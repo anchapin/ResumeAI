@@ -1,6 +1,8 @@
 import os
 import json
+import asyncio
 from typing import List, Optional, Dict, Any
+from async_lru import alru_cache
 from fastapi import FastAPI, HTTPException, Response
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
@@ -41,8 +43,13 @@ class MockTemplateGenerator:
         return b"%PDF-1.4... (Mock PDF Data)"
 
 class MockAIGenerator:
-    def tailor_resume(self, data: Dict, job_description: str) -> str:
+    @alru_cache(maxsize=32)
+    async def tailor_resume(self, resume_json: str, job_description: str) -> str:
         # Simulate AI tailoring logic
+        # Simulate expensive operation (uncomment to verify caching behavior)
+        # await asyncio.sleep(2)
+
+        data = json.loads(resume_json)
         experience_section = MockTemplateGenerator()._format_experience(data.get('experience', []))
         
         return f"""# {data.get('name')} (Tailored)
@@ -143,7 +150,7 @@ async def generate_preview(request: GeneratePreviewRequest):
     """
     try:
         # Convert Pydantic model to dict to mimic YAML loader result
-        data_dict = request.resume.dict()
+        data_dict = request.resume.model_dump()
         markdown = template_generator.generate(data_dict, request.variant)
         return {"markdown": markdown}
     except Exception as e:
@@ -155,7 +162,7 @@ async def generate_pdf(request: GeneratePreviewRequest):
     Returns a PDF stream of the resume.
     """
     try:
-        data_dict = request.resume.dict()
+        data_dict = request.resume.model_dump()
         pdf_bytes = template_generator.generate_pdf(data_dict, request.variant)
         return Response(content=pdf_bytes, media_type="application/pdf")
     except Exception as e:
@@ -167,10 +174,11 @@ async def generate_package(request: GeneratePackageRequest):
     Generates a full application package including tailored resume and cover letter.
     """
     try:
-        data_dict = request.resume.dict()
+        data_dict = request.resume.model_dump()
         
         # 1. Tailor Resume
-        tailored_markdown = ai_generator.tailor_resume(data_dict, request.job_description)
+        # Pass JSON string to allow for caching keys
+        tailored_markdown = await ai_generator.tailor_resume(request.resume.model_dump_json(), request.job_description)
         
         # 2. Generate Cover Letter (if requested)
         cover_letter_md = None
