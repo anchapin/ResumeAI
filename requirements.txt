@@ -1,0 +1,11 @@
+fastapi
+uvicorn
+click
+pyyaml
+jinja2
+rich
+anthropic
+openai
+pandas
+python-dateutil
+requests
