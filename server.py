@@ -1,5 +1,6 @@
 import os
 import json
+import asyncio
 from typing import List, Optional, Dict, Any
 from fastapi import FastAPI, HTTPException, Response
 from pydantic import BaseModel
@@ -144,7 +145,7 @@ async def generate_preview(request: GeneratePreviewRequest):
     try:
         # Convert Pydantic model to dict to mimic YAML loader result
         data_dict = request.resume.dict()
-        markdown = template_generator.generate(data_dict, request.variant)
+        markdown = await asyncio.to_thread(template_generator.generate, data_dict, request.variant)
         return {"markdown": markdown}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
