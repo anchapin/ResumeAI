@@ -10,6 +10,8 @@ interface WorkspaceProps {
 
 type TabType = 'Resume' | 'Cover Letter' | 'Analysis';
 
+const TABS: TabType[] = ['Resume', 'Cover Letter', 'Analysis'];
+
 const Workspace: React.FC<WorkspaceProps> = ({ resumeData, onNavigate }) => {
     const { generatePackage, loading, error, data } = useGeneratePackage();
     const [activeTab, setActiveTab] = useState<TabType>('Resume');
@@ -243,7 +245,7 @@ const Workspace: React.FC<WorkspaceProps> = ({ resumeData, onNavigate }) => {
                     {/* Preview Toolbar */}
                     <div className="flex items-center justify-between px-6 py-2 bg-white border-b border-slate-200 shadow-sm z-10">
                          <div className="flex gap-1">
-                            {(['Resume', 'Cover Letter', 'Analysis'] as TabType[]).map((tab) => (
+                            {TABS.map((tab) => (
                                 <button 
                                     key={tab} 
                                     onClick={() => setActiveTab(tab)}
