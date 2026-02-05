@@ -29,12 +29,12 @@ class MockTemplateGenerator:
 """
     
     def _format_experience(self, experience: List[Dict]) -> str:
-        result = ""
-        for exp in experience:
-            result += f"\n**{exp.get('role', 'Role')}** at {exp.get('company', 'Company')}\n"
-            result += f"{exp.get('startDate', '')} - {exp.get('endDate', '')}\n"
-            result += f"{exp.get('description', '')}\n"
-        return result
+        return "".join(
+            f"\n**{exp.get('role', 'Role')}** at {exp.get('company', 'Company')}\n"
+            f"{exp.get('startDate', '')} - {exp.get('endDate', '')}\n"
+            f"{exp.get('description', '')}\n"
+            for exp in experience
+        )
 
     def generate_pdf(self, data: Dict, variant: str) -> bytes:
         # Return a dummy PDF byte stream
