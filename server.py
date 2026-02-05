@@ -59,6 +59,24 @@ Highly motivated professional tailored for the following job requirements:
     def analyze_match(self, resume_data: Dict, job_description: str) -> str:
         return "Match Score: 88/100. Strong alignment with required skills in React and Python."
 
+    def generate_variations(self, data: Dict, job_description: str, count: int = 3) -> List[str]:
+        # Simulate generating variations
+        variations = []
+        base_markdown = self.tailor_resume(data, job_description)
+        for i in range(count):
+            # In a real implementation, this would call the AI with different temperature/prompts
+            variations.append(f"{base_markdown}\n\n*(Variation {i+1}: Optimized for ATS and keyword density)*")
+        return variations
+
+    def judge_variations(self, variations: List[str], job_description: str) -> Dict[str, Any]:
+        # Simulate judging process
+        # For mock, we'll always pick the last one as "best"
+        best_idx = len(variations) - 1
+        return {
+            "best_index": best_idx,
+            "justification": f"Variation {best_idx+1} was selected because it demonstrated the strongest alignment with the job description, effectively highlighting key achievements and skills. (AI Score: {90 + best_idx}/100)"
+        }
+
 class MockCoverLetterGenerator:
     def generate(self, data: Dict, company_name: str, job_description: str) -> str:
         experiences = data.get('experience', [])
@@ -184,8 +202,18 @@ async def generate_package(request: GeneratePackageRequest):
         # 3. AI Analysis (if requested)
         analysis_text = None
         if request.use_ai_judge:
-            # Logic to generate variations and pick best would go here
-            analysis_text = ai_generator.analyze_match(data_dict, request.job_description)
+            # Generate multiple variations
+            variations = ai_generator.generate_variations(data_dict, request.job_description, count=3)
+
+            # Judge and pick the best one
+            judgment = ai_generator.judge_variations(variations, request.job_description)
+            best_idx = judgment.get("best_index", 0)
+
+            # Update the response with the best variation and analysis
+            if 0 <= best_idx < len(variations):
+                tailored_markdown = variations[best_idx]
+
+            analysis_text = judgment.get("justification")
 
         return PackageResponse(
             resume_markdown=tailored_markdown,
