@@ -7,6 +7,9 @@ interface EditorProps {
   onBack: () => void;
 }
 
+const NAV_ITEMS = ['Dashboard', 'My Resumes', 'Templates', 'Settings'];
+const TAB_ITEMS = ['Contact Info', 'Summary', 'Experience', 'Skills', 'Education', 'Projects'];
+
 const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, onBack }) => {
   const experiences = resumeData.experience;
   const [expandedId, setExpandedId] = useState<string | null>(experiences.length > 0 ? experiences[0].id : null);
@@ -56,7 +59,7 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, onBack }) => {
         </div>
         <div className="flex items-center gap-8">
             <nav className="flex gap-6">
-                {['Dashboard', 'My Resumes', 'Templates', 'Settings'].map(item => (
+                {NAV_ITEMS.map(item => (
                     <button key={item} onClick={onBack} className="text-sm font-semibold text-slate-500 hover:text-primary-600 transition-colors">
                         {item}
                     </button>
@@ -93,7 +96,7 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, onBack }) => {
             {/* Tabs */}
             <div className="border-b border-slate-200 mb-8 overflow-x-auto">
                 <div className="flex gap-8">
-                    {['Contact Info', 'Summary', 'Experience', 'Skills', 'Education', 'Projects'].map((tab) => {
+                    {TAB_ITEMS.map((tab) => {
                         const active = tab === 'Experience';
                         return (
                             <button 
