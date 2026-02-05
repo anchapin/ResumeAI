@@ -3,6 +3,7 @@ import Sidebar from './components/Sidebar';
 import Dashboard from './pages/Dashboard';
 import Editor from './pages/Editor';
 import Workspace from './pages/Workspace';
+import JobApplications from './pages/JobApplications';
 import { Route, ResumeData } from './types';
 
 const initialResumeData: ResumeData = {
@@ -46,6 +47,13 @@ function App() {
             <div className="flex min-h-screen bg-[#f6f6f8]">
                 <Sidebar currentRoute={currentRoute} onNavigate={setCurrentRoute} />
                 <Dashboard />
+            </div>
+        );
+      case Route.APPLICATIONS:
+        return (
+            <div className="flex min-h-screen bg-[#f6f6f8]">
+                <Sidebar currentRoute={currentRoute} onNavigate={setCurrentRoute} />
+                <JobApplications />
             </div>
         );
       case Route.EDITOR:

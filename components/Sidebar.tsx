@@ -10,7 +10,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentRoute, onNavigate }) => {
   const navItems = [
     { id: Route.DASHBOARD, label: 'Dashboard', icon: 'dashboard' },
     { id: Route.EDITOR, label: 'My Master Profile', icon: 'account_circle' },
-    { id: 'applications', label: 'Job Applications', icon: 'work' }, // Placeholder
+    { id: Route.APPLICATIONS, label: 'Job Applications', icon: 'work' },
     { id: 'settings', label: 'Settings', icon: 'settings' }, // Placeholder
   ];
 
@@ -36,8 +36,8 @@ const Sidebar: React.FC<SidebarProps> = ({ currentRoute, onNavigate }) => {
               <button
                 key={item.id}
                 onClick={() => {
-                    if (item.id === Route.DASHBOARD || item.id === Route.EDITOR) {
-                        onNavigate(item.id);
+                    if (item.id === Route.DASHBOARD || item.id === Route.EDITOR || item.id === Route.APPLICATIONS) {
+                        onNavigate(item.id as Route);
                     }
                 }}
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 ${
