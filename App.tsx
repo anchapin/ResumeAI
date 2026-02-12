@@ -4,6 +4,7 @@ import Dashboard from './pages/Dashboard';
 import Editor from './pages/Editor';
 import Workspace from './pages/Workspace';
 import JobApplications from './pages/JobApplications';
+import Settings from './pages/Settings';
 import { Route, ResumeData } from './types';
 
 const initialResumeData: ResumeData = {
@@ -70,6 +71,13 @@ function App() {
             resumeData={resumeData}
             onNavigate={setCurrentRoute} 
           />
+        );
+      case Route.SETTINGS:
+        return (
+            <div className="flex min-h-screen bg-[#f6f6f8]">
+                <Sidebar currentRoute={currentRoute} onNavigate={setCurrentRoute} />
+                <Settings />
+            </div>
         );
       default:
         return <Dashboard />;
