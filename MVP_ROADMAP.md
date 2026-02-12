@@ -23,12 +23,18 @@ The MVP will transition from a monolithic mock server to a decoupled architectur
 
 The core of the MVP is the backend service. It must be isolated to handle heavy dependencies (LaTeX) and provide a clean API surface.
 
-#### Task 1.1: Project Scaffolding & Dependency Integration
+#### Task 1.1: Project Scaffolding & Dependency Integration ~~[COMPLETED]~~
 *   **Action:** Create a new directory `resume-api/` (or a separate repo `resume-api-service`).
 *   **Dependencies:**
     *   **FastAPI / Uvicorn:** For the web server.
     *   **Resume CLI:** Vendor the `resume-cli` code (copy `cli/`, `templates/`, `config/` from the source repo) into `resume-api/lib/` to ensure stability and ease of modification without waiting for upstream package releases.
     *   **Pydantic:** For strict request/response validation.
+*   **Status:** ✅ Completed in Issue #12
+    *   Created `resume-api/` directory structure
+    *   Implemented Python-based resume CLI library (jsonresume/resume-cli is Node.js/unmaintained)
+    *   Created `requirements.txt` with FastAPI, Uvicorn, Pydantic, and AI dependencies
+    *   FastAPI application scaffolds and runs without import errors
+    *   Docker configuration ready
 
 #### Task 1.2: Dockerization (Crucial)
 *   **Challenge:** `resume-cli` relies on LaTeX (`texlive`) for high-quality PDFs. This is a large dependency (~2-4GB) and hard to install on standard PaaS (like Vercel/Heroku) directly.
@@ -97,7 +103,7 @@ Connect the React frontend to the new real API.
 
 ## 4. Definition of Done (MVP)
 
-1.  [ ] **Repo Created:** `resume-api` repo exists with `resume-cli` vendored.
+1.  [x] **Repo Created:** `resume-api` repo exists with `resume-cli` vendored. ~~(Completed in Issue #12)~~
 2.  [ ] **Docker Builds:** `docker build` passes and includes `texlive`.
 3.  [ ] **PDF Generation Works:** Sending JSON to `/render/pdf` returns a valid, professional PDF.
 4.  [ ] **Tailoring Works:** Sending JSON + Job Desc returns modified JSON.
