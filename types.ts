@@ -39,4 +39,5 @@ export enum Route {
   DASHBOARD = 'dashboard',
   EDITOR = 'editor',
   WORKSPACE = 'workspace',
+  SETTINGS = 'settings',
 }

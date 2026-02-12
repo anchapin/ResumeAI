@@ -11,7 +11,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentRoute, onNavigate }) => {
     { id: Route.DASHBOARD, label: 'Dashboard', icon: 'dashboard' },
     { id: Route.EDITOR, label: 'My Master Profile', icon: 'account_circle' },
     { id: 'applications', label: 'Job Applications', icon: 'work' }, // Placeholder
-    { id: 'settings', label: 'Settings', icon: 'settings' }, // Placeholder
+    { id: Route.SETTINGS, label: 'Settings', icon: 'settings' },
   ];
 
   return (
@@ -36,7 +36,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentRoute, onNavigate }) => {
               <button
                 key={item.id}
                 onClick={() => {
-                    if (item.id === Route.DASHBOARD || item.id === Route.EDITOR) {
+                    if (item.id === Route.DASHBOARD || item.id === Route.EDITOR || item.id === Route.SETTINGS) {
                         onNavigate(item.id);
                     }
                 }}
