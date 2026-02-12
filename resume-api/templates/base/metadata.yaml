@@ -1,0 +1,8 @@
+name: base
+display_name: Base Template
+description: A clean, professional resume template
+format: latex
+output_formats:
+  - pdf
+author: ResumeAI Team
+version: 1.0.0
