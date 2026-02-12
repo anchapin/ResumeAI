@@ -147,9 +147,40 @@ interface EditorProps {
 const NAV_ITEMS = ['Dashboard', 'My Resumes', 'Templates', 'Settings'];
 const TAB_ITEMS = ['Contact Info', 'Summary', 'Experience', 'Skills', 'Education', 'Projects'];
 
+/**
+ * Helper function to get a human-readable time difference
+ */
+function getTimeSince(date: Date): string {
+  const now = new Date();
+  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+
+  if (diffInSeconds < 60) {
+    return 'just now';
+  } else if (diffInSeconds < 3600) {
+    const minutes = Math.floor(diffInSeconds / 60);
+    return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
+  } else if (diffInSeconds < 86400) {
+    const hours = Math.floor(diffInSeconds / 3600);
+    return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+  } else {
+    const days = Math.floor(diffInSeconds / 86400);
+    return `${days} day${days > 1 ? 's' : ''} ago`;
+  }
+}
+
 const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, onBack }) => {
   const experiences = resumeData.experience;
   const [expandedId, setExpandedId] = useState<string | null>(experiences.length > 0 ? experiences[0].id : null);
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
+
+  // Track when data is saved (after a short debounce)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setLastSaved(new Date());
+    }, 500); // Debounce to avoid updating too frequently
+
+    return () => clearTimeout(timer);
+  }, [resumeData]);
 
   // Use a ref to hold the latest resumeData so that callbacks can be stable
   const resumeDataRef = useRef(resumeData);
@@ -244,7 +275,9 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, onBack }) => {
                     <h1 className="text-4xl font-extrabold text-slate-900 tracking-tight mb-2">Edit Professional Profile</h1>
                     <p className="text-primary-600 font-medium text-sm flex items-center gap-1">
                         <span className="material-symbols-outlined text-sm">check_circle</span>
-                        Last saved 2 minutes ago
+                        {lastSaved
+                          ? `Saved ${getTimeSince(lastSaved)} ago`
+                          : 'Changes not yet saved'}
                     </p>
                 </div>
                 <div className="flex gap-3">
