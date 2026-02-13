@@ -2,19 +2,19 @@ import { describe, it, vi } from 'vitest';
 import { render, screen, fireEvent, act } from '@testing-library/react';
 import React, { useState } from 'react';
 import Editor from './Editor';
-import { SimpleResumeData, WorkExperience } from '../types';
+import { ResumeData, WorkItem } from '../types';
 
 // Mock data generator
-const generateLargeResumeData = (count: number): SimpleResumeData => {
-  const experiences: WorkExperience[] = Array.from({ length: count }, (_, i) => ({
-    id: `exp-${i}`,
+const generateLargeResumeData = (count: number): ResumeData => {
+  const work: WorkItem[] = Array.from({ length: count }, (_, i) => ({
+    
     company: `Company ${i}`,
-    role: `Role ${i}`,
+    position: `Role ${i}`,
     startDate: '2020',
     endDate: '2021',
     current: false,
-    description: `Description for ${i}`,
-    tags: ['Tag1', 'Tag2']
+    summary: `Description for ${i}`,
+    highlights: ['Tag1', 'Tag2']
   }));
 
   return {
