@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Route, SimpleResumeData } from '../types';
-import { useGeneratePackage } from '../hooks/useGeneratePackage';
+import { useGeneratePackage, convertToResumeData } from '../hooks/useGeneratePackage';
 
 interface WorkspaceProps {
     resumeData: SimpleResumeData;
@@ -33,7 +33,7 @@ const Workspace: React.FC<WorkspaceProps> = ({ resumeData, onNavigate }) => {
 
         try {
             await generatePackage({
-                resume_data: resumeData,
+                resume_data: convertToResumeData(resumeData),
                 job_description: jobDescription,
                 company_name: companyName || undefined,
                 job_title: jobTitle || undefined
@@ -53,7 +53,7 @@ const Workspace: React.FC<WorkspaceProps> = ({ resumeData, onNavigate }) => {
 
         try {
             await downloadPDF({
-                resume_data: resumeData,
+                resume_data: convertToResumeData(resumeData),
                 variant: variant
             });
         } catch (e) {

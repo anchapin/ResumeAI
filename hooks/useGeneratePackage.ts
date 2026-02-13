@@ -6,7 +6,7 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
 const API_KEY = import.meta.env.RESUMEAI_API_KEY || '';
 
 // Convert SimpleResumeData to ResumeData (JSON Resume format)
-function convertToResumeData(data: SimpleResumeData): ResumeData {
+export function convertToResumeData(data: SimpleResumeData): ResumeData {
     return {
         basics: {
             name: data.name,
