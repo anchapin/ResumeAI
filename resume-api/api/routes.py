@@ -26,6 +26,9 @@ sys.path.insert(0, str(lib_path))
 
 from lib.cli import ResumeGenerator, ResumeTailorer, VariantManager
 
+# Import authentication
+from config.dependencies import AuthorizedAPIKey
+
 # Initialize components
 LIB_DIR = Path(__file__).parent.parent
 TEMPLATES_DIR = LIB_DIR / "templates"
@@ -54,16 +57,21 @@ async def health_check():
             "description": "PDF resume file"
         },
         400: {"model": ErrorResponse},
+        401: {"model": ErrorResponse},
+        403: {"model": ErrorResponse},
         500: {"model": ErrorResponse}
     },
     tags=["Rendering"]
 )
-async def render_pdf(request: ResumeRequest):
+async def render_pdf(request: ResumeRequest, auth: AuthorizedAPIKey):
     """
     Generate a PDF resume from resume data.
 
+    Requires API key authentication via X-API-KEY header.
+
     Args:
         request: ResumeRequest containing resume_data and variant
+        auth: API key authentication info
 
     Returns:
         PDF file as binary response
@@ -110,16 +118,21 @@ async def render_pdf(request: ResumeRequest):
     response_model=TailoredResumeResponse,
     responses={
         400: {"model": ErrorResponse},
+        401: {"model": ErrorResponse},
+        403: {"model": ErrorResponse},
         500: {"model": ErrorResponse}
     },
     tags=["Tailoring"]
 )
-async def tailor_resume(request: TailorRequest):
+async def tailor_resume(request: TailorRequest, auth: AuthorizedAPIKey):
     """
     Tailor a resume to match a job description.
 
+    Requires API key authentication via X-API-KEY header.
+
     Args:
         request: TailorRequest containing resume_data and job_description
+        auth: API key authentication info
 
     Returns:
         TailoredResumeResponse with modified resume data

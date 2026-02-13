@@ -4,25 +4,15 @@ __pycache__/
 *$py.class
 *.so
 .Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs
-parts/
-sdist/
-var/
-wheels/
 *.egg-info/
-.installed.cfg
-*.egg
+build/
+dist/
 
 # Virtual environments
 venv/
 env/
 ENV/
-.venv
+.venv/
 
 # IDEs
 .vscode/
@@ -31,37 +21,35 @@ ENV/
 *.swo
 *~
 
-# Testing
-.pytest_cache/
-.coverage
-htmlcov/
-.tox/
+# OS
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
 
 # Environment files
 .env
 .env.local
 .env.*.local
 
-# Git
-.git/
-.gitignore
-
-# Docker
-Dockerfile
-docker-compose.yml
-.dockerignore
-
 # Documentation
 *.md
-docs/
+README.md
+
+# Tests
+tests/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Logs
+*.log
 
 # CI/CD
 .github/
 .gitlab-ci.yml
-
-# OS
-.DS_Store
-Thumbs.db
 
 # Development scripts
 validate_setup.py

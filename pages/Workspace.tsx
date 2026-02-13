@@ -8,35 +8,35 @@ interface WorkspaceProps {
     onNavigate: (route: Route) => void;
 }
 
-type TabType = 'Resume' | 'Cover Letter' | 'Analysis';
+type TabType = 'Resume' | 'Keywords' | 'Suggestions';
 
-const TABS: TabType[] = ['Resume', 'Cover Letter', 'Analysis'];
+const TABS: TabType[] = ['Resume', 'Keywords', 'Suggestions'];
 
 const Workspace: React.FC<WorkspaceProps> = ({ resumeData, onNavigate }) => {
-    const { generatePackage, loading, error, data } = useGeneratePackage();
+    const { generatePackage, downloadPDF, loading, error, data } = useGeneratePackage();
     const [activeTab, setActiveTab] = useState<TabType>('Resume');
-    
+
     // Form State
     const [companyName, setCompanyName] = useState('');
+    const [jobTitle, setJobTitle] = useState('');
     const [jobDescription, setJobDescription] = useState('');
-    const [variant, setVariant] = useState('Product Designer (Standard)');
-    const [includeCoverLetter, setIncludeCoverLetter] = useState(true);
-    const [useAIJudge, setUseAIJudge] = useState(false);
+    const [variant, setVariant] = useState('base');
+    const [variants, setVariants] = useState<Array<{name: string; display_name: string; description: string}>>([
+        { name: 'base', display_name: 'Base Template', description: 'A clean, professional resume template' }
+    ]);
 
     const handleGenerate = async () => {
-        if (!jobDescription || !companyName) {
-            alert("Please enter company name and job description.");
+        if (!jobDescription) {
+            alert("Please enter a job description.");
             return;
         }
 
         try {
             await generatePackage({
-                resume: resumeData,
+                resume_data: resumeData,
                 job_description: jobDescription,
-                company_name: companyName,
-                variant: variant,
-                include_cover_letter: includeCoverLetter,
-                use_ai_judge: useAIJudge
+                company_name: companyName || undefined,
+                job_title: jobTitle || undefined
             });
             setActiveTab('Resume');
         } catch (e) {
@@ -46,63 +46,61 @@ const Workspace: React.FC<WorkspaceProps> = ({ resumeData, onNavigate }) => {
     };
 
     const handleDownloadPDF = async () => {
-        if (!data && !companyName) {
-             alert("Generate a package first or enter a company name.");
-             return;
+        if (!companyName) {
+            alert("Please enter a company name before downloading.");
+            return;
         }
 
         try {
-            // Using 127.0.0.1 instead of localhost avoids IPv6 resolution issues on some systems
-            const response = await fetch('http://127.0.0.1:8000/generate/pdf', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    resume: resumeData,
-                    variant: variant,
-                    job_description: jobDescription
-                })
+            await downloadPDF({
+                resume_data: resumeData,
+                variant: variant
             });
-            
-            if (!response.ok) throw new Error('Download failed');
-            
-            const blob = await response.blob();
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `Resume-${companyName || 'Draft'}.pdf`;
-            document.body.appendChild(a);
-            a.click();
-            window.URL.revokeObjectURL(url);
-            document.body.removeChild(a);
         } catch (e) {
             console.error(e);
-            alert("Failed to download PDF. Ensure the backend is running.");
+            alert("Failed to download PDF. Ensure backend is running.");
         }
     };
 
     const renderPreviewContent = () => {
         if (!data) return null;
 
-        let content = "";
         switch (activeTab) {
             case 'Resume':
-                content = data.resume_markdown;
-                break;
-            case 'Cover Letter':
-                content = data.cover_letter_markdown || "Cover letter was not generated.";
-                break;
-            case 'Analysis':
-                content = data.analysis || "AI Analysis was not requested.";
-                break;
+                return (
+                    <div className="w-full max-w-[800px] bg-white shadow-2xl rounded-sm p-12 min-h-[1000px] animate-in fade-in duration-500">
+                        <div className="markdown-content">
+                            <h2 className="text-xl font-bold mb-4">{data.resume_data.basics?.name || 'Resume'}</h2>
+                            <p className="text-gray-600 mb-6">{data.resume_data.basics?.label || 'Professional'}</p>
+                            <pre className="whitespace-pre-wrap text-sm">{JSON.stringify(data.resume_data, null, 2)}</pre>
+                        </div>
+                    </div>
+                );
+            case 'Keywords':
+                return (
+                    <div className="w-full max-w-[800px] bg-white shadow-2xl rounded-sm p-12 animate-in fade-in duration-500">
+                        <h2 className="text-2xl font-bold mb-6">Extracted Keywords</h2>
+                        <div className="flex flex-wrap gap-2">
+                            {data.keywords.map((keyword, idx) => (
+                                <span key={idx} className="px-3 py-1 bg-primary-100 text-primary-700 rounded-full text-sm font-medium">
+                                    {keyword}
+                                </span>
+                            ))}
+                        </div>
+                    </div>
+                );
+            case 'Suggestions':
+                return (
+                    <div className="w-full max-w-[800px] bg-white shadow-2xl rounded-sm p-12 animate-in fade-in duration-500">
+                        <h2 className="text-2xl font-bold mb-6">Improvement Suggestions</h2>
+                        <div className="prose">
+                            <pre className="whitespace-pre-wrap text-sm">{JSON.stringify(data.suggestions, null, 2)}</pre>
+                        </div>
+                    </div>
+                );
+            default:
+                return null;
         }
-
-        return (
-            <div className="w-full max-w-[800px] bg-white shadow-2xl rounded-sm p-12 min-h-[1000px] animate-in fade-in duration-500">
-                <div className="markdown-content">
-                    <ReactMarkdown>{content}</ReactMarkdown>
-                </div>
-            </div>
-        );
     };
 
     return (
@@ -120,7 +118,7 @@ const Workspace: React.FC<WorkspaceProps> = ({ resumeData, onNavigate }) => {
                      </div>
                 </div>
                 <div className="flex items-center gap-3">
-                     <button 
+                     <button
                         onClick={handleGenerate}
                         disabled={loading}
                         className="hidden sm:flex items-center gap-2 bg-primary-600 text-white px-4 py-2 rounded-lg font-bold text-sm hover:bg-primary-700 transition-all shadow-md shadow-primary-600/20 disabled:opacity-70 disabled:cursor-not-allowed"
@@ -155,7 +153,7 @@ const Workspace: React.FC<WorkspaceProps> = ({ resumeData, onNavigate }) => {
                         </nav>
                         <h2 className="text-2xl font-bold text-slate-900">New Application</h2>
                     </div>
-                    
+
                     <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-6">
                         {error && (
                             <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm font-medium flex items-center gap-2">
@@ -166,18 +164,29 @@ const Workspace: React.FC<WorkspaceProps> = ({ resumeData, onNavigate }) => {
 
                         <div className="space-y-2">
                             <label className="text-sm font-bold text-slate-700">Company Name</label>
-                            <input 
-                                type="text" 
+                            <input
+                                type="text"
                                 value={companyName}
                                 onChange={(e) => setCompanyName(e.target.value)}
-                                placeholder="e.g. Acme Corp" 
+                                placeholder="e.g. Acme Corp"
+                                className="w-full px-4 py-3 rounded-lg bg-slate-50 border border-slate-200 focus:bg-white focus:border-primary-500 focus:ring-2 focus:ring-primary-100 outline-none transition-all"
+                            />
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-sm font-bold text-slate-700">Job Title (Optional)</label>
+                            <input
+                                type="text"
+                                value={jobTitle}
+                                onChange={(e) => setJobTitle(e.target.value)}
+                                placeholder="e.g. Senior Product Designer"
                                 className="w-full px-4 py-3 rounded-lg bg-slate-50 border border-slate-200 focus:bg-white focus:border-primary-500 focus:ring-2 focus:ring-primary-100 outline-none transition-all"
                             />
                         </div>
 
                         <div className="space-y-2">
                             <label className="text-sm font-bold text-slate-700">Paste Job Description Here</label>
-                            <textarea 
+                            <textarea
                                 value={jobDescription}
                                 onChange={(e) => setJobDescription(e.target.value)}
                                 className="w-full min-h-[200px] px-4 py-3 rounded-lg bg-slate-50 border border-slate-200 focus:bg-white focus:border-primary-500 focus:ring-2 focus:ring-primary-100 outline-none transition-all resize-none"
@@ -186,55 +195,18 @@ const Workspace: React.FC<WorkspaceProps> = ({ resumeData, onNavigate }) => {
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-sm font-bold text-slate-700">Select Base Variant</label>
+                            <label className="text-sm font-bold text-slate-700">Select Template</label>
                             <div className="relative">
-                                <select 
+                                <select
                                     value={variant}
                                     onChange={(e) => setVariant(e.target.value)}
                                     className="w-full appearance-none px-4 py-3 rounded-lg bg-slate-50 border border-slate-200 focus:bg-white focus:border-primary-500 outline-none cursor-pointer font-medium text-slate-700"
                                 >
-                                    <option>Product Designer (Standard)</option>
-                                    <option>Senior Designer (Creative)</option>
-                                    <option>UX Engineer (Technical)</option>
+                                    {variants.map(v => (
+                                        <option key={v.name} value={v.name}>{v.display_name}</option>
+                                    ))}
                                 </select>
                                 <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">expand_more</span>
-                            </div>
-                        </div>
-
-                        {/* AI Config */}
-                        <div className="pt-6 border-t border-slate-100 space-y-4">
-                            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">AI Configuration</h3>
-                            
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-sm font-bold text-slate-800">Generate Cover Letter?</p>
-                                    <p className="text-xs text-slate-500">Craft a custom letter based on job requirements</p>
-                                </div>
-                                <label className="relative inline-flex items-center cursor-pointer">
-                                    <input 
-                                        type="checkbox" 
-                                        className="sr-only peer" 
-                                        checked={includeCoverLetter}
-                                        onChange={(e) => setIncludeCoverLetter(e.target.checked)}
-                                    />
-                                    <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
-                                </label>
-                            </div>
-
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-sm font-bold text-slate-800">Use AI Judge</p>
-                                    <p className="text-xs text-slate-500">Score the resume alignment before finalizing</p>
-                                </div>
-                                <label className="relative inline-flex items-center cursor-pointer">
-                                    <input 
-                                        type="checkbox" 
-                                        className="sr-only peer" 
-                                        checked={useAIJudge}
-                                        onChange={(e) => setUseAIJudge(e.target.checked)}
-                                    />
-                                    <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
-                                </label>
                             </div>
                         </div>
                     </div>
@@ -246,12 +218,12 @@ const Workspace: React.FC<WorkspaceProps> = ({ resumeData, onNavigate }) => {
                     <div className="flex items-center justify-between px-6 py-2 bg-white border-b border-slate-200 shadow-sm z-10">
                          <div className="flex gap-1">
                             {TABS.map((tab) => (
-                                <button 
-                                    key={tab} 
+                                <button
+                                    key={tab}
                                     onClick={() => setActiveTab(tab)}
                                     className={`px-4 py-2 text-sm font-bold rounded-md transition-colors ${
-                                        activeTab === tab 
-                                        ? 'bg-primary-50 text-primary-700' 
+                                        activeTab === tab
+                                        ? 'bg-primary-50 text-primary-700'
                                         : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
                                     }`}
                                 >
@@ -264,7 +236,7 @@ const Workspace: React.FC<WorkspaceProps> = ({ resumeData, onNavigate }) => {
                              <span className="text-xs font-bold min-w-[3rem] text-center">100%</span>
                              <button className="p-2 hover:bg-slate-100 rounded-lg"><span className="material-symbols-outlined text-[20px]">zoom_in</span></button>
                              <div className="h-4 w-px bg-slate-300 mx-2"></div>
-                             <button 
+                             <button
                                 onClick={handleDownloadPDF}
                                 className="p-2 hover:bg-slate-100 rounded-lg text-primary-600"
                                 title="Download PDF"
@@ -282,7 +254,7 @@ const Workspace: React.FC<WorkspaceProps> = ({ resumeData, onNavigate }) => {
                                      <span className="material-symbols-outlined text-5xl text-primary-300">auto_awesome</span>
                                 </div>
                                 <h3 className="text-2xl font-bold text-slate-900 mb-2">Ready to Tailor?</h3>
-                                <p className="text-slate-500 max-w-sm mx-auto">Input the company details and job description on the left to generate your optimized resume package.</p>
+                                <p className="text-slate-500 max-w-sm mx-auto">Input job description on the left to generate your optimized resume package.</p>
                             </div>
                         )}
                     </div>

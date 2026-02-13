@@ -4,87 +4,235 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-ResumeAI SaaS is a resume builder dashboard and editor for tailoring job applications. The project consists of:
+**ResumeAI** is a resume builder SaaS application with two main components:
+
 - **Frontend:** React 19 application with TypeScript and Vite
-- **Backend:** FastAPI Python server (currently mocked, transitioning to production API)
+- **Backend:** FastAPI Python service with Resume CLI integration
+- **Architecture:** SPA (Single Page Application) with client-side state management
+- **Deployment:** Docker containers for API service, Vercel for frontend
 
 ## Development Commands
 
 ### Frontend
 ```bash
-npm install              # Install dependencies
-npm run dev              # Start dev server on port 3000
-npm run build            # Build for production
-npm run preview          # Preview production build
-npm run test             # Run Vitest tests
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
+
+# Run tests
+npm run test
+
+# Build for production
+npm run build
+
+# Preview production build
+npm run preview
 ```
 
 ### Backend
 ```bash
-python server.py         # Start FastAPI server on port 8000
-# The backend listens on 0.0.0.0:8000 (or PORT env var)
+# Start development server (in resume-api/)
+cd resume-api && python main.py
+
+# Start with production settings (auto-detected from .env or PORT env)
+cd resume-api && PORT=8000 python main.py
 ```
 
-### Environment Setup
-Create `.env.local` and set:
+### Docker
+```bash
+# Build API service image
+cd resume-api && docker build -t resume-api:latest .
+
+# Run container locally
+docker run -p 8000:8000 resume-api:latest
+
+# Run container with auto-restart
+docker-compose up
+
+# Run container with specific .env
+docker-compose --env-file .env up
 ```
-GEMINI_API_KEY=your_api_key_here
+
+## Project Structure
+
+```
+/
+├── src/                    # React frontend (Vite, TSX, Tailwind)
+│   ├── components/          # Reusable UI components
+│   ├── pages/              # Route-based pages (Dashboard, Editor, Workspace, Settings)
+│   ├── hooks/              # Custom React hooks
+│   ├── utils/              # Utility functions
+│   ├── types.ts            # Shared TypeScript types
+│   └── App.tsx            # Main app component
+├── resume-api/            # Backend FastAPI service
+│   ├── api/                # API routes and models
+│   ├── config/             # Settings and authentication
+│   ├── lib/                # CLI integration (vendor resume-cli)
+│   │   ├── cli/          # Resume generator, tailorer, variants
+│   │   └── utils/         # AI integration
+│   ├── templates/           # Resume YAML templates
+│   ├── main.py             # FastAPI application entry
+│   ├── Dockerfile          # Docker container config
+│   ├── requirements.txt      # Python dependencies
+│   └── docker-compose.yml  # Docker Compose config
+├── public/                 # Static assets (Vite output)
+├── tests/                  # Test files
+└── package.json            # Node.js config
 ```
 
-## Architecture
+## Key Architecture Decisions
 
-### Frontend Structure
-The React app uses a simple SPA routing pattern managed through state in `App.tsx`:
+### Frontend State Management
+- Uses `localStorage` for user profile persistence (MVP approach)
+- Client-side navigation via React state in `App.tsx` (not React Router)
+- API key stored in `localStorage` under `RESUMEAI_API_KEY` key
+- Future: Consider IndexedDB or user API for multi-device sync
 
-- **Entry Point:** `index.tsx` → `App.tsx`
-- **Routing:** Client-side using React state (`Route` enum in `types.ts`)
-- **Pages:** `Dashboard.tsx`, `Editor.tsx`, `Workspace.tsx`, `Settings.tsx`
-- **Components:** `Sidebar.tsx` for navigation
-- **Hooks:** Custom hooks in `hooks/` (e.g., `useGeneratePackage.ts`)
-- **Types:** Shared interfaces in `types.ts`
+### API Architecture
+- **Legacy Endpoints** (mock server in `server.py`): `/generate/preview`, `/generate/pdf`, `/generate/package`
+- **V1 API** (production): `/v1/render/pdf`, `/v1/tailor`, `/v1/variants`
+- **Authentication:** API Key middleware in `resume-api/config/dependencies.py`
+  - Required: `X-API-KEY` header for protected endpoints
+  - Optional: Public endpoints allow unauthenticated access
+  - Development Mode: Set `REQUIRE_API_KEY=false` to disable
 
-### Backend Structure
-- `server.py` - FastAPI application with three main endpoints:
-  - `POST /generate/preview` - Basic resume preview (markdown)
-  - `POST /generate/pdf` - PDF generation (currently mocked)
-  - `POST /generate/package` - Full package with tailored resume + cover letter
+### Backend Modules
+- **FastAPI:** Web framework with automatic OpenAPI docs (`/docs`)
+- **Pydantic:** Request/response validation with `pydantic_settings.BaseSettings`
+- **Resume CLI Integration:** Vendor code in `resume-api/lib/cli/` wraps Python CLI library
+- **AI Abstraction:** `resume-api/lib/utils/ai.py` supports OpenAI, Claude, Gemini
+- **Template System:** YAML-based resume templates in `resume-api/templates/`
 
-The backend is currently using mock generators (`MockTemplateGenerator`, `MockAIGenerator`, `MockCoverLetterGenerator`). See `MVP_ROADMAP.md` for the transition plan to integrate real `resume-cli`.
+### Environment Configuration
 
-### API Integration
-- Frontend communicates with backend via `http://127.0.0.1:8000` (see `hooks/useGeneratePackage.ts:29`)
-- Note: `127.0.0.1` is used instead of `localhost` to avoid IPv6 resolution issues
-- CORS is enabled for local development
+**Frontend (.env.local):**
+```bash
+GEMINI_API_KEY=your_gemini_api_key_here
+VITE_API_URL=http://127.0.0.1:8000  # Local development
+# VITE_API_URL=https://api.resumeai.com   # Production deployment
+```
 
-### State Management
-- React `useState` for UI state and navigation
-- `localStorage` used for user profile persistence (MVP approach)
+**Backend (resume-api/.env):**
+```bash
+# AI Configuration
+AI_PROVIDER=openai              # openai, claude, gemini
+AI_MODEL=gpt-4o
+OPENAI_API_KEY=sk-...
+ANTHROPIC_API_KEY=sk-...
+GEMINI_API_KEY=...
 
-## Code Patterns & Conventions
+# API Authentication
+MASTER_API_KEY=rai_1234567890abcdef...  # For ResumeAI frontend
+API_KEYS=rai_xyz...,rai_abc...  # For 3rd party developers
+REQUIRE_API_KEY=true           # Set to false to disable auth
 
-### TypeScript
-- Strong typing throughout with interfaces defined in `types.ts`
-- Backend uses Pydantic models for request/response validation
+# Server Configuration
+HOST=0.0.0.0
+PORT=8000
+DEBUG=false
+```
 
-### Performance
-- React.memo used for expensive components
-- `useCallback` for event handlers
-- Active optimization work on array allocations (see recent commits)
-- Benchmark tests available in `pages/Editor.bench.test.tsx`
+## TypeScript Configuration
 
-### Styling
-- Tailwind CSS with custom design system
-- Primary color: indigo (#4f46e5)
-- Font: Inter family
+- **Strict mode:** `strict` in tsconfig.json
+- **Path mapping:** `@/*` paths for clean imports
+- **Build target:** esnext for modern syntax
+- **Vite plugin:** React hot module replacement
 
-## Key Files
-- `App.tsx` - Main app component with routing logic
-- `pages/Workspace.tsx` - Main application workspace for generating resumes
-- `pages/Editor.tsx` - Resume data editor (has performance benchmarks)
-- `hooks/useGeneratePackage.ts` - API integration for package generation
-- `types.ts` - Shared TypeScript interfaces
-- `server.py` - Backend API endpoints
-- `MVP_ROADMAP.md` - Detailed transition plan to production architecture
+## Docker Configuration
 
-## Current Status
-The project is in a transition phase from mock prototype to functional MVP. The backend endpoints are mocked but structured to facilitate integration with the real `resume-cli` library. See `MVP_ROADMAP.md` for the detailed implementation plan including Dockerization, `resume-cli` integration, and deployment strategy.
+- **Base Image:** `python:3.11-slim`
+- **Python Path:** `PYTHONPATH=/app:/usr/local/lib/python3.11/site-packages`
+- **Working Directory:** `/app`
+- **Exposed Port:** 8000
+- **Health Check:** `python -c "import httpx; httpx.get('http://localhost:8000/health', timeout=10).raise_for_status() or exit(1)"`
+- **Non-root User:** `appuser` (UID 1000)
+
+## Testing
+
+```bash
+# Run all tests
+npm test
+
+# Run specific test file
+npm test tests/test_server_performance.tsx
+
+# Test backend (from resume-api/)
+cd resume-api && python -m pytest
+
+# Test Docker container
+cd resume-api && docker build -t resume-api:test . && docker run --rm resume-api:test python -c "from lib.cli import ResumeGenerator; print('SUCCESS')"
+```
+
+## Known Limitations & Gotchas
+
+1. **Docker Build Time:** The `resume-api` Dockerfile includes `texlive` which is 2-4GB and can take 10+ minutes to build
+2. **Frontend Routing:** Using React state for routing instead of React Router means route changes require code deployment
+3. **API Key Storage:** Currently using `localStorage` - consider user accounts for production
+4. **CORS:** Enabled for all origins during development (`allow_origins=["*"]`)
+
+## Code Style & Conventions
+
+- **File naming:** `kebab-case` for TypeScript files
+- **Component naming:** PascalCase (e.g., `Dashboard.tsx`, `Editor.tsx`)
+- **Function naming:** `camelCase` (e.g., `useGeneratePackage`, `formatResumeData`)
+- **Constants:** `UPPER_SNAKE_CASE` for magic values
+- **Type definitions:** All shared types in `types.ts`
+- **Git hooks:** Custom hooks in `hooks/` directory
+- **Pydantic models:** All request/response models in `resume-api/api/models.py`
+
+## Deployment
+
+See `MVP_ROADMAP.md` for detailed deployment strategy.
+
+## Git Workflow
+
+All new commits should be made on **feature branches**, not directly to `main`. This enables:
+- Isolated development for each feature
+- Easier PR creation (feature branch vs main)
+- Parallel development without branch conflicts
+- Clear separation of concerns
+
+**Creating a Feature Branch:**
+```bash
+# Create a new feature branch from main
+git checkout main
+git checkout -b feature/issue-XX description
+
+# Work on your feature
+# Make commits
+git add .
+git commit -m "feat: description"
+
+# Push to remote
+git push origin feature/issue-XX
+```
+
+**Creating a Pull Request:**
+```bash
+# Create PR from feature branch to main
+gh pr create --base main --head feature/issue-XX --title "..." --body "Closes #XX"
+```
+
+**Completing a Feature:**
+```bash
+# Once PR is merged, the branch can be deleted
+git checkout main
+git pull origin main
+git branch -d feature/issue-XX
+```
+
+**Never merge feature branches directly to main:**
+- ❌ Don't use `git merge feature/XX` - this bypasses PR review
+- ❌ Don't push directly to main without PR - loses commit history
+- ❌ Don't delete feature branches before PR merges
+
+**Main Branch Purpose:**
+- The `main` branch should only receive updates via merged PRs
+- This ensures every feature goes through code review
+- Maintains clean commit history
+
+**Exception:**
+- Hotfixes that need immediate deployment may be committed directly to main temporarily, but should still go through PR process for tracking.
