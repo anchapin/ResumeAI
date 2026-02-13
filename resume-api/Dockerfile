@@ -6,9 +6,10 @@ FROM python:3.11-slim
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     DEBIAN_FRONTEND=noninteractive \
-    PYTHONPATH=/app:/usr/local/lib/python3.11/site-packages
+    PYTHONPATH=/app:/usr/local/lib/python3.11/site-packages \
+    PORT=8000
 
-# Install system dependencies including LaTeX
+# Install system dependencies including LaTeX for professional PDF generation
 RUN apt-get update && apt-get install -y \
     # LaTeX dependencies (minimal xetex installation)
     texlive-xetex \

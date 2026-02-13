@@ -5,9 +5,8 @@ __pycache__/
 *.so
 .Python
 *.egg-info/
-dist/
 build/
-*.egg
+dist/
 
 # Virtual environments
 venv/
@@ -15,7 +14,7 @@ env/
 ENV/
 .venv/
 
-# IDE
+# IDEs
 .vscode/
 .idea/
 *.swp
@@ -29,16 +28,15 @@ Thumbs.db
 # Git
 .git/
 .gitignore
-.gitattributes
 
-# Environment
+# Environment files
 .env
 .env.local
 .env.*.local
 
 # Documentation
 *.md
-docs/
+README.md
 
 # Tests
 tests/
@@ -49,5 +47,9 @@ htmlcov/
 # Logs
 *.log
 
-# Node modules (if any frontend)
-node_modules/
+# CI/CD
+.github/
+.gitlab-ci.yml
+
+# Development scripts
+validate_setup.py
