@@ -1,0 +1,44 @@
+# Dependencies
+node_modules
+
+# Build output
+dist
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Git
+.git
+.gitignore
+
+# Documentation
+*.md
+!README.md
+
+# Tests
+tests
+*.test.tsx
+*.test.ts
+*.bench.test.tsx
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# Python (backend)
+resume-api/
+requirements.txt
+
+# Benchmarks
+benchmarks
+
+# Logs
+*.log
+
+# Misc
+.DS_Store
+Thumbs.db
