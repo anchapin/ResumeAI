@@ -2,11 +2,12 @@
 FastAPI routes for Resume API.
 """
 
+import logging
 import os
 import sys
 from pathlib import Path
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, Request, status
 from fastapi.responses import Response
 
 from .models import (
@@ -25,7 +26,30 @@ sys.path.insert(0, str(lib_path))
 
 from lib.cli import ResumeGenerator, ResumeTailorer, VariantManager  # noqa: E402
 
-from config.dependencies import AuthorizedAPIKey  # noqa: E402
+# Import authentication and rate limiting
+from config.dependencies import AuthorizedAPIKey, limiter  # noqa: E402
+from config import settings  # noqa: E402
+
+
+# Helper function to conditionally apply rate limiting
+def rate_limit(limit_value: str):
+    """
+    Decorator that applies rate limiting only when enabled.
+
+    Args:
+        limit_value: Rate limit string (e.g., "10/minute")
+
+    Returns:
+        Decorator function or identity if disabled
+    """
+    if settings.enable_rate_limiting:
+        return limiter.limit(limit_value)
+    else:
+        # Return identity decorator (no-op)
+        return lambda f: f
+
+# Configure logging
+logger = logging.getLogger(__name__)
 
 # Initialize components
 LIB_DIR = Path(__file__).parent.parent
@@ -51,18 +75,23 @@ async def health_check():
         400: {"model": ErrorResponse},
         401: {"model": ErrorResponse},
         403: {"model": ErrorResponse},
+        429: {"model": ErrorResponse},
         500: {"model": ErrorResponse},
     },
     tags=["Rendering"],
 )
-async def render_pdf(request: ResumeRequest, auth: AuthorizedAPIKey):
+@rate_limit(settings.rate_limit_pdf)
+async def render_pdf(request: Request, body: ResumeRequest, auth: AuthorizedAPIKey):
     """
     Generate a PDF resume from resume data.
 
     Requires API key authentication via X-API-KEY header.
 
+    Rate limit: 10 requests per minute per API key.
+
     Args:
-        request: ResumeRequest containing resume_data and variant
+        request: FastAPI Request object
+        body: ResumeRequest containing resume_data and variant
         auth: API key authentication info
 
     Returns:
@@ -70,7 +99,7 @@ async def render_pdf(request: ResumeRequest, auth: AuthorizedAPIKey):
     """
     try:
         # Convert Pydantic model to dict
-        resume_dict = request.resume_data.model_dump(exclude_none=True)
+        resume_dict = body.resume_data.model_dump(exclude_none=True)
 
         # Initialize generator
         generator = ResumeGenerator(
@@ -79,7 +108,7 @@ async def render_pdf(request: ResumeRequest, auth: AuthorizedAPIKey):
 
         # Generate PDF
         pdf_bytes = generator.generate_pdf(
-            resume_data=resume_dict, variant=request.variant
+            resume_data=resume_dict, variant=body.variant
         )
 
         # Return PDF response
@@ -87,7 +116,7 @@ async def render_pdf(request: ResumeRequest, auth: AuthorizedAPIKey):
             content=pdf_bytes,
             media_type="application/pdf",
             headers={
-                "Content-Disposition": f'attachment; filename="resume_{request.variant}.pdf"'
+                "Content-Disposition": f'attachment; filename="resume_{body.variant}.pdf"'
             },
         )
 
@@ -107,18 +136,23 @@ async def render_pdf(request: ResumeRequest, auth: AuthorizedAPIKey):
         400: {"model": ErrorResponse},
         401: {"model": ErrorResponse},
         403: {"model": ErrorResponse},
+        429: {"model": ErrorResponse},
         500: {"model": ErrorResponse},
     },
     tags=["Tailoring"],
 )
-async def tailor_resume(request: TailorRequest, auth: AuthorizedAPIKey):
+@rate_limit(settings.rate_limit_tailor)
+async def tailor_resume(request: Request, body: TailorRequest, auth: AuthorizedAPIKey):
     """
     Tailor a resume to match a job description.
 
     Requires API key authentication via X-API-KEY header.
 
+    Rate limit: 30 requests per minute per API key.
+
     Args:
-        request: TailorRequest containing resume_data and job_description
+        request: FastAPI Request object
+        body: TailorRequest containing resume_data and job_description
         auth: API key authentication info
 
     Returns:
@@ -126,7 +160,7 @@ async def tailor_resume(request: TailorRequest, auth: AuthorizedAPIKey):
     """
     try:
         # Convert Pydantic model to dict
-        resume_dict = request.resume_data.model_dump(exclude_none=True)
+        resume_dict = body.resume_data.model_dump(exclude_none=True)
 
         # Initialize tailorer
         ai_provider = os.getenv("AI_PROVIDER", "openai")
@@ -139,17 +173,17 @@ async def tailor_resume(request: TailorRequest, auth: AuthorizedAPIKey):
         # Tailor resume
         tailored_dict = tailorer.tailor_resume(
             resume_data=resume_dict,
-            job_description=request.job_description,
-            company_name=request.company_name,
-            job_title=request.job_title,
+            job_description=body.job_description,
+            company_name=body.company_name,
+            job_title=body.job_title,
         )
 
         # Get keywords
-        keywords = tailorer.extract_keywords(request.job_description)
+        keywords = tailorer.extract_keywords(body.job_description)
 
         # Get suggestions
         suggestions = tailorer.suggest_improvements(
-            resume_data=resume_dict, job_description=request.job_description
+            resume_data=resume_dict, job_description=body.job_description
         )
 
         # Convert back to Pydantic model
@@ -168,10 +202,22 @@ async def tailor_resume(request: TailorRequest, auth: AuthorizedAPIKey):
         )
 
 
-@router.get("/v1/variants", response_model=VariantsResponse, tags=["Variants"])
-async def list_variants():
+@router.get(
+    "/v1/variants",
+    response_model=VariantsResponse,
+    responses={
+        200: {"description": "List of variants"},
+        429: {"model": ErrorResponse},
+        500: {"model": ErrorResponse}
+    },
+    tags=["Variants"]
+)
+@rate_limit(settings.rate_limit_variants)
+async def list_variants(request: Request):
     """
     List all available resume template variants.
+
+    Rate limit: 60 requests per minute per API key.
 
     Returns:
         VariantsResponse with list of available variants
