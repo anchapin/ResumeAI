@@ -2,9 +2,8 @@
 FastAPI routes for Resume API.
 """
 
-import os
+import sys
 from pathlib import Path
-from typing import Dict, Any
 
 from fastapi import APIRouter, HTTPException, status
 from fastapi.responses import Response
@@ -19,15 +18,12 @@ from .models import (
     ResumeData,
 )
 
-# Import resume library
-import sys
-
+# Setup library path
 lib_path = Path(__file__).parent.parent
 sys.path.insert(0, str(lib_path))
 
 from lib.cli import ResumeGenerator, ResumeTailorer, VariantManager
 
-# Import authentication
 from config.dependencies import AuthorizedAPIKey
 
 # Initialize components
