@@ -8,6 +8,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from api import router
+from config.dependencies import limiter, rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 
 # Initialize FastAPI app
 app = FastAPI(
@@ -17,6 +19,12 @@ app = FastAPI(
     docs_url="/docs",
     redoc_url="/redoc",
 )
+
+# Add rate limiting state
+app.state.limiter = limiter
+
+# Register rate limit exception handler
+app.add_exception_handler(RateLimitExceeded, rate_limit_exceeded_handler)
 
 # Configure CORS
 app.add_middleware(

@@ -37,18 +37,28 @@ class Settings(BaseSettings):
     # API Authentication
     require_api_key: bool = True
     master_api_key: Optional[str] = None
-    api_keys: Optional[str] = None  # Comma-separated list from env
+    api_keys: Optional[list[str]] = (
+        None  # List of API keys (parsed from comma-separated env)
+    )
 
     # CORS Configuration
     cors_origins: list[str] = ["*"]
 
+    # Rate Limiting Configuration
+    enable_rate_limiting: bool = True
+    rate_limit_pdf: str = "10/minute"  # PDF generation is expensive
+    rate_limit_tailor: str = "30/minute"  # Tailoring is moderate
+    rate_limit_variants: str = "60/minute"  # Listing variants is light
+
     @field_validator("api_keys", mode="before")
     @classmethod
-    def parse_api_keys(cls, v: Union[str, None]) -> Optional[list[str]]:
+    def parse_api_keys(cls, v: Union[str, list, None]) -> Optional[list[str]]:
         """Parse comma-separated API keys string into list."""
         if v is None:
             return None
-        return [key.strip() for key in v.split(",") if key.strip()]
+        if isinstance(v, list):
+            return v
+        return [key.strip() for key in str(v).split(",") if key.strip()]
 
     class Config:
         env_file = ".env"

@@ -18,6 +18,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from fastapi.testclient import TestClient
 from server import app
 
+
 class TestV1Endpoints(unittest.TestCase):
     """Test suite for v1 API endpoints."""
 
@@ -41,7 +42,7 @@ class TestV1Endpoints(unittest.TestCase):
                     "endDate": "2022-12",
                     "current": False,
                     "description": "Built amazing features",
-                    "tags": ["Python", "React", "AWS"]
+                    "tags": ["Python", "React", "AWS"],
                 },
                 {
                     "id": "2",
@@ -51,9 +52,9 @@ class TestV1Endpoints(unittest.TestCase):
                     "endDate": "Present",
                     "current": True,
                     "description": "Led engineering team",
-                    "tags": ["Leadership", "Architecture", "Python"]
-                }
-            ]
+                    "tags": ["Leadership", "Architecture", "Python"],
+                },
+            ],
         }
 
         self.sample_job_description = """
@@ -68,10 +69,7 @@ class TestV1Endpoints(unittest.TestCase):
         """Test POST /v1/render/pdf returns PDF content."""
         response = self.client.post(
             "/v1/render/pdf",
-            json={
-                "resume_data": self.sample_resume_data,
-                "variant": "professional"
-            }
+            json={"resume_data": self.sample_resume_data, "variant": "professional"},
         )
 
         self.assertEqual(response.status_code, 200)
@@ -85,13 +83,12 @@ class TestV1Endpoints(unittest.TestCase):
         for variant in variants:
             response = self.client.post(
                 "/v1/render/pdf",
-                json={
-                    "resume_data": self.sample_resume_data,
-                    "variant": variant
-                }
+                json={"resume_data": self.sample_resume_data, "variant": variant},
             )
 
-            self.assertEqual(response.status_code, 200, f"Failed for variant: {variant}")
+            self.assertEqual(
+                response.status_code, 200, f"Failed for variant: {variant}"
+            )
             self.assertIn("application/pdf", response.headers["content-type"])
 
     def test_v1_render_pdf_default_variant(self):
@@ -101,7 +98,7 @@ class TestV1Endpoints(unittest.TestCase):
             json={
                 "resume_data": self.sample_resume_data
                 # variant not specified, should default to "base"
-            }
+            },
         )
 
         self.assertEqual(response.status_code, 200)
@@ -113,8 +110,8 @@ class TestV1Endpoints(unittest.TestCase):
             "/v1/tailor",
             json={
                 "resume_data": self.sample_resume_data,
-                "job_description": self.sample_job_description
-            }
+                "job_description": self.sample_job_description,
+            },
         )
 
         self.assertEqual(response.status_code, 200)
@@ -138,8 +135,8 @@ class TestV1Endpoints(unittest.TestCase):
             "/v1/tailor",
             json={
                 "resume_data": self.sample_resume_data,
-                "job_description": self.sample_job_description
-            }
+                "job_description": self.sample_job_description,
+            },
         )
 
         tailored_data = response.json()
@@ -148,7 +145,9 @@ class TestV1Endpoints(unittest.TestCase):
         self.assertEqual(tailored_data["name"], self.sample_resume_data["name"])
         self.assertEqual(tailored_data["email"], self.sample_resume_data["email"])
         self.assertEqual(tailored_data["role"], self.sample_resume_data["role"])
-        self.assertEqual(len(tailored_data["experience"]), len(self.sample_resume_data["experience"]))
+        self.assertEqual(
+            len(tailored_data["experience"]), len(self.sample_resume_data["experience"])
+        )
 
     def test_v1_variants_success(self):
         """Test GET /v1/variants returns list of available variants."""

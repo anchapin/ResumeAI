@@ -1,13 +1,48 @@
 """
-FastAPI dependencies for API authentication.
+FastAPI dependencies for API authentication and rate limiting.
 """
 
+import logging
 from typing import Annotated
 
-from fastapi import Depends, Header, HTTPException, status
+from fastapi import Depends, Header, HTTPException, Request, status
 from pydantic import BaseModel
+from slowapi import Limiter
+from slowapi.errors import RateLimitExceeded
+from slowapi.util import get_remote_address
 
 from . import settings
+
+# Configure logging
+logger = logging.getLogger(__name__)
+
+
+def get_api_key_identifier(request: Request) -> str:
+    """
+    Get a unique identifier for rate limiting based on API key.
+
+    Rate limiting is done per API key, not per IP address.
+
+    Args:
+        request: FastAPI request object
+
+    Returns:
+        API key as identifier, or remote address if no API key
+    """
+    # Try to get API key from header
+    api_key = request.headers.get("X-API-KEY")
+
+    # If API key exists and auth is required, use it for rate limiting
+    if api_key and settings.require_api_key:
+        return f"apikey:{api_key}"
+
+    # Otherwise, fall back to IP address
+    return f"ip:{get_remote_address(request)}"
+
+
+# Initialize rate limiter
+# Uses API key as identifier when available, otherwise falls back to IP
+limiter = Limiter(key_func=get_api_key_identifier, default_limits=["200/minute"])
 
 
 class APIKeyAuthInfo(BaseModel):
@@ -86,3 +121,36 @@ async def require_master_key(auth: AuthorizedAPIKey) -> APIKeyAuthInfo:
 
 # Type alias for master key dependency
 MasterAPIKey = Annotated[APIKeyAuthInfo, Depends(require_master_key)]
+
+
+async def rate_limit_exceeded_handler(request: Request, exc: RateLimitExceeded):
+    """
+    Handle rate limit exceeded errors.
+
+    Logs violation and returns a proper HTTP response.
+
+    Args:
+        request: FastAPI request object
+        exc: RateLimitExceeded exception
+
+    Returns:
+        JSON response with 429 status code
+    """
+    from fastapi.responses import JSONResponse
+
+    # Log the rate limit violation
+    identifier = get_api_key_identifier(request)
+    logger.warning(
+        f"Rate limit exceeded for {identifier} on {request.url.path}: " f"{exc.detail}"
+    )
+
+    # Extract limit info from the exception
+    # The detail attribute contains information about the limit that was exceeded
+    detail_str = str(exc.detail)
+
+    # Return JSON response with 429 status
+    return JSONResponse(
+        status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+        content={"detail": detail_str},
+        headers={"Retry-After": "60"},
+    )

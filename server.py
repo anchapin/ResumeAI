@@ -18,12 +18,13 @@ import yaml
 # from cli.generators.cover_letter import CoverLetterGenerator
 # from cli.utils import ResumeYAML
 
+
 # Mocking the CLI classes for the purpose of this server implementation
 class MockTemplateGenerator:
     def generate(self, data: Dict, variant: str) -> str:
         # Mock markdown generation
-        experience_section = self._format_experience(data.get('experience', []))
-        
+        experience_section = self._format_experience(data.get("experience", []))
+
         return f"""# {data.get('name')}
 ## {data.get('role')}
 
@@ -34,7 +35,7 @@ class MockTemplateGenerator:
 
 *(Generated with variant: {variant})*
 """
-    
+
     def _format_experience(self, experience: List[Dict]) -> str:
         return "".join(
             f"\n**{exp.get('role', 'Role')}** at {exp.get('company', 'Company')}\n"
@@ -47,6 +48,7 @@ class MockTemplateGenerator:
         # Return a dummy PDF byte stream
         return b"%PDF-1.4... (Mock PDF Data)"
 
+
 class MockAIGenerator:
     @alru_cache(maxsize=32)
     async def tailor_resume(self, resume_json: str, job_description: str) -> str:
@@ -55,8 +57,10 @@ class MockAIGenerator:
         # await asyncio.sleep(2)
 
         data = json.loads(resume_json)
-        experience_section = MockTemplateGenerator()._format_experience(data.get('experience', []))
-        
+        experience_section = MockTemplateGenerator()._format_experience(
+            data.get("experience", [])
+        )
+
         return f"""# {data.get('name')} (Tailored)
 ## {data.get('role')}
 
@@ -71,11 +75,14 @@ Highly motivated professional tailored for the following job requirements:
     def analyze_match(self, resume_data: Dict, job_description: str) -> str:
         return "Match Score: 88/100. Strong alignment with required skills in React and Python."
 
+
 class MockCoverLetterGenerator:
     def generate(self, data: Dict, company_name: str, job_description: str) -> str:
-        experiences = data.get('experience', [])
-        latest_company = experiences[0].get('company') if experiences else "my previous roles"
-        
+        experiences = data.get("experience", [])
+        latest_company = (
+            experiences[0].get("company") if experiences else "my previous roles"
+        )
+
         return f"""Dear Hiring Manager at {company_name},
 
 I am writing to express my strong interest in the open position. With my background as a {data.get('role')}, I am confident I can contribute significantly to your team.
@@ -85,6 +92,7 @@ Reflecting on your needs: "{job_description[:50]}...", I believe my experience a
 Sincerely,
 {data.get('name')}
 """
+
 
 # Initialize Generators
 template_generator = MockTemplateGenerator()
@@ -106,6 +114,7 @@ app.add_middleware(
 
 # --- Pydantic Models ---
 
+
 class WorkExperience(BaseModel):
     id: str
     company: str
@@ -116,6 +125,7 @@ class WorkExperience(BaseModel):
     description: str
     tags: List[str]
 
+
 class ResumeData(BaseModel):
     name: str
     email: str
@@ -124,10 +134,12 @@ class ResumeData(BaseModel):
     role: str
     experience: List[WorkExperience]
 
+
 class GeneratePreviewRequest(BaseModel):
     resume: ResumeData
     job_description: str = ""
     variant: str = "standard"
+
 
 class GeneratePackageRequest(BaseModel):
     resume: ResumeData
@@ -137,32 +149,43 @@ class GeneratePackageRequest(BaseModel):
     include_cover_letter: bool = True
     use_ai_judge: bool = False
 
+
 class PackageResponse(BaseModel):
     resume_markdown: str
     cover_letter_markdown: Optional[str] = None
     analysis: Optional[str] = None
 
+
 # --- v1 API Pydantic Models ---
+
 
 class V1RenderPdfRequest(BaseModel):
     """Request model for POST /v1/render/pdf"""
+
     resume_data: Dict[str, Any]
     variant: str = "base"
 
+
 class V1TailorRequest(BaseModel):
     """Request model for POST /v1/tailor"""
+
     resume_data: Dict[str, Any]
     job_description: str
 
+
 class V1VariantsResponse(BaseModel):
     """Response model for GET /v1/variants"""
+
     variants: List[str]
 
+
 # --- Endpoints ---
+
 
 @app.get("/")
 async def health_check():
     return {"status": "ok", "service": "ResumeAI API"}
+
 
 @app.post("/generate/preview")
 async def generate_preview(request: GeneratePreviewRequest):
@@ -172,10 +195,13 @@ async def generate_preview(request: GeneratePreviewRequest):
     try:
         # Convert Pydantic model to dict to mimic YAML loader result
         data_dict = request.resume.model_dump()
-        markdown = await asyncio.to_thread(template_generator.generate, data_dict, request.variant)
+        markdown = await asyncio.to_thread(
+            template_generator.generate, data_dict, request.variant
+        )
         return {"markdown": markdown}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @app.post("/generate/pdf")
 async def generate_pdf(request: GeneratePreviewRequest):
@@ -189,6 +215,7 @@ async def generate_pdf(request: GeneratePreviewRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @app.post("/generate/package", response_model=PackageResponse)
 async def generate_package(request: GeneratePackageRequest):
     """
@@ -196,36 +223,40 @@ async def generate_package(request: GeneratePackageRequest):
     """
     try:
         data_dict = request.resume.model_dump()
-        
+
         # 1. Tailor Resume
         # Pass JSON string to allow for caching keys
-        tailored_markdown = await ai_generator.tailor_resume(request.resume.model_dump_json(), request.job_description)
-        
+        tailored_markdown = await ai_generator.tailor_resume(
+            request.resume.model_dump_json(), request.job_description
+        )
+
         # 2. Generate Cover Letter (if requested)
         cover_letter_md = None
         if request.include_cover_letter:
             cover_letter_md = cover_letter_generator.generate(
-                data_dict, 
-                request.company_name, 
-                request.job_description
+                data_dict, request.company_name, request.job_description
             )
-            
+
         # 3. AI Analysis (if requested)
         analysis_text = None
         if request.use_ai_judge:
             # Logic to generate variations and pick best would go here
-            analysis_text = ai_generator.analyze_match(data_dict, request.job_description)
+            analysis_text = ai_generator.analyze_match(
+                data_dict, request.job_description
+            )
 
         return PackageResponse(
             resume_markdown=tailored_markdown,
             cover_letter_markdown=cover_letter_md,
-            analysis=analysis_text
+            analysis=analysis_text,
         )
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
 # --- v1 API Endpoints ---
+
 
 @app.post("/v1/render/pdf")
 async def v1_render_pdf(request: V1RenderPdfRequest):
@@ -252,7 +283,7 @@ async def v1_render_pdf(request: V1RenderPdfRequest):
 
             # Step 1: Dump resume_data to temporary resume.yaml
             resume_yaml_path = temp_path / "resume.yaml"
-            with open(resume_yaml_path, 'w') as f:
+            with open(resume_yaml_path, "w") as f:
                 yaml.dump(request.resume_data, f, default_flow_style=False)
 
             # Step 2: In a real implementation, invoke resume-cli
@@ -266,7 +297,9 @@ async def v1_render_pdf(request: V1RenderPdfRequest):
 
             # Step 3: For now, generate a mock PDF
             # In production, this would read the actual generated PDF
-            pdf_bytes = b"%PDF-1.4\n% Mock PDF content\n% Variant: " + request.variant.encode()
+            pdf_bytes = (
+                b"%PDF-1.4\n% Mock PDF content\n% Variant: " + request.variant.encode()
+            )
 
             # Step 4: Cleanup is handled automatically by tempfile.TemporaryDirectory()
 
@@ -276,7 +309,7 @@ async def v1_render_pdf(request: V1RenderPdfRequest):
                 media_type="application/pdf",
                 headers={
                     "Content-Disposition": f"attachment; filename=resume_{request.variant}.pdf"
-                }
+                },
             )
 
     except Exception as e:
@@ -314,10 +347,14 @@ async def v1_tailor(request: V1TailorRequest):
 
         # Add a tailoring note to indicate this is tailored
         tailored_data["_tailored"] = True
-        tailored_data["_job_description_preview"] = request.job_description[:100] + "..."
+        tailored_data["_job_description_preview"] = (
+            request.job_description[:100] + "..."
+        )
 
         # If experience exists, add a tailored flag to each entry
-        if "experience" in tailored_data and isinstance(tailored_data["experience"], list):
+        if "experience" in tailored_data and isinstance(
+            tailored_data["experience"], list
+        ):
             for exp in tailored_data["experience"]:
                 if isinstance(exp, dict):
                     exp["_tailored"] = True
@@ -326,7 +363,9 @@ async def v1_tailor(request: V1TailorRequest):
         return tailored_data
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Resume tailoring failed: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Resume tailoring failed: {str(e)}"
+        )
 
 
 @app.get("/v1/variants", response_model=V1VariantsResponse)
@@ -350,22 +389,19 @@ async def v1_variants():
         # 3. Return the list of discovered variants
 
         # For now, return a static list of common variants
-        variants = [
-            "base",
-            "backend",
-            "creative",
-            "minimal",
-            "professional",
-            "startup"
-        ]
+        variants = ["base", "backend", "creative", "minimal", "professional", "startup"]
 
         return V1VariantsResponse(variants=variants)
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to retrieve variants: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to retrieve variants: {str(e)}"
+        )
+
 
 if __name__ == "__main__":
     import uvicorn
+
     # Use PORT environment variable if available (Cloud Run requirement), else default to 8000 to match frontend
     port = int(os.environ.get("PORT", 8000))
     print(f"Starting server on port {port}...")
