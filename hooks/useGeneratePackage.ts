@@ -14,12 +14,12 @@ function convertToResumeData(data: SimpleResumeData): ResumeData {
             phone: data.phone,
             url: undefined,
             summary: undefined,
-            label: data.role,
-            location: {
-                city: data.location,
-                region: undefined,
-                countryCode: undefined
-            }
+            label: data.role
+        },
+        location: {
+            city: data.location,
+            region: undefined,
+            countryCode: undefined
         },
         work: data.experience.map((exp) => ({
             company: exp.company,
