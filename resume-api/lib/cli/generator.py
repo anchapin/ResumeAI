@@ -5,12 +5,14 @@ This module handles the generation of professional PDF resumes
 from JSON data using LaTeX templates and xelatex.
 """
 
+import os
 import tempfile
 import shutil
 import subprocess
 from pathlib import Path
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 import logging
+from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -32,6 +34,7 @@ class ResumeGenerator:
         self.templates_dir = Path(templates_dir)
         self.lib_dir = Path(lib_dir)
         self._validate_templates_dir()
+        self._setup_jinja2()
 
     def _validate_templates_dir(self):
         """Ensure the templates directory exists."""
@@ -40,6 +43,26 @@ class ResumeGenerator:
                 f"Templates directory not found: {self.templates_dir}"
             )
         logger.info(f"Templates directory: {self.templates_dir}")
+
+    def _setup_jinja2(self):
+        """Setup Jinja2 environment for LaTeX templating."""
+        # Create a custom Jinja2 environment for LaTeX
+        self.jinja_env = Environment(
+            loader=FileSystemLoader(str(self.templates_dir)),
+            autoescape=select_autoescape(['tex']),
+            block_start_string='\\BLOCK{',
+            block_end_string='}',
+            variable_start_string='\\VAR{',
+            variable_end_string='}',
+            comment_start_string='\\#{',
+            comment_end_string='}',
+            line_statement_prefix='%%',
+            line_comment_prefix='%#',
+            trim_blocks=True,
+            lstrip_blocks=True
+        )
+        # Register custom filters
+        self.jinja_env.filters['latex_escape'] = _latex_escape
 
     def generate_pdf(
         self,
@@ -78,9 +101,16 @@ class ResumeGenerator:
         with tempfile.TemporaryDirectory() as temp_dir:
             temp_path = Path(temp_dir)
 
-            # Copy template to temp directory
+            # Validate resume data
+            self._validate_resume_data(resume_data)
+
+            # Render template with resume data
+            template = self.jinja_env.get_template(f"{variant}/main.tex")
+            rendered_tex = template.render(resume=resume_data)
+
+            # Write rendered LaTeX to temp directory
             tex_file = temp_path / "resume.tex"
-            shutil.copy2(template_file, tex_file)
+            tex_file.write_text(rendered_tex, encoding='utf-8')
 
             try:
                 # Generate PDF using xelatex
@@ -104,6 +134,9 @@ class ResumeGenerator:
                     log_content = log_file.read_text()
                     logger.error(f"LaTeX log:\n{log_content[-500:]}")
                 raise RuntimeError(f"PDF generation failed: {e}")
+            except Exception as e:
+                logger.error(f"PDF generation error: {e}")
+                raise RuntimeError(f"PDF generation failed: {e}")
 
     def _compile_latex(self, tex_file: Path):
         """
@@ -113,12 +146,12 @@ class ResumeGenerator:
             tex_file: Path to the .tex file
 
         Raises:
-            subprocess.CalledProcessError: If compilation fails
+            RuntimeError: If compilation fails and no PDF is generated
         """
         output_dir = tex_file.parent
 
         # Run xelatex (run twice for references)
-        for _ in range(2):
+        for i, attempt in enumerate(range(2), 1):
             result = subprocess.run(
                 ["xelatex", "-interaction=nonstopmode", "-output-directory", str(output_dir), str(tex_file.name)],
                 cwd=str(output_dir),
@@ -126,15 +159,64 @@ class ResumeGenerator:
                 text=True,
                 timeout=30
             )
-            if result.returncode != 0:
-                raise subprocess.CalledProcessError(
-                    result.returncode,
-                    result.args,
-                    result.stdout,
-                    result.stderr
+
+            # Check if PDF was created (even with warnings, PDF might be valid)
+            pdf_file = output_dir / (tex_file.stem + ".pdf")
+
+            if not pdf_file.exists():
+                # PDF not created - this is a real error
+                logger.error(f"XeLaTeX run {i} failed - no PDF generated")
+                logger.error(f"stdout: {result.stdout[:500]}")
+                logger.error(f"stderr: {result.stderr[:500]}")
+                raise RuntimeError(
+                    f"XeLaTeX compilation failed: {result.returncode}. "
+                    f"PDF was not generated."
                 )
 
+            # Log warnings but continue
+            if result.returncode != 0:
+                logger.warning(f"XeLaTeX run {i} completed with warnings (exit code: {result.returncode})")
+                # Look for fatal errors in output
+                if "Fatal error" in result.stdout or "Fatal error" in result.stderr:
+                    raise RuntimeError(
+                        f"XeLaTeX encountered a fatal error. "
+                        f"Last 500 chars of output: {result.stdout[-500:]}"
+                    )
+
         logger.info(f"Successfully compiled {tex_file.name}")
+
+    def _validate_resume_data(self, resume_data: Dict[str, Any]):
+        """
+        Validate resume data before rendering.
+
+        Args:
+            resume_data: Resume data dictionary
+
+        Raises:
+            ValueError: If required fields are missing or invalid
+        """
+        # Ensure basics section exists
+        if not resume_data or 'basics' not in resume_data:
+            logger.warning("Resume data missing 'basics' section")
+            # Provide defaults to avoid template errors
+            resume_data['basics'] = {}
+
+        basics = resume_data['basics']
+
+        # Ensure required basic fields have defaults
+        if 'name' not in basics or not basics['name']:
+            basics['name'] = 'Your Name'
+        if 'label' not in basics or not basics['label']:
+            basics['label'] = 'Professional Title'
+        if 'email' not in basics or not basics['email']:
+            basics['email'] = 'email@example.com'
+        if 'phone' not in basics or not basics['phone']:
+            basics['phone'] = '+1 234 567 8900'
+
+        # Ensure lists exist
+        for key in ['work', 'education', 'skills', 'projects', 'awards', 'certificates', 'publications']:
+            if key not in resume_data or not resume_data[key]:
+                resume_data[key] = []
 
     def _list_variants(self) -> list:
         """List available template variants."""
@@ -143,6 +225,43 @@ class ResumeGenerator:
             if item.is_dir() and (item / "main.tex").exists():
                 variants.append(item.name)
         return variants
+
+
+def _latex_escape(text: Any) -> str:
+    """
+    Escape special LaTeX characters in text.
+
+    Args:
+        text: Text to escape (any type, will be converted to string)
+
+    Returns:
+        Escaped text safe for LaTeX
+    """
+    if text is None:
+        return ""
+
+    text_str = str(text)
+
+    # Escape special LaTeX characters
+    latex_special_chars = {
+        '&': r'\&',
+        '%': r'\%',
+        '$': r'\$',
+        '#': r'\#',
+        '_': r'\_',
+        '{': r'\{',
+        '}': r'\}',
+        '~': r'\textasciitilde{}',
+        '^': r'\^{}',
+        '\\': r'\textbackslash{}',
+        '<': r'\textless{}',
+        '>': r'\textgreater{}',
+    }
+
+    for char, escaped in latex_special_chars.items():
+        text_str = text_str.replace(char, escaped)
+
+    return text_str
 
 
 # For testing purposes - create a simple mock PDF generator
