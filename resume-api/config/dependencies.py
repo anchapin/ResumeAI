@@ -46,15 +46,11 @@ async def verify_api_key(
 
     # Check master key first
     if settings.master_api_key and x_api_key == settings.master_api_key:
-        return APIKeyAuthInfo(
-            is_authorized=True, is_master=True, api_key=x_api_key
-        )
+        return APIKeyAuthInfo(is_authorized=True, is_master=True, api_key=x_api_key)
 
     # Check against allowed API keys
     if settings.api_keys and x_api_key in settings.api_keys:
-        return APIKeyAuthInfo(
-            is_authorized=True, is_master=False, api_key=x_api_key
-        )
+        return APIKeyAuthInfo(is_authorized=True, is_master=False, api_key=x_api_key)
 
     # Invalid key
     raise HTTPException(

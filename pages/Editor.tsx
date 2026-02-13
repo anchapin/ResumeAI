@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { ResumeData, WorkExperience } from '../types';
+import { SimpleResumeData, WorkExperience } from '../types';
 
 interface ExperienceItemProps {
     exp: WorkExperience;
@@ -139,8 +139,8 @@ const ExperienceItem = React.memo(({
 });
 
 interface EditorProps {
-  resumeData: ResumeData;
-  onUpdate: (data: ResumeData) => void;
+  resumeData: SimpleResumeData;
+  onUpdate: (data: SimpleResumeData) => void;
   onBack: () => void;
 }
 

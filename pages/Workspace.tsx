@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
-import { Route, ResumeData } from '../types';
-import { useGeneratePackage } from '../hooks/useGeneratePackage';
+import { Route, SimpleResumeData } from '../types';
+import { useGeneratePackage, convertToResumeData } from '../hooks/useGeneratePackage';
 
 interface WorkspaceProps {
-    resumeData: ResumeData;
+    resumeData: SimpleResumeData;
     onNavigate: (route: Route) => void;
 }
 
@@ -33,7 +33,7 @@ const Workspace: React.FC<WorkspaceProps> = ({ resumeData, onNavigate }) => {
 
         try {
             await generatePackage({
-                resume_data: resumeData,
+                resume_data: convertToResumeData(resumeData),
                 job_description: jobDescription,
                 company_name: companyName || undefined,
                 job_title: jobTitle || undefined
@@ -53,7 +53,7 @@ const Workspace: React.FC<WorkspaceProps> = ({ resumeData, onNavigate }) => {
 
         try {
             await downloadPDF({
-                resume_data: resumeData,
+                resume_data: convertToResumeData(resumeData),
                 variant: variant
             });
         } catch (e) {
@@ -63,8 +63,20 @@ const Workspace: React.FC<WorkspaceProps> = ({ resumeData, onNavigate }) => {
     };
 
     const renderPreviewContent = () => {
-        if (!data) return null;
+        if (!data) {
+            // No API data yet, display local resumeData
+            return (
+                <div className="w-full max-w-[800px] bg-white shadow-2xl rounded-sm p-12 min-h-[1000px] animate-in fade-in duration-500">
+                    <div className="markdown-content">
+                        <h2 className="text-xl font-bold mb-4">{resumeData.name || 'Resume'}</h2>
+                        <p className="text-gray-600 mb-6">{resumeData.role || 'Professional'}</p>
+                        <pre className="whitespace-pre-wrap text-sm">{JSON.stringify(resumeData, null, 2)}</pre>
+                    </div>
+                </div>
+            );
+        }
 
+        // API data available, display the tailored resume
         switch (activeTab) {
             case 'Resume':
                 return (
