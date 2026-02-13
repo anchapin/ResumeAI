@@ -18,12 +18,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-
-      - name: Clean npm cache
-        run: rm -rf ~/.npm || true
+          cache: 'npm'
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
       - name: Run tests
         run: npm run test -- --run --reporter=verbose --exclude="utils/storage.test.ts" || true
@@ -48,6 +46,7 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+          cache: 'pip'
 
       - name: Install dependencies
         working-directory: ./resume-api

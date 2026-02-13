@@ -37,12 +37,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-
-      - name: Clean npm cache
-        run: rm -rf ~/.npm || true
+          cache: 'npm'
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
       - name: Run tests
         run: npm run test -- --run --reporter=verbose --exclude="utils/storage.test.ts" || true
@@ -63,12 +61,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-
-      - name: Clean npm cache
-        run: rm -rf ~/.npm || true
+          cache: 'npm'
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
       - name: Build production bundle
         run: npm run build
