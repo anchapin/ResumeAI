@@ -1,6 +1,6 @@
-import { ResumeData } from '../types';
-
 const STORAGE_KEY = 'resumeai_master_profile';
+
+type StoredResumeData = Record<string, unknown>;
 
 /**
  * Error types for storage operations
@@ -51,7 +51,7 @@ function isStorageAvailable(): boolean {
  * @param data - The resume data to save
  * @throws StorageError if saving fails
  */
-export function saveResumeData(data: ResumeData): void {
+export function saveResumeData(data: StoredResumeData): void {
   if (!isStorageAvailable()) {
     throw new StorageError(
       'localStorage is not available in this environment',
@@ -92,7 +92,7 @@ export function saveResumeData(data: ResumeData): void {
  * @returns The saved resume data, or null if no data exists
  * @throws StorageError if loading fails
  */
-export function loadResumeData(): ResumeData | null {
+export function loadResumeData(): StoredResumeData | null {
   if (!isStorageAvailable()) {
     throw new StorageError(
       'localStorage is not available in this environment',
@@ -107,20 +107,12 @@ export function loadResumeData(): ResumeData | null {
       return null;
     }
 
-    const data = JSON.parse(serialized) as ResumeData;
+    const data = JSON.parse(serialized) as StoredResumeData;
 
     // Basic validation to ensure the loaded data has expected structure
     if (!data || typeof data !== 'object') {
       throw new StorageError(
         'Invalid resume data structure',
-        StorageErrorType.PARSE_ERROR
-      );
-    }
-
-    // Ensure required fields exist
-    if (!data.name || !data.email || !Array.isArray(data.experience)) {
-      throw new StorageError(
-        'Invalid resume data: missing required fields',
         StorageErrorType.PARSE_ERROR
       );
     }

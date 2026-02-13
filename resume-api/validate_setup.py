@@ -25,7 +25,7 @@ def check_directory_structure():
         "lib/utils",
         "templates",
         "templates/base",
-        "config"
+        "config",
     ]
 
     for dir_path in required_dirs:
@@ -49,7 +49,7 @@ def check_vendored_code():
         "lib/cli/variants.py",
         "lib/utils/__init__.py",
         "lib/utils/ai.py",
-        "lib/__init__.py"
+        "lib/__init__.py",
     ]
 
     for file_path in required_files:
@@ -66,12 +66,7 @@ def check_requirements():
     """Check if requirements.txt contains necessary dependencies."""
     print("\nChecking requirements.txt...")
 
-    required_packages = [
-        "fastapi",
-        "uvicorn",
-        "pydantic",
-        "PyYAML"
-    ]
+    required_packages = ["fastapi", "uvicorn", "pydantic", "PyYAML"]
 
     requirements_path = Path("requirements.txt")
     if not requirements_path.exists():
@@ -100,18 +95,22 @@ def check_imports():
 
         # Import the API router
         from api import router
+
         print("  [OK] API router imported successfully")
 
         # Import models
         from api.models import ResumeRequest, TailorRequest, VariantsResponse
+
         print("  [OK] API models imported successfully")
 
         # Import library components
         from lib.cli import ResumeGenerator, ResumeTailorer, VariantManager
+
         print("  [OK] Library CLI components imported successfully")
 
         # Import main app
         import main
+
         print("  [OK] Main FastAPI app imported successfully")
 
         return True
@@ -119,6 +118,7 @@ def check_imports():
     except Exception as e:
         print(f"  [FAIL] Import error: {e}")
         import traceback
+
         traceback.print_exc()
         return False
 
@@ -127,10 +127,7 @@ def check_templates():
     """Check if templates exist."""
     print("\nChecking templates...")
 
-    template_files = [
-        "templates/base/main.tex",
-        "templates/base/metadata.yaml"
-    ]
+    template_files = ["templates/base/main.tex", "templates/base/metadata.yaml"]
 
     for file_path in template_files:
         full_path = Path(file_path)
@@ -153,7 +150,7 @@ def main():
         check_vendored_code,
         check_requirements,
         check_imports,
-        check_templates
+        check_templates,
     ]
 
     results = []

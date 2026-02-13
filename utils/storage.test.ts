@@ -4,10 +4,10 @@
  */
 
 import { saveResumeData, loadResumeData, clearResumeData, hasSavedResumeData, getStoredDataSize } from './storage';
-import { ResumeData } from '../types';
+import { SimpleResumeData } from '../types';
 
 // Test data
-const testResumeData: ResumeData = {
+const testResumeData: SimpleResumeData = {
   name: "Test User",
   email: "test@example.com",
   phone: "+1 (555) 123-4567",

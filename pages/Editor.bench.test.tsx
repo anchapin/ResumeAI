@@ -2,10 +2,10 @@ import { describe, it, vi } from 'vitest';
 import { render, screen, fireEvent, act } from '@testing-library/react';
 import React, { useState } from 'react';
 import Editor from './Editor';
-import { ResumeData, WorkExperience } from '../types';
+import { SimpleResumeData, WorkExperience } from '../types';
 
 // Mock data generator
-const generateLargeResumeData = (count: number): ResumeData => {
+const generateLargeResumeData = (count: number): SimpleResumeData => {
   const experiences: WorkExperience[] = Array.from({ length: count }, (_, i) => ({
     id: `exp-${i}`,
     company: `Company ${i}`,

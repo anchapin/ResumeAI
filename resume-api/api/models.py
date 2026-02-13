@@ -9,6 +9,7 @@ from pydantic import BaseModel, Field
 # Basic info models
 class BasicInfo(BaseModel):
     """Basic contact information."""
+
     name: Optional[str] = None
     label: Optional[str] = None
     email: Optional[str] = None
@@ -19,6 +20,7 @@ class BasicInfo(BaseModel):
 
 class Location(BaseModel):
     """Location information."""
+
     address: Optional[str] = None
     postalCode: Optional[str] = None
     city: Optional[str] = None
@@ -28,6 +30,7 @@ class Location(BaseModel):
 
 class Profile(BaseModel):
     """Social media profiles."""
+
     network: Optional[str] = None
     username: Optional[str] = None
     url: Optional[str] = None
@@ -35,12 +38,14 @@ class Profile(BaseModel):
 
 class Skill(BaseModel):
     """Skill information."""
+
     name: Optional[str] = None
     keywords: Optional[List[str]] = Field(default_factory=list)
 
 
 class WorkItem(BaseModel):
     """Work experience item."""
+
     company: Optional[str] = None
     position: Optional[str] = None
     startDate: Optional[str] = None
@@ -51,6 +56,7 @@ class WorkItem(BaseModel):
 
 class EducationItem(BaseModel):
     """Education item."""
+
     institution: Optional[str] = None
     area: Optional[str] = None
     studyType: Optional[str] = None
@@ -61,6 +67,7 @@ class EducationItem(BaseModel):
 
 class ProjectItem(BaseModel):
     """Project item."""
+
     name: Optional[str] = None
     description: Optional[str] = None
     url: Optional[str] = None
@@ -72,6 +79,7 @@ class ProjectItem(BaseModel):
 
 class ResumeData(BaseModel):
     """Complete resume data structure (JSON Resume standard)."""
+
     basics: Optional[BasicInfo] = None
     location: Optional[Location] = None
     profiles: Optional[List[Profile]] = Field(default_factory=list)
@@ -93,38 +101,27 @@ class ResumeData(BaseModel):
 
 class ResumeRequest(BaseModel):
     """Request to generate a PDF resume."""
+
     resume_data: ResumeData = Field(
-        ...,
-        description="Resume data in JSON Resume format"
+        ..., description="Resume data in JSON Resume format"
     )
-    variant: str = Field(
-        default="base",
-        description="Template variant to use"
-    )
+    variant: str = Field(default="base", description="Template variant to use")
 
 
 class TailorRequest(BaseModel):
     """Request to tailor a resume to a job description."""
-    resume_data: ResumeData = Field(
-        ...,
-        description="Original resume data"
-    )
-    job_description: str = Field(
-        ...,
-        description="Job description text"
-    )
+
+    resume_data: ResumeData = Field(..., description="Original resume data")
+    job_description: str = Field(..., description="Job description text")
     company_name: Optional[str] = Field(
-        None,
-        description="Company name for personalization"
+        None, description="Company name for personalization"
     )
-    job_title: Optional[str] = Field(
-        None,
-        description="Job title for personalization"
-    )
+    job_title: Optional[str] = Field(None, description="Job title for personalization")
 
 
 class VariantMetadata(BaseModel):
     """Metadata for a resume variant."""
+
     name: str
     display_name: str
     description: str
@@ -134,11 +131,13 @@ class VariantMetadata(BaseModel):
 
 class VariantsResponse(BaseModel):
     """Response listing available variants."""
+
     variants: List[VariantMetadata]
 
 
 class TailoredResumeResponse(BaseModel):
     """Response with tailored resume data."""
+
     resume_data: ResumeData
     keywords: List[str]
     suggestions: Optional[Dict[str, Any]] = None
@@ -146,6 +145,7 @@ class TailoredResumeResponse(BaseModel):
 
 class HealthResponse(BaseModel):
     """Health check response."""
+
     status: str
     version: str
 
@@ -155,5 +155,6 @@ class HealthResponse(BaseModel):
 
 class ErrorResponse(BaseModel):
     """Error response."""
+
     error: str
     detail: Optional[str] = None

@@ -5,10 +5,10 @@ import Editor from './pages/Editor';
 import Workspace from './pages/Workspace';
 import JobApplications from './pages/JobApplications';
 import Settings from './pages/Settings';
-import { Route, ResumeData } from './types';
+import { Route, SimpleResumeData } from './types';
 import { loadResumeData, saveResumeData, StorageError } from './utils/storage';
 
-const initialResumeData: ResumeData = {
+const initialResumeData: SimpleResumeData = {
   name: "Alex Rivera",
   email: "alex.rivera@example.com",
   phone: "+1 (555) 012-3456",
@@ -40,7 +40,7 @@ const initialResumeData: ResumeData = {
 
 function App() {
   const [currentRoute, setCurrentRoute] = useState<Route>(Route.DASHBOARD);
-  const [resumeData, setResumeData] = useState<ResumeData>(initialResumeData);
+  const [resumeData, setResumeData] = useState<SimpleResumeData>(initialResumeData);
   const [isLoaded, setIsLoaded] = useState(false);
   const [storageError, setStorageError] = useState<string | null>(null);
 
@@ -116,7 +116,7 @@ function App() {
    * This is mainly for type consistency, but could be extended
    * with additional logic in the future.
    */
-  const handleUpdateResumeData = useCallback((newData: ResumeData | ((prev: ResumeData) => ResumeData)) => {
+  const handleUpdateResumeData = useCallback((newData: SimpleResumeData | ((prev: SimpleResumeData) => SimpleResumeData)) => {
     setResumeData(newData);
   }, []);
 
