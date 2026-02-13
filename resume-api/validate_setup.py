@@ -9,7 +9,6 @@ This script verifies that:
 4. FastAPI app runs without import errors
 """
 
-import os
 import sys
 from pathlib import Path
 
@@ -94,22 +93,30 @@ def check_imports():
         sys.path.insert(0, str(Path.cwd()))
 
         # Import the API router
-        from api import router
+        from api import router  # noqa: F401
 
         print("  [OK] API router imported successfully")
 
         # Import models
-        from api.models import ResumeRequest, TailorRequest, VariantsResponse
+        from api.models import (  # noqa: F401
+            ResumeRequest,
+            TailorRequest,
+            VariantsResponse,
+        )
 
         print("  [OK] API models imported successfully")
 
         # Import library components
-        from lib.cli import ResumeGenerator, ResumeTailorer, VariantManager
+        from lib.cli import (  # noqa: F401
+            ResumeGenerator,
+            ResumeTailorer,
+            VariantManager,
+        )
 
         print("  [OK] Library CLI components imported successfully")
 
         # Import main app
-        import main
+        import main  # noqa: F401
 
         print("  [OK] Main FastAPI app imported successfully")
 

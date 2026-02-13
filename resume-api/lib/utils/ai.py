@@ -7,7 +7,7 @@ including keyword extraction and improvement suggestions.
 
 import logging
 import re
-from typing import Dict, Any, List, Optional, Protocol
+from typing import Dict, Any, List, Optional
 from abc import ABC, abstractmethod
 
 logging.basicConfig(level=logging.INFO)

@@ -8,7 +8,7 @@ metadata retrieval, and validation.
 import yaml
 import logging
 from pathlib import Path
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

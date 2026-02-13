@@ -5,12 +5,11 @@ This module handles the generation of professional PDF resumes
 from JSON data using LaTeX templates and xelatex.
 """
 
-import os
 import tempfile
 import shutil
 import subprocess
 from pathlib import Path
-from typing import Dict, Any, Optional
+from typing import Dict, Any
 import logging
 
 logging.basicConfig(level=logging.INFO)

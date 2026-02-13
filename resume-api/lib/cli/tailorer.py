@@ -5,7 +5,6 @@ This module provides functionality to tailor resumes to specific
 job descriptions using AI providers (OpenAI, Anthropic, Google).
 """
 
-import os
 import logging
 from typing import Dict, Any, List, Optional
 

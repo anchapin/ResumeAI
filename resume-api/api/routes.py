@@ -2,6 +2,7 @@
 FastAPI routes for Resume API.
 """
 
+import os
 import sys
 from pathlib import Path
 
