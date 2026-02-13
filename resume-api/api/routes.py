@@ -48,6 +48,7 @@ def rate_limit(limit_value: str):
         # Return identity decorator (no-op)
         return lambda f: f
 
+
 # Configure logging
 logger = logging.getLogger(__name__)
 
@@ -208,9 +209,9 @@ async def tailor_resume(request: Request, body: TailorRequest, auth: AuthorizedA
     responses={
         200: {"description": "List of variants"},
         429: {"model": ErrorResponse},
-        500: {"model": ErrorResponse}
+        500: {"model": ErrorResponse},
     },
-    tags=["Variants"]
+    tags=["Variants"],
 )
 @rate_limit(settings.rate_limit_variants)
 async def list_variants(request: Request):

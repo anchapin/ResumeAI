@@ -81,15 +81,11 @@ async def verify_api_key(
 
     # Check master key first
     if settings.master_api_key and x_api_key == settings.master_api_key:
-        return APIKeyAuthInfo(
-            is_authorized=True, is_master=True, api_key=x_api_key
-        )
+        return APIKeyAuthInfo(is_authorized=True, is_master=True, api_key=x_api_key)
 
     # Check against allowed API keys
     if settings.api_keys and x_api_key in settings.api_keys:
-        return APIKeyAuthInfo(
-            is_authorized=True, is_master=False, api_key=x_api_key
-        )
+        return APIKeyAuthInfo(is_authorized=True, is_master=False, api_key=x_api_key)
 
     # Invalid key
     raise HTTPException(
@@ -145,8 +141,7 @@ async def rate_limit_exceeded_handler(request: Request, exc: RateLimitExceeded):
     # Log the rate limit violation
     identifier = get_api_key_identifier(request)
     logger.warning(
-        f"Rate limit exceeded for {identifier} on {request.url.path}: "
-        f"{exc.detail}"
+        f"Rate limit exceeded for {identifier} on {request.url.path}: " f"{exc.detail}"
     )
 
     # Extract limit info from the exception
@@ -157,7 +152,5 @@ async def rate_limit_exceeded_handler(request: Request, exc: RateLimitExceeded):
     return JSONResponse(
         status_code=status.HTTP_429_TOO_MANY_REQUESTS,
         content={"detail": detail_str},
-        headers={
-            "Retry-After": "60"
-        }
+        headers={"Retry-After": "60"},
     )

@@ -38,7 +38,9 @@ class Settings(BaseSettings):
     # API Authentication
     require_api_key: bool = True
     master_api_key: Optional[str] = None
-    api_keys: Optional[list[str]] = None  # List of API keys (parsed from comma-separated env)
+    api_keys: Optional[list[str]] = (
+        None  # List of API keys (parsed from comma-separated env)
+    )
 
     # CORS Configuration
     cors_origins: list[str] = ["*"]
