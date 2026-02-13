@@ -23,9 +23,9 @@ from .models import (
 lib_path = Path(__file__).parent.parent
 sys.path.insert(0, str(lib_path))
 
-from lib.cli import ResumeGenerator, ResumeTailorer, VariantManager
+from lib.cli import ResumeGenerator, ResumeTailorer, VariantManager  # noqa: E402
 
-from config.dependencies import AuthorizedAPIKey
+from config.dependencies import AuthorizedAPIKey  # noqa: E402
 
 # Initialize components
 LIB_DIR = Path(__file__).parent.parent

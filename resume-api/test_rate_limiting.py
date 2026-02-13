@@ -11,8 +11,6 @@ Tests various scenarios:
 
 import asyncio
 import httpx
-import time
-from typing import Dict, Any
 
 
 # Test configuration
