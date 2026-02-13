@@ -40,7 +40,7 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install
 
       - name: Run tests
         run: npm run test -- --run --reporter=verbose --exclude="utils/storage.test.ts" || true
@@ -64,7 +64,7 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install
 
       - name: Build production bundle
         run: npm run build
