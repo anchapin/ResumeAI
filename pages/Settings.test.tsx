@@ -96,8 +96,8 @@ describe('Settings Component', () => {
 
     it('renders First Name input with default value "Alex"', () => {
       render(<Settings />);
-      const inputs = screen.getAllByRole('textbox');
-      const firstNameInput = inputs.find(input => input.value === 'Alex') as HTMLInputElement;
+      const inputs = screen.getAllByRole('textbox') as HTMLInputElement[];
+      const firstNameInput = inputs.find(input => input.value === 'Alex');
 
       expect(firstNameInput).toBeInTheDocument();
       expect(firstNameInput).toHaveValue('Alex');
@@ -106,8 +106,8 @@ describe('Settings Component', () => {
 
     it('renders Last Name input with default value "Rivera"', () => {
       render(<Settings />);
-      const inputs = screen.getAllByRole('textbox');
-      const lastNameInput = inputs.find(input => input.value === 'Rivera') as HTMLInputElement;
+      const inputs = screen.getAllByRole('textbox') as HTMLInputElement[];
+      const lastNameInput = inputs.find(input => input.value === 'Rivera');
 
       expect(lastNameInput).toBeInTheDocument();
       expect(lastNameInput).toHaveValue('Rivera');
@@ -116,8 +116,8 @@ describe('Settings Component', () => {
 
     it('renders Email Address input with default value', () => {
       render(<Settings />);
-      const inputs = screen.getAllByRole('textbox');
-      const emailInput = inputs.find(input => input.value === 'alex.rivera@example.com') as HTMLInputElement;
+      const inputs = screen.getAllByRole('textbox') as HTMLInputElement[];
+      const emailInput = inputs.find(input => input.value === 'alex.rivera@example.com');
 
       expect(emailInput).toBeInTheDocument();
       expect(emailInput).toHaveValue('alex.rivera@example.com');
@@ -141,7 +141,7 @@ describe('Settings Component', () => {
 
     it('all profile inputs have correct styling classes', () => {
       render(<Settings />);
-      const inputs = screen.getAllByRole('textbox');
+      const inputs = screen.getAllByRole('textbox') as HTMLInputElement[];
       expect(inputs.length).toBeGreaterThanOrEqual(3);
 
       inputs.slice(0, 3).forEach(input => {
@@ -161,8 +161,8 @@ describe('Settings Component', () => {
     it('allows typing in First Name input', async () => {
       const user = userEvent.setup();
       render(<Settings />);
-      const inputs = screen.getAllByRole('textbox');
-      const firstNameInput = inputs.find(input => input.value === 'Alex') as HTMLInputElement;
+      const inputs = screen.getAllByRole('textbox') as HTMLInputElement[];
+      const firstNameInput = inputs.find(input => input.value === 'Alex');
 
       await user.clear(firstNameInput);
       await user.type(firstNameInput, 'John');
@@ -173,8 +173,8 @@ describe('Settings Component', () => {
     it('allows typing in Last Name input', async () => {
       const user = userEvent.setup();
       render(<Settings />);
-      const inputs = screen.getAllByRole('textbox');
-      const lastNameInput = inputs.find(input => input.value === 'Rivera') as HTMLInputElement;
+      const inputs = screen.getAllByRole('textbox') as HTMLInputElement[];
+      const lastNameInput = inputs.find(input => input.value === 'Rivera');
 
       await user.clear(lastNameInput);
       await user.type(lastNameInput, 'Doe');
@@ -185,8 +185,8 @@ describe('Settings Component', () => {
     it('allows typing in Email input', async () => {
       const user = userEvent.setup();
       render(<Settings />);
-      const inputs = screen.getAllByRole('textbox');
-      const emailInput = inputs.find(input => input.value === 'alex.rivera@example.com') as HTMLInputElement;
+      const inputs = screen.getAllByRole('textbox') as HTMLInputElement[];
+      const emailInput = inputs.find(input => input.value === 'alex.rivera@example.com');
 
       await user.clear(emailInput);
       await user.type(emailInput, 'john.doe@example.com');
@@ -442,7 +442,7 @@ describe('Settings Component', () => {
       expect(emailLabel).toBeInTheDocument();
 
       // Verify inputs exist by finding them with their default values
-      const inputs = screen.getAllByRole('textbox');
+      const inputs = screen.getAllByRole('textbox') as HTMLInputElement[];
       const firstNameInput = inputs.find(input => input.value === 'Alex');
       const lastNameInput = inputs.find(input => input.value === 'Rivera');
       const emailInput = inputs.find(input => input.value === 'alex.rivera@example.com');
@@ -517,7 +517,7 @@ describe('Settings Component', () => {
     it('profile form has consistent default values', () => {
       render(<Settings />);
 
-      const inputs = screen.getAllByRole('textbox');
+      const inputs = screen.getAllByRole('textbox') as HTMLInputElement[];
       const firstNameInput = inputs.find(input => input.value === 'Alex');
       const lastNameInput = inputs.find(input => input.value === 'Rivera');
       const emailInput = inputs.find(input => input.value === 'alex.rivera@example.com');
@@ -556,7 +556,7 @@ describe('Settings Component', () => {
 
     it('form inputs maintain responsive sizing', () => {
       render(<Settings />);
-      const inputs = screen.getAllByRole('textbox');
+      const inputs = screen.getAllByRole('textbox') as HTMLInputElement[];
 
       inputs.slice(0, 3).forEach(input => {
         expect(input).toHaveClass('w-full');
