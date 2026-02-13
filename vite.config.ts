@@ -12,6 +12,22 @@ export default defineConfig(({ mode }) => {
       test: {
         environment: 'jsdom',
         globals: true,
+        setupFiles: './vitest.setup.ts',
+        coverage: {
+          provider: 'v8',
+          reporter: ['text', 'json', 'html'],
+          exclude: [
+            'node_modules/',
+            'tests/',
+            '**/*.test.{ts,tsx}',
+            '**/*.bench.test.{ts,tsx}',
+            '**/dist/',
+            '**/build/',
+            '**/coverage/',
+            'vitest.config.ts',
+            'vite.config.ts',
+          ],
+        },
       },
       plugins: [react()],
       define: {
