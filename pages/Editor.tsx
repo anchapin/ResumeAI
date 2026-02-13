@@ -1,14 +1,14 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { ResumeData, WorkItem } from '../types';
+import { SimpleResumeData, WorkExperience } from '../types';
 
 interface ExperienceItemProps {
-    exp: WorkItem;
+    exp: WorkExperience;
     isExpanded: boolean;
-    onToggleExpand: (index: number) => void;
-    onDelete: (index: number) => void;
-    onUpdate: (index: number, field: keyof WorkItem, value: any) => void;
-    onAddHighlight: (index: number, highlight: string) => void;
-    onRemoveHighlight: (index: number, highlight: string) => void;
+    onToggleExpand: (id: string) => void;
+    onDelete: (id: string) => void;
+    onUpdate: (id: string, field: keyof WorkExperience, value: any) => void;
+    onAddTag: (id: string, tag: string) => void;
+    onRemoveTag: (id: string, tag: string) => void;
 }
 
 const ExperienceItem = React.memo(({
@@ -27,13 +27,13 @@ const ExperienceItem = React.memo(({
             }`}
         >
             {/* Card Header */}
-            <div className="p-6 flex items-start justify-between cursor-pointer" onClick={() => onToggleExpand(exp.position || ''')}>
+            <div className="p-6 flex items-start justify-between cursor-pointer" onClick={() => onToggleExpand(exp.id)}>
                 <div className="flex items-center gap-4">
                     <button className={`p-1 rounded-full transition-transform duration-200 ${isExpanded ? 'rotate-180 bg-slate-100 text-slate-900' : 'text-slate-400'}`}>
                         <span className="material-symbols-outlined">expand_more</span>
                     </button>
                     <div>
-                        <h3 className="font-bold text-slate-900 text-lg">{exp.position}</h3>
+                        <h3 className="font-bold text-slate-900 text-lg">{exp.role}</h3>
                         <p className="text-sm text-slate-500 font-medium">{exp.company} | {exp.startDate} - {exp.endDate}</p>
                     </div>
                 </div>
@@ -42,7 +42,7 @@ const ExperienceItem = React.memo(({
                         <span className="material-symbols-outlined text-[20px]">edit</span>
                      </button>
                      <button
-                        onClick={(e) => { e.stopPropagation(); onDelete(exp.position || '''); }}
+                        onClick={(e) => { e.stopPropagation(); onDelete(exp.id); }}
                         className="p-2 text-slate-400 hover:bg-red-50 hover:text-red-500 rounded-lg"
                      >
                         <span className="material-symbols-outlined text-[20px]">delete</span>
@@ -59,7 +59,7 @@ const ExperienceItem = React.memo(({
                             <input
                                 type="text"
                                 value={exp.company}
-                                onChange={(e) => onUpdate(exp.position || ''', 'company', e.target.value)}
+                                onChange={(e) => onUpdate(exp.id, 'company', e.target.value)}
                                 className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all text-slate-900"
                             />
                         </div>
@@ -67,8 +67,8 @@ const ExperienceItem = React.memo(({
                             <label className="text-sm font-bold text-slate-700">Job Title</label>
                             <input
                                 type="text"
-                                value={exp.position}
-                                onChange={(e) => onUpdate(exp.position || ''', 'role', e.target.value)}
+                                value={exp.role}
+                                onChange={(e) => onUpdate(exp.id, 'role', e.target.value)}
                                 className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all text-slate-900"
                             />
                         </div>
@@ -77,7 +77,7 @@ const ExperienceItem = React.memo(({
                             <input
                                 type="text"
                                 value={exp.startDate}
-                                onChange={(e) => onUpdate(exp.position || ''', 'startDate', e.target.value)}
+                                onChange={(e) => onUpdate(exp.id, 'startDate', e.target.value)}
                                 className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all text-slate-900"
                             />
                         </div>
@@ -86,7 +86,7 @@ const ExperienceItem = React.memo(({
                             <input
                                 type="text"
                                 value={exp.endDate}
-                                onChange={(e) => onUpdate(exp.position || ''', 'endDate', e.target.value)}
+                                onChange={(e) => onUpdate(exp.id, 'endDate', e.target.value)}
                                 className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all text-slate-900"
                             />
                         </div>
@@ -96,18 +96,18 @@ const ExperienceItem = React.memo(({
                         <label className="text-sm font-bold text-slate-700">Achievements & Responsibilities</label>
                         <div className="bg-slate-50 border border-dashed border-slate-300 rounded-xl p-4">
                             <textarea
-                                value={exp.summary}
-                                onChange={(e) => onUpdate(exp.position || ''', 'description', e.target.value)}
+                                value={exp.description}
+                                onChange={(e) => onUpdate(exp.id, 'description', e.target.value)}
                                 className="w-full bg-transparent border-none focus:ring-0 p-0 text-sm text-slate-700 resize-none h-20 placeholder-slate-400"
                                 placeholder="Describe your achievements..."
                             />
                             <div className="flex flex-wrap items-center gap-2 mt-2 pt-2 border-t border-slate-200">
-                                <span className="text-xs font-bold text-slate-400 uppercase tracking-wide">Highlights:</span>
-                                {exp.highlights?.map(tag => (
+                                <span className="text-xs font-bold text-slate-400 uppercase tracking-wide">Tags:</span>
+                                {exp.tags.map(tag => (
                                     <span key={tag} className="inline-flex items-center gap-1 px-2.5 py-1 bg-primary-50 text-primary-700 rounded-md text-xs font-bold border border-primary-100">
                                         {tag}
                                         <button
-                                            onClick={() => onRemoveHighlight(exp.position || ''', tag)}
+                                            onClick={() => onRemoveTag(exp.id, tag)}
                                             className="hover:text-primary-900"
                                         >
                                             <span className="material-symbols-outlined text-[14px]">close</span>
@@ -116,7 +116,7 @@ const ExperienceItem = React.memo(({
                                 ))}
                                 <input
                                     type="text"
-                                    placeholder="+ Add Highlight"
+                                    placeholder="+ Add Skill"
                                     className="bg-transparent text-xs p-1 focus:ring-0 border-none w-24 placeholder-slate-400"
                                     onKeyDown={(e) => {
                                         if(e.key === 'Enter') {
@@ -139,8 +139,8 @@ const ExperienceItem = React.memo(({
 });
 
 interface EditorProps {
-  resumeData: ResumeData;
-  onUpdate: (data: ResumeData) => void;
+  resumeData: SimpleResumeData;
+  onUpdate: (data: SimpleResumeData) => void;
   onBack: () => void;
 }
 
@@ -169,8 +169,8 @@ function getTimeSince(date: Date): string {
 }
 
 const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, onBack }) => {
-  const work = resumeData.work || [];
-  const [expandedId, setExpandedId] = useState<string | null>(work.length > 0 ? work[0].position : null);
+  const experiences = resumeData.experience;
+  const [expandedId, setExpandedId] = useState<string | null>(experiences.length > 0 ? experiences[0].id : null);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
 
   // Track when data is saved (after a short debounce)
@@ -188,13 +188,13 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, onBack }) => {
     resumeDataRef.current = resumeData;
   }, [resumeData]);
 
-  const handleDelete = useCallback((index: number) => {
+  const handleDelete = useCallback((id: string) => {
     const currentData = resumeDataRef.current;
-    const newWork = (currentData.work || []).filter((_, i) => i !== index);
-    onUpdate({ ...currentData, work: newWork });
+    const newExperiences = currentData.experience.filter(exp => exp.id !== id);
+    onUpdate({ ...currentData, experience: newExperiences });
   }, [onUpdate]);
 
-  const handleToggleExpand = useCallback((index: number) => {
+  const handleToggleExpand = useCallback((id: string) => {
     // This depends on expandedId which is local state.
     // However, setExpandedId uses functional update or current state.
     // We can use functional update if we needed, but we toggle based on id.
@@ -203,19 +203,19 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, onBack }) => {
     setExpandedId(prev => prev === id ? null : id);
   }, []);
 
-  const updateWorkItem = useCallback((index: number, field: keyof WorkItem, value: any) => {
+  const updateExperience = useCallback((id: string, field: keyof WorkExperience, value: any) => {
     const currentData = resumeDataRef.current;
-    const newWork = (currentData.work || []).map((item, i) =>
-      i === index ? { ...item, [field]: value } : exp
+    const newExperiences = currentData.experience.map(exp =>
+      exp.id === id ? { ...exp, [field]: value } : exp
     );
-    onUpdate({ ...currentData, work: newWork });
+    onUpdate({ ...currentData, experience: newExperiences });
   }, [onUpdate]);
 
-  const addHighlight = useCallback((index: number, highlight: string) => {
+  const addTag = useCallback((id: string, tag: string) => {
       if(!tag.trim()) return;
       const currentData = resumeDataRef.current;
-      const item = currentData.work?.[index];
-      if(item && (!item.highlights || !item.highlights.includes(highlight))) {
+      const exp = currentData.experience.find(e => e.id === id);
+      if(exp && !exp.tags.includes(tag)) {
           // Logic duplicated from updateExperience to avoid dependency or closure issues, or we could call updateExperience if we are careful.
           // Calling updateExperience inside here is fine if updateExperience is in scope.
           // But updateExperience is defined in the same scope.
@@ -225,21 +225,21 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, onBack }) => {
           // But adding it to dependency array makes addTag depend on it.
           // Since updateExperience is stable (only depends on onUpdate), it is fine.
           // However, simpler to just implement the logic directly using the ref.
-          const newWork = (currentData.work || []).map((w, i) =>
-            i === index ? { ...w, highlights: [...(w.highlights || []), highlight]} } : e
+          const newExperiences = currentData.experience.map(e =>
+            e.id === id ? { ...e, tags: [...e.tags, tag] } : e
           );
-          onUpdate({ ...currentData, work: newWork });
+          onUpdate({ ...currentData, experience: newExperiences });
       }
   }, [onUpdate]);
 
-  const removeHighlight = useCallback((index: number, highlight: string) => {
+  const removeTag = useCallback((id: string, tag: string) => {
       const currentData = resumeDataRef.current;
-      const item = currentData.work?.[index];
+      const exp = currentData.experience.find(e => e.id === id);
       if(exp) {
-          const newWork = (currentData.work || []).map((w, i) =>
-            i === index ? { ...w, highlights: w.highlights.filter(h => h !== highlight)} } : e
+          const newExperiences = currentData.experience.map(e =>
+            e.id === id ? { ...e, tags: e.tags.filter(t => t !== tag) } : e
           );
-          onUpdate({ ...currentData, work: newWork });
+          onUpdate({ ...currentData, experience: newExperiences });
       }
   }, [onUpdate]);
 
@@ -316,19 +316,19 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, onBack }) => {
             <div className="space-y-6 pb-20">
                 <div className="flex justify-between items-center">
                     <h2 className="text-2xl font-bold text-slate-900">Work Experience</h2>
-                    <span className="text-sm font-medium text-slate-500">{work.length} positions listed</span>
+                    <span className="text-sm font-medium text-slate-500">{experiences.length} positions listed</span>
                 </div>
 
-                {work.map((exp, index) => (
+                {experiences.map((exp) => (
                     <ExperienceItem
-                        key={index}
+                        key={exp.id}
                         exp={exp}
-                        isExpanded={expandedId === exp.position}
-                        onToggleExpand={() => handleToggleExpand(index)}
-                        onDelete={() => handleDelete(index)}
-                        onUpdate={(field, value) => updateWorkItem(index, field, value)}
-                        onAddHighlight={(highlight) => addHighlight(index, highlight)}
-                        onRemoveHighlight={(highlight) => removeHighlight(index, highlight)}
+                        isExpanded={expandedId === exp.id}
+                        onToggleExpand={handleToggleExpand}
+                        onDelete={handleDelete}
+                        onUpdate={updateExperience}
+                        onAddTag={addTag}
+                        onRemoveTag={removeTag}
                     />
                 ))}
 
@@ -336,18 +336,18 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, onBack }) => {
                     onClick={() => {
                         const newId = Date.now().toString();
                         const currentData = resumeDataRef.current;
-                        const newWork = [...(currentData.work || []), {
-                            position: 'New Role',
+                        const newExperiences = [...currentData.experience, {
+                            id: newId,
                             company: 'New Company',
-                            company: 'New Company',
+                            role: 'New Role',
                             startDate: '',
                             endDate: '',
-                            
-                            summary: '',
-                            highlights: []
+                            current: false,
+                            description: '',
+                            tags: []
                         }];
-                        onUpdate({ ...currentData, work: newWork });
-                        setExpandedId('New Role');
+                        onUpdate({ ...currentData, experience: newExperiences });
+                        setExpandedId(newId);
                     }}
                     className="w-full flex items-center justify-center gap-2 border-2 border-dashed border-primary-200 rounded-xl py-6 text-primary-600 font-bold hover:bg-primary-50/50 hover:border-primary-300 transition-all group"
                 >
