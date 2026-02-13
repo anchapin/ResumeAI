@@ -74,7 +74,7 @@ export function runStorageTests() {
     // Verify data integrity
     const nameMatch = loadedData.name === testResumeData.name;
     const emailMatch = loadedData.email === testResumeData.email;
-    const expCountMatch = loadedData.experience.length === testResumeData.experience.length;
+    const expCountMatch = loadedData.experience?.length === testResumeData.experience.length;
 
     console.log(nameMatch ? '✓ Name matches' : '✗ Name mismatch');
     console.log(emailMatch ? '✓ Email matches' : '✗ Email mismatch');

@@ -1,7 +1,5 @@
 const STORAGE_KEY = 'resumeai_master_profile';
 
-type StoredResumeData = Record<string, unknown>;
-
 /**
  * Error types for storage operations
  */
@@ -51,7 +49,7 @@ function isStorageAvailable(): boolean {
  * @param data - The resume data to save
  * @throws StorageError if saving fails
  */
-export function saveResumeData(data: StoredResumeData): void {
+export function saveResumeData(data: SimpleResumeData): void {
   if (!isStorageAvailable()) {
     throw new StorageError(
       'localStorage is not available in this environment',
@@ -92,7 +90,7 @@ export function saveResumeData(data: StoredResumeData): void {
  * @returns The saved resume data, or null if no data exists
  * @throws StorageError if loading fails
  */
-export function loadResumeData(): StoredResumeData | null {
+export function loadResumeData(): SimpleResumeData | null {
   if (!isStorageAvailable()) {
     throw new StorageError(
       'localStorage is not available in this environment',
