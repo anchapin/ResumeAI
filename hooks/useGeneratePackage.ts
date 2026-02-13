@@ -1,9 +1,38 @@
 import { useState } from 'react';
-import { ResumeData } from '../types';
+import { ResumeData, SimpleResumeData } from '../types';
 
 // Get API URL from environment variable
 const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
 const API_KEY = import.meta.env.RESUMEAI_API_KEY || '';
+
+// Convert SimpleResumeData to ResumeData (JSON Resume format)
+function convertToResumeData(data: SimpleResumeData): ResumeData {
+    return {
+        basics: {
+            name: data.name,
+            email: data.email,
+            phone: data.phone,
+            url: undefined,
+            summary: undefined,
+            label: data.role,
+            location: {
+                city: data.location,
+                region: undefined,
+                countryCode: undefined
+            }
+        },
+        work: data.experience.map((exp) => ({
+            company: exp.company,
+            position: exp.role,
+            startDate: exp.startDate,
+            endDate: exp.endDate,
+            summary: exp.description,
+            highlights: exp.tags
+        })),
+        education: [],
+        skills: []
+    };
+}
 
 export interface TailorRequest {
     resume_data: ResumeData;

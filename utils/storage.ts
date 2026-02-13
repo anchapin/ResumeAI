@@ -106,7 +106,7 @@ export function loadResumeData(): SimpleResumeData | null {
       return null;
     }
 
-    const data = JSON.parse(serialized) as StoredResumeData;
+    const data = JSON.parse(serialized) as SimpleResumeData;
 
     // Basic validation to ensure the loaded data has expected structure
     if (!data || typeof data !== 'object') {
