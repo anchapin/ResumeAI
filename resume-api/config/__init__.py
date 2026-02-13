@@ -2,7 +2,6 @@
 Configuration for Resume API.
 """
 
-import os
 from pathlib import Path
 from typing import Optional, Union
 

@@ -8,7 +8,6 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from api import router
-from config import settings
 from config.dependencies import limiter, rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 
