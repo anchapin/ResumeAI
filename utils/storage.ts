@@ -3,6 +3,7 @@ const STORAGE_KEY = 'resumeai_master_profile';
 /**
  * Error types for storage operations
  */
+import type { SimpleResumeData } from '../types';
 export enum StorageErrorType {
   QUOTA_EXCEEDED = 'QUOTA_EXCEEDED',
   PARSE_ERROR = 'PARSE_ERROR',
