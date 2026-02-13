@@ -1,7 +1,27 @@
-fastapi
-uvicorn
-pydantic
-async-lru
-httpx
-pytest
-pytest-asyncio
+# FastAPI and ASGI server
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+python-multipart==0.0.6
+
+# Data validation
+pydantic==2.5.0
+pydantic-settings==2.1.0
+
+# CORS support
+python-dotenv==1.0.0
+
+# YAML parsing (for resume.yaml)
+PyYAML==6.0.1
+
+# Async support
+aiofiles==23.2.1
+
+# HTTP client (for AI APIs)
+httpx==0.25.2
+
+# Async LRU cache (for performance optimization)
+async-lru==2.0.4
+
+# Testing
+pytest==7.4.3
+pytest-asyncio==0.21.1

@@ -1,11 +1,16 @@
 import os
 import json
 import asyncio
+import tempfile
+import shutil
+import subprocess
+from pathlib import Path
 from typing import List, Optional, Dict, Any
 from async_lru import alru_cache
 from fastapi import FastAPI, HTTPException, Response
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
+import yaml
 
 # NOTE: In a real environment, these would be imported from the CLI package
 # from cli.generators.template import TemplateGenerator
@@ -137,6 +142,22 @@ class PackageResponse(BaseModel):
     cover_letter_markdown: Optional[str] = None
     analysis: Optional[str] = None
 
+# --- v1 API Pydantic Models ---
+
+class V1RenderPdfRequest(BaseModel):
+    """Request model for POST /v1/render/pdf"""
+    resume_data: Dict[str, Any]
+    variant: str = "base"
+
+class V1TailorRequest(BaseModel):
+    """Request model for POST /v1/tailor"""
+    resume_data: Dict[str, Any]
+    job_description: str
+
+class V1VariantsResponse(BaseModel):
+    """Response model for GET /v1/variants"""
+    variants: List[str]
+
 # --- Endpoints ---
 
 @app.get("/")
@@ -203,6 +224,145 @@ async def generate_package(request: GeneratePackageRequest):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+# --- v1 API Endpoints ---
+
+@app.post("/v1/render/pdf")
+async def v1_render_pdf(request: V1RenderPdfRequest):
+    """
+    Generate a PDF from resume data using resume-cli.
+
+    This endpoint:
+    1. Accepts JSON containing resume_data (matching resume.yaml schema) and variant
+    2. Dumps resume_data to a temporary resume.yaml
+    3. Invokes resume-cli generate --variant {variant} --format pdf
+    4. Reads the generated PDF bytes
+    5. Cleans up temp files
+    6. Returns application/pdf stream
+
+    Note: This is currently a mock implementation. The real implementation would:
+    - Call resume-cli via subprocess or direct import
+    - Handle actual PDF generation
+    - Support multiple template variants
+    """
+    try:
+        # Create a temporary directory for this request
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_path = Path(temp_dir)
+
+            # Step 1: Dump resume_data to temporary resume.yaml
+            resume_yaml_path = temp_path / "resume.yaml"
+            with open(resume_yaml_path, 'w') as f:
+                yaml.dump(request.resume_data, f, default_flow_style=False)
+
+            # Step 2: In a real implementation, invoke resume-cli
+            # subprocess.run([
+            #     "resume-cli", "generate",
+            #     "--variant", request.variant,
+            #     "--format", "pdf",
+            #     "--input", str(resume_yaml_path),
+            #     "--output", str(temp_path / "resume.pdf")
+            # ], check=True)
+
+            # Step 3: For now, generate a mock PDF
+            # In production, this would read the actual generated PDF
+            pdf_bytes = b"%PDF-1.4\n% Mock PDF content\n% Variant: " + request.variant.encode()
+
+            # Step 4: Cleanup is handled automatically by tempfile.TemporaryDirectory()
+
+            # Step 5: Return PDF stream
+            return Response(
+                content=pdf_bytes,
+                media_type="application/pdf",
+                headers={
+                    "Content-Disposition": f"attachment; filename=resume_{request.variant}.pdf"
+                }
+            )
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"PDF generation failed: {str(e)}")
+
+
+@app.post("/v1/tailor", response_model=Dict[str, Any])
+async def v1_tailor(request: V1TailorRequest):
+    """
+    Tailor resume data for a specific job description.
+
+    This endpoint:
+    1. Accepts JSON containing resume_data and job_description
+    2. Initializes AI Generator from resume-cli
+    3. Runs tailoring logic (extract keywords, reorder bullets)
+    4. Returns JSON with modified resume_data
+
+    Note: This is currently a mock implementation. The real implementation would:
+    - Use resume-cli's AI generator with OpenAI/Claude/Gemini
+    - Extract keywords from job description using NLP
+    - Match keywords with resume skills and experience
+    - Reorder bullets to prioritize relevant experience
+    - Generate tailored bullet points
+    """
+    try:
+        # In a real implementation, we would:
+        # 1. Initialize the AI Generator from resume-cli
+        # 2. Extract keywords from job_description using NLP
+        # 3. Match keywords with resume skills and experience
+        # 4. Reorder bullets to prioritize relevant experience
+        # 5. Generate tailored bullet points
+
+        # Mock tailoring logic for now
+        tailored_data = request.resume_data.copy()
+
+        # Add a tailoring note to indicate this is tailored
+        tailored_data["_tailored"] = True
+        tailored_data["_job_description_preview"] = request.job_description[:100] + "..."
+
+        # If experience exists, add a tailored flag to each entry
+        if "experience" in tailored_data and isinstance(tailored_data["experience"], list):
+            for exp in tailored_data["experience"]:
+                if isinstance(exp, dict):
+                    exp["_tailored"] = True
+                    exp["_relevance_score"] = 0.85  # Mock relevance score
+
+        return tailored_data
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Resume tailoring failed: {str(e)}")
+
+
+@app.get("/v1/variants", response_model=V1VariantsResponse)
+async def v1_variants():
+    """
+    Get list of available resume templates/variants.
+
+    This endpoint:
+    1. Returns list of available templates/variants from CLI config
+    2. Returns JSON list (e.g., ["base", "backend", "creative"])
+
+    Note: This is currently returning a static list. The real implementation would:
+    - Read variants from resume-cli config/templates directory
+    - Dynamically discover available templates
+    - Support custom template uploads
+    """
+    try:
+        # In a real implementation, we would:
+        # 1. Read the resume-cli config file
+        # 2. Scan the templates directory for available variants
+        # 3. Return the list of discovered variants
+
+        # For now, return a static list of common variants
+        variants = [
+            "base",
+            "backend",
+            "creative",
+            "minimal",
+            "professional",
+            "startup"
+        ]
+
+        return V1VariantsResponse(variants=variants)
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to retrieve variants: {str(e)}")
 
 if __name__ == "__main__":
     import uvicorn
