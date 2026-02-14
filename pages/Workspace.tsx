@@ -247,19 +247,20 @@ const Workspace: React.FC<WorkspaceProps> = ({ resumeData, onNavigate }) => {
                         </div>
 
                         <div className="space-y-2">
-                            <label htmlFor="select-template" className="text-sm font-bold text-slate-700">Select Template</label>
+                            <label id="template-label" htmlFor="template-select" className="text-sm font-bold text-slate-700">Select Template</label>
                             <div className="relative">
                                 {variantsLoading ? (
-                                    <select
-                                        id="select-template"
-                                        disabled
-                                        className="w-full appearance-none px-4 py-3 rounded-lg bg-slate-100 border border-slate-200 focus:bg-slate-100 outline-none cursor-not-allowed font-medium text-slate-400"
+                                    <div 
+                                        id="template-select"
+                                        aria-labelledby="template-label"
+                                        role="status"
+                                        className="w-full px-4 py-3 rounded-lg bg-slate-50 border border-slate-200 flex items-center"
                                     >
-                                        <option>Loading templates...</option>
-                                    </select>
+                                        <span className="text-slate-500">Loading templates...</span>
+                                    </div>
                                 ) : (
                                     <select
-                                        id="select-template"
+                                        id="template-select"
                                         value={variant}
                                         onChange={(e) => setVariant(e.target.value)}
                                         className="w-full appearance-none px-4 py-3 rounded-lg bg-slate-50 border border-slate-200 focus:bg-white focus:border-primary-500 outline-none cursor-pointer font-medium text-slate-700"
@@ -269,7 +270,9 @@ const Workspace: React.FC<WorkspaceProps> = ({ resumeData, onNavigate }) => {
                                         ))}
                                     </select>
                                 )}
-                                <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">expand_more</span>
+                                {!variantsLoading && (
+                                    <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">expand_more</span>
+                                )}
                             </div>
                             {variantsLoading && (
                                 <p className="text-xs text-slate-500">Fetching available templates...</p>
