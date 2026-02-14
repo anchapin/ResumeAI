@@ -24,24 +24,10 @@ const generateLargeResumeData = (count: number): SimpleResumeData => {
     location: "Test Loc",
     role: "Test Role",
     summary: "Test summary",
-    skills: ["Skill 1", "Skill 2"],
+    skills: ["Test skill"],
     experience: experiences,
-    education: [{
-      id: "edu-1",
-      institution: "Test Institution",
-      area: "Computer Science",
-      studyType: "Bachelor's",
-      startDate: "2015",
-      endDate: "2019"
-    }],
-    projects: [{
-      id: "proj-1",
-      name: "Test Project",
-      description: "Test Description",
-      startDate: "2020",
-      endDate: "2021",
-      highlights: ["Highlight 1"]
-    }]
+    education: [],
+    projects: []
   };
 };
 
