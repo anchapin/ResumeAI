@@ -9,7 +9,7 @@ from pathlib import Path
 # Add lib path
 sys.path.insert(0, str(Path(__file__).parent))
 
-from api.models import (
+from api.models import (  # noqa: E402
     BasicInfo,
     ResumeData,
     WorkItem,
@@ -29,7 +29,7 @@ def test_valid_data():
                 email="john@example.com",
                 phone="+1 (555) 123-4567",
                 url="https://johndoe.com",
-                summary="Software engineer with 5 years of experience"
+                summary="Software engineer with 5 years of experience",
             ),
             work=[
                 WorkItem(
@@ -38,12 +38,12 @@ def test_valid_data():
                     startDate="2020-01-01",
                     endDate="2023-12-31",
                     summary="Developed web applications",
-                    highlights=["Built REST API", "Improved performance by 50%"]
+                    highlights=["Built REST API", "Improved performance by 50%"],
                 )
-            ]
+            ],
         )
 
-        request = ResumeRequest(resume_data=resume, variant="base")
+        ResumeRequest(resume_data=resume, variant="base")
 
         print("✓ Valid resume data passed validation")
         return True
@@ -58,7 +58,7 @@ def test_invalid_email():
     print("\nTesting invalid email...")
 
     try:
-        resume = ResumeData(
+        ResumeData(
             basics=BasicInfo(
                 name="John Doe",
                 email="invalid-email",  # Invalid
@@ -81,7 +81,7 @@ def test_invalid_url():
     print("\nTesting invalid URL...")
 
     try:
-        resume = ResumeData(
+        ResumeData(
             basics=BasicInfo(
                 name="John Doe",
                 url="not-a-url",  # Invalid
@@ -107,8 +107,7 @@ def test_xss_attempt():
         xss_payload = "<script>alert('XSS')</script>"
         resume = ResumeData(
             basics=BasicInfo(
-                name=xss_payload,
-                summary="<img src=x onerror=alert('XSS')>"
+                name=xss_payload, summary="<img src=x onerror=alert('XSS')>"
             )
         )
 
@@ -130,7 +129,7 @@ def test_invalid_date_range():
     print("\nTesting invalid date range...")
 
     try:
-        resume = ResumeData(
+        ResumeData(
             work=[
                 WorkItem(
                     company="Tech Corp",
@@ -157,7 +156,7 @@ def test_empty_resume():
     print("\nTesting empty resume...")
 
     try:
-        resume = ResumeData()
+        ResumeData()
         print("✗ Empty resume should have been rejected")
         return False
 
@@ -176,11 +175,7 @@ def test_too_long_string():
 
     try:
         long_name = "x" * 2000  # Exceeds MAX_STRING_LENGTH
-        resume = ResumeData(
-            basics=BasicInfo(
-                name=long_name
-            )
-        )
+        ResumeData(basics=BasicInfo(name=long_name))
         print("✗ Overly long string should have been rejected")
         return False
 
@@ -199,11 +194,9 @@ def test_tailor_request_validation():
 
     # Test too short job description
     try:
-        request = TailorRequest(
-            resume_data=ResumeData(
-                basics=BasicInfo(name="John Doe")
-            ),
-            job_description="short"  # Less than 10 characters
+        TailorRequest(
+            resume_data=ResumeData(basics=BasicInfo(name="John Doe")),
+            job_description="short",  # Less than 10 characters
         )
         print("✗ Short job description should have been rejected")
         return False
@@ -217,21 +210,21 @@ def test_tailor_request_validation():
 
     # Test valid job description with XSS
     try:
-        request = TailorRequest(
-            resume_data=ResumeData(
-                basics=BasicInfo(name="John Doe")
-            ),
+        tailoring_request = TailorRequest(
+            resume_data=ResumeData(basics=BasicInfo(name="John Doe")),
             job_description="Great job opportunity <script>alert('XSS')</script>",
             company_name="Tech Corp",
-            job_title="Engineer"
+            job_title="Engineer",
         )
 
         # Check that script tag was sanitized
-        if "<script>" not in request.job_description:
-            print(f"✓ Job description sanitized: '{request.job_description}'")
+        if "<script>" not in tailoring_request.job_description:
+            print(f"✓ Job description sanitized: '{tailoring_request.job_description}'")
             return True
         else:
-            print(f"✗ Job description not sanitized: '{request.job_description}'")
+            print(
+                f"✗ Job description not sanitized: '{tailoring_request.job_description}'"
+            )
             return False
 
     except Exception as e:
@@ -244,12 +237,7 @@ def test_invalid_phone():
     print("\nTesting invalid phone number...")
 
     try:
-        resume = ResumeData(
-            basics=BasicInfo(
-                name="John Doe",
-                phone="abc123"  # Invalid phone
-            )
-        )
+        ResumeData(basics=BasicInfo(name="John Doe", phone="abc123"))  # Invalid phone
         print("✗ Invalid phone number should have been rejected")
         return False
 

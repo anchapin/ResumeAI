@@ -16,6 +16,8 @@ const testResumeData: SimpleResumeData = {
   phone: "+1 (555) 123-4567",
   location: "Test City, TS",
   role: "Test Role",
+  summary: "Test summary",
+  skills: ["Test Skill", "Another Skill"],
   experience: [
     {
       id: 'test-1',
@@ -27,7 +29,23 @@ const testResumeData: SimpleResumeData = {
       description: 'Test description',
       tags: ['Test', 'Skill']
     }
-  ]
+  ],
+  education: [{
+    id: "edu-1",
+    institution: "Test University",
+    area: "Computer Science",
+    studyType: "Bachelor's",
+    startDate: "2015",
+    endDate: "2019"
+  }],
+  projects: [{
+    id: "proj-1",
+    name: "Test Project",
+    description: "Test Description",
+    startDate: "2020",
+    endDate: "2021",
+    highlights: ["Highlight 1"]
+  }]
 };
 
 describe('Storage Utilities', () => {

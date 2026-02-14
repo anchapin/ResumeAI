@@ -62,7 +62,7 @@ class ResumeGenerator:
         )
         # Register custom filters
         self.jinja_env.filters['latex_escape'] = _latex_escape
-        
+
         # Set up finalize function to auto-escape unfiltered variables
         # Only apply to strings that are not already Markup objects to prevent double-escaping
         from markupsafe import Markup
@@ -255,7 +255,7 @@ def _latex_escape(text: Any) -> Markup:
     i = 0
     while i < len(text_str):
         char = text_str[i]
-        
+
         # Check for backslash specially since it's part of escape sequences
         if char == '\\':
             # Check if this is part of an existing LaTeX command like \input{}
@@ -280,7 +280,7 @@ def _latex_escape(text: Any) -> Markup:
         else:
             # Regular character, just append as-is
             result.append(char)
-        
+
         i += 1
 
     return Markup(''.join(result))
