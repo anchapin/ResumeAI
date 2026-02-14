@@ -235,9 +235,7 @@ def test_invalid_phone():
     print("\nTesting invalid phone number...")
 
     try:
-        ResumeData(
-            basics=BasicInfo(name="John Doe", phone="abc123")  # Invalid phone
-        )
+        ResumeData(basics=BasicInfo(name="John Doe", phone="abc123"))  # Invalid phone
         print("✗ Invalid phone number should have been rejected")
         return False
 
