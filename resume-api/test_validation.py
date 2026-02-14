@@ -218,11 +218,13 @@ def test_tailor_request_validation():
         )
 
         # Check that script tag was sanitized
-        if "<script>" not in request.job_description:
-            print(f"✓ Job description sanitized: '{request.job_description}'")
+        if "<script>" not in tailoring_request.job_description:
+            print(f"✓ Job description sanitized: '{tailoring_request.job_description}'")
             return True
         else:
-            print(f"✗ Job description not sanitized: '{request.job_description}'")
+            print(
+                f"✗ Job description not sanitized: '{tailoring_request.job_description}'"
+            )
             return False
 
     except Exception as e:
