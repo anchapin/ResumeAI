@@ -194,7 +194,7 @@ def test_tailor_request_validation():
 
     # Test too short job description
     try:
-        request = TailorRequest(
+        TailorRequest(
             resume_data=ResumeData(basics=BasicInfo(name="John Doe")),
             job_description="short",  # Less than 10 characters
         )
