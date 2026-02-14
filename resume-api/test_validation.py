@@ -222,7 +222,9 @@ def test_tailor_request_validation():
             print(f"✓ Job description sanitized: '{tailoring_request.job_description}'")
             return True
         else:
-            print(f"✗ Job description not sanitized: '{tailoring_request.job_description}'")
+            print(
+                f"✗ Job description not sanitized: '{tailoring_request.job_description}'"
+            )
             return False
 
     except Exception as e:
@@ -235,9 +237,7 @@ def test_invalid_phone():
     print("\nTesting invalid phone number...")
 
     try:
-        ResumeData(
-            basics=BasicInfo(name="John Doe", phone="abc123")  # Invalid phone
-        )
+        ResumeData(basics=BasicInfo(name="John Doe", phone="abc123"))  # Invalid phone
         print("✗ Invalid phone number should have been rejected")
         return False
 
