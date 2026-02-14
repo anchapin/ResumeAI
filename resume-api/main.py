@@ -1,13 +1,11 @@
-from contextlib import asynccontextmanager
-
 """
 Resume API - Main Application
 
 FastAPI service for generating and tailoring professional resumes.
 """
 
-from fastapi import FastAPI
 from contextlib import asynccontextmanager
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from api import router
