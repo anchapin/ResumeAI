@@ -44,7 +44,6 @@ const generateLargeResumeData = (count: number): SimpleResumeData => {
     }]
   };
 };
-};
 
 const TestWrapper = ({ count }: { count: number }) => {
   const [resumeData, setResumeData] = useState(generateLargeResumeData(count));
