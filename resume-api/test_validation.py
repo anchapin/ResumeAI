@@ -198,6 +198,9 @@ def test_tailor_request_validation():
             resume_data=ResumeData(basics=BasicInfo(name="John Doe")),
             job_description="short",  # Less than 10 characters
         )
+            resume_data=ResumeData(basics=BasicInfo(name="John Doe")),
+            job_description="short",  # Less than 10 characters
+        )
         print("✗ Short job description should have been rejected")
         return False
 
