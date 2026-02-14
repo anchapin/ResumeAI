@@ -1,9 +1,12 @@
-/**
- * Simple manual test for storage utilities
- * This can be run in the browser console to verify functionality
- */
-
-import { saveResumeData, loadResumeData, clearResumeData, hasSavedResumeData, getStoredDataSize } from './storage';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { 
+  saveResumeData, 
+  loadResumeData, 
+  clearResumeData, 
+  hasSavedResumeData, 
+  getStoredDataSize,
+  StorageError 
+} from '../utils/storage';
 import { SimpleResumeData } from '../types';
 
 // Test data
@@ -27,95 +30,136 @@ const testResumeData: SimpleResumeData = {
   ]
 };
 
-/**
- * Run all storage tests
- */
-export function runStorageTests() {
-  console.log('=== Running Storage Tests ===\n');
-
-  // Test 1: Clear any existing data
-  console.log('Test 1: Clearing existing data...');
-  try {
-    clearResumeData();
-    console.log('✓ Data cleared successfully');
-  } catch (error) {
-    console.error('✗ Failed to clear data:', error);
-  }
-
-  // Test 2: Check if data exists (should be false)
-  console.log('\nTest 2: Checking for saved data...');
-  const hasData = hasSavedResumeData();
-  console.log(hasData ? '✗ Found data when expected none' : '✓ No data found as expected');
-
-  // Test 3: Save resume data
-  console.log('\nTest 3: Saving resume data...');
-  try {
-    saveResumeData(testResumeData);
-    console.log('✓ Data saved successfully');
-  } catch (error) {
-    console.error('✗ Failed to save data:', error);
-    return;
-  }
-
-  // Test 4: Check if data exists (should be true)
-  console.log('\nTest 4: Checking for saved data...');
-  const hasDataAfterSave = hasSavedResumeData();
-  console.log(hasDataAfterSave ? '✓ Data found as expected' : '✗ No data found after save');
-
-  // Test 5: Load resume data
-  console.log('\nTest 5: Loading resume data...');
-  try {
-    const loadedData = loadResumeData();
-    if (!loadedData) {
-      console.error('✗ No data loaded');
-      return;
+describe('Storage Utilities', () => {
+  beforeEach(() => {
+    // Clear any existing data before each test
+    try {
+      clearResumeData();
+    } catch (error) {
+      // Ignore errors during cleanup if storage isn't available
     }
+  });
 
-    // Verify data integrity
-    const nameMatch = loadedData.name === testResumeData.name;
-    const emailMatch = loadedData.email === testResumeData.email;
-    const expCountMatch = loadedData.experience?.length === testResumeData.experience.length;
+  afterEach(() => {
+    // Ensure cleanup after each test
+    try {
+      clearResumeData();
+    } catch (error) {
+      // Ignore errors during cleanup if storage isn't available
+    }
+  });
 
-    console.log(nameMatch ? '✓ Name matches' : '✗ Name mismatch');
-    console.log(emailMatch ? '✓ Email matches' : '✗ Email mismatch');
-    console.log(expCountMatch ? '✓ Experience count matches' : '✗ Experience count mismatch');
+  it('should clear existing data', () => {
+    // Initially should have no data
+    const hasDataBefore = hasSavedResumeData();
+    expect(hasDataBefore).toBe(false);
+  });
 
-    console.log('\nLoaded data:', JSON.stringify(loadedData, null, 2));
-  } catch (error) {
-    console.error('✗ Failed to load data:', error);
-  }
+  it('should detect when no data is saved', () => {
+    const hasData = hasSavedResumeData();
+    expect(hasData).toBe(false);
+  });
 
-  // Test 6: Check data size
-  console.log('\nTest 6: Checking stored data size...');
-  const size = getStoredDataSize();
-  console.log(`✓ Data size: ${size} bytes (${(size / 1024).toFixed(2)} KB)`);
+  it('should save resume data', () => {
+    expect(() => {
+      saveResumeData(testResumeData);
+    }).not.toThrow();
+    
+    const hasDataAfterSave = hasSavedResumeData();
+    expect(hasDataAfterSave).toBe(true);
+  });
 
-  // Test 7: Update and reload
-  console.log('\nTest 7: Updating and reloading...');
-  const updatedData = { ...testResumeData, name: "Updated User" };
-  try {
+  it('should load saved resume data', () => {
+    // Save data first
+    saveResumeData(testResumeData);
+    
+    // Then load it
+    const loadedData = loadResumeData();
+    
+    expect(loadedData).toBeDefined();
+    if (loadedData) {
+      expect(loadedData.name).toBe(testResumeData.name);
+      expect(loadedData.email).toBe(testResumeData.email);
+      expect(loadedData.experience.length).toBe(testResumeData.experience.length);
+      
+      // Check first experience entry
+      const firstOriginalExp = testResumeData.experience[0];
+      const firstLoadedExp = loadedData.experience[0];
+      expect(firstLoadedExp.company).toBe(firstOriginalExp.company);
+      expect(firstLoadedExp.role).toBe(firstOriginalExp.role);
+      expect(firstLoadedExp.description).toBe(firstOriginalExp.description);
+    }
+  });
+
+  it('should return undefined when no data is saved', () => {
+    const loadedData = loadResumeData();
+    expect(loadedData).toBeNull();
+  });
+
+  it('should handle data updates correctly', () => {
+    // Save initial data
+    saveResumeData(testResumeData);
+    
+    // Update and save new data
+    const updatedData = { ...testResumeData, name: "Updated User" };
     saveResumeData(updatedData);
+    
+    // Load and verify update
     const reloadedData = loadResumeData();
-    const nameMatches = reloadedData?.name === "Updated User";
-    console.log(nameMatches ? '✓ Update persisted correctly' : '✗ Update failed to persist');
-  } catch (error) {
-    console.error('✗ Update test failed:', error);
-  }
+    expect(reloadedData?.name).toBe("Updated User");
+    expect(reloadedData?.email).toBe(testResumeData.email); // Should remain unchanged
+  });
 
-  // Cleanup
-  console.log('\nTest 8: Cleanup - clearing test data...');
-  try {
+  it('should return correct data size', () => {
+    // Initially should be 0
+    const initialSize = getStoredDataSize();
+    expect(initialSize).toBe(0);
+    
+    // After saving, should be > 0
+    saveResumeData(testResumeData);
+    const sizeAfterSave = getStoredDataSize();
+    expect(sizeAfterSave).toBeGreaterThan(0);
+  });
+
+  it('should clear data completely', () => {
+    // Save data
+    saveResumeData(testResumeData);
+    expect(hasSavedResumeData()).toBe(true);
+    
+    // Clear data
     clearResumeData();
-    console.log('✓ Cleanup complete');
-  } catch (error) {
-    console.error('✗ Cleanup failed:', error);
-  }
+    
+    // Verify it's gone
+    expect(hasSavedResumeData()).toBe(false);
+    const loadedData = loadResumeData();
+    expect(loadedData).toBeNull();
+  });
 
-  console.log('\n=== Storage Tests Complete ===');
-}
-
-// Export for manual testing in browser console
-if (typeof window !== 'undefined') {
-  (window as any).runStorageTests = runStorageTests;
-  console.log('Storage tests loaded. Run runStorageTests() to execute.');
-}
+  it('should handle storage quota exceeded errors gracefully', () => {
+    // Create very large data to potentially exceed storage limits
+    const largeData = {
+      ...testResumeData,
+      experience: Array(1000).fill({
+        id: 'large-test',
+        company: 'A'.repeat(10000),
+        role: 'B'.repeat(10000),
+        startDate: 'C'.repeat(10000),
+        endDate: 'D'.repeat(10000),
+        current: true,
+        description: 'E'.repeat(10000),
+        tags: ['F'.repeat(10000)]
+      })
+    };
+    
+    // This test should not crash even if storage is exceeded
+    try {
+      saveResumeData(largeData);
+    } catch (error) {
+      // If it throws a StorageError, that's acceptable
+      expect(error).toBeInstanceOf(StorageError);
+      if (error instanceof StorageError) {
+        expect(error.type).toMatch(/QUOTA_EXCEEDED|ACCESS_DENIED|NOT_AVAILABLE|UNKNOWN/);
+      }
+    }
+  });
+});
