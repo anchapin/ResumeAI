@@ -1,9 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Route, SimpleResumeData } from '../types';
 import { useGeneratePackage, convertToResumeData } from '../hooks/useGeneratePackage';
-import { useVariants } from '../hooks/useVariants';
-import logger from '../utils/logger';
 
 interface WorkspaceProps {
     resumeData: SimpleResumeData;
@@ -16,7 +14,6 @@ const TABS: TabType[] = ['Resume', 'Keywords', 'Suggestions'];
 
 const Workspace: React.FC<WorkspaceProps> = ({ resumeData, onNavigate }) => {
     const { generatePackage, downloadPDF, loading, error, data } = useGeneratePackage();
-    const { variants: apiVariants, loading: variantsLoading, error: variantsError } = useVariants();
     const [activeTab, setActiveTab] = useState<TabType>('Resume');
 
     // Form State
@@ -24,15 +21,9 @@ const Workspace: React.FC<WorkspaceProps> = ({ resumeData, onNavigate }) => {
     const [jobTitle, setJobTitle] = useState('');
     const [jobDescription, setJobDescription] = useState('');
     const [variant, setVariant] = useState('base');
-
-    // Initialize with API variants once loaded
-    useEffect(() => {
-        if (apiVariants.length > 0) {
-            // Set default to first variant if 'base' is not available
-            const defaultVariant = apiVariants.some(v => v.name === 'base') ? 'base' : apiVariants[0].name;
-            setVariant(defaultVariant);
-        }
-    }, [apiVariants]);
+    const [variants, setVariants] = useState<Array<{name: string; display_name: string; description: string}>>([
+        { name: 'base', display_name: 'Base Template', description: 'A clean, professional resume template' }
+    ]);
 
     const handleGenerate = async () => {
         if (!jobDescription) {
@@ -49,7 +40,7 @@ const Workspace: React.FC<WorkspaceProps> = ({ resumeData, onNavigate }) => {
             });
             setActiveTab('Resume');
         } catch (e) {
-            logger.error(e);
+            console.error(e);
             // Error is handled by hook state, UI displays it below if needed
         }
     };
@@ -66,7 +57,7 @@ const Workspace: React.FC<WorkspaceProps> = ({ resumeData, onNavigate }) => {
                 variant: variant
             });
         } catch (e) {
-            logger.error(e);
+            console.error(e);
             alert("Failed to download PDF. Ensure backend is running.");
         }
     };
@@ -176,16 +167,17 @@ const Workspace: React.FC<WorkspaceProps> = ({ resumeData, onNavigate }) => {
                     </div>
 
                     <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-6">
-                        {(error || variantsError) && (
+                        {error && (
                             <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm font-medium flex items-center gap-2">
                                 <span className="material-symbols-outlined text-[20px]">error</span>
-                                {error || variantsError}
+                                {error}
                             </div>
                         )}
 
                         <div className="space-y-2">
-                            <label className="text-sm font-bold text-slate-700">Company Name</label>
+                            <label htmlFor="companyName" className="text-sm font-bold text-slate-700">Company Name</label>
                             <input
+                                id="companyName"
                                 type="text"
                                 value={companyName}
                                 onChange={(e) => setCompanyName(e.target.value)}
@@ -195,8 +187,9 @@ const Workspace: React.FC<WorkspaceProps> = ({ resumeData, onNavigate }) => {
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-sm font-bold text-slate-700">Job Title (Optional)</label>
+                            <label htmlFor="jobTitle" className="text-sm font-bold text-slate-700">Job Title (Optional)</label>
                             <input
+                                id="jobTitle"
                                 type="text"
                                 value={jobTitle}
                                 onChange={(e) => setJobTitle(e.target.value)}
@@ -206,8 +199,9 @@ const Workspace: React.FC<WorkspaceProps> = ({ resumeData, onNavigate }) => {
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-sm font-bold text-slate-700">Paste Job Description Here</label>
+                            <label htmlFor="jobDescription" className="text-sm font-bold text-slate-700">Paste Job Description Here</label>
                             <textarea
+                                id="jobDescription"
                                 value={jobDescription}
                                 onChange={(e) => setJobDescription(e.target.value)}
                                 className="w-full min-h-[200px] px-4 py-3 rounded-lg bg-slate-50 border border-slate-200 focus:bg-white focus:border-primary-500 focus:ring-2 focus:ring-primary-100 outline-none transition-all resize-none"
@@ -216,30 +210,20 @@ const Workspace: React.FC<WorkspaceProps> = ({ resumeData, onNavigate }) => {
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-sm font-bold text-slate-700">Select Template</label>
+                            <label htmlFor="templateSelect" className="text-sm font-bold text-slate-700">Select Template</label>
                             <div className="relative">
-                                {variantsLoading ? (
-                                    <div className="w-full px-4 py-3 rounded-lg bg-slate-50 border border-slate-200 flex items-center">
-                                        <span className="text-slate-500">Loading templates...</span>
-                                    </div>
-                                ) : (
-                                    <select
-                                        value={variant}
-                                        onChange={(e) => setVariant(e.target.value)}
-                                        className="w-full appearance-none px-4 py-3 rounded-lg bg-slate-50 border border-slate-200 focus:bg-white focus:border-primary-500 outline-none cursor-pointer font-medium text-slate-700"
-                                    >
-                                        {apiVariants.map(v => (
-                                            <option key={v.name} value={v.name}>{v.display_name}</option>
-                                        ))}
-                                    </select>
-                                )}
-                                {!variantsLoading && (
-                                    <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">expand_more</span>
-                                )}
+                                <select
+                                    id="templateSelect"
+                                    value={variant}
+                                    onChange={(e) => setVariant(e.target.value)}
+                                    className="w-full appearance-none px-4 py-3 rounded-lg bg-slate-50 border border-slate-200 focus:bg-white focus:border-primary-500 outline-none cursor-pointer font-medium text-slate-700"
+                                >
+                                    {variants.map(v => (
+                                        <option key={v.name} value={v.name}>{v.display_name}</option>
+                                    ))}
+                                </select>
+                                <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">expand_more</span>
                             </div>
-                            {variantsLoading && (
-                                <p className="text-xs text-slate-500">Fetching available templates...</p>
-                            )}
                         </div>
                     </div>
                 </div>
