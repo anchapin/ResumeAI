@@ -7,10 +7,12 @@ from JSON data using LaTeX templates and xelatex.
 
 import tempfile
 import subprocess
+import re
 from pathlib import Path
 from typing import Dict, Any
 import logging
-from jinja2 import Environment, FileSystemLoader, select_autoescape
+from jinja2 import Environment, FileSystemLoader
+from markupsafe import Markup
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -44,10 +46,20 @@ class ResumeGenerator:
 
     def _setup_jinja2(self):
         """Setup Jinja2 environment for LaTeX templating."""
+        # Define finalize function for auto-escaping
+        def latex_finalize(value):
+            """Auto-escape variables for LaTeX."""
+            if value is None:
+                return ""
+            return _latex_escape(value)
+
         # Create a custom Jinja2 environment for LaTeX
         self.jinja_env = Environment(
             loader=FileSystemLoader(str(self.templates_dir)),
-            autoescape=select_autoescape(['tex']),
+            # Disable built-in autoescape (which defaults to HTML)
+            # We use finalize to handle LaTeX escaping for ALL variables
+            autoescape=False,
+            finalize=latex_finalize,
             block_start_string='\\BLOCK{',
             block_end_string='}',
             variable_start_string='\\VAR{',
@@ -225,7 +237,7 @@ class ResumeGenerator:
         return variants
 
 
-def _latex_escape(text: Any) -> str:
+def _latex_escape(text: Any) -> Markup:
     """
     Escape special LaTeX characters in text.
 
@@ -233,10 +245,14 @@ def _latex_escape(text: Any) -> str:
         text: Text to escape (any type, will be converted to string)
 
     Returns:
-        Escaped text safe for LaTeX
+        Escaped text safe for LaTeX (as Markup)
     """
     if text is None:
-        return ""
+        return Markup("")
+
+    # If it's already Markup, return as is to prevent double escaping
+    if isinstance(text, Markup):
+        return text
 
     text_str = str(text)
 
@@ -256,10 +272,16 @@ def _latex_escape(text: Any) -> str:
         '>': r'\textgreater{}',
     }
 
-    for char, escaped in latex_special_chars.items():
-        text_str = text_str.replace(char, escaped)
+    # Create regex pattern for single-pass replacement
+    pattern = re.compile("|".join(re.escape(k) for k in latex_special_chars.keys()))
 
-    return text_str
+    def replace(match):
+        return latex_special_chars[match.group(0)]
+
+    # Perform single-pass replacement
+    escaped_str = pattern.sub(replace, text_str)
+
+    return Markup(escaped_str)
 
 
 # For testing purposes - create a simple mock PDF generator
