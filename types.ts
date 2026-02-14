@@ -109,7 +109,27 @@ export interface SimpleResumeData {
   phone: string;
   location: string;
   role: string;
+  summary?: string;
+  skills?: string[];
   experience: WorkExperience[];
+  education?: {
+    id: string;
+    institution: string;
+    area: string;
+    studyType: string;
+    startDate: string;
+    endDate: string;
+    courses: string[];
+  }[];
+  projects?: {
+    id: string;
+    name: string;
+    description: string;
+    startDate: string;
+    endDate: string;
+    roles: string[];
+    highlights: string[];
+  }[];
 }
 
 export enum Route {
