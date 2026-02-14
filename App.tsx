@@ -14,6 +14,18 @@ const initialResumeData: SimpleResumeData = {
   phone: "+1 (555) 012-3456",
   location: "San Francisco, CA",
   role: "Senior Product Designer",
+  summary: "Passionate and detail-oriented Senior Product Designer with 8+ years of experience creating user-centered digital experiences. Expertise in UX research, interaction design, and design systems. Proven track record of delivering products that drive business growth and user satisfaction.",
+  skills: [
+    "Figma",
+    "Sketch",
+    "Adobe XD",
+    "User Research",
+    "Prototyping",
+    "Design Systems",
+    "React",
+    "TypeScript",
+    "HTML/CSS"
+  ],
   experience: [
     {
       id: '1',
@@ -34,6 +46,29 @@ const initialResumeData: SimpleResumeData = {
       current: false,
       description: 'Mentored a team of 5 junior developers and implemented CI/CD pipelines reducing deployment time by 50%.',
       tags: ['Mentorship', 'CI/CD']
+    }
+  ],
+  education: [
+    {
+      id: '1',
+      institution: 'Stanford University',
+      area: 'Computer Science',
+      studyType: 'Bachelor of Science',
+      startDate: '2013',
+      endDate: '2017',
+      courses: ['Data Structures', 'Algorithms', 'Machine Learning', 'Human-Computer Interaction']
+    }
+  ],
+  projects: [
+    {
+      id: '1',
+      name: 'E-commerce Platform Redesign',
+      description: 'Led a complete UX overhaul of a major e-commerce platform, resulting in a 35% increase in conversion rates.',
+      url: 'https://github.com/alexrivera/ecommerce-redesign',
+      roles: ['Lead Designer', 'UX Researcher'],
+      startDate: '2022',
+      endDate: '2023',
+      highlights: ['User interviews with 50+ customers', 'A/B testing of new designs', 'Design system creation']
     }
   ]
 };
