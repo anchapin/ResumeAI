@@ -475,7 +475,7 @@ function getTimeSince(date: Date): string {
 }
 
 const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, onBack }) => {
-  const [activeTab, setActiveTab] = useState<string>('Contact Info');
+  const [activeTab, setActiveTab] = useState<string>('Experience');
 
   // Experience state
   const experiences = resumeData.experience;
