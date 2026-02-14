@@ -7,11 +7,10 @@ from JSON data using LaTeX templates and xelatex.
 
 import tempfile
 import subprocess
-import re
 from pathlib import Path
 from typing import Dict, Any
 import logging
-from jinja2 import Environment, FileSystemLoader
+from jinja2 import Environment, FileSystemLoader, select_autoescape
 from markupsafe import Markup
 
 logging.basicConfig(level=logging.INFO)
@@ -46,20 +45,10 @@ class ResumeGenerator:
 
     def _setup_jinja2(self):
         """Setup Jinja2 environment for LaTeX templating."""
-        # Define finalize function for auto-escaping
-        def latex_finalize(value):
-            """Auto-escape variables for LaTeX."""
-            if value is None:
-                return ""
-            return _latex_escape(value)
-
         # Create a custom Jinja2 environment for LaTeX
         self.jinja_env = Environment(
             loader=FileSystemLoader(str(self.templates_dir)),
-            # Disable built-in autoescape (which defaults to HTML)
-            # We use finalize to handle LaTeX escaping for ALL variables
-            autoescape=False,
-            finalize=latex_finalize,
+            autoescape=select_autoescape(['tex']),
             block_start_string='\\BLOCK{',
             block_end_string='}',
             variable_start_string='\\VAR{',
@@ -73,6 +62,11 @@ class ResumeGenerator:
         )
         # Register custom filters
         self.jinja_env.filters['latex_escape'] = _latex_escape
+        
+        # Set up finalize function to auto-escape unfiltered variables
+        # Only apply to strings that are not already Markup objects to prevent double-escaping
+        from markupsafe import Markup
+        self.jinja_env.finalize = lambda x: _latex_escape(x) if isinstance(x, str) and not isinstance(x, Markup) else x
 
     def generate_pdf(
         self,
@@ -245,43 +239,51 @@ def _latex_escape(text: Any) -> Markup:
         text: Text to escape (any type, will be converted to string)
 
     Returns:
-        Escaped text safe for LaTeX (as Markup)
+        Escaped text safe for LaTeX as a Markup object to prevent double escaping
     """
     if text is None:
         return Markup("")
 
-    # If it's already Markup, return as is to prevent double escaping
+    # Handle already-marked-up content
     if isinstance(text, Markup):
-        return text
+        return text  # Already marked up, return as-is
 
     text_str = str(text)
 
-    # Escape special LaTeX characters
-    latex_special_chars = {
-        '&': r'\&',
-        '%': r'\%',
-        '$': r'\$',
-        '#': r'\#',
-        '_': r'\_',
-        '{': r'\{',
-        '}': r'\}',
-        '~': r'\textasciitilde{}',
-        '^': r'\^{}',
-        '\\': r'\textbackslash{}',
-        '<': r'\textless{}',
-        '>': r'\textgreater{}',
-    }
+    # Process the string character by character to avoid replacement conflicts
+    result = []
+    i = 0
+    while i < len(text_str):
+        char = text_str[i]
+        
+        # Check for backslash specially since it's part of escape sequences
+        if char == '\\':
+            # Check if this is part of an existing LaTeX command like \input{}
+            # For now, just escape the backslash itself
+            result.append(r'\textbackslash{}')
+        elif char in '&%$#_{}~^<>':
+            # Map characters to their escaped versions
+            escaped_map = {
+                '&': r'\&',
+                '%': r'\%',
+                '$': r'\$',
+                '#': r'\#',
+                '_': r'\_',
+                '{': r'\{',
+                '}': r'\}',
+                '~': r'\textasciitilde{}',
+                '^': r'\^{}',
+                '<': r'\textless{}',
+                '>': r'\textgreater{}',
+            }
+            result.append(escaped_map[char])
+        else:
+            # Regular character, just append as-is
+            result.append(char)
+        
+        i += 1
 
-    # Create regex pattern for single-pass replacement
-    pattern = re.compile("|".join(re.escape(k) for k in latex_special_chars.keys()))
-
-    def replace(match):
-        return latex_special_chars[match.group(0)]
-
-    # Perform single-pass replacement
-    escaped_str = pattern.sub(replace, text_str)
-
-    return Markup(escaped_str)
+    return Markup(''.join(result))
 
 
 # For testing purposes - create a simple mock PDF generator
