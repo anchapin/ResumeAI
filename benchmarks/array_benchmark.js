@@ -1,15 +1,8 @@
 import { performance } from 'perf_hooks';
 
-// Simple logger for benchmarks
-const logger = {
-  info: (...args) => console.log(...args),
-  warn: (...args) => console.warn(...args),
-  error: (...args) => console.error(...args)
-};
-
 const iterations = 50000000;
 
-logger.info(`Running benchmark with ${iterations} iterations...`);
+console.log(`Running benchmark with ${iterations} iterations...`);
 
 let dummy = 0;
 
@@ -21,7 +14,7 @@ for (let i = 0; i < iterations; i++) {
 }
 let end = performance.now();
 const inlineDuration = end - start;
-logger.info(`Inline Array Creation: ${inlineDuration.toFixed(2)} ms`);
+console.log(`Inline Array Creation: ${inlineDuration.toFixed(2)} ms`);
 
 // Scenario 2: Constant Array
 const TABS = ['Resume', 'Cover Letter', 'Analysis'];
@@ -31,6 +24,6 @@ for (let i = 0; i < iterations; i++) {
 }
 end = performance.now();
 const constantDuration = end - start;
-logger.info(`Constant Array: ${constantDuration.toFixed(2)} ms`);
+console.log(`Constant Array: ${constantDuration.toFixed(2)} ms`);
 
-logger.info(`Dummy: ${dummy}`);
+console.log(`Dummy: ${dummy}`);
