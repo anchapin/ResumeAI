@@ -7,6 +7,7 @@ from typing import Optional, Union
 
 from pydantic import field_validator
 from pydantic_settings import BaseSettings
+from pydantic_settings import SettingsConfigDict
 
 
 class Settings(BaseSettings):
@@ -60,9 +61,7 @@ class Settings(BaseSettings):
             return v
         return [key.strip() for key in str(v).split(",") if key.strip()]
 
-    class Config:
-        env_file = ".env"
-        case_sensitive = False
+    model_config = SettingsConfigDict(env_file=".env", case_sensitive=False)
 
 
 # Global settings instance
