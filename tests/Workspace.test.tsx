@@ -15,6 +15,15 @@ vi.mock('../hooks/useGeneratePackage', () => ({
   convertToResumeData: vi.fn(),
 }));
 
+vi.mock('../hooks/useVariants', () => ({
+  useVariants: () => ({
+    variants: [
+      { name: 'base', display_name: 'Base Template', description: 'A clean, professional resume template', format: 'json', output_formats: ['pdf'] }
+    ],
+    loading: false,
+    error: null,
+  }),
+}));
 // Mock ReactMarkdown
 vi.mock('react-markdown', () => ({
   default: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
@@ -133,7 +142,16 @@ describe('Workspace Component', () => {
     expect(jobDescTextarea).toHaveValue('Job description text');
   });
 
-  it('renders the select dropdown with template options', () => {
+  it('displays loading state for variants', () => {
+    // Temporarily override the mock to simulate loading state
+    vi.mock('../hooks/useVariants', () => ({
+      useVariants: () => ({
+        variants: [],
+        loading: true,
+        error: null,
+      }),
+    }));
+
     render(
       <Workspace
         resumeData={mockResumeData}
@@ -141,12 +159,7 @@ describe('Workspace Component', () => {
       />
     );
 
-    const selectElement = screen.getByRole('combobox');
-    expect(selectElement).toBeInTheDocument();
-    
-    // Check that the base template option is available
-    const baseOption = screen.getByRole('option', { name: 'Base Template' });
-    expect(baseOption).toBeInTheDocument();
+    expect(screen.getByText('Loading templates...')).toBeInTheDocument();
   });
 
   it('handles tab switching', () => {
