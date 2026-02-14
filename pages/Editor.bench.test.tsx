@@ -23,7 +23,11 @@ const generateLargeResumeData = (count: number): SimpleResumeData => {
     phone: "123",
     location: "Test Loc",
     role: "Test Role",
-    experience: experiences
+    summary: "Test summary",
+    skills: ["Test skill"],
+    experience: experiences,
+    education: [],
+    projects: []
   };
 };
 

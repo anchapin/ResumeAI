@@ -27,7 +27,11 @@ const testResumeData: SimpleResumeData = {
       description: 'Test description',
       tags: ['Test', 'Skill']
     }
-  ]
+  ],
+  summary: "Test summary",
+  skills: ["Test skill"],
+  education: [],
+  projects: []
 };
 
 describe('Storage Utilities', () => {
