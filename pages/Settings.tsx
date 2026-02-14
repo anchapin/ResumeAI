@@ -1,5 +1,15 @@
 import React from 'react';
 
+/**
+ * @component
+ * @description Settings page component for managing user preferences and account settings
+ * @returns {JSX.Element} The rendered settings page component
+ * 
+ * @example
+ * ```tsx
+ * <Settings />
+ * ```
+ */
 const Settings: React.FC = () => {
   return (
     <div className="flex-1 min-h-screen bg-[#f6f6f8] pl-72">

@@ -1,16 +1,68 @@
 import React, { useState } from 'react';
 import { WorkExperience } from '../types';
 
+/**
+ * @interface ExperienceItemProps
+ * @description Props for the ExperienceItem component
+ * @property {WorkExperience} exp - The work experience object to display
+ * @property {boolean} isExpanded - Whether the item is expanded or collapsed
+ * @property {Function} onToggleExpand - Callback to toggle expansion state
+ * @property {Function} onDelete - Callback to delete the experience
+ * @property {Function} onUpdate - Callback to update a field in the experience
+ * @property {Function} onAddTag - Callback to add a tag to the experience
+ * @property {Function} onRemoveTag - Callback to remove a tag from the experience
+ */
 interface ExperienceItemProps {
+    /** The work experience object to display */
     exp: WorkExperience;
+    /** Whether the item is expanded or collapsed */
     isExpanded: boolean;
+    /** Callback to toggle expansion state */
     onToggleExpand: (id: string) => void;
+    /** Callback to delete the experience */
     onDelete: (id: string) => void;
+    /** Callback to update a field in the experience */
     onUpdate: (id: string, field: keyof WorkExperience, value: any) => void;
+    /** Callback to add a tag to the experience */
     onAddTag: (id: string, tag: string) => void;
+    /** Callback to remove a tag from the experience */
     onRemoveTag: (id: string, tag: string) => void;
 }
 
+/**
+ * @component
+ * @description A component that displays a single work experience item with expandable/collapsible functionality
+ * @param {ExperienceItemProps} props - Component properties
+ * @param {WorkExperience} props.exp - The work experience object to display
+ * @param {boolean} props.isExpanded - Whether the item is expanded or collapsed
+ * @param {Function} props.onToggleExpand - Callback to toggle expansion state
+ * @param {Function} props.onDelete - Callback to delete the experience
+ * @param {Function} props.onUpdate - Callback to update a field in the experience
+ * @param {Function} props.onAddTag - Callback to add a tag to the experience
+ * @param {Function} props.onRemoveTag - Callback to remove a tag from the experience
+ * @returns {JSX.Element} The rendered experience item component
+ * 
+ * @example
+ * ```tsx
+ * <ExperienceItem
+ *   exp={{
+ *     id: '1',
+ *     company: 'Acme Corp',
+ *     role: 'Software Engineer',
+ *     startDate: 'Jan 2020',
+ *     endDate: 'Present',
+ *     description: 'Developed software solutions...',
+ *     tags: ['React', 'TypeScript']
+ *   }}
+ *   isExpanded={true}
+ *   onToggleExpand={(id) => console.log(`Toggled ${id}`)}
+ *   onDelete={(id) => console.log(`Deleted ${id}`)}
+ *   onUpdate={(id, field, value) => console.log(`Updated ${id}.${field} to ${value}`)}
+ *   onAddTag={(id, tag) => console.log(`Added tag ${tag} to ${id}`)}
+ *   onRemoveTag={(id, tag) => console.log(`Removed tag ${tag} from ${id}`)}
+ * />
+ * ```
+ */
 const ExperienceItem = React.memo(({
     exp,
     isExpanded,

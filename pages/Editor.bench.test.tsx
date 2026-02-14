@@ -29,7 +29,7 @@ const generateLargeResumeData = (count: number): SimpleResumeData => {
     education: [],
     projects: []
   };
-};
+}
 
 const TestWrapper = ({ count }: { count: number }) => {
   const [resumeData, setResumeData] = useState(generateLargeResumeData(count));

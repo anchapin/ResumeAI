@@ -7,6 +7,9 @@ import JobApplications from './pages/JobApplications';
 import Settings from './pages/Settings';
 import { Route, SimpleResumeData } from './types';
 import { loadResumeData, saveResumeData, StorageError } from './utils/storage';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import './components/toast-styles.css';
 
 const initialResumeData: SimpleResumeData = {
   name: "Alex Rivera",
@@ -222,6 +225,18 @@ function App() {
       ) : (
         renderContent()
       )}
+      <ToastContainer 
+        position="top-right"
+        autoClose={5000}
+        hideProgressBar={true}
+        newestOnTop
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+      />
     </div>
   );
 }

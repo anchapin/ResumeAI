@@ -2,6 +2,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import Workspace from '../pages/Workspace';
 import { Route, SimpleResumeData } from '../types';
+import { showErrorToast, showSuccessToast } from '../utils/toast';
 
 // Mock the hooks
 vi.mock('../hooks/useGeneratePackage', () => ({
@@ -13,6 +14,12 @@ vi.mock('../hooks/useGeneratePackage', () => ({
     data: null,
   }),
   convertToResumeData: vi.fn(),
+}));
+
+// Mock toast functions
+vi.mock('../utils/toast', () => ({
+  showErrorToast: vi.fn(),
+  showSuccessToast: vi.fn(),
 }));
 
 vi.mock('../hooks/useVariants', () => ({
@@ -78,9 +85,13 @@ describe('Workspace Component', () => {
   };
 
   const mockOnNavigate = vi.fn();
+  const mockShowErrorToast = vi.fn();
+  const mockShowSuccessToast = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(showErrorToast).mockImplementation(mockShowErrorToast);
+    vi.mocked(showSuccessToast).mockImplementation(mockShowSuccessToast);
   });
 
   it('renders the Workspace component with all elements', () => {
@@ -188,9 +199,6 @@ describe('Workspace Component', () => {
   });
 
   it('validates required fields before generation', async () => {
-    // Mock window.alert to track calls
-    const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
-
     render(
       <Workspace
         resumeData={mockResumeData}
@@ -198,14 +206,11 @@ describe('Workspace Component', () => {
       />
     );
 
-    // Click generate without job description (empty initially)
+    // Click generate without job description (should trigger validation)
     const generateButton = screen.getByText('Generate Package');
     fireEvent.click(generateButton);
 
-    // Verify that alert was called due to validation
-    expect(alertSpy).toHaveBeenCalledWith("Please enter a job description.");
-
-    // Clean up
-    alertSpy.mockRestore();
+    // Should show error toast for missing job description
+    expect(mockShowErrorToast).toHaveBeenCalledWith("Please enter a job description.");
   });
 });

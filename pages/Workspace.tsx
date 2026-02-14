@@ -3,16 +3,43 @@ import ReactMarkdown from 'react-markdown';
 import { Route, SimpleResumeData } from '../types';
 import { useGeneratePackage, convertToResumeData } from '../hooks/useGeneratePackage';
 import { useVariants } from '../hooks/useVariants';
+import { showErrorToast, showSuccessToast } from '../utils/toast';
 
+/**
+ * @interface WorkspaceProps
+ * @description Props for the Workspace component
+ * @property {SimpleResumeData} resumeData - The resume data to use in the workspace
+ * @property {Function} onNavigate - Callback function to handle navigation
+ */
 interface WorkspaceProps {
+    /** The resume data to use in the workspace */
     resumeData: SimpleResumeData;
+    /** Callback function to handle navigation */
     onNavigate: (route: Route) => void;
 }
 
+/** Available tab types for the workspace */
 type TabType = 'Resume' | 'Keywords' | 'Suggestions';
 
+/** Available tabs for the workspace */
 const TABS: TabType[] = ['Resume', 'Keywords', 'Suggestions'];
 
+/**
+ * @component
+ * @description Workspace page component for tailoring resumes to job descriptions
+ * @param {WorkspaceProps} props - Component properties
+ * @param {SimpleResumeData} props.resumeData - The resume data to use in the workspace
+ * @param {Function} props.onNavigate - Callback function to handle navigation
+ * @returns {JSX.Element} The rendered workspace page component
+ * 
+ * @example
+ * ```tsx
+ * <Workspace 
+ *   resumeData={sampleResumeData} 
+ *   onNavigate={(route) => console.log(`Navigating to ${route}`)} 
+ * />
+ * ```
+ */
 const Workspace: React.FC<WorkspaceProps> = ({ resumeData, onNavigate }) => {
     const { generatePackage, downloadPDF, loading, error, data } = useGeneratePackage();
     const { variants: apiVariants, loading: variantsLoading, error: variantsError } = useVariants();
@@ -35,7 +62,7 @@ const Workspace: React.FC<WorkspaceProps> = ({ resumeData, onNavigate }) => {
 
     const handleGenerate = async () => {
         if (!jobDescription) {
-            alert("Please enter a job description.");
+            showErrorToast("Please enter a job description.");
             return;
         }
 
@@ -46,16 +73,17 @@ const Workspace: React.FC<WorkspaceProps> = ({ resumeData, onNavigate }) => {
                 company_name: companyName || undefined,
                 job_title: jobTitle || undefined
             });
+            showSuccessToast("Resume package generated successfully!");
             setActiveTab('Resume');
         } catch (e) {
             console.error(e);
-            // Error is handled by hook state, UI displays it below if needed
+            showErrorToast("Failed to generate resume package. Please try again.");
         }
     };
 
     const handleDownloadPDF = async () => {
         if (!companyName) {
-            alert("Please enter a company name before downloading.");
+            showErrorToast("Please enter a company name before downloading.");
             return;
         }
 
@@ -64,9 +92,10 @@ const Workspace: React.FC<WorkspaceProps> = ({ resumeData, onNavigate }) => {
                 resume_data: convertToResumeData(resumeData),
                 variant: variant
             });
+            showSuccessToast("PDF downloaded successfully!");
         } catch (e) {
             console.error(e);
-            alert("Failed to download PDF. Ensure backend is running.");
+            showErrorToast("Failed to download PDF. Ensure backend is running.");
         }
     };
 
@@ -183,9 +212,9 @@ const Workspace: React.FC<WorkspaceProps> = ({ resumeData, onNavigate }) => {
                         )}
 
                         <div className="space-y-2">
-                            <label htmlFor="companyName" className="text-sm font-bold text-slate-700">Company Name</label>
+                            <label htmlFor="company-name" className="text-sm font-bold text-slate-700">Company Name</label>
                             <input
-                                id="companyName"
+                                id="company-name"
                                 type="text"
                                 value={companyName}
                                 onChange={(e) => setCompanyName(e.target.value)}
@@ -195,9 +224,15 @@ const Workspace: React.FC<WorkspaceProps> = ({ resumeData, onNavigate }) => {
                         </div>
 
                         <div className="space-y-2">
+<<<<<<< HEAD
+                            <label htmlFor="job-title" className="text-sm font-bold text-slate-700">Job Title (Optional)</label>
+                            <input
+                                id="job-title"
+=======
                             <label htmlFor="jobTitle" className="text-sm font-bold text-slate-700">Job Title (Optional)</label>
                             <input
                                 id="jobTitle"
+>>>>>>> origin/main
                                 type="text"
                                 value={jobTitle}
                                 onChange={(e) => setJobTitle(e.target.value)}
@@ -207,9 +242,15 @@ const Workspace: React.FC<WorkspaceProps> = ({ resumeData, onNavigate }) => {
                         </div>
 
                         <div className="space-y-2">
+<<<<<<< HEAD
+                            <label htmlFor="job-description" className="text-sm font-bold text-slate-700">Paste Job Description Here</label>
+                            <textarea
+                                id="job-description"
+=======
                             <label htmlFor="jobDescription" className="text-sm font-bold text-slate-700">Paste Job Description Here</label>
                             <textarea
                                 id="jobDescription"
+>>>>>>> origin/main
                                 value={jobDescription}
                                 onChange={(e) => setJobDescription(e.target.value)}
                                 className="w-full min-h-[200px] px-4 py-3 rounded-lg bg-slate-50 border border-slate-200 focus:bg-white focus:border-primary-500 focus:ring-2 focus:ring-primary-100 outline-none transition-all resize-none"
@@ -218,14 +259,24 @@ const Workspace: React.FC<WorkspaceProps> = ({ resumeData, onNavigate }) => {
                         </div>
 
                         <div className="space-y-2">
+<<<<<<< HEAD
+                            <label id="template-label" htmlFor="template-select" className="text-sm font-bold text-slate-700">Select Template</label>
+=======
                             <label htmlFor="templateSelect" className="text-sm font-bold text-slate-700">Select Template</label>
+>>>>>>> origin/main
                             <div className="relative">
                                 {variantsLoading ? (
-                                    <div className="w-full px-4 py-3 rounded-lg bg-slate-50 border border-slate-200 flex items-center">
+                                    <div 
+                                        id="template-select"
+                                        aria-labelledby="template-label"
+                                        role="status"
+                                        className="w-full px-4 py-3 rounded-lg bg-slate-50 border border-slate-200 flex items-center"
+                                    >
                                         <span className="text-slate-500">Loading templates...</span>
                                     </div>
                                 ) : (
                                     <select
+                                        id="template-select"
                                         value={variant}
                                         onChange={(e) => setVariant(e.target.value)}
                                         className="w-full appearance-none px-4 py-3 rounded-lg bg-slate-50 border border-slate-200 focus:bg-white focus:border-primary-500 outline-none cursor-pointer font-medium text-slate-700"
