@@ -198,6 +198,9 @@ def test_tailor_request_validation():
             resume_data=ResumeData(basics=BasicInfo(name="John Doe")),
             job_description="short",  # Less than 10 characters
         )
+            resume_data=ResumeData(basics=BasicInfo(name="John Doe")),
+            job_description="short",  # Less than 10 characters
+        )
         print("✗ Short job description should have been rejected")
         return False
 
@@ -210,7 +213,7 @@ def test_tailor_request_validation():
 
     # Test valid job description with XSS
     try:
-        request = TailorRequest(
+        tailoring_request = TailorRequest(
             resume_data=ResumeData(basics=BasicInfo(name="John Doe")),
             job_description="Great job opportunity <script>alert('XSS')</script>",
             company_name="Tech Corp",
@@ -218,11 +221,13 @@ def test_tailor_request_validation():
         )
 
         # Check that script tag was sanitized
-        if "<script>" not in request.job_description:
-            print(f"✓ Job description sanitized: '{request.job_description}'")
+        if "<script>" not in tailoring_request.job_description:
+            print(f"✓ Job description sanitized: '{tailoring_request.job_description}'")
             return True
         else:
-            print(f"✗ Job description not sanitized: '{request.job_description}'")
+            print(
+                f"✗ Job description not sanitized: '{tailoring_request.job_description}'"
+            )
             return False
 
     except Exception as e:
