@@ -20,7 +20,7 @@ To run the integration tests:
 
 ```bash
 # From the worktree directory
-cd /home/alexc/Projects/feature-issue-36-add-api-endpoint-integration-tests
+cd "$(dirname "$0")"
 
 # Install dependencies if needed
 pip install pytest fastapi requests python-multipart
