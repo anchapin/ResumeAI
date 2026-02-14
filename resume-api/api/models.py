@@ -690,7 +690,8 @@ class ResumeData(BaseModel):
                     sanitized = sanitize_html(value)
                     if len(sanitized) > MAX_STRING_LENGTH:
                         raise ValueError(
-                            f"{field_name[:-1].capitalize()} field '{key}' exceeds maximum length of {MAX_STRING_LENGTH} characters"
+                            f"{field_name[:-1].capitalize()} field '{key}' "
+                            f"exceeds maximum length of {MAX_STRING_LENGTH} characters"
                         )
                     sanitized_item[key] = sanitized
                 elif isinstance(value, list):
@@ -701,7 +702,8 @@ class ResumeData(BaseModel):
                             sanitized = sanitize_html(list_item)
                             if len(sanitized) > MAX_STRING_LENGTH:
                                 raise ValueError(
-                                    f"{field_name[:-1].capitalize()} list item exceeds maximum length of {MAX_STRING_LENGTH} characters"
+                                    f"{field_name[:-1].capitalize()} list item "
+                                    f"exceeds maximum length of {MAX_STRING_LENGTH} characters"
                                 )
                             validated_list.append(sanitized)
                         else:
