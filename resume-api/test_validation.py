@@ -23,7 +23,7 @@ def test_valid_data():
     print("Testing valid resume data...")
 
     try:
-        ResumeData(
+        resume = ResumeData(
             basics=BasicInfo(
                 name="John Doe",
                 email="john@example.com",
@@ -105,7 +105,7 @@ def test_xss_attempt():
 
     try:
         xss_payload = "<script>alert('XSS')</script>"
-        ResumeData(
+        resume = ResumeData(
             basics=BasicInfo(
                 name=xss_payload, summary="<img src=x onerror=alert('XSS')>"
             )
