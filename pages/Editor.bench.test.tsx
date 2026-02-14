@@ -82,3 +82,4 @@ describe('Editor Performance', () => {
     logger.info(`[BENCHMARK] Update took ${duration.toFixed(2)}ms with ${ITEM_COUNT} items`);
   });
 });
+// CI trigger
