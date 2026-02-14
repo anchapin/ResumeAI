@@ -14,16 +14,11 @@ MAX_LIST_LENGTH = 100
 MAX_RESUME_ITEMS = 50
 
 # Regex patterns for validation
-EMAIL_PATTERN = re.compile(
-    r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
-)
+EMAIL_PATTERN = re.compile(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
 URL_PATTERN = re.compile(
-    r'^(https?://|ftp://)?[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(/.*)?$',
-    re.IGNORECASE
+    r"^(https?://|ftp://)?[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(/.*)?$", re.IGNORECASE
 )
-PHONE_PATTERN = re.compile(
-    r'^[\d\s\-\+\(\)]{7,20}$'
-)
+PHONE_PATTERN = re.compile(r"^[\d\s\-\+\(\)]{7,20}$")
 
 
 def sanitize_html(text: Optional[str]) -> Optional[str]:
@@ -40,25 +35,31 @@ def sanitize_html(text: Optional[str]) -> Optional[str]:
         return None
 
     # Remove script tags and content
-    text = re.sub(r'<script[^>]*>.*?</script>', '', text, flags=re.IGNORECASE | re.DOTALL)
+    text = re.sub(
+        r"<script[^>]*>.*?</script>", "", text, flags=re.IGNORECASE | re.DOTALL
+    )
 
     # Remove other dangerous tags
-    dangerous_tags = ['iframe', 'object', 'embed', 'form', 'input', 'button']
+    dangerous_tags = ["iframe", "object", "embed", "form", "input", "button"]
     for tag in dangerous_tags:
-        text = re.sub(f'<{tag}[^>]*>.*?</{tag}>', '', text, flags=re.IGNORECASE | re.DOTALL)
-        text = re.sub(f'<{tag}[^>]*/?>', '', text, flags=re.IGNORECASE)
+        text = re.sub(
+            f"<{tag}[^>]*>.*?</{tag}>", "", text, flags=re.IGNORECASE | re.DOTALL
+        )
+        text = re.sub(f"<{tag}[^>]*/?>", "", text, flags=re.IGNORECASE)
 
     # Remove event handlers (onclick, onerror, etc.)
-    text = re.sub(r'on\w+\s*=\s*["\'][^"\']*["\']', '', text, flags=re.IGNORECASE)
+    text = re.sub(r'on\w+\s*=\s*["\'][^"\']*["\']', "", text, flags=re.IGNORECASE)
 
     # Remove javascript: and data: URLs
-    text = re.sub(r'javascript\s*:', '', text, flags=re.IGNORECASE)
-    text = re.sub(r'data\s*:', '', text, flags=re.IGNORECASE)
+    text = re.sub(r"javascript\s*:", "", text, flags=re.IGNORECASE)
+    text = re.sub(r"data\s*:", "", text, flags=re.IGNORECASE)
 
     return text.strip()
 
 
-def validate_string_length(value: Optional[str], field_name: str, max_length: int = MAX_STRING_LENGTH) -> Optional[str]:
+def validate_string_length(
+    value: Optional[str], field_name: str, max_length: int = MAX_STRING_LENGTH
+) -> Optional[str]:
     """
     Validate string length and provide helpful error message.
 
@@ -81,7 +82,9 @@ def validate_string_length(value: Optional[str], field_name: str, max_length: in
     return value
 
 
-def validate_list_length(value: Optional[List], field_name: str, max_length: int = MAX_LIST_LENGTH) -> List:
+def validate_list_length(
+    value: Optional[List], field_name: str, max_length: int = MAX_LIST_LENGTH
+) -> List:
     """
     Validate list length and provide helpful error message.
 
@@ -109,37 +112,25 @@ class BasicInfo(BaseModel):
     """Basic contact information."""
 
     name: Optional[str] = Field(
-        None,
-        max_length=MAX_STRING_LENGTH,
-        description="Full name of the person"
+        None, max_length=MAX_STRING_LENGTH, description="Full name of the person"
     )
     label: Optional[str] = Field(
-        None,
-        max_length=MAX_STRING_LENGTH,
-        description="Professional label or title"
+        None, max_length=MAX_STRING_LENGTH, description="Professional label or title"
     )
     email: Optional[str] = Field(
-        None,
-        max_length=MAX_STRING_LENGTH,
-        description="Email address"
+        None, max_length=MAX_STRING_LENGTH, description="Email address"
     )
-    phone: Optional[str] = Field(
-        None,
-        max_length=50,
-        description="Phone number"
-    )
+    phone: Optional[str] = Field(None, max_length=50, description="Phone number")
     url: Optional[str] = Field(
-        None,
-        max_length=MAX_STRING_LENGTH,
-        description="Personal website URL"
+        None, max_length=MAX_STRING_LENGTH, description="Personal website URL"
     )
     summary: Optional[str] = Field(
         None,
         max_length=MAX_LONG_STRING_LENGTH,
-        description="Professional summary or bio"
+        description="Professional summary or bio",
     )
 
-    @field_validator('email')
+    @field_validator("email")
     @classmethod
     def validate_email(cls, v: Optional[str]) -> Optional[str]:
         """Validate email format."""
@@ -147,12 +138,11 @@ class BasicInfo(BaseModel):
             v = sanitize_html(v)
             if not EMAIL_PATTERN.match(v):
                 raise ValueError(
-                    f"Invalid email format: '{v}'. "
-                    "Expected format: user@example.com"
+                    f"Invalid email format: '{v}'. " "Expected format: user@example.com"
                 )
         return v
 
-    @field_validator('url')
+    @field_validator("url")
     @classmethod
     def validate_url(cls, v: Optional[str]) -> Optional[str]:
         """Validate URL format."""
@@ -165,7 +155,7 @@ class BasicInfo(BaseModel):
                 )
         return v
 
-    @field_validator('phone')
+    @field_validator("phone")
     @classmethod
     def validate_phone(cls, v: Optional[str]) -> Optional[str]:
         """Validate phone number format."""
@@ -178,7 +168,7 @@ class BasicInfo(BaseModel):
                 )
         return v
 
-    @field_validator('name', 'label', 'summary')
+    @field_validator("name", "label", "summary")
     @classmethod
     def sanitize_text_fields(cls, v: Optional[str]) -> Optional[str]:
         """Sanitize text fields to prevent injection attacks."""
@@ -189,32 +179,22 @@ class Location(BaseModel):
     """Location information."""
 
     address: Optional[str] = Field(
-        None,
-        max_length=MAX_STRING_LENGTH,
-        description="Street address"
+        None, max_length=MAX_STRING_LENGTH, description="Street address"
     )
     postalCode: Optional[str] = Field(
-        None,
-        max_length=20,
-        description="Postal or ZIP code"
+        None, max_length=20, description="Postal or ZIP code"
     )
     city: Optional[str] = Field(
-        None,
-        max_length=MAX_STRING_LENGTH,
-        description="City name"
+        None, max_length=MAX_STRING_LENGTH, description="City name"
     )
     countryCode: Optional[str] = Field(
-        None,
-        max_length=5,
-        description="ISO 3166-1 country code (e.g., 'US', 'GB')"
+        None, max_length=5, description="ISO 3166-1 country code (e.g., 'US', 'GB')"
     )
     region: Optional[str] = Field(
-        None,
-        max_length=MAX_STRING_LENGTH,
-        description="State, province, or region"
+        None, max_length=MAX_STRING_LENGTH, description="State, province, or region"
     )
 
-    @field_validator('countryCode')
+    @field_validator("countryCode")
     @classmethod
     def validate_country_code(cls, v: Optional[str]) -> Optional[str]:
         """Validate ISO country code format."""
@@ -227,7 +207,7 @@ class Location(BaseModel):
                 )
         return v
 
-    @field_validator('*')
+    @field_validator("*")
     @classmethod
     def sanitize_location_fields(cls, v: Optional[str]) -> Optional[str]:
         """Sanitize all location fields."""
@@ -240,20 +220,16 @@ class Profile(BaseModel):
     network: Optional[str] = Field(
         None,
         max_length=MAX_STRING_LENGTH,
-        description="Social network name (e.g., 'LinkedIn', 'Twitter')"
+        description="Social network name (e.g., 'LinkedIn', 'Twitter')",
     )
     username: Optional[str] = Field(
-        None,
-        max_length=MAX_STRING_LENGTH,
-        description="Username or handle"
+        None, max_length=MAX_STRING_LENGTH, description="Username or handle"
     )
     url: Optional[str] = Field(
-        None,
-        max_length=MAX_STRING_LENGTH,
-        description="Profile URL"
+        None, max_length=MAX_STRING_LENGTH, description="Profile URL"
     )
 
-    @field_validator('url')
+    @field_validator("url")
     @classmethod
     def validate_url(cls, v: Optional[str]) -> Optional[str]:
         """Validate URL format."""
@@ -266,7 +242,7 @@ class Profile(BaseModel):
                 )
         return v
 
-    @field_validator('network', 'username')
+    @field_validator("network", "username")
     @classmethod
     def sanitize_text_fields(cls, v: Optional[str]) -> Optional[str]:
         """Sanitize text fields."""
@@ -277,17 +253,15 @@ class Skill(BaseModel):
     """Skill information."""
 
     name: Optional[str] = Field(
-        None,
-        max_length=MAX_STRING_LENGTH,
-        description="Skill name or category"
+        None, max_length=MAX_STRING_LENGTH, description="Skill name or category"
     )
     keywords: Optional[List[str]] = Field(
         default_factory=list,
         max_length=MAX_LIST_LENGTH,
-        description="List of related keywords or technologies"
+        description="List of related keywords or technologies",
     )
 
-    @field_validator('keywords')
+    @field_validator("keywords")
     @classmethod
     def validate_keywords(cls, v: Optional[List[str]]) -> List[str]:
         """Validate keywords list."""
@@ -314,7 +288,7 @@ class Skill(BaseModel):
 
         return validated
 
-    @field_validator('name')
+    @field_validator("name")
     @classmethod
     def sanitize_name(cls, v: Optional[str]) -> Optional[str]:
         """Sanitize skill name."""
@@ -325,37 +299,33 @@ class WorkItem(BaseModel):
     """Work experience item."""
 
     company: Optional[str] = Field(
-        None,
-        max_length=MAX_STRING_LENGTH,
-        description="Company name"
+        None, max_length=MAX_STRING_LENGTH, description="Company name"
     )
     position: Optional[str] = Field(
-        None,
-        max_length=MAX_STRING_LENGTH,
-        description="Job title or position"
+        None, max_length=MAX_STRING_LENGTH, description="Job title or position"
     )
     startDate: Optional[str] = Field(
         None,
         max_length=20,
-        description="Start date (ISO 8601 format recommended: YYYY-MM-DD)"
+        description="Start date (ISO 8601 format recommended: YYYY-MM-DD)",
     )
     endDate: Optional[str] = Field(
         None,
         max_length=20,
-        description="End date (ISO 8601 format recommended: YYYY-MM-DD). Leave empty if current position"
+        description="End date (ISO 8601 format recommended: YYYY-MM-DD). Leave empty if current position",
     )
     summary: Optional[str] = Field(
         None,
         max_length=MAX_LONG_STRING_LENGTH,
-        description="Job summary or description"
+        description="Job summary or description",
     )
     highlights: Optional[List[str]] = Field(
         default_factory=list,
         max_length=MAX_LIST_LENGTH,
-        description="List of key achievements or responsibilities"
+        description="List of key achievements or responsibilities",
     )
 
-    @field_validator('highlights')
+    @field_validator("highlights")
     @classmethod
     def validate_highlights(cls, v: Optional[List[str]]) -> List[str]:
         """Validate highlights list."""
@@ -380,22 +350,28 @@ class WorkItem(BaseModel):
 
         return validated
 
-    @model_validator(mode='after')
-    def validate_date_range(self) -> 'WorkItem':
+    @model_validator(mode="after")
+    def validate_date_range(self) -> "WorkItem":
         """Validate that end date is after start date (if both provided)."""
         if self.startDate and self.endDate:
             # Simple comparison for ISO format dates (YYYY-MM-DD)
-            start_parts = self.startDate.split('-')
-            end_parts = self.endDate.split('-')
+            start_parts = self.startDate.split("-")
+            end_parts = self.endDate.split("-")
 
             if len(start_parts) == 3 and len(end_parts) == 3:
                 try:
                     start_year, start_month, start_day = map(int, start_parts)
                     end_year, end_month, end_day = map(int, end_parts)
 
-                    if (end_year < start_year or
-                        (end_year == start_year and end_month < start_month) or
-                        (end_year == start_year and end_month == start_month and end_day < start_day)):
+                    if (
+                        end_year < start_year
+                        or (end_year == start_year and end_month < start_month)
+                        or (
+                            end_year == start_year
+                            and end_month == start_month
+                            and end_day < start_day
+                        )
+                    ):
                         raise ValueError(
                             f"End date '{self.endDate}' cannot be before start date '{self.startDate}'"
                         )
@@ -405,7 +381,7 @@ class WorkItem(BaseModel):
 
         return self
 
-    @field_validator('company', 'position', 'summary')
+    @field_validator("company", "position", "summary")
     @classmethod
     def sanitize_text_fields(cls, v: Optional[str]) -> Optional[str]:
         """Sanitize text fields."""
@@ -418,35 +394,33 @@ class EducationItem(BaseModel):
     institution: Optional[str] = Field(
         None,
         max_length=MAX_STRING_LENGTH,
-        description="Institution name (university, college, etc.)"
+        description="Institution name (university, college, etc.)",
     )
     area: Optional[str] = Field(
-        None,
-        max_length=MAX_STRING_LENGTH,
-        description="Field of study or major"
+        None, max_length=MAX_STRING_LENGTH, description="Field of study or major"
     )
     studyType: Optional[str] = Field(
         None,
         max_length=MAX_STRING_LENGTH,
-        description="Degree type (e.g., 'Bachelor', 'Master', 'PhD')"
+        description="Degree type (e.g., 'Bachelor', 'Master', 'PhD')",
     )
     startDate: Optional[str] = Field(
         None,
         max_length=20,
-        description="Start date (ISO 8601 format recommended: YYYY-MM-DD)"
+        description="Start date (ISO 8601 format recommended: YYYY-MM-DD)",
     )
     endDate: Optional[str] = Field(
         None,
         max_length=20,
-        description="End date (ISO 8601 format recommended: YYYY-MM-DD)"
+        description="End date (ISO 8601 format recommended: YYYY-MM-DD)",
     )
     courses: Optional[List[str]] = Field(
         default_factory=list,
         max_length=MAX_LIST_LENGTH,
-        description="List of relevant courses"
+        description="List of relevant courses",
     )
 
-    @field_validator('courses')
+    @field_validator("courses")
     @classmethod
     def validate_courses(cls, v: Optional[List[str]]) -> List[str]:
         """Validate courses list."""
@@ -471,21 +445,27 @@ class EducationItem(BaseModel):
 
         return validated
 
-    @model_validator(mode='after')
-    def validate_date_range(self) -> 'EducationItem':
+    @model_validator(mode="after")
+    def validate_date_range(self) -> "EducationItem":
         """Validate that end date is after start date (if both provided)."""
         if self.startDate and self.endDate:
-            start_parts = self.startDate.split('-')
-            end_parts = self.endDate.split('-')
+            start_parts = self.startDate.split("-")
+            end_parts = self.endDate.split("-")
 
             if len(start_parts) == 3 and len(end_parts) == 3:
                 try:
                     start_year, start_month, start_day = map(int, start_parts)
                     end_year, end_month, end_day = map(int, end_parts)
 
-                    if (end_year < start_year or
-                        (end_year == start_year and end_month < start_month) or
-                        (end_year == start_year and end_month == start_month and end_day < start_day)):
+                    if (
+                        end_year < start_year
+                        or (end_year == start_year and end_month < start_month)
+                        or (
+                            end_year == start_year
+                            and end_month == start_month
+                            and end_day < start_day
+                        )
+                    ):
                         raise ValueError(
                             f"End date '{self.endDate}' cannot be before start date '{self.startDate}'"
                         )
@@ -494,7 +474,7 @@ class EducationItem(BaseModel):
 
         return self
 
-    @field_validator('institution', 'area', 'studyType')
+    @field_validator("institution", "area", "studyType")
     @classmethod
     def sanitize_text_fields(cls, v: Optional[str]) -> Optional[str]:
         """Sanitize text fields."""
@@ -505,42 +485,36 @@ class ProjectItem(BaseModel):
     """Project item."""
 
     name: Optional[str] = Field(
-        None,
-        max_length=MAX_STRING_LENGTH,
-        description="Project name"
+        None, max_length=MAX_STRING_LENGTH, description="Project name"
     )
     description: Optional[str] = Field(
-        None,
-        max_length=MAX_LONG_STRING_LENGTH,
-        description="Project description"
+        None, max_length=MAX_LONG_STRING_LENGTH, description="Project description"
     )
     url: Optional[str] = Field(
-        None,
-        max_length=MAX_STRING_LENGTH,
-        description="Project URL"
+        None, max_length=MAX_STRING_LENGTH, description="Project URL"
     )
     roles: Optional[List[str]] = Field(
         default_factory=list,
         max_length=MAX_LIST_LENGTH,
-        description="List of roles or responsibilities"
+        description="List of roles or responsibilities",
     )
     startDate: Optional[str] = Field(
         None,
         max_length=20,
-        description="Start date (ISO 8601 format recommended: YYYY-MM-DD)"
+        description="Start date (ISO 8601 format recommended: YYYY-MM-DD)",
     )
     endDate: Optional[str] = Field(
         None,
         max_length=20,
-        description="End date (ISO 8601 format recommended: YYYY-MM-DD)"
+        description="End date (ISO 8601 format recommended: YYYY-MM-DD)",
     )
     highlights: Optional[List[str]] = Field(
         default_factory=list,
         max_length=MAX_LIST_LENGTH,
-        description="List of key achievements or features"
+        description="List of key achievements or features",
     )
 
-    @field_validator('url')
+    @field_validator("url")
     @classmethod
     def validate_url(cls, v: Optional[str]) -> Optional[str]:
         """Validate URL format."""
@@ -553,7 +527,7 @@ class ProjectItem(BaseModel):
                 )
         return v
 
-    @field_validator('roles', 'highlights')
+    @field_validator("roles", "highlights")
     @classmethod
     def validate_lists(cls, v: Optional[List[str]], info) -> List[str]:
         """Validate list fields."""
@@ -580,21 +554,27 @@ class ProjectItem(BaseModel):
 
         return validated
 
-    @model_validator(mode='after')
-    def validate_date_range(self) -> 'ProjectItem':
+    @model_validator(mode="after")
+    def validate_date_range(self) -> "ProjectItem":
         """Validate that end date is after start date (if both provided)."""
         if self.startDate and self.endDate:
-            start_parts = self.startDate.split('-')
-            end_parts = self.endDate.split('-')
+            start_parts = self.startDate.split("-")
+            end_parts = self.endDate.split("-")
 
             if len(start_parts) == 3 and len(end_parts) == 3:
                 try:
                     start_year, start_month, start_day = map(int, start_parts)
                     end_year, end_month, end_day = map(int, end_parts)
 
-                    if (end_year < start_year or
-                        (end_year == start_year and end_month < start_month) or
-                        (end_year == start_year and end_month == start_month and end_day < start_day)):
+                    if (
+                        end_year < start_year
+                        or (end_year == start_year and end_month < start_month)
+                        or (
+                            end_year == start_year
+                            and end_month == start_month
+                            and end_day < start_day
+                        )
+                    ):
                         raise ValueError(
                             f"End date '{self.endDate}' cannot be before start date '{self.startDate}'"
                         )
@@ -603,7 +583,7 @@ class ProjectItem(BaseModel):
 
         return self
 
-    @field_validator('name', 'description')
+    @field_validator("name", "description")
     @classmethod
     def sanitize_text_fields(cls, v: Optional[str]) -> Optional[str]:
         """Sanitize text fields."""
@@ -618,67 +598,69 @@ class ResumeData(BaseModel):
     profiles: Optional[List[Profile]] = Field(
         default_factory=list,
         max_length=MAX_LIST_LENGTH,
-        description="Social media profiles"
+        description="Social media profiles",
     )
     work: Optional[List[WorkItem]] = Field(
         default_factory=list,
         max_length=MAX_RESUME_ITEMS,
-        description="Work experience items"
+        description="Work experience items",
     )
     volunteer: Optional[List[Dict[str, Any]]] = Field(
         default_factory=list,
         max_length=MAX_RESUME_ITEMS,
-        description="Volunteer experience items"
+        description="Volunteer experience items",
     )
     education: Optional[List[EducationItem]] = Field(
-        default_factory=list,
-        max_length=MAX_RESUME_ITEMS,
-        description="Education items"
+        default_factory=list, max_length=MAX_RESUME_ITEMS, description="Education items"
     )
     awards: Optional[List[Dict[str, Any]]] = Field(
         default_factory=list,
         max_length=MAX_RESUME_ITEMS,
-        description="Awards and honors"
+        description="Awards and honors",
     )
     certificates: Optional[List[Dict[str, Any]]] = Field(
         default_factory=list,
         max_length=MAX_RESUME_ITEMS,
-        description="Certificates and certifications"
+        description="Certificates and certifications",
     )
     publications: Optional[List[Dict[str, Any]]] = Field(
-        default_factory=list,
-        max_length=MAX_RESUME_ITEMS,
-        description="Publications"
+        default_factory=list, max_length=MAX_RESUME_ITEMS, description="Publications"
     )
     skills: Optional[List[Skill]] = Field(
         default_factory=list,
         max_length=MAX_LIST_LENGTH,
-        description="Skills and competencies"
+        description="Skills and competencies",
     )
     languages: Optional[List[Dict[str, Any]]] = Field(
         default_factory=list,
         max_length=MAX_LIST_LENGTH,
-        description="Languages and proficiency levels"
+        description="Languages and proficiency levels",
     )
     interests: Optional[List[Dict[str, Any]]] = Field(
         default_factory=list,
         max_length=MAX_LIST_LENGTH,
-        description="Interests and hobbies"
+        description="Interests and hobbies",
     )
     references: Optional[List[Dict[str, Any]]] = Field(
-        default_factory=list,
-        max_length=MAX_RESUME_ITEMS,
-        description="References"
+        default_factory=list, max_length=MAX_RESUME_ITEMS, description="References"
     )
     projects: Optional[List[ProjectItem]] = Field(
-        default_factory=list,
-        max_length=MAX_RESUME_ITEMS,
-        description="Project items"
+        default_factory=list, max_length=MAX_RESUME_ITEMS, description="Project items"
     )
 
-    @field_validator('volunteer', 'awards', 'certificates', 'publications', 'languages', 'interests', 'references')
+    @field_validator(
+        "volunteer",
+        "awards",
+        "certificates",
+        "publications",
+        "languages",
+        "interests",
+        "references",
+    )
     @classmethod
-    def validate_generic_lists(cls, v: Optional[List[Dict[str, Any]]], info) -> List[Dict[str, Any]]:
+    def validate_generic_lists(
+        cls, v: Optional[List[Dict[str, Any]]], info
+    ) -> List[Dict[str, Any]]:
         """Validate and sanitize generic lists (volunteer, awards, etc.)."""
         field_name = info.field_name
 
@@ -708,7 +690,8 @@ class ResumeData(BaseModel):
                     sanitized = sanitize_html(value)
                     if len(sanitized) > MAX_STRING_LENGTH:
                         raise ValueError(
-                            f"{field_name[:-1].capitalize()} field '{key}' exceeds maximum length of {MAX_STRING_LENGTH} characters"
+                            f"{field_name[:-1].capitalize()} field '{key}' "
+                            f"exceeds maximum length of {MAX_STRING_LENGTH} characters"
                         )
                     sanitized_item[key] = sanitized
                 elif isinstance(value, list):
@@ -719,7 +702,8 @@ class ResumeData(BaseModel):
                             sanitized = sanitize_html(list_item)
                             if len(sanitized) > MAX_STRING_LENGTH:
                                 raise ValueError(
-                                    f"{field_name[:-1].capitalize()} list item exceeds maximum length of {MAX_STRING_LENGTH} characters"
+                                    f"{field_name[:-1].capitalize()} list item "
+                                    f"exceeds maximum length of {MAX_STRING_LENGTH} characters"
                                 )
                             validated_list.append(sanitized)
                         else:
@@ -732,26 +716,28 @@ class ResumeData(BaseModel):
 
         return validated
 
-    @model_validator(mode='after')
-    def validate_resume_data(self) -> 'ResumeData':
+    @model_validator(mode="after")
+    def validate_resume_data(self) -> "ResumeData":
         """Validate that resume has at least basic information."""
         # Check if resume is completely empty
-        has_data = any([
-            self.basics,
-            self.location,
-            self.profiles,
-            self.work,
-            self.volunteer,
-            self.education,
-            self.awards,
-            self.certificates,
-            self.publications,
-            self.skills,
-            self.languages,
-            self.interests,
-            self.references,
-            self.projects
-        ])
+        has_data = any(
+            [
+                self.basics,
+                self.location,
+                self.profiles,
+                self.work,
+                self.volunteer,
+                self.education,
+                self.awards,
+                self.certificates,
+                self.publications,
+                self.skills,
+                self.languages,
+                self.interests,
+                self.references,
+                self.projects,
+            ]
+        )
 
         if not has_data:
             raise ValueError(
@@ -780,10 +766,10 @@ class ResumeRequest(BaseModel):
     variant: str = Field(
         default="base",
         max_length=50,
-        description="Template variant to use (e.g., 'base', 'modern', 'classic')"
+        description="Template variant to use (e.g., 'base', 'modern', 'classic')",
     )
 
-    @field_validator('variant')
+    @field_validator("variant")
     @classmethod
     def validate_variant(cls, v: str) -> str:
         """Validate variant name."""
@@ -792,7 +778,7 @@ class ResumeRequest(BaseModel):
             raise ValueError("Variant name cannot be empty")
 
         # Allow only alphanumeric characters, hyphens, and underscores
-        if not re.match(r'^[a-zA-Z0-9_-]+$', v):
+        if not re.match(r"^[a-zA-Z0-9_-]+$", v):
             raise ValueError(
                 f"Invalid variant name: '{v}'. "
                 "Variant name must contain only letters, numbers, hyphens, and underscores"
@@ -806,19 +792,21 @@ class TailorRequest(BaseModel):
 
     resume_data: ResumeData = Field(..., description="Original resume data")
     job_description: str = Field(
-        ..., min_length=10, max_length=MAX_LONG_STRING_LENGTH,
-        description="Job description text (minimum 10 characters)"
+        ...,
+        min_length=10,
+        max_length=MAX_LONG_STRING_LENGTH,
+        description="Job description text (minimum 10 characters)",
     )
     company_name: Optional[str] = Field(
-        None, max_length=MAX_STRING_LENGTH,
-        description="Company name for personalization"
+        None,
+        max_length=MAX_STRING_LENGTH,
+        description="Company name for personalization",
     )
     job_title: Optional[str] = Field(
-        None, max_length=MAX_STRING_LENGTH,
-        description="Job title for personalization"
+        None, max_length=MAX_STRING_LENGTH, description="Job title for personalization"
     )
 
-    @field_validator('job_description')
+    @field_validator("job_description")
     @classmethod
     def validate_job_description(cls, v: str) -> str:
         """Validate and sanitize job description."""
@@ -834,7 +822,7 @@ class TailorRequest(BaseModel):
 
         return v
 
-    @field_validator('company_name', 'job_title')
+    @field_validator("company_name", "job_title")
     @classmethod
     def sanitize_text_fields(cls, v: Optional[str]) -> Optional[str]:
         """Sanitize text fields."""
@@ -846,11 +834,17 @@ class VariantMetadata(BaseModel):
 
     name: str = Field(..., max_length=50, description="Variant identifier")
     display_name: str = Field(..., max_length=100, description="Human-readable name")
-    description: str = Field(..., max_length=MAX_STRING_LENGTH, description="Variant description")
-    format: str = Field(..., max_length=20, description="File format (e.g., 'json', 'yaml')")
-    output_formats: List[str] = Field(..., max_length=10, description="Supported output formats")
+    description: str = Field(
+        ..., max_length=MAX_STRING_LENGTH, description="Variant description"
+    )
+    format: str = Field(
+        ..., max_length=20, description="File format (e.g., 'json', 'yaml')"
+    )
+    output_formats: List[str] = Field(
+        ..., max_length=10, description="Supported output formats"
+    )
 
-    @field_validator('output_formats')
+    @field_validator("output_formats")
     @classmethod
     def validate_output_formats(cls, v: List[str]) -> List[str]:
         """Validate output formats list."""
@@ -858,7 +852,9 @@ class VariantMetadata(BaseModel):
             raise ValueError("Output formats cannot be empty")
 
         if len(v) > 10:
-            raise ValueError(f"Output formats exceed maximum of 10 items (current: {len(v)})")
+            raise ValueError(
+                f"Output formats exceed maximum of 10 items (current: {len(v)})"
+            )
 
         # Common output formats
 
@@ -878,7 +874,7 @@ class VariantMetadata(BaseModel):
 
         return validated
 
-    @field_validator('name', 'display_name', 'description', 'format')
+    @field_validator("name", "display_name", "description", "format")
     @classmethod
     def sanitize_text_fields(cls, v: str) -> str:
         """Sanitize text fields."""
@@ -898,14 +894,13 @@ class TailoredResumeResponse(BaseModel):
     keywords: List[str] = Field(
         ...,
         max_length=MAX_LIST_LENGTH,
-        description="Extracted keywords from job description"
+        description="Extracted keywords from job description",
     )
     suggestions: Optional[Dict[str, Any]] = Field(
-        None,
-        description="AI-generated improvement suggestions"
+        None, description="AI-generated improvement suggestions"
     )
 
-    @field_validator('keywords')
+    @field_validator("keywords")
     @classmethod
     def validate_keywords(cls, v: List[str]) -> List[str]:
         """Validate keywords list."""

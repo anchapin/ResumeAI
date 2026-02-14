@@ -31,7 +31,6 @@ vi.mock('../hooks/useVariants', () => ({
     error: null,
   }),
 }));
-
 // Mock ReactMarkdown
 vi.mock('react-markdown', () => ({
   default: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
@@ -165,9 +164,9 @@ describe('Workspace Component', () => {
     }));
 
     render(
-      <Workspace 
-        resumeData={mockResumeData} 
-        onNavigate={mockOnNavigate} 
+      <Workspace
+        resumeData={mockResumeData}
+        onNavigate={mockOnNavigate}
       />
     );
 

@@ -29,7 +29,7 @@ def test_valid_data():
                 email="john@example.com",
                 phone="+1 (555) 123-4567",
                 url="https://johndoe.com",
-                summary="Software engineer with 5 years of experience"
+                summary="Software engineer with 5 years of experience",
             ),
             work=[
                 WorkItem(
@@ -38,12 +38,16 @@ def test_valid_data():
                     startDate="2020-01-01",
                     endDate="2023-12-31",
                     summary="Developed web applications",
+<<<<<<< HEAD
                     highlights=["Built REST API", "Improved by 50%"]
+=======
+                    highlights=["Built REST API", "Improved performance by 50%"],
+>>>>>>> origin/main
                 )
-            ]
+            ],
         )
 
-        request = ResumeRequest(resume_data=resume, variant="base")
+        ResumeRequest(resume_data=resume, variant="base")
 
         print("✓ Valid resume data passed validation")
         assert request is not None
@@ -107,8 +111,7 @@ def test_xss_attempt():
         xss_payload = "<script>alert('XSS')</script>"
         resume = ResumeData(
             basics=BasicInfo(
-                name=xss_payload,
-                summary="<img src=x onerror=alert('XSS')>"
+                name=xss_payload, summary="<img src=x onerror=alert('XSS')>"
             )
         )
 
@@ -176,11 +179,15 @@ def test_too_long_string():
 
     try:
         long_name = "x" * 2000  # Exceeds MAX_STRING_LENGTH
+<<<<<<< HEAD
         ResumeData(
             basics=BasicInfo(
                 name=long_name
             )
         )
+=======
+        ResumeData(basics=BasicInfo(name=long_name))
+>>>>>>> origin/main
         print("✗ Overly long string should have been rejected")
         assert False, "Overly long string should have been rejected"
 
@@ -199,6 +206,7 @@ def test_tailor_request_validation():
 
     # Test too short job description
     try:
+<<<<<<< HEAD
         TailorRequest(
             resume_data=ResumeData(
                 basics=BasicInfo(name="John Doe")
@@ -207,6 +215,40 @@ def test_tailor_request_validation():
         )
         print("✗ Short job description should have been rejected")
         assert False, "Short job description should have been rejected"
+=======
+        request = TailorRequest(
+            resume_data=ResumeData(basics=BasicInfo(name="John Doe")),
+            job_description="short",  # Less than 10 characters
+        )
+        print("✗ Short job description should have been rejected")
+        return False
+
+    except ValueError as e:
+        if "too short" in str(e):
+            print(f"✓ Short job description correctly rejected: {e}")
+        else:
+            print(f"✗ Wrong error for short job description: {e}")
+            return False
+
+    # Test valid job description with XSS
+    try:
+        request = TailorRequest(
+            resume_data=ResumeData(basics=BasicInfo(name="John Doe")),
+            job_description="Great job opportunity <script>alert('XSS')</script>",
+            company_name="Tech Corp",
+            job_title="Engineer",
+        )
+
+        # Check that script tag was sanitized
+        if "<script>" not in tailoring_request.job_description:
+            print(f"✓ Job description sanitized: '{tailoring_request.job_description}'")
+            return True
+        else:
+            print(
+                f"✗ Job description not sanitized: '{tailoring_request.job_description}'"
+            )
+            return False
+>>>>>>> origin/main
 
     except Exception as e:
         if "least" in str(e) or "short" in str(e) or "too_short" in str(e):
@@ -246,12 +288,16 @@ def test_invalid_phone():
     print("\nTesting invalid phone number...")
 
     try:
+<<<<<<< HEAD
         ResumeData(
             basics=BasicInfo(
                 name="John Doe",
                 phone="abc123"  # Invalid phone
             )
         )
+=======
+        ResumeData(basics=BasicInfo(name="John Doe", phone="abc123"))  # Invalid phone
+>>>>>>> origin/main
         print("✗ Invalid phone number should have been rejected")
         assert False, "Invalid phone number should have been rejected"
 

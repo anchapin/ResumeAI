@@ -224,9 +224,15 @@ const Workspace: React.FC<WorkspaceProps> = ({ resumeData, onNavigate }) => {
                         </div>
 
                         <div className="space-y-2">
+<<<<<<< HEAD
                             <label htmlFor="job-title" className="text-sm font-bold text-slate-700">Job Title (Optional)</label>
                             <input
                                 id="job-title"
+=======
+                            <label htmlFor="jobTitle" className="text-sm font-bold text-slate-700">Job Title (Optional)</label>
+                            <input
+                                id="jobTitle"
+>>>>>>> origin/main
                                 type="text"
                                 value={jobTitle}
                                 onChange={(e) => setJobTitle(e.target.value)}
@@ -236,9 +242,15 @@ const Workspace: React.FC<WorkspaceProps> = ({ resumeData, onNavigate }) => {
                         </div>
 
                         <div className="space-y-2">
+<<<<<<< HEAD
                             <label htmlFor="job-description" className="text-sm font-bold text-slate-700">Paste Job Description Here</label>
                             <textarea
                                 id="job-description"
+=======
+                            <label htmlFor="jobDescription" className="text-sm font-bold text-slate-700">Paste Job Description Here</label>
+                            <textarea
+                                id="jobDescription"
+>>>>>>> origin/main
                                 value={jobDescription}
                                 onChange={(e) => setJobDescription(e.target.value)}
                                 className="w-full min-h-[200px] px-4 py-3 rounded-lg bg-slate-50 border border-slate-200 focus:bg-white focus:border-primary-500 focus:ring-2 focus:ring-primary-100 outline-none transition-all resize-none"
@@ -247,7 +259,11 @@ const Workspace: React.FC<WorkspaceProps> = ({ resumeData, onNavigate }) => {
                         </div>
 
                         <div className="space-y-2">
+<<<<<<< HEAD
                             <label id="template-label" htmlFor="template-select" className="text-sm font-bold text-slate-700">Select Template</label>
+=======
+                            <label htmlFor="templateSelect" className="text-sm font-bold text-slate-700">Select Template</label>
+>>>>>>> origin/main
                             <div className="relative">
                                 {variantsLoading ? (
                                     <div 

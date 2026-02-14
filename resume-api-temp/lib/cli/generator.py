@@ -11,7 +11,6 @@ from pathlib import Path
 from typing import Dict, Any
 import logging
 from jinja2 import Environment, FileSystemLoader, select_autoescape
-from markupsafe import Markup
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -62,11 +61,6 @@ class ResumeGenerator:
         )
         # Register custom filters
         self.jinja_env.filters['latex_escape'] = _latex_escape
-
-        # Set up finalize function to auto-escape unfiltered variables
-        # Only apply to strings that are not already Markup objects to prevent double-escaping
-        from markupsafe import Markup
-        self.jinja_env.finalize = lambda x: _latex_escape(x) if isinstance(x, str) and not isinstance(x, Markup) else x
 
     def generate_pdf(
         self,
@@ -231,7 +225,7 @@ class ResumeGenerator:
         return variants
 
 
-def _latex_escape(text: Any) -> Markup:
+def _latex_escape(text: Any) -> str:
     """
     Escape special LaTeX characters in text.
 
@@ -239,51 +233,33 @@ def _latex_escape(text: Any) -> Markup:
         text: Text to escape (any type, will be converted to string)
 
     Returns:
-        Escaped text safe for LaTeX as a Markup object to prevent double escaping
+        Escaped text safe for LaTeX
     """
     if text is None:
-        return Markup("")
-
-    # Handle already-marked-up content
-    if isinstance(text, Markup):
-        return text  # Already marked up, return as-is
+        return ""
 
     text_str = str(text)
 
-    # Process the string character by character to avoid replacement conflicts
-    result = []
-    i = 0
-    while i < len(text_str):
-        char = text_str[i]
+    # Escape special LaTeX characters
+    latex_special_chars = {
+        '&': r'\&',
+        '%': r'\%',
+        '$': r'\$',
+        '#': r'\#',
+        '_': r'\_',
+        '{': r'\{',
+        '}': r'\}',
+        '~': r'\textasciitilde{}',
+        '^': r'\^{}',
+        '\\': r'\textbackslash{}',
+        '<': r'\textless{}',
+        '>': r'\textgreater{}',
+    }
 
-        # Check for backslash specially since it's part of escape sequences
-        if char == '\\':
-            # Check if this is part of an existing LaTeX command like \input{}
-            # For now, just escape the backslash itself
-            result.append(r'\textbackslash{}')
-        elif char in '&%$#_{}~^<>':
-            # Map characters to their escaped versions
-            escaped_map = {
-                '&': r'\&',
-                '%': r'\%',
-                '$': r'\$',
-                '#': r'\#',
-                '_': r'\_',
-                '{': r'\{',
-                '}': r'\}',
-                '~': r'\textasciitilde{}',
-                '^': r'\^{}',
-                '<': r'\textless{}',
-                '>': r'\textgreater{}',
-            }
-            result.append(escaped_map[char])
-        else:
-            # Regular character, just append as-is
-            result.append(char)
+    for char, escaped in latex_special_chars.items():
+        text_str = text_str.replace(char, escaped)
 
-        i += 1
-
-    return Markup(''.join(result))
+    return text_str
 
 
 # For testing purposes - create a simple mock PDF generator
