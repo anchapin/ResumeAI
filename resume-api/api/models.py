@@ -3,8 +3,8 @@ Pydantic models for request/response validation.
 """
 
 import re
-from typing import Dict, Any, Optional, List, Union
-from pydantic import BaseModel, Field, field_validator, model_validator, ConfigDict
+from typing import Dict, Any, Optional, List
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 
 # Validation constants
@@ -861,7 +861,6 @@ class VariantMetadata(BaseModel):
             raise ValueError(f"Output formats exceed maximum of 10 items (current: {len(v)})")
 
         # Common output formats
-        valid_formats = {'pdf', 'html', 'doc', 'docx', 'txt', 'md', 'json', 'yaml'}
 
         validated = []
         for fmt in v:
