@@ -24,8 +24,27 @@ const generateLargeResumeData = (count: number): SimpleResumeData => {
     phone: "123",
     location: "Test Loc",
     role: "Test Role",
-    experience: experiences
+    summary: "Test summary",
+    skills: ["Skill 1", "Skill 2"],
+    experience: experiences,
+    education: [{
+      id: "edu-1",
+      institution: "Test Institution",
+      area: "Computer Science",
+      studyType: "Bachelor's",
+      startDate: "2015",
+      endDate: "2019"
+    }],
+    projects: [{
+      id: "proj-1",
+      name: "Test Project",
+      description: "Test Description",
+      startDate: "2020",
+      endDate: "2021",
+      highlights: ["Highlight 1"]
+    }]
   };
+};
 };
 
 const TestWrapper = ({ count }: { count: number }) => {
