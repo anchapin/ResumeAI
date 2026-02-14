@@ -2,6 +2,7 @@ import React from 'react';
 import { JobApplication } from '../types';
 import StatusBadge from '../components/StatusBadge';
 
+/** Mock data for job applications */
 const applications: JobApplication[] = [
   {
     id: '1',
@@ -61,6 +62,16 @@ const applications: JobApplication[] = [
   },
 ];
 
+/**
+ * @component
+ * @description Job Applications page component showing a list of job applications with status badges
+ * @returns {JSX.Element} The rendered job applications page component
+ * 
+ * @example
+ * ```tsx
+ * <JobApplications />
+ * ```
+ */
 const JobApplications: React.FC = () => {
   return (
     <div className="flex-1 min-h-screen bg-[#f6f6f8] pl-72">

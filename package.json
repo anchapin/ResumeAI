@@ -7,12 +7,14 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "test": "vitest"
+    "test": "vitest",
+    "docs": "typedoc --out docs --entryPoints components/ pages/ --excludeNotDocumented --excludeInternal --theme default"
   },
   "dependencies": {
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "react-markdown": "9",
+    "react-toastify": "^11.0.5",
     "recharts": "^3.7.0"
   },
   "devDependencies": {
@@ -21,9 +23,13 @@
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.1",
     "@types/node": "^22.14.0",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@types/react-toastify": "^4.0.2",
     "@vitejs/plugin-react": "^5.0.0",
     "@vitest/coverage-v8": "^4.0.18",
     "jsdom": "^28.0.0",
+    "typedoc": "^0.28.17",
     "typescript": "~5.8.2",
     "vite": "^6.2.0",
     "vitest": "^4.0.18"

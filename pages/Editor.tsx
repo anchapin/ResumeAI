@@ -444,17 +444,31 @@ const ProjectItem = React.memo(({
     );
 });
 
+/**
+ * @interface EditorProps
+ * @description Props for the Editor component
+ * @property {SimpleResumeData} resumeData - The resume data to edit
+ * @property {Function} onUpdate - Callback to update resume data
+ * @property {Function} onBack - Callback to navigate back
+ */
 interface EditorProps {
+  /** The resume data to edit */
   resumeData: SimpleResumeData;
+  /** Callback to update resume data */
   onUpdate: (data: SimpleResumeData) => void;
+  /** Callback to navigate back */
   onBack: () => void;
 }
 
+/** Navigation items for the editor header */
 const NAV_ITEMS = ['Dashboard', 'My Resumes', 'Templates', 'Settings'];
+/** Tab items for the editor content */
 const TAB_ITEMS = ['Contact Info', 'Summary', 'Experience', 'Skills', 'Education', 'Projects'];
 
 /**
  * Helper function to get a human-readable time difference
+ * @param {Date} date - The date to compare against the current time
+ * @returns {string} A human-readable time difference string
  */
 function getTimeSince(date: Date): string {
   const now = new Date();
@@ -474,6 +488,24 @@ function getTimeSince(date: Date): string {
   }
 }
 
+/**
+ * @component
+ * @description Editor page component for editing resume data
+ * @param {EditorProps} props - Component properties
+ * @param {SimpleResumeData} props.resumeData - The resume data to edit
+ * @param {Function} props.onUpdate - Callback to update resume data
+ * @param {Function} props.onBack - Callback to navigate back
+ * @returns {JSX.Element} The rendered editor page component
+ * 
+ * @example
+ * ```tsx
+ * <Editor 
+ *   resumeData={sampleResumeData} 
+ *   onUpdate={(data) => console.log('Updated:', data)} 
+ *   onBack={() => console.log('Going back')} 
+ * />
+ * ```
+ */
 const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, onBack }) => {
   const [activeTab, setActiveTab] = useState<string>('Experience');
 

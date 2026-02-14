@@ -25,7 +25,7 @@ const generateLargeResumeData = (count: number): SimpleResumeData => {
     role: "Test Role",
     experience: experiences
   };
-};
+}
 
 const TestWrapper = ({ count }: { count: number }) => {
   const [resumeData, setResumeData] = useState(generateLargeResumeData(count));

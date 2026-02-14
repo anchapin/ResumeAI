@@ -1,11 +1,35 @@
 import React from 'react';
 import { Route } from '../types';
 
+/**
+ * @interface SidebarProps
+ * @description Props for the Sidebar component
+ * @property {Route} currentRoute - The currently selected route
+ * @property {Function} onNavigate - Callback function to handle navigation
+ */
 interface SidebarProps {
+  /** The currently selected route */
   currentRoute: Route;
+  /** Callback function to handle navigation */
   onNavigate: (route: Route) => void;
 }
 
+/**
+ * @component
+ * @description Sidebar component that provides navigation links for the application
+ * @param {SidebarProps} props - Component properties
+ * @param {Route} props.currentRoute - The currently selected route
+ * @param {Function} props.onNavigate - Callback function to handle navigation
+ * @returns {JSX.Element} The rendered sidebar component
+ * 
+ * @example
+ * ```tsx
+ * <Sidebar 
+ *   currentRoute={Route.DASHBOARD} 
+ *   onNavigate={(route) => console.log(`Navigating to ${route}`)} 
+ * />
+ * ```
+ */
 const Sidebar: React.FC<SidebarProps> = ({ currentRoute, onNavigate }) => {
   const navItems = [
     { id: Route.DASHBOARD, label: 'Dashboard', icon: 'dashboard' },

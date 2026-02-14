@@ -1,5 +1,19 @@
 import React from 'react';
 
+/**
+ * @component
+ * @description A badge component that displays status with appropriate styling
+ * @param {{ status: string }} props - Component properties
+ * @param {string} props.status - The status to display (e.g., 'Applied', 'Interview', 'Offer', 'Rejected')
+ * @returns {JSX.Element} The rendered status badge component
+ * 
+ * @example
+ * ```tsx
+ * <StatusBadge status="Applied" />
+ * <StatusBadge status="Interview" />
+ * <StatusBadge status="Offer" />
+ * ```
+ */
 const StatusBadge = ({ status }: { status: string }) => {
   let colorClass = '';
   switch (status) {

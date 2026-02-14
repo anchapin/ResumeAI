@@ -3,12 +3,14 @@ import { BarChart, Bar, ResponsiveContainer, XAxis, Tooltip, Cell } from 'rechar
 import { JobApplication } from '../types';
 import StatusBadge from '../components/StatusBadge';
 
+/** Mock data for the application funnel chart */
 const data = [
   { name: 'Sent', value: 25, color: '#4f46e5' },
   { name: 'Interview', value: 8, color: '#4f46e5' }, // Using same color but will fade via opacity in custom shape if needed, or distinct colors
   { name: 'Offer', value: 2, color: '#4f46e5' },
 ];
 
+/** Mock data for recent job applications */
 const recentApps: JobApplication[] = [
   {
     id: '1',
@@ -36,6 +38,16 @@ const recentApps: JobApplication[] = [
   },
 ];
 
+/**
+ * @component
+ * @description Dashboard page component showing job search overview with statistics and charts
+ * @returns {JSX.Element} The rendered dashboard page component
+ * 
+ * @example
+ * ```tsx
+ * <Dashboard />
+ * ```
+ */
 const Dashboard: React.FC = () => {
   return (
     <div className="flex-1 min-h-screen bg-[#f6f6f8] pl-72">
