@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { SimpleResumeData, WorkExperience } from '../types';
+import { SimpleResumeData, WorkExperience, EducationEntry, ProjectEntry } from '../types';
 
 interface ExperienceItemProps {
     exp: WorkExperience;
@@ -127,10 +127,316 @@ const ExperienceItem = React.memo(({
                                 />
                             </div>
                         </div>
-                        <button className="flex items-center text-primary-600 text-sm font-bold hover:underline gap-1 mt-2">
-                            <span className="material-symbols-outlined text-[18px]">add_circle</span>
-                            Add Another Achievement
-                        </button>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+});
+
+interface EducationItemProps {
+    edu: EducationEntry;
+    isExpanded: boolean;
+    onToggleExpand: (id: string) => void;
+    onDelete: (id: string) => void;
+    onUpdate: (id: string, field: keyof EducationEntry, value: any) => void;
+}
+
+const EducationItem = React.memo(({
+    edu,
+    isExpanded,
+    onToggleExpand,
+    onDelete,
+    onUpdate
+}: EducationItemProps) => {
+    return (
+        <div
+            className={`bg-white rounded-xl border transition-all duration-300 overflow-hidden ${
+                isExpanded ? 'border-primary-200 shadow-md ring-1 ring-primary-100' : 'border-slate-200 opacity-80 hover:opacity-100'
+            }`}
+        >
+            {/* Card Header */}
+            <div className="p-6 flex items-start justify-between cursor-pointer" onClick={() => onToggleExpand(edu.id)}>
+                <div className="flex items-center gap-4">
+                    <button className={`p-1 rounded-full transition-transform duration-200 ${isExpanded ? 'rotate-180 bg-slate-100 text-slate-900' : 'text-slate-400'}`}>
+                        <span className="material-symbols-outlined">expand_more</span>
+                    </button>
+                    <div>
+                        <h3 className="font-bold text-slate-900 text-lg">{edu.institution}</h3>
+                        <p className="text-sm text-slate-500 font-medium">{edu.studyType} in {edu.area} | {edu.startDate} - {edu.endDate}</p>
+                    </div>
+                </div>
+                <div className="flex items-center gap-2">
+                     <button className="p-2 text-slate-400 hover:bg-slate-50 hover:text-slate-700 rounded-lg">
+                        <span className="material-symbols-outlined text-[20px]">edit</span>
+                     </button>
+                     <button
+                        onClick={(e) => { e.stopPropagation(); onDelete(edu.id); }}
+                        className="p-2 text-slate-400 hover:bg-red-50 hover:text-red-500 rounded-lg"
+                     >
+                        <span className="material-symbols-outlined text-[20px]">delete</span>
+                     </button>
+                </div>
+            </div>
+
+            {/* Card Body (Expanded) */}
+            {isExpanded && (
+                <div className="px-6 pb-6 pt-0 animate-in slide-in-from-top-2 fade-in duration-200">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6 pt-4 border-t border-slate-100">
+                        <div className="space-y-2">
+                            <label className="text-sm font-bold text-slate-700">Institution</label>
+                            <input
+                                type="text"
+                                value={edu.institution}
+                                onChange={(e) => onUpdate(edu.id, 'institution', e.target.value)}
+                                className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all text-slate-900"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-sm font-bold text-slate-700">Degree Type</label>
+                            <input
+                                type="text"
+                                value={edu.studyType}
+                                onChange={(e) => onUpdate(edu.id, 'studyType', e.target.value)}
+                                className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all text-slate-900"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-sm font-bold text-slate-700">Field of Study</label>
+                            <input
+                                type="text"
+                                value={edu.area}
+                                onChange={(e) => onUpdate(edu.id, 'area', e.target.value)}
+                                className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all text-slate-900"
+                            />
+                        </div>
+                        <div className="space-y-2"></div>
+                        <div className="space-y-2">
+                            <label className="text-sm font-bold text-slate-700">Start Date</label>
+                            <input
+                                type="text"
+                                value={edu.startDate}
+                                onChange={(e) => onUpdate(edu.id, 'startDate', e.target.value)}
+                                className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all text-slate-900"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-sm font-bold text-slate-700">End Date</label>
+                            <input
+                                type="text"
+                                value={edu.endDate}
+                                onChange={(e) => onUpdate(edu.id, 'endDate', e.target.value)}
+                                className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all text-slate-900"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="space-y-3">
+                        <label className="text-sm font-bold text-slate-700">Relevant Courses</label>
+                        <div className="bg-slate-50 border border-dashed border-slate-300 rounded-xl p-4">
+                            <div className="flex flex-wrap items-center gap-2">
+                                {(edu.courses || []).map((course, index) => (
+                                    <span key={index} className="inline-flex items-center gap-1 px-2.5 py-1 bg-primary-50 text-primary-700 rounded-md text-xs font-bold border border-primary-100">
+                                        {course}
+                                        <button
+                                            onClick={() => {
+                                                const newCourses = (edu.courses || []).filter((_, i) => i !== index);
+                                                onUpdate(edu.id, 'courses', newCourses);
+                                            }}
+                                            className="hover:text-primary-900"
+                                        >
+                                            <span className="material-symbols-outlined text-[14px]">close</span>
+                                        </button>
+                                    </span>
+                                ))}
+                                <input
+                                    type="text"
+                                    placeholder="+ Add Course"
+                                    className="bg-transparent text-xs p-1 focus:ring-0 border-none w-28 placeholder-slate-400"
+                                    onKeyDown={(e) => {
+                                        if(e.key === 'Enter') {
+                                            const course = e.currentTarget.value.trim();
+                                            if(course) {
+                                                onUpdate(edu.id, 'courses', [...(edu.courses || []), course]);
+                                                e.currentTarget.value = '';
+                                            }
+                                        }
+                                    }}
+                                />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+});
+
+interface ProjectItemProps {
+    project: ProjectEntry;
+    isExpanded: boolean;
+    onToggleExpand: (id: string) => void;
+    onDelete: (id: string) => void;
+    onUpdate: (id: string, field: keyof ProjectEntry, value: any) => void;
+}
+
+const ProjectItem = React.memo(({
+    project,
+    isExpanded,
+    onToggleExpand,
+    onDelete,
+    onUpdate
+}: ProjectItemProps) => {
+    return (
+        <div
+            className={`bg-white rounded-xl border transition-all duration-300 overflow-hidden ${
+                isExpanded ? 'border-primary-200 shadow-md ring-1 ring-primary-100' : 'border-slate-200 opacity-80 hover:opacity-100'
+            }`}
+        >
+            {/* Card Header */}
+            <div className="p-6 flex items-start justify-between cursor-pointer" onClick={() => onToggleExpand(project.id)}>
+                <div className="flex items-center gap-4">
+                    <button className={`p-1 rounded-full transition-transform duration-200 ${isExpanded ? 'rotate-180 bg-slate-100 text-slate-900' : 'text-slate-400'}`}>
+                        <span className="material-symbols-outlined">expand_more</span>
+                    </button>
+                    <div>
+                        <h3 className="font-bold text-slate-900 text-lg">{project.name}</h3>
+                        <p className="text-sm text-slate-500 font-medium">{project.startDate} - {project.endDate}</p>
+                    </div>
+                </div>
+                <div className="flex items-center gap-2">
+                     <button className="p-2 text-slate-400 hover:bg-slate-50 hover:text-slate-700 rounded-lg">
+                        <span className="material-symbols-outlined text-[20px]">edit</span>
+                     </button>
+                     <button
+                        onClick={(e) => { e.stopPropagation(); onDelete(project.id); }}
+                        className="p-2 text-slate-400 hover:bg-red-50 hover:text-red-500 rounded-lg"
+                     >
+                        <span className="material-symbols-outlined text-[20px]">delete</span>
+                     </button>
+                </div>
+            </div>
+
+            {/* Card Body (Expanded) */}
+            {isExpanded && (
+                <div className="px-6 pb-6 pt-0 animate-in slide-in-from-top-2 fade-in duration-200">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6 pt-4 border-t border-slate-100">
+                        <div className="space-y-2 md:col-span-2">
+                            <label className="text-sm font-bold text-slate-700">Project Name</label>
+                            <input
+                                type="text"
+                                value={project.name}
+                                onChange={(e) => onUpdate(project.id, 'name', e.target.value)}
+                                className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all text-slate-900"
+                            />
+                        </div>
+                        <div className="space-y-2 md:col-span-2">
+                            <label className="text-sm font-bold text-slate-700">Description</label>
+                            <textarea
+                                value={project.description}
+                                onChange={(e) => onUpdate(project.id, 'description', e.target.value)}
+                                className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all text-slate-900 h-24 resize-none"
+                            />
+                        </div>
+                        <div className="space-y-2 md:col-span-2">
+                            <label className="text-sm font-bold text-slate-700">Project URL</label>
+                            <input
+                                type="url"
+                                value={project.url || ''}
+                                onChange={(e) => onUpdate(project.id, 'url', e.target.value)}
+                                className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all text-slate-900"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-sm font-bold text-slate-700">Start Date</label>
+                            <input
+                                type="text"
+                                value={project.startDate}
+                                onChange={(e) => onUpdate(project.id, 'startDate', e.target.value)}
+                                className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all text-slate-900"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-sm font-bold text-slate-700">End Date</label>
+                            <input
+                                type="text"
+                                value={project.endDate}
+                                onChange={(e) => onUpdate(project.id, 'endDate', e.target.value)}
+                                className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all text-slate-900"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="space-y-3">
+                        <label className="text-sm font-bold text-slate-700">Roles</label>
+                        <div className="bg-slate-50 border border-dashed border-slate-300 rounded-xl p-4">
+                            <div className="flex flex-wrap items-center gap-2">
+                                {(project.roles || []).map((role, index) => (
+                                    <span key={index} className="inline-flex items-center gap-1 px-2.5 py-1 bg-primary-50 text-primary-700 rounded-md text-xs font-bold border border-primary-100">
+                                        {role}
+                                        <button
+                                            onClick={() => {
+                                                const newRoles = (project.roles || []).filter((_, i) => i !== index);
+                                                onUpdate(project.id, 'roles', newRoles);
+                                            }}
+                                            className="hover:text-primary-900"
+                                        >
+                                            <span className="material-symbols-outlined text-[14px]">close</span>
+                                        </button>
+                                    </span>
+                                ))}
+                                <input
+                                    type="text"
+                                    placeholder="+ Add Role"
+                                    className="bg-transparent text-xs p-1 focus:ring-0 border-none w-24 placeholder-slate-400"
+                                    onKeyDown={(e) => {
+                                        if(e.key === 'Enter') {
+                                            const role = e.currentTarget.value.trim();
+                                            if(role) {
+                                                onUpdate(project.id, 'roles', [...(project.roles || []), role]);
+                                                e.currentTarget.value = '';
+                                            }
+                                        }
+                                    }}
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="space-y-3 mt-6">
+                        <label className="text-sm font-bold text-slate-700">Key Highlights</label>
+                        <div className="bg-slate-50 border border-dashed border-slate-300 rounded-xl p-4">
+                            <div className="flex flex-wrap items-start gap-2">
+                                {(project.highlights || []).map((highlight, index) => (
+                                    <span key={index} className="inline-flex items-center gap-1 px-2.5 py-1 bg-green-50 text-green-700 rounded-md text-xs font-bold border border-green-100">
+                                        {highlight}
+                                        <button
+                                            onClick={() => {
+                                                const newHighlights = (project.highlights || []).filter((_, i) => i !== index);
+                                                onUpdate(project.id, 'highlights', newHighlights);
+                                            }}
+                                            className="hover:text-green-900"
+                                        >
+                                            <span className="material-symbols-outlined text-[14px]">close</span>
+                                        </button>
+                                    </span>
+                                ))}
+                                <input
+                                    type="text"
+                                    placeholder="+ Add Highlight"
+                                    className="bg-transparent text-xs p-1 focus:ring-0 border-none w-32 placeholder-slate-400"
+                                    onKeyDown={(e) => {
+                                        if(e.key === 'Enter') {
+                                            const highlight = e.currentTarget.value.trim();
+                                            if(highlight) {
+                                                onUpdate(project.id, 'highlights', [...(project.highlights || []), highlight]);
+                                                e.currentTarget.value = '';
+                                            }
+                                        }
+                                    }}
+                                />
+                            </div>
+                        </div>
                     </div>
                 </div>
             )}
@@ -169,8 +475,20 @@ function getTimeSince(date: Date): string {
 }
 
 const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, onBack }) => {
+  const [activeTab, setActiveTab] = useState<string>('Contact Info');
+
+  // Experience state
   const experiences = resumeData.experience;
-  const [expandedId, setExpandedId] = useState<string | null>(experiences.length > 0 ? experiences[0].id : null);
+  const [expandedExpId, setExpandedExpId] = useState<string | null>(experiences.length > 0 ? experiences[0].id : null);
+
+  // Education state
+  const education = resumeData.education || [];
+  const [expandedEduId, setExpandedEduId] = useState<string | null>(education.length > 0 ? education[0].id : null);
+
+  // Projects state
+  const projects = resumeData.projects || [];
+  const [expandedProjId, setExpandedProjId] = useState<string | null>(projects.length > 0 ? projects[0].id : null);
+
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
 
   // Track when data is saved (after a short debounce)
@@ -188,19 +506,41 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, onBack }) => {
     resumeDataRef.current = resumeData;
   }, [resumeData]);
 
-  const handleDelete = useCallback((id: string) => {
+  // Contact Info handlers
+  const updateContact = useCallback((field: keyof SimpleResumeData, value: string) => {
+    const currentData = resumeDataRef.current;
+    onUpdate({ ...currentData, [field]: value });
+  }, [onUpdate]);
+
+  // Summary handlers
+  const updateSummary = useCallback((summary: string) => {
+    const currentData = resumeDataRef.current;
+    onUpdate({ ...currentData, summary });
+  }, [onUpdate]);
+
+  // Skills handlers
+  const addSkill = useCallback((skill: string) => {
+    if(!skill.trim()) return;
+    const currentData = resumeDataRef.current;
+    if(!currentData.skills.includes(skill.trim())) {
+      onUpdate({ ...currentData, skills: [...currentData.skills, skill.trim()] });
+    }
+  }, [onUpdate]);
+
+  const removeSkill = useCallback((skill: string) => {
+    const currentData = resumeDataRef.current;
+    onUpdate({ ...currentData, skills: currentData.skills.filter(s => s !== skill) });
+  }, [onUpdate]);
+
+  // Experience handlers
+  const handleDeleteExperience = useCallback((id: string) => {
     const currentData = resumeDataRef.current;
     const newExperiences = currentData.experience.filter(exp => exp.id !== id);
     onUpdate({ ...currentData, experience: newExperiences });
   }, [onUpdate]);
 
-  const handleToggleExpand = useCallback((id: string) => {
-    // This depends on expandedId which is local state.
-    // However, setExpandedId uses functional update or current state.
-    // We can use functional update if we needed, but we toggle based on id.
-    // If we want this callback to be stable, it shouldn't depend on expandedId.
-    // setExpandedId(prev => prev === id ? null : id);
-    setExpandedId(prev => prev === id ? null : id);
+  const handleToggleExpandExperience = useCallback((id: string) => {
+    setExpandedExpId(prev => prev === id ? null : id);
   }, []);
 
   const updateExperience = useCallback((id: string, field: keyof WorkExperience, value: any) => {
@@ -211,37 +551,336 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, onBack }) => {
     onUpdate({ ...currentData, experience: newExperiences });
   }, [onUpdate]);
 
-  const addTag = useCallback((id: string, tag: string) => {
-      if(!tag.trim()) return;
-      const currentData = resumeDataRef.current;
-      const exp = currentData.experience.find(e => e.id === id);
-      if(exp && !exp.tags.includes(tag)) {
-          // Logic duplicated from updateExperience to avoid dependency or closure issues, or we could call updateExperience if we are careful.
-          // Calling updateExperience inside here is fine if updateExperience is in scope.
-          // But updateExperience is defined in the same scope.
-          // Since updateExperience is stable, we can use it?
-          // No, updateExperience is a const. It might not be initialized if we use it before declaration?
-          // It is declared before.
-          // But adding it to dependency array makes addTag depend on it.
-          // Since updateExperience is stable (only depends on onUpdate), it is fine.
-          // However, simpler to just implement the logic directly using the ref.
-          const newExperiences = currentData.experience.map(e =>
-            e.id === id ? { ...e, tags: [...e.tags, tag] } : e
-          );
-          onUpdate({ ...currentData, experience: newExperiences });
-      }
+  const addTagToExperience = useCallback((id: string, tag: string) => {
+    if(!tag.trim()) return;
+    const currentData = resumeDataRef.current;
+    const exp = currentData.experience.find(e => e.id === id);
+    if(exp && !exp.tags.includes(tag.trim())) {
+      const newExperiences = currentData.experience.map(e =>
+        e.id === id ? { ...e, tags: [...e.tags, tag.trim()] } : e
+      );
+      onUpdate({ ...currentData, experience: newExperiences });
+    }
   }, [onUpdate]);
 
-  const removeTag = useCallback((id: string, tag: string) => {
-      const currentData = resumeDataRef.current;
-      const exp = currentData.experience.find(e => e.id === id);
-      if(exp) {
-          const newExperiences = currentData.experience.map(e =>
-            e.id === id ? { ...e, tags: e.tags.filter(t => t !== tag) } : e
-          );
-          onUpdate({ ...currentData, experience: newExperiences });
-      }
+  const removeTagFromExperience = useCallback((id: string, tag: string) => {
+    const currentData = resumeDataRef.current;
+    const newExperiences = currentData.experience.map(e =>
+      e.id === id ? { ...e, tags: e.tags.filter(t => t !== tag) } : e
+    );
+    onUpdate({ ...currentData, experience: newExperiences });
   }, [onUpdate]);
+
+  const addExperience = useCallback(() => {
+    const newId = Date.now().toString();
+    const currentData = resumeDataRef.current;
+    const newExperiences = [...currentData.experience, {
+      id: newId,
+      company: 'New Company',
+      role: 'New Role',
+      startDate: '',
+      endDate: '',
+      current: false,
+      description: '',
+      tags: []
+    }];
+    onUpdate({ ...currentData, experience: newExperiences });
+    setExpandedExpId(newId);
+  }, [onUpdate]);
+
+  // Education handlers
+  const handleDeleteEducation = useCallback((id: string) => {
+    const currentData = resumeDataRef.current;
+    const newEducation = (currentData.education || []).filter(edu => edu.id !== id);
+    onUpdate({ ...currentData, education: newEducation });
+  }, [onUpdate]);
+
+  const handleToggleExpandEducation = useCallback((id: string) => {
+    setExpandedEduId(prev => prev === id ? null : id);
+  }, []);
+
+  const updateEducation = useCallback((id: string, field: keyof EducationEntry, value: any) => {
+    const currentData = resumeDataRef.current;
+    const newEducation = (currentData.education || []).map(edu =>
+      edu.id === id ? { ...edu, [field]: value } : edu
+    );
+    onUpdate({ ...currentData, education: newEducation });
+  }, [onUpdate]);
+
+  const addEducation = useCallback(() => {
+    const newId = Date.now().toString();
+    const currentData = resumeDataRef.current;
+    const newEducation = [...(currentData.education || []), {
+      id: newId,
+      institution: 'New Institution',
+      area: '',
+      studyType: '',
+      startDate: '',
+      endDate: '',
+      courses: []
+    }];
+    onUpdate({ ...currentData, education: newEducation });
+    setExpandedEduId(newId);
+  }, [onUpdate]);
+
+  // Projects handlers
+  const handleDeleteProject = useCallback((id: string) => {
+    const currentData = resumeDataRef.current;
+    const newProjects = (currentData.projects || []).filter(proj => proj.id !== id);
+    onUpdate({ ...currentData, projects: newProjects });
+  }, [onUpdate]);
+
+  const handleToggleExpandProject = useCallback((id: string) => {
+    setExpandedProjId(prev => prev === id ? null : id);
+  }, []);
+
+  const updateProject = useCallback((id: string, field: keyof ProjectEntry, value: any) => {
+    const currentData = resumeDataRef.current;
+    const newProjects = (currentData.projects || []).map(proj =>
+      proj.id === id ? { ...proj, [field]: value } : proj
+    );
+    onUpdate({ ...currentData, projects: newProjects });
+  }, [onUpdate]);
+
+  const addProject = useCallback(() => {
+    const newId = Date.now().toString();
+    const currentData = resumeDataRef.current;
+    const newProjects = [...(currentData.projects || []), {
+      id: newId,
+      name: 'New Project',
+      description: '',
+      url: '',
+      roles: [],
+      startDate: '',
+      endDate: '',
+      highlights: []
+    }];
+    onUpdate({ ...currentData, projects: newProjects });
+    setExpandedProjId(newId);
+  }, [onUpdate]);
+
+  const renderContent = () => {
+    switch (activeTab) {
+      case 'Contact Info':
+        return (
+          <div className="space-y-6 pb-20">
+            <div className="flex justify-between items-center">
+                <h2 className="text-2xl font-bold text-slate-900">Contact Information</h2>
+                <span className="text-sm font-medium text-slate-500">Basic profile details</span>
+            </div>
+
+            <div className="bg-white rounded-xl border border-slate-200 p-8 space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                        <label className="text-sm font-bold text-slate-700">Full Name</label>
+                        <input
+                            type="text"
+                            value={resumeData.name}
+                            onChange={(e) => updateContact('name', e.target.value)}
+                            className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all text-slate-900"
+                        />
+                    </div>
+                    <div className="space-y-2">
+                        <label className="text-sm font-bold text-slate-700">Email</label>
+                        <input
+                            type="email"
+                            value={resumeData.email}
+                            onChange={(e) => updateContact('email', e.target.value)}
+                            className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all text-slate-900"
+                        />
+                    </div>
+                    <div className="space-y-2">
+                        <label className="text-sm font-bold text-slate-700">Phone</label>
+                        <input
+                            type="tel"
+                            value={resumeData.phone}
+                            onChange={(e) => updateContact('phone', e.target.value)}
+                            className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all text-slate-900"
+                        />
+                    </div>
+                    <div className="space-y-2">
+                        <label className="text-sm font-bold text-slate-700">Location</label>
+                        <input
+                            type="text"
+                            value={resumeData.location}
+                            onChange={(e) => updateContact('location', e.target.value)}
+                            className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all text-slate-900"
+                        />
+                    </div>
+                    <div className="space-y-2 md:col-span-2">
+                        <label className="text-sm font-bold text-slate-700">Job Title / Role</label>
+                        <input
+                            type="text"
+                            value={resumeData.role}
+                            onChange={(e) => updateContact('role', e.target.value)}
+                            className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all text-slate-900"
+                        />
+                    </div>
+                </div>
+            </div>
+          </div>
+        );
+
+      case 'Summary':
+        return (
+          <div className="space-y-6 pb-20">
+            <div className="flex justify-between items-center">
+                <h2 className="text-2xl font-bold text-slate-900">Professional Summary</h2>
+                <span className="text-sm font-medium text-slate-500">Brief introduction</span>
+            </div>
+
+            <div className="bg-white rounded-xl border border-slate-200 p-8 space-y-4">
+                <label className="text-sm font-bold text-slate-700">Summary</label>
+                <textarea
+                    value={resumeData.summary}
+                    onChange={(e) => updateSummary(e.target.value)}
+                    rows={8}
+                    className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all text-slate-900 resize-none"
+                    placeholder="Write a brief professional summary highlighting your experience, skills, and career goals..."
+                />
+                <p className="text-xs text-slate-500">
+                    Tip: Keep your summary concise (3-5 sentences) and focused on your unique value proposition.
+                </p>
+            </div>
+          </div>
+        );
+
+      case 'Experience':
+        return (
+          <div className="space-y-6 pb-20">
+            <div className="flex justify-between items-center">
+                <h2 className="text-2xl font-bold text-slate-900">Work Experience</h2>
+                <span className="text-sm font-medium text-slate-500">{experiences.length} positions listed</span>
+            </div>
+
+            {experiences.map((exp) => (
+                <ExperienceItem
+                    key={exp.id}
+                    exp={exp}
+                    isExpanded={expandedExpId === exp.id}
+                    onToggleExpand={handleToggleExpandExperience}
+                    onDelete={handleDeleteExperience}
+                    onUpdate={updateExperience}
+                    onAddTag={addTagToExperience}
+                    onRemoveTag={removeTagFromExperience}
+                />
+            ))}
+
+            <button
+                onClick={addExperience}
+                className="w-full flex items-center justify-center gap-2 border-2 border-dashed border-primary-200 rounded-xl py-6 text-primary-600 font-bold hover:bg-primary-50/50 hover:border-primary-300 transition-all group"
+            >
+                <span className="material-symbols-outlined group-hover:scale-110 transition-transform">add_box</span>
+                Add New Work Experience
+            </button>
+          </div>
+        );
+
+      case 'Skills':
+        return (
+          <div className="space-y-6 pb-20">
+            <div className="flex justify-between items-center">
+                <h2 className="text-2xl font-bold text-slate-900">Skills</h2>
+                <span className="text-sm font-medium text-slate-500">{resumeData.skills.length} skills listed</span>
+            </div>
+
+            <div className="bg-white rounded-xl border border-slate-200 p-8 space-y-4">
+                <label className="text-sm font-bold text-slate-700">Your Skills</label>
+                <div className="bg-slate-50 border border-dashed border-slate-300 rounded-xl p-6">
+                    <div className="flex flex-wrap items-center gap-3">
+                        {resumeData.skills.map((skill) => (
+                            <span key={skill} className="inline-flex items-center gap-1 px-3 py-1.5 bg-primary-50 text-primary-700 rounded-lg text-sm font-bold border border-primary-100">
+                                {skill}
+                                <button
+                                    onClick={() => removeSkill(skill)}
+                                    className="hover:text-primary-900 ml-1"
+                                >
+                                    <span className="material-symbols-outlined text-[16px]">close</span>
+                                </button>
+                            </span>
+                        ))}
+                        <input
+                            type="text"
+                            placeholder="+ Add Skill"
+                            className="bg-transparent text-sm p-2 focus:ring-0 border-none w-32 placeholder-slate-400"
+                            onKeyDown={(e) => {
+                                if(e.key === 'Enter') {
+                                    addSkill(e.currentTarget.value);
+                                    e.currentTarget.value = '';
+                                }
+                            }}
+                        />
+                    </div>
+                </div>
+                <p className="text-xs text-slate-500">
+                    Tip: List both technical skills (programming languages, tools) and soft skills (leadership, communication).
+                </p>
+            </div>
+          </div>
+        );
+
+      case 'Education':
+        return (
+          <div className="space-y-6 pb-20">
+            <div className="flex justify-between items-center">
+                <h2 className="text-2xl font-bold text-slate-900">Education</h2>
+                <span className="text-sm font-medium text-slate-500">{education.length} entries listed</span>
+            </div>
+
+            {education.map((edu) => (
+                <EducationItem
+                    key={edu.id}
+                    edu={edu}
+                    isExpanded={expandedEduId === edu.id}
+                    onToggleExpand={handleToggleExpandEducation}
+                    onDelete={handleDeleteEducation}
+                    onUpdate={updateEducation}
+                />
+            ))}
+
+            <button
+                onClick={addEducation}
+                className="w-full flex items-center justify-center gap-2 border-2 border-dashed border-primary-200 rounded-xl py-6 text-primary-600 font-bold hover:bg-primary-50/50 hover:border-primary-300 transition-all group"
+            >
+                <span className="material-symbols-outlined group-hover:scale-110 transition-transform">add_box</span>
+                Add Education
+            </button>
+          </div>
+        );
+
+      case 'Projects':
+        return (
+          <div className="space-y-6 pb-20">
+            <div className="flex justify-between items-center">
+                <h2 className="text-2xl font-bold text-slate-900">Projects</h2>
+                <span className="text-sm font-medium text-slate-500">{projects.length} projects listed</span>
+            </div>
+
+            {projects.map((proj) => (
+                <ProjectItem
+                    key={proj.id}
+                    project={proj}
+                    isExpanded={expandedProjId === proj.id}
+                    onToggleExpand={handleToggleExpandProject}
+                    onDelete={handleDeleteProject}
+                    onUpdate={updateProject}
+                />
+            ))}
+
+            <button
+                onClick={addProject}
+                className="w-full flex items-center justify-center gap-2 border-2 border-dashed border-primary-200 rounded-xl py-6 text-primary-600 font-bold hover:bg-primary-50/50 hover:border-primary-300 transition-all group"
+            >
+                <span className="material-symbols-outlined group-hover:scale-110 transition-transform">add_box</span>
+                Add Project
+            </button>
+          </div>
+        );
+
+      default:
+        return null;
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#f6f6f8] flex flex-col">
@@ -295,13 +934,14 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, onBack }) => {
             <div className="border-b border-slate-200 mb-8 overflow-x-auto">
                 <div className="flex gap-8">
                     {TAB_ITEMS.map((tab) => {
-                        const active = tab === 'Experience';
+                        const active = activeTab === tab;
                         return (
-                            <button 
+                            <button
                                 key={tab}
+                                onClick={() => setActiveTab(tab)}
                                 className={`pb-3 pt-2 text-sm font-bold border-b-[3px] transition-colors ${
-                                    active 
-                                    ? 'border-primary-600 text-slate-900' 
+                                    active
+                                    ? 'border-primary-600 text-slate-900'
                                     : 'border-transparent text-slate-500 hover:text-primary-600 hover:border-slate-200'
                                 }`}
                             >
@@ -312,56 +952,15 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, onBack }) => {
                 </div>
             </div>
 
-            {/* Experience Section */}
-            <div className="space-y-6 pb-20">
-                <div className="flex justify-between items-center">
-                    <h2 className="text-2xl font-bold text-slate-900">Work Experience</h2>
-                    <span className="text-sm font-medium text-slate-500">{experiences.length} positions listed</span>
-                </div>
+            {/* Content Area */}
+            {renderContent()}
 
-                {experiences.map((exp) => (
-                    <ExperienceItem
-                        key={exp.id}
-                        exp={exp}
-                        isExpanded={expandedId === exp.id}
-                        onToggleExpand={handleToggleExpand}
-                        onDelete={handleDelete}
-                        onUpdate={updateExperience}
-                        onAddTag={addTag}
-                        onRemoveTag={removeTag}
-                    />
-                ))}
-
-                <button 
-                    onClick={() => {
-                        const newId = Date.now().toString();
-                        const currentData = resumeDataRef.current;
-                        const newExperiences = [...currentData.experience, {
-                            id: newId,
-                            company: 'New Company',
-                            role: 'New Role',
-                            startDate: '',
-                            endDate: '',
-                            current: false,
-                            description: '',
-                            tags: []
-                        }];
-                        onUpdate({ ...currentData, experience: newExperiences });
-                        setExpandedId(newId);
-                    }}
-                    className="w-full flex items-center justify-center gap-2 border-2 border-dashed border-primary-200 rounded-xl py-6 text-primary-600 font-bold hover:bg-primary-50/50 hover:border-primary-300 transition-all group"
-                >
-                    <span className="material-symbols-outlined group-hover:scale-110 transition-transform">add_box</span>
-                    Add New Work Experience
-                </button>
-
-                {/* Bottom Actions */}
-                <div className="flex justify-between items-center border-t border-slate-200 pt-8">
-                    <button className="text-slate-500 font-bold text-sm hover:text-red-600 transition-colors">Discard All Changes</button>
-                    <div className="flex gap-4">
-                        <button className="px-6 py-2.5 rounded-lg border border-primary-600 text-primary-600 font-bold text-sm hover:bg-primary-50 transition-all">Save as Draft</button>
-                        <button onClick={onBack} className="px-6 py-2.5 rounded-lg bg-primary-600 text-white font-bold text-sm hover:bg-primary-700 shadow-md shadow-primary-600/20 transition-all">Save & Continue</button>
-                    </div>
+            {/* Bottom Actions */}
+            <div className="flex justify-between items-center border-t border-slate-200 pt-8">
+                <button className="text-slate-500 font-bold text-sm hover:text-red-600 transition-colors">Discard All Changes</button>
+                <div className="flex gap-4">
+                    <button className="px-6 py-2.5 rounded-lg border border-primary-600 text-primary-600 font-bold text-sm hover:bg-primary-50 transition-all">Save as Draft</button>
+                    <button onClick={onBack} className="px-6 py-2.5 rounded-lg bg-primary-600 text-white font-bold text-sm hover:bg-primary-700 shadow-md shadow-primary-600/20 transition-all">Save & Continue</button>
                 </div>
             </div>
         </div>

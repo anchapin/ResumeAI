@@ -102,6 +102,29 @@ export interface ResumeData {
   projects?: ProjectItem[];
 }
 
+// Education entry type (matching JSON Resume standard)
+export interface EducationEntry {
+  id: string;
+  institution: string;
+  area: string;
+  studyType: string;
+  startDate: string;
+  endDate: string;
+  courses?: string[];
+}
+
+// Project entry type (matching JSON Resume standard)
+export interface ProjectEntry {
+  id: string;
+  name: string;
+  description: string;
+  url?: string;
+  roles?: string[];
+  startDate: string;
+  endDate: string;
+  highlights?: string[];
+}
+
 // For backward compatibility with existing frontend code
 export interface SimpleResumeData {
   name: string;
@@ -109,7 +132,11 @@ export interface SimpleResumeData {
   phone: string;
   location: string;
   role: string;
+  summary: string;
+  skills: string[];
   experience: WorkExperience[];
+  education: EducationEntry[];
+  projects: ProjectEntry[];
 }
 
 export enum Route {
