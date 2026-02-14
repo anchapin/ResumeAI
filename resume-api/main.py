@@ -1,3 +1,4 @@
+from contextlib import asynccontextmanager
 """
 Resume API - Main Application
 
@@ -5,6 +6,7 @@ FastAPI service for generating and tailoring professional resumes.
 """
 
 from fastapi import FastAPI
+from contextlib import asynccontextmanager
 from fastapi.middleware.cors import CORSMiddleware
 
 from api import router
@@ -13,11 +15,23 @@ from config.dependencies import limiter, rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 
 # Initialize FastAPI app
+
+# Define lifespan to handle startup and shutdown events
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Handle application startup and shutdown."""
+    # Startup
+    print("Resume API starting up...")
+    yield
+    # Shutdown
+    print("Resume API shutting down...")
+
 app = FastAPI(
     title="Resume API",
     description="API service for generating and tailoring professional resumes using LaTeX templates and AI",
     version="1.0.0",
     docs_url="/docs",
+    lifespan=lifespan,
     redoc_url="/redoc",
 )
 
@@ -41,18 +55,6 @@ app.add_middleware(
 
 # Include API routes
 app.include_router(router)
-
-
-@app.on_event("startup")
-async def startup_event():
-    """Run on application startup."""
-    print("Resume API starting up...")
-
-
-@app.on_event("shutdown")
-async def shutdown_event():
-    """Run on application shutdown."""
-    print("Resume API shutting down...")
 
 
 if __name__ == "__main__":

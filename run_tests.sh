@@ -6,7 +6,7 @@ set -e  # Exit on any error
 echo "Setting up environment for API integration tests..."
 
 # Change to the worktree directory
-cd /home/alexc/Projects/feature-issue-36-add-api-endpoint-integration-tests
+cd "$(dirname "$0")"
 
 # Install test dependencies
 echo "Installing test dependencies..."
