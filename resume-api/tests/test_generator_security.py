@@ -7,8 +7,7 @@ from markupsafe import Markup
 # Import the code to test (assuming the module path is correct)
 # Since we are in resume-api/tests, we might need to adjust sys.path
 sys.path.append(str(Path(__file__).parent.parent))
-
-from lib.cli.generator import ResumeGenerator, _latex_escape
+from lib.cli.generator import ResumeGenerator, _latex_escape  # noqa: E402
 
 
 class TestGeneratorSecurity(unittest.TestCase):
