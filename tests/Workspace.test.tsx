@@ -24,7 +24,6 @@ vi.mock('../hooks/useVariants', () => ({
     error: null,
   }),
 }));
-
 // Mock ReactMarkdown
 vi.mock('react-markdown', () => ({
   default: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
@@ -154,9 +153,9 @@ describe('Workspace Component', () => {
     }));
 
     render(
-      <Workspace 
-        resumeData={mockResumeData} 
-        onNavigate={mockOnNavigate} 
+      <Workspace
+        resumeData={mockResumeData}
+        onNavigate={mockOnNavigate}
       />
     );
 
@@ -189,21 +188,24 @@ describe('Workspace Component', () => {
   });
 
   it('validates required fields before generation', async () => {
-    
+    // Mock window.alert to track calls
+    const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
+
     render(
-      <Workspace 
-        resumeData={mockResumeData} 
-        onNavigate={mockOnNavigate} 
+      <Workspace
+        resumeData={mockResumeData}
+        onNavigate={mockOnNavigate}
       />
     );
 
-    // Click generate without job description
+    // Click generate without job description (empty initially)
     const generateButton = screen.getByText('Generate Package');
     fireEvent.click(generateButton);
 
-    // Should show alert (in a real scenario, we'd test the alert differently)
-    // For now, we'll just verify that generatePackage wasn't called
-    // Verify the button click works
-    expect(generateButton).toBeInTheDocument();
+    // Verify that alert was called due to validation
+    expect(alertSpy).toHaveBeenCalledWith("Please enter a job description.");
+
+    // Clean up
+    alertSpy.mockRestore();
   });
 });

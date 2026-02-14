@@ -183,9 +183,9 @@ const Workspace: React.FC<WorkspaceProps> = ({ resumeData, onNavigate }) => {
                         )}
 
                         <div className="space-y-2">
-                            <label htmlFor="company-name" className="text-sm font-bold text-slate-700">Company Name</label>
+                            <label htmlFor="companyName" className="text-sm font-bold text-slate-700">Company Name</label>
                             <input
-                                id="company-name"
+                                id="companyName"
                                 type="text"
                                 value={companyName}
                                 onChange={(e) => setCompanyName(e.target.value)}
@@ -195,9 +195,9 @@ const Workspace: React.FC<WorkspaceProps> = ({ resumeData, onNavigate }) => {
                         </div>
 
                         <div className="space-y-2">
-                            <label htmlFor="job-title" className="text-sm font-bold text-slate-700">Job Title (Optional)</label>
+                            <label htmlFor="jobTitle" className="text-sm font-bold text-slate-700">Job Title (Optional)</label>
                             <input
-                                id="job-title"
+                                id="jobTitle"
                                 type="text"
                                 value={jobTitle}
                                 onChange={(e) => setJobTitle(e.target.value)}
@@ -207,9 +207,9 @@ const Workspace: React.FC<WorkspaceProps> = ({ resumeData, onNavigate }) => {
                         </div>
 
                         <div className="space-y-2">
-                            <label htmlFor="job-description" className="text-sm font-bold text-slate-700">Paste Job Description Here</label>
+                            <label htmlFor="jobDescription" className="text-sm font-bold text-slate-700">Paste Job Description Here</label>
                             <textarea
-                                id="job-description"
+                                id="jobDescription"
                                 value={jobDescription}
                                 onChange={(e) => setJobDescription(e.target.value)}
                                 className="w-full min-h-[200px] px-4 py-3 rounded-lg bg-slate-50 border border-slate-200 focus:bg-white focus:border-primary-500 focus:ring-2 focus:ring-primary-100 outline-none transition-all resize-none"
@@ -218,19 +218,14 @@ const Workspace: React.FC<WorkspaceProps> = ({ resumeData, onNavigate }) => {
                         </div>
 
                         <div className="space-y-2">
-                            <label htmlFor="select-template" className="text-sm font-bold text-slate-700">Select Template</label>
+                            <label htmlFor="templateSelect" className="text-sm font-bold text-slate-700">Select Template</label>
                             <div className="relative">
                                 {variantsLoading ? (
-                                    <select
-                                        id="select-template"
-                                        disabled
-                                        className="w-full appearance-none px-4 py-3 rounded-lg bg-slate-100 border border-slate-200 focus:bg-slate-100 outline-none cursor-not-allowed font-medium text-slate-400"
-                                    >
-                                        <option>Loading templates...</option>
-                                    </select>
+                                    <div className="w-full px-4 py-3 rounded-lg bg-slate-50 border border-slate-200 flex items-center">
+                                        <span className="text-slate-500">Loading templates...</span>
+                                    </div>
                                 ) : (
                                     <select
-                                        id="select-template"
                                         value={variant}
                                         onChange={(e) => setVariant(e.target.value)}
                                         className="w-full appearance-none px-4 py-3 rounded-lg bg-slate-50 border border-slate-200 focus:bg-white focus:border-primary-500 outline-none cursor-pointer font-medium text-slate-700"
@@ -240,7 +235,9 @@ const Workspace: React.FC<WorkspaceProps> = ({ resumeData, onNavigate }) => {
                                         ))}
                                     </select>
                                 )}
-                                <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">expand_more</span>
+                                {!variantsLoading && (
+                                    <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">expand_more</span>
+                                )}
                             </div>
                             {variantsLoading && (
                                 <p className="text-xs text-slate-500">Fetching available templates...</p>

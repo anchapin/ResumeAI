@@ -43,7 +43,7 @@ const generateLargeResumeData = (count: number): SimpleResumeData => {
       highlights: ["Highlight 1"]
     }]
   };
-}
+};
 
 const TestWrapper = ({ count }: { count: number }) => {
   const [resumeData, setResumeData] = useState(generateLargeResumeData(count));
@@ -83,3 +83,4 @@ describe('Editor Performance', () => {
 });
 // CI trigger
 // Final CI trigger
+// CI trigger after cleanup
