@@ -106,10 +106,13 @@ app = FastAPI(title="ResumeAI API")
 # Since we don't rely on cookies/auth for this local tool, we set credentials to False.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000", "https://yourdomain.com"],
     allow_credentials=False,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
+    allow_origin_regex=None,
+    expose_headers=["Access-Control-Allow-Origin"],
+    max_age=600,
 )
 
 # --- Pydantic Models ---
@@ -224,26 +227,33 @@ async def generate_package(request: GeneratePackageRequest):
     try:
         data_dict = request.resume.model_dump()
 
-        # 1. Tailor Resume
-        # Pass JSON string to allow for caching keys
-        tailored_markdown = await ai_generator.tailor_resume(
+        # 1. Prepare tasks for concurrent execution
+        tailor_task = ai_generator.tailor_resume(
             request.resume.model_dump_json(), request.job_description
         )
 
-        # 2. Generate Cover Letter (if requested)
-        cover_letter_md = None
+        cover_letter_task = asyncio.sleep(0)
         if request.include_cover_letter:
-            cover_letter_md = cover_letter_generator.generate(
+            cover_letter_task = asyncio.to_thread(
+                cover_letter_generator.generate,
                 data_dict, request.company_name, request.job_description
             )
 
-        # 3. AI Analysis (if requested)
-        analysis_text = None
+        analysis_task = asyncio.sleep(0)
         if request.use_ai_judge:
-            # Logic to generate variations and pick best would go here
-            analysis_text = ai_generator.analyze_match(
+            analysis_task = asyncio.to_thread(
+                ai_generator.analyze_match,
                 data_dict, request.job_description
             )
+
+        # 2. Execute all tasks concurrently
+        results = await asyncio.gather(
+            tailor_task,
+            cover_letter_task,
+            analysis_task
+        )
+
+        tailored_markdown, cover_letter_md, analysis_text = results
 
         return PackageResponse(
             resume_markdown=tailored_markdown,
