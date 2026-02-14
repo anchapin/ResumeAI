@@ -81,3 +81,6 @@ describe('Editor Performance', () => {
     console.log(`[BENCHMARK] Update took ${duration.toFixed(2)}ms with ${ITEM_COUNT} items`);
   });
 });
+// CI trigger
+// Final CI trigger
+// CI trigger after cleanup

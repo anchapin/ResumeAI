@@ -194,7 +194,7 @@ def test_tailor_request_validation():
 
     # Test too short job description
     try:
-        TailorRequest(
+        request = TailorRequest(
             resume_data=ResumeData(basics=BasicInfo(name="John Doe")),
             job_description="short",  # Less than 10 characters
         )
@@ -210,7 +210,7 @@ def test_tailor_request_validation():
 
     # Test valid job description with XSS
     try:
-        tailoring_request = TailorRequest(
+        request = TailorRequest(
             resume_data=ResumeData(basics=BasicInfo(name="John Doe")),
             job_description="Great job opportunity <script>alert('XSS')</script>",
             company_name="Tech Corp",
