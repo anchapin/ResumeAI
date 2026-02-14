@@ -43,7 +43,7 @@ def test_valid_data():
             ],
         )
 
-        request = ResumeRequest(resume_data=resume, variant="base")
+        ResumeRequest(resume_data=resume, variant="base")
 
         print("✓ Valid resume data passed validation")
         return True
@@ -58,7 +58,7 @@ def test_invalid_email():
     print("\nTesting invalid email...")
 
     try:
-        resume = ResumeData(
+        ResumeData(
             basics=BasicInfo(
                 name="John Doe",
                 email="invalid-email",  # Invalid
@@ -81,7 +81,7 @@ def test_invalid_url():
     print("\nTesting invalid URL...")
 
     try:
-        resume = ResumeData(
+        ResumeData(
             basics=BasicInfo(
                 name="John Doe",
                 url="not-a-url",  # Invalid
@@ -129,7 +129,7 @@ def test_invalid_date_range():
     print("\nTesting invalid date range...")
 
     try:
-        resume = ResumeData(
+        ResumeData(
             work=[
                 WorkItem(
                     company="Tech Corp",
@@ -156,7 +156,7 @@ def test_empty_resume():
     print("\nTesting empty resume...")
 
     try:
-        resume = ResumeData()
+        ResumeData()
         print("✗ Empty resume should have been rejected")
         return False
 
@@ -175,7 +175,7 @@ def test_too_long_string():
 
     try:
         long_name = "x" * 2000  # Exceeds MAX_STRING_LENGTH
-        resume = ResumeData(basics=BasicInfo(name=long_name))
+        ResumeData(basics=BasicInfo(name=long_name))
         print("✗ Overly long string should have been rejected")
         return False
 
@@ -235,7 +235,7 @@ def test_invalid_phone():
     print("\nTesting invalid phone number...")
 
     try:
-        resume = ResumeData(
+        ResumeData(
             basics=BasicInfo(name="John Doe", phone="abc123")  # Invalid phone
         )
         print("✗ Invalid phone number should have been rejected")

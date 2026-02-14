@@ -1,4 +1,5 @@
 from contextlib import asynccontextmanager
+
 """
 Resume API - Main Application
 
@@ -16,6 +17,7 @@ from slowapi.errors import RateLimitExceeded
 
 # Initialize FastAPI app
 
+
 # Define lifespan to handle startup and shutdown events
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -25,6 +27,7 @@ async def lifespan(app: FastAPI):
     yield
     # Shutdown
     print("Resume API shutting down...")
+
 
 app = FastAPI(
     title="Resume API",

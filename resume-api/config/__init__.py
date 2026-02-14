@@ -60,12 +60,8 @@ class Settings(BaseSettings):
         if isinstance(v, list):
             return v
         return [key.strip() for key in str(v).split(",") if key.strip()]
-    
-    model_config = SettingsConfigDict(
-        env_file=".env",
-        case_sensitive=False
-    )
 
+    model_config = SettingsConfigDict(env_file=".env", case_sensitive=False)
 
 
 # Global settings instance
