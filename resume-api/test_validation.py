@@ -9,7 +9,7 @@ from pathlib import Path
 # Add lib path
 sys.path.insert(0, str(Path(__file__).parent))
 
-from api.models import (
+from api.models import (  # noqa: E402
     BasicInfo,
     ResumeData,
     WorkItem,
