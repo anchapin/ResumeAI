@@ -38,7 +38,6 @@ def test_valid_data():
                     startDate="2020-01-01",
                     endDate="2023-12-31",
                     summary="Developed web applications",
-<<<<<<< HEAD
                     highlights=["Built REST API", "Improved performance by 50%"]
                 )
             ]
