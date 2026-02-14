@@ -3,7 +3,6 @@ import ReactMarkdown from 'react-markdown';
 import { Route, SimpleResumeData } from '../types';
 import { useGeneratePackage, convertToResumeData } from '../hooks/useGeneratePackage';
 import { useVariants } from '../hooks/useVariants';
-import logger from '../utils/logger';
 
 interface WorkspaceProps {
     resumeData: SimpleResumeData;
@@ -49,7 +48,7 @@ const Workspace: React.FC<WorkspaceProps> = ({ resumeData, onNavigate }) => {
             });
             setActiveTab('Resume');
         } catch (e) {
-            logger.error(e);
+            console.error(e);
             // Error is handled by hook state, UI displays it below if needed
         }
     };
@@ -66,7 +65,7 @@ const Workspace: React.FC<WorkspaceProps> = ({ resumeData, onNavigate }) => {
                 variant: variant
             });
         } catch (e) {
-            logger.error(e);
+            console.error(e);
             alert("Failed to download PDF. Ensure backend is running.");
         }
     };
