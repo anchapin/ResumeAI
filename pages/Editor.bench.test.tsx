@@ -3,6 +3,7 @@ import { render, screen, fireEvent, act } from '@testing-library/react';
 import React, { useState } from 'react';
 import Editor from './Editor';
 import { SimpleResumeData, WorkExperience } from '../types';
+import logger from '../utils/logger';
 
 // Mock data generator
 const generateLargeResumeData = (count: number): SimpleResumeData => {
@@ -60,6 +61,6 @@ describe('Editor Performance', () => {
     const endTime = performance.now();
     const duration = endTime - startTime;
 
-    console.log(`[BENCHMARK] Update took ${duration.toFixed(2)}ms with ${ITEM_COUNT} items`);
+    logger.info(`[BENCHMARK] Update took ${duration.toFixed(2)}ms with ${ITEM_COUNT} items`);
   });
 });

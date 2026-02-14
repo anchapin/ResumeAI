@@ -7,6 +7,7 @@ import JobApplications from './pages/JobApplications';
 import Settings from './pages/Settings';
 import { Route, SimpleResumeData } from './types';
 import { loadResumeData, saveResumeData, StorageError } from './utils/storage';
+import logger, { appLogger } from './utils/logger';
 
 const initialResumeData: SimpleResumeData = {
   name: "Alex Rivera",
@@ -85,13 +86,13 @@ function App() {
       const savedData = loadResumeData();
       if (savedData) {
         setResumeData(savedData);
-        console.log('Resume data loaded from localStorage');
+        appLogger.info('Resume data loaded from localStorage');
       } else {
-        console.log('No saved resume data found, using initial data');
+        appLogger.info('No saved resume data found, using initial data');
       }
     } catch (error) {
       if (error instanceof StorageError) {
-        console.error('Storage error:', error.message, error.type);
+        appLogger.error('Storage error:', error.message, error.type);
         // Show a user-friendly error message
         const errorMessage = getErrorMessage(error);
         setStorageError(errorMessage);
@@ -99,7 +100,7 @@ function App() {
         // Auto-dismiss error after 5 seconds
         setTimeout(() => setStorageError(null), 5000);
       } else {
-        console.error('Unexpected error loading resume data:', error);
+        appLogger.error('Unexpected error loading resume data:', error);
       }
     } finally {
       setIsLoaded(true);
@@ -113,17 +114,17 @@ function App() {
 
     try {
       saveResumeData(resumeData);
-      console.log('Resume data saved to localStorage');
+      appLogger.info('Resume data saved to localStorage');
     } catch (error) {
       if (error instanceof StorageError) {
-        console.error('Storage error:', error.message, error.type);
+        appLogger.error('Storage error:', error.message, error.type);
         const errorMessage = getErrorMessage(error);
         setStorageError(errorMessage);
 
         // Auto-dismiss error after 5 seconds
         setTimeout(() => setStorageError(null), 5000);
       } else {
-        console.error('Unexpected error saving resume data:', error);
+        appLogger.error('Unexpected error saving resume data:', error);
       }
     }
   }, [resumeData, isLoaded]);
