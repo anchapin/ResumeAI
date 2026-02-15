@@ -26,3 +26,10 @@ dist-ssr
 # Python
 __pycache__/
 *.pyc
+
+# Build outputs and coverage
+dist/
+coverage/
+
+# Backup files
+*.backup
