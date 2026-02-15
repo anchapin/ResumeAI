@@ -214,22 +214,54 @@ async def tailor_resume(request: Request, body: TailorRequest, auth: AuthorizedA
     tags=["Variants"],
 )
 @rate_limit(settings.rate_limit_variants)
-async def list_variants(request: Request):
+async def list_variants(
+    request: Request,
+    search: str = None,
+    tags: str = None,
+    category: str = None,
+    industry: str = None,
+    layout: str = None,
+    color_theme: str = None,
+):
     """
-    List all available resume template variants.
+    List or filter resume template variants.
 
     Rate limit: 60 requests per minute per API key.
+    
+    Query Parameters:
+    - search: Search query for name/description
+    - tags: Comma-separated list of tags (e.g., "modern,professional")
+    - category: Template category (e.g., "technical", "creative")
+    - industry: Industry filter (e.g., "technology", "finance")
+    - layout: Layout type ("single-column", "double-column")
+    - color_theme: Color theme
 
     Returns:
-        VariantsResponse with list of available variants
+        VariantsResponse with list of available (or filtered) variants
     """
     try:
-        variants = variant_manager.list_variants()
-
-        variant_metadata = []
-        for variant in variants:
-            metadata = variant_manager.get_variant_metadata(variant)
-            variant_metadata.append(VariantMetadata(**metadata))
+        # Parse tags from comma-separated string
+        tags_list = None
+        if tags:
+            tags_list = [t.strip() for t in tags.split(",") if t.strip()]
+        
+        # Use filter if any filter params provided, otherwise get all with metadata
+        if any([search, tags_list, category, industry, layout, color_theme]):
+            filtered_variants = variant_manager.filter_variants(
+                search=search,
+                tags=tags_list,
+                category=category,
+                industry=industry,
+                layout=layout,
+                color_theme=color_theme,
+            )
+            variant_metadata = [VariantMetadata(**v) for v in filtered_variants]
+        else:
+            variants = variant_manager.list_variants()
+            variant_metadata = []
+            for variant in variants:
+                metadata = variant_manager.get_variant_metadata(variant)
+                variant_metadata.append(VariantMetadata(**metadata))
 
         return VariantsResponse(variants=variant_metadata)
 
