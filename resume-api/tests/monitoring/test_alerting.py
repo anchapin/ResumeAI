@@ -89,7 +89,9 @@ def test_alert_manager_add_rule():
 def test_alert_manager_add_handler():
     """Test adding a handler to alert manager."""
     manager = AlertManager()
-    test_handler = lambda alert: None
+
+    def test_handler(alert):
+        pass
 
     manager.add_handler(test_handler)
 

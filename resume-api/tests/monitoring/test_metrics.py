@@ -2,7 +2,6 @@
 Tests for metrics collection.
 """
 
-import pytest
 from monitoring.metrics import (
     increment_http_requests,
     observe_http_request_duration,
@@ -19,7 +18,6 @@ from monitoring.metrics import (
     observe_db_query_duration,
     increment_db_queries,
     http_requests_total,
-    http_request_duration_seconds,
     http_errors_total,
 )
 

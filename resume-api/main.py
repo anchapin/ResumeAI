@@ -19,7 +19,6 @@ from config.dependencies import limiter, rate_limit_exceeded_handler
 from database import create_db_and_tables
 from middleware.monitoring import MonitoringMiddleware
 from monitoring import logging_config, health, alerting, analytics
-from monitoring.alerting import setup_alerting
 from slowapi.errors import RateLimitExceeded
 
 # Get logger

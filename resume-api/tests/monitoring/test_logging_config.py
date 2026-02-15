@@ -2,29 +2,25 @@
 Tests for logging configuration.
 """
 
-import pytest
-import logging
 from monitoring import logging_config
 
 
 def test_setup_logging():
     """Test that logging is properly configured."""
     # Get logger
-    logger = logging_config.get_logger("test")
+    loggr = logging_config.get_logger("test")
 
     # Check logger is not None
-    assert logger is not None
+    assert loggr is not None
     # The logger is a BoundLoggerLazyProxy in structlog, which is correct
-    assert hasattr(logger, "info")
-    assert hasattr(logger, "error")
-    assert hasattr(logger, "debug")
+    assert hasattr(loggr, "info")
+    assert hasattr(loggr, "error")
+    assert hasattr(loggr, "debug")
 
 
 def test_request_context():
     """Test that RequestContext properly adds and removes context."""
-    logger = logging_config.get_logger("test")
-
-    # Use context manager
+    # Use context manager directly
     with logging_config.RequestContext(
         request_id="test-123", method="GET", path="/test"
     ):
