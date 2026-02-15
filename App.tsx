@@ -114,21 +114,26 @@ function App() {
     // Only save after initial load is complete to avoid overwriting with initial data
     if (!isLoaded) return;
 
-    try {
-      saveResumeData(resumeData);
-      console.log('Resume data saved to localStorage');
-    } catch (error) {
-      if (error instanceof StorageError) {
-        console.error('Storage error:', error.message, error.type);
-        const errorMessage = getErrorMessage(error);
-        setStorageError(errorMessage);
+    // Debounce save to avoid performance issues on rapid updates
+    const handler = setTimeout(() => {
+      try {
+        saveResumeData(resumeData);
+        console.log('Resume data saved to localStorage');
+      } catch (error) {
+        if (error instanceof StorageError) {
+          console.error('Storage error:', error.message, error.type);
+          const errorMessage = getErrorMessage(error);
+          setStorageError(errorMessage);
 
-        // Auto-dismiss error after 5 seconds
-        setTimeout(() => setStorageError(null), 5000);
-      } else {
-        console.error('Unexpected error saving resume data:', error);
+          // Auto-dismiss error after 5 seconds
+          setTimeout(() => setStorageError(null), 5000);
+        } else {
+          console.error('Unexpected error saving resume data:', error);
+        }
       }
-    }
+    }, 1000);
+
+    return () => clearTimeout(handler);
   }, [resumeData, isLoaded]);
 
   /**
