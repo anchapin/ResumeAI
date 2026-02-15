@@ -5,13 +5,12 @@ Verifies templates work with various content lengths and configurations.
 
 import sys
 from pathlib import Path
-import json
 
 # Add lib directory to path
 lib_path = Path(__file__).parent
 sys.path.insert(0, str(lib_path))
 
-from lib.cli import ResumeGenerator
+from lib.cli import ResumeGenerator  # noqa: E402
 
 # Test data for different content lengths
 SAMPLE_RESUME_SHORT = {
@@ -55,7 +54,11 @@ SAMPLE_RESUME_MEDIUM = {
         "email": "jane@example.com",
         "phone": "555-987-6543",
         "url": "https://janesmith.dev",
-        "summary": "Senior software engineer with 7 years of experience building scalable web applications and leading development teams. Passionate about clean code, testing, and developer experience.",
+        "summary": (
+            "Senior software engineer with 7 years of experience building scalable "
+            "web applications and leading development teams. Passionate about clean "
+            "code, testing, and developer experience."
+        ),
     },
     "location": {"city": "San Francisco", "region": "CA", "countryCode": "US"},
     "work": [
@@ -166,7 +169,12 @@ SAMPLE_RESUME_LONG = {
         "email": "michael.johnson@example.com",
         "phone": "555-555-5555",
         "url": "https://michaeljohnson.dev",
-        "summary": "Principal Software Architect with 15+ years of experience leading engineering teams and designing large-scale distributed systems. Expertise in cloud architecture, microservices, and building high-performance teams. Strong track record of delivering complex projects on time and under budget.",
+        "summary": (
+            "Principal Software Architect with 15+ years of experience leading "
+            "engineering teams and designing large-scale distributed systems. Expertise "
+            "in cloud architecture, microservices, and building high-performance teams. "
+            "Strong track record of delivering complex projects on time and under budget."
+        ),
     },
     "location": {"city": "Seattle", "region": "WA", "countryCode": "US"},
     "work": [
@@ -175,7 +183,10 @@ SAMPLE_RESUME_LONG = {
             "position": "Principal Software Architect",
             "startDate": "2019-01",
             "endDate": "Present",
-            "summary": "Leading architectural decisions for enterprise software platform serving 50M+ users across 30 countries.",
+            "summary": (
+                "Leading architectural decisions for enterprise software platform serving "
+                "50M+ users across 30 countries."
+            ),
             "highlights": [
                 "Designed cloud-native architecture reducing infrastructure costs by 40%",
                 "Led migration from monolith to microservices, improving deployment frequency by 10x",
@@ -330,7 +341,10 @@ SAMPLE_RESUME_LONG = {
     "projects": [
         {
             "name": "Enterprise Cloud Platform",
-            "description": "Designed and implemented company-wide cloud platform enabling rapid application development and deployment.",
+            "description": (
+                "Designed and implemented company-wide cloud platform enabling "
+                "rapid application development and deployment."
+            ),
             "highlights": [
                 "Reduced developer onboarding time from weeks to days",
                 "Enabled 100+ teams to deploy independently",
