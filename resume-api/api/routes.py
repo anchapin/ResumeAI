@@ -12,6 +12,10 @@ from fastapi import APIRouter, HTTPException, Request, UploadFile, File, status
 from fastapi.responses import Response
 from pydantic import BaseModel
 
+import docx
+from docx import Document
+from docx.shared import Inches, Pt, RGBColor
+from docx.enum.text import WD_ALIGN_PARAGRAPH
 import docx  # python-docx for DOCX parsing
 import httpx  # HTTP client for LinkedIn API
 import fitz  # PyMuPDF for PDF parsing
@@ -294,6 +298,220 @@ async def root():
             "docs": "/docs",
         },
     }
+
+
+# DOCX Export Functions
+
+def create_docx_from_resume(resume_data: dict) -> bytes:
+    """
+    Generate a DOCX file from resume data.
+    
+    Args:
+        resume_data: Resume data in JSON Resume format
+        
+    Returns:
+        DOCX file as bytes
+    """
+    doc = Document()
+    
+    # Get basics
+    basics = resume_data.get("basics", {})
+    
+    # Title - Name
+    if basics.get("name"):
+        title = doc.add_heading(basics["name"], 0)
+        title.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    
+    # Headline
+    if basics.get("headline"):
+        headline = doc.add_paragraph(basics["headline"])
+        headline.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    
+    # Contact info
+    contact_parts = []
+    if basics.get("email"):
+        contact_parts.append(basics["email"])
+    if basics.get("phone"):
+        contact_parts.append(basics["phone"])
+    if basics.get("location"):
+        location = basics["location"]
+        if isinstance(location, dict):
+            location_str = ", ".join(filter(None, [location.get("city"), location.get("region")]))
+        else:
+            location_str = str(location)
+        if location_str:
+            contact_parts.append(location_str)
+    
+    if basics.get("url"):
+        contact_parts.append(basics["url"])
+    
+    if contact_parts:
+        contact_para = doc.add_paragraph(" | ".join(contact_parts))
+        contact_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    
+    doc.add_paragraph()  # Empty line
+    
+    # Summary
+    if basics.get("summary"):
+        doc.add_heading("Summary", level=1)
+        doc.add_paragraph(basics["summary"])
+    
+    # Work Experience
+    work = resume_data.get("work", [])
+    if work:
+        doc.add_heading("Experience", level=1)
+        for job in work:
+            # Job title and company
+            job_title = job.get("position", "")
+            company = job.get("company", "")
+            if job_title or company:
+                job_para = doc.add_paragraph()
+                if job_title:
+                    run = job_para.add_run(job_title)
+                    run.bold = True
+                if company:
+                    if job_title:
+                        job_para.add_run(" at ")
+                    run = job_para.add_run(company)
+                    run.italic = True
+            
+            # Dates
+            dates = []
+            if job.get("startDate"):
+                dates.append(job["startDate"])
+            if job.get("endDate"):
+                dates.append(job["endDate"])
+            elif job.get("current"):
+                dates.append("Present")
+            
+            if dates:
+                date_para = doc.add_paragraph(" - ".join(dates))
+                date_para.runs[0].italic = True
+            
+            # Description/Summary
+            if job.get("summary"):
+                doc.add_paragraph(job["summary"])
+            
+            # Highlights
+            highlights = job.get("highlights", [])
+            for highlight in highlights:
+                doc.add_paragraph(highlight, style="List Bullet")
+            
+            doc.add_paragraph()  # Empty line between jobs
+    
+    # Education
+    education = resume_data.get("education", [])
+    if education:
+        doc.add_heading("Education", level=1)
+        for edu in education:
+            # Degree and institution
+            parts = []
+            if edu.get("studyType"):
+                parts.append(edu["studyType"])
+            if edu.get("area"):
+                parts.append(edu["area"])
+            if edu.get("institution"):
+                parts.append(edu["institution"])
+            
+            if parts:
+                edu_para = doc.add_paragraph()
+                run = edu_para.add_run(" - ".join(parts[:2]))
+                run.bold = True
+                if len(parts) > 2:
+                    edu_para.add_run(f" at {parts[2]}")
+            
+            # Dates
+            dates = []
+            if edu.get("startDate"):
+                dates.append(edu["startDate"])
+            if edu.get("endDate"):
+                dates.append(edu["endDate"])
+            
+            if dates:
+                date_para = doc.add_paragraph(" - ".join(dates))
+                date_para.runs[0].italic = True
+            
+            doc.add_paragraph()
+    
+    # Skills
+    skills = resume_data.get("skills", [])
+    if skills:
+        doc.add_heading("Skills", level=1)
+        
+        # Group skills by category if available
+        skill_names = []
+        for skill in skills:
+            if isinstance(skill, dict):
+                name = skill.get("name", "")
+                if name:
+                    skill_names.append(name)
+            elif isinstance(skill, str):
+                skill_names.append(skill)
+        
+        if skill_names:
+            skills_para = doc.add_paragraph(", ".join(skill_names))
+    
+    # Save to bytes
+    docx_bytes = io.BytesIO()
+    doc.save(docx_bytes)
+    docx_bytes.seek(0)
+    
+    return docx_bytes.getvalue()
+
+
+@router.post(
+    "/v1/export/docx",
+    response_class=Response,
+    responses={
+        200: {"content": {"application/vnd.openxmlformats-officedocument.wordprocessingml.document": {}}, "description": "DOCX resume file"},
+        400: {"model": ErrorResponse},
+        401: {"model": ErrorResponse},
+        403: {"model": ErrorResponse},
+        429: {"model": ErrorResponse},
+        500: {"model": ErrorResponse},
+    },
+    tags=["Export"],
+)
+@rate_limit(settings.rate_limit_pdf)
+async def export_docx(request: Request, body: ResumeRequest, auth: AuthorizedAPIKey):
+    """
+    Generate a DOCX resume from resume data.
+
+    Requires API key authentication via X-API-KEY header.
+
+    Rate limit: 10 requests per minute per API key.
+
+    Args:
+        request: FastAPI Request object
+        body: ResumeRequest containing resume_data and variant
+        auth: API key authentication info
+
+    Returns:
+        DOCX file as binary response
+    """
+    try:
+        # Convert Pydantic model to dict
+        resume_dict = body.resume_data.model_dump(exclude_none=True)
+        
+        # Generate DOCX
+        docx_bytes = create_docx_from_resume(resume_dict)
+        
+        # Return DOCX response
+        return Response(
+            content=docx_bytes,
+            media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            headers={
+                "Content-Disposition": f'attachment; filename="resume_{body.variant or "docx"}.docx"'
+            },
+        )
+    
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"DOCX generation failed: {str(e)}",
+        )
 
 
 # PDF Import Endpoint and Helper Functions
