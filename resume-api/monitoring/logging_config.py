@@ -4,7 +4,6 @@ Structured logging configuration using structlog.
 
 import logging
 import sys
-from pathlib import Path
 
 import structlog
 from colorama import Fore, Style, init
@@ -14,10 +13,12 @@ from config import settings
 # Initialize colorama
 init(autoreset=True)
 
+
 # Custom timestamp processor for structlog
 def add_timestamp(_, __, event_dict):
     """Add ISO format timestamp to log entry."""
     import datetime
+
     event_dict["timestamp"] = datetime.datetime.utcnow().isoformat()
     return event_dict
 
@@ -47,13 +48,15 @@ def setup_logging() -> None:
         ]
     else:
         processors = shared_processors + [
-            structlog.dev.ConsoleRenderer(colors={
-                logging.DEBUG: Fore.CYAN,
-                logging.INFO: Fore.GREEN,
-                logging.WARNING: Fore.YELLOW,
-                logging.ERROR: Fore.RED,
-                logging.CRITICAL: Fore.RED + Style.BRIGHT,
-            }),
+            structlog.dev.ConsoleRenderer(
+                colors={
+                    logging.DEBUG: Fore.CYAN,
+                    logging.INFO: Fore.GREEN,
+                    logging.WARNING: Fore.YELLOW,
+                    logging.ERROR: Fore.RED,
+                    logging.CRITICAL: Fore.RED + Style.BRIGHT,
+                }
+            ),
         ]
 
     structlog.configure(
@@ -72,6 +75,7 @@ def get_logger(name: str) -> structlog.stdlib.BoundLogger:
 
 class RequestContext:
     """Context manager for adding request-specific context to logs."""
+
     def __init__(self, **context):
         self.context = context
         self.token = None

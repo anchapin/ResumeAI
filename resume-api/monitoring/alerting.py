@@ -1,10 +1,12 @@
 """Alerting module for monitoring and alerting."""
+
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Callable
+
 from config import settings
 from monitoring import logging_config
 
 logger = logging_config.get_logger(__name__)
+
 
 class Alert:
     def __init__(self, alert_type, severity, message, details=None):
@@ -13,6 +15,7 @@ class Alert:
         self.message = message
         self.details = details or {}
         self.timestamp = datetime.utcnow()
+
 
 class AlertRule:
     def __init__(self, name, enabled=True):
@@ -38,6 +41,7 @@ class AlertRule:
             return alert
         return None
 
+
 class AlertManager:
     def __init__(self):
         self.rules = []
@@ -58,7 +62,12 @@ class AlertManager:
         self.add_handler(self.log_alert)
 
     def log_alert(self, alert):
-        logger.warning("alert_triggered", alert_type=alert.alert_type, severity=alert.severity, message=alert.message)
+        logger.warning(
+            "alert_triggered",
+            alert_type=alert.alert_type,
+            severity=alert.severity,
+            message=alert.message,
+        )
 
     async def check_all_rules(self):
         alerts = []
@@ -83,12 +92,15 @@ class AlertManager:
         while self.running:
             await self.check_all_rules()
             import asyncio
+
             await asyncio.sleep(self.check_interval)
 
     def stop(self):
         self.running = False
 
+
 alert_manager = AlertManager()
+
 
 def setup_alerting():
     alert_manager.add_default_rules()
