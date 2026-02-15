@@ -117,5 +117,3 @@ export function ErrorFallback({ error, resetError, message }: ErrorFallbackProps
     </div>
   );
 }
-
-export default ErrorBoundary;
