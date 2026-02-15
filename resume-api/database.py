@@ -1,12 +1,12 @@
 """
 Database configuration and session management.
 """
+
 from sqlalchemy import create_engine
 from sqlalchemy.pool import QueuePool
 from sqlmodel import SQLModel, Session
 from typing import Generator
 import os
-from contextlib import contextmanager
 
 # Get database URL from environment variable or use default
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./resumeai.db")
