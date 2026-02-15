@@ -32,71 +32,74 @@ const validateInput = (input: any, type: string = 'string', options: StringOptio
       if (typeof input !== 'string') {
         throw new Error('Input must be a string');
       }
-      
+
       // Sanitize string input
       const sanitized = sanitizeString(input);
-      
+
       // Apply length constraints
-      if (options.maxLength && sanitized.length > options.maxLength) {
-        throw new Error(`Input exceeds maximum length of ${options.maxLength}`);
+      const stringOpts = options as StringOptions;
+      if (stringOpts.maxLength && sanitized.length > stringOpts.maxLength) {
+        throw new Error(`Input exceeds maximum length of ${stringOpts.maxLength}`);
       }
-      
-      if (options.minLength && sanitized.length < options.minLength) {
-        throw new Error(`Input is shorter than minimum length of ${options.minLength}`);
+
+      if (stringOpts.minLength && sanitized.length < stringOpts.minLength) {
+        throw new Error(`Input is shorter than minimum length of ${stringOpts.minLength}`);
       }
-      
+
       // Check for malicious patterns
-      if (!isValidString(sanitized, options.pattern)) {
+      if (!isValidString(sanitized, stringOpts.pattern)) {
         throw new Error('Input contains invalid characters or patterns');
       }
-      
+
       return sanitized;
-    
+
     case 'email':
       if (typeof input !== 'string') {
         throw new Error('Email must be a string');
       }
-      
+
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(input)) {
         throw new Error('Invalid email format');
       }
-      
+
       return sanitizeString(input);
-    
+
     case 'number':
       if (typeof input === 'string') {
         input = parseFloat(input);
       }
-      
+
       if (isNaN(input)) {
         throw new Error('Input must be a valid number');
       }
-      
-      if (options.min !== undefined && input < options.min) {
-        throw new Error(`Number must be greater than or equal to ${options.min}`);
+
+      const numberOpts = options as NumberOptions;
+      if (numberOpts.min !== undefined && input < numberOpts.min) {
+        throw new Error(`Number must be greater than or equal to ${numberOpts.min}`);
       }
-      
-      if (options.max !== undefined && input > options.max) {
-        throw new Error(`Number must be less than or equal to ${options.max}`);
+
+      if (numberOpts.max !== undefined && input > numberOpts.max) {
+        throw new Error(`Number must be less than or equal to ${numberOpts.max}`);
       }
-      
+
       return input;
-    
+
     case 'array':
       if (!Array.isArray(input)) {
         throw new Error('Input must be an array');
       }
-      
-      if (options.maxItems && input.length > options.maxItems) {
-        throw new Error(`Array exceeds maximum items of ${options.maxItems}`);
+
+      const arrayOpts = options as ArrayOptions;
+      if (arrayOpts.maxItems && input.length > arrayOpts.maxItems) {
+        throw new Error(`Array exceeds maximum items of ${arrayOpts.maxItems}`);
       }
-      
-      if (options.minItems && input.length < options.minItems) {
-        throw new Error(`Array has fewer items than minimum of ${options.minItems}`);
+
+      if (arrayOpts.minItems && input.length < arrayOpts.minItems) {
+        throw new Error(`Array has fewer items than minimum of ${arrayOpts.minItems}`);
       }
-      
-      return input.map(item => validateInput(item, options.itemType, options.itemOptions));
+
+      return input.map((item: any) => validateInput(item, arrayOpts.itemType || 'string', arrayOpts.itemOptions));
     
     case 'object':
       if (typeof input !== 'object' || Array.isArray(input) || input === null) {
