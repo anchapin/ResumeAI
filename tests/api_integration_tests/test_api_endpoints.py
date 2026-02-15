@@ -42,7 +42,7 @@ def sample_resume_data():
             "email": "john@example.com",
             "phone": "(912) 555-4321",
             "url": "https://johndoe.com",
-            "summary": "A summary of John Doe..."
+            "summary": "A summary of John Doe...",
         },
         "work": [
             {
@@ -51,9 +51,7 @@ def sample_resume_data():
                 "startDate": "2020-01-01",
                 "endDate": "2022-01-01",
                 "summary": "Description...",
-                "highlights": [
-                    "Started the company"
-                ]
+                "highlights": ["Started the company"],
             }
         ],
         "education": [
@@ -62,15 +60,12 @@ def sample_resume_data():
                 "area": "Software Development",
                 "studyType": "Bachelor",
                 "startDate": "2016-01-01",
-                "endDate": "2020-01-01"
+                "endDate": "2020-01-01",
             }
         ],
         "skills": [
-            {
-                "name": "Web Development",
-                "keywords": ["HTML", "CSS", "JavaScript"]
-            }
-        ]
+            {"name": "Web Development", "keywords": ["HTML", "CSS", "JavaScript"]}
+        ],
     }
 
 
@@ -109,10 +104,7 @@ class TestRenderPDfEndpoint:
         """Test successful PDF generation with valid data."""
         response = client.post(
             "/v1/render/pdf",
-            json={
-                "resume_data": sample_resume_data,
-                "variant": "base"
-            }
+            json={"resume_data": sample_resume_data, "variant": "base"},
         )
         # With REQUIRE_API_KEY=False, this should work
         # But the actual implementation might still require auth
@@ -121,13 +113,10 @@ class TestRenderPDfEndpoint:
             # Try with API key
             response = client.post(
                 "/v1/render/pdf",
-                json={
-                    "resume_data": sample_resume_data,
-                    "variant": "base"
-                },
-                headers={"X-API-KEY": "test-key"}
+                json={"resume_data": sample_resume_data, "variant": "base"},
+                headers={"X-API-KEY": "test-key"},
             )
-        
+
         # The response should be 200 if the endpoint is working
         # Or it might be 500 if there are issues with the actual PDF generation
         assert response.status_code in [200, 500]
@@ -139,17 +128,15 @@ class TestRenderPDfEndpoint:
             json={
                 "resume_data": sample_resume_data
                 # variant not specified, should default to "base"
-            }
+            },
         )
         if response.status_code == 401 or response.status_code == 403:
             response = client.post(
                 "/v1/render/pdf",
-                json={
-                    "resume_data": sample_resume_data
-                },
-                headers={"X-API-KEY": "test-key"}
+                json={"resume_data": sample_resume_data},
+                headers={"X-API-KEY": "test-key"},
             )
-        
+
         assert response.status_code in [200, 500]
 
     def test_render_pdf_missing_required_fields(self):
@@ -159,17 +146,15 @@ class TestRenderPDfEndpoint:
             json={
                 "variant": "base"
                 # Missing resume_data
-            }
+            },
         )
         if response.status_code == 401 or response.status_code == 403:
             response = client.post(
                 "/v1/render/pdf",
-                json={
-                    "variant": "base"
-                },
-                headers={"X-API-KEY": "test-key"}
+                json={"variant": "base"},
+                headers={"X-API-KEY": "test-key"},
             )
-        
+
         # Should return validation error (422) due to missing required field
         assert response.status_code in [422, 400, 500]
 
@@ -177,21 +162,15 @@ class TestRenderPDfEndpoint:
         """Test PDF generation fails with invalid resume data."""
         response = client.post(
             "/v1/render/pdf",
-            json={
-                "resume_data": "invalid-data",  # Not a dict
-                "variant": "base"
-            }
+            json={"resume_data": "invalid-data", "variant": "base"},  # Not a dict
         )
         if response.status_code == 401 or response.status_code == 403:
             response = client.post(
                 "/v1/render/pdf",
-                json={
-                    "resume_data": "invalid-data",
-                    "variant": "base"
-                },
-                headers={"X-API-KEY": "test-key"}
+                json={"resume_data": "invalid-data", "variant": "base"},
+                headers={"X-API-KEY": "test-key"},
             )
-        
+
         # Should return validation error or internal server error
         assert response.status_code in [422, 400, 500]
 
@@ -202,24 +181,24 @@ class TestTailorEndpoint:
     def test_tailor_success(self, sample_resume_data):
         """Test successful resume tailoring."""
         job_description = "We are looking for a Senior Software Engineer with experience in Python, React, and AWS."
-        
+
         response = client.post(
             "/v1/tailor",
             json={
                 "resume_data": sample_resume_data,
                 "job_description": job_description,
                 "company_name": "Tech Corp",
-                "job_title": "Senior Software Engineer"
-            }
+                "job_title": "Senior Software Engineer",
+            },
         )
         # Don't try with API key since we disabled REQUIRE_API_KEY for tests
         # The response might be 200 for success or 400 due to validation issues in implementation
         # or 500 if AI provider not configured
         assert response.status_code in [200, 400, 500]
-        
+
         if response.status_code == 200:
             assert response.headers["content-type"] == "application/json"
-            
+
             data = response.json()
             assert "resume_data" in data
             assert "keywords" in data
@@ -229,14 +208,14 @@ class TestTailorEndpoint:
     def test_tailor_without_optional_fields(self, sample_resume_data):
         """Test tailoring without optional company_name and job_title fields."""
         job_description = "Looking for experienced Python developer."
-        
+
         response = client.post(
             "/v1/tailor",
             json={
                 "resume_data": sample_resume_data,
-                "job_description": job_description
+                "job_description": job_description,
                 # company_name and job_title not provided
-            }
+            },
         )
         # The response might be 200 for success or 400 due to validation issues in implementation
         # or 500 if AI provider not configured
@@ -249,17 +228,15 @@ class TestTailorEndpoint:
             json={
                 "job_description": "Some job description"
                 # Missing resume_data
-            }
+            },
         )
         if response.status_code == 401 or response.status_code == 403:
             response = client.post(
                 "/v1/tailor",
-                json={
-                    "job_description": "Some job description"
-                },
-                headers={"X-API-KEY": "test-key"}
+                json={"job_description": "Some job description"},
+                headers={"X-API-KEY": "test-key"},
             )
-        
+
         assert response.status_code in [422, 400]  # Validation error
 
     def test_tailor_empty_job_description(self, sample_resume_data):
@@ -268,19 +245,16 @@ class TestTailorEndpoint:
             "/v1/tailor",
             json={
                 "resume_data": sample_resume_data,
-                "job_description": ""  # Empty job description
-            }
+                "job_description": "",  # Empty job description
+            },
         )
         if response.status_code == 401 or response.status_code == 403:
             response = client.post(
                 "/v1/tailor",
-                json={
-                    "resume_data": sample_resume_data,
-                    "job_description": ""
-                },
-                headers={"X-API-KEY": "test-key"}
+                json={"resume_data": sample_resume_data, "job_description": ""},
+                headers={"X-API-KEY": "test-key"},
             )
-        
+
         # This might return 200 (successful but no changes) or 400 (validation error)
         assert response.status_code in [200, 400, 500]
 
@@ -293,13 +267,13 @@ class TestVariantsEndpoint:
         response = client.get("/v1/variants")
         assert response.status_code == 200
         assert response.headers["content-type"] == "application/json"
-        
+
         data = response.json()
         assert "variants" in data
         assert isinstance(data["variants"], list)
         # At least one variant should be returned
         assert len(data["variants"]) >= 1
-        
+
         # Check that each variant has required fields
         for variant in data["variants"]:
             assert "name" in variant
@@ -315,7 +289,7 @@ class TestAuthenticationAndAuthorization:
         # Health check should be accessible
         response = client.get("/health")
         assert response.status_code == 200
-        
+
         # Variants endpoint should be accessible
         response = client.get("/v1/variants")
         assert response.status_code == 200
@@ -329,7 +303,7 @@ class TestDataValidation:
         response = client.post(
             "/v1/render/pdf",
             content="invalid json {",
-            headers={"Content-Type": "application/json"}
+            headers={"Content-Type": "application/json"},
         )
         # Should return validation error
         assert response.status_code in [422]
@@ -338,9 +312,7 @@ class TestDataValidation:
         """Test handling of missing required fields in request body."""
         # Send request with completely empty body
         response = client.post(
-            "/v1/render/pdf",
-            content="{}",
-            headers={"Content-Type": "application/json"}
+            "/v1/render/pdf", content="{}", headers={"Content-Type": "application/json"}
         )
         # Should return validation error since resume_data is required
         assert response.status_code in [422, 400]

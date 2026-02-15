@@ -12,11 +12,11 @@ Tests cover:
 from unittest.mock import patch
 import pytest
 from fastapi import status
-from fastapi.testclient import TestClient
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Depends, Request
 from config.dependencies import (
     verify_api_key,
     APIKeyAuthInfo,
+    settings,
     get_api_key_identifier,
     require_master_key,
     rate_limit_exceeded_handler,
@@ -324,6 +324,7 @@ class TestAPIKeyIdentifierFunction:
     def test_get_api_key_identifier_with_api_key_but_auth_not_required(self):
         """Test get_api_key_identifier when API key is present but auth is not required."""
         from starlette.datastructures import Headers
+        from unittest.mock import MagicMock
 
         # Create a mock request with headers
         class MockRequest:
@@ -342,6 +343,7 @@ class TestAPIKeyIdentifierFunction:
     def test_get_api_key_identifier_without_api_key(self):
         """Test get_api_key_identifier when no API key is present."""
         from starlette.datastructures import Headers
+        from unittest.mock import MagicMock
 
         # Create a mock request without API key header
         class MockRequest:
@@ -409,5 +411,6 @@ class TestRateLimitExceededHandler:
 
         # Verify it's an async function
         import asyncio
+        import inspect
 
         assert asyncio.iscoroutinefunction(rate_limit_exceeded_handler)

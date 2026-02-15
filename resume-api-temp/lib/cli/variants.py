@@ -70,9 +70,7 @@ class VariantManager:
         variant_dir = self.templates_dir / variant
 
         if not variant_dir.exists():
-            raise FileNotFoundError(
-                f"Variant '{variant}' not found at {variant_dir}"
-            )
+            raise FileNotFoundError(f"Variant '{variant}' not found at {variant_dir}")
 
         # Default metadata
         metadata = {
@@ -87,14 +85,12 @@ class VariantManager:
         metadata_file = variant_dir / "metadata.yaml"
         if metadata_file.exists():
             try:
-                with open(metadata_file, 'r') as f:
+                with open(metadata_file, "r") as f:
                     loaded_metadata = yaml.safe_load(f)
                     if loaded_metadata:
                         metadata.update(loaded_metadata)
             except Exception as e:
-                logger.warning(
-                    f"Failed to load metadata for '{variant}': {e}"
-                )
+                logger.warning(f"Failed to load metadata for '{variant}': {e}")
 
         return metadata
 
@@ -142,9 +138,7 @@ class VariantManager:
                 metadata = self.get_variant_metadata(variant)
                 result.append(metadata)
             except Exception as e:
-                logger.warning(
-                    f"Failed to get metadata for '{variant}': {e}"
-                )
+                logger.warning(f"Failed to get metadata for '{variant}': {e}")
 
         return result
 
@@ -164,7 +158,7 @@ class MockVariantManager:
             "creative",
             "minimal",
             "professional",
-            "startup"
+            "startup",
         ]
 
     def list_variants(self) -> List[str]:
@@ -187,7 +181,4 @@ class MockVariantManager:
 
     def get_variants_with_metadata(self) -> List[Dict[str, Any]]:
         """Get all mock variants with metadata."""
-        return [
-            self.get_variant_metadata(v)
-            for v in self._mock_variants
-        ]
+        return [self.get_variant_metadata(v) for v in self._mock_variants]

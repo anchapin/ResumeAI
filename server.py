@@ -106,7 +106,12 @@ app = FastAPI(title="ResumeAI API")
 # Since we don't rely on cookies/auth for this local tool, we set credentials to False.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000", "http://localhost:3001", "http://127.0.0.1:3001"],
+    allow_origins=[
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "http://localhost:3001",
+        "http://127.0.0.1:3001",
+    ],
     allow_credentials=False,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
@@ -233,22 +238,19 @@ async def generate_package(request: GeneratePackageRequest):
         if request.include_cover_letter:
             cover_letter_task = asyncio.to_thread(
                 cover_letter_generator.generate,
-                data_dict, request.company_name, request.job_description
+                data_dict,
+                request.company_name,
+                request.job_description,
             )
 
         analysis_task = asyncio.sleep(0)
         if request.use_ai_judge:
             analysis_task = asyncio.to_thread(
-                ai_generator.analyze_match,
-                data_dict, request.job_description
+                ai_generator.analyze_match, data_dict, request.job_description
             )
 
         # 2. Execute all tasks concurrently
-        results = await asyncio.gather(
-            tailor_task,
-            cover_letter_task,
-            analysis_task
-        )
+        results = await asyncio.gather(tailor_task, cover_letter_task, analysis_task)
 
         tailored_markdown, cover_letter_md, analysis_text = results
 

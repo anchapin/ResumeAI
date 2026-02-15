@@ -47,7 +47,7 @@ class AITailoringUtils:
         text = text.lower()
 
         # Remove punctuation
-        text = re.sub(r'[^\w\s]', ' ', text)
+        text = re.sub(r"[^\w\s]", " ", text)
 
         # Split into words
         words = text.split()
@@ -56,18 +56,56 @@ class AITailoringUtils:
         # - Length > 2 characters
         # - Not common stop words
         stop_words = {
-            'the', 'and', 'for', 'are', 'but', 'not', 'you', 'all', 'can',
-            'her', 'was', 'one', 'our', 'out', 'has', 'have', 'been', 'this',
-            'that', 'with', 'they', 'from', 'which', 'will', 'would', 'about',
-            'should', 'could', 'their', 'your', 'also', 'more', 'into', 'than',
-            'some', 'such', 'only', 'over', 'most', 'work', 'experience',
-            'looking', 'team', 'role', 'join', 'company', 'position'
+            "the",
+            "and",
+            "for",
+            "are",
+            "but",
+            "not",
+            "you",
+            "all",
+            "can",
+            "her",
+            "was",
+            "one",
+            "our",
+            "out",
+            "has",
+            "have",
+            "been",
+            "this",
+            "that",
+            "with",
+            "they",
+            "from",
+            "which",
+            "will",
+            "would",
+            "about",
+            "should",
+            "could",
+            "their",
+            "your",
+            "also",
+            "more",
+            "into",
+            "than",
+            "some",
+            "such",
+            "only",
+            "over",
+            "most",
+            "work",
+            "experience",
+            "looking",
+            "team",
+            "role",
+            "join",
+            "company",
+            "position",
         }
 
-        keywords = [
-            word for word in words
-            if len(word) > 2 and word not in stop_words
-        ]
+        keywords = [word for word in words if len(word) > 2 and word not in stop_words]
 
         # Count frequency and sort
         word_freq = {}
@@ -75,18 +113,13 @@ class AITailoringUtils:
             word_freq[word] = word_freq.get(word, 0) + 1
 
         # Return sorted by frequency (top 20)
-        sorted_keywords = sorted(
-            word_freq.items(),
-            key=lambda x: x[1],
-            reverse=True
-        )
+        sorted_keywords = sorted(word_freq.items(), key=lambda x: x[1], reverse=True)
 
         return [word for word, freq in sorted_keywords[:20]]
 
     @staticmethod
     def calculate_match_score(
-        resume_data: Dict[str, Any],
-        keywords: List[str]
+        resume_data: Dict[str, Any], keywords: List[str]
     ) -> float:
         """
         Calculate a match score between resume and job keywords.
@@ -118,7 +151,7 @@ class AITailoringUtils:
     def generate_improvement_suggestions(
         resume_data: Dict[str, Any],
         job_description: str,
-        keywords: Optional[List[str]] = None
+        keywords: Optional[List[str]] = None,
     ) -> List[str]:
         """
         Generate suggestions for improving a resume.
@@ -140,10 +173,7 @@ class AITailoringUtils:
         resume_text = str(resume_data).lower()
 
         # Check for missing keywords
-        missing_keywords = [
-            kw for kw in keywords
-            if kw.lower() not in resume_text
-        ]
+        missing_keywords = [kw for kw in keywords if kw.lower() not in resume_text]
 
         if missing_keywords:
             suggestions.append(
@@ -151,7 +181,7 @@ class AITailoringUtils:
             )
 
         # Check for metrics
-        if not re.search(r'\d+%|\$\d+|\d+\+ years', resume_text):
+        if not re.search(r"\d+%|\$\d+|\d+\+ years", resume_text):
             suggestions.append(
                 "Add quantifiable metrics to your achievements "
                 "(e.g., 'increased sales by 25%')"
@@ -159,8 +189,16 @@ class AITailoringUtils:
 
         # Check for action verbs
         action_verbs = [
-            'achieved', 'implemented', 'developed', 'managed', 'led',
-            'created', 'improved', 'reduced', 'increased', 'delivered'
+            "achieved",
+            "implemented",
+            "developed",
+            "managed",
+            "led",
+            "created",
+            "improved",
+            "reduced",
+            "increased",
+            "delivered",
         ]
         if not any(verb in resume_text for verb in action_verbs):
             suggestions.append(
@@ -168,8 +206,8 @@ class AITailoringUtils:
             )
 
         # Check summary length
-        if 'basics' in resume_data and 'summary' in resume_data['basics']:
-            summary = resume_data['basics']['summary']
+        if "basics" in resume_data and "summary" in resume_data["basics"]:
+            summary = resume_data["basics"]["summary"]
             if len(summary) < 100:
                 suggestions.append(
                     "Consider expanding your summary to provide more context"
@@ -181,18 +219,19 @@ class AITailoringUtils:
 
         # Default suggestions if none generated
         if not suggestions:
-            suggestions.extend([
-                "Review your resume for typos and grammatical errors",
-                "Ensure your contact information is current",
-                "Tailor your resume to the specific job requirements"
-            ])
+            suggestions.extend(
+                [
+                    "Review your resume for typos and grammatical errors",
+                    "Ensure your contact information is current",
+                    "Tailor your resume to the specific job requirements",
+                ]
+            )
 
         return suggestions[:5]
 
     @staticmethod
     def prioritize_experience(
-        resume_data: Dict[str, Any],
-        job_description: str
+        resume_data: Dict[str, Any], job_description: str
     ) -> Dict[str, Any]:
         """
         Prioritize work experience entries based on job relevance.
@@ -206,12 +245,12 @@ class AITailoringUtils:
         """
         keywords = AITailoringUtils.extract_keywords(job_description)
 
-        if 'work' not in resume_data or not isinstance(resume_data['work'], list):
+        if "work" not in resume_data or not isinstance(resume_data["work"], list):
             return resume_data
 
         # Calculate relevance scores
         work_items = []
-        for item in resume_data['work']:
+        for item in resume_data["work"]:
             item_text = str(item).lower()
             matches = sum(1 for kw in keywords if kw in item_text)
             score = matches / len(keywords) if keywords else 0
@@ -221,7 +260,7 @@ class AITailoringUtils:
         work_items.sort(key=lambda x: x[0], reverse=True)
 
         # Update resume with reordered experience
-        resume_data['work'] = [item for score, item in work_items]
+        resume_data["work"] = [item for score, item in work_items]
 
         return resume_data
 

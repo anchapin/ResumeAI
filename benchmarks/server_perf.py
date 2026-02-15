@@ -25,16 +25,17 @@ payload = {
                 "endDate": "Present",
                 "current": True,
                 "description": "Led the migration of legacy monolithic architecture to microservices.",
-                "tags": ["AWS", "Microservices"]
+                "tags": ["AWS", "Microservices"],
             }
-        ]
+        ],
     },
     "job_description": "We need a Senior Software Engineer with AWS experience.",
     "company_name": "Tech Giant",
     "variant": "standard",
     "include_cover_letter": True,
-    "use_ai_judge": True
+    "use_ai_judge": True,
 }
+
 
 def start_server():
     """Starts the server in a subprocess."""
@@ -43,15 +44,17 @@ def start_server():
         [sys.executable, "server.py"],
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
-        preexec_fn=os.setsid
+        preexec_fn=os.setsid,
     )
-    time.sleep(3) # Wait for server to start
+    time.sleep(3)  # Wait for server to start
     return process
+
 
 def stop_server(process):
     """Stops the server."""
     print("Stopping server...")
     os.killpg(os.getpgid(process.pid), signal.SIGTERM)
+
 
 def benchmark():
     try:
@@ -68,6 +71,7 @@ def benchmark():
 
     except requests.exceptions.ConnectionError:
         print("Could not connect to server.")
+
 
 if __name__ == "__main__":
     server_process = start_server()

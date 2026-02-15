@@ -1,5 +1,6 @@
 from playwright.sync_api import sync_playwright, expect
 
+
 def run():
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
@@ -51,6 +52,7 @@ def run():
 
         browser.close()
         print("Verification complete.")
+
 
 if __name__ == "__main__":
     run()
