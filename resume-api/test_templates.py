@@ -21,7 +21,7 @@ SAMPLE_RESUME_SHORT = {
         "email": "john@example.com",
         "phone": "555-123-4567",
         "url": "https://johndoe.dev",
-        "summary": "Passionate software engineer with experience in Python and JavaScript."
+        "summary": "Passionate software engineer with experience in Python and JavaScript.",
     },
     "work": [
         {
@@ -30,10 +30,7 @@ SAMPLE_RESUME_SHORT = {
             "startDate": "2022-01",
             "endDate": "2024-01",
             "summary": "Developed web applications using React and Python.",
-            "highlights": [
-                "Built RESTful APIs",
-                "Improved page load times by 30%"
-            ]
+            "highlights": ["Built RESTful APIs", "Improved page load times by 30%"],
         }
     ],
     "education": [
@@ -42,13 +39,13 @@ SAMPLE_RESUME_SHORT = {
             "area": "Computer Science",
             "studyType": "Bachelor",
             "startDate": "2018-09",
-            "endDate": "2022-05"
+            "endDate": "2022-05",
         }
     ],
     "skills": [
         {"name": "Programming", "keywords": ["Python", "JavaScript", "SQL"]},
-        {"name": "Tools", "keywords": ["Git", "Docker", "Linux"]}
-    ]
+        {"name": "Tools", "keywords": ["Git", "Docker", "Linux"]},
+    ],
 }
 
 SAMPLE_RESUME_MEDIUM = {
@@ -58,13 +55,9 @@ SAMPLE_RESUME_MEDIUM = {
         "email": "jane@example.com",
         "phone": "555-987-6543",
         "url": "https://janesmith.dev",
-        "summary": "Senior software engineer with 7 years of experience building scalable web applications and leading development teams. Passionate about clean code, testing, and developer experience."
+        "summary": "Senior software engineer with 7 years of experience building scalable web applications and leading development teams. Passionate about clean code, testing, and developer experience.",
     },
-    "location": {
-        "city": "San Francisco",
-        "region": "CA",
-        "countryCode": "US"
-    },
+    "location": {"city": "San Francisco", "region": "CA", "countryCode": "US"},
     "work": [
         {
             "company": "Tech Innovations Inc.",
@@ -76,8 +69,8 @@ SAMPLE_RESUME_MEDIUM = {
                 "Designed and implemented a microservices architecture reducing deployment time by 60%",
                 "Mentored team of 5 junior developers",
                 "Improved system reliability from 99.5% to 99.9% uptime",
-                "Implemented CI/CD pipeline for automated testing and deployment"
-            ]
+                "Implemented CI/CD pipeline for automated testing and deployment",
+            ],
         },
         {
             "company": "Digital Solutions LLC",
@@ -89,8 +82,8 @@ SAMPLE_RESUME_MEDIUM = {
                 "Built responsive web applications using React and Node.js",
                 "Developed RESTful APIs serving 100k+ daily requests",
                 "Integrated third-party payment processing systems",
-                "Participated in code reviews and technical design discussions"
-            ]
+                "Participated in code reviews and technical design discussions",
+            ],
         },
         {
             "company": "StartupXYZ",
@@ -101,9 +94,9 @@ SAMPLE_RESUME_MEDIUM = {
             "highlights": [
                 "Developed MVP web application",
                 "Implemented user authentication system",
-                "Deployed applications to AWS cloud infrastructure"
-            ]
-        }
+                "Deployed applications to AWS cloud infrastructure",
+            ],
+        },
     ],
     "education": [
         {
@@ -112,22 +105,38 @@ SAMPLE_RESUME_MEDIUM = {
             "studyType": "Master",
             "startDate": "2015-09",
             "endDate": "2017-05",
-            "courses": ["Distributed Systems", "Advanced Algorithms", "Machine Learning"]
+            "courses": [
+                "Distributed Systems",
+                "Advanced Algorithms",
+                "Machine Learning",
+            ],
         },
         {
             "institution": "State College",
             "area": "Computer Science",
             "studyType": "Bachelor",
             "startDate": "2011-09",
-            "endDate": "2015-05"
-        }
+            "endDate": "2015-05",
+        },
     ],
     "skills": [
-        {"name": "Programming Languages", "keywords": ["Python", "JavaScript", "TypeScript", "Go", "Java"]},
-        {"name": "Frameworks", "keywords": ["React", "Node.js", "Django", "Flask", "FastAPI"]},
-        {"name": "Databases", "keywords": ["PostgreSQL", "MongoDB", "Redis", "Elasticsearch"]},
-        {"name": "DevOps", "keywords": ["Docker", "Kubernetes", "AWS", "CI/CD", "Terraform"]},
-        {"name": "Tools", "keywords": ["Git", "Jira", "Confluence", "Linux", "Nginx"]}
+        {
+            "name": "Programming Languages",
+            "keywords": ["Python", "JavaScript", "TypeScript", "Go", "Java"],
+        },
+        {
+            "name": "Frameworks",
+            "keywords": ["React", "Node.js", "Django", "Flask", "FastAPI"],
+        },
+        {
+            "name": "Databases",
+            "keywords": ["PostgreSQL", "MongoDB", "Redis", "Elasticsearch"],
+        },
+        {
+            "name": "DevOps",
+            "keywords": ["Docker", "Kubernetes", "AWS", "CI/CD", "Terraform"],
+        },
+        {"name": "Tools", "keywords": ["Git", "Jira", "Confluence", "Linux", "Nginx"]},
     ],
     "projects": [
         {
@@ -137,17 +146,17 @@ SAMPLE_RESUME_MEDIUM = {
             "highlights": [
                 "Implemented core features",
                 "Wrote comprehensive documentation",
-                "Reviewed pull requests from community"
-            ]
+                "Reviewed pull requests from community",
+            ],
         }
     ],
     "awards": [
         {
             "title": "Employee of the Year",
             "date": "2022",
-            "awarder": "Tech Innovations Inc."
+            "awarder": "Tech Innovations Inc.",
         }
-    ]
+    ],
 }
 
 SAMPLE_RESUME_LONG = {
@@ -157,13 +166,9 @@ SAMPLE_RESUME_LONG = {
         "email": "michael.johnson@example.com",
         "phone": "555-555-5555",
         "url": "https://michaeljohnson.dev",
-        "summary": "Principal Software Architect with 15+ years of experience leading engineering teams and designing large-scale distributed systems. Expertise in cloud architecture, microservices, and building high-performance teams. Strong track record of delivering complex projects on time and under budget."
+        "summary": "Principal Software Architect with 15+ years of experience leading engineering teams and designing large-scale distributed systems. Expertise in cloud architecture, microservices, and building high-performance teams. Strong track record of delivering complex projects on time and under budget.",
     },
-    "location": {
-        "city": "Seattle",
-        "region": "WA",
-        "countryCode": "US"
-    },
+    "location": {"city": "Seattle", "region": "WA", "countryCode": "US"},
     "work": [
         {
             "company": "Global Technology Corporation",
@@ -177,8 +182,8 @@ SAMPLE_RESUME_LONG = {
                 "Managed team of 25 engineers across 5 time zones",
                 "Established engineering standards and best practices adopted company-wide",
                 "Technical advisor to CTO on strategic technology initiatives",
-                "Reduced time-to-market for new features by 60% through improved processes"
-            ]
+                "Reduced time-to-market for new features by 60% through improved processes",
+            ],
         },
         {
             "company": "CloudScale Solutions",
@@ -192,8 +197,8 @@ SAMPLE_RESUME_LONG = {
                 "Implemented zero-downtime deployment strategy",
                 "Reduced customer support tickets by 50% through quality improvements",
                 "Mentored junior developers into leadership roles",
-                "Established agile development processes improving team velocity"
-            ]
+                "Established agile development processes improving team velocity",
+            ],
         },
         {
             "company": "DataDriven Inc.",
@@ -207,8 +212,8 @@ SAMPLE_RESUME_LONG = {
                 "Optimized database queries reducing response times by 70%",
                 "Developed API integrations with 50+ external systems",
                 "Led technical initiatives for database performance optimization",
-                "Received multiple internal awards for innovation and excellence"
-            ]
+                "Received multiple internal awards for innovation and excellence",
+            ],
         },
         {
             "company": "InnovateTech Startup",
@@ -221,9 +226,9 @@ SAMPLE_RESUME_LONG = {
                 "Implemented secure authentication and authorization systems",
                 "Built scalable backend services handling millions of requests",
                 "Participated in product design and user experience discussions",
-                "Contributed to company's Series A funding through technical excellence"
-            ]
-        }
+                "Contributed to company's Series A funding through technical excellence",
+            ],
+        },
     ],
     "education": [
         {
@@ -232,7 +237,12 @@ SAMPLE_RESUME_LONG = {
             "studyType": "PhD",
             "startDate": "2006-09",
             "endDate": "2009-06",
-            "courses": ["Distributed Systems", "Advanced Algorithms", "Cloud Computing", "Machine Learning"]
+            "courses": [
+                "Distributed Systems",
+                "Advanced Algorithms",
+                "Cloud Computing",
+                "Machine Learning",
+            ],
         },
         {
             "institution": "MIT",
@@ -240,7 +250,7 @@ SAMPLE_RESUME_LONG = {
             "studyType": "Master",
             "startDate": "2004-09",
             "endDate": "2006-05",
-            "courses": ["Software Engineering", "Database Systems", "Network Security"]
+            "courses": ["Software Engineering", "Database Systems", "Network Security"],
         },
         {
             "institution": "University of California, Berkeley",
@@ -248,17 +258,74 @@ SAMPLE_RESUME_LONG = {
             "studyType": "Bachelor",
             "startDate": "2000-09",
             "endDate": "2004-05",
-            "courses": ["Data Structures", "Algorithms", "Operating Systems", "Computer Networks"]
-        }
+            "courses": [
+                "Data Structures",
+                "Algorithms",
+                "Operating Systems",
+                "Computer Networks",
+            ],
+        },
     ],
     "skills": [
-        {"name": "Programming Languages", "keywords": ["Python", "Java", "Go", "TypeScript", "C++", "Rust", "Scala"]},
-        {"name": "Architecture", "keywords": ["Microservices", "Event-Driven", "Cloud-Native", "Serverless", "Distributed Systems"]},
-        {"name": "Cloud Platforms", "keywords": ["AWS", "GCP", "Azure", "Kubernetes", "Docker", "Terraform"]},
-        {"name": "Databases", "keywords": ["PostgreSQL", "MongoDB", "Cassandra", "Redis", "Elasticsearch", "BigQuery"]},
-        {"name": "Leadership", "keywords": ["Team Management", "Technical Leadership", "Strategic Planning", "Mentoring", "Agile/Scrum"]},
-        {"name": "DevOps", "keywords": ["CI/CD", "Infrastructure as Code", "Monitoring", "Observability", "Security"]},
-        {"name": "Data", "keywords": ["Big Data", "Machine Learning", "Data Engineering", "Analytics", "Stream Processing"]}
+        {
+            "name": "Programming Languages",
+            "keywords": ["Python", "Java", "Go", "TypeScript", "C++", "Rust", "Scala"],
+        },
+        {
+            "name": "Architecture",
+            "keywords": [
+                "Microservices",
+                "Event-Driven",
+                "Cloud-Native",
+                "Serverless",
+                "Distributed Systems",
+            ],
+        },
+        {
+            "name": "Cloud Platforms",
+            "keywords": ["AWS", "GCP", "Azure", "Kubernetes", "Docker", "Terraform"],
+        },
+        {
+            "name": "Databases",
+            "keywords": [
+                "PostgreSQL",
+                "MongoDB",
+                "Cassandra",
+                "Redis",
+                "Elasticsearch",
+                "BigQuery",
+            ],
+        },
+        {
+            "name": "Leadership",
+            "keywords": [
+                "Team Management",
+                "Technical Leadership",
+                "Strategic Planning",
+                "Mentoring",
+                "Agile/Scrum",
+            ],
+        },
+        {
+            "name": "DevOps",
+            "keywords": [
+                "CI/CD",
+                "Infrastructure as Code",
+                "Monitoring",
+                "Observability",
+                "Security",
+            ],
+        },
+        {
+            "name": "Data",
+            "keywords": [
+                "Big Data",
+                "Machine Learning",
+                "Data Engineering",
+                "Analytics",
+                "Stream Processing",
+            ],
+        },
     ],
     "projects": [
         {
@@ -268,8 +335,8 @@ SAMPLE_RESUME_LONG = {
                 "Reduced developer onboarding time from weeks to days",
                 "Enabled 100+ teams to deploy independently",
                 "Achieved 99.99% platform uptime",
-                "Recognized as company-wide innovation initiative"
-            ]
+                "Recognized as company-wide innovation initiative",
+            ],
         },
         {
             "name": "Real-Time Analytics System",
@@ -278,8 +345,8 @@ SAMPLE_RESUME_LONG = {
                 "Reduced data latency from hours to seconds",
                 "Enabled business users to make real-time decisions",
                 "Scaled to handle 10x growth in data volume",
-                "Published conference paper on architecture"
-            ]
+                "Published conference paper on architecture",
+            ],
         },
         {
             "name": "Open Source Contributions",
@@ -289,35 +356,64 @@ SAMPLE_RESUME_LONG = {
                 "500+ contributions to major projects",
                 "Maintainer of popular Kubernetes operator",
                 "Speaker at 10+ industry conferences",
-                "Technical blog with 50k+ monthly readers"
-            ]
-        }
+                "Technical blog with 50k+ monthly readers",
+            ],
+        },
     ],
     "awards": [
-        {"title": "Technical Excellence Award", "date": "2023", "awarder": "Global Technology Corporation"},
-        {"title": "Best Technical Architecture", "date": "2021", "awarder": "Cloud Solutions Awards"},
-        {"title": "Engineering Leader of the Year", "date": "2017", "awarder": "CloudScale Solutions"},
-        {"title": "Outstanding Contributor", "date": "2016", "awarder": "Open Source Foundation"},
-        {"title": "PhD Thesis Award", "date": "2009", "awarder": "Stanford University"}
+        {
+            "title": "Technical Excellence Award",
+            "date": "2023",
+            "awarder": "Global Technology Corporation",
+        },
+        {
+            "title": "Best Technical Architecture",
+            "date": "2021",
+            "awarder": "Cloud Solutions Awards",
+        },
+        {
+            "title": "Engineering Leader of the Year",
+            "date": "2017",
+            "awarder": "CloudScale Solutions",
+        },
+        {
+            "title": "Outstanding Contributor",
+            "date": "2016",
+            "awarder": "Open Source Foundation",
+        },
+        {"title": "PhD Thesis Award", "date": "2009", "awarder": "Stanford University"},
     ],
     "certificates": [
-        {"name": "AWS Solutions Architect Professional", "date": "2023", "issuer": "Amazon Web Services"},
-        {"name": "Kubernetes Administrator (CKA)", "date": "2022", "issuer": "Cloud Native Computing Foundation"},
-        {"name": "Google Cloud Professional Architect", "date": "2021", "issuer": "Google"}
+        {
+            "name": "AWS Solutions Architect Professional",
+            "date": "2023",
+            "issuer": "Amazon Web Services",
+        },
+        {
+            "name": "Kubernetes Administrator (CKA)",
+            "date": "2022",
+            "issuer": "Cloud Native Computing Foundation",
+        },
+        {
+            "name": "Google Cloud Professional Architect",
+            "date": "2021",
+            "issuer": "Google",
+        },
     ],
     "publications": [
         {
             "name": "Scalable Microservices Architecture",
             "publisher": "IEEE Software Magazine",
-            "releaseDate": "2022-03"
+            "releaseDate": "2022-03",
         },
         {
             "name": "Building Resilient Cloud Applications",
             "publisher": "ACM Computing Surveys",
-            "releaseDate": "2020-11"
-        }
-    ]
+            "releaseDate": "2020-11",
+        },
+    ],
 }
+
 
 def test_template(template_name, resume_data, description):
     """Test a template with given resume data."""
@@ -328,14 +424,12 @@ def test_template(template_name, resume_data, description):
 
     try:
         generator = ResumeGenerator(
-            templates_dir=str(lib_path / "templates"),
-            lib_dir=str(lib_path)
+            templates_dir=str(lib_path / "templates"), lib_dir=str(lib_path)
         )
 
         # Generate PDF
         pdf_bytes = generator.generate_pdf(
-            resume_data=resume_data,
-            variant=template_name
+            resume_data=resume_data, variant=template_name
         )
 
         # Check PDF was generated
@@ -349,8 +443,10 @@ def test_template(template_name, resume_data, description):
     except Exception as e:
         print(f"❌ ERROR: {str(e)}")
         import traceback
+
         traceback.print_exc()
         return False
+
 
 def main():
     """Run all template tests."""
@@ -358,7 +454,7 @@ def main():
     test_cases = [
         (SAMPLE_RESUME_SHORT, "Short (1 page)"),
         (SAMPLE_RESUME_MEDIUM, "Medium (1-2 pages)"),
-        (SAMPLE_RESUME_LONG, "Long (2+ pages)")
+        (SAMPLE_RESUME_LONG, "Long (2+ pages)"),
     ]
 
     results = []
@@ -378,14 +474,19 @@ def main():
     for template, template_results in results:
         passed = sum(1 for _, success in template_results if success)
         total = len(template_results)
-        status = "✅ PASS" if passed == total else "⚠️  PARTIAL" if passed > 0 else "❌ FAIL"
+        status = (
+            "✅ PASS" if passed == total else "⚠️  PARTIAL" if passed > 0 else "❌ FAIL"
+        )
         print(f"{template:15} {status} ({passed}/{total})")
 
-    overall_passed = sum(1 for _, results in results for _, success in results if success)
+    overall_passed = sum(
+        1 for _, results in results for _, success in results if success
+    )
     overall_total = sum(len(results) for _, results in results)
     print(f"\nOverall: {overall_passed}/{overall_total} tests passed")
 
     return overall_passed == overall_total
+
 
 if __name__ == "__main__":
     success = main()
