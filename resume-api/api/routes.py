@@ -11,6 +11,7 @@ from pathlib import Path
 from fastapi import APIRouter, HTTPException, Request, UploadFile, File, status
 from fastapi.responses import Response
 
+import docx  # python-docx for DOCX parsing
 import fitz  # PyMuPDF for PDF parsing
 
 from .models import (
@@ -579,4 +580,91 @@ async def import_pdf(request: Request, file: UploadFile = File(...), auth: Autho
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"PDF import failed: {str(e)}",
+        )
+
+
+def extract_text_from_docx(file_bytes: bytes) -> str:
+    """Extract text content from DOCX file."""
+    try:
+        doc = docx.Document(io.BytesIO(file_bytes))
+    except Exception as e:
+        raise ValueError(f"Invalid or corrupted DOCX file: {str(e)}")
+    
+    text_parts = []
+    for para in doc.paragraphs:
+        if para.text.strip():
+            text_parts.append(para.text)
+    
+    # Also extract text from tables
+    for table in doc.tables:
+        for row in table.rows:
+            for cell in row.cells:
+                if cell.text.strip():
+                    text_parts.append(cell.text)
+    
+    if not text_parts:
+        raise ValueError("No text content found in DOCX file.")
+    
+    return "
+".join(text_parts)
+
+
+@router.post(
+    "/v1/import/docx",
+    response_model=ResumeData,
+    responses={
+        200: {"model": ResumeData, "description": "Imported resume data"},
+        400: {"model": ErrorResponse},
+        401: {"model": ErrorResponse},
+        403: {"model": ErrorResponse},
+        429: {"model": ErrorResponse},
+        500: {"model": ErrorResponse},
+    },
+    tags=["Import"],
+)
+@rate_limit("10/minute")
+async def import_docx(request: Request, file: UploadFile = File(...), auth: AuthorizedAPIKey = None):
+    """
+    Import resume from DOCX file.
+    
+    Accepts DOCX file uploads and extracts resume data in JSON Resume format.
+    
+    Requires API key authentication via X-API-KEY header.
+    
+    Rate limit: 10 requests per minute per API key.
+    """
+    # Check file type
+    content_type = file.content_type
+    if content_type not in ["application/vnd.openxmlformats-officedocument.wordprocessingml.document", "application/vnd.ms-word.document"]:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid file type. Only DOCX files are accepted.",
+        )
+    
+    try:
+        # Read file content
+        content = await file.read()
+        
+        # Check file size (max 10MB)
+        if len(content) > 10 * 1024 * 1024:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="File too large. Maximum size is 10MB.",
+            )
+        
+        # Extract text from DOCX
+        text = extract_text_from_docx(content)
+        
+        # Parse into JSON Resume format
+        resume_data = parse_resume_text(text)
+        
+        # Validate and return
+        return ResumeData(**resume_data)
+    
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"DOCX import failed: {str(e)}",
         )
