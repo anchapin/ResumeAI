@@ -8,7 +8,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest",
-    "docs": "typedoc --out docs --entryPoints components/ pages/ --excludeNotDocumented --excludeInternal --theme default"
+    "docs": "typedoc --out docs --entryPoints components/ pages/ utils/ hooks/ --excludeNotDocumented --excludeInternal --theme default"
   },
   "dependencies": {
     "react": "^19.2.4",
