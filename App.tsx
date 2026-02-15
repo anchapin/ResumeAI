@@ -7,6 +7,7 @@ import JobApplications from './pages/JobApplications';
 import Settings from './pages/Settings';
 import { Route, SimpleResumeData } from './types';
 import { loadResumeData, saveResumeData, StorageError } from './utils/storage';
+import ErrorBoundary from './components/ErrorBoundary';
 import { TokenManager } from './utils/security';
 import { useTheme } from './hooks/useTheme';
 import { ToastContainer } from 'react-toastify';
@@ -78,6 +79,9 @@ const initialResumeData: SimpleResumeData = {
   ]
 };
 
+/** Save status enum for tracking auto-save state */
+export type SaveStatus = 'idle' | 'saving' | 'saved' | 'error';
+
 function App() {
   const [currentRoute, setCurrentRoute] = useState<Route>(Route.DASHBOARD);
   const [resumeData, setResumeData] = useState<SimpleResumeData>(initialResumeData);
@@ -86,6 +90,7 @@ function App() {
   
   // Initialize theme (dark mode support)
   const { theme, isDark, toggleTheme } = useTheme();
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
 
   // Load resume data from localStorage on mount and check security
   useEffect(() => {
@@ -128,12 +133,20 @@ function App() {
     // Only save after initial load is complete to avoid overwriting with initial data
     if (!isLoaded) return;
 
+    // Set saving status when data changes
+    setSaveStatus('saving');
+
     // Debounce save to avoid performance issues on rapid updates
     const handler = setTimeout(() => {
       try {
         saveResumeData(resumeData);
+        setSaveStatus('saved');
         console.log('Resume data saved to localStorage');
+        
+        // Reset to idle after 3 seconds
+        setTimeout(() => setSaveStatus('idle'), 3000);
       } catch (error) {
+        setSaveStatus('error');
         if (error instanceof StorageError) {
           console.error('Storage error:', error.message, error.type);
           const errorMessage = getErrorMessage(error);
@@ -144,6 +157,9 @@ function App() {
         } else {
           console.error('Unexpected error saving resume data:', error);
         }
+        
+        // Reset to idle after 5 seconds
+        setTimeout(() => setSaveStatus('idle'), 5000);
       }
     }, 1000);
 
@@ -199,6 +215,7 @@ function App() {
             resumeData={resumeData}
             onUpdate={handleUpdateResumeData}
             onBack={() => setCurrentRoute(Route.DASHBOARD)}
+            saveStatus={saveStatus}
           />
         );
       case Route.WORKSPACE:
@@ -221,7 +238,7 @@ function App() {
   };
 
   return (
-    <div className="font-sans text-slate-900">
+    <ErrorBoundary>
       {storageError && (
         <div className="fixed top-4 right-4 z-50 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg shadow-lg flex items-center gap-2 animate-in slide-in-from-top-2 fade-in">
           <span className="material-symbols-outlined text-red-500">error</span>
@@ -256,7 +273,7 @@ function App() {
         pauseOnHover
         theme="light"
       />
-    </div>
+    </ErrorBoundary>
   );
 }
 

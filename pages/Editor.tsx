@@ -450,6 +450,7 @@ const ProjectItem = React.memo(({
  * @property {SimpleResumeData} resumeData - The resume data to edit
  * @property {Function} onUpdate - Callback to update resume data
  * @property {Function} onBack - Callback to navigate back
+ * @property {string} saveStatus - Current save status: 'idle', 'saving', 'saved', or 'error'
  */
 interface EditorProps {
   /** The resume data to edit */
@@ -458,6 +459,8 @@ interface EditorProps {
   onUpdate: (data: SimpleResumeData) => void;
   /** Callback to navigate back */
   onBack: () => void;
+  /** Current save status for auto-save indicator */
+  saveStatus?: 'idle' | 'saving' | 'saved' | 'error';
 }
 
 /** Navigation items for the editor header */
@@ -506,7 +509,7 @@ function getTimeSince(date: Date): string {
  * />
  * ```
  */
-const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, onBack }) => {
+const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, onBack, saveStatus = 'idle' }) => {
   const [activeTab, setActiveTab] = useState<string>('Experience');
 
   // Experience state
@@ -944,11 +947,41 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, onBack }) => {
             <div className="flex flex-wrap justify-between items-end gap-3 mb-8">
                 <div>
                     <h1 className="text-4xl font-extrabold text-slate-900 tracking-tight mb-2">Edit Professional Profile</h1>
-                    <p className="text-primary-600 font-medium text-sm flex items-center gap-1">
-                        <span className="material-symbols-outlined text-sm">check_circle</span>
-                        {lastSaved
-                          ? `Saved ${getTimeSince(lastSaved)} ago`
-                          : 'Changes not yet saved'}
+                    <p className={`font-medium text-sm flex items-center gap-1 ${
+                      saveStatus === 'error' ? 'text-red-600' :
+                      saveStatus === 'saving' ? 'text-amber-600' :
+                      saveStatus === 'saved' ? 'text-green-600' : 'text-primary-600'
+                    }`}>
+                        {saveStatus === 'saving' && (
+                          <>
+                            <span className="material-symbols-outlined text-sm animate-spin">sync</span>
+                            Saving...
+                          </>
+                        )}
+                        {saveStatus === 'saved' && (
+                          <>
+                            <span className="material-symbols-outlined text-sm">check_circle</span>
+                            Saved
+                          </>
+                        )}
+                        {saveStatus === 'error' && (
+                          <>
+                            <span className="material-symbols-outlined text-sm">error</span>
+                            Save failed
+                          </>
+                        )}
+                        {saveStatus === 'idle' && lastSaved && (
+                          <>
+                            <span className="material-symbols-outlined text-sm">check_circle</span>
+                            Saved {getTimeSince(lastSaved)} ago
+                          </>
+                        )}
+                        {saveStatus === 'idle' && !lastSaved && (
+                          <>
+                            <span className="material-symbols-outlined text-sm">edit</span>
+                            Changes not yet saved
+                          </>
+                        )}
                     </p>
                 </div>
                 <div className="flex gap-3">
