@@ -8,6 +8,7 @@ import Settings from './pages/Settings';
 import { Route, SimpleResumeData } from './types';
 import { loadResumeData, saveResumeData, StorageError } from './utils/storage';
 import { TokenManager } from './utils/security';
+import ErrorBoundary from './components/ErrorBoundary';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import './components/toast-styles.css';
@@ -233,7 +234,7 @@ function App() {
   };
 
   return (
-    <div className="font-sans text-slate-900">
+    <ErrorBoundary>
       {storageError && (
         <div className="fixed top-4 right-4 z-50 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg shadow-lg flex items-center gap-2 animate-in slide-in-from-top-2 fade-in">
           <span className="material-symbols-outlined text-red-500">error</span>
@@ -268,7 +269,7 @@ function App() {
         pauseOnHover
         theme="light"
       />
-    </div>
+    </ErrorBoundary>
   );
 }
 
