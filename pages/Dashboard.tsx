@@ -1,7 +1,25 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { BarChart, Bar, ResponsiveContainer, XAxis, Tooltip, Cell } from 'recharts';
 import { JobApplication } from '../types';
 import StatusBadge from '../components/StatusBadge';
+
+// Types for user and resume data
+interface User {
+  id: number;
+  email: string;
+  first_name?: string;
+  last_name?: string;
+  created_at: string;
+}
+
+interface Resume {
+  id: number;
+  title: string;
+  content: any;
+  template: string;
+  created_at: string;
+  updated_at: string;
+}
 
 /** Mock data for the application funnel chart */
 const data = [
@@ -42,13 +60,70 @@ const recentApps: JobApplication[] = [
  * @component
  * @description Dashboard page component showing job search overview with statistics and charts
  * @returns {JSX.Element} The rendered dashboard page component
- * 
+ *
  * @example
  * ```tsx
  * <Dashboard />
  * ```
  */
 const Dashboard: React.FC = () => {
+  const [user, setUser] = useState<User | null>(null);
+  const [resumes, setResumes] = useState<Resume[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        // Get user profile
+        const token = localStorage.getItem('accessToken');
+        if (!token) {
+          throw new Error('No authentication token found');
+        }
+
+        const userResponse = await fetch('/api/auth/me', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (!userResponse.ok) {
+          throw new Error('Failed to fetch user profile');
+        }
+
+        const userData = await userResponse.json();
+        setUser(userData);
+
+        // Get user's resumes
+        const resumesResponse = await fetch('/api/resumes', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (!resumesResponse.ok) {
+          throw new Error('Failed to fetch resumes');
+        }
+
+        const resumesData = await resumesResponse.json();
+        setResumes(resumesData);
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserData();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex-1 min-h-screen bg-[#f6f6f8] pl-72">
       {/* Header */}
@@ -59,10 +134,16 @@ const Dashboard: React.FC = () => {
             <span className="material-symbols-outlined">notifications</span>
             <div className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></div>
           </button>
-          <div
-            className="w-9 h-9 rounded-full bg-slate-200 bg-cover bg-center border border-slate-200 shadow-sm"
-            style={{ backgroundImage: 'url("https://picsum.photos/100/100")' }}
-          ></div>
+          <div className="flex items-center gap-2">
+            <div
+              className="w-9 h-9 rounded-full bg-slate-200 bg-cover bg-center border border-slate-200 shadow-sm flex items-center justify-center text-sm font-bold text-slate-700"
+            >
+              {user?.first_name?.charAt(0) || user?.email.charAt(0) || 'U'}
+            </div>
+            <span className="text-sm font-medium text-slate-700">
+              {user?.first_name ? `${user.first_name} ${user?.last_name || ''}` : user?.email}
+            </span>
+          </div>
         </div>
       </header>
 
@@ -71,87 +152,133 @@ const Dashboard: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm flex flex-col gap-3 transition-transform hover:-translate-y-1 duration-300">
             <div className="flex justify-between items-start">
-              <p className="text-slate-500 text-sm font-semibold">Applications Sent</p>
+              <p className="text-slate-500 text-sm font-semibold">Your Resumes</p>
               <div className="p-2 bg-primary-50 rounded-lg text-primary-600">
-                <span className="material-symbols-outlined text-[20px]">send</span>
+                <span className="material-symbols-outlined text-[20px]">description</span>
               </div>
             </div>
             <div>
-              <p className="text-slate-900 text-4xl font-bold tracking-tight">25</p>
+              <p className="text-slate-900 text-4xl font-bold tracking-tight">{resumes.length}</p>
               <p className="text-emerald-600 text-sm font-semibold flex items-center gap-1 mt-1">
                 <span className="material-symbols-outlined text-[16px]">trending_up</span>
-                +12% this month
+                {resumes.length > 0 ? '+1 this week' : 'Get started today'}
               </p>
             </div>
           </div>
 
           <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm flex flex-col gap-3 transition-transform hover:-translate-y-1 duration-300">
             <div className="flex justify-between items-start">
-              <p className="text-slate-500 text-sm font-semibold">Interview Rate</p>
+              <p className="text-slate-500 text-sm font-semibold">Account Created</p>
               <div className="p-2 bg-green-50 rounded-lg text-green-600">
-                <span className="material-symbols-outlined text-[20px]">record_voice_over</span>
+                <span className="material-symbols-outlined text-[20px]">person_add</span>
               </div>
             </div>
             <div>
-              <p className="text-slate-900 text-4xl font-bold tracking-tight">32%</p>
-              <p className="text-emerald-600 text-sm font-semibold flex items-center gap-1 mt-1">
-                <span className="material-symbols-outlined text-[16px]">trending_up</span>
-                +5% from last week
+              <p className="text-slate-900 text-4xl font-bold tracking-tight">
+                {user ? new Date(user.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '--'}
               </p>
+              <p className="text-slate-400 text-sm font-medium mt-1">Since joining</p>
             </div>
           </div>
 
           <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm flex flex-col gap-3 transition-transform hover:-translate-y-1 duration-300">
             <div className="flex justify-between items-start">
-              <p className="text-slate-500 text-sm font-semibold">Pending Responses</p>
+              <p className="text-slate-500 text-sm font-semibold">Last Login</p>
               <div className="p-2 bg-amber-50 rounded-lg text-amber-600">
-                <span className="material-symbols-outlined text-[20px]">hourglass_empty</span>
+                <span className="material-symbols-outlined text-[20px]">schedule</span>
               </div>
             </div>
             <div>
-              <p className="text-slate-900 text-4xl font-bold tracking-tight">5</p>
-              <p className="text-slate-400 text-sm font-medium mt-1">No change</p>
+              <p className="text-slate-900 text-4xl font-bold tracking-tight">Today</p>
+              <p className="text-slate-400 text-sm font-medium mt-1">Active now</p>
             </div>
           </div>
         </div>
 
-        {/* Recent Applications */}
+        {/* Your Resumes */}
         <div className="space-y-4">
           <div className="flex items-center justify-between px-1">
-            <h3 className="text-slate-900 text-xl font-bold tracking-tight">Recent Applications</h3>
+            <h3 className="text-slate-900 text-xl font-bold tracking-tight">Your Resumes</h3>
             <button className="text-primary-600 text-sm font-bold hover:text-primary-700 hover:underline">View all</button>
           </div>
           <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-slate-50/50 border-b border-slate-100">
-                  <th className="px-6 py-4 text-slate-500 text-xs font-bold uppercase tracking-wider">Company</th>
-                  <th className="px-6 py-4 text-slate-500 text-xs font-bold uppercase tracking-wider">Role</th>
-                  <th className="px-6 py-4 text-slate-500 text-xs font-bold uppercase tracking-wider text-center">Status</th>
-                  <th className="px-6 py-4 text-slate-500 text-xs font-bold uppercase tracking-wider text-right">Date Applied</th>
+                  <th className="px-6 py-4 text-slate-500 text-xs font-bold uppercase tracking-wider">Title</th>
+                  <th className="px-6 py-4 text-slate-500 text-xs font-bold uppercase tracking-wider">Template</th>
+                  <th className="px-6 py-4 text-slate-500 text-xs font-bold uppercase tracking-wider text-center">Created</th>
+                  <th className="px-6 py-4 text-slate-500 text-xs font-bold uppercase tracking-wider text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {recentApps.map((app) => (
-                  <tr key={app.id} className="hover:bg-slate-50 transition-colors cursor-pointer group">
+                {resumes.slice(0, 3).map((resume) => (
+                  <tr key={resume.id} className="hover:bg-slate-50 transition-colors cursor-pointer group">
                     <td className="px-6 py-5">
                       <div className="flex items-center gap-4">
-                        <div className="bg-white rounded-lg size-10 flex items-center justify-center p-1 border border-slate-100 shadow-sm">
-                           {/* Using a placeholder if logo fails, but styled nicely */}
-                           <img src={app.logo} alt={app.company} className="max-w-full max-h-full object-contain" onError={(e) => {
-                             (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${app.company}&background=random`
-                           }}/>
+                        <div className="bg-white rounded-lg size-10 flex items-center justify-center p-2 border border-slate-100 shadow-sm">
+                          <span className="material-symbols-outlined text-slate-600">description</span>
                         </div>
-                        <span className="text-slate-900 font-bold text-sm group-hover:text-primary-600 transition-colors">{app.company}</span>
+                        <span className="text-slate-900 font-bold text-sm group-hover:text-primary-600 transition-colors">{resume.title}</span>
                       </div>
                     </td>
-                    <td className="px-6 py-5 text-slate-700 text-sm font-medium">{app.role}</td>
-                    <td className="px-6 py-5 text-center">
-                      <StatusBadge status={app.status} />
+                    <td className="px-6 py-5 text-slate-700 text-sm font-medium capitalize">{resume.template}</td>
+                    <td className="px-6 py-5 text-center text-slate-500 text-sm font-medium">
+                      {new Date(resume.created_at).toLocaleDateString()}
                     </td>
-                    <td className="px-6 py-5 text-slate-500 text-sm text-right font-medium">{app.dateApplied}</td>
+                    <td className="px-6 py-5 text-slate-500 text-sm text-right font-medium">
+                      <button 
+                        className="text-blue-600 hover:text-blue-800 mr-3"
+                        onClick={() => window.location.href = `/editor/${resume.id}`}
+                      >
+                        Edit
+                      </button>
+                      <button 
+                        className="text-red-600 hover:text-red-800"
+                        onClick={async () => {
+                          if (window.confirm('Are you sure you want to delete this resume?')) {
+                            try {
+                              const token = localStorage.getItem('accessToken');
+                              const response = await fetch(`/api/resumes/${resume.id}`, {
+                                method: 'DELETE',
+                                headers: {
+                                  'Authorization': `Bearer ${token}`
+                                }
+                              });
+                              
+                              if (response.ok) {
+                                setResumes(resumes.filter(r => r.id !== resume.id));
+                              } else {
+                                alert('Failed to delete resume');
+                              }
+                            } catch (error) {
+                              console.error('Error deleting resume:', error);
+                              alert('Error deleting resume');
+                            }
+                          }
+                        }}
+                      >
+                        Delete
+                      </button>
+                    </td>
                   </tr>
                 ))}
+                {resumes.length === 0 && (
+                  <tr>
+                    <td colSpan={4} className="px-6 py-12 text-center">
+                      <div className="flex flex-col items-center justify-center">
+                        <span className="material-symbols-outlined text-4xl text-slate-300 mb-2">description</span>
+                        <p className="text-slate-500">You don't have any resumes yet</p>
+                        <button 
+                          className="mt-3 text-primary-600 hover:text-primary-700 font-medium"
+                          onClick={() => window.location.href = '/editor'}
+                        >
+                          Create your first resume
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
