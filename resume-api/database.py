@@ -5,8 +5,7 @@ Uses SQLAlchemy with async support for resume storage,
 versioning, collaboration, and sharing.
 """
 
-from datetime import datetime
-from typing import Optional, List
+import os
 from sqlalchemy import (
     Column,
     Integer,
@@ -20,8 +19,13 @@ from sqlalchemy import (
     Index,
     Float,
 )
+from sqlalchemy.ext.asyncio import (
+    AsyncSession,
+    async_sessionmaker,
+    create_async_engine,
+)
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import relationship, Mapped
+from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
 Base = declarative_base()
@@ -272,10 +276,6 @@ class ErrorResponse(Base):
         Index("idx_error_user_timestamp", "user_id", "timestamp"),
     )
 
-
-# Create engine and session
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
-import os
 
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///./resumeai.db")
 

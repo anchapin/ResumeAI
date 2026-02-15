@@ -13,15 +13,13 @@ Includes endpoints for:
 - User settings
 """
 
+import os
 import secrets
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import List, Optional
-from typing_extensions import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from fastapi.responses import Response
-from pydantic import EmailStr
-from sqlalchemy import select, and_, or_
+from sqlalchemy import select, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -34,17 +32,12 @@ from .models import (
     ShareResumeResponse,
     BulkOperationRequest,
     BulkOperationResponse,
-    FormatOptions,
-    ExportRequest,
-    ImportRequest,
-    TemplateFilter,
     UserSettingsRequest,
     # Response models
     ResumeMetadata,
     ResumeResponse,
     ResumeVersionResponse,
     CommentResponse,
-    ErrorResponse,
     ResumeData,
     UserSettingsResponse,
 )
@@ -1103,7 +1096,3 @@ async def update_user_settings(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to update settings: {str(e)}",
         )
-
-
-# Import os for share URL construction
-import os

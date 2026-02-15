@@ -767,7 +767,7 @@ class ResumeRequest(BaseModel):
         max_length=50,
         description="Template variant to use (e.g., 'base', 'modern', 'classic')",
     )
-    customization: Optional[TemplateCustomization] = Field(
+    customization: Optional["TemplateCustomization"] = Field(
         default=None, description="Template customization options"
     )
 
