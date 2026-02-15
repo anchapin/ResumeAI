@@ -605,7 +605,8 @@ def extract_text_from_docx(file_bytes: bytes) -> str:
     if not text_parts:
         raise ValueError("No text content found in DOCX file.")
     
-    return "\n".join(text_parts)
+    return "
+".join(text_parts)
 
 
 @router.post(
