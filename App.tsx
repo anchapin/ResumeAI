@@ -8,6 +8,7 @@ import Settings from './pages/Settings';
 import { Route, SimpleResumeData } from './types';
 import { loadResumeData, saveResumeData, StorageError } from './utils/storage';
 import { TokenManager } from './utils/security';
+import { useTheme } from './hooks/useTheme';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import './components/toast-styles.css';
@@ -82,6 +83,9 @@ function App() {
   const [resumeData, setResumeData] = useState<SimpleResumeData>(initialResumeData);
   const [isLoaded, setIsLoaded] = useState(false);
   const [storageError, setStorageError] = useState<string | null>(null);
+  
+  // Initialize theme (dark mode support)
+  const { theme, isDark, toggleTheme } = useTheme();
 
   // Load resume data from localStorage on mount and check security
   useEffect(() => {
