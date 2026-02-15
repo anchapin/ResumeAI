@@ -12,7 +12,6 @@ Tests various scenarios:
 import asyncio
 import httpx
 
-
 # Test configuration
 API_BASE_URL = "http://localhost:8000"
 TEST_API_KEY = "rai_test_key_1234567890"

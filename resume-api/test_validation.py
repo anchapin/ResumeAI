@@ -43,12 +43,10 @@ def test_valid_data():
             ],
         )
 
-        # Assign to a variable so we can verify it exists
-        req = ResumeRequest(resume_data=resume, variant="base")
+        request = ResumeRequest(resume_data=resume, variant="base")
 
         print("✓ Valid resume data passed validation")
-        # Fix: 'request' was undefined, changed to 'req' which is the variable name
-        assert req is not None
+        assert request is not None
 
     except Exception as e:
         print(f"✗ Valid data failed validation: {e}")

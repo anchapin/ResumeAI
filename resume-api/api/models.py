@@ -6,7 +6,6 @@ import re
 from typing import Dict, Any, Optional, List
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-
 # Validation constants
 MAX_STRING_LENGTH = 1000
 MAX_LONG_STRING_LENGTH = 10000
