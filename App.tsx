@@ -77,11 +77,15 @@ const initialResumeData: SimpleResumeData = {
   ]
 };
 
+/** Save status enum for tracking auto-save state */
+export type SaveStatus = 'idle' | 'saving' | 'saved' | 'error';
+
 function App() {
   const [currentRoute, setCurrentRoute] = useState<Route>(Route.DASHBOARD);
   const [resumeData, setResumeData] = useState<SimpleResumeData>(initialResumeData);
   const [isLoaded, setIsLoaded] = useState(false);
   const [storageError, setStorageError] = useState<string | null>(null);
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
 
   // Load resume data from localStorage on mount and check security
   useEffect(() => {
@@ -124,12 +128,20 @@ function App() {
     // Only save after initial load is complete to avoid overwriting with initial data
     if (!isLoaded) return;
 
+    // Set saving status when data changes
+    setSaveStatus('saving');
+
     // Debounce save to avoid performance issues on rapid updates
     const handler = setTimeout(() => {
       try {
         saveResumeData(resumeData);
+        setSaveStatus('saved');
         console.log('Resume data saved to localStorage');
+        
+        // Reset to idle after 3 seconds
+        setTimeout(() => setSaveStatus('idle'), 3000);
       } catch (error) {
+        setSaveStatus('error');
         if (error instanceof StorageError) {
           console.error('Storage error:', error.message, error.type);
           const errorMessage = getErrorMessage(error);
@@ -140,6 +152,9 @@ function App() {
         } else {
           console.error('Unexpected error saving resume data:', error);
         }
+        
+        // Reset to idle after 5 seconds
+        setTimeout(() => setSaveStatus('idle'), 5000);
       }
     }, 1000);
 
@@ -195,6 +210,7 @@ function App() {
             resumeData={resumeData}
             onUpdate={handleUpdateResumeData}
             onBack={() => setCurrentRoute(Route.DASHBOARD)}
+            saveStatus={saveStatus}
           />
         );
       case Route.WORKSPACE:
