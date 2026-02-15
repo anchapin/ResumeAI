@@ -1,0 +1,38 @@
+name: academic
+display_name: Academic CV
+description: A comprehensive academic curriculum vitae template designed for researchers, professors, and graduate students. Features detailed sections for publications, research, teaching, and academic achievements following academic standards.
+format: latex
+output_formats:
+  - pdf
+category: academic
+style: formal
+author: ResumeAI Team
+version: 1.0.0
+features:
+  - publication_focus
+  - research_emphasis
+  - teaching_experience
+  - academic_standard
+  - comprehensive
+recommended_for:
+  - professors
+  - researchers
+  - phd_candidates
+  - postdoctoral_fellows
+  - academic_staff
+font_options:
+  - Times New Roman
+  - Computer Modern
+color_schemes:
+  - name: classic
+    primary: [0, 0, 0]
+    accent: [0, 0, 139]
+    secondary: [105, 105, 105]
+  - name: harvard
+    primary: [51, 51, 51]
+    accent: [196, 30, 58]
+    secondary: [128, 128, 128]
+  - name: oxford
+    primary: [0, 51, 102]
+    accent: [153, 0, 51]
+    secondary: [102, 102, 102]

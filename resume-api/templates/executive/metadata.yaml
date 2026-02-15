@@ -1,0 +1,39 @@
+name: executive
+display_name: Executive Leadership
+description: A sophisticated resume template designed for senior executives and C-level professionals. Features a commanding presence with refined typography, strategic section placement, and emphasis on leadership achievements and organizational impact.
+format: latex
+output_formats:
+  - pdf
+category: executive
+style: professional
+author: ResumeAI Team
+version: 1.0.0
+features:
+  - leadership_focus
+  - achievement_oriented
+  - refined_typography
+  - strategic_layout
+  - professional_prestige
+recommended_for:
+  - ceo
+  - coo
+  - cto
+  - vp
+  - directors
+  - senior_managers
+font_options:
+  - Times New Roman
+  - Bookman
+color_schemes:
+  - name: navy
+    primary: [15, 23, 42]
+    accent: [30, 58, 138]
+    secondary: [100, 116, 139]
+  - name: burgundy
+    primary: [67, 20, 7]
+    accent: [127, 29, 29]
+    secondary: [120, 113, 108]
+  - name: charcoal
+    primary: [23, 23, 23]
+    accent: [75, 85, 99]
+    secondary: [148, 163, 184]

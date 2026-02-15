@@ -6,7 +6,7 @@ import os
 import sys
 from pathlib import Path
 
-from fastapi import APIRouter, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.responses import Response
 
 from .models import (
@@ -26,9 +26,12 @@ sys.path.insert(0, str(lib_path))
 from lib.cli import ResumeGenerator, ResumeTailorer, VariantManager  # noqa: E402
 
 # Import authentication and rate limiting
-from config.dependencies import AuthorizedAPIKey, limiter  # noqa: E402
+from config.dependencies import AuthorizedAPIKey, get_api_key, limiter  # noqa: E402
 from config import settings  # noqa: E402
 from monitoring import logging_config  # noqa: E402
+
+# Import monitoring
+from monitoring import logging_config, metrics, analytics  # noqa: E402
 
 
 # Helper function to conditionally apply rate limiting
