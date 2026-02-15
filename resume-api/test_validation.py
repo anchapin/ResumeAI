@@ -43,10 +43,12 @@ def test_valid_data():
             ],
         )
 
-        ResumeRequest(resume_data=resume, variant="base")
+        # Assign to a variable so we can verify it exists
+        req = ResumeRequest(resume_data=resume, variant="base")
 
         print("✓ Valid resume data passed validation")
-        assert request is not None
+        # Fix: 'request' was undefined, changed to 'req' which is the variable name
+        assert req is not None
 
     except Exception as e:
         print(f"✗ Valid data failed validation: {e}")
@@ -175,11 +177,7 @@ def test_too_long_string():
 
     try:
         long_name = "x" * 2000  # Exceeds MAX_STRING_LENGTH
-        ResumeData(
-            basics=BasicInfo(
-                name=long_name
-            )
-        )
+        ResumeData(basics=BasicInfo(name=long_name))
         print("✗ Overly long string should have been rejected")
         assert False, "Overly long string should have been rejected"
 
@@ -199,10 +197,8 @@ def test_tailor_request_validation():
     # Test too short job description
     try:
         TailorRequest(
-            resume_data=ResumeData(
-                basics=BasicInfo(name="John Doe")
-            ),
-            job_description="short"  # Less than 10 characters
+            resume_data=ResumeData(basics=BasicInfo(name="John Doe")),
+            job_description="short",  # Less than 10 characters
         )
         print("✗ Short job description should have been rejected")
         assert False, "Short job description should have been rejected"
@@ -214,12 +210,10 @@ def test_tailor_request_validation():
             # Test valid job description with XSS
             try:
                 xss_request = TailorRequest(
-                    resume_data=ResumeData(
-                        basics=BasicInfo(name="John Doe")
-                    ),
+                    resume_data=ResumeData(basics=BasicInfo(name="John Doe")),
                     job_description="Job opportunity <script>alert('XSS')</script>",
                     company_name="Tech Corp",
-                    job_title="Engineer"
+                    job_title="Engineer",
                 )
 
                 # Check that script tag was sanitized
@@ -245,12 +239,7 @@ def test_invalid_phone():
     print("\nTesting invalid phone number...")
 
     try:
-        ResumeData(
-            basics=BasicInfo(
-                name="John Doe",
-                phone="abc123"  # Invalid phone
-            )
-        )
+        ResumeData(basics=BasicInfo(name="John Doe", phone="abc123"))  # Invalid phone
         print("✗ Invalid phone number should have been rejected")
         assert False, "Invalid phone number should have been rejected"
 

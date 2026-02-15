@@ -5,6 +5,7 @@ This module handles the generation of professional PDF resumes
 from JSON data using LaTeX templates and xelatex.
 """
 
+import re
 import tempfile
 import subprocess
 from pathlib import Path
@@ -84,9 +85,16 @@ class ResumeGenerator:
             PDF file as bytes
 
         Raises:
-            ValueError: If variant is not found
+            ValueError: If variant is invalid or not found
             RuntimeError: If PDF generation fails
         """
+        # Validate variant name to prevent path traversal
+        if not re.match(r"^[a-zA-Z0-9_-]+$", variant):
+            raise ValueError(
+                f"Invalid variant name: '{variant}'. "
+                "Variant name must contain only letters, numbers, hyphens, and underscores."
+            )
+
         variant_dir = self.templates_dir / variant
         if not variant_dir.exists():
             raise ValueError(
