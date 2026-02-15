@@ -14,6 +14,7 @@ from starlette.requests import Request
 from starlette.responses import Response
 
 from api import router
+from api.websocket import handle_websocket_connection
 from config import settings
 from config.dependencies import limiter, rate_limit_exceeded_handler
 from database import create_db_and_tables
@@ -211,6 +212,25 @@ async def endpoint_popularity(hours: int = 24, limit: int = 10):
 
 # Include API routes
 app.include_router(router)
+
+
+# WebSocket endpoint for real-time collaboration
+@app.websocket("/ws/resumes/{resume_id}")
+async def websocket_resume(websocket, resume_id: str, user_id: str = None):
+    """
+    WebSocket endpoint for real-time collaboration on resumes.
+    
+    Connect to collaborate on a specific resume:
+    ws://host/ws/resumes/{resume_id}?user_id=optional_user_id
+    
+    Message types:
+    - cursor_update: Broadcast cursor position
+    - resume_update: Broadcast resume data changes
+    - typing_start: User started typing
+    - typing_stop: User stopped typing
+    - ping: Keep-alive ping
+    """
+    await handle_websocket_connection(websocket, resume_id, user_id)
 
 
 if __name__ == "__main__":

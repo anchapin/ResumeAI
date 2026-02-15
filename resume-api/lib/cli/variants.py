@@ -148,6 +148,84 @@ class VariantManager:
 
         return result
 
+    def filter_variants(
+        self,
+        search: str = None,
+        tags: List[str] = None,
+        category: str = None,
+        industry: str = None,
+        layout: str = None,
+        color_theme: str = None,
+    ) -> List[Dict[str, Any]]:
+        """
+        Filter variants based on search criteria.
+        
+        Args:
+            search: Search query for name/description
+            tags: Comma-separated list of tags
+            category: Template category
+            industry: Industry filter
+            layout: Layout type (single-column, double-column)
+            color_theme: Color theme
+            
+        Returns:
+            List of filtered variants with metadata
+        """
+        variants = self.get_variants_with_metadata()
+        
+        filtered = []
+        
+        for variant in variants:
+            # Search filter
+            if search:
+                search_lower = search.lower()
+                name = variant.get("name", "").lower()
+                display_name = variant.get("display_name", "").lower()
+                description = variant.get("description", "").lower()
+                
+                if not (search_lower in name or 
+                        search_lower in display_name or 
+                        search_lower in description):
+                    continue
+            
+            # Tags filter
+            if tags:
+                variant_tags = variant.get("tags", [])
+                if isinstance(variant_tags, str):
+                    variant_tags = [t.strip() for t in variant_tags.split(",")]
+                
+                if not any(tag.lower() in [t.lower() for t in variant_tags] for tag in tags):
+                    continue
+            
+            # Category filter
+            if category:
+                variant_category = variant.get("category", "").lower()
+                if variant_category != category.lower():
+                    continue
+            
+            # Industry filter
+            if industry:
+                variant_industry = variant.get("industry", "").lower()
+                if variant_industry != industry.lower():
+                    continue
+            
+            # Layout filter
+            if layout:
+                variant_layout = variant.get("layout", "").lower()
+                if variant_layout != layout.lower():
+                    continue
+            
+            # Color theme filter
+            if color_theme:
+                variant_color = variant.get("color_theme", "").lower()
+                if variant_color != color_theme.lower():
+                    continue
+            
+            filtered.append(variant)
+        
+        logger.info(f"Filtered {len(variants)} variants down to {len(filtered)}")
+        return filtered
+
 
 # Mock version for testing
 class MockVariantManager:
