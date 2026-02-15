@@ -145,4 +145,88 @@ export enum Route {
   WORKSPACE = 'workspace',
   APPLICATIONS = 'applications',
   SETTINGS = 'settings',
+  VERSIONS = 'versions',
+  SHARE = 'share',
+  IMPORT = 'import',
+  BULK = 'bulk',
+}
+
+// Advanced Features Types
+
+export interface ResumeMetadata {
+  id: number;
+  title: string;
+  tags: string[];
+  is_public: boolean;
+  created_at: string;
+  updated_at: string;
+  version_count: number;
+}
+
+export interface ResumeVersion {
+  id: number;
+  resume_id: number;
+  version_number: number;
+  data: ResumeData;
+  change_description: string | null;
+  created_at: string;
+}
+
+export interface Comment {
+  id: number;
+  resume_id: number;
+  author_name: string;
+  author_email: string;
+  content: string;
+  section: string | null;
+  is_resolved: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ShareLink {
+  share_token: string;
+  share_url: string;
+  permissions: string;
+  expires_at: string | null;
+  max_views: number | null;
+}
+
+export interface FormatOptions {
+  font_family: string;
+  font_size: number;
+  line_spacing: number;
+  margin_top: number;
+  margin_bottom: number;
+  margin_left: number;
+  margin_right: number;
+  color_theme: string;
+  layout: 'single' | 'double';
+  show_section_dividers: boolean;
+  section_order: string[] | null;
+}
+
+export interface UserSettings {
+  keyboard_shortcuts_enabled: boolean;
+  high_contrast_mode: boolean;
+  reduced_motion: boolean;
+  screen_reader_optimized: boolean;
+  default_font: string;
+  default_font_size: number;
+  default_spacing: string;
+}
+
+export interface KeyboardShortcut {
+  key: string;
+  action: string;
+  category: string;
+}
+
+export interface TemplateFilter {
+  search?: string;
+  tags?: string[];
+  category?: string;
+  industry?: string;
+  layout?: 'single' | 'double';
+  color_theme?: string;
 }
