@@ -13,7 +13,7 @@ from unittest.mock import patch
 import pytest
 from fastapi import status
 from fastapi.testclient import TestClient
-from fastapi import FastAPI, Depends, Request
+from fastapi import FastAPI, Depends
 from config.dependencies import (
     verify_api_key,
     APIKeyAuthInfo,
