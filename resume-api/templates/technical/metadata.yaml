@@ -1,0 +1,37 @@
+name: technical
+display_name: Technical Minimalist
+description: A clean, technical resume template optimized for engineers and developers. Minimalist design with focus on content readability. Perfect for technical roles where skills and experience matter most.
+format: latex
+output_formats:
+  - pdf
+category: technical
+style: minimalist
+author: ResumeAI Team
+version: 1.0.0
+features:
+  - clean_layout
+  - ats_friendly
+  - section_dividers
+  - skills_focus
+  - minimal_decorations
+recommended_for:
+  - software_engineers
+  - data_scientists
+  - system_administrators
+  - devops_engineers
+font_options:
+  - Helvetica
+  - Arial
+color_schemes:
+  - name: default
+    primary: [33, 37, 41]
+    accent: [13, 110, 253]
+    secondary: [108, 117, 125]
+  - name: blue
+    primary: [31, 41, 55]
+    accent: [59, 130, 246]
+    secondary: [100, 116, 139]
+  - name: green
+    primary: [22, 78, 99]
+    accent: [16, 185, 129]
+    secondary: [71, 85, 105]

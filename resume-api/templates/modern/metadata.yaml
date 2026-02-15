@@ -1,0 +1,37 @@
+name: modern
+display_name: Modern Clean
+description: A contemporary resume template with a clean, balanced design. Features modern typography, ample white space, and a professional appearance suitable for most industries. Perfect for professionals seeking a polished, up-to-date look.
+format: latex
+output_formats:
+  - pdf
+category: modern
+style: contemporary
+author: ResumeAI Team
+version: 1.0.0
+features:
+  - modern_design
+  - clean_layout
+  - balanced_spacing
+  - versatile
+  - professional
+recommended_for:
+  - business_analysts
+  - project_managers
+  - consultants
+  - general_professionals
+font_options:
+  - Helvetica
+  - Arial
+color_schemes:
+  - name: slate
+    primary: [51, 65, 85]
+    accent: [59, 130, 246]
+    secondary: [148, 163, 184]
+  - name: emerald
+    primary: [6, 78, 59]
+    accent: [16, 185, 129]
+    secondary: [134, 239, 172]
+  - name: indigo
+    primary: [30, 27, 75]
+    accent: [99, 102, 241]
+    secondary: [165, 180, 252]

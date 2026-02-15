@@ -3,6 +3,7 @@ Configuration dependencies and settings.
 """
 
 import os
+
 from fastapi import Header, HTTPException, status
 from fastapi.requests import Request
 from fastapi.responses import JSONResponse
