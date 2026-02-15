@@ -19,7 +19,6 @@ from config.dependencies import limiter, rate_limit_exceeded_handler
 from database import create_db_and_tables
 from middleware.monitoring import MonitoringMiddleware
 from monitoring import logging_config, health, alerting, analytics
-from monitoring.alerting import setup_alerting
 from slowapi.errors import RateLimitExceeded
 
 # Get logger
@@ -60,18 +59,8 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         return response
 
 
-# Define lifespan to handle startup and shutdown events
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    """Handle application startup and shutdown."""
-    # Startup
-    logger.info("Resume API starting up...", version=settings.app_version)
-
-    # Initialize database tables
-    await create_db_and_tables()
-    logger.info("Database initialized")
-
-    # Set up Sentry error tracking if enabled
+def setup_sentry():
+    """Initialize Sentry error tracking if enabled."""
     if settings.enable_sentry and settings.sentry_dsn:
         import sentry_sdk
 
@@ -79,23 +68,64 @@ async def lifespan(app: FastAPI):
             dsn=settings.sentry_dsn,
             environment=settings.sentry_environment,
             traces_sample_rate=settings.sentry_traces_sample_rate,
+            send_default_pii=False,
         )
-        logger.info("Sentry error tracking enabled")
+        logger.info("sentry_initialized", environment=settings.sentry_environment)
 
-    # Set up Prometheus metrics if enabled
+
+def setup_prometheus(app: FastAPI):
+    """Initialize Prometheus metrics instrumentation if enabled."""
     if settings.enable_metrics:
-        Instrumentator().instrument(app).expose(app, endpoint=settings.metrics_path)
-        logger.info("Prometheus metrics enabled", path=settings.metrics_path)
+        try:
+            instrumentator = Instrumentator(
+                should_group_status_codes=False,
+                should_ignore_untemplated=True,
+                should_group_untemplated=True,
+                should_instrument_requests_inprogress=True,
+                excluded_handlers=["/metrics"],
+                env_var_name="OTEL_SERVICE_NAME",
+                inprogress_name="fastapi_inprogress",
+                inprogress_labels=True,
+            )
+
+            instrumentator.instrument(app).expose(
+                app,
+                endpoint=settings.metrics_path,
+                should_gzip=True,
+                include_in_schema=False,
+            )
+
+            logger.info("prometheus_initialized", metrics_path=settings.metrics_path)
+        except ImportError:
+            logger.warning("prometheus_fastapi_instrumentator not available")
+
+
+# Define lifespan to handle startup and shutdown events
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Handle application startup and shutdown."""
+    # Startup
+    logger.info("application_startup", version=settings.app_version)
+
+    # Initialize database tables
+    await create_db_and_tables()
+    logger.info("Database initialized")
+
+    # Set up Sentry error tracking
+    setup_sentry()
+
+    # Set up Prometheus metrics
+    setup_prometheus(app)
 
     # Set up alerting in background
     if settings.enable_alerting:
-        setup_alerting()
         asyncio.create_task(alert_manager_task())
         logger.info("Alerting enabled")
 
     yield
+
     # Shutdown
-    logger.info("Resume API shutting down...")
+    logger.info("application_shutdown")
     alerting.alert_manager.stop()
 
 
@@ -108,9 +138,13 @@ async def alert_manager_task():
         logger.error("Alert manager task failed", error=str(e))
 
 
+# Create FastAPI application
 app = FastAPI(
     title="Resume API",
-    description="API service for generating and tailoring professional resumes using LaTeX templates and AI",
+    description=(
+        "API service for generating and tailoring professional resumes "
+        "using LaTeX templates and AI"
+    ),
     version=settings.app_version,
     docs_url="/docs",
     lifespan=lifespan,
