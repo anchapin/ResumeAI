@@ -1,4 +1,3 @@
-
 import unittest
 import tempfile
 import shutil
@@ -19,12 +18,8 @@ except ImportError:
     print(f"Failed to import lib.cli.generator. sys.path: {sys.path}")
     raise
 
-RESUME_DATA = {
-    "basics": {
-        "name": "Test User",
-        "email": "test@example.com"
-    }
-}
+RESUME_DATA = {"basics": {"name": "Test User", "email": "test@example.com"}}
+
 
 class TestPathTraversal(unittest.TestCase):
     def setUp(self):
@@ -65,6 +60,7 @@ class TestPathTraversal(unittest.TestCase):
 
         # Assert the error message indicates validation failure
         self.assertIn("Invalid variant name", str(cm.exception))
+
 
 if __name__ == "__main__":
     unittest.main()
