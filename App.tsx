@@ -7,6 +7,7 @@ import JobApplications from './pages/JobApplications';
 import Settings from './pages/Settings';
 import { Route, SimpleResumeData } from './types';
 import { loadResumeData, saveResumeData, StorageError } from './utils/storage';
+import { TokenManager } from './utils/security';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import './components/toast-styles.css';
@@ -82,8 +83,17 @@ function App() {
   const [isLoaded, setIsLoaded] = useState(false);
   const [storageError, setStorageError] = useState<string | null>(null);
 
-  // Load resume data from localStorage on mount
+  // Load resume data from localStorage on mount and check security
   useEffect(() => {
+    // Check if authentication token is still valid
+    const token = TokenManager.getToken();
+    if (token && TokenManager.isTokenExpired(token)) {
+      // Token is expired, remove it
+      TokenManager.removeToken();
+      console.warn('Authentication token expired, please log in again');
+      // In a real app, you might show a notification or redirect to login
+    }
+
     try {
       const savedData = loadResumeData();
       if (savedData) {

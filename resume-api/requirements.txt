@@ -41,3 +41,6 @@ mypy==1.12.1
 
 # Rate Limiting
 slowapi==0.1.9
+
+# JWT Support
+python-jose[cryptography]==3.3.0
