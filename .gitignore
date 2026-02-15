@@ -26,3 +26,9 @@ dist-ssr
 # Python
 __pycache__/
 *.pyc
+
+# Coverage
+coverage/
+
+# Backup files
+*.backup
