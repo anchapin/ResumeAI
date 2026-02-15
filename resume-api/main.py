@@ -97,9 +97,7 @@ def setup_prometheus(app: FastAPI):
 
             logger.info("prometheus_initialized", metrics_path=settings.metrics_path)
         except ImportError:
-            logger.warning(
-                "prometheus_fastapi_instrumentator not available"
-            )
+            logger.warning("prometheus_fastapi_instrumentator not available")
 
 
 # Define lifespan to handle startup and shutdown events

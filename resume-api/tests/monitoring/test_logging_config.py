@@ -36,9 +36,7 @@ def test_log_exception():
         raise ValueError("Test exception")
     except Exception as exc:
         # This should not raise an error
-        logging_config.log_exception(
-            logger=logger, exc=exc, method="GET", path="/test"
-        )
+        logging_config.log_exception(logger=logger, exc=exc, method="GET", path="/test")
 
 
 def test_log_request():
