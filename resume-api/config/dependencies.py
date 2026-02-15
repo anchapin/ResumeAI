@@ -1,6 +1,7 @@
 """
 Configuration dependencies and settings.
 """
+
 import os
 from datetime import timedelta
 from . import settings

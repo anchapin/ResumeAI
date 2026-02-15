@@ -25,15 +25,19 @@ from routes.resumes import router as resumes_router
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         response: Response = await call_next(request)
-        
+
         # Add security headers
-        response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+        response.headers["Strict-Transport-Security"] = (
+            "max-age=31536000; includeSubDomains"
+        )
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["X-Frame-Options"] = "DENY"
         response.headers["X-XSS-Protection"] = "1; mode=block"
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
-        response.headers["Permissions-Policy"] = "geolocation=(), microphone=(), camera=()"
-        
+        response.headers["Permissions-Policy"] = (
+            "geolocation=(), microphone=(), camera=()"
+        )
+
         # Content Security Policy
         csp = (
             "default-src 'self'; "
@@ -47,7 +51,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
             "base-uri 'self'"
         )
         response.headers["Content-Security-Policy"] = csp
-        
+
         return response
 
 
@@ -89,7 +93,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
     # Add additional security for CORS
-    allow_origin_regex=settings.cors_origin_regex if hasattr(settings, 'cors_origin_regex') else None,
+    allow_origin_regex=(
+        settings.cors_origin_regex if hasattr(settings, "cors_origin_regex") else None
+    ),
 )
 
 # Include API routes
