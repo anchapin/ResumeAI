@@ -952,13 +952,19 @@ class ColorScheme(BaseModel):
 
     name: str = Field(..., max_length=50, description="Scheme name")
     primary: List[int] = Field(
-        ..., description="Primary color RGB values [R, G, B]", min_length=3, max_length=3
+        ...,
+        description="Primary color RGB values [R, G, B]",
+        min_length=3,
+        max_length=3,
     )
     accent: List[int] = Field(
         ..., description="Accent color RGB values [R, G, B]", min_length=3, max_length=3
     )
     secondary: List[int] = Field(
-        ..., description="Secondary color RGB values [R, G, B]", min_length=3, max_length=3
+        ...,
+        description="Secondary color RGB values [R, G, B]",
+        min_length=3,
+        max_length=3,
     )
 
     @field_validator("primary", "accent", "secondary")
@@ -967,9 +973,7 @@ class ColorScheme(BaseModel):
         """Validate RGB color values."""
         for value in v:
             if not (0 <= value <= 255):
-                raise ValueError(
-                    f"RGB values must be between 0 and 255. Got: {value}"
-                )
+                raise ValueError(f"RGB values must be between 0 and 255. Got: {value}")
         return v
 
     @field_validator("*")
@@ -984,17 +988,25 @@ class TemplateMetadata(BaseModel):
 
     name: str = Field(..., max_length=50, description="Template identifier")
     display_name: str = Field(..., max_length=100, description="Human-readable name")
-    description: str = Field(..., max_length=MAX_STRING_LENGTH, description="Template description")
+    description: str = Field(
+        ..., max_length=MAX_STRING_LENGTH, description="Template description"
+    )
     format: str = Field(..., max_length=20, description="File format")
     output_formats: List[str] = Field(..., description="Supported output formats")
     category: str = Field(..., max_length=50, description="Template category")
     style: str = Field(..., max_length=50, description="Template style")
     features: List[str] = Field(default_factory=list, description="Template features")
-    recommended_for: List[str] = Field(default_factory=list, description="Recommended roles")
+    recommended_for: List[str] = Field(
+        default_factory=list, description="Recommended roles"
+    )
     font_options: List[str] = Field(default_factory=list, description="Available fonts")
-    color_schemes: List[ColorScheme] = Field(default_factory=list, description="Color schemes")
+    color_schemes: List[ColorScheme] = Field(
+        default_factory=list, description="Color schemes"
+    )
 
-    @field_validator("name", "display_name", "description", "format", "category", "style")
+    @field_validator(
+        "name", "display_name", "description", "format", "category", "style"
+    )
     @classmethod
     def sanitize_text_fields(cls, v: str) -> str:
         """Sanitize text fields."""
@@ -1024,7 +1036,9 @@ class TemplateCustomization(BaseModel):
         default="default", max_length=50, description="Color scheme name"
     )
     font: str = Field(default="default", max_length=50, description="Font choice")
-    paper_size: str = Field(default="letter", max_length=10, description="Paper size (letter, A4)")
+    paper_size: str = Field(
+        default="letter", max_length=10, description="Paper size (letter, A4)"
+    )
     margin_left: Optional[float] = Field(
         default=0.75, ge=0.25, le=2.0, description="Left margin in inches"
     )
@@ -1051,7 +1065,9 @@ class SavedTemplateConfiguration(BaseModel):
     id: str = Field(..., max_length=100, description="Configuration ID")
     user_id: str = Field(..., max_length=100, description="User ID")
     name: str = Field(..., max_length=100, description="Configuration name")
-    customization: TemplateCustomization = Field(..., description="Customization settings")
+    customization: TemplateCustomization = Field(
+        ..., description="Customization settings"
+    )
     created_at: str = Field(..., description="Creation timestamp")
     updated_at: str = Field(..., description="Last update timestamp")
 
@@ -1092,9 +1108,7 @@ class UpdateResumeRequest(BaseModel):
 
     title: Optional[str] = Field(None, max_length=200, description="Resume title")
     data: Optional[ResumeData] = Field(None, description="Updated resume data")
-    tags: Optional[List[str]] = Field(
-        None, max_length=20, description="Updated tags"
-    )
+    tags: Optional[List[str]] = Field(None, max_length=20, description="Updated tags")
     change_description: Optional[str] = Field(
         None, max_length=500, description="Description of changes made"
     )
@@ -1129,7 +1143,9 @@ class CommentRequest(BaseModel):
 
     author_name: str = Field(..., max_length=200, description="Comment author name")
     author_email: str = Field(..., max_length=255, description="Comment author email")
-    content: str = Field(..., min_length=1, max_length=5000, description="Comment content")
+    content: str = Field(
+        ..., min_length=1, max_length=5000, description="Comment content"
+    )
     section: Optional[str] = Field(
         None, max_length=100, description="Resume section being commented on"
     )
@@ -1198,9 +1214,13 @@ class BulkOperationRequest(BaseModel):
 
     resume_ids: List[int] = Field(..., max_length=100, description="List of resume IDs")
     operation: str = Field(
-        ..., max_length=50, description="Operation type (delete, export, duplicate, tag)"
+        ...,
+        max_length=50,
+        description="Operation type (delete, export, duplicate, tag)",
     )
-    tags: Optional[List[str]] = Field(None, max_length=20, description="Tags for tag operation")
+    tags: Optional[List[str]] = Field(
+        None, max_length=20, description="Tags for tag operation"
+    )
     export_format: Optional[str] = Field(
         None, max_length=20, description="Export format for export operation"
     )
@@ -1218,14 +1238,30 @@ class FormatOptions(BaseModel):
 
     font_family: str = Field(default="Arial", max_length=50, description="Font family")
     font_size: int = Field(default=11, ge=8, le=24, description="Font size")
-    line_spacing: float = Field(default=1.15, ge=1.0, le=2.0, description="Line spacing")
-    margin_top: float = Field(default=0.5, ge=0, le=2.0, description="Top margin (inches)")
-    margin_bottom: float = Field(default=0.5, ge=0, le=2.0, description="Bottom margin (inches)")
-    margin_left: float = Field(default=0.75, ge=0, le=2.0, description="Left margin (inches)")
-    margin_right: float = Field(default=0.75, ge=0, le=2.0, description="Right margin (inches)")
-    color_theme: str = Field(default="default", max_length=50, description="Color theme name")
-    layout: str = Field(default="single", max_length=20, description="Layout (single, double)")
-    show_section_dividers: bool = Field(default=True, description="Show section dividers")
+    line_spacing: float = Field(
+        default=1.15, ge=1.0, le=2.0, description="Line spacing"
+    )
+    margin_top: float = Field(
+        default=0.5, ge=0, le=2.0, description="Top margin (inches)"
+    )
+    margin_bottom: float = Field(
+        default=0.5, ge=0, le=2.0, description="Bottom margin (inches)"
+    )
+    margin_left: float = Field(
+        default=0.75, ge=0, le=2.0, description="Left margin (inches)"
+    )
+    margin_right: float = Field(
+        default=0.75, ge=0, le=2.0, description="Right margin (inches)"
+    )
+    color_theme: str = Field(
+        default="default", max_length=50, description="Color theme name"
+    )
+    layout: str = Field(
+        default="single", max_length=20, description="Layout (single, double)"
+    )
+    show_section_dividers: bool = Field(
+        default=True, description="Show section dividers"
+    )
     section_order: Optional[List[str]] = Field(
         None, max_length=20, description="Custom section order"
     )
@@ -1247,9 +1283,13 @@ class ExportRequest(BaseModel):
 class ImportRequest(BaseModel):
     """Request to import resume from different formats."""
 
-    format: str = Field(..., max_length=20, description="Import format (pdf, docx, json)")
+    format: str = Field(
+        ..., max_length=20, description="Import format (pdf, docx, json)"
+    )
     data: Optional[str] = Field(None, description="Raw data for JSON import")
-    url: Optional[str] = Field(None, max_length=500, description="URL for LinkedIn import")
+    url: Optional[str] = Field(
+        None, max_length=500, description="URL for LinkedIn import"
+    )
 
 
 class TemplateFilter(BaseModel):
@@ -1257,10 +1297,18 @@ class TemplateFilter(BaseModel):
 
     search: Optional[str] = Field(None, max_length=100, description="Search query")
     tags: Optional[List[str]] = Field(None, max_length=20, description="Filter by tags")
-    category: Optional[str] = Field(None, max_length=50, description="Filter by category")
-    industry: Optional[str] = Field(None, max_length=50, description="Filter by industry")
-    layout: Optional[str] = Field(None, max_length=20, description="Filter by layout (single, double)")
-    color_theme: Optional[str] = Field(None, max_length=50, description="Filter by color theme")
+    category: Optional[str] = Field(
+        None, max_length=50, description="Filter by category"
+    )
+    industry: Optional[str] = Field(
+        None, max_length=50, description="Filter by industry"
+    )
+    layout: Optional[str] = Field(
+        None, max_length=20, description="Filter by layout (single, double)"
+    )
+    color_theme: Optional[str] = Field(
+        None, max_length=50, description="Filter by color theme"
+    )
 
 
 class KeyboardShortcut(BaseModel):
@@ -1268,7 +1316,9 @@ class KeyboardShortcut(BaseModel):
 
     key: str = Field(..., max_length=50, description="Key combination (e.g., 'Ctrl+S')")
     action: str = Field(..., max_length=100, description="Action description")
-    category: str = Field(..., max_length=50, description="Category (e.g., 'File', 'Edit')")
+    category: str = Field(
+        ..., max_length=50, description="Category (e.g., 'File', 'Edit')"
+    )
 
 
 class UserSettingsRequest(BaseModel):
@@ -1277,14 +1327,20 @@ class UserSettingsRequest(BaseModel):
     keyboard_shortcuts_enabled: Optional[bool] = Field(
         None, description="Enable keyboard shortcuts"
     )
-    high_contrast_mode: Optional[bool] = Field(None, description="Enable high contrast mode")
+    high_contrast_mode: Optional[bool] = Field(
+        None, description="Enable high contrast mode"
+    )
     reduced_motion: Optional[bool] = Field(None, description="Enable reduced motion")
     screen_reader_optimized: Optional[bool] = Field(
         None, description="Optimize for screen readers"
     )
     default_font: Optional[str] = Field(None, max_length=50, description="Default font")
-    default_font_size: Optional[int] = Field(None, ge=8, le=24, description="Default font size")
-    default_spacing: Optional[str] = Field(None, max_length=20, description="Default spacing")
+    default_font_size: Optional[int] = Field(
+        None, ge=8, le=24, description="Default font size"
+    )
+    default_spacing: Optional[str] = Field(
+        None, max_length=20, description="Default spacing"
+    )
 
 
 class UserSettingsResponse(BaseModel):

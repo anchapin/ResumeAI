@@ -63,7 +63,7 @@ export function matchesShortcut(
   const ctrl = parts.includes('Ctrl');
   const shift = parts.includes('Shift');
   const alt = parts.includes('Alt');
-  const meta = parts.includes('Meta' || 'Cmd');
+  const meta = parts.includes('Meta') || parts.includes('Cmd');
 
   return (
     event.key.toLowerCase() === key &&

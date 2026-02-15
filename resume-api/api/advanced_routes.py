@@ -48,7 +48,15 @@ from .models import (
     ResumeData,
     UserSettingsResponse,
 )
-from database import get_db, Resume, ResumeVersion, Comment, ResumeShare, Tag, UserSettings
+from database import (
+    get_db,
+    Resume,
+    ResumeVersion,
+    Comment,
+    ResumeShare,
+    Tag,
+    UserSettings,
+)
 from config.dependencies import AuthorizedAPIKey
 
 router = APIRouter()
@@ -762,6 +770,7 @@ async def share_resume(
         # Hash password if provided
         if request.password:
             import hashlib
+
             share.share_password_hash = hashlib.sha256(
                 request.password.encode()
             ).hexdigest()
@@ -779,7 +788,9 @@ async def share_resume(
         await db.commit()
 
         # Construct share URL
-        share_url = f"{os.getenv('FRONTEND_URL', 'http://localhost:5173')}/share/{share_token}"
+        share_url = (
+            f"{os.getenv('FRONTEND_URL', 'http://localhost:5173')}/share/{share_token}"
+        )
 
         return ShareResumeResponse(
             share_token=share_token,
@@ -848,6 +859,7 @@ async def access_shared_resume(
                     detail="Password required",
                 )
             import hashlib
+
             password_hash = hashlib.sha256(password.encode()).hexdigest()
             if password_hash != share.share_password_hash:
                 raise HTTPException(
@@ -916,9 +928,7 @@ async def bulk_operations(
 
         for resume_id in request.resume_ids:
             try:
-                result = await db.execute(
-                    select(Resume).where(Resume.id == resume_id)
-                )
+                result = await db.execute(select(Resume).where(Resume.id == resume_id))
                 resume = result.scalar_one_or_none()
 
                 if not resume:
@@ -948,7 +958,9 @@ async def bulk_operations(
                 elif request.operation == "tag":
                     if request.tags:
                         for tag_name in request.tags:
-                            tag = await db.execute(select(Tag).where(Tag.name == tag_name))
+                            tag = await db.execute(
+                                select(Tag).where(Tag.name == tag_name)
+                            )
                             existing_tag = tag.scalar_one_or_none()
                             if not existing_tag:
                                 existing_tag = Tag(name=tag_name)
@@ -967,7 +979,10 @@ async def bulk_operations(
 
                 else:
                     failed.append(
-                        {"id": resume_id, "error": f"Unknown operation: {request.operation}"}
+                        {
+                            "id": resume_id,
+                            "error": f"Unknown operation: {request.operation}",
+                        }
                     )
 
             except Exception as e:

@@ -38,6 +38,7 @@ resume_tags = Table(
 
 class Tag(Base):
     """Tag model for categorizing resumes."""
+
     __tablename__ = "tags"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -50,6 +51,7 @@ class Tag(Base):
 
 class Resume(Base):
     """Resume model with versioning support."""
+
     __tablename__ = "resumes"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -70,20 +72,27 @@ class Resume(Base):
     # Metadata
     tags = relationship("Tag", secondary=resume_tags, back_populates="resumes")
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+    updated_at = Column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
 
     # Relationships
-    versions = relationship("ResumeVersion", foreign_keys="ResumeVersion.resume_id", back_populates="resume")
-    comments = relationship("Comment", back_populates="resume", cascade="all, delete-orphan")
-    shares = relationship("ResumeShare", back_populates="resume", cascade="all, delete-orphan")
-
-    __table_args__ = (
-        Index("idx_resume_updated_at", "updated_at"),
+    versions = relationship(
+        "ResumeVersion", foreign_keys="ResumeVersion.resume_id", back_populates="resume"
     )
+    comments = relationship(
+        "Comment", back_populates="resume", cascade="all, delete-orphan"
+    )
+    shares = relationship(
+        "ResumeShare", back_populates="resume", cascade="all, delete-orphan"
+    )
+
+    __table_args__ = (Index("idx_resume_updated_at", "updated_at"),)
 
 
 class ResumeVersion(Base):
     """Resume version model for tracking changes."""
+
     __tablename__ = "resume_versions"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -100,13 +109,12 @@ class ResumeVersion(Base):
     # Relationships
     resume = relationship("Resume", foreign_keys=[resume_id], back_populates="versions")
 
-    __table_args__ = (
-        Index("idx_version_number", "resume_id", "version_number"),
-    )
+    __table_args__ = (Index("idx_version_number", "resume_id", "version_number"),)
 
 
 class Comment(Base):
     """Comment model for collaboration features."""
+
     __tablename__ = "comments"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -121,18 +129,19 @@ class Comment(Base):
     section = Column(String(100), nullable=True)  # Section of resume being commented on
     is_resolved = Column(Boolean, default=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), index=True)
-    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+    updated_at = Column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
 
     # Relationships
     resume = relationship("Resume", back_populates="comments")
 
-    __table_args__ = (
-        Index("idx_comment_resume_created", "resume_id", "created_at"),
-    )
+    __table_args__ = (Index("idx_comment_resume_created", "resume_id", "created_at"),)
 
 
 class ResumeShare(Base):
     """Resume share model for tracking shared links."""
+
     __tablename__ = "resume_shares"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -155,6 +164,7 @@ class ResumeShare(Base):
 
 class UserSettings(Base):
     """User settings model for preferences."""
+
     __tablename__ = "user_settings"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -175,12 +185,15 @@ class UserSettings(Base):
 
     # Other preferences
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+    updated_at = Column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
 
 
 # Analytics models for monitoring and usage tracking
 class UsageAnalytics(Base):
     """Request analytics model for tracking API usage."""
+
     __tablename__ = "usage_analytics"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -202,6 +215,7 @@ class UsageAnalytics(Base):
 
 class EndpointUsage(Base):
     """Endpoint usage statistics model."""
+
     __tablename__ = "endpoint_usage"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -221,11 +235,14 @@ class EndpointUsage(Base):
 
 class UserEngagement(Base):
     """User engagement events model."""
+
     __tablename__ = "user_engagement"
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(String(255), nullable=False, index=True)
-    action = Column(String(100), nullable=False, index=True)  # e.g., "generate_pdf", "tailor_resume"
+    action = Column(
+        String(100), nullable=False, index=True
+    )  # e.g., "generate_pdf", "tailor_resume"
     endpoint = Column(String(500), nullable=True)
     metadata = Column(JSON, nullable=True)
     timestamp = Column(DateTime(timezone=True), server_default=func.now(), index=True)
@@ -238,6 +255,7 @@ class UserEngagement(Base):
 
 class ErrorResponse(Base):
     """Error tracking model for monitoring."""
+
     __tablename__ = "error_responses"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -259,10 +277,7 @@ class ErrorResponse(Base):
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 import os
 
-DATABASE_URL = os.getenv(
-    "DATABASE_URL",
-    "sqlite+aiosqlite:///./resumeai.db"
-)
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///./resumeai.db")
 
 engine = create_async_engine(
     DATABASE_URL,
