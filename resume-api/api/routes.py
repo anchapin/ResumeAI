@@ -30,9 +30,6 @@ from config.dependencies import AuthorizedAPIKey, limiter  # noqa: E402
 from config import settings  # noqa: E402
 from monitoring import logging_config  # noqa: E402
 
-# Import monitoring
-from monitoring import logging_config  # noqa: E402
-
 
 # Helper function to conditionally apply rate limiting
 def rate_limit(limit_value: str):
