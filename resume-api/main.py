@@ -4,9 +4,11 @@ Resume API - Main Application
 FastAPI service for generating and tailoring professional resumes.
 """
 
+import asyncio
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from prometheus_fastapi_instrumentator import Instrumentator
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import Response
@@ -14,10 +16,14 @@ from starlette.responses import Response
 from api import router
 from config import settings
 from config.dependencies import limiter, rate_limit_exceeded_handler
-from slowapi.errors import RateLimitExceeded
 from database import create_db_and_tables
-from routes.auth import router as auth_router
-from routes.resumes import router as resumes_router
+from middleware.monitoring import MonitoringMiddleware
+from monitoring import logging_config, metrics, health, alerting, analytics
+from monitoring.alerting import setup_alerting
+from slowapi.errors import RateLimitExceeded
+
+# Get logger
+logger = logging_config.get_logger(__name__)
 
 
 # Security middleware to add security headers
@@ -59,17 +65,53 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 async def lifespan(app: FastAPI):
     """Handle application startup and shutdown."""
     # Startup
-    print("Resume API starting up...")
-    create_db_and_tables()  # Initialize database tables
+    logger.info("Resume API starting up...", version=settings.app_version)
+
+    # Initialize database tables
+    await create_db_and_tables()
+    logger.info("Database initialized")
+
+    # Set up Sentry error tracking if enabled
+    if settings.enable_sentry and settings.sentry_dsn:
+        import sentry_sdk
+
+        sentry_sdk.init(
+            dsn=settings.sentry_dsn,
+            environment=settings.sentry_environment,
+            traces_sample_rate=settings.sentry_traces_sample_rate,
+        )
+        logger.info("Sentry error tracking enabled")
+
+    # Set up Prometheus metrics if enabled
+    if settings.enable_metrics:
+        Instrumentator().instrument(app).expose(app, endpoint=settings.metrics_path)
+        logger.info("Prometheus metrics enabled", path=settings.metrics_path)
+
+    # Set up alerting in background
+    if settings.enable_alerting:
+        setup_alerting()
+        asyncio.create_task(alert_manager_task())
+        logger.info("Alerting enabled")
+
     yield
     # Shutdown
-    print("Resume API shutting down...")
+    logger.info("Resume API shutting down...")
+    alerting.alert_manager.stop()
+
+
+# Global alert manager task
+async def alert_manager_task():
+    """Background task for alert manager."""
+    try:
+        await alerting.alert_manager.start()
+    except Exception as e:
+        logger.error("Alert manager task failed", error=str(e))
 
 
 app = FastAPI(
     title="Resume API",
     description="API service for generating and tailoring professional resumes using LaTeX templates and AI",
-    version="1.0.0",
+    version=settings.app_version,
     docs_url="/docs",
     lifespan=lifespan,
     redoc_url="/redoc",
@@ -80,6 +122,9 @@ app.state.limiter = limiter
 
 # Register rate limit exception handler
 app.add_exception_handler(RateLimitExceeded, rate_limit_exceeded_handler)
+
+# Add monitoring middleware (must be added before security middleware)
+app.add_middleware(MonitoringMiddleware)
 
 # Add security headers middleware
 app.add_middleware(SecurityHeadersMiddleware)
@@ -97,13 +142,44 @@ app.add_middleware(
     ),
 )
 
+
+# Health check endpoints
+@app.get("/health", tags=["Health"])
+async def health_check():
+    """Basic health check endpoint."""
+    return {"status": "healthy", "version": settings.app_version}
+
+
+@app.get("/health/detailed", tags=["Health"])
+async def health_check_detailed():
+    """Detailed health check with all components."""
+    return await health.get_health_status(detailed=True)
+
+
+@app.get("/health/ready", tags=["Health"])
+async def readiness_check():
+    """Readiness check for orchestration systems."""
+    return await health.get_readiness_status()
+
+
+# Analytics endpoints
+@app.get("/analytics/summary", tags=["Analytics"])
+async def analytics_summary(hours: int = 24):
+    """Get analytics summary for the specified time period."""
+    return await analytics.get_analytics_summary(hours=hours)
+
+
+@app.get("/analytics/endpoints", tags=["Analytics"])
+async def endpoint_popularity(hours: int = 24, limit: int = 10):
+    """Get most popular endpoints."""
+    return await analytics.get_endpoint_popularity(hours=hours, limit=limit)
+
+
 # Include API routes
 app.include_router(router)
-app.include_router(auth_router)
-app.include_router(resumes_router)
 
 
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("main:app", host=settings.host, port=settings.port, reload=settings.debug)
