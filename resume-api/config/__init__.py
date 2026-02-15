@@ -45,11 +45,41 @@ class Settings(BaseSettings):
     # CORS Configuration
     cors_origins: list[str] = ["*"]
 
+    # JWT Configuration
+    jwt_secret: str = "your-secret-key-change-in-production"
+    jwt_algorithm: str = "HS256"
+    jwt_access_token_expire_minutes: int = 30
+
     # Rate Limiting Configuration
     enable_rate_limiting: bool = True
     rate_limit_pdf: str = "10/minute"  # PDF generation is expensive
     rate_limit_tailor: str = "30/minute"  # Tailoring is moderate
     rate_limit_variants: str = "60/minute"  # Listing variants is light
+
+    # Logging Configuration
+    log_level: str = "INFO"  # DEBUG, INFO, WARNING, ERROR, CRITICAL
+    log_format: str = "json"  # json, console
+    log_file: Optional[str] = None  # Path to log file, None for stdout
+
+    # Metrics Configuration
+    enable_metrics: bool = True
+    metrics_path: str = "/metrics"
+
+    # Sentry (Error Tracking) Configuration
+    enable_sentry: bool = False
+    sentry_dsn: Optional[str] = None
+    sentry_environment: str = "production"
+    sentry_traces_sample_rate: float = 0.1
+
+    # Alerting Configuration
+    enable_alerting: bool = True
+    alert_error_rate_threshold: float = 0.05  # 5% error rate triggers alert
+    alert_slow_response_threshold: float = 5.0  # Response time in seconds
+    alert_check_interval: int = 300  # Check every 5 minutes
+
+    # Analytics Configuration
+    enable_analytics: bool = True
+    analytics_retention_days: int = 90  # Keep analytics data for 90 days
 
     @field_validator("api_keys", mode="before")
     @classmethod

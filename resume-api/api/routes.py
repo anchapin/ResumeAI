@@ -50,7 +50,7 @@ def rate_limit(limit_value: str):
 
 
 # Configure logging
-logger = logging.getLogger(__name__)
+logger = logging_config.get_logger(__name__)
 
 # Initialize components
 LIB_DIR = Path(__file__).parent.parent
