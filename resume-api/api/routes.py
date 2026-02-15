@@ -37,7 +37,12 @@ sys.path.insert(0, str(lib_path))
 from lib.cli import ResumeGenerator, ResumeTailorer, VariantManager  # noqa: E402
 
 # Import authentication and rate limiting
-from config.dependencies import AuthorizedAPIKey, limiter  # noqa: E402
+from config.dependencies import (
+    AuthorizedAPIKey, 
+    limiter, 
+    check_api_key_rate_limit,
+    per_api_key_limiter
+)  # noqa: E402
 from config import settings  # noqa: E402
 from monitoring import logging_config  # noqa: E402
 
@@ -109,6 +114,10 @@ async def render_pdf(request: Request, body: ResumeRequest, auth: AuthorizedAPIK
     Returns:
         PDF file as binary response
     """
+    # Apply per-API-key rate limiting
+    per_api_key_limiter.set_limit(auth, settings.rate_limit_pdf)
+    await check_api_key_rate_limit(auth)
+    
     try:
         # Convert Pydantic model to dict
         resume_dict = body.resume_data.model_dump(exclude_none=True)
@@ -170,6 +179,10 @@ async def tailor_resume(request: Request, body: TailorRequest, auth: AuthorizedA
     Returns:
         TailoredResumeResponse with modified resume data
     """
+    # Apply per-API-key rate limiting
+    per_api_key_limiter.set_limit(auth, settings.rate_limit_tailor)
+    await check_api_key_rate_limit(auth)
+    
     try:
         # Convert Pydantic model to dict
         resume_dict = body.resume_data.model_dump(exclude_none=True)
