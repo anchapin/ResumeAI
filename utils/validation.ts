@@ -2,8 +2,27 @@
  * Client-side validation utilities for ResumeAI application
  */
 
+// Type definitions for validation options
+interface StringOptions {
+  maxLength?: number;
+  minLength?: number;
+  pattern?: string | RegExp;
+}
+
+interface NumberOptions {
+  min?: number;
+  max?: number;
+}
+
+interface ArrayOptions {
+  maxItems?: number;
+  minItems?: number;
+  itemType?: string;
+  itemOptions?: StringOptions | NumberOptions;
+}
+
 // Input validation functions
-const validateInput = (input, type = 'string', options = {}) => {
+const validateInput = (input: any, type: string = 'string', options: StringOptions | NumberOptions | ArrayOptions = {}) => {
   if (input === null || input === undefined) {
     throw new Error('Input cannot be null or undefined');
   }
