@@ -18,6 +18,7 @@ router = APIRouter(prefix="/api/salary", tags=["salary"])
 # Request/Response Models
 class SalaryResearchRequest(BaseModel):
     """Request model for salary research."""
+
     title: str
     location: str
     company: Optional[str] = None
@@ -26,6 +27,7 @@ class SalaryResearchRequest(BaseModel):
 
 class SalaryResearchResponse(BaseModel):
     """Response model for salary research."""
+
     success: bool
     title: str
     location: str
@@ -37,6 +39,7 @@ class SalaryResearchResponse(BaseModel):
 
 class OfferInput(BaseModel):
     """Input model for a job offer."""
+
     company: str
     title: str
     base_salary: int
@@ -51,12 +54,14 @@ class OfferInput(BaseModel):
 
 class OfferComparisonRequest(BaseModel):
     """Request model for offer comparison."""
+
     offers: List[OfferInput]
     priorities: Optional[Dict[str, float]] = None
 
 
 class OfferComparisonResponse(BaseModel):
     """Response model for offer comparison."""
+
     success: bool
     offers: List[Dict[str, Any]]
     recommendation: Optional[Dict[str, Any]]
@@ -66,6 +71,7 @@ class OfferComparisonResponse(BaseModel):
 
 class PrioritiesUpdateRequest(BaseModel):
     """Request model for updating priorities."""
+
     priorities: Dict[str, float]
 
 
@@ -74,7 +80,7 @@ class PrioritiesUpdateRequest(BaseModel):
 async def research_salary(request: SalaryResearchRequest):
     """
     Research salary data for a given job title and location.
-    
+
     Returns salary ranges, median, and insights based on
     industry standards and available data.
     """
@@ -84,9 +90,9 @@ async def research_salary(request: SalaryResearchRequest):
             title=request.title,
             location=request.location,
             company=request.company,
-            experience_level=request.experience_level
+            experience_level=request.experience_level,
         )
-        
+
         return SalaryResearchResponse(
             success=True,
             title=result["title"],
@@ -94,7 +100,7 @@ async def research_salary(request: SalaryResearchRequest):
             company=result["company"],
             experience_level=result["experience_level"],
             salary_data=result["salary_data"],
-            insights=result["insights"]
+            insights=result["insights"],
         )
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Salary research failed: {str(e)}")
@@ -105,7 +111,7 @@ async def research_salary(request: SalaryResearchRequest):
 async def create_offer(offer: OfferInput):
     """
     Create and validate a job offer.
-    
+
     Returns the offer with calculated total compensation.
     """
     try:
@@ -113,11 +119,11 @@ async def create_offer(offer: OfferInput):
         total_comp = offer.base_salary
         if offer.signing_bonus:
             total_comp += offer.signing_bonus
-        
+
         return {
             "success": True,
             "offer": offer.dict(),
-            "total_compensation": total_comp
+            "total_compensation": total_comp,
         }
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Offer creation failed: {str(e)}")
@@ -127,44 +133,43 @@ async def create_offer(offer: OfferInput):
 async def compare_offers(request: OfferComparisonRequest):
     """
     Compare multiple job offers using weighted scoring.
-    
+
     Supports custom priorities for different compensation aspects.
     """
     try:
         comparator = OfferComparison()
-        
+
         # Convert Pydantic models to dicts
         offers = [offer.dict() for offer in request.offers]
-        
-        result = comparator.compare_offers(
-            offers=offers,
-            priorities=request.priorities
-        )
-        
+
+        result = comparator.compare_offers(offers=offers, priorities=request.priorities)
+
         # Generate report
         report = comparator.generate_comparison_report(result)
-        
+
         return OfferComparisonResponse(
             success=True,
             offers=result["offers"],
             recommendation=result.get("recommendation"),
             priorities_used=result["priorities_used"],
-            report=report
+            report=report,
         )
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Offer comparison failed: {str(e)}")
+        raise HTTPException(
+            status_code=400, detail=f"Offer comparison failed: {str(e)}"
+        )
 
 
 @router.put("/offers/priorities", response_model=Dict[str, float])
 async def update_priorities(request: PrioritiesUpdateRequest):
     """
     Update and priority validate weights for offer comparison.
-    
+
     Weights should sum to 1.0.
     """
     try:
         priorities = request.priorities
-        
+
         # Validate and normalize
         total = sum(priorities.values())
         if total == 0:
@@ -174,12 +179,12 @@ async def update_priorities(request: PrioritiesUpdateRequest):
                 "growth": 0.25,
                 "work_life_balance": 0.20,
                 "benefits": 0.15,
-                "culture": 0.10
+                "culture": 0.10,
             }
         elif abs(total - 1.0) > 0.01:
             # Normalize
-            priorities = {k: v/total for k, v in priorities.items()}
-        
+            priorities = {k: v / total for k, v in priorities.items()}
+
         return priorities
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Priority update failed: {str(e)}")
@@ -195,5 +200,5 @@ async def get_default_priorities():
         "growth": 0.25,
         "work_life_balance": 0.20,
         "benefits": 0.15,
-        "culture": 0.10
+        "culture": 0.10,
     }
