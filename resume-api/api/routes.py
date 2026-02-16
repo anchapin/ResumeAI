@@ -8,9 +8,10 @@ import re
 import sys
 from pathlib import Path
 
+from typing import List, Optional
 from fastapi import APIRouter, HTTPException, Request, UploadFile, File, status
 from fastapi.responses import Response
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 import docx
 from docx import Document
@@ -34,7 +35,7 @@ from .models import (
 lib_path = Path(__file__).parent.parent
 sys.path.insert(0, str(lib_path))
 
-from lib.cli import ResumeGenerator, ResumeTailorer, VariantManager  # noqa: E402
+from lib.cli import ResumeGenerator, ResumeTailorer, VariantManager, ATSChecker  # noqa: E402
 
 # Import authentication and rate limiting
 from config.dependencies import AuthorizedAPIKey, limiter  # noqa: E402
@@ -1092,3 +1093,116 @@ async def import_linkedin(request: Request, body: LinkedInImportRequest, auth: A
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"LinkedIn import failed: {str(e)}",
         )
+
+
+# ATS Compatibility Checker
+
+class ATSCheckRequest(BaseModel):
+    """Request to check ATS compatibility."""
+
+    resume_data: ResumeData = Field(..., description="Resume data to check")
+    job_description: Optional[str] = Field(
+        None, description="Optional job description for keyword matching"
+    )
+    industry: str = Field(
+        default="general",
+        description="Industry for keyword analysis (technology, marketing, finance, healthcare, general)"
+    )
+
+
+class ATSCheckResponse(BaseModel):
+    """Response with ATS compatibility check results."""
+
+    score: float
+    issues: List[str]
+    suggestions: List[str]
+    passed_checks: List[str]
+    failed_checks: List[str]
+
+
+@router.post(
+    "/v1/ats/check",
+    response_model=ATSCheckResponse,
+    responses={
+        400: {"model": ErrorResponse},
+        401: {"model": ErrorResponse},
+        403: {"model": ErrorResponse},
+        429: {"model": ErrorResponse},
+        500: {"model": ErrorResponse},
+    },
+    tags=["ATS"],
+)
+@rate_limit("20/minute")
+async def check_ats_compatibility(
+    request: Request,
+    body: ATSCheckRequest,
+    auth: AuthorizedAPIKey = None
+):
+    """
+    Check resume compatibility with ATS systems.
+    
+    Requires API key authentication via X-API-KEY header.
+    
+    Rate limit: 20 requests per minute per API key.
+    
+    Args:
+        request: FastAPI Request object
+        body: ATSCheckRequest containing resume_data
+        auth: API key authentication info
+    
+    Returns:
+        ATSCheckResponse with compatibility analysis
+    """
+    try:
+        # Convert Pydantic model to dict
+        resume_dict = body.resume_data.model_dump(exclude_none=True)
+        
+        # Initialize ATS checker
+        ats_checker = ATSChecker()
+        
+        # Run ATS check
+        result = ats_checker.check_resume(
+            resume_data=resume_dict,
+            job_description=body.job_description,
+            industry=body.industry
+        )
+        
+        return ATSCheckResponse(
+            score=result.score,
+            issues=result.issues,
+            suggestions=result.suggestions,
+            passed_checks=result.passed_checks,
+            failed_checks=result.failed_checks
+        )
+    
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"ATS check failed: {str(e)}",
+        )
+
+
+@router.get(
+    "/v1/ats/formats",
+    responses={
+        200: {"description": "List of supported file formats and their scores"},
+        500: {"model": ErrorResponse},
+    },
+    tags=["ATS"],
+)
+async def list_ats_formats():
+    """
+    List supported file formats and their ATS compatibility scores.
+    
+    Returns:
+        Dictionary of file extensions and their compatibility scores
+    """
+    return {
+        ".docx": {"score": 100, "description": "Microsoft Word (recommended)"},
+        ".pdf": {"score": 95, "description": "PDF (widely supported)"},
+        ".doc": {"score": 85, "description": "Legacy Word format"},
+        ".rtf": {"score": 75, "description": "Rich Text Format"},
+        ".txt": {"score": 70, "description": "Plain text (least compatible)"},
+    }
