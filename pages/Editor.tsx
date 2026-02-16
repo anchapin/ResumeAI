@@ -1,5 +1,7 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { SimpleResumeData, WorkExperience, EducationEntry, ProjectEntry } from '../types';
+import { convertToAPIData, generatePDF, getVariants, VariantMetadata } from '../utils/api-client';
+import TemplateSelector from '../components/TemplateSelector';
 
 interface ExperienceItemProps {
     exp: WorkExperience;
@@ -511,6 +513,59 @@ function getTimeSince(date: Date): string {
  */
 const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, onBack, saveStatus = 'idle' }) => {
   const [activeTab, setActiveTab] = useState<string>('Experience');
+  
+  // PDF generation state
+  const [selectedVariant, setSelectedVariant] = useState<string>('modern');
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState<boolean>(false);
+  const [pdfError, setPdfError] = useState<string | null>(null);
+  const [showTemplateSelector, setShowTemplateSelector] = useState<boolean>(false);
+  
+  // Fetch variants on mount
+  useEffect(() => {
+    const loadVariants = async () => {
+      try {
+        const variants = await getVariants();
+        if (variants.length > 0) {
+          setSelectedVariant(variants[0].name);
+        }
+      } catch (err) {
+        console.error('Failed to load variants:', err);
+      }
+    };
+    loadVariants();
+  }, []);
+  
+  // Handle PDF generation
+  const handleGeneratePDF = useCallback(async () => {
+    setIsGeneratingPDF(true);
+    setPdfError(null);
+    
+    try {
+      const apiData = convertToAPIData(resumeData);
+      const pdfBlob = await generatePDF(apiData, selectedVariant);
+      
+      // Create download link
+      const url = URL.createObjectURL(pdfBlob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `resume-${selectedVariant}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('PDF generation failed:', err);
+      setPdfError(err instanceof Error ? err.message : 'Failed to generate PDF');
+    } finally {
+      setIsGeneratingPDF(false);
+    }
+  }, [resumeData, selectedVariant]);
+  
+  // Handle template change
+  const handleTemplateChange = useCallback((template: string) => {
+    setSelectedVariant(template);
+    setShowTemplateSelector(false);
+  }, []);
 
   // Experience state
   const experiences = resumeData.experience;
@@ -985,9 +1040,22 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, onBack, saveStatu
                     </p>
                 </div>
                 <div className="flex gap-3">
-                    <button className="flex items-center gap-2 px-5 h-10 rounded-lg bg-slate-200 text-slate-700 font-bold text-sm hover:bg-slate-300 transition-colors">
-                        <span className="material-symbols-outlined text-[18px]">visibility</span>
-                        Preview
+                    <button 
+                        onClick={handleGeneratePDF}
+                        disabled={isGeneratingPDF}
+                        className="flex items-center gap-2 px-5 h-10 rounded-lg bg-slate-200 text-slate-700 font-bold text-sm hover:bg-slate-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        {isGeneratingPDF ? (
+                            <>
+                                <span className="material-symbols-outlined text-[18px] animate-spin">sync</span>
+                                Generating...
+                            </>
+                        ) : (
+                            <>
+                                <span className="material-symbols-outlined text-[18px]">visibility</span>
+                                Preview
+                            </>
+                        )}
                     </button>
                     <button className="flex items-center gap-2 px-6 h-10 rounded-lg bg-primary-600 text-white font-bold text-sm hover:bg-primary-700 transition-colors shadow-lg shadow-primary-600/20">
                         Save Profile
