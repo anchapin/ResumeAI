@@ -539,12 +539,6 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, onBack, saveStatu
   const handleGeneratePDF = useCallback(async () => {
     setIsGeneratingPDF(true);
     setPdfError(null);
-    
-    try {
-      const apiData = convertToAPIData(resumeData);
-      const pdfBlob = await generatePDF(apiData, selectedVariant);
-      
-      // Create download link
       const url = URL.createObjectURL(pdfBlob);
       const link = document.createElement('a');
       link.href = url;
@@ -561,7 +555,6 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, onBack, saveStatu
     }
   }, [resumeData, selectedVariant]);
   
-  // Handle template change
   const handleTemplateChange = useCallback((template: string) => {
     setSelectedVariant(template);
     setShowTemplateSelector(false);
@@ -1043,19 +1036,6 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, onBack, saveStatu
                     <button 
                         onClick={handleGeneratePDF}
                         disabled={isGeneratingPDF}
-                        className="flex items-center gap-2 px-5 h-10 rounded-lg bg-slate-200 text-slate-700 font-bold text-sm hover:bg-slate-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                        {isGeneratingPDF ? (
-                            <>
-                                <span className="material-symbols-outlined text-[18px] animate-spin">sync</span>
-                                Generating...
-                            </>
-                        ) : (
-                            <>
-                                <span className="material-symbols-outlined text-[18px]">visibility</span>
-                                Preview
-                            </>
-                        )}
                     </button>
                     <button className="flex items-center gap-2 px-6 h-10 rounded-lg bg-primary-600 text-white font-bold text-sm hover:bg-primary-700 transition-colors shadow-lg shadow-primary-600/20">
                         Save Profile
