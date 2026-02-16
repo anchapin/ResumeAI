@@ -3,7 +3,6 @@
 interface ImportMetaEnv {
   readonly VITE_API_URL: string
   readonly RESUMEAI_API_KEY?: string
-  readonly GEMINI_API_KEY?: string
 }
 
 interface ImportMeta {
