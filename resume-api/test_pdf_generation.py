@@ -15,7 +15,6 @@ sys.path.insert(0, str(lib_path))
 
 from lib.cli.generator import ResumeGenerator
 
-
 # Sample resume data for testing
 SAMPLE_RESUME_DATA = {
     "basics": {
@@ -25,11 +24,7 @@ SAMPLE_RESUME_DATA = {
         "phone": "+1 234 567 8900",
         "url": "https://johndoe.com",
         "summary": "Experienced software engineer with 5+ years of experience in web development.",
-        "location": {
-            "city": "San Francisco",
-            "region": "CA",
-            "countryCode": "US"
-        }
+        "location": {"city": "San Francisco", "region": "CA", "countryCode": "US"},
     },
     "work": [
         {
@@ -41,8 +36,8 @@ SAMPLE_RESUME_DATA = {
             "highlights": [
                 "Led team of 5 engineers",
                 "Improved system performance by 40%",
-                "Implemented microservices architecture"
-            ]
+                "Implemented microservices architecture",
+            ],
         },
         {
             "company": "Startup Inc",
@@ -52,9 +47,9 @@ SAMPLE_RESUME_DATA = {
             "summary": "Full-stack development",
             "highlights": [
                 "Built customer-facing webapp",
-                "Reduced page load time by 60%"
-            ]
-        }
+                "Reduced page load time by 60%",
+            ],
+        },
     ],
     "education": [
         {
@@ -62,7 +57,7 @@ SAMPLE_RESUME_DATA = {
             "area": "Computer Science",
             "studyType": "Bachelor of Science",
             "startDate": "2013-09",
-            "endDate": "2017-06"
+            "endDate": "2017-06",
         }
     ],
     "skills": [
@@ -70,36 +65,24 @@ SAMPLE_RESUME_DATA = {
         {"name": "JavaScript", "level": "Expert"},
         {"name": "React", "level": "Advanced"},
         {"name": "Node.js", "level": "Advanced"},
-        {"name": "AWS", "level": "Intermediate"}
+        {"name": "AWS", "level": "Intermediate"},
     ],
     "projects": [
         {
             "name": "Open Source Contrib",
             "description": "Contributed to various open source projects",
-            "highlights": ["1000+ stars on GitHub"]
+            "highlights": ["1000+ stars on GitHub"],
         }
     ],
     "awards": [
-        {
-            "title": "Best Developer Award",
-            "date": "2021",
-            "awarder": "Tech Corp"
-        }
+        {"title": "Best Developer Award", "date": "2021", "awarder": "Tech Corp"}
     ],
     "certificates": [
-        {
-            "name": "AWS Solutions Architect",
-            "date": "2022",
-            "issuer": "Amazon"
-        }
+        {"name": "AWS Solutions Architect", "date": "2022", "issuer": "Amazon"}
     ],
     "publications": [
-        {
-            "name": "Paper on ML",
-            "publisher": "IEEE",
-            "releaseDate": "2020"
-        }
-    ]
+        {"name": "Paper on ML", "publisher": "IEEE", "releaseDate": "2020"}
+    ],
 }
 
 # Template variants to test
@@ -133,13 +116,13 @@ class TestResumeGenerator:
         """Test PDF generation for all template variants."""
         try:
             pdf_bytes = generator.generate_pdf(SAMPLE_RESUME_DATA, variant)
-            
+
             # Verify PDF header
             assert pdf_bytes[:4] == b"%PDF"
-            
+
             # Verify PDF is not empty
             assert len(pdf_bytes) > 1000
-            
+
         except FileNotFoundError:
             pytest.skip(f"Template variant '{variant}' not found")
         except Exception as e:
@@ -152,7 +135,7 @@ class TestResumeGenerator:
         """Test that invalid variant names are rejected."""
         with pytest.raises(ValueError, match="Invalid variant name"):
             generator.generate_pdf(SAMPLE_RESUME_DATA, "../etc/passwd")
-        
+
         with pytest.raises(ValueError, match="Invalid variant name"):
             generator.generate_pdf(SAMPLE_RESUME_DATA, "..")
 
@@ -169,11 +152,7 @@ class TestResumeGenerator:
 
     def test_minimal_resume_data(self, generator):
         """Test with minimal resume data (just name)."""
-        minimal_data = {
-            "basics": {
-                "name": "Jane Smith"
-            }
-        }
+        minimal_data = {"basics": {"name": "Jane Smith"}}
         pdf_bytes = generator.generate_pdf(minimal_data, "base")
         assert pdf_bytes[:4] == b"%PDF"
 
@@ -194,10 +173,10 @@ class TestLaTeXEscaping:
                 "name": "Test & User #1",
                 "label": "Developer $100k",
                 "email": "test@example.com",
-                "summary": "100% satisfied with_work {great} results!"
+                "summary": "100% satisfied with_work {great} results!",
             }
         }
-        
+
         try:
             pdf_bytes = generator.generate_pdf(resume_with_special_chars, "base")
             assert pdf_bytes[:4] == b"%PDF"
