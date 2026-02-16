@@ -34,7 +34,11 @@ from .models import (
 lib_path = Path(__file__).parent.parent
 sys.path.insert(0, str(lib_path))
 
-from lib.cli import ResumeGenerator, ResumeTailorer, VariantManager  # noqa: E402
+from lib.cli import ResumeGenerator, ResumeTailorer, VariantManager, JobPostingParser  # noqa: E402
+
+# Import typing
+from typing import Optional, List
+from pydantic import Field
 
 # Import authentication and rate limiting
 from config.dependencies import AuthorizedAPIKey, limiter  # noqa: E402
@@ -1091,4 +1095,91 @@ async def import_linkedin(request: Request, body: LinkedInImportRequest, auth: A
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"LinkedIn import failed: {str(e)}",
+        )
+
+
+# Job Posting Parser
+
+class JobPostingRequest(BaseModel):
+    """Request to parse a job posting."""
+
+    text: str = Field(..., description="Job posting text or HTML")
+    format: str = Field(default="text", description="Format of input ('text' or 'html')")
+
+
+class JobPostingResponse(BaseModel):
+    """Response with parsed job posting."""
+
+    title: str
+    company: str
+    location: Optional[str]
+    description: str
+    requirements: List[str]
+    responsibilities: List[str]
+    nice_to_have: List[str]
+    skills: List[str]
+    salary_range: Optional[dict]
+    job_type: Optional[str]
+    experience_level: Optional[str]
+    benefits: List[str]
+
+
+@router.post(
+    "/v1/parse/job",
+    response_model=JobPostingResponse,
+    responses={
+        400: {"model": ErrorResponse},
+        401: {"model": ErrorResponse},
+        429: {"model": ErrorResponse},
+        500: {"model": ErrorResponse},
+    },
+    tags=["Job Parser"],
+)
+@rate_limit("20/minute")
+async def parse_job_posting(
+    request: Request,
+    body: JobPostingRequest,
+    auth: AuthorizedAPIKey = None
+):
+    """
+    Parse a job posting and extract structured information.
+    
+    Rate limit: 20 requests per minute per API key.
+    
+    Args:
+        request: FastAPI Request object
+        body: JobPostingRequest containing job posting text
+        auth: API key authentication info
+    
+    Returns:
+        JobPostingResponse with parsed job posting
+    """
+    try:
+        # Initialize parser
+        parser = JobPostingParser()
+        
+        # Parse job posting
+        result = parser.parse(text=body.text, format=body.format)
+        
+        return JobPostingResponse(
+            title=result.title,
+            company=result.company,
+            location=result.location,
+            description=result.description,
+            requirements=result.requirements,
+            responsibilities=result.responsibilities,
+            nice_to_have=result.nice_to_have,
+            skills=result.skills,
+            salary_range=result.salary_range,
+            job_type=result.job_type,
+            experience_level=result.experience_level,
+            benefits=result.benefits
+        )
+    
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Job posting parsing failed: {str(e)}",
         )
