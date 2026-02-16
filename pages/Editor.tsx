@@ -566,6 +566,21 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, onBack, saveStatu
     setSelectedVariant(template);
     setShowTemplateSelector(false);
   }, []);
+  
+  // Handle Save Profile
+  const handleSaveProfile = useCallback(async () => {
+    try {
+      // Save to localStorage as backup
+      localStorage.setItem('resume_draft', JSON.stringify(resumeData));
+      
+      // TODO: Connect to backend API when available
+      // For now, just show success
+      alert('Profile saved successfully!');
+    } catch (err) {
+      console.error('Save failed:', err);
+      alert('Failed to save profile. Please try again.');
+    }
+  }, [resumeData]);
 
   // Experience state
   const experiences = resumeData.experience;
@@ -1057,7 +1072,7 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, onBack, saveStatu
                             </>
                         )}
                     </button>
-                    <button className="flex items-center gap-2 px-6 h-10 rounded-lg bg-primary-600 text-white font-bold text-sm hover:bg-primary-700 transition-colors shadow-lg shadow-primary-600/20">
+                    <button onClick={handleSaveProfile} className="flex items-center gap-2 px-6 h-10 rounded-lg bg-primary-600 text-white font-bold text-sm hover:bg-primary-700 transition-colors shadow-lg shadow-primary-600/20">
                         Save Profile
                     </button>
                 </div>
