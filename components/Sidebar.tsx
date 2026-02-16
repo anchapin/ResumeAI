@@ -14,6 +14,13 @@ interface SidebarProps {
   onNavigate: (route: Route) => void;
 }
 
+const NAV_ITEMS = [
+  { id: Route.DASHBOARD, label: 'Dashboard', icon: 'dashboard' },
+  { id: Route.EDITOR, label: 'My Master Profile', icon: 'account_circle' },
+  { id: Route.APPLICATIONS, label: 'Job Applications', icon: 'work' },
+  { id: Route.SETTINGS, label: 'Settings', icon: 'settings' },
+] as const;
+
 /**
  * @component
  * @description Sidebar component that provides navigation links for the application
@@ -30,14 +37,7 @@ interface SidebarProps {
  * />
  * ```
  */
-const Sidebar: React.FC<SidebarProps> = ({ currentRoute, onNavigate }) => {
-  const navItems = [
-    { id: Route.DASHBOARD, label: 'Dashboard', icon: 'dashboard' },
-    { id: Route.EDITOR, label: 'My Master Profile', icon: 'account_circle' },
-    { id: Route.APPLICATIONS, label: 'Job Applications', icon: 'work' },
-    { id: Route.SETTINGS, label: 'Settings', icon: 'settings' },
-  ];
-
+const Sidebar: React.FC<SidebarProps> = React.memo(({ currentRoute, onNavigate }) => {
   return (
     <aside className="w-72 bg-white border-r border-slate-200 flex flex-col justify-between p-6 fixed h-full z-20">
       <div className="flex flex-col gap-8">
@@ -59,7 +59,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentRoute, onNavigate }) => {
 
         {/* Nav Links */}
         <nav className="flex flex-col gap-1">
-          {navItems.map((item) => {
+          {NAV_ITEMS.map((item) => {
             const isActive = currentRoute === item.id;
             return (
               <button
@@ -109,6 +109,6 @@ const Sidebar: React.FC<SidebarProps> = ({ currentRoute, onNavigate }) => {
       </div>
     </aside>
   );
-};
+});
 
 export default Sidebar;
