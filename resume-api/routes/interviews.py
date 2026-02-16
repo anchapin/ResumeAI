@@ -25,12 +25,14 @@ question_generator = InterviewQuestionGenerator()
 # Request/Response Models
 class StartInterviewRequest(BaseModel):
     """Request model for starting a mock interview."""
+
     job_description: str
     num_questions: int = 5
 
 
 class InterviewSessionResponse(BaseModel):
     """Response model for an interview session."""
+
     session_id: str
     job_description: str
     questions: List[Dict[str, Any]]
@@ -40,11 +42,13 @@ class InterviewSessionResponse(BaseModel):
 
 class SubmitAnswerRequest(BaseModel):
     """Request model for submitting an answer."""
+
     answer: str
 
 
 class AnswerResponse(BaseModel):
     """Response model for a submitted answer."""
+
     success: bool
     feedback: str
     score: float
@@ -54,6 +58,7 @@ class AnswerResponse(BaseModel):
 
 class QuestionGenerationRequest(BaseModel):
     """Request model for generating questions."""
+
     job_description: str
     num_questions: int = 10
     categories: Optional[List[str]] = None
@@ -61,6 +66,7 @@ class QuestionGenerationRequest(BaseModel):
 
 class QuestionsResponse(BaseModel):
     """Response model for generated questions."""
+
     success: bool
     questions: List[Dict[str, Any]]
 
@@ -70,36 +76,37 @@ class QuestionsResponse(BaseModel):
 async def start_interview(request: StartInterviewRequest):
     """
     Start a new mock interview session.
-    
+
     Generates questions based on the job description and returns
     the first question.
     """
     try:
         session = interview_generator.create_session(
-            job_description=request.job_description,
-            num_questions=request.num_questions
+            job_description=request.job_description, num_questions=request.num_questions
         )
-        
+
         questions = [
             {
                 "id": q.id,
                 "category": q.category,
                 "question": q.question,
                 "difficulty": q.difficulty,
-                "tips": q.tips
+                "tips": q.tips,
             }
             for q in session.questions
         ]
-        
+
         return InterviewSessionResponse(
             session_id=session.id,
             job_description=session.job_description,
             questions=questions,
             current_question_index=session.current_question_index,
-            status=session.status
+            status=session.status,
         )
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Failed to start interview: {str(e)}")
+        raise HTTPException(
+            status_code=400, detail=f"Failed to start interview: {str(e)}"
+        )
 
 
 @router.get("/{session_id}", response_model=InterviewSessionResponse)
@@ -110,24 +117,24 @@ async def get_interview_session(session_id: str):
     session = interview_generator.get_session(session_id)
     if not session:
         raise HTTPException(status_code=404, detail="Interview session not found")
-    
+
     questions = [
         {
             "id": q.id,
             "category": q.category,
             "question": q.question,
             "difficulty": q.difficulty,
-            "tips": q.tips
+            "tips": q.tips,
         }
         for q in session.questions
     ]
-    
+
     return InterviewSessionResponse(
         session_id=session.id,
         job_description=session.job_description,
         questions=questions,
         current_question_index=session.current_question_index,
-        status=session.status
+        status=session.status,
     )
 
 
@@ -135,36 +142,36 @@ async def get_interview_session(session_id: str):
 async def submit_answer(session_id: str, request: SubmitAnswerRequest):
     """
     Submit an answer to the current question in an interview session.
-    
+
     Returns feedback, score, and moves to the next question.
     """
     session = interview_generator.get_session(session_id)
     if not session:
         raise HTTPException(status_code=404, detail="Interview session not found")
-    
+
     if session.status == "completed":
-        raise HTTPException(status_code=400, detail="Interview session is already completed")
-    
+        raise HTTPException(
+            status_code=400, detail="Interview session is already completed"
+        )
+
     # Get current question
     if session.current_question_index >= len(session.questions):
         raise HTTPException(status_code=400, detail="No more questions available")
-    
+
     current_question = session.questions[session.current_question_index]
-    
+
     # Submit answer
     answer = interview_generator.submit_answer(
-        session_id=session_id,
-        question_id=current_question.id,
-        answer=request.answer
+        session_id=session_id, question_id=current_question.id, answer=request.answer
     )
-    
+
     if not answer:
         raise HTTPException(status_code=400, detail="Failed to submit answer")
-    
+
     # Prepare next question
     next_question = None
     is_complete = session.status == "completed"
-    
+
     if not is_complete and session.current_question_index < len(session.questions):
         next_q = session.questions[session.current_question_index]
         next_question = {
@@ -172,15 +179,15 @@ async def submit_answer(session_id: str, request: SubmitAnswerRequest):
             "category": next_q.category,
             "question": next_q.question,
             "difficulty": next_q.difficulty,
-            "tips": next_q.tips
+            "tips": next_q.tips,
         }
-    
+
     return AnswerResponse(
         success=True,
         feedback=answer.feedback,
         score=answer.score,
         is_complete=is_complete,
-        next_question=next_question
+        next_question=next_question,
     )
 
 
@@ -192,10 +199,10 @@ async def get_interview_report(session_id: str):
     report = interview_generator.generate_report(session_id)
     if not report:
         raise HTTPException(
-            status_code=400, 
-            detail="Report not available. Interview may still be in progress."
+            status_code=400,
+            detail="Report not available. Interview may still be in progress.",
         )
-    
+
     return report
 
 
@@ -203,63 +210,57 @@ async def get_interview_report(session_id: str):
 async def generate_questions(request: QuestionGenerationRequest):
     """
     Generate interview questions without starting a full interview session.
-    
+
     Useful for practice or generating question banks.
     """
     try:
         questions = question_generator.generate_questions(
             job_description=request.job_description,
             num_questions=request.num_questions,
-            categories=request.categories
+            categories=request.categories,
         )
-        
+
         question_list = [
             {
                 "id": q.id,
                 "category": q.category,
                 "question": q.question,
                 "difficulty": q.difficulty,
-                "tips": q.tips
+                "tips": q.tips,
             }
             for q in questions
         ]
-        
-        return QuestionsResponse(
-            success=True,
-            questions=question_list
-        )
+
+        return QuestionsResponse(success=True, questions=question_list)
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Failed to generate questions: {str(e)}")
+        raise HTTPException(
+            status_code=400, detail=f"Failed to generate questions: {str(e)}"
+        )
 
 
 @router.post("/questions/by-title", response_model=QuestionsResponse)
-async def generate_questions_by_title(
-    job_title: str,
-    num_questions: int = 10
-):
+async def generate_questions_by_title(job_title: str, num_questions: int = 10):
     """
     Generate interview questions specifically for a job title.
     """
     try:
         questions = question_generator.generate_questions_for_title(
-            job_title=job_title,
-            num_questions=num_questions
+            job_title=job_title, num_questions=num_questions
         )
-        
+
         question_list = [
             {
                 "id": q.id,
                 "category": q.category,
                 "question": q.question,
                 "difficulty": q.difficulty,
-                "tips": q.tips
+                "tips": q.tips,
             }
             for q in questions
         ]
-        
-        return QuestionsResponse(
-            success=True,
-            questions=question_list
-        )
+
+        return QuestionsResponse(success=True, questions=question_list)
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Failed to generate questions: {str(e)}")
+        raise HTTPException(
+            status_code=400, detail=f"Failed to generate questions: {str(e)}"
+        )

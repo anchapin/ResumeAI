@@ -31,7 +31,7 @@ class TestVariantManager:
     def test_list_variants(self, variant_manager):
         """Test listing available variants."""
         variants = variant_manager.list_variants()
-        
+
         assert isinstance(variants, list)
         assert len(variants) > 0
         # Should include base template
@@ -40,7 +40,7 @@ class TestVariantManager:
     def test_get_variant_metadata_base(self, variant_manager):
         """Test getting metadata for base variant."""
         metadata = variant_manager.get_variant_metadata("base")
-        
+
         assert isinstance(metadata, dict)
         assert "name" in metadata
         assert "display_name" in metadata
@@ -49,7 +49,7 @@ class TestVariantManager:
     def test_get_variant_metadata_all(self, variant_manager):
         """Test getting metadata for all variants."""
         variants = variant_manager.list_variants()
-        
+
         for variant in variants:
             metadata = variant_manager.get_variant_metadata(variant)
             assert isinstance(metadata, dict)
@@ -71,10 +71,10 @@ class TestVariantManager:
     def test_get_variants_with_metadata(self, variant_manager):
         """Test getting all variants with metadata."""
         variants = variant_manager.get_variants_with_metadata()
-        
+
         assert isinstance(variants, list)
         assert len(variants) > 0
-        
+
         for variant in variants:
             assert "name" in variant
             assert "display_name" in variant
@@ -82,7 +82,7 @@ class TestVariantManager:
     def test_filter_variants_by_search(self, variant_manager):
         """Test filtering variants by search query."""
         results = variant_manager.filter_variants(search="modern")
-        
+
         assert isinstance(results, list)
         # Should find modern variant if it exists
         names = [v.get("name", "") for v in results]
@@ -91,29 +91,27 @@ class TestVariantManager:
     def test_filter_variants_by_category(self, variant_manager):
         """Test filtering variants by category."""
         results = variant_manager.filter_variants(category="technical")
-        
+
         assert isinstance(results, list)
 
     def test_filter_variants_by_tags(self, variant_manager):
         """Test filtering variants by tags."""
         results = variant_manager.filter_variants(tags=["professional"])
-        
+
         assert isinstance(results, list)
 
     def test_filter_variants_by_layout(self, variant_manager):
         """Test filtering variants by layout."""
         results = variant_manager.filter_variants(layout="single-column")
-        
+
         assert isinstance(results, list)
 
     def test_filter_variants_combined(self, variant_manager):
         """Test filtering with multiple criteria."""
         results = variant_manager.filter_variants(
-            search="tech",
-            category="technical",
-            tags=["modern"]
+            search="tech", category="technical", tags=["modern"]
         )
-        
+
         assert isinstance(results, list)
 
 
@@ -128,14 +126,14 @@ class TestMockVariantManager:
     def test_list_variants(self, mock_manager):
         """Test listing mock variants."""
         variants = mock_manager.list_variants()
-        
+
         assert isinstance(variants, list)
         assert "base" in variants
 
     def test_get_variant_metadata(self, mock_manager):
         """Test getting mock variant metadata."""
         metadata = mock_manager.get_variant_metadata("base")
-        
+
         assert isinstance(metadata, dict)
         assert metadata["name"] == "base"
 
@@ -150,7 +148,7 @@ class TestMockVariantManager:
     def test_get_variants_with_metadata(self, mock_manager):
         """Test getting all mock variants with metadata."""
         variants = mock_manager.get_variants_with_metadata()
-        
+
         assert isinstance(variants, list)
         assert len(variants) > 0
 
@@ -166,17 +164,15 @@ class TestVariantFiltering:
 
     def test_filter_with_no_matches(self, variant_manager):
         """Test filtering that returns no results."""
-        results = variant_manager.filter_variants(
-            search="xyznonexistent123"
-        )
-        
+        results = variant_manager.filter_variants(search="xyznonexistent123")
+
         assert isinstance(results, list)
 
     def test_filter_case_insensitive(self, variant_manager):
         """Test that filtering is case insensitive."""
         results_lower = variant_manager.filter_variants(search="BASE")
         results_normal = variant_manager.filter_variants(search="base")
-        
+
         # Should find results for both
         assert isinstance(results_lower, list)
         assert isinstance(results_normal, list)
@@ -184,13 +180,13 @@ class TestVariantFiltering:
     def test_filter_by_color_theme(self, variant_manager):
         """Test filtering by color theme."""
         results = variant_manager.filter_variants(color_theme="blue")
-        
+
         assert isinstance(results, list)
 
     def test_filter_by_industry(self, variant_manager):
         """Test filtering by industry."""
         results = variant_manager.filter_variants(industry="technology")
-        
+
         assert isinstance(results, list)
 
 

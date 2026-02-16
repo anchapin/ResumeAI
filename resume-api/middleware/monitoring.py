@@ -12,7 +12,6 @@ from starlette.responses import Response
 from config import settings
 from monitoring import logging_config, metrics
 
-
 logger = logging_config.get_logger(__name__)
 
 

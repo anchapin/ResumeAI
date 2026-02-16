@@ -35,7 +35,12 @@ from .models import (
 lib_path = Path(__file__).parent.parent
 sys.path.insert(0, str(lib_path))
 
-from lib.cli import ResumeGenerator, ResumeTailorer, VariantManager, CoverLetterGenerator  # noqa: E402
+from lib.cli import (
+    ResumeGenerator,
+    ResumeTailorer,
+    VariantManager,
+    CoverLetterGenerator,
+)  # noqa: E402
 
 # Import authentication and rate limiting
 from config.dependencies import AuthorizedAPIKey, limiter  # noqa: E402
@@ -239,7 +244,7 @@ async def list_variants(
     List or filter resume template variants.
 
     Rate limit: 60 requests per minute per API key.
-    
+
     Query Parameters:
     - search: Search query for name/description
     - tags: Comma-separated list of tags (e.g., "modern,professional")
@@ -256,7 +261,7 @@ async def list_variants(
         tags_list = None
         if tags:
             tags_list = [t.strip() for t in tags.split(",") if t.strip()]
-        
+
         # Use filter if any filter params provided, otherwise get all with metadata
         if any([search, tags_list, category, industry, layout, color_theme]):
             filtered_variants = variant_manager.filter_variants(
@@ -303,31 +308,32 @@ async def root():
 
 # DOCX Export Functions
 
+
 def create_docx_from_resume(resume_data: dict) -> bytes:
     """
     Generate a DOCX file from resume data.
-    
+
     Args:
         resume_data: Resume data in JSON Resume format
-        
+
     Returns:
         DOCX file as bytes
     """
     doc = Document()
-    
+
     # Get basics
     basics = resume_data.get("basics", {})
-    
+
     # Title - Name
     if basics.get("name"):
         title = doc.add_heading(basics["name"], 0)
         title.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    
+
     # Headline
     if basics.get("headline"):
         headline = doc.add_paragraph(basics["headline"])
         headline.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    
+
     # Contact info
     contact_parts = []
     if basics.get("email"):
@@ -337,26 +343,28 @@ def create_docx_from_resume(resume_data: dict) -> bytes:
     if basics.get("location"):
         location = basics["location"]
         if isinstance(location, dict):
-            location_str = ", ".join(filter(None, [location.get("city"), location.get("region")]))
+            location_str = ", ".join(
+                filter(None, [location.get("city"), location.get("region")])
+            )
         else:
             location_str = str(location)
         if location_str:
             contact_parts.append(location_str)
-    
+
     if basics.get("url"):
         contact_parts.append(basics["url"])
-    
+
     if contact_parts:
         contact_para = doc.add_paragraph(" | ".join(contact_parts))
         contact_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    
+
     doc.add_paragraph()  # Empty line
-    
+
     # Summary
     if basics.get("summary"):
         doc.add_heading("Summary", level=1)
         doc.add_paragraph(basics["summary"])
-    
+
     # Work Experience
     work = resume_data.get("work", [])
     if work:
@@ -375,7 +383,7 @@ def create_docx_from_resume(resume_data: dict) -> bytes:
                         job_para.add_run(" at ")
                     run = job_para.add_run(company)
                     run.italic = True
-            
+
             # Dates
             dates = []
             if job.get("startDate"):
@@ -384,22 +392,22 @@ def create_docx_from_resume(resume_data: dict) -> bytes:
                 dates.append(job["endDate"])
             elif job.get("current"):
                 dates.append("Present")
-            
+
             if dates:
                 date_para = doc.add_paragraph(" - ".join(dates))
                 date_para.runs[0].italic = True
-            
+
             # Description/Summary
             if job.get("summary"):
                 doc.add_paragraph(job["summary"])
-            
+
             # Highlights
             highlights = job.get("highlights", [])
             for highlight in highlights:
                 doc.add_paragraph(highlight, style="List Bullet")
-            
+
             doc.add_paragraph()  # Empty line between jobs
-    
+
     # Education
     education = resume_data.get("education", [])
     if education:
@@ -413,32 +421,32 @@ def create_docx_from_resume(resume_data: dict) -> bytes:
                 parts.append(edu["area"])
             if edu.get("institution"):
                 parts.append(edu["institution"])
-            
+
             if parts:
                 edu_para = doc.add_paragraph()
                 run = edu_para.add_run(" - ".join(parts[:2]))
                 run.bold = True
                 if len(parts) > 2:
                     edu_para.add_run(f" at {parts[2]}")
-            
+
             # Dates
             dates = []
             if edu.get("startDate"):
                 dates.append(edu["startDate"])
             if edu.get("endDate"):
                 dates.append(edu["endDate"])
-            
+
             if dates:
                 date_para = doc.add_paragraph(" - ".join(dates))
                 date_para.runs[0].italic = True
-            
+
             doc.add_paragraph()
-    
+
     # Skills
     skills = resume_data.get("skills", [])
     if skills:
         doc.add_heading("Skills", level=1)
-        
+
         # Group skills by category if available
         skill_names = []
         for skill in skills:
@@ -448,15 +456,15 @@ def create_docx_from_resume(resume_data: dict) -> bytes:
                     skill_names.append(name)
             elif isinstance(skill, str):
                 skill_names.append(skill)
-        
+
         if skill_names:
             skills_para = doc.add_paragraph(", ".join(skill_names))
-    
+
     # Save to bytes
     docx_bytes = io.BytesIO()
     doc.save(docx_bytes)
     docx_bytes.seek(0)
-    
+
     return docx_bytes.getvalue()
 
 
@@ -464,7 +472,12 @@ def create_docx_from_resume(resume_data: dict) -> bytes:
     "/v1/export/docx",
     response_class=Response,
     responses={
-        200: {"content": {"application/vnd.openxmlformats-officedocument.wordprocessingml.document": {}}, "description": "DOCX resume file"},
+        200: {
+            "content": {
+                "application/vnd.openxmlformats-officedocument.wordprocessingml.document": {}
+            },
+            "description": "DOCX resume file",
+        },
         400: {"model": ErrorResponse},
         401: {"model": ErrorResponse},
         403: {"model": ErrorResponse},
@@ -493,10 +506,10 @@ async def export_docx(request: Request, body: ResumeRequest, auth: AuthorizedAPI
     try:
         # Convert Pydantic model to dict
         resume_dict = body.resume_data.model_dump(exclude_none=True)
-        
+
         # Generate DOCX
         docx_bytes = create_docx_from_resume(resume_dict)
-        
+
         # Return DOCX response
         return Response(
             content=docx_bytes,
@@ -505,7 +518,7 @@ async def export_docx(request: Request, body: ResumeRequest, auth: AuthorizedAPI
                 "Content-Disposition": f'attachment; filename="resume_{body.variant or "docx"}.docx"'
             },
         )
-    
+
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except Exception as e:
@@ -517,16 +530,17 @@ async def export_docx(request: Request, body: ResumeRequest, auth: AuthorizedAPI
 
 # PDF Import Endpoint and Helper Functions
 
+
 def extract_text_from_pdf(file_bytes: bytes) -> str:
     """
     Extract text content from PDF file.
-    
+
     Args:
         file_bytes: PDF file content as bytes
-        
+
     Returns:
         Extracted text content
-        
+
     Raises:
         ValueError: If PDF is corrupted or invalid
     """
@@ -534,29 +548,29 @@ def extract_text_from_pdf(file_bytes: bytes) -> str:
         doc = fitz.open(stream=file_bytes, doc_type="pdf")
     except Exception as e:
         raise ValueError(f"Invalid or corrupted PDF file: {str(e)}")
-    
+
     text_parts = []
     for page_num in range(len(doc)):
         page = doc[page_num]
         text = page.get_text()
         if text.strip():
             text_parts.append(text)
-    
+
     doc.close()
-    
+
     if not text_parts:
         raise ValueError("No text content found in PDF. This may be a scanned image.")
-    
+
     return "\n".join(text_parts)
 
 
 def parse_resume_text(text: str) -> dict:
     """
     Parse extracted text into JSON Resume format.
-    
+
     Args:
         text: Extracted text from PDF
-        
+
     Returns:
         Dictionary in JSON Resume format
     """
@@ -567,12 +581,12 @@ def parse_resume_text(text: str) -> dict:
         "education": [],
         "skills": [],
     }
-    
+
     # Email pattern
-    email_pattern = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
+    email_pattern = r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b"
     # Phone pattern (various formats)
-    phone_pattern = r'(\+?1[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}'
-    
+    phone_pattern = r"(\+?1[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}"
+
     # Extract contact info from first few lines (usually name at top)
     name_candidates = []
     for line in lines[:10]:
@@ -591,30 +605,35 @@ def parse_resume_text(text: str) -> dict:
         if not resume["basics"].get("name") and len(line) > 2 and len(line) < 50:
             if "@" not in line and not re.search(phone_pattern, line):
                 name_candidates.append(line)
-    
+
     if name_candidates:
         resume["basics"]["name"] = name_candidates[0]
-    
+
     # Detect sections
     current_section = None
     current_work = {}
     current_education = {}
-    
+
     section_keywords = {
-        "experience": ["experience", "employment", "work history", "professional experience"],
+        "experience": [
+            "experience",
+            "employment",
+            "work history",
+            "professional experience",
+        ],
         "education": ["education", "academic", "degree", "university", "college"],
         "skills": ["skills", "technical skills", "competencies", "technologies"],
         "summary": ["summary", "objective", "profile", "about"],
     }
-    
+
     work_entries = []
     education_entries = []
     skills_list = []
     summary_text = []
-    
+
     for line in lines:
         line_lower = line.lower().strip()
-        
+
         # Check for section headers
         detected_section = None
         for section, keywords in section_keywords.items():
@@ -622,11 +641,11 @@ def parse_resume_text(text: str) -> dict:
                 if len(line) < 30:  # Likely a header
                     detected_section = section
                     break
-        
+
         if detected_section:
             current_section = detected_section
             continue
-        
+
         # Add content to appropriate section
         if current_section == "experience" and line.strip():
             work_entries.append(line.strip())
@@ -636,7 +655,7 @@ def parse_resume_text(text: str) -> dict:
             skills_list.append(line.strip())
         elif current_section == "summary" and line.strip():
             summary_text.append(line.strip())
-    
+
     # Build work experience entries
     if work_entries:
         # Group consecutive entries into work experiences
@@ -644,11 +663,21 @@ def parse_resume_text(text: str) -> dict:
         current_entry = {}
         for entry in work_entries:
             # Check if this looks like a date line
-            if re.match(r'\d{4}\s*[-–]\s*\d{4}|\d{4}\s*[-–]\s*present', entry, re.IGNORECASE):
+            if re.match(
+                r"\d{4}\s*[-–]\s*\d{4}|\d{4}\s*[-–]\s*present", entry, re.IGNORECASE
+            ):
                 if current_entry:
                     work.append(current_entry)
-                current_entry = {"position": "", "company": "", "startDate": "", "endDate": "", "highlights": []}
-                current_entry["startDate"], current_entry["endDate"] = extract_dates(entry)
+                current_entry = {
+                    "position": "",
+                    "company": "",
+                    "startDate": "",
+                    "endDate": "",
+                    "highlights": [],
+                }
+                current_entry["startDate"], current_entry["endDate"] = extract_dates(
+                    entry
+                )
             elif current_entry is not None:
                 if not current_entry.get("company"):
                     current_entry["company"] = entry
@@ -658,13 +687,13 @@ def parse_resume_text(text: str) -> dict:
                     if "highlights" not in current_entry:
                         current_entry["highlights"] = []
                     current_entry["highlights"].append(entry)
-        
+
         if current_entry and current_entry.get("company"):
             work.append(current_entry)
-        
+
         if work:
             resume["work"] = work
-    
+
     # Build education entries
     if education_entries:
         education = []
@@ -676,63 +705,63 @@ def parse_resume_text(text: str) -> dict:
                 edu["studyType"] = entry
             else:
                 edu["institution"] = entry
-            
+
             # Check for dates
             dates = extract_dates(entry)
             if dates[0]:
                 edu["startDate"] = dates[0]
             if dates[1]:
                 edu["endDate"] = dates[1]
-            
+
             if edu:
                 education.append(edu)
-        
+
         if education:
             resume["education"] = education
-    
+
     # Build skills section
     if skills_list:
         # Parse skills - could be comma-separated or newline-separated
         all_skills = []
         for skill_line in skills_list:
             # Split by common separators
-            parts = re.split(r'[,;|\n]', skill_line)
+            parts = re.split(r"[,;|\n]", skill_line)
             for part in parts:
                 part = part.strip()
                 if part and len(part) < 50:
                     all_skills.append(part)
-        
+
         if all_skills:
             resume["skills"] = [{"name": s} for s in all_skills[:20]]  # Limit to 20
-    
+
     # Add summary if found
     if summary_text:
         resume["basics"]["summary"] = " ".join(summary_text[:3])
-    
+
     return resume
 
 
 def extract_dates(text: str) -> tuple:
     """
     Extract start and end dates from text.
-    
+
     Args:
         text: Text containing date information
-        
+
     Returns:
         Tuple of (start_date, end_date)
     """
     # Pattern for year ranges like "2020-2024" or "2020 - Present"
-    date_pattern = r'(\d{4})\s*[-–]\s*(\d{4}|present|current)'
+    date_pattern = r"(\d{4})\s*[-–]\s*(\d{4}|present|current)"
     match = re.search(date_pattern, text, re.IGNORECASE)
-    
+
     if match:
         start_date = match.group(1)
         end_date = match.group(2)
         if end_date.lower() in ["present", "current"]:
             end_date = ""
         return (start_date, end_date)
-    
+
     return ("", "")
 
 
@@ -750,21 +779,23 @@ def extract_dates(text: str) -> tuple:
     tags=["Import"],
 )
 @rate_limit("10/minute")
-async def import_pdf(request: Request, file: UploadFile = File(...), auth: AuthorizedAPIKey = None):
+async def import_pdf(
+    request: Request, file: UploadFile = File(...), auth: AuthorizedAPIKey = None
+):
     """
     Import resume from PDF file.
-    
+
     Accepts PDF file uploads and extracts resume data in JSON Resume format.
-    
+
     Requires API key authentication via X-API-KEY header.
-    
+
     Rate limit: 10 requests per minute per API key.
-    
+
     Args:
         request: FastAPI Request object
         file: PDF file to import
         auth: API key authentication info (optional)
-    
+
     Returns:
         ResumeData in JSON Resume format
     """
@@ -774,27 +805,27 @@ async def import_pdf(request: Request, file: UploadFile = File(...), auth: Autho
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid file type. Only PDF files are accepted.",
         )
-    
+
     try:
         # Read file content
         content = await file.read()
-        
+
         # Check file size (max 10MB)
         if len(content) > 10 * 1024 * 1024:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="File too large. Maximum size is 10MB.",
             )
-        
+
         # Extract text from PDF
         text = extract_text_from_pdf(content)
-        
+
         # Parse into JSON Resume format
         resume_data = parse_resume_text(text)
-        
+
         # Validate and return
         return ResumeData(**resume_data)
-    
+
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except Exception as e:
@@ -810,22 +841,22 @@ def extract_text_from_docx(file_bytes: bytes) -> str:
         doc = docx.Document(io.BytesIO(file_bytes))
     except Exception as e:
         raise ValueError(f"Invalid or corrupted DOCX file: {str(e)}")
-    
+
     text_parts = []
     for para in doc.paragraphs:
         if para.text.strip():
             text_parts.append(para.text)
-    
+
     # Also extract text from tables
     for table in doc.tables:
         for row in table.rows:
             for cell in row.cells:
                 if cell.text.strip():
                     text_parts.append(cell.text)
-    
+
     if not text_parts:
         raise ValueError("No text content found in DOCX file.")
-    
+
     return "\n".join(text_parts)
 
 
@@ -843,44 +874,49 @@ def extract_text_from_docx(file_bytes: bytes) -> str:
     tags=["Import"],
 )
 @rate_limit("10/minute")
-async def import_docx(request: Request, file: UploadFile = File(...), auth: AuthorizedAPIKey = None):
+async def import_docx(
+    request: Request, file: UploadFile = File(...), auth: AuthorizedAPIKey = None
+):
     """
     Import resume from DOCX file.
-    
+
     Accepts DOCX file uploads and extracts resume data in JSON Resume format.
-    
+
     Requires API key authentication via X-API-KEY header.
-    
+
     Rate limit: 10 requests per minute per API key.
     """
     # Check file type
     content_type = file.content_type
-    if content_type not in ["application/vnd.openxmlformats-officedocument.wordprocessingml.document", "application/vnd.ms-word.document"]:
+    if content_type not in [
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "application/vnd.ms-word.document",
+    ]:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid file type. Only DOCX files are accepted.",
         )
-    
+
     try:
         # Read file content
         content = await file.read()
-        
+
         # Check file size (max 10MB)
         if len(content) > 10 * 1024 * 1024:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="File too large. Maximum size is 10MB.",
             )
-        
+
         # Extract text from DOCX
         text = extract_text_from_docx(content)
-        
+
         # Parse into JSON Resume format
         resume_data = parse_resume_text(text)
-        
+
         # Validate and return
         return ResumeData(**resume_data)
-    
+
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except Exception as e:
@@ -898,18 +934,18 @@ class LinkedInImportRequest(BaseModel):
 async def fetch_linkedin_profile(url: str, api_key: str = None) -> dict:
     """
     Fetch LinkedIn profile data using a third-party API.
-    
+
     This uses the LinkedIn Profile Scraper API as an example.
     The API key should be configured via LINKEDIN_SCRAPER_API_KEY environment variable.
     """
     api_key = api_key or os.getenv("LINKEDIN_SCRAPER_API_KEY")
-    
+
     if not api_key:
         raise ValueError(
             "LinkedIn profile import is not configured. "
             "Please set LINKEDIN_SCRAPER_API_KEY environment variable."
         )
-    
+
     # Example API endpoint - this would need to be configured with actual service
     async with httpx.AsyncClient() as client:
         try:
@@ -917,18 +953,18 @@ async def fetch_linkedin_profile(url: str, api_key: str = None) -> dict:
                 "https://api.linkedinprofile.io/v1/scrape",
                 json={"url": url},
                 headers={"Authorization": f"Bearer {api_key}"},
-                timeout=30.0
+                timeout=30.0,
             )
-            
+
             if response.status_code == 429:
                 raise ValueError("Rate limited. Please try again later.")
             elif response.status_code == 404:
                 raise ValueError("LinkedIn profile not found or is private.")
             elif response.status_code != 200:
                 raise ValueError(f"Failed to fetch LinkedIn profile: {response.text}")
-            
+
             return response.json()
-            
+
         except httpx.TimeoutException:
             raise ValueError("Request timed out. Please try again.")
         except Exception as e:
@@ -943,23 +979,23 @@ def parse_linkedin_to_resume(profile_data: dict) -> dict:
         "education": [],
         "skills": [],
     }
-    
+
     # Extract basics
     if profile_data.get("fullName"):
         resume["basics"]["name"] = profile_data["fullName"]
-    
+
     if profile_data.get("headline"):
         resume["basics"]["headline"] = profile_data["headline"]
-    
+
     if profile_data.get("email"):
         resume["basics"]["email"] = profile_data["email"]
-    
+
     if profile_data.get("phone"):
         resume["basics"]["phone"] = profile_data["phone"]
-    
+
     if profile_data.get("summary"):
         resume["basics"]["summary"] = profile_data["summary"]
-    
+
     # Location
     if profile_data.get("location"):
         location = profile_data["location"]
@@ -967,67 +1003,67 @@ def parse_linkedin_to_resume(profile_data: dict) -> dict:
             resume["basics"]["location"] = {
                 "city": location.get("city", ""),
                 "region": location.get("region", ""),
-                "countryCode": location.get("countryCode", "")
+                "countryCode": location.get("countryCode", ""),
             }
         else:
             resume["basics"]["location"] = {"address": str(location)}
-    
+
     # Extract work experience
     for job in profile_data.get("experience", []):
         work_entry = {}
-        
+
         if job.get("title"):
             work_entry["position"] = job["title"]
-        
+
         if job.get("companyName"):
             work_entry["company"] = job["companyName"]
-        
+
         if job.get("startDate"):
             work_entry["startDate"] = job["startDate"]
-        
+
         if job.get("endDate"):
             work_entry["endDate"] = job["endDate"]
         elif job.get("current"):
             work_entry["endDate"] = ""
-        
+
         if job.get("description"):
             work_entry["summary"] = job["description"]
-        
+
         if job.get("highlights"):
             work_entry["highlights"] = job["highlights"]
-        
+
         if work_entry:
             resume["work"].append(work_entry)
-    
+
     # Extract education
     for edu in profile_data.get("education", []):
         edu_entry = {}
-        
+
         if edu.get("schoolName"):
             edu_entry["institution"] = edu["schoolName"]
-        
+
         if edu.get("degreeName"):
             edu_entry["studyType"] = edu["degreeName"]
-        
+
         if edu.get("fieldOfStudy"):
             edu_entry["area"] = edu["fieldOfStudy"]
-        
+
         if edu.get("startDate"):
             edu_entry["startDate"] = edu["startDate"]
-        
+
         if edu.get("endDate"):
             edu_entry["endDate"] = edu["endDate"]
-        
+
         if edu_entry:
             resume["education"].append(edu_entry)
-    
+
     # Extract skills
     for skill in profile_data.get("skills", []):
         if isinstance(skill, str):
             resume["skills"].append({"name": skill})
         elif isinstance(skill, dict) and skill.get("name"):
             resume["skills"].append({"name": skill["name"]})
-    
+
     return resume
 
 
@@ -1045,46 +1081,48 @@ def parse_linkedin_to_resume(profile_data: dict) -> dict:
     tags=["Import"],
 )
 @rate_limit("5/minute")
-async def import_linkedin(request: Request, body: LinkedInImportRequest, auth: AuthorizedAPIKey = None):
+async def import_linkedin(
+    request: Request, body: LinkedInImportRequest, auth: AuthorizedAPIKey = None
+):
     """
     Import resume from LinkedIn profile.
-    
+
     Accepts LinkedIn profile URL and fetches profile data using configured API.
-    
+
     Requires API key authentication via X-API-KEY header.
-    
+
     Rate limit: 5 requests per minute per API key.
-    
+
     Configuration:
     - LINKEDIN_SCRAPER_API_KEY: API key for LinkedIn scraping service
     """
     # Validate URL
     linkedin_url = body.url.strip()
-    
+
     # Check if it's a valid LinkedIn URL
     if "linkedin.com" not in linkedin_url.lower():
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid LinkedIn profile URL.",
         )
-    
+
     # Check for common LinkedIn URL patterns
-    if not re.search(r'linkedin\.com/(in|pub|profile)/', linkedin_url):
+    if not re.search(r"linkedin\.com/(in|pub|profile)/", linkedin_url):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid LinkedIn profile URL format.",
         )
-    
+
     try:
         # Fetch profile data
         profile_data = await fetch_linkedin_profile(linkedin_url)
-        
+
         # Parse to JSON Resume format
         resume_data = parse_linkedin_to_resume(profile_data)
-        
+
         # Return validated data
         return ResumeData(**resume_data)
-    
+
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except Exception as e:
@@ -1096,21 +1134,19 @@ async def import_linkedin(request: Request, body: LinkedInImportRequest, auth: A
 
 # Cover Letter Generation
 
+
 class CoverLetterRequest(BaseModel):
     """Request to generate a cover letter."""
 
     resume_data: ResumeData = Field(..., description="Resume data")
     job_description: str = Field(
-        ...,
-        min_length=10,
-        max_length=50000,
-        description="Job description text"
+        ..., min_length=10, max_length=50000, description="Job description text"
     )
     company_name: str = Field(..., max_length=200, description="Company name")
     job_title: str = Field(..., max_length=200, description="Job title")
     tone: str = Field(
         default="professional",
-        description="Tone of the cover letter (professional, casual, formal)"
+        description="Tone of the cover letter (professional, casual, formal)",
     )
 
 
@@ -1139,29 +1175,27 @@ class CoverLetterResponse(BaseModel):
 )
 @rate_limit("10/minute")
 async def generate_cover_letter(
-    request: Request,
-    body: CoverLetterRequest,
-    auth: AuthorizedAPIKey = None
+    request: Request, body: CoverLetterRequest, auth: AuthorizedAPIKey = None
 ):
     """
     Generate a cover letter based on resume and job description.
-    
+
     Requires API key authentication via X-API-KEY header.
-    
+
     Rate limit: 10 requests per minute per API key.
-    
+
     Args:
         request: FastAPI Request object
         body: CoverLetterRequest containing resume_data and job details
         auth: API key authentication info
-    
+
     Returns:
         CoverLetterResponse with generated cover letter
     """
     try:
         # Convert Pydantic model to dict
         resume_dict = body.resume_data.model_dump(exclude_none=True)
-        
+
         # Initialize cover letter generator
         ai_provider = os.getenv("AI_PROVIDER", "openai")
         cover_letter_gen = CoverLetterGenerator(
@@ -1169,7 +1203,7 @@ async def generate_cover_letter(
             api_key=os.getenv(f"{ai_provider.upper()}_API_KEY"),
             model=os.getenv("AI_MODEL"),
         )
-        
+
         # Generate cover letter
         cover_letter = cover_letter_gen.generate_cover_letter(
             resume_data=resume_dict,
@@ -1178,9 +1212,9 @@ async def generate_cover_letter(
             job_title=body.job_title,
             tone=body.tone,
         )
-        
+
         return CoverLetterResponse(**cover_letter)
-    
+
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except Exception as e:
