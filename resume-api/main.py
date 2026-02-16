@@ -22,6 +22,11 @@ from middleware.monitoring import MonitoringMiddleware
 from monitoring import logging_config, health, alerting, analytics
 from slowapi.errors import RateLimitExceeded
 
+# Import new feature routes
+from routes.interviews import router as interviews_router
+from routes.salary import router as salary_router
+from routes.linkedin import router as linkedin_router
+
 # Get logger
 logger = logging_config.get_logger(__name__)
 
@@ -212,6 +217,11 @@ async def endpoint_popularity(hours: int = 24, limit: int = 10):
 
 # Include API routes
 app.include_router(router)
+
+# Include new feature routes
+app.include_router(interviews_router)
+app.include_router(salary_router)
+app.include_router(linkedin_router)
 
 
 # WebSocket endpoint for real-time collaboration
