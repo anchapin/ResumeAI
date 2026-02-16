@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTheme } from '../hooks/useTheme';
 
 /**
@@ -13,6 +13,50 @@ import { useTheme } from '../hooks/useTheme';
  */
 const Settings: React.FC = () => {
   const { isDark, toggleTheme } = useTheme();
+  
+  // API Key state
+  const [apiKey, setApiKey] = useState<string>('');
+  const [showApiKey, setShowApiKey] = useState<boolean>(false);
+  const [isApiKeySaved, setIsApiKeySaved] = useState<boolean>(false);
+  const [apiKeyError, setApiKeyError] = useState<string | null>(null);
+  
+  // Load API key from localStorage on mount
+  useEffect(() => {
+    const storedKey = localStorage.getItem('RESUMEAI_API_KEY');
+    if (storedKey) {
+      setApiKey(storedKey);
+      setIsApiKeySaved(true);
+    }
+  }, []);
+  
+  // Handle API key save
+  const handleSaveApiKey = () => {
+    setApiKeyError(null);
+    
+    // Basic validation
+    if (!apiKey.trim()) {
+      setApiKeyError('API key is required');
+      return;
+    }
+    
+    if (apiKey.length < 10) {
+      setApiKeyError('API key seems too short. Please check and try again.');
+      return;
+    }
+    
+    // Save to localStorage
+    localStorage.setItem('RESUMEAI_API_KEY', apiKey.trim());
+    setIsApiKeySaved(true);
+  };
+  
+  // Handle API key removal
+  const handleRemoveApiKey = () => {
+    localStorage.removeItem('RESUMEAI_API_KEY');
+    setApiKey('');
+    setIsApiKeySaved(false);
+    setApiKeyError(null);
+  };
+  
   return (
     <div className="flex-1 min-h-screen bg-[#f6f6f8] pl-72">
       {/* Header */}
@@ -31,6 +75,82 @@ const Settings: React.FC = () => {
       </header>
 
       <div className="p-8 max-w-[1000px] mx-auto space-y-8">
+        {/* API Key Management */}
+        <section className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+          <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50">
+            <h3 className="text-lg font-bold text-slate-900">API Key Configuration</h3>
+            <p className="text-sm text-slate-500">Manage your API key for backend authentication</p>
+          </div>
+          <div className="p-6 space-y-4">
+            {/* API Key Status Indicator */}
+            <div className="flex items-center gap-2 mb-4">
+              {isApiKeySaved ? (
+                <span className="inline-flex items-center gap-1 px-3 py-1 bg-green-50 text-green-700 rounded-full text-sm font-medium">
+                  <span className="material-symbols-outlined text-[16px]">check_circle</span>
+                  API Key Configured
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 px-3 py-1 bg-amber-50 text-amber-700 rounded-full text-sm font-medium">
+                  <span className="material-symbols-outlined text-[16px]">warning</span>
+                  API Key Not Set
+                </span>
+              )}
+            </div>
+            
+            {/* API Key Input */}
+            <div className="space-y-2">
+              <label className="text-sm font-bold text-slate-700">API Key</label>
+              <div className="relative">
+                <input
+                  type={showApiKey ? 'text' : 'password'}
+                  value={apiKey}
+                  onChange={(e) => setApiKey(e.target.value)}
+                  placeholder="Enter your API key (e.g., resume-api-xxxxx)"
+                  className="w-full px-4 py-3 pr-12 rounded-lg border border-slate-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all text-slate-900 font-mono"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowApiKey(!showApiKey)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                >
+                  <span className="material-symbols-outlined text-[20px]">
+                    {showApiKey ? 'visibility_off' : 'visibility'}
+                  </span>
+                </button>
+              </div>
+              <p className="text-xs text-slate-500">
+                Get your API key from the backend dashboard. Required for PDF generation and AI tailoring features.
+              </p>
+            </div>
+            
+            {/* Error Message */}
+            {apiKeyError && (
+              <div className="flex items-center gap-2 text-red-600 text-sm">
+                <span className="material-symbols-outlined text-[16px]">error</span>
+                {apiKeyError}
+              </div>
+            )}
+            
+            {/* Action Buttons */}
+            <div className="flex items-center gap-3 pt-2">
+              <button
+                onClick={handleSaveApiKey}
+                className="px-5 py-2 rounded-lg bg-primary-600 text-white font-bold text-sm hover:bg-primary-700 transition-colors shadow-lg shadow-primary-600/20"
+              >
+                Save API Key
+              </button>
+              {isApiKeySaved && (
+                <button
+                  onClick={handleRemoveApiKey}
+                  className="px-5 py-2 rounded-lg border border-red-200 text-red-600 font-bold text-sm hover:bg-red-50 transition-colors"
+                >
+                  Remove API Key
+                </button>
+              )}
+            </div>
+          </div>
+        </section>
+
         {/* Profile Settings */}
         <section className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
           <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50">

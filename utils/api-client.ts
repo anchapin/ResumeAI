@@ -10,6 +10,7 @@ import {
   FormatOptions,
   UserSettings,
   ResumeData,
+  SimpleResumeData,
 } from '../types';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
@@ -53,6 +54,187 @@ export async function createResume(
 
   if (!response.ok) {
     throw new Error('Failed to create resume');
+  }
+
+  return response.json();
+}
+
+// ============ PDF Generation ============
+
+/**
+ * Resume data for PDF generation (API format)
+ */
+export interface ResumeDataForAPI {
+  basics?: {
+    name?: string;
+    label?: string;
+    email?: string;
+    phone?: string;
+    url?: string;
+    summary?: string;
+    location?: {
+      address?: string;
+      postalCode?: string;
+      city?: string;
+      countryCode?: string;
+      region?: string;
+    };
+  };
+  work?: Array<{
+    company?: string;
+    position?: string;
+    startDate?: string;
+    endDate?: string;
+    summary?: string;
+    highlights?: string[];
+  }>;
+  education?: Array<{
+    institution?: string;
+    area?: string;
+    studyType?: string;
+    startDate?: string;
+    endDate?: string;
+    courses?: string[];
+  }>;
+  skills?: Array<{
+    name?: string;
+    keywords?: string[];
+  }>;
+  projects?: Array<{
+    name?: string;
+    description?: string;
+    url?: string;
+    roles?: string[];
+    startDate?: string;
+    endDate?: string;
+    highlights?: string[];
+  }>;
+}
+
+/**
+ * Convert SimpleResumeData to API format
+ */
+export function convertToAPIData(resumeData: SimpleResumeData): ResumeDataForAPI {
+  return {
+    basics: {
+      name: resumeData.name,
+      email: resumeData.email,
+      phone: resumeData.phone,
+      summary: resumeData.summary,
+      location: { city: resumeData.location },
+    },
+    work: resumeData.experience.map(exp => ({
+      company: exp.company,
+      position: exp.role,
+      startDate: exp.startDate,
+      endDate: exp.endDate,
+      summary: exp.description,
+    })),
+    education: resumeData.education.map(edu => ({
+      institution: edu.institution,
+      area: edu.area,
+      studyType: edu.studyType,
+      startDate: edu.startDate,
+      endDate: edu.endDate,
+      courses: edu.courses,
+    })),
+    skills: resumeData.skills.map(skill => ({ name: skill })),
+    projects: resumeData.projects.map(proj => ({
+      name: proj.name,
+      description: proj.description,
+      url: proj.url,
+      roles: proj.roles,
+      startDate: proj.startDate,
+      endDate: proj.endDate,
+      highlights: proj.highlights,
+    })),
+  };
+}
+
+/**
+ * Generate PDF from resume data
+ */
+export async function generatePDF(
+  resumeData: ResumeDataForAPI,
+  variant: string = 'modern'
+): Promise<Blob> {
+  const response = await fetch(`${API_URL}/v1/render/pdf`, {
+    method: 'POST',
+    headers: { ...getHeaders(), 'Content-Type': 'application/json' },
+    body: JSON.stringify({ resume_data: resumeData, variant }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ detail: 'PDF generation failed' }));
+    throw new Error(error.detail || 'Failed to generate PDF');
+  }
+
+  return response.blob();
+}
+
+// ============ Template Variants ============
+
+export interface VariantMetadata {
+  name: string;
+  display_name: string;
+  description: string;
+  category: string;
+  style: string;
+  features: string[];
+  recommended_for: string[];
+  color_schemes: Array<{ name: string; primary: number[]; accent: number[]; secondary: number[] }>;
+}
+
+export interface VariantsResponse {
+  variants: VariantMetadata[];
+}
+
+/**
+ * Fetch available template variants
+ */
+export async function getVariants(filters?: { search?: string; category?: string; tags?: string[] }): Promise<VariantMetadata[]> {
+  const params = new URLSearchParams();
+  if (filters?.search) params.append('search', filters.search);
+  if (filters?.category) params.append('category', filters.category);
+  if (filters?.tags) params.append('tags', filters.tags.join(','));
+
+  const response = await fetch(`${API_URL}/v1/variants?${params}`, { headers: getHeaders() });
+  if (!response.ok) throw new Error('Failed to fetch variants');
+  const data: VariantsResponse = await response.json();
+  return data.variants;
+}
+
+// ============ Resume Tailoring ============
+
+export interface TailoredResumeResponse {
+  resume_data: ResumeDataForAPI;
+  keywords: string[];
+  suggestions: string[];
+}
+
+/**
+ * Tailor resume to job description
+ */
+export async function tailorResume(
+  resumeData: ResumeDataForAPI,
+  jobDescription: string,
+  companyName?: string,
+  jobTitle?: string
+): Promise<TailoredResumeResponse> {
+  const response = await fetch(`${API_URL}/v1/tailor`, {
+    method: 'POST',
+    headers: { ...getHeaders(), 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      resume_data: resumeData,
+      job_description: jobDescription,
+      company_name: companyName,
+      job_title: jobTitle,
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ detail: 'Resume tailoring failed' }));
+    throw new Error(error.detail || 'Failed to tailor resume');
   }
 
   return response.json();
