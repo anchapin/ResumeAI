@@ -1,0 +1,3 @@
+## 2024-05-23 - Storage Optimization Rejected
+**Learning:** Checking for localStorage availability by writing to it is an anti-pattern for performance, but replacing it with a simple existence check (`typeof localStorage !== 'undefined'`) can reduce robustness by masking `QuotaExceededError` or `SecurityError` (e.g., Safari Private Mode).
+**Action:** When optimizing browser API checks, ensure that error handling (like catching `QuotaExceededError`) is preserved or improved, and be aware that simple existence checks might report false positives for usability. If robust detection requires I/O, consider caching the result (lazy initialization) instead of removing the check or repeating it.
