@@ -35,7 +35,7 @@ from .models import (
 lib_path = Path(__file__).parent.parent
 sys.path.insert(0, str(lib_path))
 
-from lib.cli import ResumeGenerator, ResumeTailorer, VariantManager, ATSChecker  # noqa: E402
+from lib.cli import ResumeGenerator, ResumeTailorer, VariantManager, CoverLetterGenerator  # noqa: E402
 
 # Import authentication and rate limiting
 from config.dependencies import AuthorizedAPIKey, limiter  # noqa: E402
@@ -1095,34 +1095,40 @@ async def import_linkedin(request: Request, body: LinkedInImportRequest, auth: A
         )
 
 
-# ATS Compatibility Checker
+# Cover Letter Generation
 
-class ATSCheckRequest(BaseModel):
-    """Request to check ATS compatibility."""
+class CoverLetterRequest(BaseModel):
+    """Request to generate a cover letter."""
 
-    resume_data: ResumeData = Field(..., description="Resume data to check")
-    job_description: Optional[str] = Field(
-        None, description="Optional job description for keyword matching"
+    resume_data: ResumeData = Field(..., description="Resume data")
+    job_description: str = Field(
+        ...,
+        min_length=10,
+        max_length=50000,
+        description="Job description text"
     )
-    industry: str = Field(
-        default="general",
-        description="Industry for keyword analysis (technology, marketing, finance, healthcare, general)"
+    company_name: str = Field(..., max_length=200, description="Company name")
+    job_title: str = Field(..., max_length=200, description="Job title")
+    tone: str = Field(
+        default="professional",
+        description="Tone of the cover letter (professional, casual, formal)"
     )
 
 
-class ATSCheckResponse(BaseModel):
-    """Response with ATS compatibility check results."""
+class CoverLetterResponse(BaseModel):
+    """Response with generated cover letter."""
 
-    score: float
-    issues: List[str]
-    suggestions: List[str]
-    passed_checks: List[str]
-    failed_checks: List[str]
+    header: str
+    introduction: str
+    body: str
+    closing: str
+    full_text: str
+    metadata: dict
 
 
 @router.post(
-    "/v1/ats/check",
-    response_model=ATSCheckResponse,
+    "/v1/cover-letter",
+    response_model=CoverLetterResponse,
     responses={
         400: {"model": ErrorResponse},
         401: {"model": ErrorResponse},
@@ -1130,79 +1136,56 @@ class ATSCheckResponse(BaseModel):
         429: {"model": ErrorResponse},
         500: {"model": ErrorResponse},
     },
-    tags=["ATS"],
+    tags=["Cover Letter"],
 )
-@rate_limit("20/minute")
-async def check_ats_compatibility(
+@rate_limit("10/minute")
+async def generate_cover_letter(
     request: Request,
-    body: ATSCheckRequest,
+    body: CoverLetterRequest,
     auth: AuthorizedAPIKey = None
 ):
     """
-    Check resume compatibility with ATS systems.
+    Generate a cover letter based on resume and job description.
     
     Requires API key authentication via X-API-KEY header.
     
-    Rate limit: 20 requests per minute per API key.
+    Rate limit: 10 requests per minute per API key.
     
     Args:
         request: FastAPI Request object
-        body: ATSCheckRequest containing resume_data
+        body: CoverLetterRequest containing resume_data and job details
         auth: API key authentication info
     
     Returns:
-        ATSCheckResponse with compatibility analysis
+        CoverLetterResponse with generated cover letter
     """
     try:
         # Convert Pydantic model to dict
         resume_dict = body.resume_data.model_dump(exclude_none=True)
         
-        # Initialize ATS checker
-        ats_checker = ATSChecker()
+        # Initialize cover letter generator
+        ai_provider = os.getenv("AI_PROVIDER", "openai")
+        cover_letter_gen = CoverLetterGenerator(
+            ai_provider=ai_provider,
+            api_key=os.getenv(f"{ai_provider.upper()}_API_KEY"),
+            model=os.getenv("AI_MODEL"),
+        )
         
-        # Run ATS check
-        result = ats_checker.check_resume(
+        # Generate cover letter
+        cover_letter = cover_letter_gen.generate_cover_letter(
             resume_data=resume_dict,
             job_description=body.job_description,
-            industry=body.industry
+            company_name=body.company_name,
+            job_title=body.job_title,
+            tone=body.tone,
         )
         
-        return ATSCheckResponse(
-            score=result.score,
-            issues=result.issues,
-            suggestions=result.suggestions,
-            passed_checks=result.passed_checks,
-            failed_checks=result.failed_checks
-        )
+        return CoverLetterResponse(**cover_letter)
     
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"ATS check failed: {str(e)}",
+            detail=f"Cover letter generation failed: {str(e)}",
         )
-
-
-@router.get(
-    "/v1/ats/formats",
-    responses={
-        200: {"description": "List of supported file formats and their scores"},
-        500: {"model": ErrorResponse},
-    },
-    tags=["ATS"],
-)
-async def list_ats_formats():
-    """
-    List supported file formats and their ATS compatibility scores.
-    
-    Returns:
-        Dictionary of file extensions and their compatibility scores
-    """
-    return {
-        ".docx": {"score": 100, "description": "Microsoft Word (recommended)"},
-        ".pdf": {"score": 95, "description": "PDF (widely supported)"},
-        ".doc": {"score": 85, "description": "Legacy Word format"},
-        ".rtf": {"score": 75, "description": "Rich Text Format"},
-        ".txt": {"score": 70, "description": "Plain text (least compatible)"},
-    }
