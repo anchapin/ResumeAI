@@ -10,7 +10,7 @@ from pathlib import Path
 
 from fastapi import APIRouter, HTTPException, Request, UploadFile, File, status
 from fastapi.responses import Response
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 import docx
 from docx import Document
@@ -34,7 +34,7 @@ from .models import (
 lib_path = Path(__file__).parent.parent
 sys.path.insert(0, str(lib_path))
 
-from lib.cli import ResumeGenerator, ResumeTailorer, VariantManager  # noqa: E402
+from lib.cli import ResumeGenerator, ResumeTailorer, VariantManager, CoverLetterGenerator  # noqa: E402
 
 # Import authentication and rate limiting
 from config.dependencies import AuthorizedAPIKey, limiter  # noqa: E402
@@ -1091,4 +1091,100 @@ async def import_linkedin(request: Request, body: LinkedInImportRequest, auth: A
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"LinkedIn import failed: {str(e)}",
+        )
+
+
+# Cover Letter Generation
+
+class CoverLetterRequest(BaseModel):
+    """Request to generate a cover letter."""
+
+    resume_data: ResumeData = Field(..., description="Resume data")
+    job_description: str = Field(
+        ...,
+        min_length=10,
+        max_length=50000,
+        description="Job description text"
+    )
+    company_name: str = Field(..., max_length=200, description="Company name")
+    job_title: str = Field(..., max_length=200, description="Job title")
+    tone: str = Field(
+        default="professional",
+        description="Tone of the cover letter (professional, casual, formal)"
+    )
+
+
+class CoverLetterResponse(BaseModel):
+    """Response with generated cover letter."""
+
+    header: str
+    introduction: str
+    body: str
+    closing: str
+    full_text: str
+    metadata: dict
+
+
+@router.post(
+    "/v1/cover-letter",
+    response_model=CoverLetterResponse,
+    responses={
+        400: {"model": ErrorResponse},
+        401: {"model": ErrorResponse},
+        403: {"model": ErrorResponse},
+        429: {"model": ErrorResponse},
+        500: {"model": ErrorResponse},
+    },
+    tags=["Cover Letter"],
+)
+@rate_limit("10/minute")
+async def generate_cover_letter(
+    request: Request,
+    body: CoverLetterRequest,
+    auth: AuthorizedAPIKey = None
+):
+    """
+    Generate a cover letter based on resume and job description.
+    
+    Requires API key authentication via X-API-KEY header.
+    
+    Rate limit: 10 requests per minute per API key.
+    
+    Args:
+        request: FastAPI Request object
+        body: CoverLetterRequest containing resume_data and job details
+        auth: API key authentication info
+    
+    Returns:
+        CoverLetterResponse with generated cover letter
+    """
+    try:
+        # Convert Pydantic model to dict
+        resume_dict = body.resume_data.model_dump(exclude_none=True)
+        
+        # Initialize cover letter generator
+        ai_provider = os.getenv("AI_PROVIDER", "openai")
+        cover_letter_gen = CoverLetterGenerator(
+            ai_provider=ai_provider,
+            api_key=os.getenv(f"{ai_provider.upper()}_API_KEY"),
+            model=os.getenv("AI_MODEL"),
+        )
+        
+        # Generate cover letter
+        cover_letter = cover_letter_gen.generate_cover_letter(
+            resume_data=resume_dict,
+            job_description=body.job_description,
+            company_name=body.company_name,
+            job_title=body.job_title,
+            tone=body.tone,
+        )
+        
+        return CoverLetterResponse(**cover_letter)
+    
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Cover letter generation failed: {str(e)}",
         )
