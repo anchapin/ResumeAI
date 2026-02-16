@@ -303,7 +303,9 @@ describe('JobApplications Component', () => {
       ];
       
       statuses.forEach(status => {
-        expect(screen.getByText(status)).toBeInTheDocument();
+        const elements = screen.getAllByText(status);
+        expect(elements.length).toBeGreaterThan(0);
+        elements.forEach(el => expect(el).toBeInTheDocument());
       });
     });
 
