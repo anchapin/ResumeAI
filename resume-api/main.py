@@ -229,10 +229,10 @@ app.include_router(linkedin_router)
 async def websocket_resume(websocket, resume_id: str, user_id: str = None):
     """
     WebSocket endpoint for real-time collaboration on resumes.
-    
+
     Connect to collaborate on a specific resume:
     ws://host/ws/resumes/{resume_id}?user_id=optional_user_id
-    
+
     Message types:
     - cursor_update: Broadcast cursor position
     - resume_update: Broadcast resume data changes
