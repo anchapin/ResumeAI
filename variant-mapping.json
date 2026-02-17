@@ -1,0 +1,64 @@
+{
+  "description": "Variant mapping between resume-cli and ResumeAI template systems",
+  "version": "1.0.0",
+  "mappings": {
+    "base": {
+      "resume_cli": "v1.0.0-base",
+      "resumeai": "base",
+      "description": "General software engineering resume",
+      "equivalent": true
+    },
+    "backend": {
+      "resume_cli": "v1.1.0-backend",
+      "resumeai": "technical",
+      "description": "Backend & DevOps specialization",
+      "equivalent": true
+    },
+    "ml_ai": {
+      "resume_cli": "v1.2.0-ml_ai",
+      "resumeai": "technical",
+      "description": "ML/AI specialization",
+      "equivalent": true
+    },
+    "fullstack": {
+      "resume_cli": "v1.3.0-fullstack",
+      "resumeai": "modern",
+      "description": "Full-stack specialization",
+      "equivalent": true
+    },
+    "devops": {
+      "resume_cli": "v1.4.0-devops",
+      "resumeai": "technical",
+      "description": "DevOps & Infrastructure specialization",
+      "equivalent": true
+    },
+    "leadership": {
+      "resume_cli": "v1.5.0-leadership",
+      "resumeai": "executive",
+      "description": "Leadership & Technical Staff",
+      "equivalent": true
+    }
+  },
+  "resume_cli_variants": [
+    "v1.0.0-base",
+    "v1.1.0-backend",
+    "v1.2.0-ml_ai",
+    "v1.3.0-fullstack",
+    "v1.4.0-devops",
+    "v1.5.0-leadership"
+  ],
+  "resumeai_templates": [
+    "base",
+    "modern",
+    "technical",
+    "creative",
+    "executive",
+    "academic"
+  ],
+  "notes": [
+    "ResumeAI uses template names: base, modern, technical, creative, executive, academic",
+    "resume-cli uses versioned variant names: v1.x.x-variant",
+    "This mapping provides equivalence between the two systems",
+    "Additional ResumeAI templates (creative, executive, academic) have no resume-cli equivalent"
+  ]
+}
