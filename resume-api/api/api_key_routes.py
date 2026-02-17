@@ -18,11 +18,10 @@ from typing import List, Optional, Annotated
 from fastapi import APIRouter, HTTPException, Query, status, Depends
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func
+from sqlalchemy import select
 
-from database import get_async_session, APIKey, User
+from database import get_async_session, APIKey
 from config.dependencies import get_current_user, CurrentUser
-from config import settings
 from monitoring import logging_config
 
 # Get logger
