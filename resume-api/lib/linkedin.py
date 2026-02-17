@@ -80,9 +80,9 @@ class LinkedInImporter:
         # Detect format and normalize
         format_type = self.detect_format(data)
 
-        if format_type == 'scraper':
+        if format_type == "scraper":
             return self._parse_scraper_format(data)
-        elif format_type == 'minimal':
+        elif format_type == "minimal":
             return self._parse_minimal_format(data)
         else:
             return self._parse_standard_format(data)
@@ -137,12 +137,14 @@ class LinkedInImporter:
             result["projects"] = self._parse_projects(data["projects"])
 
         # Certifications
-        if 'certifications' in data:
-            result['certifications'] = self._parse_certifications(data['certifications'])
+        if "certifications" in data:
+            result["certifications"] = self._parse_certifications(
+                data["certifications"]
+            )
 
         # Volunteer
-        if 'volunteer' in data:
-            result['volunteer'] = self._parse_volunteer(data['volunteer'])
+        if "volunteer" in data:
+            result["volunteer"] = self._parse_volunteer(data["volunteer"])
 
         return result
 
@@ -151,43 +153,43 @@ class LinkedInImporter:
         result = {}
 
         # Basic info
-        if 'fullName' in data:
-            result['name'] = data['fullName']
-        elif 'name' in data:
-            result['name'] = data['name']
+        if "fullName" in data:
+            result["name"] = data["fullName"]
+        elif "name" in data:
+            result["name"] = data["name"]
 
-        if 'headline' in data:
-            result['headline'] = data['headline']
+        if "headline" in data:
+            result["headline"] = data["headline"]
 
-        if 'summary' in data or 'about' in data:
-            result['summary'] = data.get('summary') or data.get('about', '')
+        if "summary" in data or "about" in data:
+            result["summary"] = data.get("summary") or data.get("about", "")
 
         # Contact info
-        if 'email' in data:
-            result['email'] = data['email']
+        if "email" in data:
+            result["email"] = data["email"]
 
-        if 'phone' in data:
-            result['phone'] = data['phone']
+        if "phone" in data:
+            result["phone"] = data["phone"]
 
         # Location handling - can be string or object
-        location = data.get('location') or data.get('city')
+        location = data.get("location") or data.get("city")
         if location:
             if isinstance(location, dict):
-                result['location'] = location.get('city') or location.get('name', '')
+                result["location"] = location.get("city") or location.get("name", "")
             else:
-                result['location'] = str(location)
+                result["location"] = str(location)
 
         # Experience
-        if 'experience' in data:
-            result['experience'] = self._parse_scraper_experience(data['experience'])
+        if "experience" in data:
+            result["experience"] = self._parse_scraper_experience(data["experience"])
 
         # Education
-        if 'education' in data:
-            result['education'] = self._parse_scraper_education(data['education'])
+        if "education" in data:
+            result["education"] = self._parse_scraper_education(data["education"])
 
         # Skills
-        if 'skills' in data:
-            result['skills'] = self._parse_scraper_skills(data['skills'])
+        if "skills" in data:
+            result["skills"] = self._parse_scraper_skills(data["skills"])
 
         return result
 
@@ -196,36 +198,40 @@ class LinkedInImporter:
         result = {}
 
         # Basic info
-        if 'name' in data:
-            result['name'] = data['name']
+        if "name" in data:
+            result["name"] = data["name"]
 
-        if 'headline' in data or 'title' in data or 'role' in data:
-            result['headline'] = data.get('headline') or data.get('title') or data.get('role', '')
+        if "headline" in data or "title" in data or "role" in data:
+            result["headline"] = (
+                data.get("headline") or data.get("title") or data.get("role", "")
+            )
 
-        if 'summary' in data or 'bio' in data or 'about' in data:
-            result['summary'] = data.get('summary') or data.get('bio') or data.get('about', '')
+        if "summary" in data or "bio" in data or "about" in data:
+            result["summary"] = (
+                data.get("summary") or data.get("bio") or data.get("about", "")
+            )
 
         # Contact info
-        if 'email' in data:
-            result['email'] = data['email']
+        if "email" in data:
+            result["email"] = data["email"]
 
-        if 'phone' in data:
-            result['phone'] = data['phone']
+        if "phone" in data:
+            result["phone"] = data["phone"]
 
-        if 'location' in data or 'city' in data:
-            result['location'] = data.get('location') or data.get('city', '')
+        if "location" in data or "city" in data:
+            result["location"] = data.get("location") or data.get("city", "")
 
         # Experience
-        if 'experience' in data:
-            result['experience'] = self._parse_minimal_experience(data['experience'])
+        if "experience" in data:
+            result["experience"] = self._parse_minimal_experience(data["experience"])
 
         # Education
-        if 'education' in data:
-            result['education'] = self._parse_minimal_education(data['education'])
+        if "education" in data:
+            result["education"] = self._parse_minimal_education(data["education"])
 
         # Skills
-        if 'skills' in data:
-            result['skills'] = self._parse_minimal_skills(data['skills'])
+        if "skills" in data:
+            result["skills"] = self._parse_minimal_skills(data["skills"])
 
         return result
 
@@ -338,23 +344,25 @@ class LinkedInImporter:
         result = []
         for exp in experience:
             entry = {
-                'id': str(hash(f"{exp.get('companyName', '')}{exp.get('title', '')}"))[:8],
-                'company': exp.get('companyName', '') or exp.get('company', ''),
-                'role': exp.get('title', '') or exp.get('position', ''),
-                'description': exp.get('description', '') or exp.get('summary', ''),
+                "id": str(hash(f"{exp.get('companyName', '')}{exp.get('title', '')}"))[
+                    :8
+                ],
+                "company": exp.get("companyName", "") or exp.get("company", ""),
+                "role": exp.get("title", "") or exp.get("position", ""),
+                "description": exp.get("description", "") or exp.get("summary", ""),
             }
 
             # Handle date formats from scraper
-            start_date = exp.get('startDate', '')
-            end_date = exp.get('endDate', '')
+            start_date = exp.get("startDate", "")
+            end_date = exp.get("endDate", "")
 
             if start_date:
-                entry['startDate'] = self._normalize_date(start_date)
-            if end_date and end_date.lower() not in ['present', 'current', 'now']:
-                entry['endDate'] = self._normalize_date(end_date)
+                entry["startDate"] = self._normalize_date(start_date)
+            if end_date and end_date.lower() not in ["present", "current", "now"]:
+                entry["endDate"] = self._normalize_date(end_date)
             else:
-                entry['current'] = True
-                entry['endDate'] = ''
+                entry["current"] = True
+                entry["endDate"] = ""
 
             result.append(entry)
         return result
@@ -364,19 +372,21 @@ class LinkedInImporter:
         result = []
         for edu in education:
             entry = {
-                'id': str(hash(f"{edu.get('schoolName', '')}{edu.get('degreeName', '')}"))[:8],
-                'institution': edu.get('schoolName', '') or edu.get('institution', ''),
-                'studyType': edu.get('degreeName', '') or edu.get('degree', ''),
-                'area': edu.get('fieldOfStudy', '') or edu.get('area', ''),
+                "id": str(
+                    hash(f"{edu.get('schoolName', '')}{edu.get('degreeName', '')}")
+                )[:8],
+                "institution": edu.get("schoolName", "") or edu.get("institution", ""),
+                "studyType": edu.get("degreeName", "") or edu.get("degree", ""),
+                "area": edu.get("fieldOfStudy", "") or edu.get("area", ""),
             }
 
-            start_date = edu.get('startDate', '')
-            end_date = edu.get('endDate', '')
+            start_date = edu.get("startDate", "")
+            end_date = edu.get("endDate", "")
 
             if start_date:
-                entry['startDate'] = self._normalize_date(start_date)
+                entry["startDate"] = self._normalize_date(start_date)
             if end_date:
-                entry['endDate'] = self._normalize_date(end_date)
+                entry["endDate"] = self._normalize_date(end_date)
 
             result.append(entry)
         return result
@@ -388,7 +398,7 @@ class LinkedInImporter:
             if isinstance(skill, str):
                 result.append(skill)
             elif isinstance(skill, dict):
-                name = skill.get('name', '') or skill.get('skill', '')
+                name = skill.get("name", "") or skill.get("skill", "")
                 if name:
                     result.append(name)
         return result
@@ -398,24 +408,40 @@ class LinkedInImporter:
         result = []
         for exp in experience:
             entry = {
-                'id': str(hash(f"{exp.get('company', '')}{exp.get('role', '')}{exp.get('position', '')}"))[:8],
-                'company': exp.get('company', ''),
-                'role': exp.get('role', '') or exp.get('position', '') or exp.get('title', ''),
-                'description': exp.get('description', '') or exp.get('summary', '') or exp.get('details', ''),
+                "id": str(
+                    hash(
+                        f"{exp.get('company', '')}{exp.get('role', '')}{exp.get('position', '')}"
+                    )
+                )[:8],
+                "company": exp.get("company", ""),
+                "role": exp.get("role", "")
+                or exp.get("position", "")
+                or exp.get("title", ""),
+                "description": exp.get("description", "")
+                or exp.get("summary", "")
+                or exp.get("details", ""),
             }
 
             # Handle various date formats
-            start = exp.get('startDate', '') or exp.get('start_date', '') or exp.get('from', '')
-            end = exp.get('endDate', '') or exp.get('end_date', '') or exp.get('to', '')
-            current = exp.get('current', False) or exp.get('present', False) or exp.get('to', '').lower() in ['present', 'current', 'now']
+            start = (
+                exp.get("startDate", "")
+                or exp.get("start_date", "")
+                or exp.get("from", "")
+            )
+            end = exp.get("endDate", "") or exp.get("end_date", "") or exp.get("to", "")
+            current = (
+                exp.get("current", False)
+                or exp.get("present", False)
+                or exp.get("to", "").lower() in ["present", "current", "now"]
+            )
 
             if start:
-                entry['startDate'] = self._normalize_date(start)
+                entry["startDate"] = self._normalize_date(start)
             if end and not current:
-                entry['endDate'] = self._normalize_date(end)
+                entry["endDate"] = self._normalize_date(end)
             else:
-                entry['current'] = True
-                entry['endDate'] = ''
+                entry["current"] = True
+                entry["endDate"] = ""
 
             result.append(entry)
         return result
@@ -425,19 +451,31 @@ class LinkedInImporter:
         result = []
         for edu in education:
             entry = {
-                'id': str(hash(f"{edu.get('institution', '')}{edu.get('degree', '')}"))[:8],
-                'institution': edu.get('institution', '') or edu.get('school', '') or edu.get('university', ''),
-                'studyType': edu.get('studyType', '') or edu.get('degree', '') or edu.get('degree_type', ''),
-                'area': edu.get('area', '') or edu.get('major', '') or edu.get('field_of_study', ''),
+                "id": str(hash(f"{edu.get('institution', '')}{edu.get('degree', '')}"))[
+                    :8
+                ],
+                "institution": edu.get("institution", "")
+                or edu.get("school", "")
+                or edu.get("university", ""),
+                "studyType": edu.get("studyType", "")
+                or edu.get("degree", "")
+                or edu.get("degree_type", ""),
+                "area": edu.get("area", "")
+                or edu.get("major", "")
+                or edu.get("field_of_study", ""),
             }
 
-            start = edu.get('startDate', '') or edu.get('start_date', '') or edu.get('from', '')
-            end = edu.get('endDate', '') or edu.get('end_date', '') or edu.get('to', '')
+            start = (
+                edu.get("startDate", "")
+                or edu.get("start_date", "")
+                or edu.get("from", "")
+            )
+            end = edu.get("endDate", "") or edu.get("end_date", "") or edu.get("to", "")
 
             if start:
-                entry['startDate'] = self._normalize_date(start)
+                entry["startDate"] = self._normalize_date(start)
             if end:
-                entry['endDate'] = self._normalize_date(end)
+                entry["endDate"] = self._normalize_date(end)
 
             result.append(entry)
         return result
@@ -449,7 +487,11 @@ class LinkedInImporter:
             if isinstance(skill, str):
                 result.append(skill)
             elif isinstance(skill, dict):
-                name = skill.get('name', '') or skill.get('skill', '') or skill.get('title', '')
+                name = (
+                    skill.get("name", "")
+                    or skill.get("skill", "")
+                    or skill.get("title", "")
+                )
                 if name:
                     result.append(name)
         return result
@@ -459,22 +501,24 @@ class LinkedInImporter:
         result = []
         for cert in certifications:
             entry = {
-                'id': str(hash(cert.get('name', '')))[:8],
-                'name': cert.get('name', '') or cert.get('certificationName', ''),
-                'issuer': cert.get('authority', '') or cert.get('issuer', '') or cert.get('organization', ''),
+                "id": str(hash(cert.get("name", "")))[:8],
+                "name": cert.get("name", "") or cert.get("certificationName", ""),
+                "issuer": cert.get("authority", "")
+                or cert.get("issuer", "")
+                or cert.get("organization", ""),
             }
 
             # Handle dates
-            start_date = cert.get('timePeriod', {}).get('startDate', {})
+            start_date = cert.get("timePeriod", {}).get("startDate", {})
             if start_date:
-                entry['startDate'] = self._parse_date(start_date)
+                entry["startDate"] = self._parse_date(start_date)
 
-            end_date = cert.get('timePeriod', {}).get('endDate', {})
+            end_date = cert.get("timePeriod", {}).get("endDate", {})
             if end_date:
-                entry['endDate'] = self._parse_date(end_date)
+                entry["endDate"] = self._parse_date(end_date)
 
-            if cert.get('displaySource'):
-                entry['url'] = cert['displaySource']
+            if cert.get("displaySource"):
+                entry["url"] = cert["displaySource"]
 
             result.append(entry)
         return result
@@ -484,23 +528,28 @@ class LinkedInImporter:
         result = []
         for vol in volunteer:
             entry = {
-                'id': str(hash(f"{vol.get('organizationName', '')}{vol.get('role', '')}"))[:8],
-                'organization': vol.get('organizationName', '') or vol.get('organization', ''),
-                'role': vol.get('role', '') or vol.get('position', '') or vol.get('title', ''),
-                'description': vol.get('description', ''),
+                "id": str(
+                    hash(f"{vol.get('organizationName', '')}{vol.get('role', '')}")
+                )[:8],
+                "organization": vol.get("organizationName", "")
+                or vol.get("organization", ""),
+                "role": vol.get("role", "")
+                or vol.get("position", "")
+                or vol.get("title", ""),
+                "description": vol.get("description", ""),
             }
 
             # Handle dates
-            time_period = vol.get('timePeriod', {})
+            time_period = vol.get("timePeriod", {})
             if time_period:
-                start_date = time_period.get('startDate', {})
-                end_date = time_period.get('endDate', {})
+                start_date = time_period.get("startDate", {})
+                end_date = time_period.get("endDate", {})
                 if start_date:
-                    entry['startDate'] = self._parse_date(start_date)
+                    entry["startDate"] = self._parse_date(start_date)
                 if end_date:
-                    entry['endDate'] = self._parse_date(end_date)
+                    entry["endDate"] = self._parse_date(end_date)
                 else:
-                    entry['current'] = True
+                    entry["current"] = True
 
             result.append(entry)
         return result
@@ -516,35 +565,46 @@ class LinkedInImporter:
         - "2020-01-15"
         """
         if not date_str:
-            return ''
+            return ""
 
         date_str = str(date_str).strip()
 
         # Already in YYYY-MM format
-        if re.match(r'^\d{4}-\d{2}$', date_str):
+        if re.match(r"^\d{4}-\d{2}$", date_str):
             return date_str
 
         # Just year
-        if re.match(r'^\d{4}$', date_str):
+        if re.match(r"^\d{4}$", date_str):
             return date_str
 
         # Month name year format (Jan 2020, January 2020)
         month_names = {
-            'jan': '01', 'january': '01',
-            'feb': '02', 'february': '02',
-            'mar': '03', 'march': '03',
-            'apr': '04', 'april': '04',
-            'may': '05',
-            'jun': '06', 'june': '06',
-            'jul': '07', 'july': '07',
-            'aug': '08', 'august': '08',
-            'sep': '09', 'september': '09',
-            'oct': '10', 'october': '10',
-            'nov': '11', 'november': '11',
-            'dec': '12', 'december': '12',
+            "jan": "01",
+            "january": "01",
+            "feb": "02",
+            "february": "02",
+            "mar": "03",
+            "march": "03",
+            "apr": "04",
+            "april": "04",
+            "may": "05",
+            "jun": "06",
+            "june": "06",
+            "jul": "07",
+            "july": "07",
+            "aug": "08",
+            "august": "08",
+            "sep": "09",
+            "september": "09",
+            "oct": "10",
+            "october": "10",
+            "nov": "11",
+            "november": "11",
+            "dec": "12",
+            "december": "12",
         }
 
-        match = re.match(r'(\w+)\s+(\d{4})', date_str, re.IGNORECASE)
+        match = re.match(r"(\w+)\s+(\d{4})", date_str, re.IGNORECASE)
         if match:
             month_str, year = match.groups()
             month = month_names.get(month_str.lower())
@@ -552,13 +612,13 @@ class LinkedInImporter:
                 return f"{year}-{month}"
 
         # MM/YYYY or M/YYYY format
-        match = re.match(r'(\d{1,2})/(\d{4})', date_str)
+        match = re.match(r"(\d{1,2})/(\d{4})", date_str)
         if match:
             month, year = match.groups()
             return f"{year}-{month.zfill(2)}"
 
         # YYYY-MM-DD format
-        match = re.match(r'(\d{4})-(\d{2})-(\d{2})', date_str)
+        match = re.match(r"(\d{4})-(\d{2})-(\d{2})", date_str)
         if match:
             year, month, _ = match.groups()
             return f"{year}-{month}"
