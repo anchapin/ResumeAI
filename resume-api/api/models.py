@@ -4,7 +4,7 @@ Pydantic models for request/response validation.
 
 import re
 from datetime import datetime
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any, Optional, List, Tuple
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 # Validation constants

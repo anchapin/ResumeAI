@@ -29,8 +29,6 @@ from monitoring import logging_config  # noqa: E402
 from lib.utils import (
     JobDescriptionParser,
     parse_job_description,
-    ATSCompatibilityChecker,
-    check_ats_compatibility,
 )
 
 logger = logging_config.get_logger(__name__)
