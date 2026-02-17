@@ -20,7 +20,6 @@ from sqlalchemy import select
 from . import settings
 from database import get_async_session, User
 from config.jwt_utils import verify_access_token
-from config.security import verify_password
 
 # Secret key for JWT tokens - should be set in environment variables
 SECRET_KEY = settings.jwt_secret
