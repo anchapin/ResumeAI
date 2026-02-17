@@ -7,10 +7,9 @@ Provides endpoints for:
 - Finding connections at target companies
 """
 
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import List, Optional, Dict, Any
-import json
 
 from lib.linkedin import LinkedInImporter, LinkedInExporter
 from lib.connections import ConnectionFinder

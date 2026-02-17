@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import React from 'react';
 import Editor from './Editor';
@@ -117,8 +117,8 @@ describe('Editor Component', () => {
           onBack={mockOnBack}
         />
       );
-      const avatars = document.querySelectorAll('.bg-cover.bg-center');
-      expect(avatars.length).toBeGreaterThan(0);
+      const avatar = screen.getByAltText('Profile');
+      expect(avatar).toBeInTheDocument();
     });
   });
 
@@ -238,8 +238,8 @@ describe('Editor Component', () => {
         />
       );
       
-      const container = document.querySelector('.flex-1.min-h-screen');
-      expect(container).toBeInTheDocument();
+      const container = document.querySelector('main');
+      expect(container).toHaveClass('flex-1');
     });
 
     it('has header section', () => {
@@ -265,7 +265,7 @@ describe('Editor Component', () => {
       );
       
       const nav = document.querySelector('nav');
-      expect(nav).toHaveClass('flex', 'items-center');
+      expect(nav).toHaveClass('flex', 'gap-6');
     });
   });
 

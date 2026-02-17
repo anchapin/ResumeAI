@@ -24,7 +24,6 @@ class AIProvider(ABC):
     @abstractmethod
     def generate_response(self, prompt: str) -> str:
         """Generate a response from the AI provider."""
-        pass
 
 
 class AITailoringUtils:

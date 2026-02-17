@@ -8,16 +8,12 @@ import re
 import sys
 from pathlib import Path
 
-from typing import List, Optional
 from fastapi import APIRouter, HTTPException, Request, UploadFile, File, status
 from fastapi.responses import Response
 from pydantic import BaseModel, Field
 
-import docx
 from docx import Document
-from docx.shared import Inches, Pt, RGBColor
 from docx.enum.text import WD_ALIGN_PARAGRAPH
-import docx  # python-docx for DOCX parsing
 import httpx  # HTTP client for LinkedIn API
 import fitz  # PyMuPDF for PDF parsing
 
@@ -35,12 +31,12 @@ from .models import (
 lib_path = Path(__file__).parent.parent
 sys.path.insert(0, str(lib_path))
 
-from lib.cli import (
+from lib.cli import (  # noqa: E402
     ResumeGenerator,
     ResumeTailorer,
     VariantManager,
     CoverLetterGenerator,
-)  # noqa: E402
+)
 
 # Import authentication and rate limiting
 from config.dependencies import AuthorizedAPIKey, limiter  # noqa: E402
@@ -458,7 +454,7 @@ def create_docx_from_resume(resume_data: dict) -> bytes:
                 skill_names.append(skill)
 
         if skill_names:
-            skills_para = doc.add_paragraph(", ".join(skill_names))
+            doc.add_paragraph(", ".join(skill_names))
 
     # Save to bytes
     docx_bytes = io.BytesIO()
@@ -611,8 +607,6 @@ def parse_resume_text(text: str) -> dict:
 
     # Detect sections
     current_section = None
-    current_work = {}
-    current_education = {}
 
     section_keywords = {
         "experience": [

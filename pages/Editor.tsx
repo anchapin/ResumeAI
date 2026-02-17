@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { SimpleResumeData, WorkExperience, EducationEntry, ProjectEntry } from '../types';
 import { convertToAPIData, generatePDF, getVariants, VariantMetadata } from '../utils/api-client';
-import TemplateSelector from '../components/TemplateSelector';
+import { TemplateSelector } from '../components/TemplateSelector';
 
 interface ExperienceItemProps {
     exp: WorkExperience;
@@ -539,6 +539,10 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, onBack, saveStatu
   const handleGeneratePDF = useCallback(async () => {
     setIsGeneratingPDF(true);
     setPdfError(null);
+    try {
+      // Convert SimpleResumeData to the API expected format
+      const apiData = convertToAPIData(resumeData);
+      const pdfBlob = await generatePDF(apiData, selectedVariant);
       const url = URL.createObjectURL(pdfBlob);
       const link = document.createElement('a');
       link.href = url;
@@ -1051,6 +1055,19 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, onBack, saveStatu
                     <button 
                         onClick={handleGeneratePDF}
                         disabled={isGeneratingPDF}
+                        className="flex items-center gap-2 px-6 h-10 rounded-lg border border-primary-600 text-primary-600 font-bold text-sm hover:bg-primary-50 transition-colors"
+                    >
+                        {isGeneratingPDF ? (
+                            <>
+                                <span className="material-symbols-outlined text-sm animate-spin">sync</span>
+                                Generating...
+                            </>
+                        ) : (
+                            <>
+                                <span className="material-symbols-outlined text-[20px]">download</span>
+                                Download PDF
+                            </>
+                        )}
                     </button>
                     <button onClick={handleSaveProfile} className="flex items-center gap-2 px-6 h-10 rounded-lg bg-primary-600 text-white font-bold text-sm hover:bg-primary-700 transition-colors shadow-lg shadow-primary-600/20">
                         Save Profile

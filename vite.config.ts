@@ -9,6 +9,9 @@ export default defineConfig(({ mode }) => {
         port: 3000,
         host: '0.0.0.0',
       },
+      optimizeDeps: {
+        exclude: ['docs'],
+      },
       test: {
         environment: 'jsdom',
         globals: true,
@@ -24,6 +27,7 @@ export default defineConfig(({ mode }) => {
             '**/dist/',
             '**/build/',
             '**/coverage/',
+            '**/docs/',
             'vitest.config.ts',
             'vite.config.ts',
           ],
