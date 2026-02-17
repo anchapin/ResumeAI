@@ -48,7 +48,7 @@ class MockInterviewSession:
 
 class InterviewQuestionGenerator:
     """Generates interview questions based on job descriptions."""
-    
+
     # Question banks by category
     QUESTION_BANKS = {
         "behavioral": [
@@ -196,7 +196,7 @@ class InterviewQuestionGenerator:
             }
         ]
     }
-    
+
     def generate_questions(
         self,
         job_description: str,
@@ -205,28 +205,28 @@ class InterviewQuestionGenerator:
     ) -> List[InterviewQuestion]:
         """
         Generate interview questions based on job description.
-        
+
         Args:
             job_description: The job description to base questions on
             num_questions: Number of questions to generate
             categories: List of categories to include
-            
+
         Returns:
             List of InterviewQuestion objects
         """
         if categories is None:
             categories = ["behavioral", "technical", "system_design", "cultural_fit"]
-        
+
         questions = []
         questions_per_category = max(1, num_questions // len(categories))
-        
+
         for category in categories:
             category_questions = self.QUESTION_BANKS.get(category, [])
             selected = random.sample(
-                category_questions, 
+                category_questions,
                 min(questions_per_category, len(category_questions))
             )
-            
+
             for q in selected:
                 questions.append(InterviewQuestion(
                     id=str(uuid.uuid4()),
@@ -235,11 +235,11 @@ class InterviewQuestionGenerator:
                     difficulty=random.choice(["easy", "medium", "hard"]),
                     tips=q["tips"]
                 ))
-        
+
         # Shuffle and limit
         random.shuffle(questions)
         return questions[:num_questions]
-    
+
     def generate_questions_for_title(
         self,
         job_title: str,
@@ -247,7 +247,7 @@ class InterviewQuestionGenerator:
     ) -> List[InterviewQuestion]:
         """Generate questions specifically for a job title."""
         job_title_lower = job_title.lower()
-        
+
         # Customize categories based on role
         if "manager" in job_title_lower or "lead" in job_title_lower:
             categories = ["behavioral", "system_design", "cultural_fit"]
@@ -257,17 +257,17 @@ class InterviewQuestionGenerator:
             categories = ["behavioral", "cultural_fit", "technical"]
         else:
             categories = ["behavioral", "technical", "system_design", "cultural_fit"]
-        
+
         return self.generate_questions(job_title, num_questions, categories)
 
 
 class MockInterviewGenerator:
     """Manages mock interview sessions."""
-    
+
     def __init__(self):
         self.sessions: Dict[str, MockInterviewSession] = {}
         self.question_generator = InterviewQuestionGenerator()
-    
+
     def create_session(
         self,
         job_description: str,
@@ -275,26 +275,26 @@ class MockInterviewGenerator:
     ) -> MockInterviewSession:
         """Create a new mock interview session."""
         session_id = str(uuid.uuid4())
-        
+
         # Generate questions based on job description
         questions = self.question_generator.generate_questions(
-            job_description, 
+            job_description,
             num_questions
         )
-        
+
         session = MockInterviewSession(
             id=session_id,
             job_description=job_description,
             questions=questions
         )
-        
+
         self.sessions[session_id] = session
         return session
-    
+
     def get_session(self, session_id: str) -> Optional[MockInterviewSession]:
         """Get a session by ID."""
         return self.sessions.get(session_id)
-    
+
     def submit_answer(
         self,
         session_id: str,
@@ -305,12 +305,12 @@ class MockInterviewGenerator:
         session = self.sessions.get(session_id)
         if not session:
             return None
-        
+
         # Find the question
         question = next((q for q in session.questions if q.id == question_id), None)
         if not question:
             return None
-        
+
         # Create answer with auto-feedback
         interview_answer = InterviewAnswer(
             question_id=question_id,
@@ -318,17 +318,17 @@ class MockInterviewGenerator:
             feedback=self._generate_feedback(question, answer),
             score=self._score_answer(question, answer)
         )
-        
+
         session.answers.append(interview_answer)
-        
+
         # Move to next question
         session.current_question_index += 1
         if session.current_question_index >= len(session.questions):
             session.status = "completed"
             session.completed_at = datetime.now()
-        
+
         return interview_answer
-    
+
     def _generate_feedback(
         self,
         question: InterviewQuestion,
@@ -336,21 +336,21 @@ class MockInterviewGenerator:
     ) -> str:
         """Generate feedback for an answer."""
         answer_length = len(answer)
-        
+
         if answer_length < 50:
             return "Your answer seems too brief. Try to provide more detail with specific examples."
-        
+
         if answer_length < 150:
             return "Good start, but consider expanding your answer with more specific examples or details."
-        
+
         # Check for STAR method in behavioral questions
         if question.category == "behavioral":
             answer_lower = answer.lower()
             if not any(word in answer_lower for word in ["situation", "task", "action", "result", "i ", "my "]):
                 return "Consider using the STAR method (Situation, Task, Action, Result) to structure your answer."
-        
+
         return "Great answer! You provided good detail and structure. Keep practicing to refine your delivery."
-    
+
     def _score_answer(
         self,
         question: InterviewQuestion,
@@ -358,37 +358,37 @@ class MockInterviewGenerator:
     ) -> float:
         """Score an answer (0-100)."""
         score = 50.0  # Base score
-        
+
         # Length factor
         length = len(answer)
         if 100 <= length <= 500:
             score += 20
         elif length > 500:
             score += 15
-        
+
         # Structure indicators
         answer_lower = answer.lower()
         if any(word in answer_lower for word in ["first", "second", "finally", "additionally", "however"]):
             score += 10
-        
+
         if any(word in answer_lower for word in ["because", "therefore", "result", "outcome", "learned"]):
             score += 10
-        
+
         # Specificity
         if any(word in answer_lower for word in ["for example", "for instance", "specifically", "exactly"]):
             score += 10
-        
+
         return min(100.0, score)
-    
+
     def generate_report(self, session_id: str) -> Optional[Dict[str, Any]]:
         """Generate a final report for a completed session."""
         session = self.sessions.get(session_id)
         if not session or session.status != "completed":
             return None
-        
+
         # Calculate overall score
         total_score = sum(a.score for a in session.answers) / len(session.answers) if session.answers else 0
-        
+
         # Category breakdown
         category_scores = {}
         for answer in session.answers:
@@ -396,12 +396,12 @@ class MockInterviewGenerator:
             if question.category not in category_scores:
                 category_scores[question.category] = []
             category_scores[question.category].append(answer.score)
-        
+
         category_averages = {
             cat: sum(scores) / len(scores)
             for cat, scores in category_scores.items()
         }
-        
+
         return {
             "session_id": session_id,
             "job_description": session.job_description,

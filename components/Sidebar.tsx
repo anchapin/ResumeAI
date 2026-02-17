@@ -6,12 +6,15 @@ import { Route } from '../types';
  * @description Props for the Sidebar component
  * @property {Route} currentRoute - The currently selected route
  * @property {Function} onNavigate - Callback function to handle navigation
+ * @property {Function} onShowShortcuts - Callback function to show keyboard shortcuts help
  */
 interface SidebarProps {
   /** The currently selected route */
   currentRoute: Route;
   /** Callback function to handle navigation */
   onNavigate: (route: Route) => void;
+  /** Callback function to show keyboard shortcuts help */
+  onShowShortcuts: () => void;
 }
 
 const NAV_ITEMS = [
@@ -27,6 +30,7 @@ const NAV_ITEMS = [
  * @param {SidebarProps} props - Component properties
  * @param {Route} props.currentRoute - The currently selected route
  * @param {Function} props.onNavigate - Callback function to handle navigation
+ * @param {Function} props.onShowShortcuts - Callback function to show keyboard shortcuts help
  * @returns {JSX.Element} The rendered sidebar component
  * 
  * @example
@@ -34,10 +38,11 @@ const NAV_ITEMS = [
  * <Sidebar 
  *   currentRoute={Route.DASHBOARD} 
  *   onNavigate={(route) => console.log(`Navigating to ${route}`)} 
+ *   onShowShortcuts={() => console.log('Show shortcuts')}
  * />
  * ```
  */
-const Sidebar: React.FC<SidebarProps> = React.memo(({ currentRoute, onNavigate }) => {
+const Sidebar: React.FC<SidebarProps> = React.memo(({ currentRoute, onNavigate, onShowShortcuts }) => {
   return (
     <aside className="w-72 bg-white border-r border-slate-200 flex flex-col justify-between p-6 fixed h-full z-20">
       <div className="flex flex-col gap-8">
@@ -100,10 +105,11 @@ const Sidebar: React.FC<SidebarProps> = React.memo(({ currentRoute, onNavigate }
         <div className="border-t border-slate-100 pt-4">
           <button
             type="button"
-            className="flex items-center gap-3 px-3 py-2 text-slate-500 hover:text-primary-600 transition-colors w-full text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 rounded-lg"
+            onClick={onShowShortcuts}
+            className="flex items-center gap-3 px-3 py-2 text-slate-500 hover:text-primary-600 transition-colors w-full text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 rounded-lg group"
           >
-            <span className="material-symbols-outlined" aria-hidden="true">help</span>
-            <span className="text-sm font-medium">Help Center</span>
+            <span className="material-symbols-outlined group-hover:animate-pulse" aria-hidden="true">keyboard</span>
+            <span className="text-sm font-medium">Keyboard Shortcuts</span>
           </button>
         </div>
       </div>

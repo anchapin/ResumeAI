@@ -97,7 +97,7 @@ export const useGeneratePackage = () => {
             setData({
                 resume_data: savedResume,
                 keywords: [],
-                suggestions: {} as Record<string, unknown>
+                suggestions: {}
             });
         }
     }, []);
