@@ -2,6 +2,7 @@ import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { SimpleResumeData, WorkExperience, EducationEntry, ProjectEntry } from '../types';
 import { convertToAPIData, generatePDF, getVariants, VariantMetadata } from '../utils/api-client';
 import { TemplateSelector } from '../components/TemplateSelector';
+import { LinkedInImportDialog } from '../components/LinkedInImportDialog';
 
 interface ExperienceItemProps {
     exp: WorkExperience;
@@ -519,7 +520,10 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, onBack, saveStatu
   const [isGeneratingPDF, setIsGeneratingPDF] = useState<boolean>(false);
   const [pdfError, setPdfError] = useState<string | null>(null);
   const [showTemplateSelector, setShowTemplateSelector] = useState<boolean>(false);
-  
+
+  // LinkedIn import state
+  const [showLinkedInImport, setShowLinkedInImport] = useState<boolean>(false);
+
   // Drag and drop state for section reordering
   const [draggedItemId, setDraggedItemId] = useState<string | null>(null);
   const [dragOverItemId, setDragOverItemId] = useState<string | null>(null);
@@ -571,7 +575,7 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, onBack, saveStatu
     try {
       // Save to localStorage as backup
       localStorage.setItem('resume_draft', JSON.stringify(resumeData));
-      
+
       // TODO: Connect to backend API when available
       // For now, just show success
       alert('Profile saved successfully!');
@@ -580,6 +584,28 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, onBack, saveStatu
       alert('Failed to save profile. Please try again.');
     }
   }, [resumeData]);
+
+  // Handle LinkedIn Import
+  const handleLinkedInImport = useCallback((importedData: Partial<SimpleResumeData>) => {
+    const currentData = resumeDataRef.current;
+    
+    // Merge imported data with existing data (imported data takes precedence)
+    const mergedData: SimpleResumeData = {
+      ...currentData,
+      name: importedData.name || currentData.name,
+      email: importedData.email || currentData.email,
+      phone: importedData.phone || currentData.phone,
+      location: importedData.location || currentData.location,
+      role: importedData.role || currentData.role,
+      summary: importedData.summary || currentData.summary,
+      skills: importedData.skills?.length ? importedData.skills : currentData.skills,
+      experience: importedData.experience?.length ? importedData.experience : currentData.experience,
+      education: importedData.education?.length ? importedData.education : currentData.education,
+      projects: importedData.projects?.length ? importedData.projects : currentData.projects,
+    };
+    
+    onUpdate(mergedData);
+  }, [onUpdate]);
 
   // Experience state
   const experiences = resumeData.experience;
@@ -806,6 +832,27 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, onBack, saveStatu
             <div className="flex justify-between items-center">
                 <h2 className="text-2xl font-bold text-slate-900">Contact Information</h2>
                 <span className="text-sm font-medium text-slate-500">Basic profile details</span>
+            </div>
+
+            {/* LinkedIn Import Card */}
+            <div className="bg-gradient-to-r from-[#0077b5] to-[#00a0dc] rounded-xl p-6 text-white shadow-lg">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="bg-white/20 size-12 rounded-lg flex items-center justify-center">
+                    <span className="material-symbols-outlined text-white">account_circle</span>
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-lg">Import from LinkedIn</h3>
+                    <p className="text-sm text-white/80">Quickly populate your profile with LinkedIn data</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowLinkedInImport(true)}
+                  className="px-4 py-2 bg-white text-[#0077b5] font-semibold rounded-lg hover:bg-white/90 transition-colors shadow-md"
+                >
+                  Import Now
+                </button>
+              </div>
             </div>
 
             <div className="bg-white rounded-xl border border-slate-200 p-8 space-y-6">
@@ -1158,6 +1205,13 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, onBack, saveStatu
             </div>
         </div>
       </main>
+
+      {/* LinkedIn Import Dialog */}
+      <LinkedInImportDialog
+        isOpen={showLinkedInImport}
+        onClose={() => setShowLinkedInImport(false)}
+        onImport={handleLinkedInImport}
+      />
     </div>
   );
 };

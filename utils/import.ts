@@ -129,31 +129,32 @@ export async function importFromLinkedInUrl(linkedinUrl: string): Promise<Resume
  * @returns Parsed resume data
  */
 export async function importFromLinkedInFile(file: File): Promise<ResumeData> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    
-    reader.onload = async (e) => {
-      try {
-        const content = e.target?.result as string;
-        const linkedinData = JSON.parse(content);
-        
-        // Use the local LinkedIn import utility
-        const { importFromLinkedIn } = await import('./linkedin');
-        const resumeData = importFromLinkedIn(linkedinData);
-        
-        resolve(resumeData as ResumeData);
-      } catch (error) {
-        console.error('Error parsing LinkedIn file:', error);
-        reject(new Error('Failed to parse LinkedIn export file. Please ensure it is a valid JSON file.'));
-      }
-    };
-    
-    reader.onerror = () => {
-      reject(new Error('Failed to read LinkedIn export file'));
-    };
-    
-    reader.readAsText(file);
-  });
+  const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
+  const apiKey = localStorage.getItem('RESUMEAI_API_KEY');
+
+  try {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await fetch(`${API_URL}/v1/import/linkedin-file`, {
+      method: 'POST',
+      headers: {
+        ...(apiKey && { 'X-API-KEY': apiKey }),
+      },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ detail: 'Failed to import LinkedIn file' }));
+      throw new Error(errorData.detail || 'Failed to import LinkedIn file');
+    }
+
+    const data = await response.json();
+    return data as ResumeData;
+  } catch (error) {
+    console.error('Error importing LinkedIn file:', error);
+    throw new Error('Failed to import LinkedIn file. Please ensure the backend is running and the file is valid.');
+  }
 }
 
 // Backwards compatibility alias

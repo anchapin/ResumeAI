@@ -1124,6 +1124,194 @@ async def import_linkedin(
         )
 
 
+# LinkedIn JSON File Import Endpoint
+
+
+@router.post(
+    "/v1/import/linkedin-file",
+    response_model=ResumeData,
+    responses={
+        200: {"model": ResumeData, "description": "Imported resume data"},
+        400: {"model": ErrorResponse},
+        401: {"model": ErrorResponse},
+        403: {"model": ErrorResponse},
+        429: {"model": ErrorResponse},
+        500: {"model": ErrorResponse},
+    },
+    tags=["Import"],
+)
+@rate_limit("10/minute")
+async def import_linkedin_file(
+    request: Request, file: UploadFile = File(...), auth: AuthorizedAPIKey = None
+):
+    """
+    Import resume from LinkedIn exported JSON file.
+
+    Accepts LinkedIn profile data export JSON file and converts to JSON Resume format.
+    Users can download their LinkedIn data from Settings > Data privacy > Get a copy of your data.
+
+    Requires API key authentication via X-API-KEY header.
+
+    Rate limit: 10 requests per minute per API key.
+
+    Supported LinkedIn export formats:
+    - Profile JSON export
+    - Full data archive (extracted Profile.json)
+    """
+    # Check file type
+    content_type = file.content_type
+    if content_type not in [
+        "application/json",
+        "text/json",
+    ] and not file.filename.lower().endswith(".json"):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid file type. Only JSON files are accepted.",
+        )
+
+    try:
+        # Read file content
+        content = await file.read()
+
+        # Check file size (max 5MB)
+        if len(content) > 5 * 1024 * 1024:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="File too large. Maximum size is 5MB.",
+            )
+
+        # Parse JSON
+        try:
+            import json
+
+            linkedin_data = json.loads(content.decode("utf-8"))
+        except json.JSONDecodeError as e:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid JSON format: {str(e)}",
+            )
+
+        # Import LinkedIn library and parse
+        from lib.linkedin import LinkedInImporter
+
+        importer = LinkedInImporter()
+
+        # Handle different LinkedIn export formats
+        resume_data_dict = importer.parse_export(linkedin_data, mode="overwrite")
+
+        # Convert to JSON Resume format
+        resume_data = convert_linkedin_to_json_resume(resume_data_dict)
+
+        # Return validated data
+        return ResumeData(**resume_data)
+
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"LinkedIn file import failed: {str(e)}",
+        )
+
+
+def convert_linkedin_to_json_resume(linkedin_data: dict) -> dict:
+    """
+    Convert parsed LinkedIn data to JSON Resume format.
+
+    Args:
+        linkedin_data: Parsed LinkedIn data from LinkedInImporter
+
+    Returns:
+        Dictionary in JSON Resume format
+    """
+    resume = {
+        "basics": {},
+        "work": [],
+        "education": [],
+        "skills": [],
+        "languages": [],
+        "projects": [],
+        "certificates": [],
+    }
+
+    # Basic info
+    if linkedin_data.get("name"):
+        resume["basics"]["name"] = linkedin_data["name"]
+
+    if linkedin_data.get("headline") or linkedin_data.get("role"):
+        resume["basics"]["label"] = linkedin_data.get("headline") or linkedin_data.get(
+            "role"
+        )
+
+    if linkedin_data.get("summary"):
+        resume["basics"]["summary"] = linkedin_data["summary"]
+
+    if linkedin_data.get("email"):
+        resume["basics"]["email"] = linkedin_data["email"]
+
+    if linkedin_data.get("phone"):
+        resume["basics"]["phone"] = linkedin_data["phone"]
+
+    if linkedin_data.get("location"):
+        resume["location"] = {"city": linkedin_data["location"]}
+
+    # Work experience
+    for exp in linkedin_data.get("experience", []):
+        work_entry = {
+            "company": exp.get("company", ""),
+            "position": exp.get("role", ""),
+            "startDate": exp.get("startDate", ""),
+            "endDate": exp.get("endDate", "") if not exp.get("current") else "",
+            "summary": exp.get("description", ""),
+        }
+        if work_entry["company"] or work_entry["position"]:
+            resume["work"].append(work_entry)
+
+    # Education
+    for edu in linkedin_data.get("education", []):
+        edu_entry = {
+            "institution": edu.get("institution", ""),
+            "studyType": edu.get("studyType", ""),
+            "area": edu.get("area", ""),
+            "startDate": edu.get("startDate", ""),
+            "endDate": edu.get("endDate", ""),
+        }
+        if edu_entry["institution"]:
+            resume["education"].append(edu_entry)
+
+    # Skills
+    for skill in linkedin_data.get("skills", []):
+        if isinstance(skill, str):
+            resume["skills"].append({"name": skill})
+        elif isinstance(skill, dict) and skill.get("name"):
+            resume["skills"].append({"name": skill["name"]})
+
+    # Languages
+    for lang in linkedin_data.get("languages", []):
+        if isinstance(lang, dict):
+            resume["languages"].append(
+                {
+                    "name": lang.get("name", ""),
+                    "proficiency": lang.get("proficiency", ""),
+                }
+            )
+
+    # Projects
+    for proj in linkedin_data.get("projects", []):
+        if isinstance(proj, dict):
+            project_entry = {
+                "name": proj.get("name", ""),
+                "description": proj.get("description", ""),
+                "url": proj.get("url", ""),
+            }
+            if project_entry["name"]:
+                resume["projects"].append(project_entry)
+
+    return resume
+
+
 # Cover Letter Generation
 
 
