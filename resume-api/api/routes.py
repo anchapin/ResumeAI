@@ -15,7 +15,7 @@ from pydantic import BaseModel, Field
 from docx import Document
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 import httpx  # HTTP client for LinkedIn API
-import fitz  # PyMuPDF for PDF parsing
+from pypdf import PdfReader  # pypdf for PDF parsing (Python 3.14 compatible)
 
 from .models import (
     ResumeRequest,
@@ -541,18 +541,16 @@ def extract_text_from_pdf(file_bytes: bytes) -> str:
         ValueError: If PDF is corrupted or invalid
     """
     try:
-        doc = fitz.open(stream=file_bytes, doc_type="pdf")
+        # Use pypdf (Python 3.14 compatible alternative to PyMuPDF)
+        reader = PdfReader(io.BytesIO(file_bytes))
     except Exception as e:
         raise ValueError(f"Invalid or corrupted PDF file: {str(e)}")
 
     text_parts = []
-    for page_num in range(len(doc)):
-        page = doc[page_num]
-        text = page.get_text()
-        if text.strip():
-            text_parts.append(text)
-
-    doc.close()
+    for page in reader.pages:
+        text = page.extract_text()
+        if text and text.strip():
+            text_parts.append(text.strip())
 
     if not text_parts:
         raise ValueError("No text content found in PDF. This may be a scanned image.")
