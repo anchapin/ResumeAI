@@ -34,11 +34,21 @@ router = APIRouter(prefix="/api-keys", tags=["API Keys"])
 class APIKeyCreateRequest(BaseModel):
     """Request model for creating API key."""
 
-    name: str = Field(..., min_length=1, max_length=100, description="Name for the API key")
-    description: Optional[str] = Field(None, max_length=500, description="Optional description")
-    rate_limit: Optional[str] = Field("100/minute", description="Rate limit (e.g., '100/minute')")
-    rate_limit_daily: Optional[int] = Field(1000, ge=10, le=100000, description="Daily request limit")
-    expires_in_days: Optional[int] = Field(None, ge=1, le=365, description="Days until expiration")
+    name: str = Field(
+        ..., min_length=1, max_length=100, description="Name for the API key"
+    )
+    description: Optional[str] = Field(
+        None, max_length=500, description="Optional description"
+    )
+    rate_limit: Optional[str] = Field(
+        "100/minute", description="Rate limit (e.g., '100/minute')"
+    )
+    rate_limit_daily: Optional[int] = Field(
+        1000, ge=10, le=100000, description="Daily request limit"
+    )
+    expires_in_days: Optional[int] = Field(
+        None, ge=1, le=365, description="Days until expiration"
+    )
 
 
 class APIKeyCreateResponse(BaseModel):
@@ -121,7 +131,10 @@ def _get_key_prefix(api_key: str) -> str:
     status_code=status.HTTP_201_CREATED,
     summary="Create new API key",
     responses={
-        201: {"model": APIKeyCreateResponse, "description": "API key created successfully"},
+        201: {
+            "model": APIKeyCreateResponse,
+            "description": "API key created successfully",
+        },
         400: {"description": "Invalid input data"},
         401: {"description": "Not authenticated"},
     },
@@ -153,7 +166,9 @@ async def create_api_key(
     # Calculate expiration date if specified
     expires_at = None
     if request.expires_in_days:
-        expires_at = datetime.now(timezone.utc) + timedelta(days=request.expires_in_days)
+        expires_at = datetime.now(timezone.utc) + timedelta(
+            days=request.expires_in_days
+        )
 
     # Create API key record
     new_key = APIKey(
@@ -229,7 +244,9 @@ async def list_api_keys(
                 name=key.name,
                 description=key.description,
                 created_at=key.created_at.isoformat(),
-                last_used=key.last_request_at.isoformat() if key.last_request_at else None,
+                last_used=(
+                    key.last_request_at.isoformat() if key.last_request_at else None
+                ),
                 is_active=key.is_active,
                 is_revoked=key.is_revoked,
                 request_count=key.total_requests,

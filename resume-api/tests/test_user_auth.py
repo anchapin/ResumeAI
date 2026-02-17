@@ -26,7 +26,6 @@ from config.jwt_utils import (
     create_access_token,
 )
 
-
 # Test database setup
 TEST_DATABASE_URL = "sqlite+aiosqlite:///./test_auth.db"
 
