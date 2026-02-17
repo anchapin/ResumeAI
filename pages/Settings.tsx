@@ -1,5 +1,39 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useTheme } from '../hooks/useTheme';
+
+/** Mock usage data - in production this would come from the API */
+interface UsageData {
+  period: string;
+  pdfGenerations: number;
+  aiTailoring: number;
+  variantsGenerated: number;
+  totalRequests: number;
+}
+
+/** Generate mock usage history */
+const generateMockUsageHistory = (): UsageData[] => {
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
+  return months.map((period, idx) => ({
+    period,
+    pdfGenerations: Math.floor(Math.random() * 50) + 10,
+    aiTailoring: Math.floor(Math.random() * 30) + 5,
+    variantsGenerated: Math.floor(Math.random() * 20) + 5,
+    totalRequests: 0,
+  })).map(item => ({
+    ...item,
+    totalRequests: item.pdfGenerations + item.aiTailoring + item.variantsGenerated,
+  })).reverse();
+};
+
+/** Mock current usage stats */
+const currentUsageStats = {
+  pdfGenerations: 127,
+  aiTailoring: 89,
+  variantsGenerated: 45,
+  totalRequests: 261,
+  monthlyLimit: 500,
+  resetDate: 'March 1, 2026',
+};
 
 /**
  * @component
@@ -19,6 +53,15 @@ const Settings: React.FC = () => {
   const [showApiKey, setShowApiKey] = useState<boolean>(false);
   const [isApiKeySaved, setIsApiKeySaved] = useState<boolean>(false);
   const [apiKeyError, setApiKeyError] = useState<string | null>(null);
+  
+  // Usage tracking state
+  const [usageHistory] = useState<UsageData[]>(generateMockUsageHistory);
+  const [usageAlertThreshold, setUsageAlertThreshold] = useState<number>(80);
+  
+  // Calculate usage percentage
+  const usagePercentage = useMemo(() => {
+    return Math.round((currentUsageStats.totalRequests / currentUsageStats.monthlyLimit) * 100);
+  }, []);
   
   // Load API key from localStorage on mount
   useEffect(() => {
@@ -242,6 +285,112 @@ const Settings: React.FC = () => {
                     <input type="checkbox" defaultChecked className="sr-only peer" />
                     <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
                 </label>
+            </div>
+          </div>
+        </section>
+
+        {/* Usage Tracking Dashboard */}
+        <section className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+          <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50">
+            <h3 className="text-lg font-bold text-slate-900">Usage & Limits</h3>
+            <p className="text-sm text-slate-500">Track your API usage and manage limits</p>
+          </div>
+          <div className="p-6 space-y-6">
+            {/* Current Usage Overview */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="bg-slate-50 rounded-xl p-4 text-center">
+                <div className="text-3xl font-bold text-primary-600">{currentUsageStats.pdfGenerations}</div>
+                <div className="text-sm text-slate-500 mt-1">PDF Generations</div>
+              </div>
+              <div className="bg-slate-50 rounded-xl p-4 text-center">
+                <div className="text-3xl font-bold text-amber-600">{currentUsageStats.aiTailoring}</div>
+                <div className="text-sm text-slate-500 mt-1">AI Tailoring</div>
+              </div>
+              <div className="bg-slate-50 rounded-xl p-4 text-center">
+                <div className="text-3xl font-bold text-purple-600">{currentUsageStats.variantsGenerated}</div>
+                <div className="text-sm text-slate-500 mt-1">Variants Generated</div>
+              </div>
+              <div className="bg-slate-50 rounded-xl p-4 text-center">
+                <div className="text-3xl font-bold text-slate-700">{currentUsageStats.totalRequests}</div>
+                <div className="text-sm text-slate-500 mt-1">Total Requests</div>
+              </div>
+            </div>
+            
+            {/* Usage Progress Bar */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-sm">
+                <span className="font-medium text-slate-700">Monthly Usage</span>
+                <span className="text-slate-500">
+                  {currentUsageStats.totalRequests} / {currentUsageStats.monthlyLimit} requests ({usagePercentage}%)
+                </span>
+              </div>
+              <div className="w-full bg-slate-100 rounded-full h-3 overflow-hidden">
+                <div 
+                  className={`h-full rounded-full transition-all duration-500 ${
+                    usagePercentage >= 90 ? 'bg-red-500' :
+                    usagePercentage >= 70 ? 'bg-amber-500' : 'bg-primary-500'
+                  }`}
+                  style={{ width: `${usagePercentage}%` }}
+                ></div>
+              </div>
+              <p className="text-xs text-slate-500">
+                Usage resets on {currentUsageStats.resetDate}
+              </p>
+            </div>
+            
+            {/* Usage Alert Threshold */}
+            <div className="flex items-center justify-between py-3 border-t border-slate-100">
+              <div>
+                <h4 className="text-sm font-bold text-slate-900">Usage Alert Threshold</h4>
+                <p className="text-sm text-slate-500">Get notified when usage exceeds this percentage</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="range"
+                  min="50"
+                  max="100"
+                  value={usageAlertThreshold}
+                  onChange={(e) => setUsageAlertThreshold(Number(e.target.value))}
+                  className="w-24 h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer"
+                />
+                <span className="text-sm font-bold text-slate-700 w-12 text-right">{usageAlertThreshold}%</span>
+              </div>
+            </div>
+            
+            {/* Usage History Chart */}
+            <div className="pt-4 border-t border-slate-100">
+              <h4 className="text-sm font-bold text-slate-900 mb-4">Usage History (Last 6 Months)</h4>
+              <div className="h-40 flex items-end gap-2">
+                {usageHistory.map((month, idx) => {
+                  const maxRequests = Math.max(...usageHistory.map(m => m.totalRequests));
+                  const heightPercent = maxRequests > 0 ? (month.totalRequests / maxRequests) * 100 : 0;
+                  return (
+                    <div key={idx} className="flex-1 flex flex-col items-center gap-2">
+                      <div className="w-full bg-primary-100 rounded-t-lg relative group" style={{ height: `${heightPercent}%`, minHeight: '8px' }}>
+                        <div className="absolute bottom-0 left-0 right-0 bg-primary-500 rounded-t-lg" style={{ height: '100%' }}></div>
+                        <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
+                          {month.totalRequests} requests
+                        </div>
+                      </div>
+                      <span className="text-xs text-slate-500">{month.period}</span>
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="flex items-center justify-center gap-6 mt-4">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 bg-primary-500 rounded"></div>
+                  <span className="text-xs text-slate-500">Total Requests</span>
+                </div>
+              </div>
+            </div>
+            
+            {/* Export Usage Report */}
+            <div className="pt-4 border-t border-slate-100">
+              <button className="flex items-center gap-2 px-4 py-2 rounded-lg border border-slate-300 text-slate-700 font-medium text-sm hover:bg-slate-50 transition-colors">
+                <span className="material-symbols-outlined text-[18px]">download</span>
+                Export Usage Report
+              </button>
             </div>
           </div>
         </section>
