@@ -5,7 +5,7 @@
  * in LinkedIn-compatible formats.
  */
 
-import { ResumeData } from '../types';
+import { ResumeData, Skill } from '../types';
 
 /**
  * LinkedIn field mappings to internal resume format
@@ -50,32 +50,38 @@ export function importFromLinkedIn(linkedinData: any): Partial<ResumeData> {
   
   // Extract name
   if (linkedinData.firstName || linkedinData.lastName) {
-    result.name = `${linkedinData.firstName || ''} ${linkedinData.lastName || ''}`.trim();
+    result.basics = {
+      name: `${linkedinData.firstName || ''} ${linkedinData.lastName || ''}`.trim(),
+    };
   }
   
-  // Extract headline as role
+  // Extract headline as label (role)
   if (linkedinData.headline) {
-    result.role = linkedinData.headline;
+    result.basics = result.basics || {};
+    result.basics.label = linkedinData.headline;
   }
   
   // Extract summary
   if (linkedinData.summary) {
-    result.summary = linkedinData.summary;
+    result.basics = result.basics || {};
+    result.basics.summary = linkedinData.summary;
   }
   
   // Extract email
   if (linkedinData.emailAddress) {
-    result.email = linkedinData.emailAddress;
+    result.basics = result.basics || {};
+    result.basics.email = linkedinData.emailAddress;
   }
   
   // Extract phone
   if (linkedinData.phoneNumbers && linkedinData.phoneNumbers.length > 0) {
-    result.phone = linkedinData.phoneNumbers[0]?.phoneNumber || '';
+    result.basics = result.basics || {};
+    result.basics.phone = linkedinData.phoneNumbers[0]?.phoneNumber || '';
   }
   
   // Extract location
   if (linkedinData.locationName) {
-    result.location = linkedinData.locationName;
+    result.location = { city: linkedinData.locationName };
   }
   
   // Extract experience
@@ -138,18 +144,18 @@ function parseLinkedInEducation(educations: any[]): Education[] {
 /**
  * Parse LinkedIn skills to skills format
  */
-function parseLinkedInSkills(skills: any[]): string[] {
+function parseLinkedInSkills(skills: any[]): Skill[] {
   if (!Array.isArray(skills)) return [];
   
   return skills
-    .map((skill) => (typeof skill === 'string' ? skill : skill.name))
-    .filter(Boolean);
+    .map((skill) => ({ name: typeof skill === 'string' ? skill : skill.name || '' }))
+    .filter((s) => s.name);
 }
 
 /**
  * Parse LinkedIn languages
  */
-function parseLinkedInLanguages(languages: any[]): Language[] {
+function parseLinkedInLanguages(languages: any[]): Record<string, unknown>[] {
   if (!Array.isArray(languages)) return [];
   
   return languages.map((lang) => ({
@@ -196,42 +202,44 @@ export function exportToLinkedInFormat(resumeData: ResumeData): LinkedInProfile 
     skills: [],
   };
   
+  const basics = resumeData.basics;
+  
   // Split name
-  if (resumeData.name) {
-    const nameParts = resumeData.name.split(' ');
+  if (basics?.name) {
+    const nameParts = basics.name.split(' ');
     profile.firstName = nameParts[0] || '';
     profile.lastName = nameParts.slice(1).join(' ') || '';
   }
   
-  // Headline/role
-  profile.headline = resumeData.role || '';
+  // Headline/role (label)
+  profile.headline = basics?.label || '';
   
   // Summary
-  profile.summary = resumeData.summary || '';
+  profile.summary = basics?.summary || '';
   
   // Location
-  profile.locationName = resumeData.location || '';
+  profile.locationName = resumeData.location?.city || resumeData.location?.region || '';
   
   // Email
-  if (resumeData.email) {
-    profile.emailAddress = resumeData.email;
+  if (basics?.email) {
+    profile.emailAddress = basics.email;
   }
   
   // Phone
-  if (resumeData.phone) {
-    profile.phoneNumbers = [{ phoneNumber: resumeData.phone }];
+  if (basics?.phone) {
+    profile.phoneNumbers = [{ phoneNumber: basics.phone }];
   }
   
   // Work experience
   if (resumeData.work) {
     profile.positions = resumeData.work.map((exp) => ({
       companyName: exp.company || '',
-      title: exp.role || '',
-      description: exp.description || '',
-      locationName: exp.location || '',
+      title: exp.position || exp.company || '',
+      description: exp.summary || '',
+      locationName: '',
       timePeriod: {
-        startDate: formatDateForLinkedIn(exp.startDate),
-        endDate: exp.current ? undefined : formatDateForLinkedIn(exp.endDate),
+        startDate: formatDateForLinkedIn(exp.startDate || ''),
+        endDate: exp.endDate ? formatDateForLinkedIn(exp.endDate) : undefined,
       },
     }));
   }
@@ -251,10 +259,7 @@ export function exportToLinkedInFormat(resumeData: ResumeData): LinkedInProfile 
   
   // Skills
   if (resumeData.skills) {
-    const skills = Array.isArray(resumeData.skills) 
-      ? resumeData.skills 
-      : Object.values(resumeData.skills).flat();
-    profile.skills = skills.map((s) => ({ name: typeof s === 'string' ? s : s.name || '' }));
+    profile.skills = resumeData.skills.map((s) => ({ name: s.name || '' }));
   }
   
   return profile;
