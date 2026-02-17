@@ -8,16 +8,13 @@ import re
 import sys
 from pathlib import Path
 
-from typing import List, Optional
 from fastapi import APIRouter, HTTPException, Request, UploadFile, File, status
 from fastapi.responses import Response
 from pydantic import BaseModel, Field
 
 import docx
 from docx import Document
-from docx.shared import Inches, Pt, RGBColor
 from docx.enum.text import WD_ALIGN_PARAGRAPH
-import docx  # python-docx for DOCX parsing
 import httpx  # HTTP client for LinkedIn API
 import fitz  # PyMuPDF for PDF parsing
 

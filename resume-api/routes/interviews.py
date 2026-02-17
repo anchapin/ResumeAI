@@ -11,7 +11,6 @@ Provides endpoints for:
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import List, Optional, Dict, Any
-import asyncio
 
 from lib.interview import MockInterviewGenerator, InterviewQuestionGenerator
 
