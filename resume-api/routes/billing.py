@@ -35,8 +35,10 @@ router = APIRouter(prefix="/api/billing", tags=["billing"])
 
 # ========== Request/Response Models ==========
 
+
 class PlanResponse(BaseModel):
     """Subscription plan details."""
+
     id: int
     name: str
     display_name: str
@@ -55,6 +57,7 @@ class PlanResponse(BaseModel):
 
 class SubscriptionResponse(BaseModel):
     """User subscription details."""
+
     id: int
     user_id: str
     status: str
@@ -69,6 +72,7 @@ class SubscriptionResponse(BaseModel):
 
 class CheckoutSessionRequest(BaseModel):
     """Request to create checkout session."""
+
     plan_name: str = Field(..., description="Plan name (e.g., 'basic', 'premium')")
     success_url: str = Field(..., description="URL to redirect after success")
     cancel_url: str = Field(..., description="URL to redirect after cancel")
@@ -77,28 +81,35 @@ class CheckoutSessionRequest(BaseModel):
 
 class CheckoutSessionResponse(BaseModel):
     """Checkout session response."""
+
     session_id: str
     url: str
 
 
 class PortalSessionRequest(BaseModel):
     """Request to create billing portal session."""
+
     return_url: str = Field(..., description="URL to redirect after portal session")
 
 
 class PortalSessionResponse(BaseModel):
     """Billing portal session response."""
+
     url: str
 
 
 class PaymentMethodRequest(BaseModel):
     """Request to attach payment method."""
+
     payment_method_id: str = Field(..., description="Stripe payment method ID")
-    set_as_default: bool = Field(default=False, description="Set as default payment method")
+    set_as_default: bool = Field(
+        default=False, description="Set as default payment method"
+    )
 
 
 class PaymentMethodResponse(BaseModel):
     """Payment method details."""
+
     id: int
     type: str
     brand: Optional[str]
@@ -111,6 +122,7 @@ class PaymentMethodResponse(BaseModel):
 
 class InvoiceResponse(BaseModel):
     """Invoice details."""
+
     id: int
     amount_cents: int
     currency: str
@@ -123,6 +135,7 @@ class InvoiceResponse(BaseModel):
 
 class UsageCheckResponse(BaseModel):
     """Usage limit check response."""
+
     allowed: bool
     limit: Optional[int]
     used: int
@@ -131,10 +144,12 @@ class UsageCheckResponse(BaseModel):
 
 class WebhookRequest(BaseModel):
     """Webhook payload (raw)."""
+
     pass
 
 
 # ========== Helper Functions ==========
+
 
 async def get_user_id_from_header(x_user_id: Optional[str] = Header(None)) -> str:
     """
@@ -145,13 +160,13 @@ async def get_user_id_from_header(x_user_id: Optional[str] = Header(None)) -> st
     """
     if not x_user_id:
         raise HTTPException(
-            status_code=401,
-            detail="X-User-ID header required. Please authenticate."
+            status_code=401, detail="X-User-ID header required. Please authenticate."
         )
     return x_user_id
 
 
 # ========== Subscription Plans ==========
+
 
 @router.get("/plans", response_model=List[PlanResponse])
 async def list_plans():
@@ -180,10 +195,10 @@ async def get_plan(plan_name: str):
 
 # ========== Subscription Management ==========
 
+
 @router.get("/subscription", response_model=SubscriptionResponse)
 async def get_subscription(
-    user_id: str = Depends(get_user_id_from_header),
-    db: AsyncSession = Depends(get_db)
+    user_id: str = Depends(get_user_id_from_header), db: AsyncSession = Depends(get_db)
 ):
     """
     Get current user subscription details.
@@ -207,7 +222,7 @@ async def get_subscription(
             cancel_at_period_end=False,
             resumes_generated_this_period=0,
             ai_tailorings_this_period=0,
-            created_at=""
+            created_at="",
         )
 
     plan_response = None
@@ -226,7 +241,7 @@ async def get_subscription(
             max_templates=subscription.plan.max_templates,
             include_priority_support=subscription.plan.include_priority_support,
             include_custom_domains=subscription.plan.include_custom_domains,
-            is_popular=subscription.plan.is_popular
+            is_popular=subscription.plan.is_popular,
         )
 
     return SubscriptionResponse(
@@ -236,19 +251,20 @@ async def get_subscription(
         plan=plan_response,
         current_period_start=(
             subscription.current_period_start.isoformat()
-            if subscription.current_period_start else None
+            if subscription.current_period_start
+            else None
         ),
         current_period_end=(
             subscription.current_period_end.isoformat()
-            if subscription.current_period_end else None
+            if subscription.current_period_end
+            else None
         ),
         cancel_at_period_end=subscription.cancel_at_period_end,
         resumes_generated_this_period=subscription.resumes_generated_this_period,
         ai_tailorings_this_period=subscription.ai_tailorings_this_period,
         created_at=(
-            subscription.created_at.isoformat()
-            if subscription.created_at else ""
-        )
+            subscription.created_at.isoformat() if subscription.created_at else ""
+        ),
     )
 
 
@@ -256,7 +272,7 @@ async def get_subscription(
 async def create_checkout_session(
     request: CheckoutSessionRequest,
     user_id: str = Depends(get_user_id_from_header),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ):
     """
     Create a Stripe checkout session for subscription purchase.
@@ -270,12 +286,14 @@ async def create_checkout_session(
     # Get plan details
     plan = await stripe_service.get_plan_by_name(request.plan_name)
     if not plan:
-        raise HTTPException(status_code=404, detail=f"Plan '{request.plan_name}' not found")
+        raise HTTPException(
+            status_code=404, detail=f"Plan '{request.plan_name}' not found"
+        )
 
     if not plan.get("stripe_price_id"):
         raise HTTPException(
             status_code=500,
-            detail="Plan not configured with Stripe. Please contact support."
+            detail="Plan not configured with Stripe. Please contact support.",
         )
 
     # Get or create Stripe customer
@@ -293,7 +311,7 @@ async def create_checkout_session(
         subscription = Subscription(
             user_id=user_id,
             stripe_customer_id=customer.stripe_customer_id,
-            status="inactive"
+            status="inactive",
         )
         db.add(subscription)
 
@@ -305,20 +323,17 @@ async def create_checkout_session(
         price_id=plan["stripe_price_id"],
         success_url=request.success_url,
         cancel_url=request.cancel_url,
-        trial_period_days=request.trial_period_days
+        trial_period_days=request.trial_period_days,
     )
 
-    return CheckoutSessionResponse(
-        session_id=checkout.session_id,
-        url=checkout.url
-    )
+    return CheckoutSessionResponse(session_id=checkout.session_id, url=checkout.url)
 
 
 @router.post("/portal", response_model=PortalSessionResponse)
 async def create_portal_session(
     request: PortalSessionRequest,
     user_id: str = Depends(get_user_id_from_header),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ):
     """
     Create a Stripe billing portal session for self-service management.
@@ -334,12 +349,12 @@ async def create_portal_session(
     if not subscription or not subscription.stripe_customer_id:
         raise HTTPException(
             status_code=404,
-            detail="No active subscription found. Please subscribe first."
+            detail="No active subscription found. Please subscribe first.",
         )
 
     portal = await stripe_service.create_portal_session(
         stripe_customer_id=subscription.stripe_customer_id,
-        return_url=request.return_url
+        return_url=request.return_url,
     )
 
     return PortalSessionResponse(url=portal["url"])
@@ -349,7 +364,7 @@ async def create_portal_session(
 async def cancel_subscription(
     at_period_end: bool = True,
     user_id: str = Depends(get_user_id_from_header),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ):
     """
     Cancel current subscription.
@@ -363,15 +378,12 @@ async def cancel_subscription(
     subscription = result.scalar_one_or_none()
 
     if not subscription or not subscription.stripe_subscription_id:
-        raise HTTPException(
-            status_code=404,
-            detail="No active subscription found."
-        )
+        raise HTTPException(status_code=404, detail="No active subscription found.")
 
     # Cancel in Stripe
     stripe_sub = await stripe_service.cancel_subscription(
         stripe_subscription_id=subscription.stripe_subscription_id,
-        at_period_end=at_period_end
+        at_period_end=at_period_end,
     )
 
     if not stripe_sub:
@@ -390,8 +402,7 @@ async def cancel_subscription(
 
 @router.post("/resume")
 async def resume_subscription(
-    user_id: str = Depends(get_user_id_from_header),
-    db: AsyncSession = Depends(get_db)
+    user_id: str = Depends(get_user_id_from_header), db: AsyncSession = Depends(get_db)
 ):
     """
     Resume a canceled subscription (before period ends).
@@ -402,15 +413,11 @@ async def resume_subscription(
     subscription = result.scalar_one_or_none()
 
     if not subscription or not subscription.stripe_subscription_id:
-        raise HTTPException(
-            status_code=404,
-            detail="No subscription found to resume."
-        )
+        raise HTTPException(status_code=404, detail="No subscription found to resume.")
 
     if not subscription.cancel_at_period_end:
         raise HTTPException(
-            status_code=400,
-            detail="Subscription is not canceled. Nothing to resume."
+            status_code=400, detail="Subscription is not canceled. Nothing to resume."
         )
 
     # Resume in Stripe
@@ -433,7 +440,7 @@ async def resume_subscription(
 async def upgrade_subscription(
     new_plan_name: str,
     user_id: str = Depends(get_user_id_from_header),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ):
     """
     Upgrade or downgrade to a different subscription plan.
@@ -447,10 +454,7 @@ async def upgrade_subscription(
     subscription = result.scalar_one_or_none()
 
     if not subscription or not subscription.stripe_subscription_id:
-        raise HTTPException(
-            status_code=404,
-            detail="No active subscription found."
-        )
+        raise HTTPException(status_code=404, detail="No active subscription found.")
 
     # Get new plan
     new_plan = await stripe_service.get_plan_by_name(new_plan_name)
@@ -458,15 +462,12 @@ async def upgrade_subscription(
         raise HTTPException(status_code=404, detail=f"Plan '{new_plan_name}' not found")
 
     if not new_plan.get("stripe_price_id"):
-        raise HTTPException(
-            status_code=500,
-            detail="Plan not configured with Stripe."
-        )
+        raise HTTPException(status_code=500, detail="Plan not configured with Stripe.")
 
     # Update in Stripe
     stripe_sub = await stripe_service.update_subscription_plan(
         stripe_subscription_id=subscription.stripe_subscription_id,
-        new_price_id=new_plan["stripe_price_id"]
+        new_price_id=new_plan["stripe_price_id"],
     )
 
     if not stripe_sub:
@@ -487,18 +488,17 @@ async def upgrade_subscription(
 
 # ========== Payment Methods ==========
 
+
 @router.get("/payment-methods", response_model=List[PaymentMethodResponse])
 async def list_payment_methods(
-    user_id: str = Depends(get_user_id_from_header),
-    db: AsyncSession = Depends(get_db)
+    user_id: str = Depends(get_user_id_from_header), db: AsyncSession = Depends(get_db)
 ):
     """
     Get all saved payment methods for the user.
     """
     result = await db.execute(
         select(PaymentMethod).where(
-            PaymentMethod.user_id == user_id,
-            PaymentMethod.is_active
+            PaymentMethod.user_id == user_id, PaymentMethod.is_active
         )
     )
     payment_methods = result.scalars().all()
@@ -512,7 +512,7 @@ async def list_payment_methods(
             exp_month=pm.exp_month,
             exp_year=pm.exp_year,
             billing_name=pm.billing_name,
-            is_default=pm.is_default
+            is_default=pm.is_default,
         )
         for pm in payment_methods
     ]
@@ -522,7 +522,7 @@ async def list_payment_methods(
 async def add_payment_method(
     request: PaymentMethodRequest,
     user_id: str = Depends(get_user_id_from_header),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ):
     """
     Add a new payment method.
@@ -538,21 +538,20 @@ async def add_payment_method(
 
     if not subscription or not subscription.stripe_customer_id:
         raise HTTPException(
-            status_code=404,
-            detail="No subscription found. Please subscribe first."
+            status_code=404, detail="No subscription found. Please subscribe first."
         )
 
     # Attach to Stripe customer
     pm_data = await stripe_service.attach_payment_method(
         payment_method_id=request.payment_method_id,
-        stripe_customer_id=subscription.stripe_customer_id
+        stripe_customer_id=subscription.stripe_customer_id,
     )
 
     # Set as default if requested
     if request.set_as_default:
         await stripe_service.set_default_payment_method(
             stripe_customer_id=subscription.stripe_customer_id,
-            payment_method_id=request.payment_method_id
+            payment_method_id=request.payment_method_id,
         )
 
     # Save to database
@@ -576,7 +575,7 @@ async def add_payment_method(
         billing_state=address.get("state"),
         billing_postal_code=address.get("postal_code"),
         billing_country=address.get("country"),
-        is_default=request.set_as_default
+        is_default=request.set_as_default,
     )
 
     db.add(payment_method)
@@ -591,7 +590,7 @@ async def add_payment_method(
         exp_month=payment_method.exp_month,
         exp_year=payment_method.exp_year,
         billing_name=payment_method.billing_name,
-        is_default=payment_method.is_default
+        is_default=payment_method.is_default,
     )
 
 
@@ -599,15 +598,14 @@ async def add_payment_method(
 async def remove_payment_method(
     payment_method_id: int,
     user_id: str = Depends(get_user_id_from_header),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ):
     """
     Remove a payment method.
     """
     result = await db.execute(
         select(PaymentMethod).where(
-            PaymentMethod.id == payment_method_id,
-            PaymentMethod.user_id == user_id
+            PaymentMethod.id == payment_method_id, PaymentMethod.user_id == user_id
         )
     )
     payment_method = result.scalar_one_or_none()
@@ -630,17 +628,15 @@ async def remove_payment_method(
 
 # ========== Invoices ==========
 
+
 @router.get("/invoices", response_model=List[InvoiceResponse])
 async def list_invoices(
-    user_id: str = Depends(get_user_id_from_header),
-    db: AsyncSession = Depends(get_db)
+    user_id: str = Depends(get_user_id_from_header), db: AsyncSession = Depends(get_db)
 ):
     """
     Get invoice history for the user.
     """
-    result = await db.execute(
-        select(Invoice).where(Invoice.user_id == user_id)
-    )
+    result = await db.execute(select(Invoice).where(Invoice.user_id == user_id))
     invoices = result.scalars().all()
 
     return [
@@ -652,7 +648,7 @@ async def list_invoices(
             description=inv.description,
             created_at=inv.created_at.isoformat() if inv.created_at else "",
             paid_at=inv.paid_at.isoformat() if inv.paid_at else None,
-            invoice_pdf_url=inv.invoice_pdf_url
+            invoice_pdf_url=inv.invoice_pdf_url,
         )
         for inv in invoices
     ]
@@ -662,16 +658,13 @@ async def list_invoices(
 async def get_invoice(
     invoice_id: int,
     user_id: str = Depends(get_user_id_from_header),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ):
     """
     Get details for a specific invoice.
     """
     result = await db.execute(
-        select(Invoice).where(
-            Invoice.id == invoice_id,
-            Invoice.user_id == user_id
-        )
+        select(Invoice).where(Invoice.id == invoice_id, Invoice.user_id == user_id)
     )
     invoice = result.scalar_one_or_none()
 
@@ -686,16 +679,16 @@ async def get_invoice(
         "description": invoice.description,
         "created_at": invoice.created_at.isoformat() if invoice.created_at else "",
         "paid_at": invoice.paid_at.isoformat() if invoice.paid_at else None,
-        "invoice_pdf_url": invoice.invoice_pdf_url
+        "invoice_pdf_url": invoice.invoice_pdf_url,
     }
 
 
 # ========== Usage Tracking ==========
 
+
 @router.get("/usage", response_model=Dict[str, UsageCheckResponse])
 async def get_usage(
-    user_id: str = Depends(get_user_id_from_header),
-    db: AsyncSession = Depends(get_db)
+    user_id: str = Depends(get_user_id_from_header), db: AsyncSession = Depends(get_db)
 ):
     """
     Get current usage statistics for the billing period.
@@ -705,14 +698,13 @@ async def get_usage(
 
     return {
         "resume_generated": UsageCheckResponse(**resume_check),
-        "ai_tailored": UsageCheckResponse(**tailoring_check)
+        "ai_tailored": UsageCheckResponse(**tailoring_check),
     }
 
 
 @router.post("/usage/check")
 async def check_usage_limit(
-    action: str,
-    user_id: str = Depends(get_user_id_from_header)
+    action: str, user_id: str = Depends(get_user_id_from_header)
 ):
     """
     Check if user can perform a specific action based on usage limits.
@@ -728,7 +720,7 @@ async def check_usage_limit(
             detail=(
                 f"Usage limit exceeded for {action}. "
                 f"Limit: {result['limit']}, Used: {result['used']}"
-            )
+            ),
         )
 
     return result
@@ -736,11 +728,9 @@ async def check_usage_limit(
 
 # ========== Webhooks ==========
 
+
 @router.post("/webhooks/stripe")
-async def stripe_webhook(
-    request: Request,
-    stripe_signature: str = Header(None)
-):
+async def stripe_webhook(request: Request, stripe_signature: str = Header(None)):
     """
     Handle Stripe webhook events.
 
@@ -753,19 +743,18 @@ async def stripe_webhook(
     payload = await request.body()
 
     if not settings.stripe_webhook_secret:
-        raise HTTPException(
-            status_code=500,
-            detail="Webhook secret not configured"
-        )
+        raise HTTPException(status_code=500, detail="Webhook secret not configured")
 
     try:
         event = stripe_service.verify_webhook_signature(
             payload=payload,
             signature=stripe_signature,
-            webhook_secret=settings.stripe_webhook_secret
+            webhook_secret=settings.stripe_webhook_secret,
         )
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Invalid webhook signature: {str(e)}")
+        raise HTTPException(
+            status_code=400, detail=f"Invalid webhook signature: {str(e)}"
+        )
 
     # Handle different event types
     event_type = event["type"]
@@ -798,6 +787,7 @@ async def stripe_webhook(
 
 # ========== Webhook Event Handlers ==========
 
+
 async def handle_checkout_completed(session: AsyncSession, data: Dict[str, Any]):
     """Handle checkout.session.completed event."""
     subscription_id = data.get("subscription")
@@ -822,7 +812,7 @@ async def handle_checkout_completed(session: AsyncSession, data: Dict[str, Any])
             user_id=subscription.user_id,
             subscription_id=subscription.id,
             event_type="checkout.session.completed",
-            event_data=data
+            event_data=data,
         )
         session.add(event)
         await session.commit()
@@ -840,18 +830,22 @@ async def handle_subscription_created(session: AsyncSession, data: Dict[str, Any
     if subscription:
         subscription.stripe_subscription_id = data.get("id")
         subscription.status = data.get("status", "active")
-        subscription.current_period_start = datetime.fromtimestamp(
-            data.get("current_period_start", 0)
-        ) if data.get("current_period_start") else None
-        subscription.current_period_end = datetime.fromtimestamp(
-            data.get("current_period_end", 0)
-        ) if data.get("current_period_end") else None
+        subscription.current_period_start = (
+            datetime.fromtimestamp(data.get("current_period_start", 0))
+            if data.get("current_period_start")
+            else None
+        )
+        subscription.current_period_end = (
+            datetime.fromtimestamp(data.get("current_period_end", 0))
+            if data.get("current_period_end")
+            else None
+        )
 
         event = BillingEvent(
             user_id=subscription.user_id,
             subscription_id=subscription.id,
             event_type="customer.subscription.created",
-            event_data=data
+            event_data=data,
         )
         session.add(event)
         await session.commit()
@@ -883,7 +877,7 @@ async def handle_subscription_updated(session: AsyncSession, data: Dict[str, Any
             user_id=subscription.user_id,
             subscription_id=subscription.id,
             event_type="customer.subscription.updated",
-            event_data=data
+            event_data=data,
         )
         session.add(event)
         await session.commit()
@@ -906,7 +900,7 @@ async def handle_subscription_deleted(session: AsyncSession, data: Dict[str, Any
             user_id=subscription.user_id,
             subscription_id=subscription.id,
             event_type="customer.subscription.deleted",
-            event_data=data
+            event_data=data,
         )
         session.add(event)
         await session.commit()
@@ -931,14 +925,18 @@ async def handle_invoice_paid(session: AsyncSession, data: Dict[str, Any]):
             currency=data.get("currency", "USD"),
             status="paid",
             description=data.get("description"),
-            period_start=datetime.fromtimestamp(
-                data.get("period_start", 0)
-            ) if data.get("period_start") else None,
-            period_end=datetime.fromtimestamp(
-                data.get("period_end", 0)
-            ) if data.get("period_end") else None,
+            period_start=(
+                datetime.fromtimestamp(data.get("period_start", 0))
+                if data.get("period_start")
+                else None
+            ),
+            period_end=(
+                datetime.fromtimestamp(data.get("period_end", 0))
+                if data.get("period_end")
+                else None
+            ),
             invoice_pdf_url=data.get("hosted_invoice_url"),
-            paid_at=func.now()
+            paid_at=func.now(),
         )
         session.add(invoice)
 
@@ -946,7 +944,7 @@ async def handle_invoice_paid(session: AsyncSession, data: Dict[str, Any]):
             user_id=subscription.user_id,
             subscription_id=subscription.id,
             event_type="invoice.paid",
-            event_data=data
+            event_data=data,
         )
         session.add(event)
         await session.commit()
@@ -971,12 +969,16 @@ async def handle_invoice_failed(session: AsyncSession, data: Dict[str, Any]):
             amount_cents=data.get("amount_due", 0),
             currency=data.get("currency", "USD"),
             status="failed",
-            period_start=datetime.fromtimestamp(
-                data.get("period_start", 0)
-            ) if data.get("period_start") else None,
-            period_end=datetime.fromtimestamp(
-                data.get("period_end", 0)
-            ) if data.get("period_end") else None,
+            period_start=(
+                datetime.fromtimestamp(data.get("period_start", 0))
+                if data.get("period_start")
+                else None
+            ),
+            period_end=(
+                datetime.fromtimestamp(data.get("period_end", 0))
+                if data.get("period_end")
+                else None
+            ),
         )
         session.add(invoice)
 
@@ -984,7 +986,7 @@ async def handle_invoice_failed(session: AsyncSession, data: Dict[str, Any]):
             user_id=subscription.user_id,
             subscription_id=subscription.id,
             event_type="invoice.payment_failed",
-            event_data=data
+            event_data=data,
         )
         session.add(event)
         await session.commit()
@@ -1004,7 +1006,7 @@ async def handle_trial_will_end(session: AsyncSession, data: Dict[str, Any]):
             user_id=subscription.user_id,
             subscription_id=subscription.id,
             event_type="customer.subscription.trial_will_end",
-            event_data=data
+            event_data=data,
         )
         session.add(event)
         await session.commit()

@@ -284,36 +284,40 @@ class SubscriptionPlan(Base):
     __tablename__ = "subscription_plans"
 
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String(100), nullable=False, unique=True, index=True)  # e.g., "basic", "premium"
+    name = Column(
+        String(100), nullable=False, unique=True, index=True
+    )  # e.g., "basic", "premium"
     display_name = Column(String(200), nullable=False)  # e.g., "Basic Plan"
     description = Column(Text, nullable=True)
-    
+
     # Pricing
     price_cents = Column(Integer, nullable=False)  # Price in cents
     currency = Column(String(3), default="USD")
     interval = Column(String(20), default="month")  # month, year
-    
+
     # Stripe integration
     stripe_price_id = Column(String(255), unique=True, nullable=True, index=True)
     stripe_product_id = Column(String(255), nullable=True)
-    
+
     # Features
     features = Column(JSON, nullable=True)  # List of features included
-    
+
     # Limits
     max_resumes_per_month = Column(Integer, default=5)
     max_ai_tailorings_per_month = Column(Integer, default=3)
     max_templates = Column(Integer, default=3)
     include_priority_support = Column(Boolean, default=False)
     include_custom_domains = Column(Boolean, default=False)
-    
+
     # Status
     is_active = Column(Boolean, default=True)
     is_popular = Column(Boolean, default=False)  # Mark as "most popular"
-    
+
     # Metadata
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+    updated_at = Column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
 
 
 class Subscription(Base):
@@ -323,32 +327,36 @@ class Subscription(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(String(255), nullable=False, index=True)  # User identifier
-    
+
     # Plan reference
     plan_id = Column(Integer, ForeignKey("subscription_plans.id"), nullable=True)
     plan = relationship("SubscriptionPlan", backref="subscriptions")
-    
+
     # Stripe integration
     stripe_customer_id = Column(String(255), unique=True, nullable=True, index=True)
     stripe_subscription_id = Column(String(255), unique=True, nullable=True)
     stripe_payment_method_id = Column(String(255), nullable=True)
-    
+
     # Subscription status
-    status = Column(String(50), default="inactive", index=True)  # inactive, active, past_due, canceled, trialing
+    status = Column(
+        String(50), default="inactive", index=True
+    )  # inactive, active, past_due, canceled, trialing
     current_period_start = Column(DateTime(timezone=True), nullable=True)
     current_period_end = Column(DateTime(timezone=True), nullable=True)
     cancel_at_period_end = Column(Boolean, default=False)
     canceled_at = Column(DateTime(timezone=True), nullable=True)
     trial_start = Column(DateTime(timezone=True), nullable=True)
     trial_end = Column(DateTime(timezone=True), nullable=True)
-    
+
     # Usage tracking
     resumes_generated_this_period = Column(Integer, default=0)
     ai_tailorings_this_period = Column(Integer, default=0)
-    
+
     # Metadata
     created_at = Column(DateTime(timezone=True), server_default=func.now(), index=True)
-    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+    updated_at = Column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
 
     __table_args__ = (Index("idx_subscription_user_status", "user_id", "status"),)
 
@@ -362,24 +370,26 @@ class Invoice(Base):
     user_id = Column(String(255), nullable=False, index=True)
     subscription_id = Column(Integer, ForeignKey("subscriptions.id"), nullable=True)
     subscription = relationship("Subscription", backref="invoices")
-    
+
     # Stripe integration
     stripe_invoice_id = Column(String(255), unique=True, nullable=True, index=True)
     stripe_payment_intent_id = Column(String(255), nullable=True)
-    
+
     # Invoice details
     amount_cents = Column(Integer, nullable=False)
     currency = Column(String(3), default="USD")
-    status = Column(String(50), default="pending", index=True)  # pending, paid, open, uncollectible, void
+    status = Column(
+        String(50), default="pending", index=True
+    )  # pending, paid, open, uncollectible, void
     description = Column(Text, nullable=True)
-    
+
     # Period
     period_start = Column(DateTime(timezone=True), nullable=True)
     period_end = Column(DateTime(timezone=True), nullable=True)
-    
+
     # PDF
     invoice_pdf_url = Column(String(500), nullable=True)
-    
+
     # Metadata
     created_at = Column(DateTime(timezone=True), server_default=func.now(), index=True)
     paid_at = Column(DateTime(timezone=True), nullable=True)
@@ -394,17 +404,19 @@ class PaymentMethod(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(String(255), nullable=False, index=True)
-    
+
     # Stripe integration
-    stripe_payment_method_id = Column(String(255), unique=True, nullable=True, index=True)
-    
+    stripe_payment_method_id = Column(
+        String(255), unique=True, nullable=True, index=True
+    )
+
     # Payment method details
     type = Column(String(50), nullable=False)  # card, bank_account, etc.
     brand = Column(String(50), nullable=True)  # visa, mastercard, amex, etc.
     last4 = Column(String(10), nullable=True)
     exp_month = Column(Integer, nullable=True)
     exp_year = Column(Integer, nullable=True)
-    
+
     # Billing details
     billing_name = Column(String(200), nullable=True)
     billing_email = Column(String(255), nullable=True)
@@ -414,14 +426,16 @@ class PaymentMethod(Base):
     billing_state = Column(String(100), nullable=True)
     billing_postal_code = Column(String(20), nullable=True)
     billing_country = Column(String(2), nullable=True)
-    
+
     # Status
     is_default = Column(Boolean, default=False)
     is_active = Column(Boolean, default=True)
-    
+
     # Metadata
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+    updated_at = Column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
 
 
 class BillingEvent(Base):
@@ -433,12 +447,14 @@ class BillingEvent(Base):
     user_id = Column(String(255), nullable=False, index=True)
     subscription_id = Column(Integer, ForeignKey("subscriptions.id"), nullable=True)
     subscription = relationship("Subscription", backref="events")
-    
+
     # Event details
-    event_type = Column(String(100), nullable=False, index=True)  # subscription.created, invoice.paid, etc.
+    event_type = Column(
+        String(100), nullable=False, index=True
+    )  # subscription.created, invoice.paid, etc.
     event_data = Column(JSON, nullable=True)
     stripe_event_id = Column(String(255), unique=True, nullable=True)
-    
+
     # Metadata
     created_at = Column(DateTime(timezone=True), server_default=func.now(), index=True)
 
