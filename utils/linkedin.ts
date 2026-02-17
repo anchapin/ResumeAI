@@ -1,11 +1,16 @@
 /**
  * LinkedIn Import/Export Utility Functions
- * 
+ *
  * Provides functionality to import LinkedIn profile data and export resumes
  * in LinkedIn-compatible formats.
+ *
+ * Supports multiple LinkedIn export formats:
+ * - LinkedIn Data Export (JSON format from Settings > Data privacy)
+ * - LinkedIn Profile Scraper API format
+ * - Manual JSON format with common field names
  */
 
-import { ResumeData, Skill } from '../types';
+import { ResumeData, Skill, WorkItem, EducationItem, Location, Profile } from '../types';
 
 /**
  * LinkedIn field mappings to internal resume format
@@ -20,25 +25,41 @@ export const LINKEDIN_FIELD_MAPPINGS = {
   summary: 'summary',
   emailAddress: 'email',
   phoneNumbers: 'phones',
-  
+
   // Experience
   positions: 'experience',
-  
+
   // Education
   educations: 'education',
-  
+
   // Skills
   skills: 'skills',
-  
+
   // Languages
   languages: 'languages',
-  
+
   // Certifications
   certifications: 'certifications',
-  
+
   // Projects
   projects: 'projects',
 };
+
+/**
+ * Detect the format of LinkedIn export data
+ */
+function detectLinkedInFormat(data: any): 'standard' | 'scraper' | 'minimal' | 'unknown' {
+  if (data.firstName !== undefined || data.lastName !== undefined) {
+    return 'standard';
+  }
+  if (data.fullName !== undefined || data.profileUrl !== undefined) {
+    return 'scraper';
+  }
+  if (data.name !== undefined && (data.experience !== undefined || data.education !== undefined)) {
+    return 'minimal';
+  }
+  return 'unknown';
+}
 
 /**
  * Import LinkedIn profile data from JSON export
@@ -46,93 +67,244 @@ export const LINKEDIN_FIELD_MAPPINGS = {
  * @returns ResumeData compatible object
  */
 export function importFromLinkedIn(linkedinData: any): Partial<ResumeData> {
+  const format = detectLinkedInFormat(linkedinData);
+
+  if (format === 'scraper') {
+    return importFromLinkedInScraperFormat(linkedinData);
+  } else if (format === 'minimal') {
+    return importFromLinkedInMinimalFormat(linkedinData);
+  } else {
+    return importFromLinkedInStandardFormat(linkedinData);
+  }
+}
+
+/**
+ * Import standard LinkedIn export format
+ */
+function importFromLinkedInStandardFormat(linkedinData: any): Partial<ResumeData> {
   const result: Partial<ResumeData> = {};
-  
+
   // Extract name
-  if (linkedinData.firstName || linkedinData.lastName) {
+  if (linkedinData.firstName !== undefined || linkedinData.lastName !== undefined) {
     result.basics = {
       name: `${linkedinData.firstName || ''} ${linkedinData.lastName || ''}`.trim(),
     };
   }
-  
+
   // Extract headline as label (role)
   if (linkedinData.headline) {
     result.basics = result.basics || {};
     result.basics.label = linkedinData.headline;
   }
-  
+
   // Extract summary
   if (linkedinData.summary) {
     result.basics = result.basics || {};
     result.basics.summary = linkedinData.summary;
   }
-  
+
   // Extract email
   if (linkedinData.emailAddress) {
     result.basics = result.basics || {};
     result.basics.email = linkedinData.emailAddress;
   }
-  
+
   // Extract phone
-  if (linkedinData.phoneNumbers && linkedinData.phoneNumbers.length > 0) {
+  if (linkedinData.phoneNumbers && Array.isArray(linkedinData.phoneNumbers) && linkedinData.phoneNumbers.length > 0) {
     result.basics = result.basics || {};
     result.basics.phone = linkedinData.phoneNumbers[0]?.phoneNumber || '';
   }
-  
+
   // Extract location
   if (linkedinData.locationName) {
     result.location = { city: linkedinData.locationName };
   }
-  
+
   // Extract experience
-  if (linkedinData.positions) {
+  if (linkedinData.positions && Array.isArray(linkedinData.positions)) {
     result.work = parseLinkedInPositions(linkedinData.positions);
   }
-  
+
   // Extract education
-  if (linkedinData.educations) {
+  if (linkedinData.educations && Array.isArray(linkedinData.educations)) {
     result.education = parseLinkedInEducation(linkedinData.educations);
   }
-  
+
   // Extract skills
-  if (linkedinData.skills) {
+  if (linkedinData.skills && Array.isArray(linkedinData.skills)) {
     result.skills = parseLinkedInSkills(linkedinData.skills);
   }
-  
+
   // Extract languages
-  if (linkedinData.languages) {
+  if (linkedinData.languages && Array.isArray(linkedinData.languages)) {
     result.languages = parseLinkedInLanguages(linkedinData.languages);
   }
-  
+
+  // Extract certifications
+  if (linkedinData.certifications && Array.isArray(linkedinData.certifications)) {
+    result.certificates = parseLinkedInCertifications(linkedinData.certifications);
+  }
+
+  // Extract projects
+  if (linkedinData.projects && Array.isArray(linkedinData.projects)) {
+    result.projects = parseLinkedInProjects(linkedinData.projects);
+  }
+
+  return result;
+}
+
+/**
+ * Import LinkedIn scraper API format
+ */
+function importFromLinkedInScraperFormat(linkedinData: any): Partial<ResumeData> {
+  const result: Partial<ResumeData> = {};
+
+  // Extract name
+  if (linkedinData.fullName) {
+    result.basics = { name: linkedinData.fullName };
+  } else if (linkedinData.name) {
+    result.basics = { name: linkedinData.name };
+  }
+
+  // Extract headline
+  if (linkedinData.headline) {
+    result.basics = result.basics || {};
+    result.basics.label = linkedinData.headline;
+  }
+
+  // Extract summary (could be 'summary' or 'about')
+  if (linkedinData.summary || linkedinData.about) {
+    result.basics = result.basics || {};
+    result.basics.summary = linkedinData.summary || linkedinData.about;
+  }
+
+  // Extract email
+  if (linkedinData.email) {
+    result.basics = result.basics || {};
+    result.basics.email = linkedinData.email;
+  }
+
+  // Extract phone
+  if (linkedinData.phone) {
+    result.basics = result.basics || {};
+    result.basics.phone = linkedinData.phone;
+  }
+
+  // Extract location (can be string or object)
+  const location = linkedinData.location || linkedinData.city;
+  if (location) {
+    if (typeof location === 'object') {
+      result.location = {
+        city: location.city || location.name,
+        region: location.region,
+        countryCode: location.countryCode,
+      };
+    } else {
+      result.location = { city: location };
+    }
+  }
+
+  // Extract experience
+  if (linkedinData.experience && Array.isArray(linkedinData.experience)) {
+    result.work = parseScraperExperience(linkedinData.experience);
+  }
+
+  // Extract education
+  if (linkedinData.education && Array.isArray(linkedinData.education)) {
+    result.education = parseScraperEducation(linkedinData.education);
+  }
+
+  // Extract skills
+  if (linkedinData.skills && Array.isArray(linkedinData.skills)) {
+    result.skills = parseScraperSkills(linkedinData.skills);
+  }
+
+  return result;
+}
+
+/**
+ * Import minimal/custom LinkedIn format
+ */
+function importFromLinkedInMinimalFormat(linkedinData: any): Partial<ResumeData> {
+  const result: Partial<ResumeData> = {};
+
+  // Extract name
+  if (linkedinData.name) {
+    result.basics = { name: linkedinData.name };
+  }
+
+  // Extract headline (could be 'headline', 'title', or 'role')
+  const headline = linkedinData.headline || linkedinData.title || linkedinData.role;
+  if (headline) {
+    result.basics = result.basics || {};
+    result.basics.label = headline;
+  }
+
+  // Extract summary (could be 'summary', 'bio', or 'about')
+  const summary = linkedinData.summary || linkedinData.bio || linkedinData.about;
+  if (summary) {
+    result.basics = result.basics || {};
+    result.basics.summary = summary;
+  }
+
+  // Extract email
+  if (linkedinData.email) {
+    result.basics = result.basics || {};
+    result.basics.email = linkedinData.email;
+  }
+
+  // Extract phone
+  if (linkedinData.phone) {
+    result.basics = result.basics || {};
+    result.basics.phone = linkedinData.phone;
+  }
+
+  // Extract location
+  const location = linkedinData.location || linkedinData.city;
+  if (location) {
+    result.location = { city: location };
+  }
+
+  // Extract experience
+  if (linkedinData.experience && Array.isArray(linkedinData.experience)) {
+    result.work = parseMinimalExperience(linkedinData.experience);
+  }
+
+  // Extract education
+  if (linkedinData.education && Array.isArray(linkedinData.education)) {
+    result.education = parseMinimalEducation(linkedinData.education);
+  }
+
+  // Extract skills
+  if (linkedinData.skills && Array.isArray(linkedinData.skills)) {
+    result.skills = parseMinimalSkills(linkedinData.skills);
+  }
+
   return result;
 }
 
 /**
  * Parse LinkedIn positions to work experience format
  */
-function parseLinkedInPositions(positions: any[]): WorkExperience[] {
+function parseLinkedInPositions(positions: any[]): WorkItem[] {
   if (!Array.isArray(positions)) return [];
-  
+
   return positions.map((pos) => ({
-    id: generateId(),
     company: pos.companyName || '',
-    role: pos.title || '',
+    position: pos.title || '',
     startDate: parseLinkedInDate(pos.timePeriod?.startDate),
-    endDate: pos.timePeriod?.endDate ? parseLinkedInDate(pos.timePeriod.endDate) : 'Present',
-    current: !pos.timePeriod?.endDate,
-    description: pos.description || '',
-    location: pos.locationName || '',
+    endDate: pos.timePeriod?.endDate ? parseLinkedInDate(pos.timePeriod.endDate) : '',
+    summary: pos.description || '',
   }));
 }
 
 /**
  * Parse LinkedIn education to education format
  */
-function parseLinkedInEducation(educations: any[]): Education[] {
+function parseLinkedInEducation(educations: any[]): EducationItem[] {
   if (!Array.isArray(educations)) return [];
-  
+
   return educations.map((edu) => ({
-    id: generateId(),
     institution: edu.schoolName || '',
     area: edu.fieldOfStudy || '',
     studyType: edu.degreeName || '',
@@ -146,7 +318,7 @@ function parseLinkedInEducation(educations: any[]): Education[] {
  */
 function parseLinkedInSkills(skills: any[]): Skill[] {
   if (!Array.isArray(skills)) return [];
-  
+
   return skills
     .map((skill) => ({ name: typeof skill === 'string' ? skill : skill.name || '' }))
     .filter((s) => s.name);
@@ -157,10 +329,38 @@ function parseLinkedInSkills(skills: any[]): Skill[] {
  */
 function parseLinkedInLanguages(languages: any[]): Record<string, unknown>[] {
   if (!Array.isArray(languages)) return [];
-  
+
   return languages.map((lang) => ({
     name: lang.name || '',
     proficiency: lang.proficiency || '',
+  }));
+}
+
+/**
+ * Parse LinkedIn certifications
+ */
+function parseLinkedInCertifications(certifications: any[]): Record<string, unknown>[] {
+  if (!Array.isArray(certifications)) return [];
+
+  return certifications.map((cert) => ({
+    name: cert.name || cert.certificationName || '',
+    issuer: cert.authority || cert.issuer || cert.organization || '',
+    startDate: cert.timePeriod?.startDate ? parseLinkedInDate(cert.timePeriod.startDate) : '',
+    endDate: cert.timePeriod?.endDate ? parseLinkedInDate(cert.timePeriod.endDate) : '',
+    url: cert.displaySource || '',
+  }));
+}
+
+/**
+ * Parse LinkedIn projects
+ */
+function parseLinkedInProjects(projects: any[]): Record<string, unknown>[] {
+  if (!Array.isArray(projects)) return [];
+
+  return projects.map((proj) => ({
+    name: proj.name || '',
+    description: proj.description || '',
+    url: proj.url || '',
   }));
 }
 
@@ -176,6 +376,155 @@ function parseLinkedInDate(dateObj: { month?: number; year?: number }): string {
     return dateObj.year.toString();
   }
   return '';
+}
+
+/**
+ * Parse scraper API experience format
+ */
+function parseScraperExperience(experience: any[]): WorkItem[] {
+  if (!Array.isArray(experience)) return [];
+
+  return experience.map((exp) => ({
+    company: exp.companyName || exp.company || '',
+    position: exp.title || exp.position || '',
+    startDate: normalizeDate(exp.startDate),
+    endDate: (exp.endDate && !['present', 'current', 'now'].includes(String(exp.endDate).toLowerCase())) 
+      ? normalizeDate(exp.endDate) 
+      : '',
+    summary: exp.description || exp.summary || '',
+  }));
+}
+
+/**
+ * Parse scraper API education format
+ */
+function parseScraperEducation(education: any[]): EducationItem[] {
+  if (!Array.isArray(education)) return [];
+
+  return education.map((edu) => ({
+    institution: edu.schoolName || edu.institution || '',
+    area: edu.fieldOfStudy || edu.area || '',
+    studyType: edu.degreeName || edu.degree || '',
+    startDate: normalizeDate(edu.startDate),
+    endDate: normalizeDate(edu.endDate),
+  }));
+}
+
+/**
+ * Parse scraper API skills format
+ */
+function parseScraperSkills(skills: any[]): Skill[] {
+  if (!Array.isArray(skills)) return [];
+
+  return skills
+    .map((skill) => {
+      if (typeof skill === 'string') return { name: skill };
+      if (typeof skill === 'object') return { name: skill.name || skill.skill || '' };
+      return { name: '' };
+    })
+    .filter((s) => s.name);
+}
+
+/**
+ * Parse minimal format experience
+ */
+function parseMinimalExperience(experience: any[]): WorkItem[] {
+  if (!Array.isArray(experience)) return [];
+
+  return experience.map((exp) => ({
+    company: exp.company || '',
+    position: exp.role || exp.position || exp.title || '',
+    startDate: normalizeDate(exp.startDate || exp.start_date || exp.from),
+    endDate: (exp.endDate || exp.end_date || exp.to) && 
+             !['present', 'current', 'now'].includes(String(exp.endDate || exp.end_date || exp.to).toLowerCase())
+      ? normalizeDate(exp.endDate || exp.end_date || exp.to)
+      : '',
+    summary: exp.description || exp.summary || exp.details || '',
+  }));
+}
+
+/**
+ * Parse minimal format education
+ */
+function parseMinimalEducation(education: any[]): EducationItem[] {
+  if (!Array.isArray(education)) return [];
+
+  return education.map((edu) => ({
+    institution: edu.institution || edu.school || edu.university || '',
+    area: edu.area || edu.major || edu.field_of_study || '',
+    studyType: edu.studyType || edu.degree || edu.degree_type || '',
+    startDate: normalizeDate(edu.startDate || edu.start_date || edu.from),
+    endDate: normalizeDate(edu.endDate || edu.end_date || edu.to),
+  }));
+}
+
+/**
+ * Parse minimal format skills
+ */
+function parseMinimalSkills(skills: any[]): Skill[] {
+  if (!Array.isArray(skills)) return [];
+
+  return skills
+    .map((skill) => {
+      if (typeof skill === 'string') return { name: skill };
+      if (typeof skill === 'object') return { name: skill.name || skill.skill || skill.title || '' };
+      return { name: '' };
+    })
+    .filter((s) => s.name);
+}
+
+/**
+ * Normalize various date formats to YYYY-MM format
+ */
+function normalizeDate(dateStr: string | number | undefined): string {
+  if (!dateStr) return '';
+
+  const str = String(dateStr).trim();
+
+  // Already in YYYY-MM format
+  if (/^\d{4}-\d{2}$/.test(str)) return str;
+
+  // Just year
+  if (/^\d{4}$/.test(str)) return str;
+
+  // Month name year format (Jan 2020, January 2020)
+  const monthNames: Record<string, string> = {
+    jan: '01', january: '01',
+    feb: '02', february: '02',
+    mar: '03', march: '03',
+    apr: '04', april: '04',
+    may: '05',
+    jun: '06', june: '06',
+    jul: '07', july: '07',
+    aug: '08', august: '08',
+    sep: '09', september: '09',
+    oct: '10', october: '10',
+    nov: '11', november: '11',
+    dec: '12', december: '12',
+  };
+
+  const monthMatch = str.match(/^(\w+)\s+(\d{4})$/i);
+  if (monthMatch) {
+    const [, monthStr, year] = monthMatch;
+    const month = monthNames[monthStr.toLowerCase()];
+    if (month) return `${year}-${month}`;
+  }
+
+  // MM/YYYY or M/YYYY format
+  const slashMatch = str.match(/^(\d{1,2})\/(\d{4})$/);
+  if (slashMatch) {
+    const [, month, year] = slashMatch;
+    return `${year}-${month.padStart(2, '0')}`;
+  }
+
+  // YYYY-MM-DD format
+  const fullDateMatch = str.match(/^(\d{4})-(\d{2})-\d{2}$/);
+  if (fullDateMatch) {
+    const [, year, month] = fullDateMatch;
+    return `${year}-${month}`;
+  }
+
+  return str;
 }
 
 /**
