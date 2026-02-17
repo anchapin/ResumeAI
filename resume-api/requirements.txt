@@ -69,3 +69,6 @@ aiosqlite==0.20.0
 # PDF Parsing (for import feature)
 # Using pypdf instead of pymupdf for better Python 3.14 compatibility
 pypdf>=4.0.0
+
+# DOCX Processing (for import/export feature)
+python-docx>=1.1.0
