@@ -7,16 +7,14 @@ Tests the three main v1 endpoints:
 - GET /v1/variants
 """
 
+from server import app
+from fastapi.testclient import TestClient
 import unittest
 import sys
 import os
-import json
 
 # Add parent directory to path to import server
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-from fastapi.testclient import TestClient
-from server import app
 
 
 class TestV1Endpoints(unittest.TestCase):

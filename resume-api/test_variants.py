@@ -4,6 +4,7 @@ Comprehensive tests for Template Variants functionality.
 Tests the VariantManager class and /v1/variants endpoint.
 """
 
+from lib.cli.variants import VariantManager, MockVariantManager
 import pytest
 import sys
 from pathlib import Path
@@ -11,8 +12,6 @@ from pathlib import Path
 # Add lib to path
 lib_path = Path(__file__).parent.parent / "resume-api"
 sys.path.insert(0, str(lib_path))
-
-from lib.cli.variants import VariantManager, MockVariantManager  # noqa: E402
 
 
 class TestVariantManager:
@@ -85,6 +84,7 @@ class TestVariantManager:
 
         assert isinstance(results, list)
         # Should find modern variant if it exists
+        [v.get("name", "") for v in results]
         # Check that search worked (may or may not find matches)
 
     def test_filter_variants_by_category(self, variant_manager):

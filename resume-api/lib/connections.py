@@ -230,7 +230,7 @@ class ConnectionFinder:
             user_school = user_profile['education'][0].get('institution')
 
         if user_profile.get('experience'):
-            pass
+            [exp.get('company') for exp in user_profile['experience']]
 
         templates = {
             'github': (

@@ -9,9 +9,8 @@ Tests all major API endpoints with various scenarios including:
 - Data validation
 """
 
-import json
+from main import app
 from fastapi.testclient import TestClient
-from unittest.mock import patch, MagicMock
 import pytest
 import os
 
@@ -27,7 +26,6 @@ sys.path.insert(0, str(resume_api_path))
 os.environ["REQUIRE_API_KEY"] = "False"
 os.environ["ENABLE_RATE_LIMITING"] = "False"
 
-from main import app
 
 client = TestClient(app)
 

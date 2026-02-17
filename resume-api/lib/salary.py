@@ -205,9 +205,7 @@ class SalaryResearcher:
             "5_year_projection": future_median,
             "annual_bonus_estimate": int(median * 0.1),
             "equity_estimate": int(median * 0.15) if experience_level in ["senior", "lead", "executive"] else 0,
-            "total_compensation": median + int(median * 0.1) + (
-                int(median * 0.15) if experience_level in ["senior", "lead", "executive"] else 0
-            )
+            "total_compensation": median + int(median * 0.1) + (int(median * 0.15) if experience_level in ["senior", "lead", "executive"] else 0)
         }
 
 
@@ -247,7 +245,7 @@ class OfferComparison:
         total_weight = sum(priorities.values())
         if abs(total_weight - 1.0) > 0.01:
             # Normalize weights
-            priorities = {k: v/total_weight for k, v in priorities.items()}
+            priorities = {k: v / total_weight for k, v in priorities.items()}
 
         # Score each offer
         scored_offers = []

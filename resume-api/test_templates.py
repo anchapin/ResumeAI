@@ -431,10 +431,10 @@ SAMPLE_RESUME_LONG = {
 
 def test_template(template_name, resume_data, description):
     """Test a template with given resume data."""
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print(f"Testing Template: {template_name}")
     print(f"Resume Length: {description}")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
 
     try:
         generator = ResumeGenerator(
@@ -481,9 +481,9 @@ def main():
         results.append((template, template_results))
 
     # Print summary
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print("TEST SUMMARY")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
 
     for template, template_results in results:
         passed = sum(1 for _, success in template_results if success)

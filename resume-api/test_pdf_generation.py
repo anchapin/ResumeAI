@@ -5,6 +5,7 @@ Tests the /v1/render/pdf endpoint and ResumeGenerator class
 to verify all template variants work correctly.
 """
 
+from lib.cli.generator import ResumeGenerator
 import pytest
 import sys
 from pathlib import Path
@@ -13,7 +14,6 @@ from pathlib import Path
 lib_path = Path(__file__).parent.parent / "resume-api"
 sys.path.insert(0, str(lib_path))
 
-from lib.cli.generator import ResumeGenerator  # noqa: E402
 
 # Sample resume data for testing
 SAMPLE_RESUME_DATA = {

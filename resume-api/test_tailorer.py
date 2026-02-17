@@ -5,6 +5,7 @@ Tests the ResumeTailorer class with various AI providers
 and the /v1/tailor endpoint.
 """
 
+from lib.cli.tailorer import ResumeTailorer, MockResumeTailorer
 import pytest
 import sys
 from pathlib import Path
@@ -14,7 +15,6 @@ from unittest.mock import Mock, patch
 lib_path = Path(__file__).parent.parent / "resume-api"
 sys.path.insert(0, str(lib_path))
 
-from lib.cli.tailorer import ResumeTailorer, MockResumeTailorer  # noqa: E402
 
 # Sample resume data for testing
 SAMPLE_RESUME_DATA = {

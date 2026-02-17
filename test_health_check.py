@@ -5,7 +5,6 @@ Test script to verify health check functionality
 
 import httpx
 import sys
-import time
 
 
 def test_health_check():
