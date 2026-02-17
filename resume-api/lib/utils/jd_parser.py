@@ -14,6 +14,7 @@ from dataclasses import dataclass, field
 @dataclass
 class ParsedJobDescription:
     """Structured representation of a parsed job description."""
+
     title: Optional[str] = None
     company: Optional[str] = None
     location: Optional[str] = None
@@ -26,7 +27,9 @@ class ParsedJobDescription:
     qualifications: List[str] = field(default_factory=list)
     responsibilities: List[str] = field(default_factory=list)
     skills: List[str] = field(default_factory=list)
-    experience_level: Optional[str] = None  # "entry", "mid", "senior", "lead", "executive"
+    experience_level: Optional[str] = (
+        None  # "entry", "mid", "senior", "lead", "executive"
+    )
     experience_years: Optional[Tuple[int, int]] = None  # (min, max) years
     education_requirements: List[str] = field(default_factory=list)
     benefits: List[str] = field(default_factory=list)
@@ -44,46 +47,103 @@ class JobDescriptionParser:
     # Section headers that indicate different parts of a JD
     SECTION_HEADERS = {
         "requirements": [
-            "requirements", "required", "must have", "you must",
-            "what you need", "qualifications", "prerequisites"
+            "requirements",
+            "required",
+            "must have",
+            "you must",
+            "what you need",
+            "qualifications",
+            "prerequisites",
         ],
         "qualifications": [
-            "qualifications", "preferred", "nice to have", "bonus",
-            "plus", "additional", "desired"
+            "qualifications",
+            "preferred",
+            "nice to have",
+            "bonus",
+            "plus",
+            "additional",
+            "desired",
         ],
         "responsibilities": [
-            "responsibilities", "duties", "what you'll do", "you will",
-            "your role", "key responsibilities", "what you'll be doing",
-            "day-to-day", "tasks", "accountabilities"
+            "responsibilities",
+            "duties",
+            "what you'll do",
+            "you will",
+            "your role",
+            "key responsibilities",
+            "what you'll be doing",
+            "day-to-day",
+            "tasks",
+            "accountabilities",
         ],
         "skills": [
-            "skills", "technologies", "tools", "tech stack",
-            "technical skills", "competencies", "expertise"
+            "skills",
+            "technologies",
+            "tools",
+            "tech stack",
+            "technical skills",
+            "competencies",
+            "expertise",
         ],
         "benefits": [
-            "benefits", "perks", "what we offer", "compensation",
-            "what you get", "employee benefits", "why join us"
+            "benefits",
+            "perks",
+            "what we offer",
+            "compensation",
+            "what you get",
+            "employee benefits",
+            "why join us",
         ],
         "education": [
-            "education", "degree", "academic", "bachelor", "master",
-            "phd", "university", "college"
-        ]
+            "education",
+            "degree",
+            "academic",
+            "bachelor",
+            "master",
+            "phd",
+            "university",
+            "college",
+        ],
     }
 
     # Experience level indicators - ordered from highest to lowest priority
     EXPERIENCE_LEVELS = {
-        "executive": ["executive", "director", "vp", "head of", "chief", "cto", "ceo", "10+ years"],
+        "executive": [
+            "executive",
+            "director",
+            "vp",
+            "head of",
+            "chief",
+            "cto",
+            "ceo",
+            "10+ years",
+        ],
         "lead": ["lead", "principal", "staff", "8-12 years", "8+ years"],
         "senior": ["senior", "sr ", "sr.", "5-8 years", "5+ years", "experienced"],
         "mid": ["mid", "middle", "intermediate", "2-5 years", "3+ years", "mid-level"],
-        "entry": ["entry", "junior", "associate", "graduate", "trainee", "0-2 years", "entry-level"]
+        "entry": [
+            "entry",
+            "junior",
+            "associate",
+            "graduate",
+            "trainee",
+            "0-2 years",
+            "entry-level",
+        ],
     }
 
     # Remote work indicators
     REMOTE_INDICATORS = {
-        "remote": ["remote", "work from home", "wfh", "distributed", "virtual", "telecommute"],
+        "remote": [
+            "remote",
+            "work from home",
+            "wfh",
+            "distributed",
+            "virtual",
+            "telecommute",
+        ],
         "hybrid": ["hybrid", "flexible", "partially remote", "2-3 days"],
-        "onsite": ["onsite", "on-site", "in office", "in-person", "at our office"]
+        "onsite": ["onsite", "on-site", "in office", "in-person", "at our office"],
     }
 
     # Salary patterns
@@ -169,7 +229,7 @@ class JobDescriptionParser:
             sections.get("skills", ""),
             sections.get("requirements", ""),
             sections.get("qualifications", ""),
-            text  # Also search full text for skills
+            text,  # Also search full text for skills
         )
 
         # Extract keywords
@@ -198,11 +258,15 @@ class JobDescriptionParser:
                 # Look for header followed by colon, newline, or bullet points
                 patterns = [
                     rf"(?:^|\n)\s*{re.escape(header)}\s*[:\-]?\s*\n",  # Header with newline
-                    rf"(?:^|\n)\s*{re.escape(header)}\s*[:\-]?\s*",    # Header without newline
+                    rf"(?:^|\n)\s*{re.escape(header)}\s*[:\-]?\s*",  # Header without newline
                 ]
                 for pattern in patterns:
                     match = re.search(pattern, text_lower)
-                    if match and (match.start(), section_name, header) not in section_positions:
+                    if (
+                        match
+                        and (match.start(), section_name, header)
+                        not in section_positions
+                    ):
                         section_positions.append((match.start(), section_name, header))
                         break
 
@@ -260,10 +324,20 @@ class JobDescriptionParser:
             if len(line) < 3 or len(line) > 100:
                 continue
             # Skip lines that look like contact info or locations
-            if re.search(r"^\d+|\s+(Street|Ave|Road|Blvd|CA|NY|TX|USA)|@|\d{3}[-.]\d{3}", line):
+            if re.search(
+                r"^\d+|\s+(Street|Ave|Road|Blvd|CA|NY|TX|USA)|@|\d{3}[-.]\d{3}", line
+            ):
                 continue
             # Skip section headers
-            if line.lower() in ["requirements", "responsibilities", "qualifications", "benefits", "skills", "location", "salary"]:
+            if line.lower() in [
+                "requirements",
+                "responsibilities",
+                "qualifications",
+                "benefits",
+                "skills",
+                "location",
+                "salary",
+            ]:
                 continue
             # Skip full sentences
             if line.endswith(".") and len(line) > 40:
@@ -301,7 +375,9 @@ class JobDescriptionParser:
             if match:
                 location = match.group(1).strip()
                 # Clean up location
-                location = re.sub(r"\s*\([^)]*\)", "", location)  # Remove parentheticals
+                location = re.sub(
+                    r"\s*\([^)]*\)", "", location
+                )  # Remove parentheticals
                 return location[:100]  # Limit length
 
         return None
@@ -346,7 +422,7 @@ class JobDescriptionParser:
                         result["period"] = "yearly"
 
                 # Check for 'k' suffix (already handled in parsing)
-                if len(groups) > 4 and groups[4] and 'k' in groups[4].lower():
+                if len(groups) > 4 and groups[4] and "k" in groups[4].lower():
                     result["min"] = result["min"] * 1000 if result["min"] else None
                     result["max"] = result["max"] * 1000 if result["max"] else None
 
@@ -406,7 +482,9 @@ class JobDescriptionParser:
 
         return None
 
-    def _extract_section_content(self, section_text: str, section_type: str) -> List[str]:
+    def _extract_section_content(
+        self, section_text: str, section_type: str
+    ) -> List[str]:
         """Extract bullet points or items from a section."""
         if not section_text:
             return []
@@ -440,22 +518,85 @@ class JobDescriptionParser:
 
         return items[:20]  # Limit to 20 items per section
 
-    def _extract_skills(self, skills_section: str, requirements_section: str,
-                        qualifications_section: str, full_text: str = "") -> List[str]:
+    def _extract_skills(
+        self,
+        skills_section: str,
+        requirements_section: str,
+        qualifications_section: str,
+        full_text: str = "",
+    ) -> List[str]:
         """Extract skills from relevant sections."""
         # Common tech skills to look for
         tech_skills = [
-            "python", "javascript", "typescript", "java", "go", "rust", "c++", "c#",
-            "ruby", "php", "swift", "kotlin", "scala", "sql", "html", "css",
-            "react", "vue", "angular", "node.js", "nodejs", "django", "flask",
-            "fastapi", "spring", "rails", "next.js", "express",
-            "tensorflow", "pytorch", "keras", "pandas", "numpy", "scikit-learn",
-            "kubernetes", "docker", "aws", "azure", "gcp", "google cloud",
-            "postgres", "postgresql", "mysql", "mongodb", "redis", "elasticsearch",
-            "graphql", "rest", "api", "microservices", "devops", "ci/cd",
-            "git", "github", "gitlab", "jenkins", "terraform", "ansible",
-            "machine learning", "ml", "ai", "llm", "nlp", "data science",
-            "agile", "scrum", "leadership", "communication", "teamwork"
+            "python",
+            "javascript",
+            "typescript",
+            "java",
+            "go",
+            "rust",
+            "c++",
+            "c#",
+            "ruby",
+            "php",
+            "swift",
+            "kotlin",
+            "scala",
+            "sql",
+            "html",
+            "css",
+            "react",
+            "vue",
+            "angular",
+            "node.js",
+            "nodejs",
+            "django",
+            "flask",
+            "fastapi",
+            "spring",
+            "rails",
+            "next.js",
+            "express",
+            "tensorflow",
+            "pytorch",
+            "keras",
+            "pandas",
+            "numpy",
+            "scikit-learn",
+            "kubernetes",
+            "docker",
+            "aws",
+            "azure",
+            "gcp",
+            "google cloud",
+            "postgres",
+            "postgresql",
+            "mysql",
+            "mongodb",
+            "redis",
+            "elasticsearch",
+            "graphql",
+            "rest",
+            "api",
+            "microservices",
+            "devops",
+            "ci/cd",
+            "git",
+            "github",
+            "gitlab",
+            "jenkins",
+            "terraform",
+            "ansible",
+            "machine learning",
+            "ml",
+            "ai",
+            "llm",
+            "nlp",
+            "data science",
+            "agile",
+            "scrum",
+            "leadership",
+            "communication",
+            "teamwork",
         ]
 
         skills = []
@@ -466,23 +607,60 @@ class JobDescriptionParser:
                 skills.append(skill)
 
         # Also extract capitalized words that might be skills
-        capitalized = re.findall(r"\b[A-Z][a-zA-Z]{2,}(?:\s+[A-Z][a-zA-Z]+)*\b",
-                                 skills_section + " " + requirements_section + " " + full_text)
+        capitalized = re.findall(
+            r"\b[A-Z][a-zA-Z]{2,}(?:\s+[A-Z][a-zA-Z]+)*\b",
+            skills_section + " " + requirements_section + " " + full_text,
+        )
         for word in capitalized:
             word_lower = word.lower()
-            if (word_lower not in skills and len(word) > 2 and
-                    word_lower not in ["the", "and", "for", "with", "from", "this", "that",
-                                       "will", "have", "has", "are", "been", "being", "more",
-                                       "some", "other", "all", "new", "use", "using", "work",
-                                       "years", "experience", "knowledge", "skills", "ability",
-                                       "strong", "excellent", "plus", "must", "required",
-                                       "preferred", "responsibilities", "duties"]):
+            if (
+                word_lower not in skills
+                and len(word) > 2
+                and word_lower
+                not in [
+                    "the",
+                    "and",
+                    "for",
+                    "with",
+                    "from",
+                    "this",
+                    "that",
+                    "will",
+                    "have",
+                    "has",
+                    "are",
+                    "been",
+                    "being",
+                    "more",
+                    "some",
+                    "other",
+                    "all",
+                    "new",
+                    "use",
+                    "using",
+                    "work",
+                    "years",
+                    "experience",
+                    "knowledge",
+                    "skills",
+                    "ability",
+                    "strong",
+                    "excellent",
+                    "plus",
+                    "must",
+                    "required",
+                    "preferred",
+                    "responsibilities",
+                    "duties",
+                ]
+            ):
                 skills.append(word_lower)
 
         return list(dict.fromkeys(skills))[:50]  # Remove duplicates, limit to 50
 
-    def _extract_education_requirements(self, education_section: str,
-                                        requirements_section: str) -> List[str]:
+    def _extract_education_requirements(
+        self, education_section: str, requirements_section: str
+    ) -> List[str]:
         """Extract education requirements."""
         requirements = []
 
@@ -498,19 +676,31 @@ class JobDescriptionParser:
             matches = re.findall(pattern, all_text, re.IGNORECASE)
             for match in matches:
                 if isinstance(match, tuple):
-                    requirement = f"{match[0].title()} in {match[1].strip()}" if len(match) > 1 else match[0]
+                    requirement = (
+                        f"{match[0].title()} in {match[1].strip()}"
+                        if len(match) > 1
+                        else match[0]
+                    )
                 else:
                     requirement = match
                 requirements.append(requirement.strip())
 
         # Check for explicit education mentions
         education_keywords = [
-            "bachelor's degree", "master's degree", "phd", "doctorate",
-            "mba", "computer science", "engineering degree", "related field"
+            "bachelor's degree",
+            "master's degree",
+            "phd",
+            "doctorate",
+            "mba",
+            "computer science",
+            "engineering degree",
+            "related field",
         ]
 
         for keyword in education_keywords:
-            if keyword in all_text.lower() and keyword not in [r.lower() for r in requirements]:
+            if keyword in all_text.lower() and keyword not in [
+                r.lower() for r in requirements
+            ]:
                 requirements.append(keyword.title())
 
         return list(dict.fromkeys(requirements))[:10]
@@ -519,16 +709,97 @@ class JobDescriptionParser:
         """Extract important keywords from the JD."""
         # Remove common stop words
         stop_words = {
-            "the", "a", "an", "and", "or", "but", "in", "on", "at", "to", "for",
-            "of", "with", "by", "from", "as", "is", "was", "are", "were", "been",
-            "be", "have", "has", "had", "do", "does", "did", "will", "would",
-            "could", "should", "may", "might", "must", "shall", "can", "need",
-            "this", "that", "these", "those", "i", "you", "he", "she", "it",
-            "we", "they", "what", "which", "who", "whom", "whose", "where",
-            "when", "why", "how", "all", "each", "every", "both", "few", "more",
-            "most", "other", "some", "such", "no", "nor", "not", "only", "own",
-            "same", "so", "than", "too", "very", "just", "also", "now", "our",
-            "your", "their", "its", "his", "her", "my", "me", "us", "them"
+            "the",
+            "a",
+            "an",
+            "and",
+            "or",
+            "but",
+            "in",
+            "on",
+            "at",
+            "to",
+            "for",
+            "of",
+            "with",
+            "by",
+            "from",
+            "as",
+            "is",
+            "was",
+            "are",
+            "were",
+            "been",
+            "be",
+            "have",
+            "has",
+            "had",
+            "do",
+            "does",
+            "did",
+            "will",
+            "would",
+            "could",
+            "should",
+            "may",
+            "might",
+            "must",
+            "shall",
+            "can",
+            "need",
+            "this",
+            "that",
+            "these",
+            "those",
+            "i",
+            "you",
+            "he",
+            "she",
+            "it",
+            "we",
+            "they",
+            "what",
+            "which",
+            "who",
+            "whom",
+            "whose",
+            "where",
+            "when",
+            "why",
+            "how",
+            "all",
+            "each",
+            "every",
+            "both",
+            "few",
+            "more",
+            "most",
+            "other",
+            "some",
+            "such",
+            "no",
+            "nor",
+            "not",
+            "only",
+            "own",
+            "same",
+            "so",
+            "than",
+            "too",
+            "very",
+            "just",
+            "also",
+            "now",
+            "our",
+            "your",
+            "their",
+            "its",
+            "his",
+            "her",
+            "my",
+            "me",
+            "us",
+            "them",
         }
 
         # Extract words
@@ -568,7 +839,7 @@ def parse_job_description(job_description: str) -> Dict[str, Any]:
             "min": parsed.salary_min,
             "max": parsed.salary_max,
             "currency": parsed.salary_currency,
-            "period": parsed.salary_period
+            "period": parsed.salary_period,
         },
         "requirements": parsed.requirements,
         "qualifications": parsed.qualifications,
@@ -578,5 +849,5 @@ def parse_job_description(job_description: str) -> Dict[str, Any]:
         "experience_years": parsed.experience_years,
         "education_requirements": parsed.education_requirements,
         "benefits": parsed.benefits,
-        "keywords": parsed.keywords
+        "keywords": parsed.keywords,
     }

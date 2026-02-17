@@ -15,6 +15,7 @@ import random
 @dataclass
 class InterviewQuestion:
     """Represents an interview question."""
+
     id: str
     category: str  # 'technical', 'behavioral', 'system_design', 'cultural'
     question: str
@@ -26,6 +27,7 @@ class InterviewQuestion:
 @dataclass
 class InterviewAnswer:
     """Represents a user's answer to a question."""
+
     question_id: str
     answer: str
     submitted_at: datetime = field(default_factory=datetime.now)
@@ -36,6 +38,7 @@ class InterviewAnswer:
 @dataclass
 class MockInterviewSession:
     """Represents a mock interview session."""
+
     id: str
     job_description: str
     questions: List[InterviewQuestion] = field(default_factory=list)
@@ -57,41 +60,41 @@ class InterviewQuestionGenerator:
                 "tips": [
                     "Use the STAR method",
                     "Focus on your actions, not others'",
-                    "Show empathy and growth"
-                ]
+                    "Show empathy and growth",
+                ],
             },
             {
                 "question": "Describe a time when you had to meet a tight deadline.",
                 "tips": [
                     "Explain your prioritization strategy",
                     "Show how you communicated with stakeholders",
-                    "Highlight the outcome"
-                ]
+                    "Highlight the outcome",
+                ],
             },
             {
                 "question": "Tell me about a time you failed and what you learned from it.",
                 "tips": [
                     "Be honest about the failure",
                     "Focus on what you learned",
-                    "Show how you've applied the lesson"
-                ]
+                    "Show how you've applied the lesson",
+                ],
             },
             {
                 "question": "Describe a time you had to convince your team to adopt a new approach.",
                 "tips": [
                     "Show your leadership skills",
                     "Explain your communication strategy",
-                    "Highlight the positive outcome"
-                ]
+                    "Highlight the positive outcome",
+                ],
             },
             {
                 "question": "Tell me about a time you went above and beyond for a customer.",
                 "tips": [
                     "Focus on customer impact",
                     "Show your problem-solving skills",
-                    "Demonstrate empathy"
-                ]
-            }
+                    "Demonstrate empathy",
+                ],
+            },
         ],
         "technical": [
             {
@@ -99,41 +102,41 @@ class InterviewQuestionGenerator:
                 "tips": [
                     "Cover key architectural differences",
                     "Discuss pros and cons of each",
-                    "Give use case examples"
-                ]
+                    "Give use case examples",
+                ],
             },
             {
                 "question": "What is your approach to debugging a complex issue?",
                 "tips": [
                     "Show your systematic approach",
                     "Mention specific tools and techniques",
-                    "Highlight collaboration when needed"
-                ]
+                    "Highlight collaboration when needed",
+                ],
             },
             {
                 "question": "How would you design a URL shortening service?",
                 "tips": [
                     "Start with core requirements",
                     "Discuss scalability considerations",
-                    "Cover database design"
-                ]
+                    "Cover database design",
+                ],
             },
             {
                 "question": "Explain database indexing and when you would use it.",
                 "tips": [
                     "Cover B-tree and hash indexes",
                     "Discuss trade-offs",
-                    "Give practical examples"
-                ]
+                    "Give practical examples",
+                ],
             },
             {
                 "question": "What strategies do you use to optimize application performance?",
                 "tips": [
                     "Cover profiling and measurement",
                     "Discuss common bottlenecks",
-                    "Show breadth of knowledge"
-                ]
-            }
+                    "Show breadth of knowledge",
+                ],
+            },
         ],
         "system_design": [
             {
@@ -141,33 +144,33 @@ class InterviewQuestionGenerator:
                 "tips": [
                     "Consider real-time communication",
                     "Discuss database choices",
-                    "Cover message delivery guarantees"
-                ]
+                    "Cover message delivery guarantees",
+                ],
             },
             {
                 "question": "How would you design a recommendation system?",
                 "tips": [
                     "Discuss different approaches",
                     "Cover data collection",
-                    "Address scalability"
-                ]
+                    "Address scalability",
+                ],
             },
             {
                 "question": "Design a rate limiting system.",
                 "tips": [
                     "Cover different algorithms",
                     "Discuss distributed systems challenges",
-                    "Show trade-off understanding"
-                ]
+                    "Show trade-off understanding",
+                ],
             },
             {
                 "question": "How would you design a distributed cache?",
                 "tips": [
                     "Discuss consistency models",
                     "Cover eviction strategies",
-                    "Address fault tolerance"
-                ]
-            }
+                    "Address fault tolerance",
+                ],
+            },
         ],
         "cultural_fit": [
             {
@@ -175,33 +178,33 @@ class InterviewQuestionGenerator:
                 "tips": [
                     "Be specific about your preferences",
                     "Show adaptability",
-                    "Align with company culture"
-                ]
+                    "Align with company culture",
+                ],
             },
             {
                 "question": "How do you stay current with industry trends?",
                 "tips": [
                     "Mention specific resources",
                     "Show passion for learning",
-                    "Give concrete examples"
-                ]
+                    "Give concrete examples",
+                ],
             },
             {
                 "question": "What questions do you have about this role/company?",
                 "tips": [
                     "Ask thoughtful questions",
                     "Show you've done research",
-                    "Avoid salary/benefits initially"
-                ]
-            }
-        ]
+                    "Avoid salary/benefits initially",
+                ],
+            },
+        ],
     }
 
     def generate_questions(
         self,
         job_description: str,
         num_questions: int = 5,
-        categories: Optional[List[str]] = None
+        categories: Optional[List[str]] = None,
     ) -> List[InterviewQuestion]:
         """
         Generate interview questions based on job description.
@@ -223,27 +226,26 @@ class InterviewQuestionGenerator:
         for category in categories:
             category_questions = self.QUESTION_BANKS.get(category, [])
             selected = random.sample(
-                category_questions,
-                min(questions_per_category, len(category_questions))
+                category_questions, min(questions_per_category, len(category_questions))
             )
 
             for q in selected:
-                questions.append(InterviewQuestion(
-                    id=str(uuid.uuid4()),
-                    category=category,
-                    question=q["question"],
-                    difficulty=random.choice(["easy", "medium", "hard"]),
-                    tips=q["tips"]
-                ))
+                questions.append(
+                    InterviewQuestion(
+                        id=str(uuid.uuid4()),
+                        category=category,
+                        question=q["question"],
+                        difficulty=random.choice(["easy", "medium", "hard"]),
+                        tips=q["tips"],
+                    )
+                )
 
         # Shuffle and limit
         random.shuffle(questions)
         return questions[:num_questions]
 
     def generate_questions_for_title(
-        self,
-        job_title: str,
-        num_questions: int = 5
+        self, job_title: str, num_questions: int = 5
     ) -> List[InterviewQuestion]:
         """Generate questions specifically for a job title."""
         job_title_lower = job_title.lower()
@@ -269,23 +271,18 @@ class MockInterviewGenerator:
         self.question_generator = InterviewQuestionGenerator()
 
     def create_session(
-        self,
-        job_description: str,
-        num_questions: int = 5
+        self, job_description: str, num_questions: int = 5
     ) -> MockInterviewSession:
         """Create a new mock interview session."""
         session_id = str(uuid.uuid4())
 
         # Generate questions based on job description
         questions = self.question_generator.generate_questions(
-            job_description,
-            num_questions
+            job_description, num_questions
         )
 
         session = MockInterviewSession(
-            id=session_id,
-            job_description=job_description,
-            questions=questions
+            id=session_id, job_description=job_description, questions=questions
         )
 
         self.sessions[session_id] = session
@@ -296,10 +293,7 @@ class MockInterviewGenerator:
         return self.sessions.get(session_id)
 
     def submit_answer(
-        self,
-        session_id: str,
-        question_id: str,
-        answer: str
+        self, session_id: str, question_id: str, answer: str
     ) -> Optional[InterviewAnswer]:
         """Submit an answer for a question in a session."""
         session = self.sessions.get(session_id)
@@ -316,7 +310,7 @@ class MockInterviewGenerator:
             question_id=question_id,
             answer=answer,
             feedback=self._generate_feedback(question, answer),
-            score=self._score_answer(question, answer)
+            score=self._score_answer(question, answer),
         )
 
         session.answers.append(interview_answer)
@@ -329,11 +323,7 @@ class MockInterviewGenerator:
 
         return interview_answer
 
-    def _generate_feedback(
-        self,
-        question: InterviewQuestion,
-        answer: str
-    ) -> str:
+    def _generate_feedback(self, question: InterviewQuestion, answer: str) -> str:
         """Generate feedback for an answer."""
         answer_length = len(answer)
 
@@ -346,16 +336,15 @@ class MockInterviewGenerator:
         # Check for STAR method in behavioral questions
         if question.category == "behavioral":
             answer_lower = answer.lower()
-            if not any(word in answer_lower for word in ["situation", "task", "action", "result", "i ", "my "]):
+            if not any(
+                word in answer_lower
+                for word in ["situation", "task", "action", "result", "i ", "my "]
+            ):
                 return "Consider using the STAR method (Situation, Task, Action, Result) to structure your answer."
 
         return "Great answer! You provided good detail and structure. Keep practicing to refine your delivery."
 
-    def _score_answer(
-        self,
-        question: InterviewQuestion,
-        answer: str
-    ) -> float:
+    def _score_answer(self, question: InterviewQuestion, answer: str) -> float:
         """Score an answer (0-100)."""
         score = 50.0  # Base score
 
@@ -368,14 +357,23 @@ class MockInterviewGenerator:
 
         # Structure indicators
         answer_lower = answer.lower()
-        if any(word in answer_lower for word in ["first", "second", "finally", "additionally", "however"]):
+        if any(
+            word in answer_lower
+            for word in ["first", "second", "finally", "additionally", "however"]
+        ):
             score += 10
 
-        if any(word in answer_lower for word in ["because", "therefore", "result", "outcome", "learned"]):
+        if any(
+            word in answer_lower
+            for word in ["because", "therefore", "result", "outcome", "learned"]
+        ):
             score += 10
 
         # Specificity
-        if any(word in answer_lower for word in ["for example", "for instance", "specifically", "exactly"]):
+        if any(
+            word in answer_lower
+            for word in ["for example", "for instance", "specifically", "exactly"]
+        ):
             score += 10
 
         return min(100.0, score)
@@ -387,7 +385,11 @@ class MockInterviewGenerator:
             return None
 
         # Calculate overall score
-        total_score = sum(a.score for a in session.answers) / len(session.answers) if session.answers else 0
+        total_score = (
+            sum(a.score for a in session.answers) / len(session.answers)
+            if session.answers
+            else 0
+        )
 
         # Category breakdown
         category_scores = {}
@@ -398,8 +400,7 @@ class MockInterviewGenerator:
             category_scores[question.category].append(answer.score)
 
         category_averages = {
-            cat: sum(scores) / len(scores)
-            for cat, scores in category_scores.items()
+            cat: sum(scores) / len(scores) for cat, scores in category_scores.items()
         }
 
         return {
@@ -416,9 +417,11 @@ class MockInterviewGenerator:
                     "difficulty": q.difficulty,
                     "answer": a.answer,
                     "feedback": a.feedback,
-                    "score": a.score
+                    "score": a.score,
                 }
                 for q, a in zip(session.questions, session.answers)
             ],
-            "completed_at": session.completed_at.isoformat() if session.completed_at else None
+            "completed_at": (
+                session.completed_at.isoformat() if session.completed_at else None
+            ),
         }

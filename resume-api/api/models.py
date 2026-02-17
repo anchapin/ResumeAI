@@ -1492,7 +1492,9 @@ class SalaryInfo(BaseModel):
     min: Optional[int] = Field(None, description="Minimum salary")
     max: Optional[int] = Field(None, description="Maximum salary")
     currency: str = Field(default="USD", description="Currency code")
-    period: str = Field(default="yearly", description="Salary period (yearly, hourly, monthly)")
+    period: str = Field(
+        default="yearly", description="Salary period (yearly, hourly, monthly)"
+    )
 
 
 class JDAnalysisRequest(BaseModel):
@@ -1502,7 +1504,7 @@ class JDAnalysisRequest(BaseModel):
         ...,
         min_length=10,
         max_length=MAX_LONG_STRING_LENGTH,
-        description="Job description text to analyze"
+        description="Job description text to analyze",
     )
 
 
@@ -1547,7 +1549,7 @@ class SkillsMatchRequest(BaseModel):
         ...,
         min_length=10,
         max_length=MAX_LONG_STRING_LENGTH,
-        description="Job description text"
+        description="Job description text",
     )
 
 
@@ -1569,7 +1571,9 @@ class SkillsMatchResponse(BaseModel):
     match_score: int = Field(
         ..., ge=0, le=100, description="Overall match score (0-100)"
     )
-    jd_skills: List[str] = Field(..., description="Skills extracted from job description")
+    jd_skills: List[str] = Field(
+        ..., description="Skills extracted from job description"
+    )
     resume_skills: List[str] = Field(..., description="Skills extracted from resume")
 
 
@@ -1580,7 +1584,7 @@ class ATSCheckRequest(BaseModel):
     job_description: Optional[str] = Field(
         None,
         max_length=MAX_LONG_STRING_LENGTH,
-        description="Optional job description for keyword matching"
+        description="Optional job description for keyword matching",
     )
 
 
@@ -1595,8 +1599,12 @@ class ATSIssue(BaseModel):
 class ATSCheckResponse(BaseModel):
     """Response with ATS compatibility results."""
 
-    overall_score: int = Field(..., ge=0, le=100, description="Overall ATS score (0-100)")
-    passed: bool = Field(..., description="Whether resume passed ATS check (score >= 70)")
+    overall_score: int = Field(
+        ..., ge=0, le=100, description="Overall ATS score (0-100)"
+    )
+    passed: bool = Field(
+        ..., description="Whether resume passed ATS check (score >= 70)"
+    )
     issues: List[ATSIssue] = Field(..., description="List of ATS issues found")
     recommendations: List[str] = Field(
         ..., description="Recommendations for improvement"
@@ -1618,7 +1626,7 @@ class JDInsightsRequest(BaseModel):
         ...,
         min_length=10,
         max_length=MAX_LONG_STRING_LENGTH,
-        description="Job description text"
+        description="Job description text",
     )
 
 
@@ -1626,7 +1634,9 @@ class JDInsightsResponse(BaseModel):
     """Comprehensive response with JD analysis and resume matching."""
 
     jd_analysis: JDAnalysisResponse = Field(..., description="Parsed job description")
-    skills_match: SkillsMatchResponse = Field(..., description="Skills matching results")
+    skills_match: SkillsMatchResponse = Field(
+        ..., description="Skills matching results"
+    )
     ats_check: ATSCheckResponse = Field(..., description="ATS compatibility check")
     overall_fit_score: int = Field(
         ..., ge=0, le=100, description="Overall candidate fit score"

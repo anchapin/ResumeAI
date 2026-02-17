@@ -12,12 +12,14 @@ from typing import Any, Dict, Optional
 
 try:
     import anthropic
+
     ANTHROPIC_AVAILABLE = True
 except ImportError:
     ANTHROPIC_AVAILABLE = False
 
 try:
     import openai
+
     OPENAI_AVAILABLE = True
 except ImportError:
     OPENAI_AVAILABLE = False
@@ -26,7 +28,7 @@ except ImportError:
 class CoverLetterGenerator:
     """
     Generate personalized cover letters with AI.
-    
+
     Works with JSON Resume format (dict) instead of resume.yaml files.
     """
 
@@ -47,9 +49,11 @@ class CoverLetterGenerator:
         self.ai_provider = ai_provider.lower()
         self.api_key = api_key or os.getenv(f"{self.ai_provider.upper()}_API_KEY")
         self.model = model or os.getenv("AI_MODEL")
-        
+
         if not self.api_key:
-            raise ValueError(f"{self.ai_provider.upper()}_API_KEY environment variable not set")
+            raise ValueError(
+                f"{self.ai_provider.upper()}_API_KEY environment variable not set"
+            )
 
         # Initialize the AI client
         if self.ai_provider == "openai":
@@ -61,7 +65,7 @@ class CoverLetterGenerator:
                 client_kwargs["base_url"] = base_url
             self.client = openai.OpenAI(**client_kwargs)
             self._call_ai = self._call_openai
-            
+
         elif self.ai_provider == "anthropic":
             if not ANTHROPIC_AVAILABLE:
                 raise ImportError("anthropic package not installed")
@@ -99,7 +103,7 @@ class CoverLetterGenerator:
         basics = resume_data.get("basics", {})
         name = basics.get("name", "Candidate")
         summary = basics.get("summary", "")
-        
+
         # Get work experience
         work = resume_data.get("work", [])
         experience_summary = ""
@@ -123,7 +127,7 @@ class CoverLetterGenerator:
                     skill_names.append(name)
             elif isinstance(skill, str):
                 skill_names.append(skill)
-        
+
         skills_str = ", ".join(skill_names[:15]) if skill_names else "various skills"
 
         # Build the prompt
@@ -143,7 +147,7 @@ class CoverLetterGenerator:
 
         # Parse the response
         cover_letter = self._parse_response(response, company_name, job_title, name)
-        
+
         return cover_letter
 
     def _build_prompt(
@@ -158,7 +162,7 @@ class CoverLetterGenerator:
         tone: str,
     ) -> str:
         """Build the cover letter generation prompt."""
-        
+
         tone_guidance = {
             "professional": "Use a professional but warm tone. Be confident but not arrogant.",
             "casual": "Use a friendly, conversational tone. Show enthusiasm while remaining credible.",
@@ -201,27 +205,27 @@ Return ONLY valid JSON, nothing else."""
     def _call_openai(self, prompt: str) -> str:
         """Call OpenAI API."""
         model = self.model or "gpt-4o"
-        
+
         response = self.client.chat.completions.create(
             model=model,
             max_tokens=2000,
             temperature=0.7,
             messages=[{"role": "user", "content": prompt}],
         )
-        
+
         return response.choices[0].message.content
 
     def _call_anthropic(self, prompt: str) -> str:
         """Call Anthropic API."""
         model = self.model or "claude-3-5-sonnet-20241022"
-        
+
         message = self.client.messages.create(
             model=model,
             max_tokens=2000,
             temperature=0.7,
             messages=[{"role": "user", "content": prompt}],
         )
-        
+
         return message.content[0].text
 
     def _parse_response(
@@ -232,10 +236,10 @@ Return ONLY valid JSON, nothing else."""
         candidate_name: str,
     ) -> Dict[str, Any]:
         """Parse AI response into cover letter sections."""
-        
+
         # Try to extract JSON from response
         try:
-            json_match = re.search(r'\{.*\}', response, re.DOTALL)
+            json_match = re.search(r"\{.*\}", response, re.DOTALL)
             if json_match:
                 data = json.loads(json_match.group(0))
                 # Ensure all required keys exist
@@ -245,7 +249,9 @@ Return ONLY valid JSON, nothing else."""
                     "body": data.get("body", ""),
                     "closing": data.get("closing", ""),
                     "full_text": data.get("full_text", response),
-                    "metadata": data.get("metadata", {"word_count": len(response.split())}),
+                    "metadata": data.get(
+                        "metadata", {"word_count": len(response.split())}
+                    ),
                 }
         except (json.JSONDecodeError, AttributeError):
             pass
@@ -257,5 +263,8 @@ Return ONLY valid JSON, nothing else."""
             "body": "",
             "closing": "",
             "full_text": response,
-            "metadata": {"word_count": len(response.split()), "note": "Parse fallback used"},
+            "metadata": {
+                "word_count": len(response.split()),
+                "note": "Parse fallback used",
+            },
         }

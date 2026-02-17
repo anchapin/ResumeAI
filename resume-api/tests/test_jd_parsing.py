@@ -170,7 +170,7 @@ class TestATSCompatibilityChecker:
                 "name": "John Doe",
                 "email": "john.doe@example.com",
                 "phone": "+1-555-123-4567",
-                "summary": "Experienced software engineer with 5+ years of experience."
+                "summary": "Experienced software engineer with 5+ years of experience.",
             },
             "work": [
                 {
@@ -180,22 +180,22 @@ class TestATSCompatibilityChecker:
                     "highlights": [
                         "Increased performance by 40%",
                         "Led a team of 5 developers",
-                        "Implemented CI/CD pipeline"
-                    ]
+                        "Implemented CI/CD pipeline",
+                    ],
                 }
             ],
             "education": [
                 {
                     "institution": "University of California",
                     "studyType": "Bachelor",
-                    "area": "Computer Science"
+                    "area": "Computer Science",
                 }
             ],
             "skills": [
                 {"name": "Python", "keywords": ["Django", "Flask"]},
                 {"name": "JavaScript", "keywords": ["React", "Node.js"]},
-                {"name": "AWS", "keywords": ["EC2", "S3", "Lambda"]}
-            ]
+                {"name": "AWS", "keywords": ["EC2", "S3", "Lambda"]},
+            ],
         }
 
         self.sample_jd = """
@@ -226,8 +226,7 @@ class TestATSCompatibilityChecker:
     def test_check_with_job_description(self):
         """Test keyword matching with job description."""
         report = self.checker.check_compatibility(
-            self.sample_resume,
-            job_description=self.sample_jd
+            self.sample_resume, job_description=self.sample_jd
         )
         assert report.keyword_match_rate >= 0
         assert report.keyword_match_rate <= 1
@@ -265,7 +264,7 @@ class TestATSCompatibilityChecker:
             "basics": {"name": "John Doe"},
             "work": [],
             "education": [],
-            "skills": []
+            "skills": [],
         }
         report = self.checker.check_compatibility(resume_no_email)
         high_issues = [i for i in report.issues if i.get("severity") == "high"]
@@ -274,10 +273,7 @@ class TestATSCompatibilityChecker:
     def test_action_verbs_detection(self):
         """Test action verbs detection in experience."""
         resume_with_verbs = {
-            "basics": {
-                "name": "John Doe",
-                "email": "john@example.com"
-            },
+            "basics": {"name": "John Doe", "email": "john@example.com"},
             "work": [
                 {
                     "company": "TechCorp",
@@ -285,28 +281,24 @@ class TestATSCompatibilityChecker:
                     "highlights": [
                         "Developed new features",
                         "Implemented CI/CD",
-                        "Led team meetings"
-                    ]
+                        "Led team meetings",
+                    ],
                 }
             ],
             "education": [],
-            "skills": [{"name": "Python"}]
+            "skills": [{"name": "Python"}],
         }
         report = self.checker.check_compatibility(resume_with_verbs)
         # Should not have action verb issue
         action_verb_issues = [
-            i for i in report.issues
-            if "action verbs" in i.get("message", "").lower()
+            i for i in report.issues if "action verbs" in i.get("message", "").lower()
         ]
         assert len(action_verb_issues) == 0
 
     def test_metrics_detection(self):
         """Test metrics detection in experience."""
         resume_with_metrics = {
-            "basics": {
-                "name": "John Doe",
-                "email": "john@example.com"
-            },
+            "basics": {"name": "John Doe", "email": "john@example.com"},
             "work": [
                 {
                     "company": "TechCorp",
@@ -314,18 +306,17 @@ class TestATSCompatibilityChecker:
                     "highlights": [
                         "Increased revenue by 25%",
                         "Reduced costs by $50,000",
-                        "Improved performance 3x"
-                    ]
+                        "Improved performance 3x",
+                    ],
                 }
             ],
             "education": [],
-            "skills": [{"name": "Python"}]
+            "skills": [{"name": "Python"}],
         }
         report = self.checker.check_compatibility(resume_with_metrics)
         # Should not have metrics issue
         metrics_issues = [
-            i for i in report.issues
-            if "metrics" in i.get("message", "").lower()
+            i for i in report.issues if "metrics" in i.get("message", "").lower()
         ]
         assert len(metrics_issues) == 0
 

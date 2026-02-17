@@ -396,9 +396,9 @@ async def get_jd_insights(
         # 5. Calculate overall fit score
         # Weight: 40% skills match, 40% ATS score, 20% content quality
         overall_fit = int(
-            match_score * 0.4 +
-            ats_result.get("overall_score", 0) * 0.4 +
-            ats_result.get("content_score", 0) * 0.2
+            match_score * 0.4
+            + ats_result.get("overall_score", 0) * 0.4
+            + ats_result.get("content_score", 0) * 0.2
         )
 
         # 6. Generate summary
@@ -411,7 +411,9 @@ async def get_jd_insights(
         summary = " ".join(summary_parts) + ". " if summary_parts else ""
 
         if overall_fit >= 80:
-            summary += "Excellent match! Your resume aligns well with the job requirements."
+            summary += (
+                "Excellent match! Your resume aligns well with the job requirements."
+            )
         elif overall_fit >= 60:
             summary += "Good match with room for improvement. Consider addressing the missing skills."
         elif overall_fit >= 40:
@@ -437,7 +439,9 @@ async def get_jd_insights(
                 "Add quantifiable metrics to your experience bullets"
             )
 
-        top_recommendations = list(dict.fromkeys(recommendations))[:5]  # Remove duplicates
+        top_recommendations = list(dict.fromkeys(recommendations))[
+            :5
+        ]  # Remove duplicates
 
         return JDInsightsResponse(
             jd_analysis=jd_analysis,
@@ -479,7 +483,9 @@ def _extract_resume_skills(resume_data: Dict[str, Any]) -> List[str]:
             # Check bullets/highlights
             bullets = job.get("bullets", []) or job.get("highlights", [])
             for bullet in bullets:
-                text = bullet.get("text", "") if isinstance(bullet, dict) else str(bullet)
+                text = (
+                    bullet.get("text", "") if isinstance(bullet, dict) else str(bullet)
+                )
                 # Extract potential skills from text
                 skills.extend(_extract_tech_terms(text))
 
@@ -503,17 +509,75 @@ def _extract_resume_skills(resume_data: Dict[str, Any]) -> List[str]:
 def _extract_tech_terms(text: str) -> List[str]:
     """Extract technology terms from text."""
     tech_terms = [
-        "python", "javascript", "typescript", "java", "go", "rust", "c++", "c#",
-        "ruby", "php", "swift", "kotlin", "scala", "sql", "html", "css",
-        "react", "vue", "angular", "node.js", "nodejs", "django", "flask",
-        "fastapi", "spring", "rails", "next.js", "express",
-        "tensorflow", "pytorch", "keras", "pandas", "numpy", "scikit-learn",
-        "kubernetes", "docker", "aws", "azure", "gcp", "google cloud",
-        "postgres", "postgresql", "mysql", "mongodb", "redis", "elasticsearch",
-        "graphql", "rest", "api", "microservices", "devops", "ci/cd",
-        "git", "github", "gitlab", "jenkins", "terraform", "ansible",
-        "machine learning", "ml", "ai", "llm", "nlp", "data science",
-        "agile", "scrum", "leadership", "communication", "teamwork"
+        "python",
+        "javascript",
+        "typescript",
+        "java",
+        "go",
+        "rust",
+        "c++",
+        "c#",
+        "ruby",
+        "php",
+        "swift",
+        "kotlin",
+        "scala",
+        "sql",
+        "html",
+        "css",
+        "react",
+        "vue",
+        "angular",
+        "node.js",
+        "nodejs",
+        "django",
+        "flask",
+        "fastapi",
+        "spring",
+        "rails",
+        "next.js",
+        "express",
+        "tensorflow",
+        "pytorch",
+        "keras",
+        "pandas",
+        "numpy",
+        "scikit-learn",
+        "kubernetes",
+        "docker",
+        "aws",
+        "azure",
+        "gcp",
+        "google cloud",
+        "postgres",
+        "postgresql",
+        "mysql",
+        "mongodb",
+        "redis",
+        "elasticsearch",
+        "graphql",
+        "rest",
+        "api",
+        "microservices",
+        "devops",
+        "ci/cd",
+        "git",
+        "github",
+        "gitlab",
+        "jenkins",
+        "terraform",
+        "ansible",
+        "machine learning",
+        "ml",
+        "ai",
+        "llm",
+        "nlp",
+        "data science",
+        "agile",
+        "scrum",
+        "leadership",
+        "communication",
+        "teamwork",
     ]
 
     text_lower = text.lower()

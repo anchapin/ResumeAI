@@ -13,6 +13,7 @@ from dataclasses import dataclass
 @dataclass
 class SalaryData:
     """Salary information for a specific role."""
+
     title: str
     company: Optional[str]
     location: str
@@ -35,7 +36,7 @@ class SalaryResearcher:
         title: str,
         location: str,
         company: Optional[str] = None,
-        experience_level: str = "mid"
+        experience_level: str = "mid",
     ) -> Dict[str, Any]:
         """
         Research salary data for a given role.
@@ -75,7 +76,7 @@ class SalaryResearcher:
             "company": company,
             "experience_level": experience_level,
             "salary_data": salary_data,
-            "insights": insights
+            "insights": insights,
         }
 
         # Cache result
@@ -89,10 +90,7 @@ class SalaryResearcher:
         return None
 
     async def _estimate_from_standards(
-        self,
-        title: str,
-        location: str,
-        experience_level: str
+        self, title: str, location: str, experience_level: str
     ) -> Dict[str, Any]:
         """Estimate salary based on industry standards."""
 
@@ -103,29 +101,29 @@ class SalaryResearcher:
                 "mid": (90000, 140000),
                 "senior": (130000, 180000),
                 "lead": (160000, 220000),
-                "executive": (200000, 350000)
+                "executive": (200000, 350000),
             },
             "product manager": {
                 "entry": (70000, 100000),
                 "mid": (100000, 150000),
                 "senior": (140000, 200000),
                 "lead": (180000, 280000),
-                "executive": (250000, 400000)
+                "executive": (250000, 400000),
             },
             "designer": {
                 "entry": (50000, 80000),
                 "mid": (80000, 120000),
                 "senior": (110000, 160000),
                 "lead": (150000, 220000),
-                "executive": (200000, 350000)
+                "executive": (200000, 350000),
             },
             "data scientist": {
                 "entry": (70000, 100000),
                 "mid": (100000, 150000),
                 "senior": (140000, 200000),
                 "lead": (180000, 280000),
-                "executive": (250000, 400000)
-            }
+                "executive": (250000, 400000),
+            },
         }
 
         # Location multipliers
@@ -139,7 +137,7 @@ class SalaryResearcher:
             "denver": 1.0,
             "chicago": 1.05,
             "remote": 1.0,
-            "default": 1.0
+            "default": 1.0,
         }
 
         # Get base range
@@ -160,7 +158,7 @@ class SalaryResearcher:
             "max_salary": max_salary,
             "median_salary": median_salary,
             "source": "industry_estimates",
-            "sample_size": 1000
+            "sample_size": 1000,
         }
 
     def _combine_salary_data(self, results: List[Any]) -> Dict[str, Any]:
@@ -173,16 +171,14 @@ class SalaryResearcher:
                 "max_salary": 0,
                 "median_salary": 0,
                 "source": "none",
-                "sample_size": 0
+                "sample_size": 0,
             }
 
         # Use the most reliable source (first valid result)
         return valid_results[0]
 
     def _generate_insights(
-        self,
-        salary_data: Dict[str, Any],
-        experience_level: str
+        self, salary_data: Dict[str, Any], experience_level: str
     ) -> Dict[str, Any]:
         """Generate insights about the salary data."""
         median = salary_data.get("median_salary", 0)
@@ -196,7 +192,7 @@ class SalaryResearcher:
             "mid": 1.4,
             "senior": 1.25,
             "lead": 1.2,
-            "executive": 1.15
+            "executive": 1.15,
         }
 
         future_median = int(median * growth_multipliers.get(experience_level, 1.3))
@@ -204,8 +200,18 @@ class SalaryResearcher:
         return {
             "5_year_projection": future_median,
             "annual_bonus_estimate": int(median * 0.1),
-            "equity_estimate": int(median * 0.15) if experience_level in ["senior", "lead", "executive"] else 0,
-            "total_compensation": median + int(median * 0.1) + (int(median * 0.15) if experience_level in ["senior", "lead", "executive"] else 0)
+            "equity_estimate": (
+                int(median * 0.15)
+                if experience_level in ["senior", "lead", "executive"]
+                else 0
+            ),
+            "total_compensation": median
+            + int(median * 0.1)
+            + (
+                int(median * 0.15)
+                if experience_level in ["senior", "lead", "executive"]
+                else 0
+            ),
         }
 
 
@@ -218,13 +224,13 @@ class OfferComparison:
             "growth": 0.25,
             "work_life_balance": 0.20,
             "benefits": 0.15,
-            "culture": 0.10
+            "culture": 0.10,
         }
 
     def compare_offers(
         self,
         offers: List[Dict[str, Any]],
-        priorities: Optional[Dict[str, float]] = None
+        priorities: Optional[Dict[str, float]] = None,
     ) -> Dict[str, Any]:
         """
         Compare multiple job offers using weighted scoring.
@@ -251,11 +257,13 @@ class OfferComparison:
         scored_offers = []
         for offer in offers:
             score = self._score_offer(offer, priorities)
-            scored_offers.append({
-                "offer": offer,
-                "score": score,
-                "breakdown": self._get_score_breakdown(offer, priorities)
-            })
+            scored_offers.append(
+                {
+                    "offer": offer,
+                    "score": score,
+                    "breakdown": self._get_score_breakdown(offer, priorities),
+                }
+            )
 
         # Sort by score
         scored_offers.sort(key=lambda x: x["score"], reverse=True)
@@ -263,10 +271,12 @@ class OfferComparison:
         return {
             "offers": scored_offers,
             "recommendation": scored_offers[0] if scored_offers else None,
-            "priorities_used": priorities
+            "priorities_used": priorities,
         }
 
-    def _score_offer(self, offer: Dict[str, Any], priorities: Dict[str, float]) -> float:
+    def _score_offer(
+        self, offer: Dict[str, Any], priorities: Dict[str, float]
+    ) -> float:
         """Calculate weighted score for an offer."""
         score = 0.0
 
@@ -318,20 +328,30 @@ class OfferComparison:
         return min(100, score)
 
     def _get_score_breakdown(
-        self,
-        offer: Dict[str, Any],
-        priorities: Dict[str, float]
+        self, offer: Dict[str, Any], priorities: Dict[str, float]
     ) -> Dict[str, float]:
         """Get detailed score breakdown by category."""
         breakdown = {}
 
         if offer.get("base_salary"):
-            breakdown["salary"] = min(100, offer["base_salary"] / 2500) * priorities.get("salary", 0)
+            breakdown["salary"] = min(
+                100, offer["base_salary"] / 2500
+            ) * priorities.get("salary", 0)
 
-        breakdown["growth"] = self._normalize_growth(offer.get("growth_opportunities", 5)) * priorities.get("growth", 0)
-        breakdown["work_life_balance"] = offer.get("work_life_balance", 5) * 20 * priorities.get("work_life_balance", 0)
-        breakdown["benefits"] = self._normalize_benefits(offer.get("benefits", {})) * priorities.get("benefits", 0)
-        breakdown["culture"] = offer.get("culture_score", 5) * 20 * priorities.get("culture", 0)
+        breakdown["growth"] = self._normalize_growth(
+            offer.get("growth_opportunities", 5)
+        ) * priorities.get("growth", 0)
+        breakdown["work_life_balance"] = (
+            offer.get("work_life_balance", 5)
+            * 20
+            * priorities.get("work_life_balance", 0)
+        )
+        breakdown["benefits"] = self._normalize_benefits(
+            offer.get("benefits", {})
+        ) * priorities.get("benefits", 0)
+        breakdown["culture"] = (
+            offer.get("culture_score", 5) * 20 * priorities.get("culture", 0)
+        )
 
         return breakdown
 
