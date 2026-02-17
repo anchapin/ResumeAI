@@ -69,3 +69,6 @@ aiosqlite==0.20.0
 # PDF Parsing (for import feature)
 # Using pypdf instead of pymupdf for better Python 3.14 compatibility
 pypdf>=4.0.0
+
+# Stripe Payment Processing
+stripe>=10.0.0
