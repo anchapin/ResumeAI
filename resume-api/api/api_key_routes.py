@@ -21,7 +21,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
 from database import get_async_session, APIKey
-from config.dependencies import get_current_user, CurrentUser
+from config.dependencies import CurrentUser
 from monitoring import logging_config
 
 # Get logger
