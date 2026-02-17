@@ -13,6 +13,8 @@ import { useTheme } from './hooks/useTheme';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import './components/toast-styles.css';
+import KeyboardShortcutsHelp from './components/KeyboardShortcutsHelp';
+import { DEFAULT_SHORTCUTS, registerShortcuts } from './utils/shortcuts';
 
 const initialResumeData: SimpleResumeData = {
   name: "Alex Rivera",
@@ -91,6 +93,16 @@ function App() {
   // Initialize theme (dark mode support)
   const { theme, isDark, toggleTheme } = useTheme();
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
+  const [showShortcuts, setShowShortcuts] = useState(false);
+
+  // Register global keyboard shortcuts
+  useEffect(() => {
+    return registerShortcuts(DEFAULT_SHORTCUTS, (action) => {
+      if (action === 'Show keyboard shortcuts') {
+        setShowShortcuts(prev => !prev);
+      }
+    });
+  }, []);
 
   // Load resume data from localStorage on mount and check security
   useEffect(() => {
@@ -198,14 +210,22 @@ function App() {
       case Route.DASHBOARD:
         return (
             <div className="flex min-h-screen bg-[#f6f6f8]">
-                <Sidebar currentRoute={currentRoute} onNavigate={setCurrentRoute} />
+                <Sidebar
+                  currentRoute={currentRoute}
+                  onNavigate={setCurrentRoute}
+                  onShowShortcuts={() => setShowShortcuts(true)}
+                />
                 <Dashboard />
             </div>
         );
       case Route.APPLICATIONS:
         return (
             <div className="flex min-h-screen bg-[#f6f6f8]">
-                <Sidebar currentRoute={currentRoute} onNavigate={setCurrentRoute} />
+                <Sidebar
+                  currentRoute={currentRoute}
+                  onNavigate={setCurrentRoute}
+                  onShowShortcuts={() => setShowShortcuts(true)}
+                />
                 <JobApplications />
             </div>
         );
@@ -228,7 +248,11 @@ function App() {
       case Route.SETTINGS:
         return (
             <div className="flex min-h-screen bg-[#f6f6f8]">
-                <Sidebar currentRoute={currentRoute} onNavigate={setCurrentRoute} />
+                <Sidebar
+                  currentRoute={currentRoute}
+                  onNavigate={setCurrentRoute}
+                  onShowShortcuts={() => setShowShortcuts(true)}
+                />
                 <Settings />
             </div>
         );
@@ -239,6 +263,9 @@ function App() {
 
   return (
     <ErrorBoundary>
+      {showShortcuts && (
+        <KeyboardShortcutsHelp onClose={() => setShowShortcuts(false)} />
+      )}
       {storageError && (
         <div className="fixed top-4 right-4 z-50 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg shadow-lg flex items-center gap-2 animate-in slide-in-from-top-2 fade-in">
           <span className="material-symbols-outlined text-red-500">error</span>

@@ -31,7 +31,7 @@ For detailed architecture documentation, see [CLAUDE.md](CLAUDE.md).
 Before running ResumeAI, ensure you have the following installed:
 
 - **Node.js** (v18+) - [Download](https://nodejs.org/)
-- **Python** (v3.11+) - [Download](https://www.python.org/)
+- **Python**: 3.11 or 3.12 (Python 3.14 is NOT supported due to PyMuPDF compatibility)
 - **LaTeX** - Required for PDF generation
   - macOS: `brew install texlive`
   - Ubuntu: `sudo apt-get install texlive-latex-base`
