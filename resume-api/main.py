@@ -28,6 +28,7 @@ from routes.salary import router as salary_router
 from routes.linkedin import router as linkedin_router
 from routes.billing import router as billing_router
 from routes.auth import router as auth_router
+from api.api_key_routes import router as api_key_router
 
 # Get logger
 logger = logging_config.get_logger(__name__)
@@ -226,6 +227,7 @@ app.include_router(salary_router)
 app.include_router(linkedin_router)
 app.include_router(billing_router)
 app.include_router(auth_router)
+app.include_router(api_key_router)
 
 
 # WebSocket endpoint for real-time collaboration

@@ -6,52 +6,78 @@ Provides endpoints for:
 - Listing API keys
 - Revoking API keys
 - Viewing API key usage analytics
+
+All endpoints require JWT authentication and are user-specific.
 """
 
 import secrets
 import hashlib
-from datetime import datetime
-from typing import List, Optional
+from datetime import datetime, timezone, timedelta
+from typing import List, Optional, Annotated
 
-from fastapi import APIRouter, HTTPException, Query, status
-from pydantic import BaseModel
+from fastapi import APIRouter, HTTPException, Query, status, Depends
+from pydantic import BaseModel, Field
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 
-from config.dependencies import AuthorizedAPIKey
-from config import settings
+from database import get_async_session, APIKey
+from config.dependencies import CurrentUser
+from monitoring import logging_config
 
-router = APIRouter()
+# Get logger
+logger = logging_config.get_logger(__name__)
 
-
-# In-memory storage for API keys (for MVP - use database in production)
-# Format: {api_key: {"name": str, "created_at": datetime, "revoked": bool, "requests": int}}
-_api_keys_store = {}
+router = APIRouter(prefix="/api-keys", tags=["API Keys"])
 
 
 class APIKeyCreateRequest(BaseModel):
     """Request model for creating API key."""
 
-    name: str
-    rate_limit: Optional[str] = "100/minute"
+    name: str = Field(
+        ..., min_length=1, max_length=100, description="Name for the API key"
+    )
+    description: Optional[str] = Field(
+        None, max_length=500, description="Optional description"
+    )
+    rate_limit: Optional[str] = Field(
+        "100/minute", description="Rate limit (e.g., '100/minute')"
+    )
+    rate_limit_daily: Optional[int] = Field(
+        1000, ge=10, le=100000, description="Daily request limit"
+    )
+    expires_in_days: Optional[int] = Field(
+        None, ge=1, le=365, description="Days until expiration"
+    )
 
 
 class APIKeyCreateResponse(BaseModel):
     """Response model for created API key."""
 
-    api_key: str
+    id: int
+    api_key: str  # Only returned once at creation
     name: str
+    key_prefix: str
     created_at: str
     rate_limit: str
+    rate_limit_daily: int
+    expires_at: Optional[str] = None
 
 
 class APIKeyInfo(BaseModel):
-    """Model for API key information."""
+    """Model for API key information (without the actual key)."""
 
+    id: int
     key_prefix: str
     name: str
+    description: Optional[str] = None
     created_at: str
     last_used: Optional[str] = None
+    is_active: bool
     is_revoked: bool
     request_count: int
+    rate_limit: str
+    rate_limit_daily: int
+    expires_at: Optional[str] = None
 
 
 class APIKeyListResponse(BaseModel):
@@ -64,12 +90,23 @@ class APIKeyListResponse(BaseModel):
 class APIKeyUsageResponse(BaseModel):
     """Response model for API key usage statistics."""
 
+    id: int
     key_prefix: str
     name: str
     total_requests: int
     requests_today: int
-    requests_this_week: int
-    avg_response_time_ms: float
+    avg_response_time_ms: float = 0.0
+    last_used: Optional[str] = None
+
+
+class APIKeyUpdateRequest(BaseModel):
+    """Request model for updating API key settings."""
+
+    name: Optional[str] = Field(None, min_length=1, max_length=100)
+    description: Optional[str] = Field(None, max_length=500)
+    rate_limit: Optional[str] = None
+    rate_limit_daily: Optional[int] = Field(None, ge=10, le=100000)
+    is_active: Optional[bool] = None
 
 
 def _hash_api_key(api_key: str) -> str:
@@ -78,180 +115,401 @@ def _hash_api_key(api_key: str) -> str:
 
 
 def _generate_api_key() -> str:
-    """Generate a new API key."""
+    """Generate a new API key with prefix."""
     return f"rai_{secrets.token_urlsafe(32)}"
 
 
 def _get_key_prefix(api_key: str) -> str:
-    """Get first 8 characters of API key for identification."""
+    """Get first 12 characters of API key for identification."""
     return api_key[:12]
 
 
-def _record_request(api_key: str):
-    """Record an API key request for analytics."""
-    if api_key in _api_keys_store:
-        _api_keys_store[api_key]["requests"] += 1
-        _api_keys_store[api_key]["last_used"] = datetime.utcnow()
-
-
 @router.post(
-    "/api-keys",
+    "",
     response_model=APIKeyCreateResponse,
     status_code=status.HTTP_201_CREATED,
-    tags=["API Keys"],
+    summary="Create new API key",
+    responses={
+        201: {
+            "model": APIKeyCreateResponse,
+            "description": "API key created successfully",
+        },
+        400: {"description": "Invalid input data"},
+        401: {"description": "Not authenticated"},
+    },
 )
-async def create_api_key(request: APIKeyCreateRequest, auth: AuthorizedAPIKey):
+async def create_api_key(
+    request: APIKeyCreateRequest,
+    current_user: CurrentUser,
+    db: Annotated[AsyncSession, Depends(get_async_session)],
+):
     """
-    Create a new API key.
+    Create a new API key for the authenticated user.
 
-    Requires master API key authentication.
+    The API key is returned only once at creation time. Store it securely
+    as it cannot be retrieved later.
+
+    **Rate limits:**
+    - `rate_limit`: Requests per minute (e.g., "100/minute")
+    - `rate_limit_daily`: Maximum requests per day
+
+    **Expiration:**
+    - Optional expiration in days (1-365)
+    - If not set, the key does not expire
     """
-    # Only master key can create new API keys
-    if not settings.master_api_key or auth != settings.master_api_key:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only master API key can create new API keys",
-        )
-
     # Generate new API key
     api_key = _generate_api_key()
+    key_hash = _hash_api_key(api_key)
+    key_prefix = _get_key_prefix(api_key)
 
-    # Store key info
-    _api_keys_store[api_key] = {
-        "name": request.name,
-        "created_at": datetime.utcnow(),
-        "last_used": None,
-        "revoked": False,
-        "requests": 0,
-        "rate_limit": request.rate_limit,
-    }
+    # Calculate expiration date if specified
+    expires_at = None
+    if request.expires_in_days:
+        expires_at = datetime.now(timezone.utc) + timedelta(
+            days=request.expires_in_days
+        )
+
+    # Create API key record
+    new_key = APIKey(
+        user_id=current_user.id,
+        key_hash=key_hash,
+        key_prefix=key_prefix,
+        name=request.name,
+        description=request.description,
+        rate_limit=request.rate_limit or "100/minute",
+        rate_limit_daily=request.rate_limit_daily or 1000,
+        expires_at=expires_at,
+        is_active=True,
+        is_revoked=False,
+    )
+
+    db.add(new_key)
+    await db.commit()
+    await db.refresh(new_key)
+
+    logger.info(
+        "api_key_created",
+        user_id=current_user.id,
+        key_id=new_key.id,
+        key_prefix=key_prefix,
+    )
 
     return APIKeyCreateResponse(
-        api_key=api_key,
-        name=request.name,
-        created_at=_api_keys_store[api_key]["created_at"].isoformat(),
-        rate_limit=request.rate_limit,
+        id=new_key.id,
+        api_key=api_key,  # Only returned once
+        name=new_key.name,
+        key_prefix=new_key.key_prefix,
+        created_at=new_key.created_at.isoformat(),
+        rate_limit=new_key.rate_limit,
+        rate_limit_daily=new_key.rate_limit_daily,
+        expires_at=expires_at.isoformat() if expires_at else None,
     )
 
 
 @router.get(
-    "/api-keys",
+    "",
     response_model=APIKeyListResponse,
-    tags=["API Keys"],
+    summary="List API keys",
+    responses={
+        200: {"model": APIKeyListResponse, "description": "List of API keys"},
+        401: {"description": "Not authenticated"},
+    },
 )
-async def list_api_keys(auth: AuthorizedAPIKey):
+async def list_api_keys(
+    current_user: CurrentUser,
+    db: Annotated[AsyncSession, Depends(get_async_session)],
+):
     """
-    List all API keys.
+    List all API keys for the authenticated user.
 
-    Returns list of API keys with their metadata (excluding the full key).
-    Requires master API key authentication.
+    Returns metadata about each key (name, prefix, usage stats) but NOT
+    the actual key value. Keys are only shown once at creation time.
     """
-    # Only master key can list API keys
-    if not settings.master_api_key or auth != settings.master_api_key:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only master API key can list API keys",
-        )
+    # Query user's API keys
+    result = await db.execute(
+        select(APIKey)
+        .where(APIKey.user_id == current_user.id)
+        .order_by(APIKey.created_at.desc())
+    )
+    keys = result.scalars().all()
 
-    keys = []
-    for api_key, info in _api_keys_store.items():
-        keys.append(
+    # Convert to response format
+    keys_list = []
+    for key in keys:
+        keys_list.append(
             APIKeyInfo(
-                key_prefix=_get_key_prefix(api_key),
-                name=info["name"],
-                created_at=info["created_at"].isoformat(),
-                last_used=info["last_used"].isoformat() if info["last_used"] else None,
-                is_revoked=info["revoked"],
-                request_count=info["requests"],
+                id=key.id,
+                key_prefix=key.key_prefix,
+                name=key.name,
+                description=key.description,
+                created_at=key.created_at.isoformat(),
+                last_used=(
+                    key.last_request_at.isoformat() if key.last_request_at else None
+                ),
+                is_active=key.is_active,
+                is_revoked=key.is_revoked,
+                request_count=key.total_requests,
+                rate_limit=key.rate_limit,
+                rate_limit_daily=key.rate_limit_daily,
+                expires_at=key.expires_at.isoformat() if key.expires_at else None,
             )
         )
 
-    return APIKeyListResponse(keys=keys, total=len(keys))
+    return APIKeyListResponse(keys=keys_list, total=len(keys_list))
+
+
+@router.get(
+    "/{key_id}",
+    response_model=APIKeyInfo,
+    summary="Get API key details",
+    responses={
+        200: {"model": APIKeyInfo, "description": "API key details"},
+        401: {"description": "Not authenticated"},
+        404: {"description": "API key not found"},
+    },
+)
+async def get_api_key(
+    key_id: int,
+    current_user: CurrentUser,
+    db: Annotated[AsyncSession, Depends(get_async_session)],
+):
+    """
+    Get details for a specific API key.
+
+    Returns metadata about the key but NOT the actual key value.
+    """
+    result = await db.execute(
+        select(APIKey).where(
+            APIKey.id == key_id,
+            APIKey.user_id == current_user.id,
+        )
+    )
+    key = result.scalar_one_or_none()
+
+    if not key:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"API key with ID {key_id} not found",
+        )
+
+    return APIKeyInfo(
+        id=key.id,
+        key_prefix=key.key_prefix,
+        name=key.name,
+        description=key.description,
+        created_at=key.created_at.isoformat(),
+        last_used=key.last_request_at.isoformat() if key.last_request_at else None,
+        is_active=key.is_active,
+        is_revoked=key.is_revoked,
+        request_count=key.total_requests,
+        rate_limit=key.rate_limit,
+        rate_limit_daily=key.rate_limit_daily,
+        expires_at=key.expires_at.isoformat() if key.expires_at else None,
+    )
+
+
+@router.put(
+    "/{key_id}",
+    response_model=APIKeyInfo,
+    summary="Update API key settings",
+    responses={
+        200: {"model": APIKeyInfo, "description": "API key updated"},
+        401: {"description": "Not authenticated"},
+        404: {"description": "API key not found"},
+    },
+)
+async def update_api_key(
+    key_id: int,
+    update_data: APIKeyUpdateRequest,
+    current_user: CurrentUser,
+    db: Annotated[AsyncSession, Depends(get_async_session)],
+):
+    """
+    Update settings for an API key.
+
+    You can update the name, description, rate limits, and active status.
+    Cannot update the actual key value or prefix.
+    """
+    result = await db.execute(
+        select(APIKey).where(
+            APIKey.id == key_id,
+            APIKey.user_id == current_user.id,
+        )
+    )
+    key = result.scalar_one_or_none()
+
+    if not key:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"API key with ID {key_id} not found",
+        )
+
+    # Update fields
+    update_dict = update_data.model_dump(exclude_unset=True)
+    for field, value in update_dict.items():
+        if value is not None:
+            setattr(key, field, value)
+
+    await db.commit()
+    await db.refresh(key)
+
+    logger.info(
+        "api_key_updated",
+        user_id=current_user.id,
+        key_id=key.id,
+        fields_updated=list(update_dict.keys()),
+    )
+
+    return APIKeyInfo(
+        id=key.id,
+        key_prefix=key.key_prefix,
+        name=key.name,
+        description=key.description,
+        created_at=key.created_at.isoformat(),
+        last_used=key.last_request_at.isoformat() if key.last_request_at else None,
+        is_active=key.is_active,
+        is_revoked=key.is_revoked,
+        request_count=key.total_requests,
+        rate_limit=key.rate_limit,
+        rate_limit_daily=key.rate_limit_daily,
+        expires_at=key.expires_at.isoformat() if key.expires_at else None,
+    )
 
 
 @router.delete(
-    "/api-keys/{key_prefix}",
+    "/{key_id}",
     status_code=status.HTTP_204_NO_CONTENT,
-    tags=["API Keys"],
+    summary="Revoke API key",
+    responses={
+        204: {"description": "API key revoked successfully"},
+        401: {"description": "Not authenticated"},
+        404: {"description": "API key not found"},
+    },
 )
-async def revoke_api_key(key_prefix: str, auth: AuthorizedAPIKey):
+async def revoke_api_key(
+    key_id: int,
+    current_user: CurrentUser,
+    db: Annotated[AsyncSession, Depends(get_async_session)],
+):
     """
-    Revoke an API key.
+    Revoke (delete) an API key.
 
-    Requires master API key authentication.
+    This action is irreversible. The key will no longer work for API access.
     """
-    # Only master key can revoke API keys
-    if not settings.master_api_key or auth != settings.master_api_key:
+    result = await db.execute(
+        select(APIKey).where(
+            APIKey.id == key_id,
+            APIKey.user_id == current_user.id,
+        )
+    )
+    key = result.scalar_one_or_none()
+
+    if not key:
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only master API key can revoke API keys",
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"API key with ID {key_id} not found",
         )
 
-    # Find and revoke the key
-    for api_key, info in _api_keys_store.items():
-        if _get_key_prefix(api_key) == key_prefix:
-            info["revoked"] = True
-            return None
+    # Mark as revoked
+    key.is_revoked = True
+    key.is_active = False
+    key.revoked_at = datetime.now(timezone.utc)
 
-    raise HTTPException(
-        status_code=status.HTTP_404_NOT_FOUND,
-        detail=f"API key with prefix '{key_prefix}' not found",
+    await db.commit()
+
+    logger.info(
+        "api_key_revoked",
+        user_id=current_user.id,
+        key_id=key.id,
+        key_prefix=key.key_prefix,
     )
+
+    return None
 
 
 @router.get(
-    "/api-keys/{key_prefix}/usage",
+    "/{key_id}/usage",
     response_model=APIKeyUsageResponse,
-    tags=["API Keys"],
+    summary="Get API key usage statistics",
+    responses={
+        200: {"model": APIKeyUsageResponse, "description": "Usage statistics"},
+        401: {"description": "Not authenticated"},
+        404: {"description": "API key not found"},
+    },
 )
-async def get_api_key_usage(key_prefix: str, auth: AuthorizedAPIKey):
+async def get_api_key_usage(
+    key_id: int,
+    current_user: CurrentUser,
+    db: Annotated[AsyncSession, Depends(get_async_session)],
+):
     """
     Get usage statistics for an API key.
 
-    Requires master API key authentication.
+    Returns request counts and basic analytics.
     """
-    # Only master key can view usage
-    if not settings.master_api_key or auth != settings.master_api_key:
+    result = await db.execute(
+        select(APIKey).where(
+            APIKey.id == key_id,
+            APIKey.user_id == current_user.id,
+        )
+    )
+    key = result.scalar_one_or_none()
+
+    if not key:
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only master API key can view usage statistics",
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"API key with ID {key_id} not found",
         )
 
-    # Find the key
-    for api_key, info in _api_keys_store.items():
-        if _get_key_prefix(api_key) == key_prefix:
-            return APIKeyUsageResponse(
-                key_prefix=key_prefix,
-                name=info["name"],
-                total_requests=info["requests"],
-                requests_today=info["requests"],  # Simplified for MVP
-                requests_this_week=info["requests"],
-                avg_response_time_ms=0.0,  # Would need proper tracking
-            )
-
-    raise HTTPException(
-        status_code=status.HTTP_404_NOT_FOUND,
-        detail=f"API key with prefix '{key_prefix}' not found",
+    return APIKeyUsageResponse(
+        id=key.id,
+        key_prefix=key.key_prefix,
+        name=key.name,
+        total_requests=key.total_requests,
+        requests_today=key.requests_today,
+        avg_response_time_ms=0.0,  # Would need proper tracking
+        last_used=key.last_request_at.isoformat() if key.last_request_at else None,
     )
 
 
 @router.post(
-    "/api-keys/verify",
-    tags=["API Keys"],
+    "/verify",
+    summary="Verify API key",
+    responses={
+        200: {"description": "Verification result"},
+    },
 )
-async def verify_api_key(api_key: str = Query(..., description="API key to verify")):
+async def verify_api_key(
+    db: Annotated[AsyncSession, Depends(get_async_session)],
+    api_key: str = Query(..., description="API key to verify"),
+):
     """
-    Verify if an API key is valid.
+    Verify if an API key is valid and active.
 
     Returns key information if valid.
     """
-    if api_key in _api_keys_store:
-        info = _api_keys_store[api_key]
-        if not info["revoked"]:
-            return {
-                "valid": True,
-                "name": info["name"],
-                "rate_limit": info.get("rate_limit", "100/minute"),
-            }
+    key_hash = _hash_api_key(api_key)
 
-    return {"valid": False}
+    result = await db.execute(
+        select(APIKey).where(
+            APIKey.key_hash == key_hash,
+            APIKey.is_active.is_(True),
+            APIKey.is_revoked.is_(False),
+        )
+    )
+    key = result.scalar_one_or_none()
+
+    if not key:
+        return {"valid": False, "error": "Invalid or inactive API key"}
+
+    # Check expiration
+    if key.expires_at and key.expires_at < datetime.now(timezone.utc):
+        return {"valid": False, "error": "API key has expired"}
+
+    return {
+        "valid": True,
+        "key_prefix": key.key_prefix,
+        "name": key.name,
+        "rate_limit": key.rate_limit,
+        "rate_limit_daily": key.rate_limit_daily,
+    }

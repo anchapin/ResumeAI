@@ -517,6 +517,62 @@ class BillingEvent(Base):
     __table_args__ = (Index("idx_billing_event_user_type", "user_id", "event_type"),)
 
 
+class APIKey(Base):
+    """API Key model for user-specific API key management."""
+
+    __tablename__ = "api_keys"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+
+    # Key data (hashed for storage)
+    key_hash = Column(String(255), unique=True, nullable=False, index=True)
+    key_prefix = Column(String(12), nullable=False)  # First 12 chars for identification
+
+    # Key metadata
+    name = Column(String(100), nullable=False)
+    description = Column(Text, nullable=True)
+
+    # Rate limiting configuration
+    rate_limit = Column(String(50), default="100/minute")
+    rate_limit_daily = Column(Integer, default=1000)  # Daily request limit
+
+    # Usage tracking
+    total_requests = Column(Integer, default=0)
+    requests_today = Column(Integer, default=0)
+    last_request_at = Column(DateTime(timezone=True), nullable=True)
+
+    # Status
+    is_active = Column(Boolean, default=True, index=True)
+    is_revoked = Column(Boolean, default=False, index=True)
+    revoked_at = Column(DateTime(timezone=True), nullable=True)
+    revoked_reason = Column(String(255), nullable=True)
+
+    # Expiration (optional)
+    expires_at = Column(DateTime(timezone=True), nullable=True)
+
+    # Metadata
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), index=True)
+    updated_at = Column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
+
+    # Relationships
+    user = relationship("User", back_populates="api_keys")
+
+    __table_args__ = (
+        Index("idx_api_key_user_active", "user_id", "is_active"),
+        Index("idx_api_key_created", "created_at"),
+    )
+
+
+# Add relationship to User model
+# Note: This is done by modifying the User class after it's defined
+User.api_keys = relationship(
+    "APIKey", back_populates="user", cascade="all, delete-orphan"
+)
+
+
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///./resumeai.db")
 
 engine = create_async_engine(

@@ -15,7 +15,6 @@ from ..utils.versioning import (
     get_version_time_ago,
 )
 
-
 console = Console()
 
 
