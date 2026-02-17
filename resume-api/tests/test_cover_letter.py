@@ -79,7 +79,10 @@ def sample_resume_data():
             }
         ],
         "skills": [
-            {"name": "Programming Languages", "keywords": ["Python", "JavaScript", "TypeScript"]},
+            {
+                "name": "Programming Languages",
+                "keywords": ["Python", "JavaScript", "TypeScript"],
+            },
             {"name": "Frameworks", "keywords": ["React", "Django", "FastAPI"]},
             {"name": "Tools", "keywords": ["Git", "Docker", "AWS"]},
         ],
@@ -114,7 +117,9 @@ def sample_job_description():
 class TestCoverLetterEndpoint:
     """Test class for /v1/cover-letter endpoint."""
 
-    def test_cover_letter_requires_auth(self, client, sample_resume_data, sample_job_description):
+    def test_cover_letter_requires_auth(
+        self, client, sample_resume_data, sample_job_description
+    ):
         """Test that cover letter endpoint requires API key authentication."""
         # Note: When no API key is provided, the endpoint may return 400 (validation error)
         # before auth check due to empty resume validation, or 401/403 for auth failure
@@ -343,7 +348,9 @@ class TestCoverLetterEndpoint:
         """Test error handling when CoverLetterGenerator fails."""
         with patch("api.routes.CoverLetterGenerator") as mock_generator_class:
             mock_instance = MagicMock()
-            mock_instance.generate_cover_letter.side_effect = ValueError("Invalid input")
+            mock_instance.generate_cover_letter.side_effect = ValueError(
+                "Invalid input"
+            )
             mock_generator_class.return_value = mock_instance
 
             response = client.post(
@@ -367,7 +374,9 @@ class TestCoverLetterEndpoint:
         """Test error handling for unexpected internal errors."""
         with patch("api.routes.CoverLetterGenerator") as mock_generator_class:
             mock_instance = MagicMock()
-            mock_instance.generate_cover_letter.side_effect = Exception("Unexpected error")
+            mock_instance.generate_cover_letter.side_effect = Exception(
+                "Unexpected error"
+            )
             mock_generator_class.return_value = mock_instance
 
             response = client.post(
