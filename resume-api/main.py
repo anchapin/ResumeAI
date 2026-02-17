@@ -224,11 +224,8 @@ app.include_router(router)
 app.include_router(interviews_router)
 app.include_router(salary_router)
 app.include_router(linkedin_router)
-<<<<<<< HEAD
 app.include_router(billing_router)
-=======
 app.include_router(auth_router)
-
 
 # WebSocket endpoint for real-time collaboration
 @app.websocket("/ws/resumes/{resume_id}")
