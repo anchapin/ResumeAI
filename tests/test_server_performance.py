@@ -1,3 +1,4 @@
+from server import MockTemplateGenerator
 import unittest
 import time
 import sys
@@ -5,8 +6,6 @@ import os
 
 # Add parent directory to path to import server
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-from server import MockTemplateGenerator
 
 
 class TestServerPerformance(unittest.TestCase):
@@ -40,7 +39,7 @@ class TestServerPerformance(unittest.TestCase):
         large_data = self.experience_data * 100  # 100,000 items
 
         start_time = time.time()
-        result = self.generator._format_experience(large_data)
+        self.generator._format_experience(large_data)
         duration = time.time() - start_time
 
         print(f"\nBenchmark (100k items): {duration:.4f}s")

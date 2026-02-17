@@ -25,13 +25,13 @@ class Connection:
 
 class ConnectionFinder:
     """Finds professional connections at target companies."""
-    
+
     def __init__(self, github_token: Optional[str] = None):
         self.github_token = github_token
         self.github_headers = {}
         if github_token:
             self.github_headers['Authorization'] = f'token {github_token}'
-    
+
     async def find_connections(
         self,
         target_company: str,
@@ -40,46 +40,46 @@ class ConnectionFinder:
     ) -> List[Connection]:
         """
         Find connections at a target company.
-        
+
         Args:
             target_company: Name of the company to search
             user_profile: User's profile with education/experience history
             limit: Maximum number of connections to return
-            
+
         Returns:
             List of Connection objects
         """
         connections = []
-        
+
         # Run searches in parallel
         tasks = [
             self._find_github_employees(target_company, limit),
             self._find_alumni(target_company, user_profile.get('education', [])),
             self._find_previous_company_connections(
-                target_company, 
+                target_company,
                 user_profile.get('experience', [])
             ),
         ]
-        
+
         results = await asyncio.gather(*tasks, return_exceptions=True)
-        
+
         # Collect all connections
         for result in results:
             if isinstance(result, list):
                 connections.extend(result)
-        
+
         # Sort by similarity score and limit
         connections.sort(key=lambda x: x.similarity_score, reverse=True)
         return connections[:limit]
-    
+
     async def _find_github_employees(
-        self, 
-        company: str, 
+        self,
+        company: str,
         limit: int
     ) -> List[Connection]:
         """Find employees at company using GitHub API."""
         connections = []
-        
+
         try:
             # Search GitHub users by company
             async with httpx.AsyncClient(timeout=30.0) as client:
@@ -91,7 +91,7 @@ class ConnectionFinder:
                     },
                     headers=self.github_headers
                 )
-                
+
                 if response.status_code == 200:
                     data = response.json()
                     for item in data.get('items', []):
@@ -114,9 +114,9 @@ class ConnectionFinder:
                             connections.append(connection)
         except Exception as e:
             print(f"GitHub search error: {e}")
-        
+
         return connections
-    
+
     async def _find_alumni(
         self,
         target_company: str,
@@ -124,15 +124,15 @@ class ConnectionFinder:
     ) -> List[Connection]:
         """Find alumni from same school now at target company."""
         connections = []
-        
+
         if not education:
             return connections
-        
+
         schools = set()
         for edu in education:
             if edu.get('institution'):
                 schools.add(edu['institution'])
-        
+
         # Search GitHub for users from same schools at target company
         for school in schools:
             try:
@@ -146,7 +146,7 @@ class ConnectionFinder:
                         },
                         headers=self.github_headers
                     )
-                    
+
                     if response.status_code == 200:
                         data = response.json()
                         for item in data.get('items', []):
@@ -162,9 +162,9 @@ class ConnectionFinder:
                             connections.append(connection)
             except Exception as e:
                 print(f"Alumni search error: {e}")
-        
+
         return connections
-    
+
     async def _find_previous_company_connections(
         self,
         target_company: str,
@@ -172,16 +172,16 @@ class ConnectionFinder:
     ) -> List[Connection]:
         """Find people who previously worked at same companies."""
         connections = []
-        
+
         if not experience:
             return connections
-        
+
         # Get previous companies
         previous_companies = set()
         for exp in experience:
             if exp.get('company') and not exp.get('current'):
                 previous_companies.add(exp['company'])
-        
+
         # Search for users who worked at both previous companies and target
         for prev_company in previous_companies:
             try:
@@ -194,7 +194,7 @@ class ConnectionFinder:
                         },
                         headers=self.github_headers
                     )
-                    
+
                     if response.status_code == 200:
                         data = response.json()
                         for item in data.get('items', []):
@@ -210,9 +210,9 @@ class ConnectionFinder:
                             connections.append(connection)
             except Exception as e:
                 print(f"Previous company search error: {e}")
-        
+
         return connections
-    
+
     def generate_outreach_suggestions(
         self,
         connection: Connection,
@@ -220,19 +220,18 @@ class ConnectionFinder:
     ) -> Dict[str, str]:
         """
         Generate personalized outreach suggestions.
-        
+
         Returns templates for different connection types.
         """
         user_name = user_profile.get('name', 'there')
         user_school = None
-        user_companies = []
-        
+
         if user_profile.get('education'):
             user_school = user_profile['education'][0].get('institution')
-        
+
         if user_profile.get('experience'):
-            user_companies = [exp.get('company') for exp in user_profile['experience']]
-        
+            [exp.get('company') for exp in user_profile['experience']]
+
         templates = {
             'github': (
                 f"Hi {connection.name}! I'm {user_name} and noticed we're both at {connection.company}. "
@@ -254,7 +253,7 @@ class ConnectionFinder:
                 f"about your work at {connection.company}."
             )
         }
-        
+
         return {
             'short': templates.get(connection.connection_type, templates['github']),
             'medium': templates.get(connection.connection_type, templates['github']) + (

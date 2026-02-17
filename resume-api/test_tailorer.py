@@ -5,6 +5,7 @@ Tests the ResumeTailorer class with various AI providers
 and the /v1/tailor endpoint.
 """
 
+from lib.cli.tailorer import ResumeTailorer, MockResumeTailorer
 import pytest
 import sys
 from pathlib import Path
@@ -14,7 +15,6 @@ from unittest.mock import Mock, patch
 lib_path = Path(__file__).parent.parent / "resume-api"
 sys.path.insert(0, str(lib_path))
 
-from lib.cli.tailorer import ResumeTailorer, MockResumeTailorer
 
 # Sample resume data for testing
 SAMPLE_RESUME_DATA = {
@@ -264,7 +264,7 @@ class TestKeywordExtraction:
         tailorer = ResumeTailorer(ai_provider="openai")
 
         keywords_lower = tailorer.extract_keywords("python and JAVASCRIPT")
-        keywords_mixed = tailorer.extract_keywords("Python and JavaScript")
+        tailorer.extract_keywords("Python and JavaScript")
 
         # Should find the same keywords
         assert len(keywords_lower) > 0

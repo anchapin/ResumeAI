@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { SimpleResumeData, WorkExperience, EducationEntry, ProjectEntry } from '../types';
 import { convertToAPIData, generatePDF, getVariants, VariantMetadata } from '../utils/api-client';
-import TemplateSelector from '../components/TemplateSelector';
+import { TemplateSelector } from '../components/TemplateSelector';
 
 interface ExperienceItemProps {
     exp: WorkExperience;

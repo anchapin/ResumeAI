@@ -10,10 +10,10 @@ Provides endpoints for:
 
 import secrets
 import hashlib
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, HTTPException, Query, status
 from pydantic import BaseModel
 
 from config.dependencies import AuthorizedAPIKey

@@ -83,18 +83,18 @@ class RateLimitTester:
 
                 if response.status_code == 200:
                     headers = response.headers
-                    print(f"  Request {i+1}: Success")
+                    print(f"  Request {i + 1}: Success")
                     if "X-RateLimit-Limit" in headers:
                         print(f"    Rate Limit: {headers['X-RateLimit-Limit']}")
                         print(f"    Remaining: {headers['X-RateLimit-Remaining']}")
                         print(f"    Reset: {headers['X-RateLimit-Reset']}")
                 else:
-                    print(f"  Request {i+1}: Failed with status {response.status_code}")
+                    print(f"  Request {i + 1}: Failed with status {response.status_code}")
                     print(f"    Error: {response.text}")
                     return False
 
             except Exception as e:
-                print(f"  Request {i+1}: Error - {e}")
+                print(f"  Request {i + 1}: Error - {e}")
                 return False
 
         print("✓ Variants endpoint normal usage test passed")
@@ -117,7 +117,7 @@ class RateLimitTester:
 
                 if response.status_code == 429:
                     if not rate_limited:
-                        print(f"  Rate limit triggered at request {i+1}")
+                        print(f"  Rate limit triggered at request {i + 1}")
                         print(f"  Status: {response.status_code}")
                         print(f"  Headers: {dict(response.headers)}")
                         rate_limited = True
@@ -128,12 +128,12 @@ class RateLimitTester:
                     success_count += 1
                 else:
                     print(
-                        f"  Unexpected status {response.status_code} at request {i+1}"
+                        f"  Unexpected status {response.status_code} at request {i + 1}"
                     )
                     return False
 
             except Exception as e:
-                print(f"  Error at request {i+1}: {e}")
+                print(f"  Error at request {i + 1}: {e}")
                 return False
 
         if rate_limited:
@@ -164,7 +164,7 @@ class RateLimitTester:
                 first_key_success += 1
             elif response.status_code == 429:
                 if not first_key_limited:
-                    print(f"  First API key rate limited at request {i+1}")
+                    print(f"  First API key rate limited at request {i + 1}")
                     first_key_limited = True
 
         # Send 15 requests with second API key (should also be limited at 10)
@@ -182,7 +182,7 @@ class RateLimitTester:
                 second_key_success += 1
             elif response.status_code == 429:
                 if not second_key_limited:
-                    print(f"  Second API key rate limited at request {i+1}")
+                    print(f"  Second API key rate limited at request {i + 1}")
                     second_key_limited = True
 
         if first_key_limited and second_key_limited:
@@ -212,7 +212,7 @@ class RateLimitTester:
                 success_count += 1
             elif response.status_code == 429:
                 if not rate_limited:
-                    print(f"  Rate limit triggered at request {i+1}")
+                    print(f"  Rate limit triggered at request {i + 1}")
                     print(f"  Headers: {dict(response.headers)}")
                     rate_limited = True
 
