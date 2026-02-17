@@ -227,6 +227,7 @@ app.include_router(linkedin_router)
 app.include_router(billing_router)
 app.include_router(auth_router)
 
+
 # WebSocket endpoint for real-time collaboration
 @app.websocket("/ws/resumes/{resume_id}")
 async def websocket_resume(websocket, resume_id: str, user_id: str = None):
