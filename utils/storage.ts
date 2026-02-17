@@ -26,12 +26,21 @@ export class StorageError extends Error {
   }
 }
 
+// Cache storage availability check result to avoid redundant I/O operations
+let isStorageAvailableCache: boolean | null = null;
+
 /**
  * Checks if localStorage is available in the current environment
  */
 function isStorageAvailable(): boolean {
+  // Return cached result if available
+  if (isStorageAvailableCache !== null) {
+    return isStorageAvailableCache;
+  }
+
   try {
     if (typeof window === 'undefined' || typeof localStorage === 'undefined') {
+      isStorageAvailableCache = false;
       return false;
     }
 
@@ -39,8 +48,11 @@ function isStorageAvailable(): boolean {
     const testKey = '__storage_test__';
     localStorage.setItem(testKey, 'test');
     localStorage.removeItem(testKey);
+
+    isStorageAvailableCache = true;
     return true;
   } catch (e) {
+    isStorageAvailableCache = false;
     return false;
   }
 }
