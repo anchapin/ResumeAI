@@ -48,13 +48,16 @@ def sample_docx_bytes():
     headline.alignment = WD_ALIGN_PARAGRAPH.CENTER
 
     # Add contact info
-    contact = doc.add_paragraph("john.doe@example.com | (555) 123-4567 | San Francisco, CA")
+    contact = doc.add_paragraph(
+        "john.doe@example.com | (555) 123-4567 | San Francisco, CA"
+    )
     contact.alignment = WD_ALIGN_PARAGRAPH.CENTER
 
     # Add summary
     doc.add_heading("Summary", level=1)
     doc.add_paragraph(
-        "Experienced software engineer with 5+ years of experience in Python, " "JavaScript, and cloud technologies."
+        "Experienced software engineer with 5+ years of experience in Python, "
+        "JavaScript, and cloud technologies."
     )
 
     # Add work experience
@@ -324,7 +327,10 @@ class TestImportDocxEndpoint:
         response = client.post("/v1/import/docx", files=files)
 
         # Should return 400 or 500 depending on when the size check happens
-        assert response.status_code in [status.HTTP_400_BAD_REQUEST, status.HTTP_500_INTERNAL_SERVER_ERROR]
+        assert response.status_code in [
+            status.HTTP_400_BAD_REQUEST,
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
+        ]
         # Check for appropriate error message
         if response.status_code == status.HTTP_400_BAD_REQUEST:
             assert "File too large" in response.json()["detail"]
@@ -466,7 +472,9 @@ class TestImportDocxEdgeCases:
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
         # Unicode should be preserved
-        assert "José" in data.get("basics", {}).get("name", "") or "García" in data.get("basics", {}).get("name", "")
+        assert "José" in data.get("basics", {}).get("name", "") or "García" in data.get(
+            "basics", {}
+        ).get("name", "")
 
     def test_import_docx_very_long_content(self, client):
         """Test DOCX import with very long content."""
@@ -501,7 +509,13 @@ class TestDocxContentTypeVariations:
 
     def test_import_docx_ms_word_content_type(self, client, simple_docx_bytes):
         """Test DOCX import with MS Word content type."""
-        files = {"file": ("resume.docx", simple_docx_bytes, "application/vnd.ms-word.document")}
+        files = {
+            "file": (
+                "resume.docx",
+                simple_docx_bytes,
+                "application/vnd.ms-word.document",
+            )
+        }
 
         response = client.post("/v1/import/docx", files=files)
 
