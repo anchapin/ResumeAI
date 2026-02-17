@@ -11,12 +11,13 @@ Tests cover:
 
 import pytest
 import pytest_asyncio
+
+from database import (
     Subscription,
     SubscriptionPlan,
     Invoice,
     PaymentMethod,
     async_session_maker,
-    create_db_and_tables,
     Base,
     engine,
 )
