@@ -1163,7 +1163,7 @@ async def import_linkedin_file(
     if content_type not in [
         "application/json",
         "text/json",
-    ] and not file.filename.lower().endswith('.json'):
+    ] and not file.filename.lower().endswith(".json"):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid file type. Only JSON files are accepted.",
@@ -1183,7 +1183,8 @@ async def import_linkedin_file(
         # Parse JSON
         try:
             import json
-            linkedin_data = json.loads(content.decode('utf-8'))
+
+            linkedin_data = json.loads(content.decode("utf-8"))
         except json.JSONDecodeError as e:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -1196,7 +1197,7 @@ async def import_linkedin_file(
         importer = LinkedInImporter()
 
         # Handle different LinkedIn export formats
-        resume_data_dict = importer.parse_export(linkedin_data, mode='overwrite')
+        resume_data_dict = importer.parse_export(linkedin_data, mode="overwrite")
 
         # Convert to JSON Resume format
         resume_data = convert_linkedin_to_json_resume(resume_data_dict)
@@ -1240,7 +1241,9 @@ def convert_linkedin_to_json_resume(linkedin_data: dict) -> dict:
         resume["basics"]["name"] = linkedin_data["name"]
 
     if linkedin_data.get("headline") or linkedin_data.get("role"):
-        resume["basics"]["label"] = linkedin_data.get("headline") or linkedin_data.get("role")
+        resume["basics"]["label"] = linkedin_data.get("headline") or linkedin_data.get(
+            "role"
+        )
 
     if linkedin_data.get("summary"):
         resume["basics"]["summary"] = linkedin_data["summary"]
@@ -1288,10 +1291,12 @@ def convert_linkedin_to_json_resume(linkedin_data: dict) -> dict:
     # Languages
     for lang in linkedin_data.get("languages", []):
         if isinstance(lang, dict):
-            resume["languages"].append({
-                "name": lang.get("name", ""),
-                "proficiency": lang.get("proficiency", ""),
-            })
+            resume["languages"].append(
+                {
+                    "name": lang.get("name", ""),
+                    "proficiency": lang.get("proficiency", ""),
+                }
+            )
 
     # Projects
     for proj in linkedin_data.get("projects", []):
