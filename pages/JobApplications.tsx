@@ -1,17 +1,40 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { JobApplication, SimpleResumeData, ATSReport } from '../types';
 import StatusBadge from '../components/StatusBadge';
-import { convertToAPIData, tailorResume, checkATSScore, ResumeDataForAPI, TailoredResumeResponse } from '../utils/api-client';
+import { convertToAPIData, tailorResume, checkATSScore, TailoredResumeResponse } from '../utils/api-client';
+
+/** Extended JobApplication type with tracking fields */
+interface TrackedJobApplication extends JobApplication {
+  resumeVariant?: string;
+  applicationMethod?: 'LinkedIn' | 'Direct' | 'Referral' | 'Indeed' | 'Other';
+  jobUrl?: string;
+  notes?: string;
+}
+
+/** Stats calculation from applications */
+const calculateStats = (apps: TrackedJobApplication[]) => {
+  const total = apps.length;
+  const sent = total;
+  const pending = apps.filter(a => a.status === 'Applied').length;
+  const interviews = apps.filter(a => a.status === 'Interview').length;
+  const offers = apps.filter(a => a.status === 'Offer').length;
+  const rejected = apps.filter(a => a.status === 'Rejected').length;
+  
+  const responded = interviews + offers + rejected;
+  const interviewRate = responded > 0 ? Math.round((interviews / responded) * 100) : 0;
+  
+  return { total, sent, pending, interviews, offers, rejected, interviewRate };
+};
 
 /** Mock data for job applications */
-const applications: JobApplication[] = [
-  { id: '1', company: 'Google', role: 'Software Engineer', status: 'Applied', dateApplied: 'Oct 24, 2023', logo: 'https://lh3.googleusercontent.com/COxitqgJr1sJnIDe8-Ca402YwzGNcjqg84afM42nzQ7kXDD0jf986hws20DaEvp_ejg' },
-  { id: '2', company: 'Stripe', role: 'Product Designer', status: 'Interview', dateApplied: 'Oct 22, 2023', logo: 'https://b.stripecdn.com/docs-statics-srv/assets/b411c60/company-logos/dark/stripe.svg' },
-  { id: '3', company: 'Vercel', role: 'Frontend Developer', status: 'Offer', dateApplied: 'Oct 15, 2023', logo: 'https://assets.vercel.com/image/upload/front/favicon/vercel/180x180.png' },
-  { id: '4', company: 'Netflix', role: 'Senior UI Engineer', status: 'Rejected', dateApplied: 'Sep 28, 2023', logo: 'https://assets.nflxext.com/us/ffe/siteui/common/icons/nficon2016.png' },
-  { id: '5', company: 'Airbnb', role: 'Full Stack Developer', status: 'Applied', dateApplied: 'Nov 01, 2023', logo: 'https://a0.muscache.com/airbnb/static/icons/android/airbnb-logo-256x256.png' },
-  { id: '6', company: 'Microsoft', role: 'Software Engineer II', status: 'Interview', dateApplied: 'Oct 05, 2023', logo: 'https://img-prod-cms-rt-microsoft-com.akamaized.net/cms/api/am/imageFileData/RE1Mu3b?ver=5c31' },
-  { id: '7', company: 'Amazon', role: 'Frontend Engineer', status: 'Applied', dateApplied: 'Nov 03, 2023', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a9/Amazon_logo.svg/1024px-Amazon_logo.svg.png' },
+const initialApplications: TrackedJobApplication[] = [
+  { id: '1', company: 'Google', role: 'Software Engineer', status: 'Applied', dateApplied: 'Oct 24, 2023', logo: 'https://lh3.googleusercontent.com/COxitqgJr1sJnIDe8-Ca402YwzGNcjqg84afM42nzQ7kXDD0jf986hws20DaEvp_ejg', resumeVariant: 'v1.0.0-backend', applicationMethod: 'LinkedIn', jobUrl: 'https://linkedin.com/jobs/123' },
+  { id: '2', company: 'Stripe', role: 'Product Designer', status: 'Interview', dateApplied: 'Oct 22, 2023', logo: 'https://b.stripecdn.com/docs-statics-srv/assets/b411c60/company-logos/dark/stripe.svg', resumeVariant: 'v1.0.0-design', applicationMethod: 'Referral', jobUrl: 'https://stripe.com/careers/456' },
+  { id: '3', company: 'Vercel', role: 'Frontend Developer', status: 'Offer', dateApplied: 'Oct 15, 2023', logo: 'https://assets.vercel.com/image/upload/front/favicon/vercel/180x180.png', resumeVariant: 'v1.0.0-frontend', applicationMethod: 'Direct', jobUrl: 'https://vercel.com/careers/789' },
+  { id: '4', company: 'Netflix', role: 'Senior UI Engineer', status: 'Rejected', dateApplied: 'Sep 28, 2023', logo: 'https://assets.nflxext.com/us/ffe/siteui/common/icons/nficon2016.png', resumeVariant: 'v1.0.0-backend', applicationMethod: 'LinkedIn' },
+  { id: '5', company: 'Airbnb', role: 'Full Stack Developer', status: 'Applied', dateApplied: 'Nov 01, 2023', logo: 'https://a0.muscache.com/airbnb/static/icons/android/airbnb-logo-256x256.png', resumeVariant: 'v1.0.0-fullstack', applicationMethod: 'Indeed' },
+  { id: '6', company: 'Microsoft', role: 'Software Engineer II', status: 'Interview', dateApplied: 'Oct 05, 2023', logo: 'https://img-prod-cms-rt-microsoft-com.akamaized.net/cms/api/am/imageFileData/RE1Mu3b?ver=5c31', resumeVariant: 'v1.0.0-backend', applicationMethod: 'Referral' },
+  { id: '7', company: 'Amazon', role: 'Frontend Engineer', status: 'Applied', dateApplied: 'Nov 03, 2023', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a9/Amazon_logo.svg/1024px-Amazon_logo.svg.png', resumeVariant: 'v1.0.0-frontend', applicationMethod: 'LinkedIn' },
 ];
 
 /**
@@ -20,9 +43,13 @@ const applications: JobApplication[] = [
  * @returns {JSX.Element} The rendered job applications page component
  */
 const JobApplications: React.FC = () => {
+  // Applications state
+  const [applications, setApplications] = useState<TrackedJobApplication[]>(initialApplications);
+  
   // Resume tailoring state
   const [showTailorModal, setShowTailorModal] = useState<boolean>(false);
   const [showATSModal, setShowATSModal] = useState<boolean>(false);
+  const [showAddModal, setShowAddModal] = useState<boolean>(false);
   const [jobDescription, setJobDescription] = useState<string>('');
   const [companyName, setCompanyName] = useState<string>('');
   const [jobTitle, setJobTitle] = useState<string>('');
@@ -34,6 +61,9 @@ const JobApplications: React.FC = () => {
   const [isCheckingATS, setIsCheckingATS] = useState<boolean>(false);
   const [atsError, setAtsError] = useState<string | null>(null);
   const [atsReport, setAtsReport] = useState<ATSReport | null>(null);
+  
+  // Calculate stats from applications
+  const stats = useMemo(() => calculateStats(applications), [applications]);
   
   // Sample resume data for tailoring (would come from App context in real app)
   const sampleResumeData: SimpleResumeData = {
@@ -150,7 +180,10 @@ const JobApplications: React.FC = () => {
             <span className="material-symbols-outlined text-[20px]">auto_fix_high</span>
             <span>Tailor Resume</span>
           </button>
-          <button className="flex items-center gap-2 bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg font-medium transition-colors shadow-sm shadow-primary-600/20">
+          <button 
+            onClick={() => setShowAddModal(true)}
+            className="flex items-center gap-2 bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg font-medium transition-colors shadow-sm shadow-primary-600/20"
+          >
             <span className="material-symbols-outlined text-[20px]">add</span><span>Add Application</span>
           </button>
           <div className="w-px h-8 bg-slate-200 mx-2"></div>
@@ -188,6 +221,54 @@ const JobApplications: React.FC = () => {
                     <span>Sort</span>
                  </button>
             </div>
+        </div>
+
+        {/* Stats Dashboard */}
+        <div className="grid grid-cols-4 gap-4">
+          <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-primary-100 rounded-lg">
+                <span className="material-symbols-outlined text-primary-600">send</span>
+              </div>
+              <div>
+                <p className="text-sm text-slate-500 font-medium">Applications Sent</p>
+                <p className="text-2xl font-bold text-slate-900">{stats.total}</p>
+              </div>
+            </div>
+          </div>
+          <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-amber-100 rounded-lg">
+                <span className="material-symbols-outlined text-amber-600">hourglass_empty</span>
+              </div>
+              <div>
+                <p className="text-sm text-slate-500 font-medium">Pending</p>
+                <p className="text-2xl font-bold text-slate-900">{stats.pending}</p>
+              </div>
+            </div>
+          </div>
+          <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-purple-100 rounded-lg">
+                <span className="material-symbols-outlined text-purple-600">forum</span>
+              </div>
+              <div>
+                <p className="text-sm text-slate-500 font-medium">Interviews</p>
+                <p className="text-2xl font-bold text-slate-900">{stats.interviews}</p>
+              </div>
+            </div>
+          </div>
+          <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-green-100 rounded-lg">
+                <span className="material-symbols-outlined text-green-600">workspace_premium</span>
+              </div>
+              <div>
+                <p className="text-sm text-slate-500 font-medium">Interview Rate</p>
+                <p className="text-2xl font-bold text-slate-900">{stats.interviewRate}%</p>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
