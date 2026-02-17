@@ -520,6 +520,10 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, onBack, saveStatu
   const [pdfError, setPdfError] = useState<string | null>(null);
   const [showTemplateSelector, setShowTemplateSelector] = useState<boolean>(false);
   
+  // Drag and drop state for section reordering
+  const [draggedItemId, setDraggedItemId] = useState<string | null>(null);
+  const [dragOverItemId, setDragOverItemId] = useState<string | null>(null);
+  
   // Fetch variants on mount
   useEffect(() => {
     const loadVariants = async () => {
@@ -688,6 +692,41 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, onBack, saveStatu
     setExpandedExpId(newId);
   }, [onUpdate]);
 
+  // Drag and drop handlers for reordering
+  const handleDragStart = useCallback((id: string) => {
+    setDraggedItemId(id);
+  }, []);
+
+  const handleDragOver = useCallback((e: React.DragEvent, id: string) => {
+    e.preventDefault();
+    if (draggedItemId && draggedItemId !== id) {
+      setDragOverItemId(id);
+    }
+  }, [draggedItemId]);
+
+  const handleDragEnd = useCallback(() => {
+    setDraggedItemId(null);
+    setDragOverItemId(null);
+  }, []);
+
+  const handleDrop = useCallback((targetId: string) => {
+    if (!draggedItemId || draggedItemId === targetId) return;
+    
+    const currentData = resumeDataRef.current;
+    const items = [...currentData.experience];
+    const draggedIndex = items.findIndex(item => item.id === draggedItemId);
+    const targetIndex = items.findIndex(item => item.id === targetId);
+    
+    if (draggedIndex !== -1 && targetIndex !== -1) {
+      const [draggedItem] = items.splice(draggedIndex, 1);
+      items.splice(targetIndex, 0, draggedItem);
+      onUpdate({ ...currentData, experience: items });
+    }
+    
+    setDraggedItemId(null);
+    setDragOverItemId(null);
+  }, [draggedItemId, onUpdate]);
+
   // Education handlers
   const handleDeleteEducation = useCallback((id: string) => {
     const currentData = resumeDataRef.current;
@@ -853,9 +892,29 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, onBack, saveStatu
                 <span className="text-sm font-medium text-slate-500">{experiences.length} positions listed</span>
             </div>
 
+            {/* Drag and Drop Hint */}
+            {experiences.length > 1 && (
+              <div className="flex items-center gap-2 text-xs text-slate-400 bg-slate-50 px-3 py-2 rounded-lg">
+                <span className="material-symbols-outlined text-[16px]">drag_indicator</span>
+                <span>Drag and drop to reorder experience entries</span>
+              </div>
+            )}
+
             {experiences.map((exp) => (
-                <ExperienceItem
-                    key={exp.id}
+                <div
+                  key={exp.id}
+                  draggable
+                  onDragStart={() => handleDragStart(exp.id)}
+                  onDragOver={(e) => handleDragOver(e, exp.id)}
+                  onDragEnd={handleDragEnd}
+                  onDrop={() => handleDrop(exp.id)}
+                  className={`transition-all duration-200 ${
+                    draggedItemId === exp.id ? 'opacity-50 scale-[0.98]' : ''
+                  } ${
+                    dragOverItemId === exp.id ? 'ring-2 ring-primary-400 ring-offset-2 rounded-xl' : ''
+                  }`}
+                >
+                  <ExperienceItem
                     exp={exp}
                     isExpanded={expandedExpId === exp.id}
                     onToggleExpand={handleToggleExpandExperience}
@@ -863,7 +922,8 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, onBack, saveStatu
                     onUpdate={updateExperience}
                     onAddTag={addTagToExperience}
                     onRemoveTag={removeTagFromExperience}
-                />
+                  />
+                </div>
             ))}
 
             <button
