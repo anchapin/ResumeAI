@@ -14,7 +14,6 @@ from pydantic import BaseModel, Field
 
 from docx import Document
 from docx.enum.text import WD_ALIGN_PARAGRAPH
-import docx  # python-docx for DOCX parsing
 import httpx  # HTTP client for LinkedIn API
 import fitz  # PyMuPDF for PDF parsing
 
