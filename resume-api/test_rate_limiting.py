@@ -89,7 +89,9 @@ class RateLimitTester:
                         print(f"    Remaining: {headers['X-RateLimit-Remaining']}")
                         print(f"    Reset: {headers['X-RateLimit-Reset']}")
                 else:
-                    print(f"  Request {i + 1}: Failed with status {response.status_code}")
+                    print(
+                        f"  Request {i + 1}: Failed with status {response.status_code}"
+                    )
                     print(f"    Error: {response.text}")
                     return False
 
