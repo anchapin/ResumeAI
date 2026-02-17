@@ -27,7 +27,7 @@ class ResumeTailorer:
         self,
         ai_provider: str = "openai",
         api_key: Optional[str] = None,
-        model: Optional[str] = None
+        model: Optional[str] = None,
     ):
         """
         Initialize the ResumeTailorer.
@@ -42,7 +42,7 @@ class ResumeTailorer:
         self.model = model
 
         # Validate provider
-        if self.ai_provider not in ['openai', 'claude', 'gemini']:
+        if self.ai_provider not in ["openai", "claude", "gemini"]:
             raise ValueError(
                 f"Invalid AI provider: {ai_provider}. "
                 "Must be 'openai', 'claude', or 'gemini'"
@@ -60,27 +60,27 @@ class ResumeTailorer:
         This is a placeholder implementation.
         In production, this would initialize the actual AI clients.
         """
-        if self.ai_provider == 'openai':
+        if self.ai_provider == "openai":
             self.client = None  # openai.OpenAI(api_key=self.api_key)
             if not self.model:
-                self.model = 'gpt-4-turbo-preview'
+                self.model = "gpt-4-turbo-preview"
 
-        elif self.ai_provider == 'claude':
+        elif self.ai_provider == "claude":
             self.client = None  # anthropic.Anthropic(api_key=self.api_key)
             if not self.model:
-                self.model = 'claude-3-opus-20240229'
+                self.model = "claude-3-opus-20240229"
 
-        elif self.ai_provider == 'gemini':
+        elif self.ai_provider == "gemini":
             self.client = None  # genai.configure(api_key=self.api_key)
             if not self.model:
-                self.model = 'gemini-1.5-pro'
+                self.model = "gemini-1.5-pro"
 
     def tailor_resume(
         self,
         resume_data: Dict[str, Any],
         job_description: str,
         company_name: str,
-        job_title: str
+        job_title: str,
     ) -> Dict[str, Any]:
         """
         Tailor a resume to match a job description.
@@ -111,7 +111,7 @@ class ResumeTailorer:
             "company": company_name,
             "job_title": job_title,
             "ai_provider": self.ai_provider,
-            "model": self.model
+            "model": self.model,
         }
 
         # Tailor experience section if exists
@@ -142,7 +142,7 @@ class ResumeTailorer:
         words = job_description.split()
         # Filter for likely skill keywords (2+ characters, alphanumeric)
         keywords = [
-            word.strip('.,;:!?()[]{}"\'').lower()
+            word.strip(".,;:!?()[]{}\"'").lower()
             for word in words
             if len(word) > 2 and word.isalpha()
         ]
@@ -150,9 +150,7 @@ class ResumeTailorer:
         return list(dict.fromkeys(keywords))[:50]
 
     def suggest_improvements(
-        self,
-        resume_data: Dict[str, Any],
-        job_description: str
+        self, resume_data: Dict[str, Any], job_description: str
     ) -> List[str]:
         """
         Suggest improvements to a resume based on a job description.
@@ -171,7 +169,7 @@ class ResumeTailorer:
             "Highlight skills that match the job requirements",
             "Use action verbs at the beginning of bullet points",
             "Tailor your summary to match the company culture",
-            "Ensure your formatting is consistent throughout"
+            "Ensure your formatting is consistent throughout",
         ]
 
         return suggestions
@@ -192,7 +190,7 @@ class MockResumeTailorer:
         resume_data: Dict[str, Any],
         job_description: str,
         company_name: str,
-        job_title: str
+        job_title: str,
     ) -> Dict[str, Any]:
         """Mock tailoring - just adds metadata."""
         tailored_data = resume_data.copy()
@@ -200,7 +198,7 @@ class MockResumeTailorer:
         tailored_data["_tailored_for"] = {
             "company": company_name,
             "job_title": job_title,
-            "ai_provider": "mock"
+            "ai_provider": "mock",
         }
 
         # Add relevance scores to experience
@@ -216,17 +214,16 @@ class MockResumeTailorer:
         """Extract keywords from job description."""
         # Simple keyword extraction
         import re
-        words = re.findall(r'\b[a-zA-Z]{3,}\b', job_description.lower())
+
+        words = re.findall(r"\b[a-zA-Z]{3,}\b", job_description.lower())
         return list(set(words))[:20]
 
     def suggest_improvements(
-        self,
-        resume_data: Dict[str, Any],
-        job_description: str
+        self, resume_data: Dict[str, Any], job_description: str
     ) -> List[str]:
         """Provide mock improvement suggestions."""
         return [
             "Add more quantifiable achievements",
             "Include relevant keywords from job description",
-            "Improve formatting consistency"
+            "Improve formatting consistency",
         ]

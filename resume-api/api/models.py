@@ -4,7 +4,7 @@ Pydantic models for request/response validation.
 
 import re
 from datetime import datetime
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any, Optional, List, Tuple
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 # Validation constants
@@ -1479,3 +1479,169 @@ class MessageResponse(BaseModel):
     """Generic message response."""
 
     message: str = Field(..., description="Response message")
+
+
+# =============================================================================
+# Job Description Parsing Models
+# =============================================================================
+
+
+class SalaryInfo(BaseModel):
+    """Salary information extracted from job description."""
+
+    min: Optional[int] = Field(None, description="Minimum salary")
+    max: Optional[int] = Field(None, description="Maximum salary")
+    currency: str = Field(default="USD", description="Currency code")
+    period: str = Field(
+        default="yearly", description="Salary period (yearly, hourly, monthly)"
+    )
+
+
+class JDAnalysisRequest(BaseModel):
+    """Request to analyze a job description."""
+
+    job_description: str = Field(
+        ...,
+        min_length=10,
+        max_length=MAX_LONG_STRING_LENGTH,
+        description="Job description text to analyze",
+    )
+
+
+class JDAnalysisResponse(BaseModel):
+    """Response with parsed job description data."""
+
+    title: Optional[str] = Field(None, description="Job title")
+    company: Optional[str] = Field(None, description="Company name")
+    location: Optional[str] = Field(None, description="Job location")
+    remote_type: Optional[str] = Field(
+        None, description="Remote work type (remote, hybrid, onsite)"
+    )
+    salary: Optional[SalaryInfo] = Field(None, description="Salary information")
+    requirements: List[str] = Field(
+        default_factory=list, description="Job requirements"
+    )
+    qualifications: List[str] = Field(
+        default_factory=list, description="Preferred qualifications"
+    )
+    responsibilities: List[str] = Field(
+        default_factory=list, description="Job responsibilities"
+    )
+    skills: List[str] = Field(default_factory=list, description="Required skills")
+    experience_level: Optional[str] = Field(
+        None, description="Experience level (entry, mid, senior, lead, executive)"
+    )
+    experience_years: Optional[Tuple[int, int]] = Field(
+        None, description="Years of experience range (min, max)"
+    )
+    education_requirements: List[str] = Field(
+        default_factory=list, description="Education requirements"
+    )
+    benefits: List[str] = Field(default_factory=list, description="Benefits offered")
+    keywords: List[str] = Field(default_factory=list, description="Top keywords")
+
+
+class SkillsMatchRequest(BaseModel):
+    """Request to match resume skills against job description."""
+
+    resume_data: ResumeData = Field(..., description="Resume data")
+    job_description: str = Field(
+        ...,
+        min_length=10,
+        max_length=MAX_LONG_STRING_LENGTH,
+        description="Job description text",
+    )
+
+
+class SkillsMatchResponse(BaseModel):
+    """Response with skills matching results."""
+
+    matched_skills: List[str] = Field(
+        ..., description="Skills found in both resume and job description"
+    )
+    missing_skills: List[str] = Field(
+        ..., description="Skills from job description not found in resume"
+    )
+    additional_skills: List[str] = Field(
+        ..., description="Skills in resume not mentioned in job description"
+    )
+    match_rate: float = Field(
+        ..., ge=0.0, le=1.0, description="Skills match rate (0.0 to 1.0)"
+    )
+    match_score: int = Field(
+        ..., ge=0, le=100, description="Overall match score (0-100)"
+    )
+    jd_skills: List[str] = Field(
+        ..., description="Skills extracted from job description"
+    )
+    resume_skills: List[str] = Field(..., description="Skills extracted from resume")
+
+
+class ATSCheckRequest(BaseModel):
+    """Request to check ATS compatibility."""
+
+    resume_data: ResumeData = Field(..., description="Resume data to check")
+    job_description: Optional[str] = Field(
+        None,
+        max_length=MAX_LONG_STRING_LENGTH,
+        description="Optional job description for keyword matching",
+    )
+
+
+class ATSIssue(BaseModel):
+    """ATS compatibility issue."""
+
+    type: str = Field(..., description="Issue type")
+    severity: str = Field(..., description="Issue severity (high, medium, low)")
+    message: str = Field(..., description="Issue description")
+
+
+class ATSCheckResponse(BaseModel):
+    """Response with ATS compatibility results."""
+
+    overall_score: int = Field(
+        ..., ge=0, le=100, description="Overall ATS score (0-100)"
+    )
+    passed: bool = Field(
+        ..., description="Whether resume passed ATS check (score >= 70)"
+    )
+    issues: List[ATSIssue] = Field(..., description="List of ATS issues found")
+    recommendations: List[str] = Field(
+        ..., description="Recommendations for improvement"
+    )
+    keyword_match_rate: float = Field(
+        ..., ge=0.0, le=1.0, description="Keyword match rate with job description"
+    )
+    formatting_score: int = Field(..., ge=0, le=100, description="Formatting score")
+    content_score: int = Field(..., ge=0, le=100, description="Content quality score")
+    sections_found: List[str] = Field(..., description="Resume sections found")
+    sections_missing: List[str] = Field(..., description="Required sections missing")
+
+
+class JDInsightsRequest(BaseModel):
+    """Request for comprehensive JD insights and resume matching."""
+
+    resume_data: ResumeData = Field(..., description="Resume data")
+    job_description: str = Field(
+        ...,
+        min_length=10,
+        max_length=MAX_LONG_STRING_LENGTH,
+        description="Job description text",
+    )
+
+
+class JDInsightsResponse(BaseModel):
+    """Comprehensive response with JD analysis and resume matching."""
+
+    jd_analysis: JDAnalysisResponse = Field(..., description="Parsed job description")
+    skills_match: SkillsMatchResponse = Field(
+        ..., description="Skills matching results"
+    )
+    ats_check: ATSCheckResponse = Field(..., description="ATS compatibility check")
+    overall_fit_score: int = Field(
+        ..., ge=0, le=100, description="Overall candidate fit score"
+    )
+    summary: str = Field(..., description="Summary of analysis")
+    top_recommendations: List[str] = Field(
+        ..., description="Top recommendations for improving fit"
+    )

@@ -49,31 +49,30 @@ class ResumeGenerator:
         # Create a custom Jinja2 environment for LaTeX
         self.jinja_env = Environment(
             loader=FileSystemLoader(str(self.templates_dir)),
-            autoescape=select_autoescape(['tex']),
-            block_start_string='\\BLOCK{',
-            block_end_string='}',
-            variable_start_string='\\VAR{',
-            variable_end_string='}',
-            comment_start_string='\\#{',
-            comment_end_string='}',
-            line_statement_prefix='%%',
-            line_comment_prefix='%#',
+            autoescape=select_autoescape(["tex"]),
+            block_start_string="\\BLOCK{",
+            block_end_string="}",
+            variable_start_string="\\VAR{",
+            variable_end_string="}",
+            comment_start_string="\\#{",
+            comment_end_string="}",
+            line_statement_prefix="%%",
+            line_comment_prefix="%#",
             trim_blocks=True,
-            lstrip_blocks=True
+            lstrip_blocks=True,
         )
         # Register custom filters
-        self.jinja_env.filters['latex_escape'] = _latex_escape
+        self.jinja_env.filters["latex_escape"] = _latex_escape
 
         # Set up finalize function to auto-escape unfiltered variables
         # Only apply to strings that are not already Markup objects to prevent double-escaping
         from markupsafe import Markup
-        self.jinja_env.finalize = lambda x: _latex_escape(x) if isinstance(x, str) and not isinstance(x, Markup) else x
 
-    def generate_pdf(
-        self,
-        resume_data: Dict[str, Any],
-        variant: str = "base"
-    ) -> bytes:
+        self.jinja_env.finalize = lambda x: (
+            _latex_escape(x) if isinstance(x, str) and not isinstance(x, Markup) else x
+        )
+
+    def generate_pdf(self, resume_data: Dict[str, Any], variant: str = "base") -> bytes:
         """
         Generate a PDF resume from resume data.
 
@@ -122,7 +121,7 @@ class ResumeGenerator:
 
             # Write rendered LaTeX to temp directory
             tex_file = temp_path / "resume.tex"
-            tex_file.write_text(rendered_tex, encoding='utf-8')
+            tex_file.write_text(rendered_tex, encoding="utf-8")
 
             try:
                 # Generate PDF using xelatex
@@ -165,11 +164,17 @@ class ResumeGenerator:
         # Run xelatex (run twice for references)
         for i, attempt in enumerate(range(2), 1):
             result = subprocess.run(
-                ["xelatex", "-interaction=nonstopmode", "-output-directory", str(output_dir), str(tex_file.name)],
+                [
+                    "xelatex",
+                    "-interaction=nonstopmode",
+                    "-output-directory",
+                    str(output_dir),
+                    str(tex_file.name),
+                ],
                 cwd=str(output_dir),
                 capture_output=True,
                 text=True,
-                timeout=30
+                timeout=30,
             )
 
             # Check if PDF was created (even with warnings, PDF might be valid)
@@ -187,7 +192,9 @@ class ResumeGenerator:
 
             # Log warnings but continue
             if result.returncode != 0:
-                logger.warning(f"XeLaTeX run {i} completed with warnings (exit code: {result.returncode})")
+                logger.warning(
+                    f"XeLaTeX run {i} completed with warnings (exit code: {result.returncode})"
+                )
                 # Look for fatal errors in output
                 if "Fatal error" in result.stdout or "Fatal error" in result.stderr:
                     raise RuntimeError(
@@ -208,25 +215,33 @@ class ResumeGenerator:
             ValueError: If required fields are missing or invalid
         """
         # Ensure basics section exists
-        if not resume_data or 'basics' not in resume_data:
+        if not resume_data or "basics" not in resume_data:
             logger.warning("Resume data missing 'basics' section")
             # Provide defaults to avoid template errors
-            resume_data['basics'] = {}
+            resume_data["basics"] = {}
 
-        basics = resume_data['basics']
+        basics = resume_data["basics"]
 
         # Ensure required basic fields have defaults
-        if 'name' not in basics or not basics['name']:
-            basics['name'] = 'Your Name'
-        if 'label' not in basics or not basics['label']:
-            basics['label'] = 'Professional Title'
-        if 'email' not in basics or not basics['email']:
-            basics['email'] = 'email@example.com'
-        if 'phone' not in basics or not basics['phone']:
-            basics['phone'] = '+1 234 567 8900'
+        if "name" not in basics or not basics["name"]:
+            basics["name"] = "Your Name"
+        if "label" not in basics or not basics["label"]:
+            basics["label"] = "Professional Title"
+        if "email" not in basics or not basics["email"]:
+            basics["email"] = "email@example.com"
+        if "phone" not in basics or not basics["phone"]:
+            basics["phone"] = "+1 234 567 8900"
 
         # Ensure lists exist
-        for key in ['work', 'education', 'skills', 'projects', 'awards', 'certificates', 'publications']:
+        for key in [
+            "work",
+            "education",
+            "skills",
+            "projects",
+            "awards",
+            "certificates",
+            "publications",
+        ]:
             if key not in resume_data or not resume_data[key]:
                 resume_data[key] = []
 
@@ -265,24 +280,24 @@ def _latex_escape(text: Any) -> Markup:
         char = text_str[i]
 
         # Check for backslash specially since it's part of escape sequences
-        if char == '\\':
+        if char == "\\":
             # Check if this is part of an existing LaTeX command like \input{}
             # For now, just escape the backslash itself
-            result.append(r'\textbackslash{}')
-        elif char in '&%$#_{}~^<>':
+            result.append(r"\textbackslash{}")
+        elif char in "&%$#_{}~^<>":
             # Map characters to their escaped versions
             escaped_map = {
-                '&': r'\&',
-                '%': r'\%',
-                '$': r'\$',
-                '#': r'\#',
-                '_': r'\_',
-                '{': r'\{',
-                '}': r'\}',
-                '~': r'\textasciitilde{}',
-                '^': r'\^{}',
-                '<': r'\textless{}',
-                '>': r'\textgreater{}',
+                "&": r"\&",
+                "%": r"\%",
+                "$": r"\$",
+                "#": r"\#",
+                "_": r"\_",
+                "{": r"\{",
+                "}": r"\}",
+                "~": r"\textasciitilde{}",
+                "^": r"\^{}",
+                "<": r"\textless{}",
+                ">": r"\textgreater{}",
             }
             result.append(escaped_map[char])
         else:
@@ -291,7 +306,7 @@ def _latex_escape(text: Any) -> Markup:
 
         i += 1
 
-    return Markup(''.join(result))
+    return Markup("".join(result))
 
 
 # For testing purposes - create a simple mock PDF generator
@@ -305,11 +320,7 @@ class MockResumeGenerator:
         self.templates_dir = templates_dir
         self.lib_dir = lib_dir
 
-    def generate_pdf(
-        self,
-        resume_data: Dict[str, Any],
-        variant: str = "base"
-    ) -> bytes:
+    def generate_pdf(self, resume_data: Dict[str, Any], variant: str = "base") -> bytes:
         """
         Generate a mock PDF placeholder.
 

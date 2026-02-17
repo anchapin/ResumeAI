@@ -120,16 +120,12 @@ class StripeService:
         # TODO: Implement with Stripe Billing Portal API
         return {"url": "https://billing.stripe.com/p/session/test_123"}
 
-    async def cancel_subscription(
-        self, stripe_subscription_id: str
-    ) -> Dict[str, Any]:
+    async def cancel_subscription(self, stripe_subscription_id: str) -> Dict[str, Any]:
         """Cancel a Stripe subscription."""
         # TODO: Implement with Stripe Subscriptions API
         return {"status": "canceled", "cancel_at_period_end": False}
 
-    async def resume_subscription(
-        self, stripe_subscription_id: str
-    ) -> Dict[str, Any]:
+    async def resume_subscription(self, stripe_subscription_id: str) -> Dict[str, Any]:
         """Resume a canceled subscription."""
         # TODO: Implement with Stripe Subscriptions API
         return {"status": "active", "cancel_at_period_end": False}
@@ -164,9 +160,7 @@ class StripeService:
         # TODO: Implement with Stripe Payment Methods API
         return {"id": payment_method_id, "detached": True}
 
-    async def check_usage_limits(
-        self, user_id: str, action: str
-    ) -> Dict[str, Any]:
+    async def check_usage_limits(self, user_id: str, action: str) -> Dict[str, Any]:
         """Check if user has exceeded usage limits."""
         # TODO: Implement with database usage tracking
         return {"allowed": True, "remaining": -1, "limit": -1}
@@ -178,6 +172,7 @@ class StripeService:
         # TODO: Implement with Stripe Webhooks API
         # For now, parse the payload without verification
         import json
+
         event_data = json.loads(payload.decode("utf-8"))
         return stripe.Event.construct_from(event_data, stripe.api_key)
 
