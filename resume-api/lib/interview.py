@@ -6,7 +6,6 @@ and response evaluation.
 """
 
 import uuid
-import asyncio
 from typing import Dict, Any, List, Optional
 from dataclasses import dataclass, field
 from datetime import datetime

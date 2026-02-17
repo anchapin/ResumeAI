@@ -5,11 +5,9 @@ Provides functionality to research salary data based on title, location,
 company, and experience level.
 """
 
-import httpx
 import asyncio
 from typing import Dict, Any, List, Optional
 from dataclasses import dataclass
-import json
 
 
 @dataclass

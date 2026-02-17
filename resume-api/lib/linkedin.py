@@ -5,10 +5,7 @@ Provides functionality to import LinkedIn profile data and export resumes
 in LinkedIn-friendly formats.
 """
 
-import json
-import re
 from typing import Dict, Any, Optional, List
-from datetime import datetime
 
 
 class LinkedInImporter:
