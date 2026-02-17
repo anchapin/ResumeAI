@@ -20,7 +20,11 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 from main import app
 from database import Base, User, get_async_session
 from config.security import hash_password, verify_password
-from config.jwt_utils import verify_access_token, verify_refresh_token, create_access_token
+from config.jwt_utils import (
+    verify_access_token,
+    verify_refresh_token,
+    create_access_token,
+)
 
 
 # Test database setup
@@ -68,8 +72,7 @@ async def setup_test_database():
 async def client():
     """Create async test client."""
     async with AsyncClient(
-        transport=ASGITransport(app=app),
-        base_url="http://test"
+        transport=ASGITransport(app=app), base_url="http://test"
     ) as ac:
         yield ac
 

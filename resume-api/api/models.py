@@ -1448,9 +1448,7 @@ class UserResponse(BaseModel):
 class UserUpdate(BaseModel):
     """Request model for updating user profile."""
 
-    full_name: Optional[str] = Field(
-        None, max_length=200, description="Full name"
-    )
+    full_name: Optional[str] = Field(None, max_length=200, description="Full name")
     username: Optional[str] = Field(
         None, min_length=3, max_length=100, description="Username"
     )

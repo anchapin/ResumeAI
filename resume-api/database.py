@@ -205,13 +205,13 @@ class User(Base):
     email = Column(String(255), unique=True, nullable=False, index=True)
     username = Column(String(100), unique=True, nullable=False, index=True)
     hashed_password = Column(String(255), nullable=False)
-    
+
     # User profile
     full_name = Column(String(200), nullable=True)
     is_active = Column(Boolean, default=True, nullable=False)
     is_superuser = Column(Boolean, default=False, nullable=False)
     is_verified = Column(Boolean, default=False, nullable=False)
-    
+
     # Account metadata
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(
@@ -220,7 +220,9 @@ class User(Base):
     last_login_at = Column(DateTime(timezone=True), nullable=True)
 
     # Relationships
-    resumes = relationship("Resume", back_populates="owner", cascade="all, delete-orphan")
+    resumes = relationship(
+        "Resume", back_populates="owner", cascade="all, delete-orphan"
+    )
     refresh_tokens = relationship(
         "RefreshToken", back_populates="user", cascade="all, delete-orphan"
     )
@@ -234,16 +236,16 @@ class RefreshToken(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
     token_hash = Column(String(255), unique=True, nullable=False, index=True)
-    
+
     # Token metadata
     expires_at = Column(DateTime(timezone=True), nullable=False)
     is_revoked = Column(Boolean, default=False, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-    
+
     # Device/browser info
     device_info = Column(String(500), nullable=True)
     ip_address = Column(String(45), nullable=True)
-    
+
     # Relationships
     user = relationship("User", back_populates="refresh_tokens")
 

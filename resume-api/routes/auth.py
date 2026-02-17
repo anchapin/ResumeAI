@@ -156,7 +156,9 @@ async def login(
     - Refresh token: 7 days
     """
     # Find user by email
-    result = await db.execute(select(User).where(User.email == credentials.email.lower()))
+    result = await db.execute(
+        select(User).where(User.email == credentials.email.lower())
+    )
     user = result.scalar_one_or_none()
 
     if not user or not verify_password(credentials.password, user.hashed_password):
@@ -193,6 +195,7 @@ async def login(
 
     # Store refresh token hash in database
     from datetime import timedelta
+
     refresh_token_hash = _hash_token(refresh_token)
     stored_token = RefreshToken(
         user_id=user.id,
@@ -222,7 +225,10 @@ async def login(
     "/refresh",
     response_model=TokenRefreshResponse,
     responses={
-        200: {"model": TokenRefreshResponse, "description": "Token refreshed successfully"},
+        200: {
+            "model": TokenRefreshResponse,
+            "description": "Token refreshed successfully",
+        },
         401: {"description": "Invalid or expired refresh token"},
     },
     summary="Refresh access token",
@@ -272,6 +278,7 @@ async def refresh_token(
     if expires_at.tzinfo is None:
         # If expires_at is naive, assume UTC
         from datetime import timezone as tz
+
         expires_at = expires_at.replace(tzinfo=tz.utc)
 
     if expires_at < now:
@@ -375,9 +382,7 @@ async def update_current_user(
     if "username" in update_data:
         new_username = user_update.username.lower()
         if new_username != current_user.username.lower():
-            result = await db.execute(
-                select(User).where(User.username == new_username)
-            )
+            result = await db.execute(select(User).where(User.username == new_username))
             existing_user = result.scalar_one_or_none()
             if existing_user:
                 raise HTTPException(
@@ -424,7 +429,9 @@ async def change_password(
     The new password must meet the minimum requirements (8+ characters).
     """
     # Verify current password
-    if not verify_password(password_data.current_password, current_user.hashed_password):
+    if not verify_password(
+        password_data.current_password, current_user.hashed_password
+    ):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Current password is incorrect",
