@@ -12,7 +12,7 @@ from pathlib import Path
 lib_path = Path(__file__).parent.parent / "resume-api"
 sys.path.insert(0, str(lib_path))
 
-from lib.cli.variants import VariantManager, MockVariantManager
+from lib.cli.variants import VariantManager, MockVariantManager  # noqa: E402
 
 
 class TestVariantManager:
@@ -85,7 +85,6 @@ class TestVariantManager:
 
         assert isinstance(results, list)
         # Should find modern variant if it exists
-        names = [v.get("name", "") for v in results]
         # Check that search worked (may or may not find matches)
 
     def test_filter_variants_by_category(self, variant_manager):

@@ -13,7 +13,7 @@ from pathlib import Path
 lib_path = Path(__file__).parent.parent / "resume-api"
 sys.path.insert(0, str(lib_path))
 
-from lib.cli.generator import ResumeGenerator
+from lib.cli.generator import ResumeGenerator  # noqa: E402
 
 # Sample resume data for testing
 SAMPLE_RESUME_DATA = {

@@ -5,11 +5,10 @@ This module provides WebSocket endpoints for real-time collaboration features
 including live cursor positions, presence indicators, and resume data synchronization.
 """
 
-import asyncio
 import json
 import uuid
-from typing import Dict, Set
-from fastapi import WebSocket, WebSocketDisconnect, HTTPException
+from typing import Dict
+from fastapi import WebSocket, WebSocketDisconnect
 from datetime import datetime
 
 

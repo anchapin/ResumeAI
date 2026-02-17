@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { SimpleResumeData, WorkExperience, EducationEntry, ProjectEntry } from '../types';
 import { convertToAPIData, generatePDF, getVariants, VariantMetadata } from '../utils/api-client';
-import TemplateSelector from '../components/TemplateSelector';
+import { TemplateSelector } from '../components/TemplateSelector';
 
 interface ExperienceItemProps {
     exp: WorkExperience;
@@ -540,7 +540,9 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, onBack, saveStatu
     setIsGeneratingPDF(true);
     setPdfError(null);
     try {
-      const pdfBlob = await generatePDF(resumeData, selectedVariant);
+      // Convert SimpleResumeData to the API expected format
+      const apiData = convertToAPIData(resumeData);
+      const pdfBlob = await generatePDF(apiData, selectedVariant);
       const url = URL.createObjectURL(pdfBlob);
       const link = document.createElement('a');
       link.href = url;
