@@ -832,7 +832,7 @@ async def import_pdf(
 def extract_text_from_docx(file_bytes: bytes) -> str:
     """Extract text content from DOCX file."""
     try:
-        doc = docx.Document(io.BytesIO(file_bytes))
+        doc = Document(io.BytesIO(file_bytes))
     except Exception as e:
         raise ValueError(f"Invalid or corrupted DOCX file: {str(e)}")
 
