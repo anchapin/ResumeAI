@@ -182,3 +182,20 @@ export async function updateUserSettings(userIdentifier: string, settings: Parti
   return response.json();
 }
 
+// ATS Compatibility Checker
+
+export interface ATSCheckRequest {
+  resume_data: ResumeDataForAPI;
+  job_description: string;
+}
+
+export async function checkATSScore(resumeData: ResumeDataForAPI, jobDescription: string): Promise<import('../types').ATSReport> {
+  const response = await fetch(`${API_URL}/v1/ats/check`, {
+    method: 'POST',
+    headers: { ...getHeaders(), 'Content-Type': 'application/json' },
+    body: JSON.stringify({ resume_data: resumeData, job_description: jobDescription }),
+  });
+  if (!response.ok) { const error = await response.json().catch(() => ({ detail: 'ATS check failed' })); throw new Error(error.detail || 'Failed to check ATS score'); }
+  return response.json();
+}
+

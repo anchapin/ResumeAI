@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
-import { JobApplication, SimpleResumeData } from '../types';
+import { JobApplication, SimpleResumeData, ATSReport } from '../types';
 import StatusBadge from '../components/StatusBadge';
-import { convertToAPIData, tailorResume, ResumeDataForAPI, TailoredResumeResponse } from '../utils/api-client';
+import { convertToAPIData, tailorResume, checkATSScore, ResumeDataForAPI, TailoredResumeResponse } from '../utils/api-client';
 
 /** Mock data for job applications */
 const applications: JobApplication[] = [
@@ -22,12 +22,18 @@ const applications: JobApplication[] = [
 const JobApplications: React.FC = () => {
   // Resume tailoring state
   const [showTailorModal, setShowTailorModal] = useState<boolean>(false);
+  const [showATSModal, setShowATSModal] = useState<boolean>(false);
   const [jobDescription, setJobDescription] = useState<string>('');
   const [companyName, setCompanyName] = useState<string>('');
   const [jobTitle, setJobTitle] = useState<string>('');
   const [isTailoring, setIsTailoring] = useState<boolean>(false);
   const [tailorError, setTailorError] = useState<string | null>(null);
   const [tailoredResult, setTailoredResult] = useState<TailoredResumeResponse | null>(null);
+  
+  // ATS checking state
+  const [isCheckingATS, setIsCheckingATS] = useState<boolean>(false);
+  const [atsError, setAtsError] = useState<string | null>(null);
+  const [atsReport, setAtsReport] = useState<ATSReport | null>(null);
   
   // Sample resume data for tailoring (would come from App context in real app)
   const sampleResumeData: SimpleResumeData = {
@@ -80,11 +86,63 @@ const JobApplications: React.FC = () => {
     setTailoredResult(null);
   };
   
+  // Handle ATS check
+  const handleATSCheck = useCallback(async () => {
+    if (!jobDescription.trim()) {
+      setAtsError('Please enter a job description');
+      return;
+    }
+    
+    setIsCheckingATS(true);
+    setAtsError(null);
+    
+    try {
+      const apiData = convertToAPIData(sampleResumeData);
+      const result = await checkATSScore(apiData, jobDescription);
+      setAtsReport(result);
+    } catch (err) {
+      console.error('ATS check failed:', err);
+      setAtsError(err instanceof Error ? err.message : 'Failed to check ATS score');
+    } finally {
+      setIsCheckingATS(false);
+    }
+  }, [jobDescription]);
+  
+  // Reset ATS modal
+  const handleCloseATSModal = () => {
+    setShowATSModal(false);
+    setJobDescription('');
+    setAtsError(null);
+    setAtsReport(null);
+  };
+  
+  // Get score color based on percentage
+  const getScoreColor = (percentage: number): string => {
+    if (percentage >= 70) return 'text-green-600';
+    if (percentage >= 50) return 'text-yellow-600';
+    return 'text-red-600';
+  };
+  
+  // Get score label based on percentage
+  const getScoreLabel = (percentage: number): string => {
+    if (percentage >= 85) return 'Excellent';
+    if (percentage >= 70) return 'Good';
+    if (percentage >= 50) return 'Fair';
+    return 'Needs Work';
+  };
+  
   return (
     <div className="flex-1 min-h-screen bg-[#f6f6f8] pl-72">
       <header className="h-16 flex items-center justify-between px-8 bg-white/80 backdrop-blur-sm sticky top-0 z-10 border-b border-slate-200">
         <h2 className="text-slate-800 font-bold text-xl">Job Applications</h2>
         <div className="flex items-center gap-4">
+          <button 
+            onClick={() => setShowATSModal(true)}
+            className="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg font-medium transition-colors shadow-sm shadow-emerald-500/20"
+          >
+            <span className="material-symbols-outlined text-[20px]">fact_check</span>
+            <span>ATS Check</span>
+          </button>
           <button 
             onClick={() => setShowTailorModal(true)}
             className="flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg font-medium transition-colors shadow-sm shadow-amber-500/20"
@@ -298,6 +356,155 @@ const JobApplications: React.FC = () => {
                   <>
                     <span className="material-symbols-outlined text-[18px]">auto_fix_high</span>
                     Tailor Resume
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* ATS Compatibility Check Modal */}
+      {showATSModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-slate-200">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-xl font-bold text-slate-900">ATS Compatibility Check</h2>
+                  <p className="text-sm text-slate-500 mt-1">Check how well your resume matches the job description</p>
+                </div>
+                <button 
+                  type="button"
+                  onClick={handleCloseATSModal}
+                  className="p-2 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100"
+                  aria-label="Close"
+                  title="Close"
+                >
+                  <span className="material-symbols-outlined" aria-hidden="true">close</span>
+                </button>
+              </div>
+            </div>
+            
+            <div className="p-6 space-y-4">
+              {/* Job Description */}
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-slate-700">Job Description</label>
+                <textarea
+                  value={jobDescription}
+                  onChange={(e) => setJobDescription(e.target.value)}
+                  rows={8}
+                  placeholder="Paste the full job description here..."
+                  className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all text-slate-900 resize-none"
+                />
+              </div>
+              
+              {/* Error Message */}
+              {atsError && (
+                <div className="flex items-center gap-2 text-red-600 text-sm bg-red-50 p-3 rounded-lg">
+                  <span className="material-symbols-outlined text-[16px]">error</span>
+                  {atsError}
+                </div>
+              )}
+              
+              {/* Results */}
+              {atsReport && (
+                <div className="space-y-4">
+                  {/* Overall Score */}
+                  <div className="bg-slate-50 rounded-xl p-6 text-center">
+                    <div className={`text-5xl font-bold ${getScoreColor(atsReport.overall_percentage)}`}>
+                      {atsReport.overall_percentage.toFixed(0)}%
+                    </div>
+                    <div className="text-lg font-semibold text-slate-700 mt-2">
+                      {getScoreLabel(atsReport.overall_percentage)} - {atsReport.total_score}/{atsReport.total_possible} points
+                    </div>
+                    <p className="text-sm text-slate-500 mt-2">{atsReport.summary}</p>
+                  </div>
+                  
+                  {/* Category Breakdown */}
+                  <div className="space-y-3">
+                    <h4 className="text-sm font-bold text-slate-700">Category Breakdown</h4>
+                    {Object.entries(atsReport.categories).map(([key, category]) => (
+                      <div key={key} className="bg-white border border-slate-200 rounded-lg p-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="font-semibold text-slate-800">{category.name.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</span>
+                          <span className={`font-bold ${getScoreColor(category.percentage)}`}>
+                            {category.points_earned}/{category.points_possible} ({category.percentage.toFixed(0)}%)
+                          </span>
+                        </div>
+                        <div className="w-full bg-slate-100 rounded-full h-2 mb-3">
+                          <div 
+                            className={`h-2 rounded-full ${
+                              category.percentage >= 70 ? 'bg-green-500' : 
+                              category.percentage >= 50 ? 'bg-yellow-500' : 'bg-red-500'
+                            }`}
+                            style={{ width: `${category.percentage}%` }}
+                          ></div>
+                        </div>
+                        {category.details.length > 0 && (
+                          <ul className="text-xs text-slate-600 space-y-1">
+                            {category.details.slice(0, 3).map((detail, idx) => (
+                              <li key={idx} className="flex items-start gap-1">
+                                <span className="text-green-600">✓</span> {detail}
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                        {category.suggestions.length > 0 && (
+                          <div className="mt-2 pt-2 border-t border-slate-100">
+                            <p className="text-xs font-semibold text-amber-600 mb-1">Suggestions:</p>
+                            <ul className="text-xs text-slate-600 space-y-1">
+                              {category.suggestions.slice(0, 2).map((suggestion, idx) => (
+                                <li key={idx} className="flex items-start gap-1">
+                                  <span className="text-amber-500">•</span> {suggestion}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                  
+                  {/* Top Recommendations */}
+                  {atsReport.recommendations.length > 0 && (
+                    <div className="bg-amber-50 rounded-lg p-4 border border-amber-200">
+                      <h4 className="text-sm font-bold text-amber-800 mb-2">Top Recommendations</h4>
+                      <ul className="space-y-2">
+                        {atsReport.recommendations.map((rec, idx) => (
+                          <li key={idx} className="flex items-start gap-2 text-sm text-amber-700">
+                            <span className="material-symbols-outlined text-[16px] text-amber-600 mt-0.5">lightbulb</span>
+                            {rec}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+            
+            <div className="p-6 border-t border-slate-200 flex justify-end gap-3">
+              <button
+                onClick={handleCloseATSModal}
+                className="px-5 py-2 rounded-lg border border-slate-300 text-slate-700 font-medium hover:bg-slate-50 transition-colors"
+              >
+                Close
+              </button>
+              <button
+                onClick={handleATSCheck}
+                disabled={isCheckingATS || !jobDescription.trim()}
+                className="px-5 py-2 rounded-lg bg-emerald-500 text-white font-medium hover:bg-emerald-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                {isCheckingATS ? (
+                  <>
+                    <span className="material-symbols-outlined text-[18px] animate-spin">sync</span>
+                    Checking...
+                  </>
+                ) : (
+                  <>
+                    <span className="material-symbols-outlined text-[18px]">fact_check</span>
+                    Check ATS Score
                   </>
                 )}
               </button>

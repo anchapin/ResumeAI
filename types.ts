@@ -230,3 +230,29 @@ export interface TemplateFilter {
   layout?: 'single' | 'double';
   color_theme?: string;
 }
+
+// ATS Compatibility Checker Types
+
+export interface ATSCategoryScore {
+  name: string;
+  points_earned: number;
+  points_possible: number;
+  details: string[];
+  suggestions: string[];
+  percentage: number;
+}
+
+export interface ATSReport {
+  total_score: number;
+  total_possible: number;
+  overall_percentage: number;
+  summary: string;
+  recommendations: string[];
+  categories: {
+    format_parsing: ATSCategoryScore;
+    keywords: ATSCategoryScore;
+    section_structure: ATSCategoryScore;
+    contact_info: ATSCategoryScore;
+    readability: ATSCategoryScore;
+  };
+}
