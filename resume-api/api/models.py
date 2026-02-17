@@ -3,6 +3,7 @@ Pydantic models for request/response validation.
 """
 
 import re
+from datetime import datetime
 from typing import Dict, Any, Optional, List
 from pydantic import BaseModel, Field, field_validator, model_validator
 
@@ -1353,3 +1354,128 @@ class UserSettingsResponse(BaseModel):
     default_font: str
     default_font_size: int
     default_spacing: str
+
+
+# =============================================================================
+# Authentication Models
+# =============================================================================
+
+
+class UserCreate(BaseModel):
+    """Request model for user registration."""
+
+    email: str = Field(..., max_length=255, description="User email address")
+    username: str = Field(..., min_length=3, max_length=100, description="Username")
+    password: str = Field(
+        ..., min_length=8, max_length=100, description="Password (min 8 characters)"
+    )
+    full_name: Optional[str] = Field(
+        None, max_length=200, description="Full name (optional)"
+    )
+
+    @field_validator("email")
+    @classmethod
+    def validate_email(cls, v: str) -> str:
+        """Validate email format."""
+        v = v.strip().lower()
+        if not EMAIL_PATTERN.match(v):
+            raise ValueError("Invalid email format")
+        return v
+
+    @field_validator("username")
+    @classmethod
+    def validate_username(cls, v: str) -> str:
+        """Validate username format."""
+        v = v.strip()
+        if not re.match(r"^[a-zA-Z0-9_-]+$", v):
+            raise ValueError(
+                "Username can only contain letters, numbers, underscores, and hyphens"
+            )
+        return v
+
+
+class UserLogin(BaseModel):
+    """Request model for user login."""
+
+    email: str = Field(..., max_length=255, description="User email address")
+    password: str = Field(..., max_length=100, description="User password")
+
+    @field_validator("email")
+    @classmethod
+    def validate_email(cls, v: str) -> str:
+        """Validate email format."""
+        return v.strip().lower()
+
+
+class TokenResponse(BaseModel):
+    """Response model for token endpoints."""
+
+    access_token: str = Field(..., description="JWT access token")
+    refresh_token: str = Field(..., description="JWT refresh token")
+    token_type: str = Field(default="bearer", description="Token type")
+    expires_in: int = Field(..., description="Access token expiration in seconds")
+
+
+class RefreshTokenRequest(BaseModel):
+    """Request model for refreshing access token."""
+
+    refresh_token: str = Field(..., description="JWT refresh token")
+
+
+class TokenRefreshResponse(BaseModel):
+    """Response model for token refresh."""
+
+    access_token: str = Field(..., description="New JWT access token")
+    token_type: str = Field(default="bearer", description="Token type")
+    expires_in: int = Field(..., description="Access token expiration in seconds")
+
+
+class UserResponse(BaseModel):
+    """Response model for user information."""
+
+    id: int = Field(..., description="User ID")
+    email: str = Field(..., description="User email address")
+    username: str = Field(..., description="Username")
+    full_name: Optional[str] = Field(None, description="Full name")
+    is_active: bool = Field(..., description="Whether user is active")
+    is_verified: bool = Field(..., description="Whether user email is verified")
+    created_at: datetime = Field(..., description="Account creation timestamp")
+
+    class Config:
+        from_attributes = True
+
+
+class UserUpdate(BaseModel):
+    """Request model for updating user profile."""
+
+    full_name: Optional[str] = Field(None, max_length=200, description="Full name")
+    username: Optional[str] = Field(
+        None, min_length=3, max_length=100, description="Username"
+    )
+
+    @field_validator("username")
+    @classmethod
+    def validate_username(cls, v: Optional[str]) -> Optional[str]:
+        """Validate username format."""
+        if v is not None:
+            v = v.strip()
+            if not re.match(r"^[a-zA-Z0-9_-]+$", v):
+                raise ValueError(
+                    "Username can only contain letters, numbers, underscores, and hyphens"
+                )
+        return v
+
+
+class PasswordChangeRequest(BaseModel):
+    """Request model for changing password."""
+
+    current_password: str = Field(..., max_length=100, description="Current password")
+    new_password: str = Field(
+        ..., min_length=8, max_length=100, description="New password (min 8 characters)"
+    )
+
+
+class MessageResponse(BaseModel):
+    """Generic message response."""
+
+    message: str = Field(..., description="Response message")

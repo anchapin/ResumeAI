@@ -59,6 +59,7 @@ class Resume(Base):
     __tablename__ = "resumes"
 
     id = Column(Integer, primary_key=True, index=True)
+    owner_id = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)
     title = Column(String(200), nullable=False, index=True)
     data = Column(JSON, nullable=False)  # Stores resume data as JSON
 
@@ -81,6 +82,7 @@ class Resume(Base):
     )
 
     # Relationships
+    owner = relationship("User", back_populates="resumes")
     versions = relationship(
         "ResumeVersion", foreign_keys="ResumeVersion.resume_id", back_populates="resume"
     )
@@ -192,6 +194,60 @@ class UserSettings(Base):
     updated_at = Column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
+
+
+class User(Base):
+    """User model for authentication and account management."""
+
+    __tablename__ = "users"
+
+    id = Column(Integer, primary_key=True, index=True)
+    email = Column(String(255), unique=True, nullable=False, index=True)
+    username = Column(String(100), unique=True, nullable=False, index=True)
+    hashed_password = Column(String(255), nullable=False)
+
+    # User profile
+    full_name = Column(String(200), nullable=True)
+    is_active = Column(Boolean, default=True, nullable=False)
+    is_superuser = Column(Boolean, default=False, nullable=False)
+    is_verified = Column(Boolean, default=False, nullable=False)
+
+    # Account metadata
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
+    last_login_at = Column(DateTime(timezone=True), nullable=True)
+
+    # Relationships
+    resumes = relationship(
+        "Resume", back_populates="owner", cascade="all, delete-orphan"
+    )
+    refresh_tokens = relationship(
+        "RefreshToken", back_populates="user", cascade="all, delete-orphan"
+    )
+
+
+class RefreshToken(Base):
+    """Refresh token model for token rotation and revocation."""
+
+    __tablename__ = "refresh_tokens"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    token_hash = Column(String(255), unique=True, nullable=False, index=True)
+
+    # Token metadata
+    expires_at = Column(DateTime(timezone=True), nullable=False)
+    is_revoked = Column(Boolean, default=False, nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    # Device/browser info
+    device_info = Column(String(500), nullable=True)
+    ip_address = Column(String(45), nullable=True)
+
+    # Relationships
+    user = relationship("User", back_populates="refresh_tokens")
 
 
 # Analytics models for monitoring and usage tracking
