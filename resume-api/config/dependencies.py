@@ -3,8 +3,9 @@ Configuration dependencies and settings.
 """
 
 import os
+from typing import Annotated
 
-from fastapi import Header, HTTPException, status
+from fastapi import Header, HTTPException, status, Depends
 from fastapi.requests import Request
 from fastapi.responses import JSONResponse
 from slowapi import Limiter
@@ -44,16 +45,20 @@ async def get_api_key(x_api_key: str = Header(None)) -> str:
         return "anonymous"
     if not x_api_key:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="API key is required"
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="API key is required"
         )
     if settings.master_api_key and x_api_key == settings.master_api_key:
         return x_api_key
     if settings.api_keys and x_api_key in settings.api_keys:
         return x_api_key
-    raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid API key")
+    raise HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail="Invalid API key"
+    )
 
 
-AuthorizedAPIKey = str
+AuthorizedAPIKey = Annotated[str, Depends(get_api_key)]
 
 
 async def rate_limit_exceeded_handler(
