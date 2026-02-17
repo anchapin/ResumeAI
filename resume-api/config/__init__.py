@@ -81,6 +81,13 @@ class Settings(BaseSettings):
     enable_analytics: bool = True
     analytics_retention_days: int = 90  # Keep analytics data for 90 days
 
+    # Stripe Configuration
+    stripe_secret_key: Optional[str] = None
+    stripe_publishable_key: Optional[str] = None
+    stripe_webhook_secret: Optional[str] = None
+    stripe_price_id_basic: Optional[str] = None  # Basic plan price ID
+    stripe_price_id_premium: Optional[str] = None  # Premium plan price ID
+
     @field_validator("api_keys", mode="before")
     @classmethod
     def parse_api_keys(cls, v: Union[str, list, None]) -> Optional[list[str]]:
