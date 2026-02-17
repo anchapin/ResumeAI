@@ -15,7 +15,7 @@ from typing import Any, Dict, List, Optional
 class ResumeVersionManager:
     """
     Manage resume version history.
-    
+
     Stores versions in a .resume-versions directory alongside the resume.yaml file.
     """
 
@@ -85,7 +85,9 @@ class ResumeVersionManager:
         with open(index_path, "r", encoding="utf-8") as f:
             index = json.load(f)
 
-        return sorted(index.get("versions", []), key=lambda v: v["version_number"], reverse=True)
+        return sorted(
+            index.get("versions", []), key=lambda v: v["version_number"], reverse=True
+        )
 
     def get_version(self, version_number: int) -> Optional[Dict[str, Any]]:
         """
@@ -152,7 +154,9 @@ class ResumeVersionManager:
             with open(index_path, "r", encoding="utf-8") as f:
                 index = json.load(f)
 
-            index["versions"] = [v for v in index["versions"] if v["version_number"] != version_number]
+            index["versions"] = [
+                v for v in index["versions"] if v["version_number"] != version_number
+            ]
 
             with open(index_path, "w", encoding="utf-8") as f:
                 json.dump(index, f, indent=2)

@@ -101,7 +101,9 @@ def restore_version(ctx, version):
             f"[dim]A backup of the current version was created before restore.[/dim]"
         )
     else:
-        console.print(f"[red]✗[/red] Version {format_version_number(version)} not found.")
+        console.print(
+            f"[red]✗[/red] Version {format_version_number(version)} not found."
+        )
 
 
 @version_group.command(name="show")
@@ -115,7 +117,9 @@ def show_version(ctx, version):
     content = version_manager.get_version_content(version)
 
     if content is None:
-        console.print(f"[red]✗[/red] Version {format_version_number(version)} not found.")
+        console.print(
+            f"[red]✗[/red] Version {format_version_number(version)} not found."
+        )
         return
 
     version_info = version_manager.get_version(version)
@@ -153,8 +157,12 @@ def compare_versions(ctx, version1, version2):
 
     console.print(f"[cyan]Comparing v{version1}.0 with v{version2}.0[/cyan]")
     console.print()
-    console.print(f"Lines: {result['version1_lines']} → {result['version2_lines']} ({result['line_diff']:+d})")
-    console.print(f"Characters: {result['version1_chars']} → {result['version2_chars']} ({result['char_diff']:+d})")
+    console.print(
+        f"Lines: {result['version1_lines']} → {result['version2_lines']} ({result['line_diff']:+d})"
+    )
+    console.print(
+        f"Characters: {result['version1_chars']} → {result['version2_chars']} ({result['char_diff']:+d})"
+    )
 
 
 @version_group.command(name="delete")
@@ -179,4 +187,6 @@ def delete_version(ctx, version):
             f"[green]✓[/green] Deleted version {format_version_number(version)}"
         )
     else:
-        console.print(f"[red]✗[/red] Version {format_version_number(version)} not found.")
+        console.print(
+            f"[red]✗[/red] Version {format_version_number(version)} not found."
+        )
