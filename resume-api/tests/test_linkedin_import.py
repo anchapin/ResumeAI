@@ -9,7 +9,6 @@ Tests:
 """
 
 import pytest
-import json
 import sys
 from pathlib import Path
 
@@ -138,7 +137,7 @@ class TestLinkedInImporter:
         assert result["location"] == "New York"
         assert len(result["experience"]) == 1
         assert result["experience"][0]["company"] == "Startup Inc"
-        assert result["experience"][0]["current"] == True
+        assert result["experience"][0]["current"] is True
 
     def test_parse_minimal_format(self):
         """Test parsing minimal format."""
@@ -176,7 +175,7 @@ class TestLinkedInImporter:
         assert result["summary"] == "ML enthusiast"
         assert len(result["experience"]) == 1
         assert result["experience"][0]["company"] == "Data Corp"
-        assert result["experience"][0]["current"] == True
+        assert result["experience"][0]["current"] is True
 
     def test_normalize_date_various_formats(self):
         """Test date normalization with various formats."""
@@ -232,7 +231,7 @@ class TestLinkedInImporter:
 
         assert len(result["volunteer"]) == 1
         assert result["volunteer"][0]["organization"] == "Code for America"
-        assert result["volunteer"][0]["current"] == True
+        assert result["volunteer"][0]["current"] is True
 
 
 class TestLinkedInExporter:
