@@ -8,6 +8,7 @@ Features:
 - Job description parsing
 - Resume tailoring algorithms
 - Keyword extraction
+- ATS compatibility checking
 - Support for multiple AI providers (OpenAI, Anthropic)
 """
 
@@ -16,8 +17,16 @@ __author__ = "ResumeAI Team"
 
 from .tailor import ResumeTailorer
 from .keyword_extractor import KeywordExtractor
+from .jd_parser import JobDescriptionParser, parse_job_description, ParsedJobDescription
+from .ats_checker import ATSCompatibilityChecker, check_ats_compatibility, ATSCompatibilityReport
 
 __all__ = [
     "ResumeTailorer",
     "KeywordExtractor",
+    "JobDescriptionParser",
+    "parse_job_description",
+    "ParsedJobDescription",
+    "ATSCompatibilityChecker",
+    "check_ats_compatibility",
+    "ATSCompatibilityReport",
 ]
