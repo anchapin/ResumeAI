@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 from main import app
 from database import Base, get_async_session
 
+
 # Use tempfile for database
 @pytest_asyncio.fixture(scope="module")
 def test_db_path():
@@ -21,6 +22,7 @@ def test_db_path():
     if os.path.exists(path):
         os.unlink(path)
 
+
 @pytest_asyncio.fixture(scope="module")
 async def test_engine_fixture(test_db_path):
     """Create async engine with temp database."""
@@ -31,6 +33,7 @@ async def test_engine_fixture(test_db_path):
     yield engine
     await engine.dispose()
 
+
 @pytest_asyncio.fixture(scope="module")
 async def test_async_session_maker_fixture(test_engine_fixture):
     """Create session maker."""
@@ -40,13 +43,17 @@ async def test_async_session_maker_fixture(test_engine_fixture):
         expire_on_commit=False,
     )
 
+
 @pytest_asyncio.fixture(scope="function")
 async def override_get_async_session_fixture(test_async_session_maker_fixture):
     """Override database session for testing."""
+
     async def _get_session():
         async with test_async_session_maker_fixture() as session:
             yield session
+
     return _get_session
+
 
 @pytest_asyncio.fixture(scope="function", autouse=True)
 async def setup_test_database(test_engine_fixture, override_get_async_session_fixture):

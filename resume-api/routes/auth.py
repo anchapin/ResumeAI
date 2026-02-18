@@ -166,9 +166,7 @@ async def login(
 
     # Always perform password verification to prevent timing attacks
     if user:
-        password_valid = verify_password(
-            credentials.password, user.hashed_password
-        )
+        password_valid = verify_password(credentials.password, user.hashed_password)
     else:
         # Simulate verification time with dummy hash
         verify_password(credentials.password, DUMMY_HASH)
