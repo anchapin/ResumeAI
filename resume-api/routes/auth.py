@@ -44,6 +44,9 @@ from monitoring import logging_config
 # Get logger
 logger = logging_config.get_logger(__name__)
 
+# Create a dummy hash for timing attack mitigation
+DUMMY_HASH = hash_password("dummy_password_for_timing_mitigation")
+
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 
@@ -161,7 +164,15 @@ async def login(
     )
     user = result.scalar_one_or_none()
 
-    if not user or not verify_password(credentials.password, user.hashed_password):
+    # Always perform password verification to prevent timing attacks
+    if user:
+        password_valid = verify_password(credentials.password, user.hashed_password)
+    else:
+        # Simulate verification time with dummy hash
+        verify_password(credentials.password, DUMMY_HASH)
+        password_valid = False
+
+    if not user or not password_valid:
         logger.warning(
             "login_failed",
             email=credentials.email,
