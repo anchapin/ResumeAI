@@ -79,4 +79,22 @@ describe('ExperienceItem', () => {
     // Check if onDelete was called
     expect(mockProps.onDelete).toHaveBeenCalledWith('1');
   });
+
+  it('renders accessible form elements when expanded', () => {
+    render(<ExperienceItem {...mockProps} isExpanded={true} />);
+
+    // Check if inputs are associated with labels
+    expect(screen.getByLabelText('Company Name')).toHaveAttribute('id', 'company-1');
+    expect(screen.getByLabelText('Job Title')).toHaveAttribute('id', 'role-1');
+    expect(screen.getByLabelText('Start Date')).toHaveAttribute('id', 'startDate-1');
+    expect(screen.getByLabelText('End Date')).toHaveAttribute('id', 'endDate-1');
+    expect(screen.getByLabelText('Achievements & Responsibilities')).toHaveAttribute('id', 'description-1');
+
+    // Check tag remove buttons
+    expect(screen.getByLabelText('Remove tag Tag1')).toBeInTheDocument();
+    expect(screen.getByLabelText('Remove tag Tag2')).toBeInTheDocument();
+
+    // Check add skill input
+    expect(screen.getByLabelText('Add new skill')).toBeInTheDocument();
+  });
 });
