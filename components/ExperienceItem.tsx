@@ -131,8 +131,9 @@ const ExperienceItem = React.memo(({
                 <div className="px-6 pb-6 pt-0 animate-in slide-in-from-top-2 fade-in duration-200">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6 pt-4 border-t border-slate-100">
                         <div className="space-y-2">
-                            <label className="text-sm font-bold text-slate-700">Company Name</label>
+                            <label htmlFor={`company-${exp.id}`} className="text-sm font-bold text-slate-700">Company Name</label>
                             <input
+                                id={`company-${exp.id}`}
                                 type="text"
                                 value={exp.company}
                                 onChange={(e) => onUpdate(exp.id, 'company', e.target.value)}
@@ -140,8 +141,9 @@ const ExperienceItem = React.memo(({
                             />
                         </div>
                         <div className="space-y-2">
-                            <label className="text-sm font-bold text-slate-700">Job Title</label>
+                            <label htmlFor={`role-${exp.id}`} className="text-sm font-bold text-slate-700">Job Title</label>
                             <input
+                                id={`role-${exp.id}`}
                                 type="text"
                                 value={exp.role}
                                 onChange={(e) => onUpdate(exp.id, 'role', e.target.value)}
@@ -149,8 +151,9 @@ const ExperienceItem = React.memo(({
                             />
                         </div>
                         <div className="space-y-2">
-                            <label className="text-sm font-bold text-slate-700">Start Date</label>
+                            <label htmlFor={`startDate-${exp.id}`} className="text-sm font-bold text-slate-700">Start Date</label>
                             <input
+                                id={`startDate-${exp.id}`}
                                 type="text"
                                 value={exp.startDate}
                                 onChange={(e) => onUpdate(exp.id, 'startDate', e.target.value)}
@@ -158,8 +161,9 @@ const ExperienceItem = React.memo(({
                             />
                         </div>
                         <div className="space-y-2">
-                            <label className="text-sm font-bold text-slate-700">End Date</label>
+                            <label htmlFor={`endDate-${exp.id}`} className="text-sm font-bold text-slate-700">End Date</label>
                             <input
+                                id={`endDate-${exp.id}`}
                                 type="text"
                                 value={exp.endDate}
                                 onChange={(e) => onUpdate(exp.id, 'endDate', e.target.value)}
@@ -169,9 +173,10 @@ const ExperienceItem = React.memo(({
                     </div>
 
                     <div className="space-y-3">
-                        <label className="text-sm font-bold text-slate-700">Achievements & Responsibilities</label>
+                        <label htmlFor={`description-${exp.id}`} className="text-sm font-bold text-slate-700">Achievements & Responsibilities</label>
                         <div className="bg-slate-50 border border-dashed border-slate-300 rounded-xl p-4">
                             <textarea
+                                id={`description-${exp.id}`}
                                 value={exp.description}
                                 onChange={(e) => onUpdate(exp.id, 'description', e.target.value)}
                                 className="w-full bg-transparent border-none focus:ring-0 p-0 text-sm text-slate-700 resize-none h-20 placeholder-slate-400"
@@ -185,6 +190,7 @@ const ExperienceItem = React.memo(({
                                         <button
                                             onClick={() => onRemoveTag(exp.id, tag)}
                                             className="hover:text-primary-900"
+                                            aria-label={`Remove tag ${tag}`}
                                         >
                                             <span className="material-symbols-outlined text-[14px]">close</span>
                                         </button>
@@ -192,6 +198,7 @@ const ExperienceItem = React.memo(({
                                 ))}
                                 <input
                                     type="text"
+                                    aria-label="Add new skill"
                                     placeholder="+ Add Skill"
                                     className="bg-transparent text-xs p-1 focus:ring-0 border-none w-24 placeholder-slate-400"
                                     onKeyDown={(e) => {
@@ -203,10 +210,6 @@ const ExperienceItem = React.memo(({
                                 />
                             </div>
                         </div>
-                        <button className="flex items-center text-primary-600 text-sm font-bold hover:underline gap-1 mt-2">
-                            <span className="material-symbols-outlined text-[18px]">add_circle</span>
-                            Add Another Achievement
-                        </button>
                     </div>
                 </div>
             )}
