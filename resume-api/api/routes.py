@@ -2,6 +2,7 @@
 FastAPI routes for Resume API.
 """
 
+import asyncio
 import io
 import os
 import re
@@ -121,8 +122,8 @@ async def render_pdf(request: Request, body: ResumeRequest, auth: AuthorizedAPIK
         )
 
         # Generate PDF
-        pdf_bytes = generator.generate_pdf(
-            resume_data=resume_dict, variant=body.variant
+        pdf_bytes = await asyncio.to_thread(
+            generator.generate_pdf, resume_data=resume_dict, variant=body.variant
         )
 
         # Return PDF response
@@ -504,7 +505,7 @@ async def export_docx(request: Request, body: ResumeRequest, auth: AuthorizedAPI
         resume_dict = body.resume_data.model_dump(exclude_none=True)
 
         # Generate DOCX
-        docx_bytes = create_docx_from_resume(resume_dict)
+        docx_bytes = await asyncio.to_thread(create_docx_from_resume, resume_dict)
 
         # Return DOCX response
         return Response(
@@ -810,7 +811,7 @@ async def import_pdf(
             )
 
         # Extract text from PDF
-        text = extract_text_from_pdf(content)
+        text = await asyncio.to_thread(extract_text_from_pdf, content)
 
         # Parse into JSON Resume format
         resume_data = parse_resume_text(text)
@@ -901,7 +902,7 @@ async def import_docx(
             )
 
         # Extract text from DOCX
-        text = extract_text_from_docx(content)
+        text = await asyncio.to_thread(extract_text_from_docx, content)
 
         # Parse into JSON Resume format
         resume_data = parse_resume_text(text)
