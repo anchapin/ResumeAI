@@ -3,10 +3,12 @@ FastAPI routes for Resume API.
 """
 
 import asyncio
+import csv
 import io
 import os
 import re
 import sys
+import zipfile
 from pathlib import Path
 
 from fastapi import APIRouter, HTTPException, Request, UploadFile, File, status
@@ -1146,9 +1148,12 @@ async def import_linkedin_file(
     request: Request, file: UploadFile = File(...), auth: AuthorizedAPIKey = None
 ):
     """
-    Import resume from LinkedIn exported JSON file.
+    Import resume from LinkedIn exported file (JSON or ZIP).
 
-    Accepts LinkedIn profile data export JSON file and converts to JSON Resume format.
+    Accepts multiple LinkedIn export formats:
+    - Single JSON file (LinkedIn JSON export)
+    - ZIP folder (LinkedIn CSV data export with multiple files like Profile.csv, Positions.csv, etc.)
+    
     Users can download their LinkedIn data from Settings > Data privacy > Get a copy of your data.
 
     Requires API key authentication via X-API-KEY header.
@@ -1156,48 +1161,64 @@ async def import_linkedin_file(
     Rate limit: 10 requests per minute per API key.
 
     Supported LinkedIn export formats:
-    - Profile JSON export
-    - Full data archive (extracted Profile.json)
+    - Profile JSON export (single JSON file)
+    - Full data archive ZIP (contains CSV files: Profile.csv, Positions.csv, Education.csv, etc.)
     """
-    # Check file type
-    content_type = file.content_type
-    if content_type not in [
-        "application/json",
-        "text/json",
-    ] and not file.filename.lower().endswith(".json"):
+    # Check file type and size
+    content_type = file.content_type or ""
+    filename = file.filename or ""
+    filename_lower = filename.lower()
+
+    # Allowed file types
+    is_json = (
+        content_type in ["application/json", "text/json"]
+        or filename_lower.endswith(".json")
+    )
+    is_zip = (
+        content_type in ["application/zip", "application/x-zip-compressed"]
+        or filename_lower.endswith(".zip")
+    )
+
+    if not (is_json or is_zip):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid file type. Only JSON files are accepted.",
+            detail="Invalid file type. Please upload either a JSON file or a ZIP folder containing LinkedIn CSV files.",
         )
 
     try:
         # Read file content
         content = await file.read()
 
-        # Check file size (max 5MB)
-        if len(content) > 5 * 1024 * 1024:
+        # Check file size (max 10MB for ZIP, 5MB for JSON)
+        max_size = 10 * 1024 * 1024 if is_zip else 5 * 1024 * 1024
+        if len(content) > max_size:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="File too large. Maximum size is 5MB.",
+                detail=f"File too large. Maximum size is {max_size // (1024*1024)}MB.",
             )
 
-        # Parse JSON
-        try:
-            import json
-
-            linkedin_data = json.loads(content.decode("utf-8"))
-        except json.JSONDecodeError as e:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Invalid JSON format: {str(e)}",
-            )
-
-        # Import LinkedIn library and parse
+        # Import LinkedIn library
         from lib.linkedin import LinkedInImporter
 
         importer = LinkedInImporter()
+        linkedin_data = {}
 
-        # Handle different LinkedIn export formats
+        if is_json:
+            # Handle JSON file
+            try:
+                import json
+
+                linkedin_data = json.loads(content.decode("utf-8"))
+            except json.JSONDecodeError as e:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Invalid JSON format: {str(e)}",
+                )
+        else:
+            # Handle ZIP file containing CSV exports
+            linkedin_data = await _parse_linkedin_csv_zip(content, importer)
+
+        # Parse with the importer
         resume_data_dict = importer.parse_export(linkedin_data, mode="overwrite")
 
         # Convert to JSON Resume format
@@ -1215,6 +1236,258 @@ async def import_linkedin_file(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"LinkedIn file import failed: {str(e)}",
         )
+
+
+async def _parse_linkedin_csv_zip(
+    zip_content: bytes, importer
+) -> dict:
+    """
+    Parse LinkedIn CSV data export ZIP file.
+
+    Extracts CSV files from ZIP and combines them into a single data structure
+    that can be parsed by LinkedInImporter.
+
+    Args:
+        zip_content: Raw ZIP file content
+        importer: LinkedInImporter instance for parsing individual CSV files
+
+    Returns:
+        Dictionary with parsed LinkedIn data
+    """
+    import csv
+
+    linkedin_data = {}
+
+    try:
+        # Read ZIP file
+        zip_buffer = io.BytesIO(zip_content)
+        with zipfile.ZipFile(zip_buffer, "r") as zip_file:
+            # Define which CSV files to look for and their corresponding data keys
+            csv_mappings = {
+                "Profile.csv": "profile",
+                "Positions.csv": "positions",
+                "Education.csv": "education",
+                "Skills.csv": "skills",
+                "Certifications.csv": "certifications",
+            }
+
+            for csv_filename, data_key in csv_mappings.items():
+                # Find the CSV file (may be at root or in a subfolder)
+                matching_files = [
+                    f for f in zip_file.namelist()
+                    if f.lower().endswith(csv_filename.lower())
+                ]
+
+                if matching_files:
+                    try:
+                        csv_file_path = matching_files[0]
+                        with zip_file.open(csv_file_path) as f:
+                            content = f.read().decode("utf-8")
+                            rows = list(csv.DictReader(io.StringIO(content)))
+
+                            if rows:
+                                # Clean up empty values in rows
+                                cleaned_rows = []
+                                for row in rows:
+                                    cleaned_row = {
+                                        k: v.strip() if v else ""
+                                        for k, v in row.items()
+                                    }
+                                    cleaned_rows.append(cleaned_row)
+
+                                linkedin_data[data_key] = cleaned_rows
+                    except Exception as e:
+                        # Log but continue - some CSV files may be missing
+                        print(f"Warning: Could not parse {csv_filename}: {e}")
+
+            # Also check for Profile Summary.csv if present
+            profile_summary_files = [
+                f for f in zip_file.namelist()
+                if f.lower().endswith("profile summary.csv")
+            ]
+            if profile_summary_files:
+                try:
+                    with zip_file.open(profile_summary_files[0]) as f:
+                        content = f.read().decode("utf-8")
+                        rows = list(csv.DictReader(io.StringIO(content)))
+                        if rows and "Summary" in rows[0]:
+                            # Add summary to profile data if it exists
+                            if "profile" not in linkedin_data:
+                                linkedin_data["profile"] = []
+                            if linkedin_data["profile"] and isinstance(
+                                linkedin_data["profile"], list
+                            ):
+                                linkedin_data["profile"][0]["Summary"] = rows[0][
+                                    "Summary"
+                                ]
+                except Exception:
+                    pass  # Profile Summary is optional
+
+        # Convert CSV data to format expected by LinkedInImporter
+        # The importer expects single-level dict, but CSV data is dict of lists
+        # We need to flatten it appropriately
+        converted_data = _convert_csv_data_to_importer_format(linkedin_data)
+        return converted_data
+
+    except zipfile.BadZipFile as e:
+        raise ValueError(f"Invalid ZIP file: {str(e)}")
+    except Exception as e:
+        raise ValueError(f"Error parsing LinkedIn CSV ZIP: {str(e)}")
+
+
+def _convert_csv_data_to_importer_format(csv_data: dict) -> dict:
+    """
+    Convert CSV data structure to format expected by LinkedInImporter.
+
+    CSV data comes as dict of lists (one list per CSV file).
+    LinkedInImporter expects fields like 'positions', 'education', 'skills' etc.
+
+    Args:
+        csv_data: Dictionary with keys like 'profile', 'positions', 'education'
+
+    Returns:
+        Dictionary compatible with LinkedInImporter.parse_export()
+    """
+    result = {}
+
+    # Handle profile data (usually one row with personal info)
+    if "profile" in csv_data and csv_data["profile"]:
+        profile_row = csv_data["profile"][0]
+        # Map Profile.csv columns to importer field names
+        result.update(
+            {
+                "firstName": profile_row.get("First Name", ""),
+                "lastName": profile_row.get("Last Name", ""),
+                "headline": profile_row.get("Headline", ""),
+                "summary": profile_row.get("Summary", ""),
+                "industry": profile_row.get("Industry", ""),
+                "locationName": profile_row.get("Geo Location", ""),
+            }
+        )
+
+        # Handle email addresses (from Email Addresses.csv)
+        if csv_data.get("emails"):
+            email_list = []
+            for email_row in csv_data["emails"]:
+                if email_row.get("Email Address"):
+                    email_list.append({"emailAddress": email_row["Email Address"]})
+            if email_list:
+                result["emailAddress"] = email_list[0].get("emailAddress", "")
+
+    # Handle positions (work experience)
+    if "positions" in csv_data:
+        positions = []
+        for pos in csv_data["positions"]:
+            position = {
+                "companyName": pos.get("Company Name", ""),
+                "title": pos.get("Title", ""),
+                "description": pos.get("Description", ""),
+                "location": pos.get("Location", ""),
+                "timePeriod": {
+                    "startDate": _parse_linkedin_date(pos.get("Started On", "")),
+                    "endDate": _parse_linkedin_date(pos.get("Finished On", "")),
+                },
+            }
+            if position["companyName"]:  # Only add if company name exists
+                positions.append(position)
+        if positions:
+            result["positions"] = positions
+
+    # Handle education
+    if "education" in csv_data:
+        education = []
+        for edu in csv_data["education"]:
+            edu_entry = {
+                "schoolName": edu.get("School Name", ""),
+                "degreeName": edu.get("Degree Name", ""),
+                "fieldOfStudy": edu.get("Field of Study", "")
+                or edu.get("Activities", ""),
+                "timePeriod": {
+                    "startDate": {"year": _extract_year(edu.get("Start Date", ""))},
+                    "endDate": {"year": _extract_year(edu.get("End Date", ""))},
+                },
+            }
+            if edu_entry["schoolName"]:  # Only add if school name exists
+                education.append(edu_entry)
+        if education:
+            result["educations"] = education
+
+    # Handle certifications
+    if "certifications" in csv_data:
+        certifications = []
+        for cert in csv_data["certifications"]:
+            cert_entry = {
+                "name": cert.get("Name", ""),
+                "authority": cert.get("Authority", "") or cert.get("Issuer", ""),
+                "timePeriod": {
+                    "startDate": _parse_linkedin_date(cert.get("Started On", "")),
+                    "endDate": _parse_linkedin_date(cert.get("Finished On", "")),
+                },
+            }
+            if cert_entry["name"]:  # Only add if name exists
+                certifications.append(cert_entry)
+        if certifications:
+            result["certifications"] = certifications
+
+    # Handle skills
+    if "skills" in csv_data:
+        skills = []
+        for skill_row in csv_data["skills"]:
+            skill_name = skill_row.get("Skill", "")
+            if skill_name:
+                skills.append({"name": skill_name})
+        if skills:
+            result["skills"] = skills
+
+    return result
+
+
+def _parse_linkedin_date(date_str: str) -> dict:
+    """
+    Parse LinkedIn date string to month/year dict format.
+
+    Handles formats like "Apr 2022", "2022-04", "04/2022", "4/2022".
+
+    Args:
+        date_str: Date string from LinkedIn CSV
+
+    Returns:
+        Dict with 'month' and 'year' keys (compatible with LinkedInImporter format)
+    """
+    if not date_str or date_str.lower() == "present":
+        return {}
+
+    from datetime import datetime
+
+    date_str = date_str.strip()
+
+    try:
+        # Try parsing common date formats
+        for fmt in ["%b %Y", "%B %Y", "%m/%d/%Y", "%m/%Y", "%Y-%m"]:
+            try:
+                dt = datetime.strptime(date_str, fmt)
+                return {"month": dt.month, "year": dt.year}
+            except ValueError:
+                continue
+    except Exception:
+        pass
+
+    return {}
+
+
+def _extract_year(date_str: str) -> int:
+    """Extract year from date string."""
+    if not date_str:
+        return None
+
+    import re
+
+    # Try to find a 4-digit year
+    year_match = re.search(r"(\d{4})", date_str)
+    if year_match:
+        return int(year_match.group(1))
+
+    return None
 
 
 def convert_linkedin_to_json_resume(linkedin_data: dict) -> dict:

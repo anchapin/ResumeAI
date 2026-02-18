@@ -28,13 +28,20 @@ export const LinkedInImportDialog: React.FC<LinkedInImportDialogProps> = ({
   if (!isOpen) return null;
 
   const handleFileSelect = async (file: File) => {
-    if (file.type !== 'application/json' && !file.name.endsWith('.json')) {
-      showErrorToast('Please select a valid JSON file exported from LinkedIn.');
+    const isJson = file.type === 'application/json' || file.name.endsWith('.json');
+    const isZip = file.type === 'application/zip' || 
+                  file.type === 'application/x-zip-compressed' || 
+                  file.name.endsWith('.zip');
+
+    if (!isJson && !isZip) {
+      showErrorToast('Please select a valid file exported from LinkedIn (JSON or ZIP folder).');
       return;
     }
 
-    if (file.size > 5 * 1024 * 1024) {
-      showErrorToast('File size exceeds 5MB limit. Please export a smaller dataset from LinkedIn.');
+    // Allow larger files for ZIP (10MB) vs JSON (5MB)
+    const maxSize = isZip ? 10 * 1024 * 1024 : 5 * 1024 * 1024;
+    if (file.size > maxSize) {
+      showErrorToast(`File size exceeds ${maxSize / (1024 * 1024)}MB limit.`);
       return;
     }
 
@@ -157,8 +164,8 @@ export const LinkedInImportDialog: React.FC<LinkedInImportDialogProps> = ({
               <li>Click on "Data privacy" tab</li>
               <li>Under "Get a copy of your data", click "Request archive"</li>
               <li>Select "Profile" data and request the archive</li>
-              <li>Once ready, download and extract the ZIP file</li>
-              <li>Upload the Profile.json file here</li>
+              <li>Once ready, download the ZIP file</li>
+              <li>Upload the ZIP folder OR extract it and upload Profile.json</li>
             </ol>
           </div>
 
@@ -180,7 +187,7 @@ export const LinkedInImportDialog: React.FC<LinkedInImportDialogProps> = ({
             <input
               ref={fileInputRef}
               type="file"
-              accept=".json,application/json"
+              accept=".json,.zip,application/json,application/zip"
               onChange={handleInputChange}
               className="hidden"
               disabled={isImporting}
@@ -199,7 +206,7 @@ export const LinkedInImportDialog: React.FC<LinkedInImportDialogProps> = ({
                     Drop your LinkedIn export file here
                   </p>
                   <p className="text-sm text-slate-500 mt-1">
-                    or click to browse (JSON files only, max 5MB)
+                    or click to browse (ZIP or JSON, max 10MB)
                   </p>
                 </div>
               </div>
