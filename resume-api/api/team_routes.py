@@ -4,7 +4,7 @@ Team Collaboration API Routes.
 Endpoints for team management, sharing resumes, and collaboration features.
 """
 
-from fastapi import APIRouter, HTTPException, Request, status, Depends
+from fastapi import APIRouter, HTTPException, Request, status
 from typing import List, Optional
 from datetime import datetime
 

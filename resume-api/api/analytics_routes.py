@@ -2,7 +2,7 @@
 Application Tracking Analytics API Routes.
 """
 
-from fastapi import APIRouter, HTTPException, Request, status
+from fastapi import APIRouter, HTTPException, Request
 from typing import List, Optional
 from datetime import datetime
 from enum import Enum
