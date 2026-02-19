@@ -1,6 +1,13 @@
 """
 Billing and Subscription API Routes
 
+NOTE: Billing functionality is currently in 'Coming Soon' status.
+Most endpoints will return a 503 Service Unavailable response until
+the Stripe integration is complete. Plan listing is available for
+display purposes.
+
+For updates on billing availability, please check the project roadmap.
+
 Provides endpoints for:
 - Managing subscription plans
 - Creating and managing subscriptions
@@ -27,10 +34,38 @@ from database import (
     get_db,
     async_session_maker,
 )
-from lib.stripe import stripe_service
+from lib.stripe import stripe_service, BILLING_ENABLED
 from config import settings
 
 router = APIRouter(prefix="/api/billing", tags=["billing"])
+
+
+# ========== Billing Status Response ==========
+
+
+class BillingStatusResponse(BaseModel):
+    """Billing availability status."""
+
+    enabled: bool
+    message: str
+
+
+@router.get("/status", response_model=BillingStatusResponse)
+async def get_billing_status():
+    """
+    Check if billing functionality is available.
+
+    Returns billing availability status and a message.
+    """
+    if BILLING_ENABLED:
+        return BillingStatusResponse(
+            enabled=True, message="Billing is fully operational."
+        )
+    return BillingStatusResponse(
+        enabled=False,
+        message="Billing is coming soon. Subscription plans will be available shortly. "
+        "You can currently use the free tier with basic features.",
+    )
 
 
 # ========== Request/Response Models ==========
@@ -282,7 +317,17 @@ async def create_checkout_session(
         success_url: URL to redirect after successful payment
         cancel_url: URL to redirect after canceled payment
         trial_period_days: Optional trial period in days
+        
+    Note: This endpoint is currently disabled as billing is in 'coming soon' status.
     """
+    # Check if billing is enabled
+    if not BILLING_ENABLED:
+        raise HTTPException(
+            status_code=503,
+            detail="Billing is coming soon. Subscription purchases will be available shortly. "
+            "You can currently use the free tier with basic features.",
+        )
+    
     # Get plan details
     plan = await stripe_service.get_plan_by_name(request.plan_name)
     if not plan:
