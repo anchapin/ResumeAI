@@ -194,6 +194,59 @@ async def match_skills(
             detail=f"Skills matching failed: {str(e)}",
         )
 
+# New endpoint for AI‑powered skill‑gap analysis
+@router.post(
+    "/v1/jd/skill-gap",
+    response_model=SkillGapResponse,
+    responses={
+        400: {"model": ErrorResponse},
+        401: {"model": ErrorResponse},
+        403: {"model": ErrorResponse},
+        429: {"model": ErrorResponse},
+        500: {"model": ErrorResponse},
+    },
+    tags=["Job Description"],
+)
+@rate_limit("30/minute")
+async def skill_gap_analysis(
+    request: Request,
+    body: SkillGapRequest,
+    auth: AuthorizedAPIKey,
+):
+    """
+    Perform AI‑powered skill‑gap analysis.
+
+    Takes a job description and a resume payload, extracts skills from both,
+    and returns missing and matched skills along with a match score.
+    """
+    try:
+        # Parse job description to extract required skills
+        jd_parser = JobDescriptionParser()
+        parsed_jd = jd_parser.parse(body.job_description)
+        jd_skills = set(parsed_jd.skills)
+
+        # Extract skills from resume (reuse existing helper)
+        resume_dict = body.resume_data
+        resume_skills = _extract_resume_skills(resume_dict)
+        resume_skills_set = set(resume_skills)
+
+        # Determine matches and gaps
+        matched = list(jd_skills & resume_skills_set)
+        missing = list(jd_skills - resume_skills_set)
+        match_score = int((len(matched) / len(jd_skills) * 100) if jd_skills else 0)
+
+        return SkillGapResponse(
+            missing_skills=missing,
+            matched_skills=matched,
+            match_score=match_score,
+        )
+    except Exception as e:
+        logger.error(f"Skill‑gap analysis failed: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Skill‑gap analysis failed: {str(e)}",
+        )
+
 
 @router.post(
     "/v1/jd/ats-check",
