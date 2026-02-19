@@ -18,6 +18,7 @@ from sqlalchemy import (
     JSON,
     Index,
     Float,
+    ForeignKeyConstraint,
 )
 from sqlalchemy.ext.asyncio import (
     AsyncSession,
@@ -64,7 +65,10 @@ class Resume(Base):
     data = Column(JSON, nullable=False)  # Stores resume data as JSON
 
     # Version tracking
-    current_version_id = Column(Integer, ForeignKey("resume_versions.id"))
+    # Note: use_alter=True breaks the circular FK dependency with resume_versions
+    current_version_id = Column(
+        Integer, ForeignKey("resume_versions.id", use_alter=True, name="fk_resume_current_version")
+    )
     current_version = relationship("ResumeVersion", foreign_keys=[current_version_id])
 
     # Sharing settings
