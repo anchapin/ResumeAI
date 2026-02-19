@@ -1647,6 +1647,26 @@ class JDInsightsResponse(BaseModel):
     )
 
 
+class SkillGapRequest(BaseModel):
+    """Request model for skill-gap analysis."""
+
+    job_description: str = Field(..., description="Full job description text")
+    resume_data: Dict[str, Any] = Field(..., description="Resume JSON payload")
+
+
+class SkillGapResponse(BaseModel):
+    """Response model for skill-gap analysis."""
+
+    missing_skills: List[str] = Field(
+        ...,
+        description="Skills required by the job but not present in the resume",
+    )
+    matched_skills: List[str] = Field(
+        ..., description="Skills present in both job and resume"
+    )
+    match_score: int = Field(..., description="Overall match percentage (0-100)")
+
+
 # =============================================================================
 # Team Collaboration Models
 # =============================================================================
