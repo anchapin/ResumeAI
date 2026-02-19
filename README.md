@@ -4,6 +4,11 @@
 
 # ResumeAI - AI-Powered Resume Builder
 
+[![Frontend CI](https://github.com/anchapin/ResumeAI/actions/workflows/frontend-ci.yml/badge.svg)](https://github.com/anchapin/ResumeAI/actions/workflows/frontend-ci.yml)
+[![Backend CI](https://github.com/anchapin/ResumeAI/actions/workflows/backend-ci.yml/badge.svg)](https://github.com/anchapin/ResumeAI/actions/workflows/backend-ci.yml)
+[![PR Check](https://github.com/anchapin/ResumeAI/actions/workflows/pr-check.yml/badge.svg)](https://github.com/anchapin/ResumeAI/actions/workflows/pr-check.yml)
+[![Docker Build](https://github.com/anchapin/ResumeAI/actions/workflows/docker.yml/badge.svg)](https://github.com/anchapin/ResumeAI/actions/workflows/docker.yml)
+
 ResumeAI is a full-stack SaaS application that helps users create professional resumes with AI-powered enhancements. Build, customize, and export resumes in PDF format with job-specific tailoring.
 
 ## Features
