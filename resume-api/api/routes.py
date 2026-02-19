@@ -1153,7 +1153,7 @@ async def import_linkedin_file(
     Accepts multiple LinkedIn export formats:
     - Single JSON file (LinkedIn JSON export)
     - ZIP folder (LinkedIn CSV data export with multiple files like Profile.csv, Positions.csv, etc.)
-    
+
     Users can download their LinkedIn data from Settings > Data privacy > Get a copy of your data.
 
     Requires API key authentication via X-API-KEY header.
@@ -1170,14 +1170,14 @@ async def import_linkedin_file(
     filename_lower = filename.lower()
 
     # Allowed file types
-    is_json = (
-        content_type in ["application/json", "text/json"]
-        or filename_lower.endswith(".json")
-    )
-    is_zip = (
-        content_type in ["application/zip", "application/x-zip-compressed"]
-        or filename_lower.endswith(".zip")
-    )
+    is_json = content_type in [
+        "application/json",
+        "text/json",
+    ] or filename_lower.endswith(".json")
+    is_zip = content_type in [
+        "application/zip",
+        "application/x-zip-compressed",
+    ] or filename_lower.endswith(".zip")
 
     if not (is_json or is_zip):
         raise HTTPException(
@@ -1238,9 +1238,7 @@ async def import_linkedin_file(
         )
 
 
-async def _parse_linkedin_csv_zip(
-    zip_content: bytes, importer
-) -> dict:
+async def _parse_linkedin_csv_zip(zip_content: bytes, importer) -> dict:
     """
     Parse LinkedIn CSV data export ZIP file.
 
@@ -1274,7 +1272,8 @@ async def _parse_linkedin_csv_zip(
             for csv_filename, data_key in csv_mappings.items():
                 # Find the CSV file (may be at root or in a subfolder)
                 matching_files = [
-                    f for f in zip_file.namelist()
+                    f
+                    for f in zip_file.namelist()
                     if f.lower().endswith(csv_filename.lower())
                 ]
 
@@ -1302,7 +1301,8 @@ async def _parse_linkedin_csv_zip(
 
             # Also check for Profile Summary.csv if present
             profile_summary_files = [
-                f for f in zip_file.namelist()
+                f
+                for f in zip_file.namelist()
                 if f.lower().endswith("profile summary.csv")
             ]
             if profile_summary_files:
