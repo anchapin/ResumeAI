@@ -19,6 +19,8 @@ from .models import (
     JDInsightsResponse,
     SalaryInfo,
     ErrorResponse,
+    SkillGapRequest,
+    SkillGapResponse,
 )
 
 from config.dependencies import AuthorizedAPIKey, limiter  # noqa: E402
