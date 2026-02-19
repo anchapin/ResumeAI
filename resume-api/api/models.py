@@ -1645,3 +1645,221 @@ class JDInsightsResponse(BaseModel):
     top_recommendations: List[str] = Field(
         ..., description="Top recommendations for improving fit"
     )
+
+
+# =============================================================================
+# Team Collaboration Models
+# =============================================================================
+
+
+class TeamMemberRole(str):
+    """Team member role enumeration."""
+
+    OWNER = "owner"
+    ADMIN = "admin"
+    EDITOR = "editor"
+    VIEWER = "viewer"
+
+
+class TeamCreate(BaseModel):
+    """Request model for creating a team."""
+
+    name: str = Field(..., max_length=200, description="Team name")
+    description: Optional[str] = Field(
+        None, max_length=MAX_STRING_LENGTH, description="Team description"
+    )
+
+    @field_validator("name")
+    @classmethod
+    def validate_name(cls, v: str) -> str:
+        """Validate team name."""
+        v = sanitize_html(v)
+        if not v or not v.strip():
+            raise ValueError("Team name cannot be empty")
+        return v.strip()
+
+
+class TeamUpdate(BaseModel):
+    """Request model for updating a team."""
+
+    name: Optional[str] = Field(None, max_length=200, description="Team name")
+    description: Optional[str] = Field(
+        None, max_length=MAX_STRING_LENGTH, description="Team description"
+    )
+
+    @field_validator("name")
+    @classmethod
+    def validate_name(cls, v: Optional[str]) -> Optional[str]:
+        """Validate team name."""
+        if v is not None:
+            v = sanitize_html(v)
+            if not v.strip():
+                raise ValueError("Team name cannot be empty")
+            return v.strip()
+        return v
+
+
+class TeamInvite(BaseModel):
+    """Request model for inviting a team member."""
+
+    email: str = Field(..., max_length=255, description="Email of user to invite")
+    role: str = Field(
+        default="viewer",
+        max_length=50,
+        description="Role to assign (owner, admin, editor, viewer)",
+    )
+
+    @field_validator("email")
+    @classmethod
+    def validate_email(cls, v: str) -> str:
+        """Validate email format."""
+        v = v.strip().lower()
+        if not EMAIL_PATTERN.match(v):
+            raise ValueError("Invalid email format")
+        return v
+
+    @field_validator("role")
+    @classmethod
+    def validate_role(cls, v: str) -> str:
+        """Validate role."""
+        valid_roles = ["owner", "admin", "editor", "viewer"]
+        v = v.strip().lower()
+        if v not in valid_roles:
+            raise ValueError(f"Invalid role. Must be one of: {', '.join(valid_roles)}")
+        return v
+
+
+class TeamMemberResponse(BaseModel):
+    """Response model for team member."""
+
+    user_id: int = Field(..., description="User ID")
+    email: str = Field(..., description="User email")
+    username: str = Field(..., description="Username")
+    role: str = Field(..., description="Team role")
+    joined_at: str = Field(..., description="Join timestamp")
+
+
+class TeamResponse(BaseModel):
+    """Response model for team."""
+
+    id: int = Field(..., description="Team ID")
+    name: str = Field(..., description="Team name")
+    description: Optional[str] = Field(None, description="Team description")
+    owner_id: int = Field(..., description="Owner user ID")
+    member_count: int = Field(..., description="Number of team members")
+    resume_count: int = Field(default=0, description="Number of shared resumes")
+    created_at: str = Field(..., description="Creation timestamp")
+    updated_at: str = Field(..., description="Last update timestamp")
+
+
+class TeamDetailResponse(BaseModel):
+    """Detailed response model for team with members."""
+
+    id: int = Field(..., description="Team ID")
+    name: str = Field(..., description="Team name")
+    description: Optional[str] = Field(None, description="Team description")
+    owner_id: int = Field(..., description="Owner user ID")
+    members: List[TeamMemberResponse] = Field(
+        default_factory=list, description="Team members"
+    )
+    resume_count: int = Field(default=0, description="Number of shared resumes")
+    created_at: str = Field(..., description="Creation timestamp")
+    updated_at: str = Field(..., description="Last update timestamp")
+
+
+class TeamResumeShare(BaseModel):
+    """Request model for sharing a resume with a team."""
+
+    resume_id: int = Field(..., description="Resume ID to share")
+    permission: str = Field(
+        default="view",
+        max_length=50,
+        description="Permission level (view, edit, admin)",
+    )
+
+    @field_validator("permission")
+    @classmethod
+    def validate_permission(cls, v: str) -> str:
+        """Validate permission."""
+        valid_permissions = ["view", "edit", "admin"]
+        v = v.strip().lower()
+        if v not in valid_permissions:
+            raise ValueError(
+                f"Invalid permission. Must be one of: {', '.join(valid_permissions)}"
+            )
+        return v
+
+
+class TeamActivityResponse(BaseModel):
+    """Response model for team activity."""
+
+    id: int = Field(..., description="Activity ID")
+    team_id: int = Field(..., description="Team ID")
+    user_id: int = Field(..., description="User who performed the action")
+    username: str = Field(..., description="Username")
+    action: str = Field(..., description="Action type")
+    resource_type: str = Field(..., description="Type of resource (resume, comment)")
+    resource_id: Optional[int] = Field(None, description="Resource ID")
+    description: str = Field(..., description="Activity description")
+    created_at: str = Field(..., description="Activity timestamp")
+
+
+class ResumeCommentCreate(BaseModel):
+    """Request model for adding a comment to a resume."""
+
+    content: str = Field(
+        ..., min_length=1, max_length=5000, description="Comment content"
+    )
+    section: Optional[str] = Field(
+        None, max_length=100, description="Resume section being commented on"
+    )
+    position: Optional[Dict[str, Any]] = Field(
+        None, description="Position information for inline comments"
+    )
+
+    @field_validator("content")
+    @classmethod
+    def validate_content(cls, v: str) -> str:
+        """Validate comment content."""
+        v = sanitize_html(v)
+        if not v.strip():
+            raise ValueError("Comment content cannot be empty")
+        return v
+
+
+class ResumeCommentResponse(BaseModel):
+    """Response model for resume comment."""
+
+    id: int = Field(..., description="Comment ID")
+    resume_id: int = Field(..., description="Resume ID")
+    user_id: int = Field(..., description="User who created the comment")
+    username: str = Field(..., description="Username")
+    content: str = Field(..., description="Comment content")
+    section: Optional[str] = Field(None, description="Resume section")
+    position: Optional[Dict[str, Any]] = Field(None, description="Position info")
+    is_resolved: bool = Field(..., description="Whether comment is resolved")
+    created_at: str = Field(..., description="Creation timestamp")
+    updated_at: str = Field(..., description="Last update timestamp")
+    replies: List["ResumeCommentResponse"] = Field(
+        default_factory=list, description="Comment replies"
+    )
+
+
+class ResumeCommentUpdate(BaseModel):
+    """Request model for updating a comment."""
+
+    content: Optional[str] = Field(
+        None, min_length=1, max_length=5000, description="Comment content"
+    )
+    is_resolved: Optional[bool] = Field(None, description="Mark as resolved")
+
+    @field_validator("content")
+    @classmethod
+    def validate_content(cls, v: Optional[str]) -> Optional[str]:
+        """Validate comment content."""
+        if v is not None:
+            v = sanitize_html(v)
+            if not v.strip():
+                raise ValueError("Comment content cannot be empty")
+            return v
+        return v
