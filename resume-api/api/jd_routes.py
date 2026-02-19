@@ -194,6 +194,7 @@ async def match_skills(
             detail=f"Skills matching failed: {str(e)}",
         )
 
+
 # New endpoint for AI‑powered skill‑gap analysis
 @router.post(
     "/v1/jd/skill-gap",
