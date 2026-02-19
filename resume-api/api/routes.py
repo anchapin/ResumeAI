@@ -4,7 +4,6 @@ FastAPI routes for Resume API.
 
 from typing import BinaryIO
 import asyncio
-import csv
 import io
 import os
 import re

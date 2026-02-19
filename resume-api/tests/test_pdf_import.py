@@ -20,7 +20,7 @@ os.environ.setdefault("ENABLE_RATE_LIMITING", "False")
 os.environ.setdefault("ENABLE_ANALYTICS", "False")
 os.environ.setdefault("ENABLE_METRICS", "False")
 
-from api.routes import extract_text_from_pdf, parse_resume_text
+from api.routes import extract_text_from_pdf
 from main import app
 
 
