@@ -110,7 +110,7 @@ class StripeService:
         # TODO: Implement with Stripe Checkout API
         return {
             "id": "cs_test_123",
-            "url": f"https://checkout.stripe.com/c/pay/cs_test_123",
+            "url": "https://checkout.stripe.com/c/pay/cs_test_123",
         }
 
     async def create_portal_session(
