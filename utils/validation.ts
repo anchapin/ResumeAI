@@ -2,6 +2,8 @@
  * Client-side validation utilities for ResumeAI application
  */
 
+import type { ResumeData, SimpleResumeData } from '../types';
+
 // Type definitions for validation options
 interface StringOptions {
   maxLength?: number;
@@ -21,6 +23,16 @@ interface ArrayOptions {
   itemOptions?: StringOptions | NumberOptions;
 }
 
+// Type for job application data validation
+interface JobApplicationData {
+  jobTitle?: string;
+  companyName?: string;
+  jobDescription?: string;
+}
+
+// Union type for validation options
+type ValidationOptions = StringOptions | NumberOptions | ArrayOptions;
+
 // Input validation functions
 const validateInput = (input: any, type: string = 'string', options: StringOptions | NumberOptions | ArrayOptions = {}) => {
   if (input === null || input === undefined) {
@@ -34,7 +46,7 @@ const validateInput = (input: any, type: string = 'string', options: StringOptio
       }
 
       // Sanitize string input
-      const sanitized = sanitizeString(input);
+      const sanitized: string = sanitizeString(input) as string;
 
       // Apply length constraints
       const stringOpts = options as StringOptions;
@@ -121,7 +133,7 @@ const validateInput = (input: any, type: string = 'string', options: StringOptio
 };
 
 // Sanitize string input to prevent injection attacks
-const sanitizeString = (str) => {
+const sanitizeString = (str: unknown): string | unknown => {
   if (typeof str !== 'string') {
     return str;
   }
@@ -142,7 +154,7 @@ const sanitizeString = (str) => {
 };
 
 // Validate string against a pattern
-const isValidString = (str, pattern) => {
+const isValidString = (str: string, pattern?: string | RegExp): boolean => {
   if (!pattern) return true;
   
   if (pattern instanceof RegExp) {
@@ -153,7 +165,7 @@ const isValidString = (str, pattern) => {
 };
 
 // Validate resume data structure
-const validateResumeData = (resumeData) => {
+const validateResumeData = (resumeData: Partial<SimpleResumeData>): boolean => {
   if (!resumeData) {
     throw new Error('Resume data is required');
   }
@@ -255,7 +267,7 @@ const validateResumeData = (resumeData) => {
 };
 
 // Validate job application data
-const validateJobApplicationData = (jobData) => {
+const validateJobApplicationData = (jobData: JobApplicationData): boolean => {
   if (!jobData) {
     throw new Error('Job application data is required');
   }
