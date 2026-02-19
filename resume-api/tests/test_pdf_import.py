@@ -23,10 +23,12 @@ os.environ.setdefault("ENABLE_METRICS", "False")
 from api.routes import extract_text_from_pdf, parse_resume_text
 from main import app
 
+
 @pytest.fixture
 def client():
     """Create a test client for the FastAPI app."""
     return TestClient(app, raise_server_exceptions=False)
+
 
 @pytest.fixture
 def sample_pdf_bytes():
@@ -50,6 +52,7 @@ def sample_pdf_bytes():
     writer.write(output)
     return output.getvalue()
 
+
 # Since pypdf text extraction depends on actual text content which is hard to synthesize
 # without other libraries (like reportlab), we will mock extract_text_from_pdf for endpoint tests,
 # OR we can assume the extraction logic itself (pypdf) works and we just want to test the streaming.
@@ -57,6 +60,7 @@ def sample_pdf_bytes():
 # However, to test extract_text_from_pdf itself, we really need a PDF with text.
 # Let's create a dummy valid PDF and accept that it might return empty text,
 # just to verify it accepts the stream.
+
 
 class TestExtractTextFromPdf:
     """Test the extract_text_from_pdf function."""
@@ -82,6 +86,7 @@ class TestExtractTextFromPdf:
             extract_text_from_pdf(io.BytesIO(corrupted_bytes))
         assert "Invalid or corrupted PDF" in str(exc_info.value)
 
+
 class TestImportPdfEndpoint:
     """Test the /v1/import/pdf endpoint."""
 
@@ -91,7 +96,10 @@ class TestImportPdfEndpoint:
         # because our sample PDF is blank and parse_resume_text expects content.
 
         with pytest.MonkeyPatch.context() as m:
-            m.setattr("api.routes.extract_text_from_pdf", lambda x: "John Doe\nSoftware Engineer\njohn@example.com")
+            m.setattr(
+                "api.routes.extract_text_from_pdf",
+                lambda x: "John Doe\nSoftware Engineer\njohn@example.com",
+            )
 
             files = {
                 "file": (
