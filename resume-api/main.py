@@ -6,14 +6,12 @@ FastAPI service for generating and tailoring professional resumes.
 
 import asyncio
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, Request, status
+from fastapi import FastAPI, Request, Response, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from prometheus_fastapi_instrumentator import Instrumentator
 from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.requests import Request
-from starlette.responses import Response
 
 from api import router
 from api.websocket import handle_websocket_connection
@@ -90,7 +88,7 @@ def setup_sentry():
 
 def setup_prometheus(app: FastAPI):
     """Initialize Prometheus metrics instrumentation if enabled."""
-    if getattr(settings, 'enable_metrics', False):
+    if getattr(settings, "enable_metrics", False):
         try:
             instrumentator = Instrumentator(
                 should_group_status_codes=False,
@@ -105,14 +103,19 @@ def setup_prometheus(app: FastAPI):
 
             instrumentator.instrument(app).expose(
                 app,
-                endpoint=getattr(settings, 'metrics_path', '/metrics'),
+                endpoint=getattr(settings, "metrics_path", "/metrics"),
                 should_gzip=True,
                 include_in_schema=False,
             )
 
-            logger.info("prometheus_initialized", metrics_path=getattr(settings, 'metrics_path', '/metrics'))
+            logger.info(
+                "prometheus_initialized",
+                metrics_path=getattr(settings, "metrics_path", "/metrics"),
+            )
         except (ImportError, RuntimeError) as e:
-            logger.warning("prometheus_fastapi_instrumentator not available", error=str(e))
+            logger.warning(
+                "prometheus_fastapi_instrumentator not available", error=str(e)
+            )
 
 
 # Define lifespan to handle startup and shutdown events
@@ -172,6 +175,7 @@ app.state.limiter = limiter
 # Register rate limit exception handler
 app.add_exception_handler(RateLimitExceeded, rate_limit_exceeded_handler)
 
+
 # Register validation error handler for debugging
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
@@ -181,6 +185,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
         content={"detail": "Validation error in resume data. Please check all fields."},
     )
+
 
 # Add monitoring middleware (must be added before security middleware)
 app.add_middleware(MonitoringMiddleware)

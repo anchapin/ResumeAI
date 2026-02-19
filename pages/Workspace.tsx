@@ -499,5 +499,3 @@ const Workspace: React.FC<WorkspaceProps> = ({ resumeData, onNavigate }) => {
 };
 
 export default Workspace;
-
-export default Workspace;

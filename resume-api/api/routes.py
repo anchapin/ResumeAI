@@ -3,7 +3,6 @@ FastAPI routes for Resume API.
 """
 
 import asyncio
-import csv
 import io
 import os
 import re
@@ -11,10 +10,10 @@ import sys
 import zipfile
 from pathlib import Path
 
-from fastapi import APIRouter, HTTPException, Request, UploadFile, File, status, Form
+from fastapi import APIRouter, HTTPException, Request, UploadFile, File, status
 from fastapi.responses import Response
 from pydantic import BaseModel, Field
-from typing import List, Optional, Union
+from typing import List
 
 from docx import Document
 from docx.enum.text import WD_ALIGN_PARAGRAPH
@@ -1178,14 +1177,14 @@ async def import_linkedin_file(
             filename = file.filename or ""
             filename_lower = filename.lower()
 
-            is_json = (
-                content_type in ["application/json", "text/json"]
-                or filename_lower.endswith(".json")
-            )
-            is_zip = (
-                content_type in ["application/zip", "application/x-zip-compressed"]
-                or filename_lower.endswith(".zip")
-            )
+            is_json = content_type in [
+                "application/json",
+                "text/json",
+            ] or filename_lower.endswith(".json")
+            is_zip = content_type in [
+                "application/zip",
+                "application/x-zip-compressed",
+            ] or filename_lower.endswith(".zip")
 
             # Read content
             content = await file.read()
@@ -1237,7 +1236,7 @@ async def import_linkedin_file(
             linkedin_data = _parse_linkedin_csv_files(csv_files)
 
         if not linkedin_data:
-             raise HTTPException(
+            raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="No valid LinkedIn data found in upload.",
             )
@@ -1305,7 +1304,9 @@ def _parse_linkedin_csv_files(csv_files: dict) -> dict:
                 if rows and rows[0].get("Summary"):
                     if "profile" not in linkedin_data:
                         linkedin_data["profile"] = []
-                    if linkedin_data["profile"] and isinstance(linkedin_data["profile"], list):
+                    if linkedin_data["profile"] and isinstance(
+                        linkedin_data["profile"], list
+                    ):
                         linkedin_data["profile"][0]["Summary"] = rows[0]["Summary"]
             except Exception:
                 pass
@@ -1313,9 +1314,7 @@ def _parse_linkedin_csv_files(csv_files: dict) -> dict:
     return _convert_csv_data_to_importer_format(linkedin_data)
 
 
-async def _parse_linkedin_csv_zip(
-    zip_content: bytes, importer
-) -> dict:
+async def _parse_linkedin_csv_zip(zip_content: bytes, importer) -> dict:
     """
     Parse LinkedIn CSV data export ZIP file.
 
@@ -1351,7 +1350,8 @@ async def _parse_linkedin_csv_zip(
             for csv_filename, data_key in csv_mappings.items():
                 # Find the CSV file (may be at root or in a subfolder)
                 matching_files = [
-                    f for f in zip_file.namelist()
+                    f
+                    for f in zip_file.namelist()
                     if f.lower().endswith(csv_filename.lower())
                 ]
 
@@ -1379,7 +1379,8 @@ async def _parse_linkedin_csv_zip(
 
             # Also check for Profile Summary.csv if present
             profile_summary_files = [
-                f for f in zip_file.namelist()
+                f
+                for f in zip_file.namelist()
                 if f.lower().endswith("profile summary.csv")
             ]
             if profile_summary_files:
@@ -1449,7 +1450,7 @@ def _convert_csv_data_to_importer_format(csv_data: dict) -> dict:
                     # Prefer confirmed and primary emails
                     is_primary = email_row.get("Primary", "").lower() == "yes"
                     email_list.append({"email": email, "primary": is_primary})
-            
+
             if email_list:
                 # Sort to put primary email first
                 email_list.sort(key=lambda x: x["primary"], reverse=True)
@@ -1490,12 +1491,12 @@ def _convert_csv_data_to_importer_format(csv_data: dict) -> dict:
         for edu in csv_data["education"]:
             # Try multiple field names for field of study
             field_of_study = (
-                edu.get("Field of Study") 
-                or edu.get("Activities") 
-                or edu.get("Notes") 
+                edu.get("Field of Study")
+                or edu.get("Activities")
+                or edu.get("Notes")
                 or ""
             )
-            
+
             edu_entry = {
                 "schoolName": edu.get("School Name", ""),
                 "degreeName": edu.get("Degree Name", ""),
@@ -1532,7 +1533,11 @@ def _convert_csv_data_to_importer_format(csv_data: dict) -> dict:
         skills = []
         for skill_row in csv_data["skills"]:
             # Try both "Name" and "Skill" as column names
-            skill_name = skill_row.get("Name") or skill_row.get("Skill") or skill_row.get("skill")
+            skill_name = (
+                skill_row.get("Name")
+                or skill_row.get("Skill")
+                or skill_row.get("skill")
+            )
             if skill_name:
                 skills.append({"name": skill_name})
         if skills:
