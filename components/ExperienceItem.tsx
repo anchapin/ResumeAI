@@ -81,17 +81,23 @@ const ExperienceItem = React.memo(({
             }`}
         >
             {/* Card Header */}
-            <div className="p-6 flex items-start justify-between cursor-pointer" onClick={() => onToggleExpand(exp.id)}>
-                <div className="flex items-center gap-4">
-                    <button className={`p-1 rounded-full transition-transform duration-200 ${isExpanded ? 'rotate-180 bg-slate-100 text-slate-900' : 'text-slate-400'}`}>
+            <div className="flex items-start">
+                <button
+                    className="flex-1 p-6 flex items-center gap-4 text-left hover:bg-slate-50 focus-visible:outline-none focus-visible:bg-slate-50 transition-colors group"
+                    onClick={() => onToggleExpand(exp.id)}
+                    aria-expanded={isExpanded}
+                    aria-controls={`exp-content-${exp.id}`}
+                    title="Click to expand/collapse"
+                >
+                    <div className={`p-1 rounded-full transition-transform duration-200 ${isExpanded ? 'rotate-180 bg-slate-100 text-slate-900' : 'text-slate-400 group-hover:bg-slate-100 group-hover:text-slate-600'}`}>
                         <span className="material-symbols-outlined">expand_more</span>
-                    </button>
+                    </div>
                     <div>
                         <h3 className="font-bold text-slate-900 text-lg">{exp.role}</h3>
                         <p className="text-sm text-slate-500 font-medium">{exp.company} | {exp.startDate} - {exp.endDate}</p>
                     </div>
-                </div>
-                <div className="flex items-center gap-2">
+                </button>
+                <div className="p-6 pl-0 flex items-center gap-2">
                      <button className="p-2 text-slate-400 hover:bg-slate-50 hover:text-slate-700 rounded-lg" aria-label="Edit experience">
                         <span className="material-symbols-outlined text-[20px]">edit</span>
                      </button>
@@ -128,7 +134,12 @@ const ExperienceItem = React.memo(({
 
             {/* Card Body (Expanded) */}
             {isExpanded && (
-                <div className="px-6 pb-6 pt-0 animate-in slide-in-from-top-2 fade-in duration-200">
+                <div
+                    id={`exp-content-${exp.id}`}
+                    role="region"
+                    aria-label={`Details for ${exp.role} at ${exp.company}`}
+                    className="px-6 pb-6 pt-0 animate-in slide-in-from-top-2 fade-in duration-200"
+                >
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6 pt-4 border-t border-slate-100">
                         <div className="space-y-2">
                             <label htmlFor={`company-${exp.id}`} className="text-sm font-bold text-slate-700">Company Name</label>
@@ -199,6 +210,7 @@ const ExperienceItem = React.memo(({
                                 <input
                                     type="text"
                                     aria-label="Add new skill"
+                                    title="Press Enter to add"
                                     placeholder="+ Add Skill"
                                     className="bg-transparent text-xs p-1 focus:ring-0 border-none w-24 placeholder-slate-400"
                                     onKeyDown={(e) => {

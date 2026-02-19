@@ -1,5 +1,6 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 import { describe, it, expect, vi } from 'vitest';
 import ExperienceItem from '../../components/ExperienceItem';
@@ -96,5 +97,33 @@ describe('ExperienceItem', () => {
 
     // Check add skill input
     expect(screen.getByLabelText('Add new skill')).toBeInTheDocument();
+  });
+
+  it('has correct accessibility attributes on header', () => {
+    render(<ExperienceItem {...mockProps} />);
+    const header = screen.getByTitle('Click to expand/collapse');
+    expect(header.tagName).toBe('BUTTON');
+    expect(header).toHaveAttribute('aria-expanded', 'false');
+    expect(header).toHaveAttribute('aria-controls', 'exp-content-1');
+  });
+
+  it('toggles expansion on Enter key press', async () => {
+    const user = userEvent.setup();
+    render(<ExperienceItem {...mockProps} />);
+    const header = screen.getByTitle('Click to expand/collapse');
+
+    header.focus();
+    await user.keyboard('{Enter}');
+    expect(mockProps.onToggleExpand).toHaveBeenCalledWith('1');
+  });
+
+  it('toggles expansion on Space key press', async () => {
+    const user = userEvent.setup();
+    render(<ExperienceItem {...mockProps} />);
+    const header = screen.getByTitle('Click to expand/collapse');
+
+    header.focus();
+    await user.keyboard(' ');
+    expect(mockProps.onToggleExpand).toHaveBeenCalledWith('1');
   });
 });
