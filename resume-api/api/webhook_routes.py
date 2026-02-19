@@ -4,7 +4,7 @@ Webhook API Routes.
 Endpoints for managing webhooks and delivering notifications.
 """
 
-from fastapi import APIRouter, HTTPException, Request, status
+from fastapi import APIRouter, HTTPException, Request
 from typing import List, Optional
 from datetime import datetime
 from enum import Enum
