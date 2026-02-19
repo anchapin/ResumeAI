@@ -3,7 +3,6 @@ FastAPI routes for Resume API.
 """
 
 import asyncio
-import csv
 import io
 import os
 import re
