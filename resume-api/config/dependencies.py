@@ -5,6 +5,7 @@ Provides authentication dependencies for both API key and JWT token-based authen
 """
 
 import os
+import secrets
 from typing import Annotated, Optional
 
 from fastapi import Header, HTTPException, status, Depends
@@ -68,10 +69,18 @@ async def get_api_key(x_api_key: str = Header(None)) -> str:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="API key is required"
         )
-    if settings.master_api_key and x_api_key == settings.master_api_key:
+    # Use secrets.compare_digest for constant-time string comparison
+    # to prevent timing attacks
+    if settings.master_api_key and secrets.compare_digest(
+        x_api_key, settings.master_api_key
+    ):
         return x_api_key
-    if settings.api_keys and x_api_key in settings.api_keys:
-        return x_api_key
+
+    if settings.api_keys:
+        for key in settings.api_keys:
+            if secrets.compare_digest(x_api_key, key):
+                return x_api_key
+
     raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid API key")
 
 
