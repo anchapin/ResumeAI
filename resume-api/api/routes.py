@@ -3,7 +3,6 @@ FastAPI routes for Resume API.
 """
 
 import asyncio
-import csv
 import io
 import os
 import re
@@ -1252,7 +1251,7 @@ async def _parse_linkedin_csv_zip(zip_content: bytes, importer) -> dict:
     Returns:
         Dictionary with parsed LinkedIn data
     """
-    import csv
+    import csv as csv_module
 
     linkedin_data = {}
 
@@ -1282,7 +1281,7 @@ async def _parse_linkedin_csv_zip(zip_content: bytes, importer) -> dict:
                         csv_file_path = matching_files[0]
                         with zip_file.open(csv_file_path) as f:
                             content = f.read().decode("utf-8")
-                            rows = list(csv.DictReader(io.StringIO(content)))
+                            rows = list(csv_module.DictReader(io.StringIO(content)))
 
                             if rows:
                                 # Clean up empty values in rows
@@ -1309,7 +1308,7 @@ async def _parse_linkedin_csv_zip(zip_content: bytes, importer) -> dict:
                 try:
                     with zip_file.open(profile_summary_files[0]) as f:
                         content = f.read().decode("utf-8")
-                        rows = list(csv.DictReader(io.StringIO(content)))
+                        rows = list(csv_module.DictReader(io.StringIO(content)))
                         if rows and "Summary" in rows[0]:
                             # Add summary to profile data if it exists
                             if "profile" not in linkedin_data:
