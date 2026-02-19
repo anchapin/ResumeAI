@@ -4,6 +4,7 @@ import { convertToAPIData, generatePDF, getVariants, VariantMetadata } from '../
 import { TemplateSelector } from '../components/TemplateSelector';
 import { LinkedInImportDialog } from '../components/LinkedInImportDialog';
 import ExperienceItem from '../components/ExperienceItem';
+import ResumePreview from '../components/ResumePreview';
 
 interface EducationItemProps {
     edu: EducationEntry;
@@ -391,6 +392,9 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, onBack, saveStatu
 
   // LinkedIn import state
   const [showLinkedInImport, setShowLinkedInImport] = useState<boolean>(false);
+
+  // Real-time preview state
+  const [showPreview, setShowPreview] = useState<boolean>(false);
 
   // Drag and drop state for section reordering
   const [draggedItemId, setDraggedItemId] = useState<string | null>(null);
@@ -981,8 +985,9 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, onBack, saveStatu
         </div>
       </header>
 
-      <main className="flex-1 flex flex-col items-center w-full">
-        <div className="w-full max-w-[960px] px-6 py-8">
+      <main className={`flex-1 flex w-full ${showPreview ? 'flex-row' : 'flex-col items-center'}`}>
+        {/* Editor Panel */}
+        <div className={`${showPreview ? 'w-1/2 overflow-y-auto' : 'w-full max-w-[960px]'} px-6 py-8`}>
             {/* Header Area */}
             <div className="flex flex-wrap justify-between items-end gap-3 mb-8">
                 <div>
@@ -1025,6 +1030,18 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, onBack, saveStatu
                     </p>
                 </div>
                 <div className="flex gap-3">
+                    {/* Preview Toggle Button */}
+                    <button 
+                        onClick={() => setShowPreview(!showPreview)}
+                        className={`flex items-center gap-2 px-4 h-10 rounded-lg border font-bold text-sm transition-colors shadow-sm ${
+                          showPreview 
+                            ? 'bg-primary-600 text-white border-primary-600' 
+                            : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50'
+                        }`}
+                    >
+                        <span className="material-symbols-outlined text-lg">{showPreview ? 'visibility_off' : 'visibility'}</span>
+                        {showPreview ? 'Hide Preview' : 'Preview'}
+                    </button>
                     <button 
                         onClick={handleGeneratePDF}
                         disabled={isGeneratingPDF}
@@ -1072,6 +1089,19 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, onBack, saveStatu
                 </div>
             </div>
         </div>
+
+        {/* Preview Panel */}
+        {showPreview && (
+          <div className="w-1/2 h-[calc(100vh-60px)] sticky top-[60px] border-l border-slate-200">
+            <ResumePreview
+              resumeData={resumeData}
+              variant={selectedVariant}
+              splitMode={true}
+              onGeneratePDF={handleGeneratePDF}
+              isGeneratingPDF={isGeneratingPDF}
+            />
+          </div>
+        )}
       </main>
 
       {/* LinkedIn Import Dialog */}
