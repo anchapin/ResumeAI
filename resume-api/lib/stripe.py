@@ -110,7 +110,7 @@ class StripeService:
         # TODO: Implement with Stripe Checkout API
         return {
             "id": "cs_test_123",
-            "url": f"https://checkout.stripe.com/c/pay/cs_test_123",
+            "url": "https://checkout.stripe.com/c/pay/cs_test_123",
         }
 
     async def create_portal_session(
@@ -163,7 +163,7 @@ class StripeService:
     async def check_usage_limits(self, user_id: str, action: str) -> Dict[str, Any]:
         """Check if user has exceeded usage limits."""
         # TODO: Implement with database usage tracking
-        return {"allowed": True, "remaining": -1, "limit": -1}
+        return {"allowed": True, "remaining": -1, "limit": -1, "used": 0}
 
     def verify_webhook_signature(
         self, payload: bytes, signature: str, webhook_secret: str
