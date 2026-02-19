@@ -523,22 +523,27 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, onBack, saveStatu
   // Skills handlers
   const addSkill = useCallback((skill: string) => {
     if(!skill.trim()) return;
-    const currentData = resumeDataRef.current;
-    if(!currentData.skills.includes(skill.trim())) {
-      onUpdate({ ...currentData, skills: [...currentData.skills, skill.trim()] });
+    const prev = resumeDataRef.current;
+    if(!prev.skills.includes(skill.trim())) {
+      onUpdate({ ...prev, skills: [...prev.skills, skill.trim()] });
     }
   }, [onUpdate]);
 
   const removeSkill = useCallback((skill: string) => {
-    const currentData = resumeDataRef.current;
-    onUpdate({ ...currentData, skills: currentData.skills.filter(s => s !== skill) });
+    const prev = resumeDataRef.current;
+    onUpdate({
+      ...prev,
+      skills: prev.skills.filter(s => s !== skill)
+    });
   }, [onUpdate]);
 
   // Experience handlers
   const handleDeleteExperience = useCallback((id: string) => {
-    const currentData = resumeDataRef.current;
-    const newExperiences = currentData.experience.filter(exp => exp.id !== id);
-    onUpdate({ ...currentData, experience: newExperiences });
+    const prev = resumeDataRef.current;
+    onUpdate({
+      ...prev,
+      experience: prev.experience.filter(exp => exp.id !== id)
+    });
   }, [onUpdate]);
 
   const handleToggleExpandExperience = useCallback((id: string) => {
@@ -546,47 +551,55 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, onBack, saveStatu
   }, []);
 
   const updateExperience = useCallback((id: string, field: keyof WorkExperience, value: any) => {
-    const currentData = resumeDataRef.current;
-    const newExperiences = currentData.experience.map(exp =>
-      exp.id === id ? { ...exp, [field]: value } : exp
-    );
-    onUpdate({ ...currentData, experience: newExperiences });
+    const prev = resumeDataRef.current;
+    onUpdate({
+      ...prev,
+      experience: prev.experience.map(exp =>
+        exp.id === id ? { ...exp, [field]: value } : exp
+      )
+    });
   }, [onUpdate]);
 
   const addTagToExperience = useCallback((id: string, tag: string) => {
     if(!tag.trim()) return;
-    const currentData = resumeDataRef.current;
-    const exp = currentData.experience.find(e => e.id === id);
+    const prev = resumeDataRef.current;
+    const exp = prev.experience.find(e => e.id === id);
     if(exp && !exp.tags.includes(tag.trim())) {
-      const newExperiences = currentData.experience.map(e =>
-        e.id === id ? { ...e, tags: [...e.tags, tag.trim()] } : e
-      );
-      onUpdate({ ...currentData, experience: newExperiences });
+      onUpdate({
+        ...prev,
+        experience: prev.experience.map(e =>
+          e.id === id ? { ...e, tags: [...e.tags, tag.trim()] } : e
+        )
+      });
     }
   }, [onUpdate]);
 
   const removeTagFromExperience = useCallback((id: string, tag: string) => {
-    const currentData = resumeDataRef.current;
-    const newExperiences = currentData.experience.map(e =>
-      e.id === id ? { ...e, tags: e.tags.filter(t => t !== tag) } : e
-    );
-    onUpdate({ ...currentData, experience: newExperiences });
+    const prev = resumeDataRef.current;
+    onUpdate({
+      ...prev,
+      experience: prev.experience.map(e =>
+        e.id === id ? { ...e, tags: e.tags.filter(t => t !== tag) } : e
+      )
+    });
   }, [onUpdate]);
 
   const addExperience = useCallback(() => {
     const newId = Date.now().toString();
-    const currentData = resumeDataRef.current;
-    const newExperiences = [...currentData.experience, {
-      id: newId,
-      company: 'New Company',
-      role: 'New Role',
-      startDate: '',
-      endDate: '',
-      current: false,
-      description: '',
-      tags: []
-    }];
-    onUpdate({ ...currentData, experience: newExperiences });
+    const prev = resumeDataRef.current;
+    onUpdate({
+      ...prev,
+      experience: [...prev.experience, {
+        id: newId,
+        company: 'New Company',
+        role: 'New Role',
+        startDate: '',
+        endDate: '',
+        current: false,
+        description: '',
+        tags: []
+      }]
+    });
     setExpandedExpId(newId);
   }, [onUpdate]);
 
@@ -627,9 +640,11 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, onBack, saveStatu
 
   // Education handlers
   const handleDeleteEducation = useCallback((id: string) => {
-    const currentData = resumeDataRef.current;
-    const newEducation = (currentData.education || []).filter(edu => edu.id !== id);
-    onUpdate({ ...currentData, education: newEducation });
+    const prev = resumeDataRef.current;
+    onUpdate({
+      ...prev,
+      education: (prev.education || []).filter(edu => edu.id !== id)
+    });
   }, [onUpdate]);
 
   const handleToggleExpandEducation = useCallback((id: string) => {
@@ -637,34 +652,40 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, onBack, saveStatu
   }, []);
 
   const updateEducation = useCallback((id: string, field: keyof EducationEntry, value: any) => {
-    const currentData = resumeDataRef.current;
-    const newEducation = (currentData.education || []).map(edu =>
-      edu.id === id ? { ...edu, [field]: value } : edu
-    );
-    onUpdate({ ...currentData, education: newEducation });
+    const prev = resumeDataRef.current;
+    onUpdate({
+      ...prev,
+      education: (prev.education || []).map(edu =>
+        edu.id === id ? { ...edu, [field]: value } : edu
+      )
+    });
   }, [onUpdate]);
 
   const addEducation = useCallback(() => {
     const newId = Date.now().toString();
-    const currentData = resumeDataRef.current;
-    const newEducation = [...(currentData.education || []), {
-      id: newId,
-      institution: 'New Institution',
-      area: '',
-      studyType: '',
-      startDate: '',
-      endDate: '',
-      courses: []
-    }];
-    onUpdate({ ...currentData, education: newEducation });
+    const prev = resumeDataRef.current;
+    onUpdate({
+      ...prev,
+      education: [...(prev.education || []), {
+        id: newId,
+        institution: 'New Institution',
+        area: '',
+        studyType: '',
+        startDate: '',
+        endDate: '',
+        courses: []
+      }]
+    });
     setExpandedEduId(newId);
   }, [onUpdate]);
 
   // Projects handlers
   const handleDeleteProject = useCallback((id: string) => {
-    const currentData = resumeDataRef.current;
-    const newProjects = (currentData.projects || []).filter(proj => proj.id !== id);
-    onUpdate({ ...currentData, projects: newProjects });
+    const prev = resumeDataRef.current;
+    onUpdate({
+      ...prev,
+      projects: (prev.projects || []).filter(proj => proj.id !== id)
+    });
   }, [onUpdate]);
 
   const handleToggleExpandProject = useCallback((id: string) => {
@@ -672,27 +693,31 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, onBack, saveStatu
   }, []);
 
   const updateProject = useCallback((id: string, field: keyof ProjectEntry, value: any) => {
-    const currentData = resumeDataRef.current;
-    const newProjects = (currentData.projects || []).map(proj =>
-      proj.id === id ? { ...proj, [field]: value } : proj
-    );
-    onUpdate({ ...currentData, projects: newProjects });
+    const prev = resumeDataRef.current;
+    onUpdate({
+      ...prev,
+      projects: (prev.projects || []).map(proj =>
+        proj.id === id ? { ...proj, [field]: value } : proj
+      )
+    });
   }, [onUpdate]);
 
   const addProject = useCallback(() => {
     const newId = Date.now().toString();
-    const currentData = resumeDataRef.current;
-    const newProjects = [...(currentData.projects || []), {
-      id: newId,
-      name: 'New Project',
-      description: '',
-      url: '',
-      roles: [],
-      startDate: '',
-      endDate: '',
-      highlights: []
-    }];
-    onUpdate({ ...currentData, projects: newProjects });
+    const prev = resumeDataRef.current;
+    onUpdate({
+      ...prev,
+      projects: [...(prev.projects || []), {
+        id: newId,
+        name: 'New Project',
+        description: '',
+        url: '',
+        roles: [],
+        startDate: '',
+        endDate: '',
+        highlights: []
+      }]
+    });
     setExpandedProjId(newId);
   }, [onUpdate]);
 

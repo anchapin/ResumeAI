@@ -24,32 +24,58 @@ export const LinkedInImportDialog: React.FC<LinkedInImportDialogProps> = ({
   const [isImporting, setIsImporting] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const folderInputRef = useRef<HTMLInputElement>(null);
 
   if (!isOpen) return null;
 
-  const handleFileSelect = async (file: File) => {
-    const isJson = file.type === 'application/json' || file.name.endsWith('.json');
-    const isZip = file.type === 'application/zip' || 
-                  file.type === 'application/x-zip-compressed' || 
-                  file.name.endsWith('.zip');
+  const handleFileSelect = async (files: File | FileList) => {
+    const fileList = files instanceof FileList ? Array.from(files) : (Array.isArray(files) ? files : [files]);
+    if (fileList.length === 0) return;
 
-    if (!isJson && !isZip) {
-      showErrorToast('Please select a valid file exported from LinkedIn (JSON or ZIP folder).');
-      return;
-    }
+    // Logic for single file (JSON/ZIP) vs multiple files (CSV folder)
+    if (fileList.length === 1) {
+      const file = fileList[0];
+      const isJson = file.type === 'application/json' || file.name.endsWith('.json');
+      const isZip = file.type === 'application/zip' ||
+        file.type === 'application/x-zip-compressed' ||
+        file.name.endsWith('.zip');
 
-    // Allow larger files for ZIP (10MB) vs JSON (5MB)
-    const maxSize = isZip ? 10 * 1024 * 1024 : 5 * 1024 * 1024;
-    if (file.size > maxSize) {
-      showErrorToast(`File size exceeds ${maxSize / (1024 * 1024)}MB limit.`);
-      return;
+      // If single file is CSV, treat it as "folder" upload of 1 file (if backend supports it)
+      const isCsv = file.name.endsWith('.csv');
+
+      if (!isJson && !isZip && !isCsv) {
+        showErrorToast('Please select a valid file (JSON, ZIP) or a folder of CSVs.');
+        return;
+      }
+
+      // Allow larger files for ZIP (10MB) vs JSON (5MB)
+      const maxSize = isZip ? 10 * 1024 * 1024 : 5 * 1024 * 1024;
+      if (file.size > maxSize) {
+        showErrorToast(`File size exceeds ${maxSize / (1024 * 1024)}MB limit.`);
+        return;
+      }
+    } else {
+      // Multiple files - assume CSV folder upload
+      let totalSize = 0;
+      for (const f of fileList) totalSize += f.size;
+      if (totalSize > 20 * 1024 * 1024) {
+        showErrorToast('Total upload size exceeds 20MB limit.');
+        return;
+      }
+
+      const hasCsv = fileList.some(f => f.name.toLowerCase().endsWith('.csv'));
+      if (!hasCsv) {
+        showErrorToast('Selected files do not contain any CSV files.');
+        return;
+      }
     }
 
     setIsImporting(true);
 
     try {
-      const resumeData = await importFromLinkedInFile(file);
-      
+      // Pass the file list (single or multiple) to the import function
+      const resumeData = await importFromLinkedInFile(fileList);
+
       // Convert JSON Resume format to SimpleResumeData format
       const importedData: Partial<SimpleResumeData> = {
         name: resumeData.basics?.name || '',
@@ -105,9 +131,9 @@ export const LinkedInImportDialog: React.FC<LinkedInImportDialogProps> = ({
     e.preventDefault();
     setDragOver(false);
 
-    const file = e.dataTransfer.files[0];
-    if (file) {
-      handleFileSelect(file);
+    const files = e.dataTransfer.files;
+    if (files && files.length > 0) {
+      handleFileSelect(files);
     }
   };
 
@@ -121,14 +147,19 @@ export const LinkedInImportDialog: React.FC<LinkedInImportDialogProps> = ({
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      handleFileSelect(file);
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      handleFileSelect(files);
     }
   };
 
   const handleButtonClick = () => {
     fileInputRef.current?.click();
+  };
+
+  const handleFolderButtonClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    folderInputRef.current?.click();
   };
 
   return (
@@ -141,8 +172,11 @@ export const LinkedInImportDialog: React.FC<LinkedInImportDialogProps> = ({
               <span className="material-symbols-outlined">account_circle</span>
             </div>
             <div>
-              <h2 className="text-xl font-bold text-slate-900">Import from LinkedIn</h2>
-              <p className="text-sm text-slate-500">Upload your LinkedIn data export</p>
+              <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+                Import from LinkedIn
+                <span className="text-[10px] bg-green-500 text-white px-1.5 py-0.5 rounded-full uppercase tracking-wider font-black">Updated Parser</span>
+              </h2>
+              <p className="text-sm text-slate-500">Upload your LinkedIn data (ZIP, JSON, or CSV folder)</p>
             </div>
           </div>
           <button
@@ -158,6 +192,9 @@ export const LinkedInImportDialog: React.FC<LinkedInImportDialogProps> = ({
         <div className="p-6 space-y-4">
           {/* Instructions */}
           <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+            <p className="text-sm text-blue-900 mb-3 font-medium">
+              You can import your LinkedIn data as a <strong>ZIP file</strong>, a <strong>JSON file</strong>, or a <strong>folder containing your exported CSVs</strong>.
+            </p>
             <h3 className="font-semibold text-blue-900 mb-2">How to export your LinkedIn data:</h3>
             <ol className="text-sm text-blue-800 space-y-1 list-decimal list-inside">
               <li>Go to LinkedIn Settings & Privacy</li>
@@ -165,7 +202,7 @@ export const LinkedInImportDialog: React.FC<LinkedInImportDialogProps> = ({
               <li>Under "Get a copy of your data", click "Request archive"</li>
               <li>Select "Profile" data and request the archive</li>
               <li>Once ready, download the ZIP file</li>
-              <li>Upload the ZIP folder OR extract it and upload Profile.json</li>
+              <li>Upload the ZIP folder, Profile.json, or your folder of CSV files</li>
             </ol>
           </div>
 
@@ -177,8 +214,8 @@ export const LinkedInImportDialog: React.FC<LinkedInImportDialogProps> = ({
             onClick={handleButtonClick}
             className={`
               border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all
-              ${dragOver 
-                ? 'border-primary-500 bg-primary-50 scale-[1.02]' 
+              ${dragOver
+                ? 'border-primary-500 bg-primary-50 scale-[1.02]'
                 : 'border-slate-300 hover:border-primary-400 hover:bg-slate-50'
               }
               ${isImporting ? 'opacity-50 pointer-events-none' : ''}
@@ -192,7 +229,7 @@ export const LinkedInImportDialog: React.FC<LinkedInImportDialogProps> = ({
               className="hidden"
               disabled={isImporting}
             />
-            
+
             {isImporting ? (
               <div className="flex flex-col items-center gap-3">
                 <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary-600"></div>
@@ -206,12 +243,31 @@ export const LinkedInImportDialog: React.FC<LinkedInImportDialogProps> = ({
                     Drop your LinkedIn export file here
                   </p>
                   <p className="text-sm text-slate-500 mt-1">
-                    or click to browse (ZIP or JSON, max 10MB)
+                    click to browse (ZIP/JSON) <span className="mx-1">or</span>
+                    <button
+                      type="button"
+                      onClick={handleFolderButtonClick}
+                      className="text-primary-600 hover:text-primary-700 hover:underline font-medium"
+                    >
+                      upload folder
+                    </button>
                   </p>
                 </div>
               </div>
             )}
           </div>
+
+          {/* Hidden Folder Input */}
+          <input
+            ref={folderInputRef}
+            type="file"
+            // @ts-expect-error - webkitdirectory is non-standard but supported
+            webkitdirectory=""
+            directory=""
+            onChange={handleInputChange}
+            className="hidden"
+            disabled={isImporting}
+          />
 
           {/* What gets imported */}
           <div className="bg-slate-50 rounded-xl p-4">
