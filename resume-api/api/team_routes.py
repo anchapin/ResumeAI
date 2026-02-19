@@ -80,7 +80,7 @@ async def create_team(
             id=1,
             name=body.name,
             description=body.description,
-            owner_id=auth.user_id if hasattr(auth, 'user_id') else 1,
+            owner_id=auth.user_id if hasattr(auth, "user_id") else 1,
             member_count=1,
             resume_count=0,
             created_at=datetime.utcnow().isoformat(),
