@@ -2,8 +2,8 @@
 FastAPI routes for Resume API.
 """
 
-from typing import BinaryIO
 import asyncio
+import csv
 import io
 import os
 import re
@@ -11,9 +11,10 @@ import sys
 import zipfile
 from pathlib import Path
 
-from fastapi import APIRouter, HTTPException, Request, UploadFile, File, status
+from fastapi import APIRouter, HTTPException, Request, UploadFile, File, status, Form
 from fastapi.responses import Response
 from pydantic import BaseModel, Field
+from typing import List, Optional, Union
 
 from docx import Document
 from docx.enum.text import WD_ALIGN_PARAGRAPH
@@ -530,12 +531,12 @@ async def export_docx(request: Request, body: ResumeRequest, auth: AuthorizedAPI
 # PDF Import Endpoint and Helper Functions
 
 
-def extract_text_from_pdf(file_obj: BinaryIO) -> str:
+def extract_text_from_pdf(file_bytes: bytes) -> str:
     """
     Extract text content from PDF file.
 
     Args:
-        file_obj: PDF file object (binary)
+        file_bytes: PDF file content as bytes
 
     Returns:
         Extracted text content
@@ -545,7 +546,7 @@ def extract_text_from_pdf(file_obj: BinaryIO) -> str:
     """
     try:
         # Use pypdf (Python 3.14 compatible alternative to PyMuPDF)
-        reader = PdfReader(file_obj)
+        reader = PdfReader(io.BytesIO(file_bytes))
     except Exception as e:
         raise ValueError(f"Invalid or corrupted PDF file: {str(e)}")
 
@@ -802,19 +803,18 @@ async def import_pdf(
         )
 
     try:
-        # Check file size (max 10MB)
-        file.file.seek(0, 2)
-        size = file.file.tell()
-        file.file.seek(0)
+        # Read file content
+        content = await file.read()
 
-        if size > 10 * 1024 * 1024:
+        # Check file size (max 10MB)
+        if len(content) > 10 * 1024 * 1024:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="File too large. Maximum size is 10MB.",
             )
 
         # Extract text from PDF
-        text = await asyncio.to_thread(extract_text_from_pdf, file.file)
+        text = await asyncio.to_thread(extract_text_from_pdf, content)
 
         # Parse into JSON Resume format
         resume_data = parse_resume_text(text)
@@ -831,10 +831,10 @@ async def import_pdf(
         )
 
 
-def extract_text_from_docx(file_obj: BinaryIO) -> str:
+def extract_text_from_docx(file_bytes: bytes) -> str:
     """Extract text content from DOCX file."""
     try:
-        doc = Document(file_obj)
+        doc = Document(io.BytesIO(file_bytes))
     except Exception as e:
         raise ValueError(f"Invalid or corrupted DOCX file: {str(e)}")
 
@@ -894,19 +894,18 @@ async def import_docx(
         )
 
     try:
-        # Check file size (max 10MB)
-        file.file.seek(0, 2)
-        size = file.file.tell()
-        file.file.seek(0)
+        # Read file content
+        content = await file.read()
 
-        if size > 10 * 1024 * 1024:
+        # Check file size (max 10MB)
+        if len(content) > 10 * 1024 * 1024:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="File too large. Maximum size is 10MB.",
             )
 
         # Extract text from DOCX
-        text = await asyncio.to_thread(extract_text_from_docx, file.file)
+        text = await asyncio.to_thread(extract_text_from_docx, content)
 
         # Parse into JSON Resume format
         resume_data = parse_resume_text(text)
@@ -1147,78 +1146,101 @@ async def import_linkedin(
 )
 @rate_limit("10/minute")
 async def import_linkedin_file(
-    request: Request, file: UploadFile = File(...), auth: AuthorizedAPIKey = None
+    request: Request,
+    files: List[UploadFile] = File(...),
+    auth: AuthorizedAPIKey = None,
 ):
     """
-    Import resume from LinkedIn exported file (JSON or ZIP).
+    Import resume from LinkedIn exported file (JSON, ZIP, or multiple CSV files).
 
     Accepts multiple LinkedIn export formats:
     - Single JSON file (LinkedIn JSON export)
     - ZIP folder (LinkedIn CSV data export with multiple files like Profile.csv, Positions.csv, etc.)
+    - Multiple CSV files (Folder upload containing Profile.csv, Positions.csv, etc.)
 
     Users can download their LinkedIn data from Settings > Data privacy > Get a copy of your data.
 
     Requires API key authentication via X-API-KEY header.
 
     Rate limit: 10 requests per minute per API key.
-
-    Supported LinkedIn export formats:
-    - Profile JSON export (single JSON file)
-    - Full data archive ZIP (contains CSV files: Profile.csv, Positions.csv, Education.csv, etc.)
     """
-    # Check file type and size
-    content_type = file.content_type or ""
-    filename = file.filename or ""
-    filename_lower = filename.lower()
+    # Import LinkedIn library (moved inside function to avoid circular imports if any)
+    from lib.linkedin import LinkedInImporter
 
-    # Allowed file types
-    is_json = content_type in [
-        "application/json",
-        "text/json",
-    ] or filename_lower.endswith(".json")
-    is_zip = content_type in [
-        "application/zip",
-        "application/x-zip-compressed",
-    ] or filename_lower.endswith(".zip")
-
-    if not (is_json or is_zip):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid file type. Please upload either a JSON file or a ZIP folder containing LinkedIn CSV files.",
-        )
+    importer = LinkedInImporter()
+    linkedin_data = {}
 
     try:
-        # Read file content
-        content = await file.read()
+        # Case 1: Single file (JSON or ZIP) or single CSV
+        if len(files) == 1:
+            file = files[0]
+            content_type = file.content_type or ""
+            filename = file.filename or ""
+            filename_lower = filename.lower()
 
-        # Check file size (max 10MB for ZIP, 5MB for JSON)
-        max_size = 10 * 1024 * 1024 if is_zip else 5 * 1024 * 1024
-        if len(content) > max_size:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"File too large. Maximum size is {max_size // (1024*1024)}MB.",
+            is_json = (
+                content_type in ["application/json", "text/json"]
+                or filename_lower.endswith(".json")
+            )
+            is_zip = (
+                content_type in ["application/zip", "application/x-zip-compressed"]
+                or filename_lower.endswith(".zip")
             )
 
-        # Import LinkedIn library
-        from lib.linkedin import LinkedInImporter
+            # Read content
+            content = await file.read()
 
-        importer = LinkedInImporter()
-        linkedin_data = {}
-
-        if is_json:
-            # Handle JSON file
-            try:
-                import json
-
-                linkedin_data = json.loads(content.decode("utf-8"))
-            except json.JSONDecodeError as e:
+            # Check size
+            max_size = 10 * 1024 * 1024 if is_zip else 5 * 1024 * 1024
+            if len(content) > max_size:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=f"Invalid JSON format: {str(e)}",
+                    detail=f"File too large. Maximum size is {max_size // (1024*1024)}MB.",
                 )
+
+            if is_json:
+                try:
+                    import json
+
+                    linkedin_data = json.loads(content.decode("utf-8"))
+                except json.JSONDecodeError as e:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail=f"Invalid JSON format: {str(e)}",
+                    )
+            elif is_zip:
+                linkedin_data = await _parse_linkedin_csv_zip(content, importer)
+            else:
+                # If it's a single file but not JSON/ZIP, assume it's a CSV from a folder upload
+                # We need to process it as a single CSV in a collection
+                # Or reject if user didn't upload enough files (e.g. just Profile.csv)
+                # Let's try to process it as part of a CSV set
+                csv_files = {filename: content}
+                linkedin_data = _parse_linkedin_csv_files(csv_files)
+
+        # Case 2: Multiple files (CSV folder upload)
         else:
-            # Handle ZIP file containing CSV exports
-            linkedin_data = await _parse_linkedin_csv_zip(content, importer)
+            csv_files = {}
+            total_size = 0
+            for file in files:
+                content = await file.read()
+                total_size += len(content)
+                if file.filename:
+                    csv_files[file.filename] = content
+
+            if total_size > 20 * 1024 * 1024:  # 20MB total limit
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Total upload size exceeds 20MB limit.",
+                )
+
+            linkedin_data = _parse_linkedin_csv_files(csv_files)
+
+        if not linkedin_data:
+             raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="No valid LinkedIn data found in upload.",
+            )
 
         # Parse with the importer
         resume_data_dict = importer.parse_export(linkedin_data, mode="overwrite")
@@ -1240,7 +1262,60 @@ async def import_linkedin_file(
         )
 
 
-async def _parse_linkedin_csv_zip(zip_content: bytes, importer) -> dict:
+def _parse_linkedin_csv_files(csv_files: dict) -> dict:
+    """
+    Parse a dictionary of filename -> content bytes as LinkedIn CSVs.
+    """
+    import csv
+
+    linkedin_data = {}
+    csv_mappings = {
+        "Profile.csv": "profile",
+        "Positions.csv": "positions",
+        "Education.csv": "education",
+        "Skills.csv": "skills",
+        "Certifications.csv": "certifications",
+        "Email Addresses.csv": "emails",
+        "PhoneNumbers.csv": "phones",
+    }
+
+    # Process standard files
+    for filename, content_bytes in csv_files.items():
+        # Check against mappings (case insensitive match)
+        for map_file, data_key in csv_mappings.items():
+            if filename.lower().endswith(map_file.lower()):
+                try:
+                    content = content_bytes.decode("utf-8")
+                    rows = list(csv.DictReader(io.StringIO(content)))
+                    if rows:
+                        cleaned_rows = [
+                            {k: v.strip() if v else "" for k, v in row.items()}
+                            for row in rows
+                        ]
+                        linkedin_data[data_key] = cleaned_rows
+                except Exception as e:
+                    print(f"Warning: Could not parse {filename}: {e}")
+
+    # Process Profile Summary
+    for filename, content_bytes in csv_files.items():
+        if filename.lower().endswith("profile summary.csv"):
+            try:
+                content = content_bytes.decode("utf-8")
+                rows = list(csv.DictReader(io.StringIO(content)))
+                if rows and rows[0].get("Summary"):
+                    if "profile" not in linkedin_data:
+                        linkedin_data["profile"] = []
+                    if linkedin_data["profile"] and isinstance(linkedin_data["profile"], list):
+                        linkedin_data["profile"][0]["Summary"] = rows[0]["Summary"]
+            except Exception:
+                pass
+
+    return _convert_csv_data_to_importer_format(linkedin_data)
+
+
+async def _parse_linkedin_csv_zip(
+    zip_content: bytes, importer
+) -> dict:
     """
     Parse LinkedIn CSV data export ZIP file.
 
@@ -1254,7 +1329,7 @@ async def _parse_linkedin_csv_zip(zip_content: bytes, importer) -> dict:
     Returns:
         Dictionary with parsed LinkedIn data
     """
-    import csv as csv_module
+    import csv
 
     linkedin_data = {}
 
@@ -1269,13 +1344,14 @@ async def _parse_linkedin_csv_zip(zip_content: bytes, importer) -> dict:
                 "Education.csv": "education",
                 "Skills.csv": "skills",
                 "Certifications.csv": "certifications",
+                "Email Addresses.csv": "emails",
+                "PhoneNumbers.csv": "phones",
             }
 
             for csv_filename, data_key in csv_mappings.items():
                 # Find the CSV file (may be at root or in a subfolder)
                 matching_files = [
-                    f
-                    for f in zip_file.namelist()
+                    f for f in zip_file.namelist()
                     if f.lower().endswith(csv_filename.lower())
                 ]
 
@@ -1284,7 +1360,7 @@ async def _parse_linkedin_csv_zip(zip_content: bytes, importer) -> dict:
                         csv_file_path = matching_files[0]
                         with zip_file.open(csv_file_path) as f:
                             content = f.read().decode("utf-8")
-                            rows = list(csv_module.DictReader(io.StringIO(content)))
+                            rows = list(csv.DictReader(io.StringIO(content)))
 
                             if rows:
                                 # Clean up empty values in rows
@@ -1303,16 +1379,15 @@ async def _parse_linkedin_csv_zip(zip_content: bytes, importer) -> dict:
 
             # Also check for Profile Summary.csv if present
             profile_summary_files = [
-                f
-                for f in zip_file.namelist()
+                f for f in zip_file.namelist()
                 if f.lower().endswith("profile summary.csv")
             ]
             if profile_summary_files:
                 try:
                     with zip_file.open(profile_summary_files[0]) as f:
                         content = f.read().decode("utf-8")
-                        rows = list(csv_module.DictReader(io.StringIO(content)))
-                        if rows and "Summary" in rows[0]:
+                        rows = list(csv.DictReader(io.StringIO(content)))
+                        if rows and rows[0].get("Summary"):
                             # Add summary to profile data if it exists
                             if "profile" not in linkedin_data:
                                 linkedin_data["profile"] = []
@@ -1326,8 +1401,6 @@ async def _parse_linkedin_csv_zip(zip_content: bytes, importer) -> dict:
                     pass  # Profile Summary is optional
 
         # Convert CSV data to format expected by LinkedInImporter
-        # The importer expects single-level dict, but CSV data is dict of lists
-        # We need to flatten it appropriately
         converted_data = _convert_csv_data_to_importer_format(linkedin_data)
         return converted_data
 
@@ -1371,10 +1444,26 @@ def _convert_csv_data_to_importer_format(csv_data: dict) -> dict:
         if csv_data.get("emails"):
             email_list = []
             for email_row in csv_data["emails"]:
-                if email_row.get("Email Address"):
-                    email_list.append({"emailAddress": email_row["Email Address"]})
+                email = email_row.get("Email Address") or email_row.get("email")
+                if email:
+                    # Prefer confirmed and primary emails
+                    is_primary = email_row.get("Primary", "").lower() == "yes"
+                    email_list.append({"email": email, "primary": is_primary})
+            
             if email_list:
-                result["emailAddress"] = email_list[0].get("emailAddress", "")
+                # Sort to put primary email first
+                email_list.sort(key=lambda x: x["primary"], reverse=True)
+                result["emailAddress"] = email_list[0]["email"]
+
+        # Handle phone numbers (from PhoneNumbers.csv)
+        if csv_data.get("phones"):
+            phone_list = []
+            for phone_row in csv_data["phones"]:
+                number = phone_row.get("Number") or phone_row.get("number")
+                if number:
+                    phone_list.append({"phoneNumber": number})
+            if phone_list:
+                result["phoneNumbers"] = phone_list
 
     # Handle positions (work experience)
     if "positions" in csv_data:
@@ -1399,11 +1488,18 @@ def _convert_csv_data_to_importer_format(csv_data: dict) -> dict:
     if "education" in csv_data:
         education = []
         for edu in csv_data["education"]:
+            # Try multiple field names for field of study
+            field_of_study = (
+                edu.get("Field of Study") 
+                or edu.get("Activities") 
+                or edu.get("Notes") 
+                or ""
+            )
+            
             edu_entry = {
                 "schoolName": edu.get("School Name", ""),
                 "degreeName": edu.get("Degree Name", ""),
-                "fieldOfStudy": edu.get("Field of Study", "")
-                or edu.get("Activities", ""),
+                "fieldOfStudy": field_of_study,
                 "timePeriod": {
                     "startDate": {"year": _extract_year(edu.get("Start Date", ""))},
                     "endDate": {"year": _extract_year(edu.get("End Date", ""))},
@@ -1435,7 +1531,8 @@ def _convert_csv_data_to_importer_format(csv_data: dict) -> dict:
     if "skills" in csv_data:
         skills = []
         for skill_row in csv_data["skills"]:
-            skill_name = skill_row.get("Skill", "")
+            # Try both "Name" and "Skill" as column names
+            skill_name = skill_row.get("Name") or skill_row.get("Skill") or skill_row.get("skill")
             if skill_name:
                 skills.append({"name": skill_name})
         if skills:

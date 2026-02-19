@@ -128,13 +128,21 @@ export async function importFromLinkedInUrl(linkedinUrl: string): Promise<Resume
  * @param file - LinkedIn export JSON file
  * @returns Parsed resume data
  */
-export async function importFromLinkedInFile(file: File): Promise<ResumeData> {
+export async function importFromLinkedInFile(files: File | File[] | FileList): Promise<ResumeData> {
   const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
   const apiKey = localStorage.getItem('RESUMEAI_API_KEY');
 
   try {
     const formData = new FormData();
-    formData.append('file', file);
+
+    if (files instanceof File) {
+      formData.append('files', files);
+    } else {
+      // Handle FileList or array of Files
+      Array.from(files as Iterable<File>).forEach(file => {
+        formData.append('files', file);
+      });
+    }
 
     const response = await fetch(`${API_URL}/v1/import/linkedin-file`, {
       method: 'POST',

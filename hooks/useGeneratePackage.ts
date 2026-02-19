@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { ResumeData, SimpleResumeData } from '../types';
 
 // Get API URL from environment variable
-const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 const API_KEY = import.meta.env.RESUMEAI_API_KEY || '';
 
 // Local storage keys
@@ -13,28 +13,52 @@ const DRAFT_STORAGE_KEY = 'resumeai_draft';
 export function convertToResumeData(data: SimpleResumeData): ResumeData {
     return {
         basics: {
-            name: data.name,
-            email: data.email,
-            phone: data.phone,
-            url: undefined,
-            summary: undefined,
-            label: data.role
+            name: data.name || undefined,
+            email: data.email || undefined,
+            phone: data.phone || undefined,
+            summary: data.summary || undefined,
+            label: data.role || undefined
         },
         location: {
-            city: data.location,
-            region: undefined,
-            countryCode: undefined
+            city: data.location || undefined
         },
-        work: data.experience.map((exp) => ({
-            company: exp.company,
-            position: exp.role,
-            startDate: exp.startDate,
-            endDate: exp.endDate,
-            summary: exp.description,
-            highlights: exp.tags
+        work: (data.experience || []).map((exp) => ({
+            company: exp.company || undefined,
+            position: exp.role || undefined,
+            startDate: exp.startDate || undefined,
+            endDate: exp.endDate || undefined,
+            current: exp.current,
+            summary: exp.description || undefined,
+            highlights: exp.tags || []
         })),
-        education: [],
-        skills: []
+        education: (data.education || []).map((edu) => ({
+            institution: edu.institution || undefined,
+            area: edu.area || undefined,
+            studyType: edu.studyType || undefined,
+            startDate: edu.startDate || undefined,
+            endDate: edu.endDate || undefined,
+            courses: edu.courses || []
+        })),
+        skills: (data.skills || []).map((skill) => ({
+            name: skill || undefined
+        })),
+        projects: (data.projects || []).map((proj) => ({
+            name: proj.name || undefined,
+            description: proj.description || undefined,
+            url: proj.url || undefined,
+            startDate: proj.startDate || undefined,
+            endDate: proj.endDate || undefined,
+            highlights: proj.highlights || [],
+            roles: proj.roles || []
+        })),
+        profiles: [],
+        volunteer: [],
+        awards: [],
+        certificates: [],
+        publications: [],
+        languages: [],
+        interests: [],
+        references: []
     };
 }
 
@@ -48,7 +72,8 @@ export interface TailorRequest {
 export interface TailoredResumeResponse {
     resume_data: ResumeData;
     keywords: string[];
-    suggestions?: Record<string, unknown>;
+    suggestions?: string[];
+    markdown?: string;
 }
 
 export interface RenderPDFRequest {
@@ -91,6 +116,8 @@ export const useGeneratePackage = () => {
     const [lastSaved, setLastSaved] = useState<Date | null>(null);
 
     // Load saved resume data on mount
+    // REMOVED: This was causing stale data to be displayed in the Workspace
+    /*
     useEffect(() => {
         const savedResume = loadFromLocalStorage<ResumeData>(RESUME_STORAGE_KEY);
         if (savedResume) {
@@ -101,6 +128,7 @@ export const useGeneratePackage = () => {
             });
         }
     }, []);
+    */
 
     /**
      * Save resume data to local storage
@@ -151,6 +179,7 @@ export const useGeneratePackage = () => {
      * Tailor a resume to a job description using the production API
      */
     const generatePackage = async (requestBody: TailorRequest) => {
+        console.log('GEMINI_CODE_ACTIVE', requestBody);
         setLoading(true);
         setError(null);
         try {
@@ -220,6 +249,33 @@ export const useGeneratePackage = () => {
     };
 
     /**
+     * Render a markdown preview of the resume using the production API
+     */
+    const renderMarkdown = async (requestBody: RenderPDFRequest): Promise<string> => {
+        try {
+            const response = await fetch(`${API_URL}/v1/render/markdown`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(API_KEY && { 'X-API-KEY': API_KEY }),
+                },
+                body: JSON.stringify(requestBody)
+            });
+
+            if (!response.ok) {
+                const errData = await response.json().catch(() => ({}));
+                throw new Error(errData.detail || `Server error: ${response.status}`);
+            }
+
+            const result = await response.json();
+            return result.markdown;
+        } catch (err: any) {
+            const message = err.message || "Failed to render markdown";
+            throw new Error(message);
+        }
+    };
+
+    /**
      * Test connection to backend API
      */
     const testConnection = useCallback(async (): Promise<boolean> => {
@@ -246,6 +302,7 @@ export const useGeneratePackage = () => {
     return {
         generatePackage,
         downloadPDF,
+        renderMarkdown,
         saveResume,
         saveDraft,
         loadDraft,
