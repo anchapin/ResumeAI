@@ -15,10 +15,8 @@ from fastapi import status
 from fastapi.testclient import TestClient
 from fastapi import FastAPI, Depends
 from config.dependencies import (
-    verify_api_key,
-    APIKeyAuthInfo,
-    get_api_key_identifier,
-    require_master_key,
+    get_api_key,
+    get_request_identifier,
     rate_limit_exceeded_handler,
 )
 from config import settings as config_settings
@@ -31,14 +29,12 @@ def app():
 
     # Add a test route that requires authentication
     @app.get("/test-auth")
-    async def test_route(auth_info: APIKeyAuthInfo = Depends(verify_api_key)):
-        if auth_info and auth_info.is_authorized:
-            return {
-                "authorized": True,
-                "master": auth_info.is_master,
-                "api_key": auth_info.api_key,
-            }
-        return {"authorized": False}
+    async def test_route(api_key: str = Depends(get_api_key)):
+        # If execution reaches here, auth succeeded
+        return {
+            "authorized": True,
+            "api_key": api_key,
+        }
 
     return app
 
@@ -63,11 +59,10 @@ class TestAuthenticationMiddleware:
             assert response.status_code == 200
             data = response.json()
             assert data["authorized"] is True
-            assert data["master"] is False
             assert data["api_key"] == "valid-test-key"
 
     def test_valid_master_api_key_acceptance(self, client):
-        """Test that valid master API key is accepted and marked as master."""
+        """Test that valid master API key is accepted."""
         # Mock settings to have a master API key
         with patch.object(config_settings, "require_api_key", True), patch.object(
             config_settings, "master_api_key", "master-test-key"
@@ -79,7 +74,6 @@ class TestAuthenticationMiddleware:
             assert response.status_code == 200
             data = response.json()
             assert data["authorized"] is True
-            assert data["master"] is True
             assert data["api_key"] == "master-test-key"
 
     def test_invalid_api_key_rejection(self, client):
@@ -102,7 +96,7 @@ class TestAuthenticationMiddleware:
 
             response = client.get("/test-auth")  # No X-API-KEY header
             assert response.status_code == 401
-            assert "API key missing" in response.json()["detail"]
+            assert "API key is required" in response.json()["detail"]
 
     def test_development_mode_bypass(self, client):
         """Test that authentication is bypassed when disabled."""
@@ -113,8 +107,7 @@ class TestAuthenticationMiddleware:
             assert response.status_code == 200
             data = response.json()
             assert data["authorized"] is True
-            assert data["master"] is False
-            assert data["api_key"] is None
+            assert data["api_key"] == "anonymous"
 
     def test_multiple_api_key_formats(self, client):
         """Test various API key formats."""
@@ -162,67 +155,63 @@ class TestAuthenticationMiddleware:
             )  # Whitespace-only should be treated as invalid
 
     @pytest.mark.asyncio
-    async def test_verify_api_key_direct_call_valid_key(self):
-        """Test direct call to verify_api_key with valid key."""
+    async def test_get_api_key_direct_call_valid_key(self):
+        """Test direct call to get_api_key with valid key."""
         with patch.object(config_settings, "require_api_key", True), patch.object(
             config_settings, "api_keys", ["direct-test-key"]
         ):
 
-            auth_info = await verify_api_key("direct-test-key")
-            assert auth_info.is_authorized is True
-            assert auth_info.is_master is False
-            assert auth_info.api_key == "direct-test-key"
+            result = await get_api_key("direct-test-key")
+            assert result == "direct-test-key"
 
     @pytest.mark.asyncio
-    async def test_verify_api_key_direct_call_master_key(self):
-        """Test direct call to verify_api_key with master key."""
+    async def test_get_api_key_direct_call_master_key(self):
+        """Test direct call to get_api_key with master key."""
         with patch.object(config_settings, "require_api_key", True), patch.object(
             config_settings, "master_api_key", "master-direct-key"
         ):
 
-            auth_info = await verify_api_key("master-direct-key")
-            assert auth_info.is_authorized is True
-            assert auth_info.is_master is True
-            assert auth_info.api_key == "master-direct-key"
+            result = await get_api_key("master-direct-key")
+            assert result == "master-direct-key"
 
     @pytest.mark.asyncio
-    async def test_verify_api_key_direct_call_invalid_key(self):
-        """Test direct call to verify_api_key with invalid key raises exception."""
+    async def test_get_api_key_direct_call_invalid_key(self):
+        """Test direct call to get_api_key with invalid key raises exception."""
         with patch.object(config_settings, "require_api_key", True), patch.object(
             config_settings, "api_keys", ["some-valid-key"]
         ):
 
             with pytest.raises(Exception) as exc_info:
-                await verify_api_key("invalid-direct-key")
+                await get_api_key("invalid-direct-key")
 
             assert exc_info.value.status_code == status.HTTP_403_FORBIDDEN
             assert "Invalid API key" in exc_info.value.detail
 
     @pytest.mark.asyncio
-    async def test_verify_api_key_direct_call_missing_key(self):
-        """Test direct call to verify_api_key with missing key raises exception."""
+    async def test_get_api_key_direct_call_missing_key(self):
+        """Test direct call to get_api_key with missing key raises exception."""
         with patch.object(config_settings, "require_api_key", True):
 
             with pytest.raises(Exception) as exc_info:
-                await verify_api_key(None)
+                await get_api_key(None)
 
             assert exc_info.value.status_code == status.HTTP_401_UNAUTHORIZED
-            assert "API key missing" in exc_info.value.detail
+            assert "API key is required" in exc_info.value.detail
 
-    def test_verify_api_key_with_none_header(self, client):
+    def test_get_api_key_with_none_header(self, client):
         """Test behavior when X-API-KEY header is explicitly set to None."""
         with patch.object(config_settings, "require_api_key", True):
             # Using TestClient, passing None as header value removes the header
             response = client.get("/test-auth")
             assert response.status_code == 401
-            assert "API key missing" in response.json()["detail"]
+            assert "API key is required" in response.json()["detail"]
 
-    def test_verify_api_key_empty_string_header(self, client):
+    def test_get_api_key_empty_string_header(self, client):
         """Test behavior when X-API-KEY header is an empty string."""
         with patch.object(config_settings, "require_api_key", True):
             response = client.get("/test-auth", headers={"X-API-KEY": ""})
             assert response.status_code == 401
-            assert "API key missing" in response.json()["detail"]
+            assert "API key is required" in response.json()["detail"]
 
     def test_master_key_takes_precedence_over_regular_keys(self, client):
         """Test that master key takes precedence over regular keys."""
@@ -235,7 +224,6 @@ class TestAuthenticationMiddleware:
             assert response.status_code == 200
             data = response.json()
             assert data["authorized"] is True
-            assert data["master"] is True
             assert data["api_key"] == "master-key"
 
     def test_regular_key_works_when_master_key_present(self, client):
@@ -249,7 +237,6 @@ class TestAuthenticationMiddleware:
             assert response.status_code == 200
             data = response.json()
             assert data["authorized"] is True
-            assert data["master"] is False
             assert data["api_key"] == "regular-key"
 
     def test_case_sensitivity_of_api_keys(self, client):
@@ -269,45 +256,11 @@ class TestAuthenticationMiddleware:
             assert response.status_code == 403
 
 
-class TestAPIKeyAuthInfoModel:
-    """Test the APIKeyAuthInfo Pydantic model."""
-
-    def test_api_key_auth_info_creation(self):
-        """Test creation of APIKeyAuthInfo model instances."""
-        # Test authorized, non-master
-        auth_info = APIKeyAuthInfo(
-            is_authorized=True, is_master=False, api_key="test-key"
-        )
-        assert auth_info.is_authorized is True
-        assert auth_info.is_master is False
-        assert auth_info.api_key == "test-key"
-
-        # Test authorized, master
-        auth_info = APIKeyAuthInfo(
-            is_authorized=True, is_master=True, api_key="master-key"
-        )
-        assert auth_info.is_authorized is True
-        assert auth_info.is_master is True
-        assert auth_info.api_key == "master-key"
-
-        # Test unauthorized
-        auth_info = APIKeyAuthInfo(is_authorized=False, is_master=False, api_key=None)
-        assert auth_info.is_authorized is False
-        assert auth_info.is_master is False
-        assert auth_info.api_key is None
-
-        # Test defaults
-        auth_info = APIKeyAuthInfo(is_authorized=True)
-        assert auth_info.is_authorized is True
-        assert auth_info.is_master is False  # Default value
-        assert auth_info.api_key is None  # Default value
-
-
 class TestAPIKeyIdentifierFunction:
-    """Test the get_api_key_identifier function."""
+    """Test the get_request_identifier function."""
 
-    def test_get_api_key_identifier_with_api_key_and_auth_required(self):
-        """Test get_api_key_identifier when API key is present and auth is required."""
+    def test_get_request_identifier_with_api_key_and_auth_required(self):
+        """Test get_request_identifier when API key is present and auth is required."""
         from starlette.datastructures import Headers
 
         # Create a mock request with headers
@@ -318,29 +271,32 @@ class TestAPIKeyIdentifierFunction:
         request = MockRequest({"X-API-KEY": "test-key"})
 
         with patch.object(config_settings, "require_api_key", True):
-            identifier = get_api_key_identifier(request)
-            assert identifier == "apikey:test-key"
+            identifier = get_request_identifier(request)
+            assert identifier == "test-key"
 
-    def test_get_api_key_identifier_with_api_key_but_auth_not_required(self):
-        """Test get_api_key_identifier when API key is present but auth is not required."""
+    def test_get_request_identifier_with_api_key_but_auth_not_required(self):
+        """Test get_request_identifier when API key is present but auth is not required."""
+        # Logic in dependencies.py:
+        # def get_request_identifier(request):
+        #     api_key = request.headers.get("X-API-KEY")
+        #     if api_key:
+        #         return api_key
+        #     return get_remote_address(request)
+        # It doesn't check settings.require_api_key. It just checks presence of header.
+
         from starlette.datastructures import Headers
 
-        # Create a mock request with headers
         class MockRequest:
             def __init__(self, headers):
                 self.headers = Headers(headers)
 
         request = MockRequest({"X-API-KEY": "test-key"})
 
-        # Mock get_remote_address to return a fixed IP
-        with patch.object(config_settings, "require_api_key", False), patch(
-            "config.dependencies.get_remote_address", return_value="192.168.1.1"
-        ):
-            identifier = get_api_key_identifier(request)
-            assert identifier == "ip:192.168.1.1"
+        identifier = get_request_identifier(request)
+        assert identifier == "test-key"
 
-    def test_get_api_key_identifier_without_api_key(self):
-        """Test get_api_key_identifier when no API key is present."""
+    def test_get_request_identifier_without_api_key(self):
+        """Test get_request_identifier when no API key is present."""
         from starlette.datastructures import Headers
 
         # Create a mock request without API key header
@@ -354,49 +310,8 @@ class TestAPIKeyIdentifierFunction:
         with patch(
             "config.dependencies.get_remote_address", return_value="192.168.1.1"
         ):
-            identifier = get_api_key_identifier(request)
-            assert identifier == "ip:192.168.1.1"
-
-
-class TestRequireMasterKeyFunction:
-    """Test the require_master_key function."""
-
-    @pytest.mark.asyncio
-    async def test_require_master_key_with_master_key(self):
-        """Test require_master_key when the authenticated user has master key."""
-        from config.dependencies import APIKeyAuthInfo
-
-        # Create an auth info object representing a master key
-        master_auth = APIKeyAuthInfo(
-            is_authorized=True, is_master=True, api_key="master-key"
-        )
-
-        # Call the function directly
-        result = await require_master_key(master_auth)
-
-        # Should return the same auth info since it's a master key
-        assert result.is_authorized is True
-        assert result.is_master is True
-        assert result.api_key == "master-key"
-
-    @pytest.mark.asyncio
-    async def test_require_master_key_with_non_master_key_raises_error(self):
-        """Test require_master_key raises error when user doesn't have master key."""
-        from config.dependencies import APIKeyAuthInfo
-        from fastapi import status
-
-        # Create an auth info object representing a regular key
-        regular_auth = APIKeyAuthInfo(
-            is_authorized=True, is_master=False, api_key="regular-key"
-        )
-
-        # Call the function and expect an exception
-        with pytest.raises(Exception) as exc_info:
-            await require_master_key(regular_auth)
-
-        # Check that the right exception was raised
-        assert exc_info.value.status_code == status.HTTP_403_FORBIDDEN
-        assert "Master API key required for this operation" in exc_info.value.detail
+            identifier = get_request_identifier(request)
+            assert identifier == "192.168.1.1"
 
 
 class TestRateLimitExceededHandler:
