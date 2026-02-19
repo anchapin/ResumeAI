@@ -140,7 +140,7 @@ class TestExtractTextFromDocx:
 
     def test_extract_text_from_valid_docx(self, sample_docx_bytes):
         """Test text extraction from a valid DOCX file."""
-        text = extract_text_from_docx(sample_docx_bytes)
+        text = extract_text_from_docx(io.BytesIO(sample_docx_bytes))
 
         assert isinstance(text, str)
         assert "John Doe" in text
@@ -151,7 +151,7 @@ class TestExtractTextFromDocx:
 
     def test_extract_text_from_simple_docx(self, simple_docx_bytes):
         """Test text extraction from a minimal DOCX file."""
-        text = extract_text_from_docx(simple_docx_bytes)
+        text = extract_text_from_docx(io.BytesIO(simple_docx_bytes))
 
         assert "Jane Smith" in text
         assert "jane.smith@example.com" in text
@@ -159,7 +159,7 @@ class TestExtractTextFromDocx:
 
     def test_extract_text_from_docx_with_tables(self, docx_with_tables):
         """Test that text is extracted from tables in DOCX."""
-        text = extract_text_from_docx(docx_with_tables)
+        text = extract_text_from_docx(io.BytesIO(docx_with_tables))
 
         assert "Table Resume" in text
         assert "Python" in text
@@ -170,7 +170,7 @@ class TestExtractTextFromDocx:
         corrupted_bytes = b"This is not a valid DOCX file"
 
         with pytest.raises(ValueError) as exc_info:
-            extract_text_from_docx(corrupted_bytes)
+            extract_text_from_docx(io.BytesIO(corrupted_bytes))
 
         assert "Invalid or corrupted DOCX file" in str(exc_info.value)
 
@@ -182,7 +182,7 @@ class TestExtractTextFromDocx:
         docx_bytes.seek(0)
 
         with pytest.raises(ValueError) as exc_info:
-            extract_text_from_docx(docx_bytes.getvalue())
+            extract_text_from_docx(io.BytesIO(docx_bytes.getvalue()))
 
         assert "No text content found" in str(exc_info.value)
 
@@ -192,7 +192,7 @@ class TestParseResumeText:
 
     def test_parse_resume_with_all_sections(self, sample_docx_bytes):
         """Test parsing resume text with all standard sections."""
-        text = extract_text_from_docx(sample_docx_bytes)
+        text = extract_text_from_docx(io.BytesIO(sample_docx_bytes))
         resume = parse_resume_text(text)
 
         assert isinstance(resume, dict)
@@ -203,42 +203,42 @@ class TestParseResumeText:
 
     def test_parse_resume_name_extraction(self, sample_docx_bytes):
         """Test that name is correctly extracted."""
-        text = extract_text_from_docx(sample_docx_bytes)
+        text = extract_text_from_docx(io.BytesIO(sample_docx_bytes))
         resume = parse_resume_text(text)
 
         assert resume["basics"].get("name") == "John Doe"
 
     def test_parse_resume_email_extraction(self, sample_docx_bytes):
         """Test that email is correctly extracted."""
-        text = extract_text_from_docx(sample_docx_bytes)
+        text = extract_text_from_docx(io.BytesIO(sample_docx_bytes))
         resume = parse_resume_text(text)
 
         assert "john.doe@example.com" in resume["basics"].get("email", "")
 
     def test_parse_resume_phone_extraction(self, sample_docx_bytes):
         """Test that phone number is correctly extracted."""
-        text = extract_text_from_docx(sample_docx_bytes)
+        text = extract_text_from_docx(io.BytesIO(sample_docx_bytes))
         resume = parse_resume_text(text)
 
         assert "555" in resume["basics"].get("phone", "")
 
     def test_parse_resume_work_extraction(self, sample_docx_bytes):
         """Test that work experience is extracted."""
-        text = extract_text_from_docx(sample_docx_bytes)
+        text = extract_text_from_docx(io.BytesIO(sample_docx_bytes))
         resume = parse_resume_text(text)
 
         assert len(resume.get("work", [])) >= 0  # May vary based on parsing
 
     def test_parse_resume_education_extraction(self, sample_docx_bytes):
         """Test that education is extracted."""
-        text = extract_text_from_docx(sample_docx_bytes)
+        text = extract_text_from_docx(io.BytesIO(sample_docx_bytes))
         resume = parse_resume_text(text)
 
         assert len(resume.get("education", [])) >= 0
 
     def test_parse_resume_skills_extraction(self, sample_docx_bytes):
         """Test that skills are extracted."""
-        text = extract_text_from_docx(sample_docx_bytes)
+        text = extract_text_from_docx(io.BytesIO(sample_docx_bytes))
         resume = parse_resume_text(text)
 
         skills = resume.get("skills", [])
