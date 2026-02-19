@@ -2,6 +2,7 @@
 FastAPI routes for Resume API.
 """
 
+from typing import BinaryIO
 import asyncio
 import io
 import os
@@ -529,12 +530,12 @@ async def export_docx(request: Request, body: ResumeRequest, auth: AuthorizedAPI
 # PDF Import Endpoint and Helper Functions
 
 
-def extract_text_from_pdf(file_bytes: bytes) -> str:
+def extract_text_from_pdf(file_obj: BinaryIO) -> str:
     """
     Extract text content from PDF file.
 
     Args:
-        file_bytes: PDF file content as bytes
+        file_obj: PDF file object (binary)
 
     Returns:
         Extracted text content
@@ -544,7 +545,7 @@ def extract_text_from_pdf(file_bytes: bytes) -> str:
     """
     try:
         # Use pypdf (Python 3.14 compatible alternative to PyMuPDF)
-        reader = PdfReader(io.BytesIO(file_bytes))
+        reader = PdfReader(file_obj)
     except Exception as e:
         raise ValueError(f"Invalid or corrupted PDF file: {str(e)}")
 
@@ -801,18 +802,19 @@ async def import_pdf(
         )
 
     try:
-        # Read file content
-        content = await file.read()
-
         # Check file size (max 10MB)
-        if len(content) > 10 * 1024 * 1024:
+        file.file.seek(0, 2)
+        size = file.file.tell()
+        file.file.seek(0)
+
+        if size > 10 * 1024 * 1024:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="File too large. Maximum size is 10MB.",
             )
 
         # Extract text from PDF
-        text = await asyncio.to_thread(extract_text_from_pdf, content)
+        text = await asyncio.to_thread(extract_text_from_pdf, file.file)
 
         # Parse into JSON Resume format
         resume_data = parse_resume_text(text)
@@ -829,10 +831,10 @@ async def import_pdf(
         )
 
 
-def extract_text_from_docx(file_bytes: bytes) -> str:
+def extract_text_from_docx(file_obj: BinaryIO) -> str:
     """Extract text content from DOCX file."""
     try:
-        doc = Document(io.BytesIO(file_bytes))
+        doc = Document(file_obj)
     except Exception as e:
         raise ValueError(f"Invalid or corrupted DOCX file: {str(e)}")
 
@@ -892,18 +894,19 @@ async def import_docx(
         )
 
     try:
-        # Read file content
-        content = await file.read()
-
         # Check file size (max 10MB)
-        if len(content) > 10 * 1024 * 1024:
+        file.file.seek(0, 2)
+        size = file.file.tell()
+        file.file.seek(0)
+
+        if size > 10 * 1024 * 1024:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="File too large. Maximum size is 10MB.",
             )
 
         # Extract text from DOCX
-        text = await asyncio.to_thread(extract_text_from_docx, content)
+        text = await asyncio.to_thread(extract_text_from_docx, file.file)
 
         # Parse into JSON Resume format
         resume_data = parse_resume_text(text)
