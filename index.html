@@ -12,21 +12,7 @@
     <link rel="apple-touch-icon" href="/icon-192.png" />
     <title>ResumeAI SaaS</title>
     
-    <!-- PWA Service Worker Registration -->
-    <script>
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js')
-            .then((registration) => {
-              console.log('SW registered:', registration.scope);
-            })
-            .catch((error) => {
-              console.log('SW registration failed:', error);
-            });
-        });
-      }
-    </script>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.tailwindcss.com/3.4.15"></script>
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
       rel="stylesheet"
@@ -100,17 +86,6 @@
       .markdown-content strong { font-weight: 600; color: #0f172a; }
       .markdown-content em { color: #64748b; font-style: italic; }
     </style>
-  <script type="importmap">
-{
-  "imports": {
-    "recharts": "https://esm.sh/recharts@^3.7.0",
-    "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
-    "react/": "https://esm.sh/react@^19.2.4/",
-    "react": "https://esm.sh/react@^19.2.4",
-    "react-markdown": "https://esm.sh/react-markdown@9?deps=react@19.2.4"
-  }
-}
-</script>
 </head>
   <body>
     <div id="root"></div>

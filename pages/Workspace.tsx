@@ -19,10 +19,10 @@ interface WorkspaceProps {
 }
 
 /** Available tab types for the workspace */
-type TabType = 'Resume' | 'Keywords' | 'Suggestions';
+type TabType = 'Resume' | 'Keywords' | 'Suggestions' | 'Adjust';
 
 /** Available tabs for the workspace */
-const TABS: TabType[] = ['Resume', 'Keywords', 'Suggestions'];
+const TABS: TabType[] = ['Resume', 'Keywords', 'Suggestions', 'Adjust'];
 
 /**
  * @component
@@ -41,9 +41,14 @@ const TABS: TabType[] = ['Resume', 'Keywords', 'Suggestions'];
  * ```
  */
 const Workspace: React.FC<WorkspaceProps> = ({ resumeData, onNavigate }) => {
-    const { generatePackage, downloadPDF, loading, error, data } = useGeneratePackage();
+    const { generatePackage, downloadPDF, renderMarkdown, loading, error, data } = useGeneratePackage();
     const { variants: apiVariants, loading: variantsLoading, error: variantsError } = useVariants();
     const [activeTab, setActiveTab] = useState<TabType>('Resume');
+
+    // Local Resume Data for manual adjustments
+    const [localResumeData, setLocalResumeData] = useState(convertToResumeData(resumeData));
+    const [markdownPreview, setMarkdownPreview] = useState<string | null>(null);
+    const [isRefreshingMarkdown, setIsRefreshingMarkdown] = useState(false);
 
     // Form State
     const [companyName, setCompanyName] = useState('');
@@ -60,6 +65,34 @@ const Workspace: React.FC<WorkspaceProps> = ({ resumeData, onNavigate }) => {
         }
     }, [apiVariants]);
 
+    // Update local data when tailored data arrives
+    useEffect(() => {
+        if (data?.resume_data) {
+            setLocalResumeData(data.resume_data);
+        }
+        if (data?.markdown) {
+            setMarkdownPreview(data.markdown);
+        }
+    }, [data]);
+
+    const handleRefreshMarkdown = async () => {
+        setIsRefreshingMarkdown(true);
+        try {
+            const md = await renderMarkdown({
+                resume_data: localResumeData,
+                variant: variant
+            });
+            setMarkdownPreview(md);
+            setActiveTab('Resume');
+            showSuccessToast("Preview updated with your manual changes!");
+        } catch (e) {
+            console.error(e);
+            showErrorToast("Failed to refresh preview.");
+        } finally {
+            setIsRefreshingMarkdown(false);
+        }
+    };
+
     const handleGenerate = async () => {
         if (!jobDescription) {
             showErrorToast("Please enter a job description.");
@@ -68,7 +101,7 @@ const Workspace: React.FC<WorkspaceProps> = ({ resumeData, onNavigate }) => {
 
         try {
             await generatePackage({
-                resume_data: convertToResumeData(resumeData),
+                resume_data: localResumeData,
                 job_description: jobDescription,
                 company_name: companyName || undefined,
                 job_title: jobTitle || undefined
@@ -89,7 +122,7 @@ const Workspace: React.FC<WorkspaceProps> = ({ resumeData, onNavigate }) => {
 
         try {
             await downloadPDF({
-                resume_data: convertToResumeData(resumeData),
+                resume_data: localResumeData,
                 variant: variant
             });
             showSuccessToast("PDF downloaded successfully!");
@@ -99,29 +132,62 @@ const Workspace: React.FC<WorkspaceProps> = ({ resumeData, onNavigate }) => {
         }
     };
 
-    const renderPreviewContent = () => {
-        if (!data) {
-            // No API data yet, display local resumeData
-            return (
-                <div className="w-full max-w-[800px] bg-white shadow-2xl rounded-sm p-12 min-h-[1000px] animate-in fade-in duration-500">
-                    <div className="markdown-content">
-                        <h2 className="text-xl font-bold mb-4">{resumeData.name || 'Resume'}</h2>
-                        <p className="text-gray-600 mb-6">{resumeData.role || 'Professional'}</p>
-                        <pre className="whitespace-pre-wrap text-sm">{JSON.stringify(resumeData, null, 2)}</pre>
-                    </div>
-                </div>
-            );
-        }
+    const updateBasics = (field: string, value: string) => {
+        setLocalResumeData(prev => ({
+            ...prev,
+            basics: {
+                ...prev.basics,
+                [field]: value
+            }
+        }));
+    };
 
-        // API data available, display the tailored resume
+    const updateWork = (index: number, field: string, value: any) => {
+        setLocalResumeData(prev => {
+            const newWork = [...(prev.work || [])];
+            newWork[index] = { ...newWork[index], [field]: value };
+            return { ...prev, work: newWork };
+        });
+    };
+
+    const updateBullet = (workIndex: number, bulletIndex: number, value: string) => {
+        setLocalResumeData(prev => {
+            const newWork = [...(prev.work || [])];
+            const newHighlights = [...(newWork[workIndex].highlights || [])];
+            newHighlights[bulletIndex] = value;
+            newWork[workIndex] = { ...newWork[workIndex], highlights: newHighlights };
+            return { ...prev, work: newWork };
+        });
+    };
+
+    const renderPreviewContent = () => {
+        // API data or edited data available
         switch (activeTab) {
             case 'Resume':
                 return (
-                    <div className="w-full max-w-[800px] bg-white shadow-2xl rounded-sm p-12 min-h-[1000px] animate-in fade-in duration-500">
-                        <div className="markdown-content">
-                            <h2 className="text-xl font-bold mb-4">{data.resume_data.basics?.name || 'Resume'}</h2>
-                            <p className="text-gray-600 mb-6">{data.resume_data.basics?.label || 'Professional'}</p>
-                            <pre className="whitespace-pre-wrap text-sm">{JSON.stringify(data.resume_data, null, 2)}</pre>
+                    <div className="w-full max-w-[800px] bg-white shadow-2xl rounded-sm p-12 min-h-[1000px] animate-in fade-in duration-500 overflow-x-hidden">
+                        <div className="prose prose-slate max-w-none">
+                            {markdownPreview ? (
+                                <ReactMarkdown 
+                                    components={{
+                                        h1: ({node, ...props}) => <h1 className="text-3xl font-black mb-1 border-b-2 border-slate-900 pb-2 uppercase tracking-tight text-slate-900" {...props} />,
+                                        h2: ({node, ...props}) => <h2 className="text-lg font-black border-b border-slate-300 mt-8 mb-4 uppercase text-slate-900" {...props} />,
+                                        h3: ({node, ...props}) => <h3 className="text-md font-bold text-slate-800 mt-4 mb-1" {...props} />,
+                                        p: ({node, ...props}) => <p className="text-slate-700 text-sm leading-relaxed mb-2" {...props} />,
+                                        li: ({node, ...props}) => <li className="text-slate-700 text-sm leading-snug mb-1" {...props} />,
+                                        ul: ({node, ...props}) => <ul className="list-disc pl-5 mb-4" {...props} />,
+                                        hr: ({node, ...props}) => <hr className="my-6 border-slate-200" {...props} />
+                                    }}
+                                >
+                                    {markdownPreview}
+                                </ReactMarkdown>
+                            ) : (
+                                <div>
+                                    <h1 className="text-3xl font-bold mb-1 border-b-2 border-slate-900 pb-2 uppercase tracking-tight">{localResumeData.basics?.name}</h1>
+                                    <p className="text-slate-600 font-bold mb-6 text-sm tracking-wide">{localResumeData.basics?.label}</p>
+                                    <pre className="whitespace-pre-wrap text-xs bg-slate-50 p-4 rounded border border-slate-200">{JSON.stringify(localResumeData, null, 2)}</pre>
+                                </div>
+                            )}
                         </div>
                     </div>
                 );
@@ -130,11 +196,11 @@ const Workspace: React.FC<WorkspaceProps> = ({ resumeData, onNavigate }) => {
                     <div className="w-full max-w-[800px] bg-white shadow-2xl rounded-sm p-12 animate-in fade-in duration-500">
                         <h2 className="text-2xl font-bold mb-6">Extracted Keywords</h2>
                         <div className="flex flex-wrap gap-2">
-                            {data.keywords.map((keyword, idx) => (
+                            {data?.keywords.map((keyword, idx) => (
                                 <span key={idx} className="px-3 py-1 bg-primary-100 text-primary-700 rounded-full text-sm font-medium">
                                     {keyword}
                                 </span>
-                            ))}
+                            )) || <p>No keywords extracted yet.</p>}
                         </div>
                     </div>
                 );
@@ -142,8 +208,107 @@ const Workspace: React.FC<WorkspaceProps> = ({ resumeData, onNavigate }) => {
                 return (
                     <div className="w-full max-w-[800px] bg-white shadow-2xl rounded-sm p-12 animate-in fade-in duration-500">
                         <h2 className="text-2xl font-bold mb-6">Improvement Suggestions</h2>
-                        <div className="prose">
-                            <pre className="whitespace-pre-wrap text-sm">{JSON.stringify(data.suggestions, null, 2)}</pre>
+                        <ul className="space-y-4">
+                            {(data?.suggestions || []).map((suggestion, idx) => (
+                                <li key={idx} className="flex items-start gap-3 p-4 bg-amber-50 border border-amber-100 rounded-xl text-amber-900">
+                                    <span className="material-symbols-outlined text-amber-500 mt-0.5">lightbulb</span>
+                                    <span className="font-medium">{suggestion}</span>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                );
+            case 'Adjust':
+                return (
+                    <div className="w-full max-w-[800px] bg-white shadow-2xl rounded-sm p-12 min-h-[1000px] animate-in fade-in duration-500">
+                        <div className="flex items-center justify-between mb-8">
+                            <h2 className="text-2xl font-bold text-slate-900">Manual Adjustments</h2>
+                            <button 
+                                onClick={handleRefreshMarkdown}
+                                disabled={isRefreshingMarkdown}
+                                className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg font-bold text-sm hover:bg-primary-700 disabled:opacity-50"
+                            >
+                                {isRefreshingMarkdown ? 'Refreshing...' : 'Refresh Preview'}
+                            </button>
+                        </div>
+
+                        <div className="space-y-8">
+                            <section className="space-y-4">
+                                <h3 className="text-lg font-bold border-b pb-2">Basics</h3>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-1">
+                                        <label className="text-xs font-bold text-slate-500 uppercase">Name</label>
+                                        <input 
+                                            value={localResumeData.basics?.name || ''} 
+                                            onChange={e => updateBasics('name', e.target.value)}
+                                            className="w-full p-2 border rounded focus:ring-2 focus:ring-primary-500 outline-none"
+                                        />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <label className="text-xs font-bold text-slate-500 uppercase">Tagline / Role</label>
+                                        <input 
+                                            value={localResumeData.basics?.label || ''} 
+                                            onChange={e => updateBasics('label', e.target.value)}
+                                            className="w-full p-2 border rounded focus:ring-2 focus:ring-primary-500 outline-none"
+                                        />
+                                    </div>
+                                </div>
+                                <div className="space-y-1">
+                                    <label className="text-xs font-bold text-slate-500 uppercase">Professional Summary</label>
+                                    <textarea 
+                                        value={localResumeData.basics?.summary || ''} 
+                                        onChange={e => updateBasics('summary', e.target.value)}
+                                        className="w-full p-2 border rounded h-32 focus:ring-2 focus:ring-primary-500 outline-none"
+                                    />
+                                </div>
+                            </section>
+
+                            <section className="space-y-6">
+                                <h3 className="text-lg font-bold border-b pb-2">Professional Experience</h3>
+                                {(localResumeData.work || []).map((job, idx) => (
+                                    <div key={idx} className="p-4 border rounded-xl bg-slate-50 space-y-4">
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="space-y-1">
+                                                <label className="text-xs font-bold text-slate-500 uppercase">Company</label>
+                                                <input 
+                                                    value={job.company || ''} 
+                                                    onChange={e => updateWork(idx, 'company', e.target.value)}
+                                                    className="w-full p-2 border rounded bg-white"
+                                                />
+                                            </div>
+                                            <div className="space-y-1">
+                                                <label className="text-xs font-bold text-slate-500 uppercase">Role</label>
+                                                <input 
+                                                    value={job.position || ''} 
+                                                    onChange={e => updateWork(idx, 'position', e.target.value)}
+                                                    className="w-full p-2 border rounded bg-white"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-xs font-bold text-slate-500 uppercase">Bullet Points</label>
+                                            {/* Handle both summary text block and highlights array */}
+                                            {job.highlights && job.highlights.length > 0 ? (
+                                                job.highlights.map((bullet, bIdx) => (
+                                                    <textarea 
+                                                        key={bIdx}
+                                                        value={bullet} 
+                                                        onChange={e => updateBullet(idx, bIdx, e.target.value)}
+                                                        className="w-full p-2 border rounded bg-white text-sm h-20"
+                                                    />
+                                                ))
+                                            ) : (
+                                                <textarea 
+                                                    value={job.summary || ''} 
+                                                    onChange={e => updateWork(idx, 'summary', e.target.value)}
+                                                    className="w-full p-2 border rounded bg-white text-sm h-32"
+                                                    placeholder="Enter job description or bullets..."
+                                                />
+                                            )}
+                                        </div>
+                                    </div>
+                                ))}
+                            </section>
                         </div>
                     </div>
                 );
@@ -153,7 +318,7 @@ const Workspace: React.FC<WorkspaceProps> = ({ resumeData, onNavigate }) => {
     };
 
     return (
-        <div className="flex flex-col h-screen bg-[#f6f6f8]">
+        <div className="flex flex-col h-screen bg-[#f6f6f8] relative">
             {/* Top Bar */}
             <header className="flex-none h-16 bg-white border-b border-slate-200 px-6 flex items-center justify-between z-20">
                 <div className="flex items-center gap-4">
@@ -317,7 +482,7 @@ const Workspace: React.FC<WorkspaceProps> = ({ resumeData, onNavigate }) => {
 
                     {/* Canvas / Render Area */}
                     <div className="flex-1 overflow-y-auto custom-scrollbar p-12 flex justify-center bg-slate-100/50">
-                        {data ? renderPreviewContent() : (
+                        {renderPreviewContent() || (
                             <div className="flex flex-col items-center justify-center h-full text-center pb-20 opacity-60">
                                 <div className="bg-white p-6 rounded-full shadow-lg mb-6">
                                      <span className="material-symbols-outlined text-5xl text-primary-300">auto_awesome</span>
@@ -332,5 +497,7 @@ const Workspace: React.FC<WorkspaceProps> = ({ resumeData, onNavigate }) => {
         </div>
     );
 };
+
+export default Workspace;
 
 export default Workspace;

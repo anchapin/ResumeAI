@@ -899,7 +899,7 @@ class TailoredResumeResponse(BaseModel):
         max_length=MAX_LIST_LENGTH,
         description="Extracted keywords from job description",
     )
-    suggestions: Optional[Dict[str, Any]] = Field(
+    suggestions: Optional[List[str]] = Field(
         None, description="AI-generated improvement suggestions"
     )
 

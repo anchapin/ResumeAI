@@ -118,8 +118,20 @@ function App() {
     try {
       const savedData = loadResumeData();
       if (savedData) {
-        setResumeData(savedData);
-        console.log('Resume data loaded from localStorage');
+        // Defensive mapping to ensure all arrays exist
+        const validatedData: SimpleResumeData = {
+          ...savedData,
+          skills: Array.isArray(savedData.skills) ? savedData.skills : [],
+          experience: Array.isArray(savedData.experience) ? savedData.experience : [],
+          education: Array.isArray(savedData.education) ? savedData.education : [],
+          projects: Array.isArray(savedData.projects) ? savedData.projects : [],
+        };
+        setResumeData(validatedData);
+        console.log('Resume data loaded and validated:', {
+          skills: validatedData.skills.length,
+          education: validatedData.education.length,
+          experience: validatedData.experience.length
+        });
       } else {
         console.log('No saved resume data found, using initial data');
       }
