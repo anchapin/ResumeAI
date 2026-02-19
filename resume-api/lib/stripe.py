@@ -1,6 +1,12 @@
 """
 Stripe Service Module
 
+NOTE: Billing functionality is currently in 'Coming Soon' status.
+The Stripe integration is not yet fully implemented. This module provides
+placeholder responses for billing endpoints.
+
+For updates on billing availability, please check the project roadmap.
+
 Provides integration with Stripe API for:
 - Subscription plan management
 - Customer management
@@ -13,8 +19,12 @@ import stripe
 from typing import List, Dict, Any, Optional
 from config import settings
 
-# Initialize Stripe
-stripe.api_key = settings.stripe_secret_key
+# Billing availability flag
+BILLING_ENABLED = False  # Set to True when Stripe integration is complete
+
+# Initialize Stripe (only if billing is enabled and key is available)
+if BILLING_ENABLED and settings.stripe_secret_key:
+    stripe.api_key = settings.stripe_secret_key
 
 
 class StripeService:
