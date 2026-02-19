@@ -32,6 +32,7 @@ from api.jd_routes import router as jd_router
 from api.api_key_routes import router as api_key_router
 from api.team_routes import router as team_router
 from api.analytics_routes import router as analytics_router
+from api.webhook_routes import router as webhook_router
 
 # Get logger
 logger = logging_config.get_logger(__name__)
@@ -234,6 +235,7 @@ app.include_router(jd_router)
 app.include_router(api_key_router)
 app.include_router(team_router)
 app.include_router(analytics_router)
+app.include_router(webhook_router)
 
 
 # WebSocket endpoint for real-time collaboration
