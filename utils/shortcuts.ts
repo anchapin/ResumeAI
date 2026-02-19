@@ -92,10 +92,11 @@ export function getShortcutForAction(action: string): string | null {
 export function formatShortcutForDisplay(key: string): string {
   if (typeof navigator !== 'undefined' && navigator.platform?.startsWith('Mac')) {
     return key
-      .replace('Ctrl', '⌘')
-      .replace('Alt', '⌥')
-      .replace('Shift', '⇧')
-      .replace('Meta', '⌘');
+      .replace(/Ctrl/g, '⌘')
+      .replace(/Alt/g, '⌥')
+      .replace(/Shift/g, '⇧')
+      .replace(/Meta/g, '⌘')
+      .replace(/\+/g, '');
   }
   return key;
 }
@@ -112,11 +113,13 @@ export function registerShortcuts(
 ): () => void {
   const handler = (e: KeyboardEvent) => {
     // Ignore if user is typing in an input field
-    const target = e.target as HTMLElement;
+    const target = e.target as HTMLElement | null;
     if (
-      target.tagName === 'INPUT' ||
-      target.tagName === 'TEXTAREA' ||
-      target.isContentEditable
+      target && (
+        target.tagName === 'INPUT' ||
+        target.tagName === 'TEXTAREA' ||
+        target.isContentEditable
+      )
     ) {
       return;
     }

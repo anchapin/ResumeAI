@@ -58,12 +58,14 @@ const validateInput = (input: any, type: string = 'string', options: StringOptio
         throw new Error('Email must be a string');
       }
 
+      // Trim whitespace before validation
+      const trimmedEmail = input.trim();
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(input)) {
+      if (!emailRegex.test(trimmedEmail)) {
         throw new Error('Invalid email format');
       }
 
-      return sanitizeString(input);
+      return sanitizeString(trimmedEmail);
 
     case 'number':
       if (typeof input === 'string') {
@@ -99,7 +101,12 @@ const validateInput = (input: any, type: string = 'string', options: StringOptio
         throw new Error(`Array has fewer items than minimum of ${arrayOpts.minItems}`);
       }
 
-      return input.map((item: any) => validateInput(item, arrayOpts.itemType || 'string', arrayOpts.itemOptions));
+      // Only validate items if itemType is explicitly specified
+      if (arrayOpts.itemType) {
+        return input.map((item: any) => validateInput(item, arrayOpts.itemType, arrayOpts.itemOptions));
+      }
+
+      return input;
     
     case 'object':
       if (typeof input !== 'object' || Array.isArray(input) || input === null) {
@@ -123,13 +130,14 @@ const sanitizeString = (str) => {
   return str
     .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '') // Remove script tags
     .replace(/javascript:/gi, '') // Remove javascript: protocol
-    .replace(/on\w+=/gi, '') // Remove event handlers
+    .replace(/on\w+\s*=\s*["'][^"']*["']/gi, '') // Remove event handlers with quotes
+    .replace(/on\w+\s*=\s*[^\s>]*/gi, '') // Remove event handlers without quotes
     .replace(/data:/gi, '') // Remove data: protocol
     .replace(/vbscript:/gi, '') // Remove vbscript: protocol
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&amp;/g, '&')
-    .replace(/&quot;/g, '"')
+    .replace(/</g, '<')
+    .replace(/>/g, '>')
+    .replace(/&/g, '&')
+    .replace(/"/g, '"')
     .replace(/&#x27;/g, "'");
 };
 

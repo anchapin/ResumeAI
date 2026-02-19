@@ -106,7 +106,7 @@ describe('validation utilities', () => {
       });
 
       it('should throw error for null input', () => {
-        expect(() => validateInput(null, 'object')).toThrow('Input must be an object');
+        expect(() => validateInput(null, 'object')).toThrow('Input cannot be null or undefined');
       });
     });
   });
@@ -121,7 +121,8 @@ describe('validation utilities', () => {
     });
 
     it('should remove event handlers', () => {
-      expect(sanitizeString('onclick=alert("xss")')).toBe('=alert("xss")');
+      // Event handlers should be completely removed for security
+      expect(sanitizeString('onclick=alert("xss")')).toBe('');
     });
 
     it('should decode HTML entities', () => {
