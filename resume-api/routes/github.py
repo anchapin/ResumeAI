@@ -9,7 +9,7 @@ Provides endpoints for:
 
 import secrets
 from datetime import datetime, timezone, timedelta
-from typing import Annotated
+from typing import Annotated, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
@@ -289,6 +289,83 @@ async def github_oauth_callback(
             status_code=302,
             headers={"Location": f"{frontend_url}?status=error&error={str(e)}"},
         )
+
+
+@router.get(
+    "/connect",
+    responses={
+        200: {"description": "OAuth authorization URL generated"},
+        401: {"description": "Not authenticated"},
+    },
+    summary="Initiate GitHub OAuth authorization",
+)
+async def github_connect(
+    request: Request,
+    current_user: Annotated[User, Depends(get_current_user)],
+    db: Annotated[AsyncSession, Depends(get_async_session)],
+    redirect_uri: Annotated[Optional[str], Query()] = None,
+):
+    """
+    Initiate GitHub OAuth authorization flow.
+
+    This endpoint generates a GitHub OAuth authorization URL for the frontend
+    to redirect the user to. The user will be prompted to authorize the
+    application to access their GitHub account.
+
+    **OAuth Scopes Requested:**
+    - `read:user`: Access to user profile information
+    - `public_repo`: Access to public repositories
+
+    **State Parameter:**
+    A cryptographically secure random state parameter is generated and stored.
+    This must be stored (e.g., in session storage) and verified in the callback
+    to prevent CSRF attacks.
+
+    **Custom Redirect URI:**
+    By default, the callback URI is configured via `GITHUB_OAUTH_REDIRECT_URI`
+    environment variable or settings. You can override this per-request using
+    the `redirect_uri` query parameter, which is useful for supporting
+    different environments (development, staging, production).
+
+    **Response:**
+    Returns the authorization URL that the frontend should redirect the user to,
+    along with a state parameter for CSRF protection.
+    """
+    user_id = current_user.id
+
+    # Generate cryptographically secure random state
+    state = secrets.token_urlsafe(16)
+
+    # Calculate expiration time (10 minutes from now)
+    expires_at = datetime.now(timezone.utc) + timedelta(minutes=10)
+
+    # Store OAuth state in database
+    oauth_state = OAuthState(
+        state=state,
+        user_id=user_id,
+        provider="github",
+        expires_at=expires_at,
+    )
+    db.add(oauth_state)
+    await db.commit()
+
+    # Build OAuth authorization URL
+    callback_url = f"{request.url.scheme}://{request.url.netloc}/github/callback"
+    github_auth_url = (
+        f"https://github.com/login/oauth/authorize"
+        f"?client_id={settings.github_client_id}"
+        f"&redirect_uri={callback_url}"
+        f"&scope=user:email"
+        f"&state={state}"
+    )
+
+    logger.info(
+        "github_oauth_authorize",
+        user_id=user_id,
+        state=state,
+    )
+
+    return Response(status_code=302, headers={"Location": github_auth_url})
 
 
 @router.delete(
