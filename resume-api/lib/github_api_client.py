@@ -7,7 +7,6 @@ as well as retry logic with exponential backoff.
 """
 
 import asyncio
-import logging
 from typing import Any, Dict, List, Optional
 
 import httpx
@@ -27,7 +26,12 @@ logger = logging_config.get_logger(__name__)
 class GitHubAPIError(Exception):
     """Base exception for GitHub API errors."""
 
-    def __init__(self, message: str, status_code: Optional[int] = None, response_data: Optional[Dict] = None):
+    def __init__(
+        self,
+        message: str,
+        status_code: Optional[int] = None,
+        response_data: Optional[Dict] = None,
+    ):
         super().__init__(message)
         self.status_code = status_code
         self.response_data = response_data
@@ -257,7 +261,9 @@ class GitHubAPIClient:
             if retry_count < self.MAX_RETRIES:
                 delay = self._calculate_retry_delay(retry_count)
                 await asyncio.sleep(delay)
-                return await self._make_request(method, endpoint, params, json_data, retry_count + 1)
+                return await self._make_request(
+                    method, endpoint, params, json_data, retry_count + 1
+                )
             raise GitHubNetworkError(f"Request timeout: {str(e)}")
 
         except httpx.NetworkError as e:
@@ -270,7 +276,9 @@ class GitHubAPIClient:
             if retry_count < self.MAX_RETRIES:
                 delay = self._calculate_retry_delay(retry_count)
                 await asyncio.sleep(delay)
-                return await self._make_request(method, endpoint, params, json_data, retry_count + 1)
+                return await self._make_request(
+                    method, endpoint, params, json_data, retry_count + 1
+                )
             raise GitHubNetworkError(f"Network error: {str(e)}")
 
         except httpx.HTTPStatusError as e:
@@ -281,11 +289,18 @@ class GitHubAPIClient:
                 status_code=e.response.status_code,
                 error=str(e),
             )
-            if e.response.status_code in (429, 500, 502, 503, 504) and retry_count < self.MAX_RETRIES:
+            if (
+                e.response.status_code in (429, 500, 502, 503, 504)
+                and retry_count < self.MAX_RETRIES
+            ):
                 delay = self._calculate_retry_delay(retry_count)
                 await asyncio.sleep(delay)
-                return await self._make_request(method, endpoint, params, json_data, retry_count + 1)
-            raise GitHubAPIError(f"HTTP error: {str(e)}", status_code=e.response.status_code)
+                return await self._make_request(
+                    method, endpoint, params, json_data, retry_count + 1
+                )
+            raise GitHubAPIError(
+                f"HTTP error: {str(e)}", status_code=e.response.status_code
+            )
 
     def _check_rate_limit(self, response: httpx.Response):
         """
@@ -371,7 +386,9 @@ class GitHubAPIClient:
         elif status_code == 404:
             raise GitHubNotFoundError(message)
         else:
-            raise GitHubAPIError(message, status_code=status_code, response_data=error_data)
+            raise GitHubAPIError(
+                message, status_code=status_code, response_data=error_data
+            )
 
     def _calculate_retry_delay(self, retry_count: int) -> float:
         """
@@ -383,7 +400,7 @@ class GitHubAPIClient:
         Returns:
             Delay in seconds
         """
-        return self.BASE_RETRY_DELAY * (2 ** retry_count)
+        return self.BASE_RETRY_DELAY * (2**retry_count)
 
     # =========================================================================
     # API Methods

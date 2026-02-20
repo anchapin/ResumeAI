@@ -33,7 +33,6 @@ from lib.github_api_client import (
     GitHubTopic,
 )
 
-
 # =============================================================================
 # Fixtures
 # =============================================================================
@@ -813,7 +812,9 @@ async def test_retry_on_server_error(github_client, mock_user_data):
         mock_client = AsyncMock()
         # First call returns 503, second succeeds
         mock_client.request.side_effect = [
-            httpx.HTTPStatusError("Service Unavailable", request=MagicMock(), response=error_response),
+            httpx.HTTPStatusError(
+                "Service Unavailable", request=MagicMock(), response=error_response
+            ),
             mock_response,
         ]
         mock_ensure.return_value = mock_client
