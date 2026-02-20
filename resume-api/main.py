@@ -6,18 +6,22 @@ FastAPI service for generating and tailoring professional resumes.
 
 import asyncio
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, Response, status, Depends, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
 from prometheus_fastapi_instrumentator import Instrumentator
 from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.requests import Request
-from starlette.responses import Response
 
 from api import router
 from api.websocket import handle_websocket_connection
 from config import settings
-from config.dependencies import limiter, rate_limit_exceeded_handler
-from database import create_db_and_tables
+from config.dependencies import (
+    limiter,
+    rate_limit_exceeded_handler,
+    get_current_user_ws,
+)
+from database import create_db_and_tables, User
 from middleware.monitoring import MonitoringMiddleware
 from monitoring import logging_config, health, alerting, analytics
 from slowapi.errors import RateLimitExceeded
@@ -26,6 +30,14 @@ from slowapi.errors import RateLimitExceeded
 from routes.interviews import router as interviews_router
 from routes.salary import router as salary_router
 from routes.linkedin import router as linkedin_router
+from routes.billing import router as billing_router
+from routes.auth import router as auth_router
+from routes.github import router as github_router
+from api.jd_routes import router as jd_router
+from api.api_key_routes import router as api_key_router
+from api.team_routes import router as team_router
+from api.analytics_routes import router as analytics_router
+from api.webhook_routes import router as webhook_router
 
 # Get logger
 logger = logging_config.get_logger(__name__)
@@ -76,12 +88,44 @@ def setup_sentry():
             traces_sample_rate=settings.sentry_traces_sample_rate,
             send_default_pii=False,
         )
-        logger.info("sentry_initialized", environment=settings.sentry_environment)
+        logger.info(
+            "sentry_initialized", environment=settings.sentry_environment
+        )
+
+
+def check_github_auth_mode():
+    """Check GitHub authentication mode and log deprecation warning for CLI mode."""
+    auth_mode = getattr(settings, "github_auth_mode", "oauth")
+    logger.info(
+        "github_auth_mode_initialized",
+        mode=auth_mode,
+        environment="production" if not settings.debug else "development",
+    )
+
+    if auth_mode == "cli":
+        logger.warning(
+            "DEPRECATION_WARNING",
+            message="GitHub CLI mode is deprecated and will be removed in a future version. Please migrate to OAuth mode.",
+            mode="cli",
+            action="Set GITHUB_AUTH_MODE=oauth to use OAuth authentication",
+            documentation="See docs/github-oauth-migration.md for migration guide",
+        )
+    elif auth_mode == "oauth":
+        logger.info(
+            "github_oauth_enabled",
+            message="GitHub OAuth authentication is enabled",
+        )
+    else:
+        logger.error(
+            "github_auth_mode_invalid",
+            mode=auth_mode,
+            message=f"Invalid GITHUB_AUTH_MODE value: {auth_mode}. Expected 'oauth' or 'cli'.",
+        )
 
 
 def setup_prometheus(app: FastAPI):
     """Initialize Prometheus metrics instrumentation if enabled."""
-    if settings.enable_metrics:
+    if getattr(settings, "enable_metrics", False):
         try:
             instrumentator = Instrumentator(
                 should_group_status_codes=False,
@@ -96,14 +140,19 @@ def setup_prometheus(app: FastAPI):
 
             instrumentator.instrument(app).expose(
                 app,
-                endpoint=settings.metrics_path,
+                endpoint=getattr(settings, "metrics_path", "/metrics"),
                 should_gzip=True,
                 include_in_schema=False,
             )
 
-            logger.info("prometheus_initialized", metrics_path=settings.metrics_path)
-        except ImportError:
-            logger.warning("prometheus_fastapi_instrumentator not available")
+            logger.info(
+                "prometheus_initialized",
+                metrics_path=getattr(settings, "metrics_path", "/metrics"),
+            )
+        except (ImportError, RuntimeError) as e:
+            logger.warning(
+                "prometheus_fastapi_instrumentator not available", error=str(e)
+            )
 
 
 # Define lifespan to handle startup and shutdown events
@@ -112,6 +161,9 @@ async def lifespan(app: FastAPI):
     """Handle application startup and shutdown."""
     # Startup
     logger.info("application_startup", version=settings.app_version)
+
+    # Check GitHub authentication mode for deprecation warnings
+    check_github_auth_mode()
 
     # Initialize database tables
     await create_db_and_tables()
@@ -163,6 +215,22 @@ app.state.limiter = limiter
 # Register rate limit exception handler
 app.add_exception_handler(RateLimitExceeded, rate_limit_exceeded_handler)
 
+
+# Register validation error handler for debugging
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(
+    request: Request, exc: RequestValidationError
+):
+    """Log validation errors for debugging."""
+    logger.error("validation_error", errors=exc.errors())
+    return JSONResponse(
+        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        content={
+            "detail": "Validation error in resume data. Check all fields."
+        },
+    )
+
+
 # Add monitoring middleware (must be added before security middleware)
 app.add_middleware(MonitoringMiddleware)
 
@@ -178,7 +246,9 @@ app.add_middleware(
     allow_headers=["*"],
     # Add additional security for CORS
     allow_origin_regex=(
-        settings.cors_origin_regex if hasattr(settings, "cors_origin_regex") else None
+        settings.cors_origin_regex
+        if hasattr(settings, "cors_origin_regex")
+        else None
     ),
 )
 
@@ -194,6 +264,12 @@ async def health_check():
 async def health_check_detailed():
     """Detailed health check with all components."""
     return await health.get_health_status(detailed=True)
+
+
+@app.get("/health/oauth", tags=["Health"])
+async def oauth_health_check():
+    """OAuth integration health check endpoint."""
+    return await health.health_checker.check_oauth_health()
 
 
 @app.get("/health/ready", tags=["Health"])
@@ -222,30 +298,42 @@ app.include_router(router)
 app.include_router(interviews_router)
 app.include_router(salary_router)
 app.include_router(linkedin_router)
+app.include_router(billing_router)
+app.include_router(auth_router)
+app.include_router(github_router)
+app.include_router(jd_router)
+app.include_router(api_key_router)
+app.include_router(team_router)
+app.include_router(analytics_router)
+app.include_router(webhook_router)
 
 
 # WebSocket endpoint for real-time collaboration
 @app.websocket("/ws/resumes/{resume_id}")
-async def websocket_resume(websocket, resume_id: str, user_id: str = None):
+async def websocket_resume(
+    websocket: WebSocket,
+    resume_id: str,
+    current_user: User = Depends(get_current_user_ws),
+):
     """
     WebSocket endpoint for real-time collaboration on resumes.
 
     Connect to collaborate on a specific resume:
-    ws://host/ws/resumes/{resume_id}?user_id=optional_user_id
+    ws://host/ws/resumes/{resume_id}?token=jwt_token
 
-    Message types:
-    - cursor_update: Broadcast cursor position
-    - resume_update: Broadcast resume data changes
-    - typing_start: User started typing
-    - typing_stop: User stopped typing
-    - ping: Keep-alive ping
+    Requires authentication via JWT token in query parameter.
     """
-    await handle_websocket_connection(websocket, resume_id, user_id)
+    await handle_websocket_connection(
+        websocket, resume_id, str(current_user.id)
+    )
 
 
 if __name__ == "__main__":
     import uvicorn
 
     uvicorn.run(
-        "main:app", host=settings.host, port=settings.port, reload=settings.debug
+        "main:app",
+        host=settings.host,
+        port=settings.port,
+        reload=settings.debug,
     )

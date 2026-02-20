@@ -86,6 +86,38 @@ docker run -p 8000:8000 \
 ### Health Check
 - `GET /health` - Check API health status
 
+### GitHub Integration
+
+#### Get GitHub Status
+- `GET /github/status` - Check GitHub connection status
+
+Response:
+```json
+{
+  "connection_status": "connected",
+  "auth_mode": "oauth",
+  "github_username": "username",
+  "message": null
+}
+```
+
+**Response Fields:**
+- `connection_status`: Connection status ("connected", "not_connected", or "error")
+- `auth_mode`: Authentication mode ("oauth" or "cli")
+- `github_username`: GitHub username if connected, null otherwise
+- `message`: Optional message providing additional context
+
+**Authentication Modes:**
+- `oauth`: Checks the database for OAuth connection (recommended for production)
+- `cli`: Checks if gh CLI is authenticated (deprecated, will be removed)
+
+**Note:** CLI mode is deprecated. Please use OAuth mode for all deployments.
+
+#### GitHub OAuth Flow
+- `GET /github/connect` - Initiate GitHub OAuth authorization
+- `GET /github/callback` - Handle GitHub OAuth callback
+- `DELETE /github/disconnect` - Disconnect GitHub account
+
 ### PDF Generation
 - `POST /v1/render/pdf` - Generate PDF resume from JSON data
 
@@ -141,6 +173,41 @@ ANTHROPIC_API_KEY=sk-ant-...
 AI_PROVIDER=gemini
 GEMINI_API_KEY=AIza...
 ```
+
+## GitHub OAuth Configuration
+
+The service supports GitHub integration for importing projects and profiles.
+
+### GitHub OAuth (Recommended for Production)
+
+1. Create a GitHub OAuth App at https://github.com/settings/developers
+   - Application name: ResumeAI
+   - Homepage URL: https://yourdomain.com
+   - Authorization callback URL: https://api.yourdomain.com/github/callback
+
+2. Configure environment variables:
+```bash
+GITHUB_CLIENT_ID=Iv1.xxxxxxxxxxxxxxxxxxxxxx
+GITHUB_CLIENT_SECRET=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+GITHUB_AUTH_MODE=oauth  # Recommended for production
+```
+
+### GitHub CLI (Deprecated)
+
+For local development, you can use GitHub CLI authentication:
+
+```bash
+GITHUB_AUTH_MODE=cli  # Deprecated, will be removed
+```
+
+**Note:** CLI mode is deprecated and will be removed in a future release. Please migrate to OAuth mode.
+
+### Environment-Specific Defaults
+
+- **Production**: `oauth` (default)
+- **Development**: `cli` (for local testing without OAuth setup)
+
+See `.env.example` for full configuration options.
 
 ## Development
 

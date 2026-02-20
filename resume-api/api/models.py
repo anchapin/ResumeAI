@@ -3,7 +3,8 @@ Pydantic models for request/response validation.
 """
 
 import re
-from typing import Dict, Any, Optional, List
+from datetime import datetime
+from typing import Dict, Any, Optional, List, Tuple
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 # Validation constants
@@ -898,7 +899,7 @@ class TailoredResumeResponse(BaseModel):
         max_length=MAX_LIST_LENGTH,
         description="Extracted keywords from job description",
     )
-    suggestions: Optional[Dict[str, Any]] = Field(
+    suggestions: Optional[List[str]] = Field(
         None, description="AI-generated improvement suggestions"
     )
 
@@ -1353,3 +1354,554 @@ class UserSettingsResponse(BaseModel):
     default_font: str
     default_font_size: int
     default_spacing: str
+
+
+# =============================================================================
+# Authentication Models
+# =============================================================================
+
+
+class UserCreate(BaseModel):
+    """Request model for user registration."""
+
+    email: str = Field(..., max_length=255, description="User email address")
+    username: str = Field(..., min_length=3, max_length=100, description="Username")
+    password: str = Field(
+        ..., min_length=8, max_length=100, description="Password (min 8 characters)"
+    )
+    full_name: Optional[str] = Field(
+        None, max_length=200, description="Full name (optional)"
+    )
+
+    @field_validator("email")
+    @classmethod
+    def validate_email(cls, v: str) -> str:
+        """Validate email format."""
+        v = v.strip().lower()
+        if not EMAIL_PATTERN.match(v):
+            raise ValueError("Invalid email format")
+        return v
+
+    @field_validator("username")
+    @classmethod
+    def validate_username(cls, v: str) -> str:
+        """Validate username format."""
+        v = v.strip()
+        if not re.match(r"^[a-zA-Z0-9_-]+$", v):
+            raise ValueError(
+                "Username can only contain letters, numbers, underscores, and hyphens"
+            )
+        return v
+
+
+class UserLogin(BaseModel):
+    """Request model for user login."""
+
+    email: str = Field(..., max_length=255, description="User email address")
+    password: str = Field(..., max_length=100, description="User password")
+
+    @field_validator("email")
+    @classmethod
+    def validate_email(cls, v: str) -> str:
+        """Validate email format."""
+        return v.strip().lower()
+
+
+class TokenResponse(BaseModel):
+    """Response model for token endpoints."""
+
+    access_token: str = Field(..., description="JWT access token")
+    refresh_token: str = Field(..., description="JWT refresh token")
+    token_type: str = Field(default="bearer", description="Token type")
+    expires_in: int = Field(..., description="Access token expiration in seconds")
+
+
+class RefreshTokenRequest(BaseModel):
+    """Request model for refreshing access token."""
+
+    refresh_token: str = Field(..., description="JWT refresh token")
+
+
+class TokenRefreshResponse(BaseModel):
+    """Response model for token refresh."""
+
+    access_token: str = Field(..., description="New JWT access token")
+    token_type: str = Field(default="bearer", description="Token type")
+    expires_in: int = Field(..., description="Access token expiration in seconds")
+
+
+class UserResponse(BaseModel):
+    """Response model for user information."""
+
+    id: int = Field(..., description="User ID")
+    email: str = Field(..., description="User email address")
+    username: str = Field(..., description="Username")
+    full_name: Optional[str] = Field(None, description="Full name")
+    is_active: bool = Field(..., description="Whether user is active")
+    is_verified: bool = Field(..., description="Whether user email is verified")
+    created_at: datetime = Field(..., description="Account creation timestamp")
+
+    class Config:
+        from_attributes = True
+
+
+class UserUpdate(BaseModel):
+    """Request model for updating user profile."""
+
+    full_name: Optional[str] = Field(None, max_length=200, description="Full name")
+    username: Optional[str] = Field(
+        None, min_length=3, max_length=100, description="Username"
+    )
+
+    @field_validator("username")
+    @classmethod
+    def validate_username(cls, v: Optional[str]) -> Optional[str]:
+        """Validate username format."""
+        if v is not None:
+            v = v.strip()
+            if not re.match(r"^[a-zA-Z0-9_-]+$", v):
+                raise ValueError(
+                    "Username can only contain letters, numbers, underscores, and hyphens"
+                )
+        return v
+
+
+class PasswordChangeRequest(BaseModel):
+    """Request model for changing password."""
+
+    current_password: str = Field(..., max_length=100, description="Current password")
+    new_password: str = Field(
+        ..., min_length=8, max_length=100, description="New password (min 8 characters)"
+    )
+
+
+class MessageResponse(BaseModel):
+    """Generic message response."""
+
+    message: str = Field(..., description="Response message")
+
+
+# =============================================================================
+# Job Description Parsing Models
+# =============================================================================
+
+
+class SalaryInfo(BaseModel):
+    """Salary information extracted from job description."""
+
+    min: Optional[int] = Field(None, description="Minimum salary")
+    max: Optional[int] = Field(None, description="Maximum salary")
+    currency: str = Field(default="USD", description="Currency code")
+    period: str = Field(
+        default="yearly", description="Salary period (yearly, hourly, monthly)"
+    )
+
+
+class JDAnalysisRequest(BaseModel):
+    """Request to analyze a job description."""
+
+    job_description: str = Field(
+        ...,
+        min_length=10,
+        max_length=MAX_LONG_STRING_LENGTH,
+        description="Job description text to analyze",
+    )
+
+
+class JDAnalysisResponse(BaseModel):
+    """Response with parsed job description data."""
+
+    title: Optional[str] = Field(None, description="Job title")
+    company: Optional[str] = Field(None, description="Company name")
+    location: Optional[str] = Field(None, description="Job location")
+    remote_type: Optional[str] = Field(
+        None, description="Remote work type (remote, hybrid, onsite)"
+    )
+    salary: Optional[SalaryInfo] = Field(None, description="Salary information")
+    requirements: List[str] = Field(
+        default_factory=list, description="Job requirements"
+    )
+    qualifications: List[str] = Field(
+        default_factory=list, description="Preferred qualifications"
+    )
+    responsibilities: List[str] = Field(
+        default_factory=list, description="Job responsibilities"
+    )
+    skills: List[str] = Field(default_factory=list, description="Required skills")
+    experience_level: Optional[str] = Field(
+        None, description="Experience level (entry, mid, senior, lead, executive)"
+    )
+    experience_years: Optional[Tuple[int, int]] = Field(
+        None, description="Years of experience range (min, max)"
+    )
+    education_requirements: List[str] = Field(
+        default_factory=list, description="Education requirements"
+    )
+    benefits: List[str] = Field(default_factory=list, description="Benefits offered")
+    keywords: List[str] = Field(default_factory=list, description="Top keywords")
+
+
+class SkillsMatchRequest(BaseModel):
+    """Request to match resume skills against job description."""
+
+    resume_data: ResumeData = Field(..., description="Resume data")
+    job_description: str = Field(
+        ...,
+        min_length=10,
+        max_length=MAX_LONG_STRING_LENGTH,
+        description="Job description text",
+    )
+
+
+class SkillsMatchResponse(BaseModel):
+    """Response with skills matching results."""
+
+    matched_skills: List[str] = Field(
+        ..., description="Skills found in both resume and job description"
+    )
+    missing_skills: List[str] = Field(
+        ..., description="Skills from job description not found in resume"
+    )
+    additional_skills: List[str] = Field(
+        ..., description="Skills in resume not mentioned in job description"
+    )
+    match_rate: float = Field(
+        ..., ge=0.0, le=1.0, description="Skills match rate (0.0 to 1.0)"
+    )
+    match_score: int = Field(
+        ..., ge=0, le=100, description="Overall match score (0-100)"
+    )
+    jd_skills: List[str] = Field(
+        ..., description="Skills extracted from job description"
+    )
+    resume_skills: List[str] = Field(..., description="Skills extracted from resume")
+
+
+class ATSCheckRequest(BaseModel):
+    """Request to check ATS compatibility."""
+
+    resume_data: ResumeData = Field(..., description="Resume data to check")
+    job_description: Optional[str] = Field(
+        None,
+        max_length=MAX_LONG_STRING_LENGTH,
+        description="Optional job description for keyword matching",
+    )
+
+
+class ATSIssue(BaseModel):
+    """ATS compatibility issue."""
+
+    type: str = Field(..., description="Issue type")
+    severity: str = Field(..., description="Issue severity (high, medium, low)")
+    message: str = Field(..., description="Issue description")
+
+
+class ATSCheckResponse(BaseModel):
+    """Response with ATS compatibility results."""
+
+    overall_score: int = Field(
+        ..., ge=0, le=100, description="Overall ATS score (0-100)"
+    )
+    passed: bool = Field(
+        ..., description="Whether resume passed ATS check (score >= 70)"
+    )
+    issues: List[ATSIssue] = Field(..., description="List of ATS issues found")
+    recommendations: List[str] = Field(
+        ..., description="Recommendations for improvement"
+    )
+    keyword_match_rate: float = Field(
+        ..., ge=0.0, le=1.0, description="Keyword match rate with job description"
+    )
+    formatting_score: int = Field(..., ge=0, le=100, description="Formatting score")
+    content_score: int = Field(..., ge=0, le=100, description="Content quality score")
+    sections_found: List[str] = Field(..., description="Resume sections found")
+    sections_missing: List[str] = Field(..., description="Required sections missing")
+
+
+class JDInsightsRequest(BaseModel):
+    """Request for comprehensive JD insights and resume matching."""
+
+    resume_data: ResumeData = Field(..., description="Resume data")
+    job_description: str = Field(
+        ...,
+        min_length=10,
+        max_length=MAX_LONG_STRING_LENGTH,
+        description="Job description text",
+    )
+
+
+class JDInsightsResponse(BaseModel):
+    """Comprehensive response with JD analysis and resume matching."""
+
+    jd_analysis: JDAnalysisResponse = Field(..., description="Parsed job description")
+    skills_match: SkillsMatchResponse = Field(
+        ..., description="Skills matching results"
+    )
+    ats_check: ATSCheckResponse = Field(..., description="ATS compatibility check")
+    overall_fit_score: int = Field(
+        ..., ge=0, le=100, description="Overall candidate fit score"
+    )
+    summary: str = Field(..., description="Summary of analysis")
+    top_recommendations: List[str] = Field(
+        ..., description="Top recommendations for improving fit"
+    )
+
+
+class SkillGapRequest(BaseModel):
+    """Request model for skill-gap analysis."""
+
+    job_description: str = Field(..., description="Full job description text")
+    resume_data: Dict[str, Any] = Field(..., description="Resume JSON payload")
+
+
+class SkillGapResponse(BaseModel):
+    """Response model for skill-gap analysis."""
+
+    missing_skills: List[str] = Field(
+        ...,
+        description="Skills required by the job but not present in the resume",
+    )
+    matched_skills: List[str] = Field(
+        ..., description="Skills present in both job and resume"
+    )
+    match_score: int = Field(..., description="Overall match percentage (0-100)")
+
+
+# =============================================================================
+# Team Collaboration Models
+# =============================================================================
+
+
+class TeamMemberRole(str):
+    """Team member role enumeration."""
+
+    OWNER = "owner"
+    ADMIN = "admin"
+    EDITOR = "editor"
+    VIEWER = "viewer"
+
+
+class TeamCreate(BaseModel):
+    """Request model for creating a team."""
+
+    name: str = Field(..., max_length=200, description="Team name")
+    description: Optional[str] = Field(
+        None, max_length=MAX_STRING_LENGTH, description="Team description"
+    )
+
+    @field_validator("name")
+    @classmethod
+    def validate_name(cls, v: str) -> str:
+        """Validate team name."""
+        v = sanitize_html(v)
+        if not v or not v.strip():
+            raise ValueError("Team name cannot be empty")
+        return v.strip()
+
+
+class TeamUpdate(BaseModel):
+    """Request model for updating a team."""
+
+    name: Optional[str] = Field(None, max_length=200, description="Team name")
+    description: Optional[str] = Field(
+        None, max_length=MAX_STRING_LENGTH, description="Team description"
+    )
+
+    @field_validator("name")
+    @classmethod
+    def validate_name(cls, v: Optional[str]) -> Optional[str]:
+        """Validate team name."""
+        if v is not None:
+            v = sanitize_html(v)
+            if not v.strip():
+                raise ValueError("Team name cannot be empty")
+            return v.strip()
+        return v
+
+
+class TeamInvite(BaseModel):
+    """Request model for inviting a team member."""
+
+    email: str = Field(..., max_length=255, description="Email of user to invite")
+    role: str = Field(
+        default="viewer",
+        max_length=50,
+        description="Role to assign (owner, admin, editor, viewer)",
+    )
+
+    @field_validator("email")
+    @classmethod
+    def validate_email(cls, v: str) -> str:
+        """Validate email format."""
+        v = v.strip().lower()
+        if not EMAIL_PATTERN.match(v):
+            raise ValueError("Invalid email format")
+        return v
+
+    @field_validator("role")
+    @classmethod
+    def validate_role(cls, v: str) -> str:
+        """Validate role."""
+        valid_roles = ["owner", "admin", "editor", "viewer"]
+        v = v.strip().lower()
+        if v not in valid_roles:
+            raise ValueError(f"Invalid role. Must be one of: {', '.join(valid_roles)}")
+        return v
+
+
+class TeamMemberResponse(BaseModel):
+    """Response model for team member."""
+
+    user_id: int = Field(..., description="User ID")
+    email: str = Field(..., description="User email")
+    username: str = Field(..., description="Username")
+    role: str = Field(..., description="Team role")
+    joined_at: str = Field(..., description="Join timestamp")
+
+
+class TeamResponse(BaseModel):
+    """Response model for team."""
+
+    id: int = Field(..., description="Team ID")
+    name: str = Field(..., description="Team name")
+    description: Optional[str] = Field(None, description="Team description")
+    owner_id: int = Field(..., description="Owner user ID")
+    member_count: int = Field(..., description="Number of team members")
+    resume_count: int = Field(default=0, description="Number of shared resumes")
+    created_at: str = Field(..., description="Creation timestamp")
+    updated_at: str = Field(..., description="Last update timestamp")
+
+
+class TeamDetailResponse(BaseModel):
+    """Detailed response model for team with members."""
+
+    id: int = Field(..., description="Team ID")
+    name: str = Field(..., description="Team name")
+    description: Optional[str] = Field(None, description="Team description")
+    owner_id: int = Field(..., description="Owner user ID")
+    members: List[TeamMemberResponse] = Field(
+        default_factory=list, description="Team members"
+    )
+    resume_count: int = Field(default=0, description="Number of shared resumes")
+    created_at: str = Field(..., description="Creation timestamp")
+    updated_at: str = Field(..., description="Last update timestamp")
+
+
+class TeamResumeShare(BaseModel):
+    """Request model for sharing a resume with a team."""
+
+    resume_id: int = Field(..., description="Resume ID to share")
+    permission: str = Field(
+        default="view",
+        max_length=50,
+        description="Permission level (view, edit, admin)",
+    )
+
+    @field_validator("permission")
+    @classmethod
+    def validate_permission(cls, v: str) -> str:
+        """Validate permission."""
+        valid_permissions = ["view", "edit", "admin"]
+        v = v.strip().lower()
+        if v not in valid_permissions:
+            raise ValueError(
+                f"Invalid permission. Must be one of: {', '.join(valid_permissions)}"
+            )
+        return v
+
+
+class TeamActivityResponse(BaseModel):
+    """Response model for team activity."""
+
+    id: int = Field(..., description="Activity ID")
+    team_id: int = Field(..., description="Team ID")
+    user_id: int = Field(..., description="User who performed the action")
+    username: str = Field(..., description="Username")
+    action: str = Field(..., description="Action type")
+    resource_type: str = Field(..., description="Type of resource (resume, comment)")
+    resource_id: Optional[int] = Field(None, description="Resource ID")
+    description: str = Field(..., description="Activity description")
+    created_at: str = Field(..., description="Activity timestamp")
+
+
+class ResumeCommentCreate(BaseModel):
+    """Request model for adding a comment to a resume."""
+
+    content: str = Field(
+        ..., min_length=1, max_length=5000, description="Comment content"
+    )
+    section: Optional[str] = Field(
+        None, max_length=100, description="Resume section being commented on"
+    )
+    position: Optional[Dict[str, Any]] = Field(
+        None, description="Position information for inline comments"
+    )
+
+    @field_validator("content")
+    @classmethod
+    def validate_content(cls, v: str) -> str:
+        """Validate comment content."""
+        v = sanitize_html(v)
+        if not v.strip():
+            raise ValueError("Comment content cannot be empty")
+        return v
+
+
+class ResumeCommentResponse(BaseModel):
+    """Response model for resume comment."""
+
+    id: int = Field(..., description="Comment ID")
+    resume_id: int = Field(..., description="Resume ID")
+    user_id: int = Field(..., description="User who created the comment")
+    username: str = Field(..., description="Username")
+    content: str = Field(..., description="Comment content")
+    section: Optional[str] = Field(None, description="Resume section")
+    position: Optional[Dict[str, Any]] = Field(None, description="Position info")
+    is_resolved: bool = Field(..., description="Whether comment is resolved")
+    created_at: str = Field(..., description="Creation timestamp")
+    updated_at: str = Field(..., description="Last update timestamp")
+    replies: List["ResumeCommentResponse"] = Field(
+        default_factory=list, description="Comment replies"
+    )
+
+
+class ResumeCommentUpdate(BaseModel):
+    """Request model for updating a comment."""
+
+    content: Optional[str] = Field(
+        None, min_length=1, max_length=5000, description="Comment content"
+    )
+    is_resolved: Optional[bool] = Field(None, description="Mark as resolved")
+
+    @field_validator("content")
+    @classmethod
+    def validate_content(cls, v: Optional[str]) -> Optional[str]:
+        """Validate comment content."""
+        if v is not None:
+            v = sanitize_html(v)
+            if not v.strip():
+                raise ValueError("Comment content cannot be empty")
+            return v
+        return v
+
+
+# =============================================================================
+# GitHub Integration Models
+# =============================================================================
+
+
+class GitHubStatusResponse(BaseModel):
+    """Response model for GitHub connection status."""
+
+    connection_status: str = Field(
+        ..., description="Connection status: 'connected', 'not_connected', or 'error'"
+    )
+    auth_mode: str = Field(
+        ..., description="Authentication mode: 'oauth' or 'cli' (deprecated)"
+    )
+    github_username: Optional[str] = Field(
+        None, description="GitHub username if connected, null otherwise"
+    )
+    message: Optional[str] = Field(
+        None, description="Optional message providing additional context"
+    )

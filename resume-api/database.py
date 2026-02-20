@@ -18,6 +18,7 @@ from sqlalchemy import (
     JSON,
     Index,
     Float,
+    ForeignKeyConstraint,
 )
 from sqlalchemy.ext.asyncio import (
     AsyncSession,
@@ -59,11 +60,15 @@ class Resume(Base):
     __tablename__ = "resumes"
 
     id = Column(Integer, primary_key=True, index=True)
+    owner_id = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)
     title = Column(String(200), nullable=False, index=True)
     data = Column(JSON, nullable=False)  # Stores resume data as JSON
 
     # Version tracking
-    current_version_id = Column(Integer, ForeignKey("resume_versions.id"))
+    # Note: use_alter=True breaks the circular FK dependency with resume_versions
+    current_version_id = Column(
+        Integer, ForeignKey("resume_versions.id", use_alter=True, name="fk_resume_current_version")
+    )
     current_version = relationship("ResumeVersion", foreign_keys=[current_version_id])
 
     # Sharing settings
@@ -81,6 +86,7 @@ class Resume(Base):
     )
 
     # Relationships
+    owner = relationship("User", back_populates="resumes")
     versions = relationship(
         "ResumeVersion", foreign_keys="ResumeVersion.resume_id", back_populates="resume"
     )
@@ -194,6 +200,60 @@ class UserSettings(Base):
     )
 
 
+class User(Base):
+    """User model for authentication and account management."""
+
+    __tablename__ = "users"
+
+    id = Column(Integer, primary_key=True, index=True)
+    email = Column(String(255), unique=True, nullable=False, index=True)
+    username = Column(String(100), unique=True, nullable=False, index=True)
+    hashed_password = Column(String(255), nullable=False)
+
+    # User profile
+    full_name = Column(String(200), nullable=True)
+    is_active = Column(Boolean, default=True, nullable=False)
+    is_superuser = Column(Boolean, default=False, nullable=False)
+    is_verified = Column(Boolean, default=False, nullable=False)
+
+    # Account metadata
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
+    last_login_at = Column(DateTime(timezone=True), nullable=True)
+
+    # Relationships
+    resumes = relationship(
+        "Resume", back_populates="owner", cascade="all, delete-orphan"
+    )
+    refresh_tokens = relationship(
+        "RefreshToken", back_populates="user", cascade="all, delete-orphan"
+    )
+
+
+class RefreshToken(Base):
+    """Refresh token model for token rotation and revocation."""
+
+    __tablename__ = "refresh_tokens"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    token_hash = Column(String(255), unique=True, nullable=False, index=True)
+
+    # Token metadata
+    expires_at = Column(DateTime(timezone=True), nullable=False)
+    is_revoked = Column(Boolean, default=False, nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    # Device/browser info
+    device_info = Column(String(500), nullable=True)
+    ip_address = Column(String(45), nullable=True)
+
+    # Relationships
+    user = relationship("User", back_populates="refresh_tokens")
+
+
 # Analytics models for monitoring and usage tracking
 class UsageAnalytics(Base):
     """Request analytics model for tracking API usage."""
@@ -248,7 +308,7 @@ class UserEngagement(Base):
         String(100), nullable=False, index=True
     )  # e.g., "generate_pdf", "tailor_resume"
     endpoint = Column(String(500), nullable=True)
-    metadata = Column(JSON, nullable=True)
+    event_metadata = Column(JSON, nullable=True)
     timestamp = Column(DateTime(timezone=True), server_default=func.now(), index=True)
 
     __table_args__ = (
@@ -275,6 +335,312 @@ class ErrorResponse(Base):
         Index("idx_error_type_timestamp", "error_type", "timestamp"),
         Index("idx_error_user_timestamp", "user_id", "timestamp"),
     )
+
+
+# Billing and Subscription models
+class SubscriptionPlan(Base):
+    """Subscription plan model for defining available plans."""
+
+    __tablename__ = "subscription_plans"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(
+        String(100), nullable=False, unique=True, index=True
+    )  # e.g., "basic", "premium"
+    display_name = Column(String(200), nullable=False)  # e.g., "Basic Plan"
+    description = Column(Text, nullable=True)
+
+    # Pricing
+    price_cents = Column(Integer, nullable=False)  # Price in cents
+    currency = Column(String(3), default="USD")
+    interval = Column(String(20), default="month")  # month, year
+
+    # Stripe integration
+    stripe_price_id = Column(String(255), unique=True, nullable=True, index=True)
+    stripe_product_id = Column(String(255), nullable=True)
+
+    # Features
+    features = Column(JSON, nullable=True)  # List of features included
+
+    # Limits
+    max_resumes_per_month = Column(Integer, default=5)
+    max_ai_tailorings_per_month = Column(Integer, default=3)
+    max_templates = Column(Integer, default=3)
+    include_priority_support = Column(Boolean, default=False)
+    include_custom_domains = Column(Boolean, default=False)
+
+    # Status
+    is_active = Column(Boolean, default=True)
+    is_popular = Column(Boolean, default=False)  # Mark as "most popular"
+
+    # Metadata
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
+
+
+class Subscription(Base):
+    """User subscription model."""
+
+    __tablename__ = "subscriptions"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(String(255), nullable=False, index=True)  # User identifier
+
+    # Plan reference
+    plan_id = Column(Integer, ForeignKey("subscription_plans.id"), nullable=True)
+    plan = relationship("SubscriptionPlan", backref="subscriptions")
+
+    # Stripe integration
+    stripe_customer_id = Column(String(255), unique=True, nullable=True, index=True)
+    stripe_subscription_id = Column(String(255), unique=True, nullable=True)
+    stripe_payment_method_id = Column(String(255), nullable=True)
+
+    # Subscription status
+    status = Column(
+        String(50), default="inactive", index=True
+    )  # inactive, active, past_due, canceled, trialing
+    current_period_start = Column(DateTime(timezone=True), nullable=True)
+    current_period_end = Column(DateTime(timezone=True), nullable=True)
+    cancel_at_period_end = Column(Boolean, default=False)
+    canceled_at = Column(DateTime(timezone=True), nullable=True)
+    trial_start = Column(DateTime(timezone=True), nullable=True)
+    trial_end = Column(DateTime(timezone=True), nullable=True)
+
+    # Usage tracking
+    resumes_generated_this_period = Column(Integer, default=0)
+    ai_tailorings_this_period = Column(Integer, default=0)
+
+    # Metadata
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), index=True)
+    updated_at = Column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
+
+    __table_args__ = (Index("idx_subscription_user_status", "user_id", "status"),)
+
+
+class Invoice(Base):
+    """Invoice model for tracking billing history."""
+
+    __tablename__ = "invoices"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(String(255), nullable=False, index=True)
+    subscription_id = Column(Integer, ForeignKey("subscriptions.id"), nullable=True)
+    subscription = relationship("Subscription", backref="invoices")
+
+    # Stripe integration
+    stripe_invoice_id = Column(String(255), unique=True, nullable=True, index=True)
+    stripe_payment_intent_id = Column(String(255), nullable=True)
+
+    # Invoice details
+    amount_cents = Column(Integer, nullable=False)
+    currency = Column(String(3), default="USD")
+    status = Column(
+        String(50), default="pending", index=True
+    )  # pending, paid, open, uncollectible, void
+    description = Column(Text, nullable=True)
+
+    # Period
+    period_start = Column(DateTime(timezone=True), nullable=True)
+    period_end = Column(DateTime(timezone=True), nullable=True)
+
+    # PDF
+    invoice_pdf_url = Column(String(500), nullable=True)
+
+    # Metadata
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), index=True)
+    paid_at = Column(DateTime(timezone=True), nullable=True)
+
+    __table_args__ = (Index("idx_invoice_user_created", "user_id", "created_at"),)
+
+
+class PaymentMethod(Base):
+    """Payment method model for storing user payment methods."""
+
+    __tablename__ = "payment_methods"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(String(255), nullable=False, index=True)
+
+    # Stripe integration
+    stripe_payment_method_id = Column(
+        String(255), unique=True, nullable=True, index=True
+    )
+
+    # Payment method details
+    type = Column(String(50), nullable=False)  # card, bank_account, etc.
+    brand = Column(String(50), nullable=True)  # visa, mastercard, amex, etc.
+    last4 = Column(String(10), nullable=True)
+    exp_month = Column(Integer, nullable=True)
+    exp_year = Column(Integer, nullable=True)
+
+    # Billing details
+    billing_name = Column(String(200), nullable=True)
+    billing_email = Column(String(255), nullable=True)
+    billing_address_line1 = Column(String(255), nullable=True)
+    billing_address_line2 = Column(String(255), nullable=True)
+    billing_city = Column(String(100), nullable=True)
+    billing_state = Column(String(100), nullable=True)
+    billing_postal_code = Column(String(20), nullable=True)
+    billing_country = Column(String(2), nullable=True)
+
+    # Status
+    is_default = Column(Boolean, default=False)
+    is_active = Column(Boolean, default=True)
+
+    # Metadata
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
+
+
+class BillingEvent(Base):
+    """Billing event log for audit trail."""
+
+    __tablename__ = "billing_events"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(String(255), nullable=False, index=True)
+    subscription_id = Column(Integer, ForeignKey("subscriptions.id"), nullable=True)
+    subscription = relationship("Subscription", backref="events")
+
+    # Event details
+    event_type = Column(
+        String(100), nullable=False, index=True
+    )  # subscription.created, invoice.paid, etc.
+    event_data = Column(JSON, nullable=True)
+    stripe_event_id = Column(String(255), unique=True, nullable=True)
+
+    # Metadata
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), index=True)
+
+    __table_args__ = (Index("idx_billing_event_user_type", "user_id", "event_type"),)
+
+
+class APIKey(Base):
+    """API Key model for user-specific API key management."""
+
+    __tablename__ = "api_keys"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+
+    # Key data (hashed for storage)
+    key_hash = Column(String(255), unique=True, nullable=False, index=True)
+    key_prefix = Column(String(12), nullable=False)  # First 12 chars for identification
+
+    # Key metadata
+    name = Column(String(100), nullable=False)
+    description = Column(Text, nullable=True)
+
+    # Rate limiting configuration
+    rate_limit = Column(String(50), default="100/minute")
+    rate_limit_daily = Column(Integer, default=1000)  # Daily request limit
+
+    # Usage tracking
+    total_requests = Column(Integer, default=0)
+    requests_today = Column(Integer, default=0)
+    last_request_at = Column(DateTime(timezone=True), nullable=True)
+
+    # Status
+    is_active = Column(Boolean, default=True, index=True)
+    is_revoked = Column(Boolean, default=False, index=True)
+    revoked_at = Column(DateTime(timezone=True), nullable=True)
+    revoked_reason = Column(String(255), nullable=True)
+
+    # Expiration (optional)
+    expires_at = Column(DateTime(timezone=True), nullable=True)
+
+    # Metadata
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), index=True)
+    updated_at = Column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
+
+    # Relationships
+    user = relationship("User", back_populates="api_keys")
+
+    __table_args__ = (
+        Index("idx_api_key_user_active", "user_id", "is_active"),
+        Index("idx_api_key_created", "created_at"),
+    )
+
+
+class GitHubConnection(Base):
+    """GitHub OAuth connection model for storing user GitHub connections."""
+
+    __tablename__ = "github_connections"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, unique=True, index=True)
+
+    # GitHub OAuth data
+    github_user_id = Column(String(100), nullable=False, index=True)  # GitHub user ID
+    github_username = Column(String(100), nullable=False)  # GitHub username
+    github_email = Column(String(255), nullable=True)  # GitHub email
+    access_token = Column(Text, nullable=False)  # Encrypted access token
+    refresh_token = Column(Text, nullable=True)  # Encrypted refresh token (if applicable)
+    token_type = Column(String(50), default="bearer")  # Token type
+    scope = Column(Text, nullable=True)  # Granted scopes
+
+    # Token metadata
+    expires_at = Column(DateTime(timezone=True), nullable=True)  # Token expiration
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), index=True)
+    updated_at = Column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
+    last_used_at = Column(DateTime(timezone=True), nullable=True)
+    is_active = Column(Boolean, default=True, nullable=False, index=True)
+
+    # Relationships
+    user = relationship("User", back_populates="github_connections")
+
+    __table_args__ = (
+        Index("idx_github_github_user_id", "github_user_id"),
+        Index("idx_github_user_active", "user_id", "is_active"),
+    )
+
+
+# Alias for backward compatibility with existing imports
+UserGitHubConnection = GitHubConnection
+
+
+class OAuthState(Base):
+    """OAuth state model for storing OAuth flow state parameters."""
+
+    __tablename__ = "oauth_states"
+
+    id = Column(Integer, primary_key=True, index=True)
+    state = Column(String(100), unique=True, nullable=False, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    provider = Column(String(50), nullable=False, default="github")  # github, linkedin, etc.
+    expires_at = Column(DateTime(timezone=True), nullable=False, index=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    # Relationships
+    user = relationship("User")
+
+    __table_args__ = (
+        Index("idx_oauth_state", "state"),
+        Index("idx_oauth_user", "user_id"),
+    )
+
+
+# Add relationship to User model
+# Note: This is done by modifying the User class after it's defined
+User.api_keys = relationship(
+    "APIKey", back_populates="user", cascade="all, delete-orphan"
+)
+User.github_connections = relationship(
+    "GitHubConnection", back_populates="user", cascade="all, delete-orphan"
+)
+User.oauth_states = relationship(
+    "OAuthState", back_populates="user", cascade="all, delete-orphan"
+)
 
 
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///./resumeai.db")
