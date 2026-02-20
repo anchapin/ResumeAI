@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useTheme } from '../hooks/useTheme';
 import { toast } from 'react-toastify';
+import GitHubSettings from '../components/GitHubSettings';
 
 /** Mock usage data - in production this would come from the API */
 interface UsageData {
@@ -429,6 +430,9 @@ const Settings: React.FC = () => {
             </div>
           </div>
         </section>
+
+        {/* GitHub Connection Settings */}
+        <GitHubSettings />
 
         {/* User-Specific API Keys Management */}
         <section className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
