@@ -571,15 +571,15 @@ class APIKey(Base):
 
 
 class GitHubConnection(Base):
-    """GitHub OAuth connection model for storing user's GitHub account."""
+    """GitHub OAuth connection model for storing user GitHub connections."""
 
     __tablename__ = "github_connections"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, unique=True, index=True)
 
     # GitHub account details
-    github_user_id = Column(Integer, nullable=False, unique=True, index=True)
+    github_user_id = Column(String(100), nullable=False, index=True)  # GitHub user ID
     github_username = Column(String(255), nullable=False, index=True)
     github_display_name = Column(String(255), nullable=True)
 
@@ -595,6 +595,7 @@ class GitHubConnection(Base):
     # Connection status
     is_active = Column(Boolean, default=True, nullable=False, index=True)
     revoked_at = Column(DateTime(timezone=True), nullable=True)
+    last_used_at = Column(DateTime(timezone=True), nullable=True)
 
     # Metadata
     created_at = Column(DateTime(timezone=True), server_default=func.now(), index=True)
@@ -603,10 +604,11 @@ class GitHubConnection(Base):
     )
 
     # Relationships
-    user = relationship("User")
+    user = relationship("User", back_populates="github_connections")
 
     __table_args__ = (
-        Index("idx_github_conn_user", "user_id", "is_active"),
+        Index("idx_github_github_user_id", "github_user_id"),
+        Index("idx_github_user_active", "user_id", "is_active"),
     )
 
 
@@ -628,8 +630,6 @@ class GitHubOAuthState(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now(), index=True)
     expires_at = Column(DateTime(timezone=True), nullable=False, index=True)
     is_used = Column(Boolean, default=False, nullable=False, index=True)
-
-
 # Add relationship to User model
 # Note: This is done by modifying the User class after it's defined
 User.api_keys = relationship(

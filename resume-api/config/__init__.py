@@ -91,7 +91,14 @@ class Settings(BaseSettings):
     # GitHub OAuth Configuration
     github_client_id: Optional[str] = None
     github_client_secret: Optional[str] = None
-    github_oauth_callback_url: str = "http://127.0.0.1:8000/github/callback"  # Default callback URL
+    github_callback_url: Optional[str] = (
+        None  # e.g., https://api.resumeai.example.com/github/callback
+    )
+    frontend_url: str = "http://localhost:5173"
+
+    # GitHub Authentication Mode (DEPRECATED: cli mode will be removed)
+    # Options: "oauth" (recommended, production default), "cli" (deprecated, will be removed)
+    github_auth_mode: str = "oauth"
 
     @field_validator("api_keys", mode="before")
     @classmethod

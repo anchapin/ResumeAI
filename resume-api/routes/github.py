@@ -1,480 +1,452 @@
 """
-GitHub OAuth API Routes
+GitHub OAuth Integration Routes
 
 Provides endpoints for:
-- OAuth flow initiation (/connect)
-- OAuth callback handling (/callback)
-- GitHub connection management
+- OAuth callback handling
+- GitHub user authentication
+- Token management and storage
 """
 
-import logging
-from datetime import datetime, timedelta
-from typing import Optional
-
-from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
-from pydantic import BaseModel
-from sqlalchemy import select
+import secrets
+from datetime import datetime, timezone, timedelta
+from typing import Annotated, Optional
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+import httpx
+from httpx import AsyncClient
 
+from database import get_async_session, User, OAuthState, UserGitHubConnection
+from config.dependencies import get_current_user
+from config.security import encrypt_token
 from config import settings
-from database import get_db, GitHubConnection, GitHubOAuthState, User
-from lib.token_encryption import get_token_encryption, TokenEncryptionError
+from monitoring import logging_config
+from monitoring import metrics as monitoring_metrics
 
-router = APIRouter(prefix="/github", tags=["github"])
-logger = logging.getLogger(__name__)
+# Get logger
+logger = logging_config.get_logger(__name__)
 
-# OAuth Scopes
-GITHUB_SCOPES = "read:user public_repo"
-
-
-# Request/Response Models
-class ConnectResponse(BaseModel):
-    """Response model for OAuth connect endpoint."""
-
-    success: bool
-    authorization_url: str
-    state: str
-    expires_in: int  # Seconds until state expires
+router = APIRouter(prefix="/github", tags=["GitHub"])
 
 
-class CallbackResponse(BaseModel):
-    """Response model for OAuth callback."""
-
-    success: bool
-    message: str
-    user_id: Optional[int] = None
-    github_username: Optional[str] = None
-
-
-class ConnectionInfo(BaseModel):
-    """Information about a GitHub connection."""
-
-    id: int
-    github_user_id: int
-    github_username: str
-    github_display_name: Optional[str]
-    is_active: bool
-    created_at: datetime
-
-
-class ConnectionListResponse(BaseModel):
-    """Response model for listing GitHub connections."""
-
-    success: bool
-    connections: list[ConnectionInfo]
-
-
-# Helper Functions
-def generate_oauth_state() -> str:
-    """Generate a secure random state parameter for OAuth flow."""
-    import secrets
-    return secrets.token_urlsafe(32)
-
-
-def build_github_authorization_url(
-    client_id: str,
-    redirect_uri: str,
-    state: str,
-    scopes: str = GITHUB_SCOPES,
-) -> str:
-    """Build GitHub OAuth authorization URL."""
-    base_url = "https://github.com/login/oauth/authorize"
-    params = {
-        "client_id": client_id,
-        "redirect_uri": redirect_uri,
-        "scope": scopes,
-        "state": state,
-    }
-
-    from urllib.parse import urlencode
-    query_string = urlencode(params)
-    return f"{base_url}?{query_string}"
-
-
-# OAuth Connect Endpoint
-@router.get("/connect", response_model=ConnectResponse)
-async def github_oauth_connect(
-    request: Request,
-    redirect_uri: Optional[str] = Query(
-        None,
-        description="Custom redirect URI (defaults to GITHUB_OAUTH_CALLBACK_URL setting)",
-    ),
-    db: AsyncSession = Depends(get_db),
-):
+async def exchange_code_for_token(code: str) -> dict:
     """
-    Initiate GitHub OAuth flow.
+    Exchange OAuth authorization code for access token.
 
-    This endpoint generates a GitHub OAuth authorization URL for the frontend to redirect to.
-    It creates a secure state parameter to prevent CSRF attacks and stores it temporarily.
-
-    Query Parameters:
-        redirect_uri: Optional custom redirect URI. If not provided, uses GITHUB_OAUTH_CALLBACK_URL from settings.
+    Args:
+        code: Authorization code from GitHub
 
     Returns:
-        ConnectResponse containing the authorization URL and state parameter.
+        Dictionary with access_token, scope, token_type
 
-    Usage:
-        1. Frontend calls GET /github/connect
-        2. Frontend receives authorization_url and state
-        3. Frontend redirects user to authorization_url
-        4. User authorizes the application on GitHub
-        5. GitHub redirects to /github/callback with code and state
-        6. Frontend handles the callback response
+    Raises:
+        HTTPException: If token exchange fails
+    """
+    if not settings.github_client_id or not settings.github_client_secret:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="GitHub OAuth not configured",
+        )
 
-    Example Response:
-        {
-            "success": true,
-            "authorization_url": "https://github.com/login/oauth/authorize?client_id=xxx&redirect_uri=xxx&scope=xxx&state=xxx",
-            "state": "abc123...",
-            "expires_in": 600
-        }
+    async with AsyncClient() as client:
+        response = await client.post(
+            "https://github.com/login/oauth/access_token",
+            data={
+                "client_id": settings.github_client_id,
+                "client_secret": settings.github_client_secret,
+                "code": code,
+            },
+            headers={"Accept": "application/json"},
+        )
+
+        if response.status_code != 200:
+            logger.error("github_token_exchange_failed", status=response.status_code)
+            monitoring_metrics.increment_oauth_connection_failure(
+                provider="github", error_type="token_exchange_failed"
+            )
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Failed to exchange code for token",
+            )
+
+        token_data = await response.json()
+
+        if "error" in token_data:
+            error = token_data.get("error")
+            logger.error("github_token_error", error=error)
+            monitoring_metrics.increment_oauth_connection_failure(
+                provider="github", error_type=error
+            )
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=token_data.get("error_description", "Token exchange failed"),
+            )
+
+        return token_data
+
+
+async def fetch_github_user(token: str) -> dict:
+    """
+    Fetch GitHub user profile using access token.
+
+    Args:
+        token: GitHub OAuth access token
+
+    Returns:
+        Dictionary with user profile data
+
+    Raises:
+        HTTPException: If user fetch fails
+    """
+    async with AsyncClient() as client:
+        response = await client.get(
+            "https://api.github.com/user",
+            headers={
+                "Authorization": f"Bearer {token}",
+                "Accept": "application/vnd.github.v3+json",
+            },
+        )
+
+        if response.status_code != 200:
+            logger.error("github_user_fetch_failed", status=response.status_code)
+            monitoring_metrics.increment_oauth_connection_failure(
+                provider="github", error_type="user_fetch_failed"
+            )
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Failed to fetch GitHub user profile",
+            )
+
+        return await response.json()
+
+
+async def _revoke_github_token(token: str) -> bool:
+    """
+    Optionally revoke a GitHub OAuth token via GitHub API.
+
+    Note: This requires the token to have the appropriate scope and
+    the application to be registered as an OAuth app. This is a best-effort
+    operation - if revocation fails, we still delete the token from our database.
+
+    Args:
+        token: The GitHub OAuth access token to revoke
+
+    Returns:
+        True if revocation succeeded or failed gracefully, False on critical error
     """
     try:
-        # Validate GitHub OAuth configuration
-        if not settings.github_client_id:
-            raise HTTPException(
-                status_code=500,
-                detail="GitHub OAuth not configured. Missing GITHUB_CLIENT_ID.",
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            # GitHub API endpoint for revoking OAuth tokens
+            # Note: This endpoint may not work for all OAuth flows
+            response = await client.post(
+                "https://api.github.com/applications/{client_id}/token",
+                headers={
+                    "Authorization": f"Bearer {token}",
+                    "Accept": "application/vnd.github.v3+json",
+                },
             )
-
-        # Determine redirect URI
-        final_redirect_uri = redirect_uri or settings.github_oauth_callback_url
-        if not final_redirect_uri:
-            raise HTTPException(
-                status_code=500,
-                detail="GitHub OAuth callback URL not configured.",
-            )
-
-        # Generate secure state parameter
-        state = generate_oauth_state()
-
-        # Set expiration (10 minutes from now)
-        expires_at = datetime.utcnow() + timedelta(minutes=10)
-
-        # Store state in database for validation during callback
-        oauth_state = GitHubOAuthState(
-            state=state,
-            redirect_uri=final_redirect_uri,
-            expires_at=expires_at,
-        )
-        db.add(oauth_state)
-        await db.commit()
-
-        # Build authorization URL
-        authorization_url = build_github_authorization_url(
-            client_id=settings.github_client_id,
-            redirect_uri=final_redirect_uri,
-            state=state,
-        )
-
-        logger.info(
-            "GitHub OAuth connect initiated",
-            state=state[:8] + "...",  # Log only prefix for security
-            expires_in_seconds=600,
-        )
-
-        return ConnectResponse(
-            success=True,
-            authorization_url=authorization_url,
-            state=state,
-            expires_in=600,  # 10 minutes
-        )
-
-    except HTTPException:
-        raise
+            # Log revocation attempt
+            if response.status_code in [200, 204, 404]:
+                logger.info("github_token_revoked", status_code=response.status_code)
+                return True
+            else:
+                logger.warning(
+                    "github_token_revocation_failed",
+                    status_code=response.status_code,
+                    response=response.text[:200],
+                )
+                # Return True anyway - we'll delete the token from our DB
+                return True
     except Exception as e:
-        logger.error(f"GitHub OAuth connect error: {e}", exc_info=True)
-        raise HTTPException(
-            status_code=500, detail="Failed to initiate GitHub OAuth flow"
-        )
+        logger.error("github_token_revocation_error", error=str(e))
+        # Return True anyway - we'll delete the token from our DB
+        return True
 
 
-# OAuth Callback Endpoint
-@router.get("/callback", response_model=CallbackResponse)
+@router.get(
+    "/callback",
+    responses={
+        302: {"description": "Redirect to frontend with status"},
+        400: {"description": "OAuth failed or invalid request"},
+    },
+    summary="Handle GitHub OAuth callback",
+)
 async def github_oauth_callback(
     request: Request,
-    code: str = Query(..., description="OAuth authorization code from GitHub"),
-    state: str = Query(..., description="State parameter from connect request"),
-    db: AsyncSession = Depends(get_db),
+    code: Annotated[str, Query(description="Authorization code from GitHub")],
+    state: Annotated[str, Query(description="OAuth state parameter")],
+    db: Annotated[AsyncSession, Depends(get_async_session)],
 ):
     """
-    Handle GitHub OAuth callback.
+    Handle OAuth callback from GitHub.
 
-    This endpoint receives the callback from GitHub after user authorization.
-    It validates the state, exchanges the code for an access token,
+    This endpoint is called by GitHub after user authorization.
+    It exchanges the authorization code for an access token,
     fetches the user's GitHub profile, and stores the connection.
 
-    Query Parameters:
-        code: OAuth authorization code returned by GitHub
-        state: State parameter from the initial connect request
+    **Flow:**
+    1. Validate OAuth state parameter
+    2. Exchange authorization code for access token
+    3. Fetch GitHub user profile
+    4. Encrypt and store access token
+    5. Redirect user to frontend with success/error status
 
-    Returns:
-        CallbackResponse with success status and connection details.
+    **Query Parameters:**
+    - code: Authorization code from GitHub (required)
+    - state: OAuth state parameter for CSRF protection (required)
 
-    Error Responses:
-        - 400: Invalid or expired state parameter
-        - 400: Invalid authorization code
-        - 401: GitHub OAuth configuration missing
-        - 500: Failed to exchange token or store connection
-
-    Example Response:
-        {
-            "success": true,
-            "message": "GitHub connection established",
-            "user_id": 123,
-            "github_username": "johndoe"
-        }
+    **Response:**
+    Redirects to frontend with status query parameter:
+    - ?status=success: OAuth completed successfully
+    - ?status=error&error=<error_message>: OAuth failed
     """
     try:
-        # Validate GitHub OAuth configuration
-        if not settings.github_client_id or not settings.github_client_secret:
-            raise HTTPException(
-                status_code=500,
-                detail="GitHub OAuth not configured. Missing GITHUB_CLIENT_ID or GITHUB_CLIENT_SECRET.",
-            )
-
-        # Retrieve and validate state from database
+        # Verify OAuth state
         result = await db.execute(
-            select(GitHubOAuthState).where(GitHubOAuthState.state == state)
+            select(OAuthState).where(OAuthState.state == state)
         )
         oauth_state = result.scalar_one_or_none()
 
         if not oauth_state:
-            logger.warning(f"Invalid OAuth state: {state[:8]}...")
-            raise HTTPException(
-                status_code=400,
-                detail="Invalid or expired state parameter",
+            logger.warning("github_oauth_invalid_state", state=state)
+            frontend_url = settings.frontend_url
+            return Response(
+                status_code=302,
+                headers={"Location": f"{frontend_url}?status=error&error=invalid_state"},
             )
 
-        # Check if state has expired
-        if datetime.utcnow() > oauth_state.expires_at:
-            logger.warning(f"Expired OAuth state: {state[:8]}...")
+        if datetime.now(timezone.utc) > oauth_state.expires_at:
+            logger.warning("github_oauth_expired_state", state=state)
             await db.delete(oauth_state)
             await db.commit()
-            raise HTTPException(
-                status_code=400,
-                detail="State parameter has expired",
+            frontend_url = settings.frontend_url
+            return Response(
+                status_code=302,
+                headers={"Location": f"{frontend_url}?status=error&error=expired_state"},
             )
 
-        # Check if state has already been used
-        if oauth_state.is_used:
-            logger.warning(f"OAuth state already used: {state[:8]}...")
-            raise HTTPException(
-                status_code=400,
-                detail="State parameter has already been used",
-            )
+        # Exchange code for token
+        token_data = await exchange_code_for_token(code)
+        access_token = token_data.get("access_token")
 
-        # Mark state as used
-        oauth_state.is_used = True
-        await db.commit()
-
-        # Exchange authorization code for access token
-        import urllib.parse
-        import httpx
-
-        token_url = "https://github.com/login/oauth/access_token"
-        token_data = {
-            "client_id": settings.github_client_id,
-            "client_secret": settings.github_client_secret,
-            "code": code,
-            "redirect_uri": oauth_state.redirect_uri,
-        }
-
-        async with httpx.AsyncClient() as client:
-            token_response = await client.post(
-                token_url,
-                data=token_data,
-                headers={"Accept": "application/json"},
-            )
-
-            if token_response.status_code != 200:
-                logger.error(f"GitHub token exchange failed: {token_response.text}")
-                raise HTTPException(
-                    status_code=400,
-                    detail="Failed to exchange authorization code for access token",
-                )
-
-            token_info = token_response.json()
-
-            if "error" in token_info:
-                logger.error(f"GitHub OAuth error: {token_info.get('error_description')}")
-                raise HTTPException(
-                    status_code=400,
-                    detail=f"GitHub OAuth error: {token_info.get('error_description', 'Unknown error')}",
-                )
-
-            access_token = token_info.get("access_token")
-            token_type = token_info.get("token_type", "bearer")
-            scope = token_info.get("scope")
-
-            if not access_token:
-                raise HTTPException(
-                    status_code=400,
-                    detail="No access token received from GitHub",
-                )
-
-        # Fetch GitHub user profile
-        user_response = await client.get(
-            "https://api.github.com/user",
-            headers={"Authorization": f"Bearer {access_token}"},
-        )
-
-        if user_response.status_code != 200:
-            logger.error(f"GitHub user profile fetch failed: {user_response.text}")
-            raise HTTPException(
-                status_code=400,
-                detail="Failed to fetch GitHub user profile",
-            )
-
-        github_user = user_response.json()
+        # Fetch GitHub user
+        github_user = await fetch_github_user(access_token)
         github_user_id = github_user.get("id")
         github_username = github_user.get("login")
-        github_display_name = github_user.get("name")
+        github_email = github_user.get("email")
 
-        if not github_user_id or not github_username:
-            raise HTTPException(
-                status_code=400,
-                detail="Invalid GitHub user data received",
+        # Encrypt token for storage
+        encrypted_token = encrypt_token(access_token)
+
+        # Check if connection already exists
+        existing_connection = await db.execute(
+            select(UserGitHubConnection).where(
+                UserGitHubConnection.github_user_id == github_user_id
             )
-
-        # Encrypt access token before storage
-        try:
-            encryption = get_token_encryption()
-            encrypted_access_token = encryption.encrypt(access_token)
-        except TokenEncryptionError as e:
-            logger.error(f"Token encryption failed: {e}")
-            raise HTTPException(
-                status_code=500,
-                detail="Failed to encrypt access token",
-            )
-
-        # Check if user already has a GitHub connection
-        result = await db.execute(
-            select(GitHubConnection).where(GitHubConnection.github_user_id == github_user_id)
         )
-        existing_connection = result.scalar_one_or_none()
+        existing = existing_connection.scalar_one_or_none()
 
-        if existing_connection:
+        if existing:
             # Update existing connection
-            existing_connection.access_token = encrypted_access_token
-            existing_connection.token_type = token_type
-            existing_connection.scope = scope
-            existing_connection.is_active = True
-            existing_connection.updated_at = datetime.utcnow()
-            if github_display_name:
-                existing_connection.github_display_name = github_display_name
+            existing.access_token = encrypted_token
+            existing.github_username = github_username
+            existing.github_email = github_email
+            existing.is_active = True
+            existing.updated_at = datetime.now(timezone.utc)
+            await db.commit()
 
             logger.info(
-                f"Updated existing GitHub connection for user {github_username}",
-                connection_id=existing_connection.id,
-            )
-        else:
-            # Create new connection (user_id will be set later during actual auth flow)
-            new_connection = GitHubConnection(
-                user_id=oauth_state.user_id,  # May be None if no user auth yet
+                "github_oauth_existing_connection_updated",
                 github_user_id=github_user_id,
                 github_username=github_username,
-                github_display_name=github_display_name,
-                access_token=encrypted_access_token,
-                token_type=token_type,
-                scope=scope,
+            )
+            monitoring_metrics.increment_oauth_connection_success(provider="github")
+        else:
+            # Create new connection
+            new_connection = UserGitHubConnection(
+                user_id=oauth_state.user_id,
+                github_user_id=github_user_id,
+                github_username=github_username,
+                github_email=github_email,
+                access_token=encrypted_token,
                 is_active=True,
             )
             db.add(new_connection)
+            await db.commit()
+
             logger.info(
-                f"Created new GitHub connection for user {github_username}",
+                "github_oauth_new_connection",
+                github_user_id=github_user_id,
+                github_username=github_username,
+                user_id=oauth_state.user_id,
             )
+            monitoring_metrics.increment_oauth_connection_success(provider="github")
 
-        # Clean up used state
+        # Clean up OAuth state
         await db.delete(oauth_state)
-
-        # Commit all changes
         await db.commit()
 
-        logger.info(
-            "GitHub OAuth callback successful",
-            github_username=github_username,
-            github_user_id=github_user_id,
-        )
-
-        return CallbackResponse(
-            success=True,
-            message="GitHub connection established successfully",
-            user_id=oauth_state.user_id,
-            github_username=github_username,
+        # Redirect to frontend with success
+        frontend_url = settings.frontend_url
+        return Response(
+            status_code=302,
+            headers={"Location": f"{frontend_url}?status=success"},
         )
 
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"GitHub OAuth callback error: {e}", exc_info=True)
-        raise HTTPException(
-            status_code=500, detail="Failed to complete GitHub OAuth flow"
+        logger.error("github_oauth_error", error=str(e))
+        frontend_url = settings.frontend_url
+        return Response(
+            status_code=302,
+            headers={"Location": f"{frontend_url}?status=error&error={str(e)}"},
         )
 
 
-# Connection Management Endpoints
-@router.get("/connections", response_model=ConnectionListResponse)
-async def list_github_connections(
+@router.get(
+    "/connect",
+    responses={
+        200: {"description": "OAuth authorization URL generated"},
+        401: {"description": "Not authenticated"},
+    },
+    summary="Initiate GitHub OAuth authorization",
+)
+async def github_connect(
     request: Request,
-    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[User, Depends(get_current_user)],
+    db: Annotated[AsyncSession, Depends(get_async_session)],
+    redirect_uri: Annotated[Optional[str], Query()] = None,
 ):
     """
-    List GitHub connections for the authenticated user.
+    Initiate GitHub OAuth authorization flow.
 
-    Returns a list of all GitHub OAuth connections associated with the user.
+    This endpoint generates a GitHub OAuth authorization URL for the frontend
+    to redirect the user to. The user will be prompted to authorize the
+    application to access their GitHub account.
+
+    **OAuth Scopes Requested:**
+    - `read:user`: Access to user profile information
+    - `public_repo`: Access to public repositories
+
+    **State Parameter:**
+    A cryptographically secure random state parameter is generated and stored.
+    This must be stored (e.g., in session storage) and verified in the callback
+    to prevent CSRF attacks.
+
+    **Custom Redirect URI:**
+    By default, the callback URI is configured via `GITHUB_OAUTH_REDIRECT_URI`
+    environment variable or settings. You can override this per-request using
+    the `redirect_uri` query parameter, which is useful for supporting
+    different environments (development, staging, production).
+
+    **Response:**
+    Returns the authorization URL that the frontend should redirect the user to,
+    along with a state parameter for CSRF protection.
     """
-    # For now, return all connections (will add user authentication later)
-    result = await db.execute(select(GitHubConnection))
-    connections = result.scalars().all()
+    user_id = current_user.id
 
-    connection_list = [
-        ConnectionInfo(
-            id=conn.id,
-            github_user_id=conn.github_user_id,
-            github_username=conn.github_username,
-            github_display_name=conn.github_display_name,
-            is_active=conn.is_active,
-            created_at=conn.created_at,
-        )
-        for conn in connections
-    ]
+    # Generate cryptographically secure random state
+    state = secrets.token_urlsafe(16)
 
-    return ConnectionListResponse(
-        success=True,
-        connections=connection_list,
+    # Calculate expiration time (10 minutes from now)
+    expires_at = datetime.now(timezone.utc) + timedelta(minutes=10)
+
+    # Store OAuth state in database
+    oauth_state = OAuthState(
+        state=state,
+        user_id=user_id,
+        provider="github",
+        expires_at=expires_at,
+    )
+    db.add(oauth_state)
+    await db.commit()
+
+    # Build OAuth authorization URL
+    callback_url = f"{request.url.scheme}://{request.url.netloc}/github/callback"
+    github_auth_url = (
+        f"https://github.com/login/oauth/authorize"
+        f"?client_id={settings.github_client_id}"
+        f"&redirect_uri={callback_url}"
+        f"&scope=user:email"
+        f"&state={state}"
     )
 
+    logger.info(
+        "github_oauth_authorize",
+        user_id=user_id,
+        state=state,
+    )
 
-@router.delete("/connections/{connection_id}")
-async def delete_github_connection(
-    connection_id: int,
+    return Response(status_code=302, headers={"Location": github_auth_url})
+
+
+@router.delete(
+    "/disconnect",
+    status_code=status.HTTP_204_NO_CONTENT,
+    responses={
+        204: {"description": "GitHub account disconnected successfully"},
+        401: {"description": "Not authenticated"},
+        404: {"description": "No GitHub connection found"},
+    },
+    summary="Disconnect GitHub account",
+)
+async def disconnect_github(
     request: Request,
-    db: AsyncSession = Depends(get_db),
+    current_user: Annotated[User, Depends(get_current_user)],
+    db: Annotated[AsyncSession, Depends(get_async_session)],
 ):
     """
-    Delete a GitHub connection.
+    Disconnect user's GitHub account and delete stored OAuth tokens.
 
-    This endpoint revokes the GitHub OAuth connection and marks it as inactive.
-    The connection is not deleted from the database for audit purposes.
+    This endpoint:
+    1. Optionally revokes the GitHub OAuth token with GitHub API (best-effort)
+    2. Deletes the encrypted token from the database
+    3. Removes all GitHub connection data for the user
+
+    Requires authentication via JWT access token.
+
+    **Error handling:**
+    - 401: User not authenticated
+    - Returns 204 No Content regardless of whether connection exists (idempotent)
     """
+    user_id = current_user.id
+
+    # Check if user has a GitHub connection
+    logger.info(
+        "github_disconnect_attempt",
+        user_id=user_id,
+        email=current_user.email,
+    )
+
+    # Fetch the GitHub connection for this user
     result = await db.execute(
-        select(GitHubConnection).where(GitHubConnection.id == connection_id)
+        select(UserGitHubConnection).where(
+            UserGitHubConnection.user_id == user_id,
+        )
     )
     connection = result.scalar_one_or_none()
 
-    if not connection:
-        raise HTTPException(status_code=404, detail="GitHub connection not found")
+    # If connection exists, revoke the token with GitHub API and delete from database
+    if connection:
+        # Attempt to revoke the token with GitHub API (best-effort)
+        await _revoke_github_token(connection.access_token)
 
-    # Mark as revoked
-    connection.is_active = False
-    connection.revoked_at = datetime.utcnow()
-    await db.commit()
+        # Delete the connection from database
+        await db.delete(connection)
+        await db.commit()
 
-    logger.info(
-        "GitHub connection deleted",
-        connection_id=connection_id,
-        github_username=connection.github_username,
-    )
+        logger.info(
+            "github_disconnect_success",
+            user_id=user_id,
+            connection_id=connection.id,
+            github_username=connection.github_username,
+        )
+    else:
+        # No connection found - log and return success (idempotent)
+        logger.info(
+            "github_disconnect_no_connection",
+            user_id=user_id,
+        )
 
-    return {"success": True, "message": "GitHub connection revoked"}
+    return None

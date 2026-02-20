@@ -1,5 +1,30 @@
 """
-Resume API Library Module.
+Library modules for ResumeAI.
 
-This module contains shared utilities and components for the Resume API.
+This package contains various library modules for interacting with external services
+and implementing core functionality.
 """
+
+from .github_api_client import (
+    GitHubAPIClient,
+    GitHubAPIError,
+    GitHubRateLimitError,
+    GitHubAuthenticationError,
+    GitHubNetworkError,
+    GitHubNotFoundError,
+    GitHubUser,
+    GitHubRepository,
+    GitHubTopic,
+)
+
+__all__ = [
+    "GitHubAPIClient",
+    "GitHubAPIError",
+    "GitHubRateLimitError",
+    "GitHubAuthenticationError",
+    "GitHubNetworkError",
+    "GitHubNotFoundError",
+    "GitHubUser",
+    "GitHubRepository",
+    "GitHubTopic",
+]
