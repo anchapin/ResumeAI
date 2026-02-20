@@ -87,7 +87,9 @@ def setup_sentry():
             traces_sample_rate=settings.sentry_traces_sample_rate,
             send_default_pii=False,
         )
-        logger.info("sentry_initialized", environment=settings.sentry_environment)
+        logger.info(
+            "sentry_initialized", environment=settings.sentry_environment
+        )
 
 
 def setup_prometheus(app: FastAPI):
@@ -182,12 +184,16 @@ app.add_exception_handler(RateLimitExceeded, rate_limit_exceeded_handler)
 
 # Register validation error handler for debugging
 @app.exception_handler(RequestValidationError)
-async def validation_exception_handler(request: Request, exc: RequestValidationError):
+async def validation_exception_handler(
+    request: Request, exc: RequestValidationError
+):
     """Log validation errors for debugging."""
     logger.error("validation_error", errors=exc.errors())
     return JSONResponse(
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-        content={"detail": "Validation error in resume data. Please check all fields."},
+        content={
+            "detail": "Validation error in resume data. Check all fields."
+        },
     )
 
 
@@ -206,7 +212,9 @@ app.add_middleware(
     allow_headers=["*"],
     # Add additional security for CORS
     allow_origin_regex=(
-        settings.cors_origin_regex if hasattr(settings, "cors_origin_regex") else None
+        settings.cors_origin_regex
+        if hasattr(settings, "cors_origin_regex")
+        else None
     ),
 )
 
@@ -273,20 +281,18 @@ async def websocket_resume(
     ws://host/ws/resumes/{resume_id}?token=jwt_token
 
     Requires authentication via JWT token in query parameter.
-
-    Message types:
-    - cursor_update: Broadcast cursor position
-    - resume_update: Broadcast resume data changes
-    - typing_start: User started typing
-    - typing_stop: User stopped typing
-    - ping: Keep-alive ping
     """
-    await handle_websocket_connection(websocket, resume_id, str(current_user.id))
+    await handle_websocket_connection(
+        websocket, resume_id, str(current_user.id)
+    )
 
 
 if __name__ == "__main__":
     import uvicorn
 
     uvicorn.run(
-        "main:app", host=settings.host, port=settings.port, reload=settings.debug
+        "main:app",
+        host=settings.host,
+        port=settings.port,
+        reload=settings.debug,
     )

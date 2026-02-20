@@ -1,14 +1,22 @@
 """
 Configuration dependencies and settings.
 
-Provides authentication dependencies for both API key and JWT token-based authentication.
+Provides authentication dependencies for both API key and JWT token-based
+authentication.
 """
 
 import os
 import secrets
 from typing import Annotated, Optional
 
-from fastapi import Header, HTTPException, status, Depends, Query, WebSocketException
+from fastapi import (
+    Header,
+    HTTPException,
+    status,
+    Depends,
+    Query,
+    WebSocketException,
+)
 from fastapi.requests import Request
 from fastapi.responses import JSONResponse
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
@@ -64,7 +72,8 @@ async def get_current_user_ws(
     """
     Authenticate WebSocket connection using JWT token in query parameter.
 
-    Raises WebSocketException with code 1008 (Policy Violation) if authentication fails.
+    Raises WebSocketException with code 1008 (Policy Violation) if
+    authentication fails.
     """
     if not token:
         raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION)
@@ -105,7 +114,8 @@ async def get_api_key(x_api_key: str = Header(None)) -> str:
         return "anonymous"
     if not x_api_key:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="API key is required"
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="API key is required",
         )
     # Use secrets.compare_digest for constant-time string comparison
     # to prevent timing attacks
@@ -119,7 +129,9 @@ async def get_api_key(x_api_key: str = Header(None)) -> str:
             if secrets.compare_digest(x_api_key, key):
                 return x_api_key
 
-    raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid API key")
+    raise HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN, detail="Invalid API key"
+    )
 
 
 AuthorizedAPIKey = Annotated[str, Depends(get_api_key)]
@@ -131,7 +143,9 @@ AuthorizedAPIKey = Annotated[str, Depends(get_api_key)]
 
 
 async def get_current_user(
-    credentials: Annotated[Optional[HTTPAuthorizationCredentials], Depends(security)],
+    credentials: Annotated[
+        Optional[HTTPAuthorizationCredentials], Depends(security)
+    ],
     db: Annotated[AsyncSession, Depends(get_async_session)],
 ) -> User:
     """
@@ -142,7 +156,9 @@ async def get_current_user(
 
     Usage:
         @router.get("/protected")
-        async def protected_route(current_user: User = Depends(get_current_user)):
+        async def protected_route(
+            current_user: User = Depends(get_current_user)
+        ):
             return {"user": current_user}
 
     Raises:
@@ -206,7 +222,9 @@ CurrentUser = Annotated[User, Depends(get_current_user)]
 
 
 async def get_current_user_optional(
-    credentials: Annotated[Optional[HTTPAuthorizationCredentials], Depends(security)],
+    credentials: Annotated[
+        Optional[HTTPAuthorizationCredentials], Depends(security)
+    ],
     db: Annotated[AsyncSession, Depends(get_async_session)],
 ) -> Optional[User]:
     """
@@ -241,7 +259,9 @@ async def get_current_user_optional(
     return None
 
 
-CurrentUserOptional = Annotated[Optional[User], Depends(get_current_user_optional)]
+CurrentUserOptional = Annotated[
+    Optional[User], Depends(get_current_user_optional)
+]
 
 
 # =============================================================================
