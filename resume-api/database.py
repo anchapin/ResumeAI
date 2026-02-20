@@ -570,10 +570,73 @@ class APIKey(Base):
     )
 
 
+class GitHubConnection(Base):
+    """GitHub OAuth connection model for storing user's GitHub account."""
+
+    __tablename__ = "github_connections"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+
+    # GitHub account details
+    github_user_id = Column(Integer, nullable=False, unique=True, index=True)
+    github_username = Column(String(255), nullable=False, index=True)
+    github_display_name = Column(String(255), nullable=True)
+
+    # OAuth tokens (encrypted at rest)
+    access_token = Column(Text, nullable=False)  # Encrypted
+    refresh_token = Column(Text, nullable=True)  # Encrypted (optional)
+    token_type = Column(String(50), default="bearer")
+    scope = Column(String(500), nullable=True)  # Space-separated scopes
+
+    # Token metadata
+    expires_at = Column(DateTime(timezone=True), nullable=True)  # OAuth token expiration
+
+    # Connection status
+    is_active = Column(Boolean, default=True, nullable=False, index=True)
+    revoked_at = Column(DateTime(timezone=True), nullable=True)
+
+    # Metadata
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), index=True)
+    updated_at = Column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
+
+    # Relationships
+    user = relationship("User")
+
+    __table_args__ = (
+        Index("idx_github_conn_user", "user_id", "is_active"),
+    )
+
+
+class GitHubOAuthState(Base):
+    """Temporary storage for OAuth state parameters during flow."""
+
+    __tablename__ = "github_oauth_states"
+
+    id = Column(Integer, primary_key=True, index=True)
+    state = Column(String(255), unique=True, nullable=False, index=True)
+
+    # User association (optional - may be null before authentication)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)
+
+    # Redirect URI (to redirect back after OAuth)
+    redirect_uri = Column(String(500), nullable=True)
+
+    # State metadata
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), index=True)
+    expires_at = Column(DateTime(timezone=True), nullable=False, index=True)
+    is_used = Column(Boolean, default=False, nullable=False, index=True)
+
+
 # Add relationship to User model
 # Note: This is done by modifying the User class after it's defined
 User.api_keys = relationship(
     "APIKey", back_populates="user", cascade="all, delete-orphan"
+)
+User.github_connections = relationship(
+    "GitHubConnection", back_populates="user", cascade="all, delete-orphan"
 )
 
 
