@@ -4,6 +4,7 @@ JWT utilities for user authentication.
 Provides functions for creating, verifying, and managing JWT tokens.
 """
 
+import uuid
 from datetime import datetime, timedelta, timezone
 from typing import Optional, Any
 from jose import JWTError, jwt
@@ -34,7 +35,8 @@ def create_access_token(
             minutes=settings.jwt_access_token_expire_minutes
         )
 
-    to_encode.update({"exp": expire, "type": "access"})
+    # Add unique JWT ID (jti) to ensure tokens are unique even for same data
+    to_encode.update({"jti": str(uuid.uuid4()), "exp": expire, "type": "access"})
 
     return jwt.encode(
         to_encode,
@@ -67,7 +69,8 @@ def create_refresh_token(
         # Default refresh token expiration: 7 days
         expire = datetime.now(timezone.utc) + timedelta(days=7)
 
-    to_encode.update({"exp": expire, "type": "refresh"})
+    # Add unique JWT ID (jti) to ensure tokens are unique even for same data
+    to_encode.update({"jti": str(uuid.uuid4()), "exp": expire, "type": "refresh"})
 
     return jwt.encode(
         to_encode,
