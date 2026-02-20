@@ -6,7 +6,7 @@ FastAPI service for generating and tailoring professional resumes.
 
 import asyncio
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, Request, Response, status
+from fastapi import FastAPI, Request, Response, status, Depends, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
@@ -16,8 +16,12 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from api import router
 from api.websocket import handle_websocket_connection
 from config import settings
-from config.dependencies import limiter, rate_limit_exceeded_handler
-from database import create_db_and_tables
+from config.dependencies import (
+    limiter,
+    rate_limit_exceeded_handler,
+    get_current_user_ws,
+)
+from database import create_db_and_tables, User
 from middleware.monitoring import MonitoringMiddleware
 from monitoring import logging_config, health, alerting, analytics
 from slowapi.errors import RateLimitExceeded
@@ -84,7 +88,9 @@ def setup_sentry():
             traces_sample_rate=settings.sentry_traces_sample_rate,
             send_default_pii=False,
         )
-        logger.info("sentry_initialized", environment=settings.sentry_environment)
+        logger.info(
+            "sentry_initialized", environment=settings.sentry_environment
+        )
 
 
 def setup_prometheus(app: FastAPI):
@@ -179,12 +185,16 @@ app.add_exception_handler(RateLimitExceeded, rate_limit_exceeded_handler)
 
 # Register validation error handler for debugging
 @app.exception_handler(RequestValidationError)
-async def validation_exception_handler(request: Request, exc: RequestValidationError):
+async def validation_exception_handler(
+    request: Request, exc: RequestValidationError
+):
     """Log validation errors for debugging."""
     logger.error("validation_error", errors=exc.errors())
     return JSONResponse(
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-        content={"detail": "Validation error in resume data. Please check all fields."},
+        content={
+            "detail": "Validation error in resume data. Check all fields."
+        },
     )
 
 
@@ -203,7 +213,9 @@ app.add_middleware(
     allow_headers=["*"],
     # Add additional security for CORS
     allow_origin_regex=(
-        settings.cors_origin_regex if hasattr(settings, "cors_origin_regex") else None
+        settings.cors_origin_regex
+        if hasattr(settings, "cors_origin_regex")
+        else None
     ),
 )
 
@@ -259,26 +271,30 @@ app.include_router(webhook_router)
 
 # WebSocket endpoint for real-time collaboration
 @app.websocket("/ws/resumes/{resume_id}")
-async def websocket_resume(websocket, resume_id: str, user_id: str = None):
+async def websocket_resume(
+    websocket: WebSocket,
+    resume_id: str,
+    current_user: User = Depends(get_current_user_ws),
+):
     """
     WebSocket endpoint for real-time collaboration on resumes.
 
     Connect to collaborate on a specific resume:
-    ws://host/ws/resumes/{resume_id}?user_id=optional_user_id
+    ws://host/ws/resumes/{resume_id}?token=jwt_token
 
-    Message types:
-    - cursor_update: Broadcast cursor position
-    - resume_update: Broadcast resume data changes
-    - typing_start: User started typing
-    - typing_stop: User stopped typing
-    - ping: Keep-alive ping
+    Requires authentication via JWT token in query parameter.
     """
-    await handle_websocket_connection(websocket, resume_id, user_id)
+    await handle_websocket_connection(
+        websocket, resume_id, str(current_user.id)
+    )
 
 
 if __name__ == "__main__":
     import uvicorn
 
     uvicorn.run(
-        "main:app", host=settings.host, port=settings.port, reload=settings.debug
+        "main:app",
+        host=settings.host,
+        port=settings.port,
+        reload=settings.debug,
     )
