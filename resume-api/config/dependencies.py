@@ -8,7 +8,7 @@ import os
 import secrets
 from typing import Annotated, Optional
 
-from fastapi import Header, HTTPException, status, Depends
+from fastapi import Header, HTTPException, status, Depends, Query, WebSocketException
 from fastapi.requests import Request
 from fastapi.responses import JSONResponse
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
@@ -50,6 +50,44 @@ def get_request_identifier(request):
 
 
 limiter = Limiter(key_func=get_request_identifier)
+
+
+# =============================================================================
+# WebSocket Authentication
+# =============================================================================
+
+
+async def get_current_user_ws(
+    token: Annotated[str, Query(..., description="JWT access token")] = None,
+    db: AsyncSession = Depends(get_async_session),
+) -> User:
+    """
+    Authenticate WebSocket connection using JWT token in query parameter.
+
+    Raises WebSocketException with code 1008 (Policy Violation) if authentication fails.
+    """
+    if not token:
+        raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION)
+
+    try:
+        payload = verify_access_token(token)
+        if payload is None:
+            raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION)
+
+        user_id = payload.get("sub")
+        if user_id is None:
+            raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION)
+
+        result = await db.execute(select(User).where(User.id == int(user_id)))
+        user = result.scalar_one_or_none()
+
+        if user is None or not user.is_active:
+            raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION)
+
+        return user
+
+    except Exception:
+        raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION)
 
 
 # =============================================================================

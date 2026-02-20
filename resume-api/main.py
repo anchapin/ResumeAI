@@ -6,7 +6,7 @@ FastAPI service for generating and tailoring professional resumes.
 
 import asyncio
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, Request, Response, status
+from fastapi import FastAPI, Request, Response, status, Depends, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
@@ -16,8 +16,12 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from api import router
 from api.websocket import handle_websocket_connection
 from config import settings
-from config.dependencies import limiter, rate_limit_exceeded_handler
-from database import create_db_and_tables
+from config.dependencies import (
+    limiter,
+    rate_limit_exceeded_handler,
+    get_current_user_ws,
+)
+from database import create_db_and_tables, User
 from middleware.monitoring import MonitoringMiddleware
 from monitoring import logging_config, health, alerting, analytics
 from slowapi.errors import RateLimitExceeded
@@ -257,12 +261,18 @@ app.include_router(webhook_router)
 
 # WebSocket endpoint for real-time collaboration
 @app.websocket("/ws/resumes/{resume_id}")
-async def websocket_resume(websocket, resume_id: str, user_id: str = None):
+async def websocket_resume(
+    websocket: WebSocket,
+    resume_id: str,
+    current_user: User = Depends(get_current_user_ws),
+):
     """
     WebSocket endpoint for real-time collaboration on resumes.
 
     Connect to collaborate on a specific resume:
-    ws://host/ws/resumes/{resume_id}?user_id=optional_user_id
+    ws://host/ws/resumes/{resume_id}?token=jwt_token
+
+    Requires authentication via JWT token in query parameter.
 
     Message types:
     - cursor_update: Broadcast cursor position
@@ -271,7 +281,7 @@ async def websocket_resume(websocket, resume_id: str, user_id: str = None):
     - typing_stop: User stopped typing
     - ping: Keep-alive ping
     """
-    await handle_websocket_connection(websocket, resume_id, user_id)
+    await handle_websocket_connection(websocket, resume_id, str(current_user.id))
 
 
 if __name__ == "__main__":
