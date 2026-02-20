@@ -7,8 +7,10 @@ metadata retrieval, and validation.
 
 import yaml
 import logging
+import copy
 from pathlib import Path
 from typing import Dict, Any, List
+from functools import lru_cache
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -35,12 +37,11 @@ class VariantManager:
 
         logger.info(f"VariantManager initialized with: {self.templates_dir}")
 
-    def list_variants(self) -> List[str]:
+    @lru_cache(maxsize=1)
+    def _list_variants_cached(self) -> tuple:
         """
-        List all available template variants.
-
-        Returns:
-            List of variant names
+        Cached implementation of list_variants.
+        Returns a tuple to ensure immutability in cache.
         """
         variants = []
 
@@ -52,20 +53,24 @@ class VariantManager:
                     logger.debug(f"Found variant: {item.name}")
 
         logger.info(f"Found {len(variants)} variants")
-        return variants
+        return tuple(variants)
 
-    def get_variant_metadata(self, variant: str) -> Dict[str, Any]:
+    def list_variants(self) -> List[str]:
         """
-        Get metadata for a specific variant.
+        List all available template variants.
 
-        Args:
-            variant: Variant name
+        Optimized with caching to avoid redundant directory scanning.
+        Returns a new list to prevent modification of the cached tuple.
 
         Returns:
-            Dictionary containing variant metadata
+            List of variant names
+        """
+        return list(self._list_variants_cached())
 
-        Raises:
-            FileNotFoundError: If variant doesn't exist
+    @lru_cache(maxsize=128)
+    def _get_variant_metadata_cached(self, variant: str) -> Dict[str, Any]:
+        """
+        Cached implementation of get_variant_metadata.
         """
         variant_dir = self.templates_dir / variant
 
@@ -93,6 +98,24 @@ class VariantManager:
                 logger.warning(f"Failed to load metadata for '{variant}': {e}")
 
         return metadata
+
+    def get_variant_metadata(self, variant: str) -> Dict[str, Any]:
+        """
+        Get metadata for a specific variant.
+
+        Optimized with caching to avoid redundant file I/O.
+        Returns a deep copy to prevent modification of the cached dictionary.
+
+        Args:
+            variant: Variant name
+
+        Returns:
+            Dictionary containing variant metadata
+
+        Raises:
+            FileNotFoundError: If variant doesn't exist
+        """
+        return copy.deepcopy(self._get_variant_metadata_cached(variant))
 
     def validate_variant(self, variant: str) -> bool:
         """
