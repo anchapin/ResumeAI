@@ -124,6 +124,8 @@ Vercel will automatically deploy on push to main branch.
 - [ ] Enable `REQUIRE_API_KEY=true` in production
 - [ ] Configure `CORS_ORIGINS` to your Vercel domain
 - [ ] Enable rate limiting (`ENABLE_RATE_LIMITING=true`)
+- [ ] Configure GitHub OAuth (`GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`)
+- [ ] Ensure `GITHUB_AUTH_MODE=oauth` (CLI mode is deprecated)
 
 ### Monitoring
 - [ ] Set up Sentry for error tracking (optional)

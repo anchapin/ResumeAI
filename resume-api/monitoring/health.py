@@ -4,6 +4,7 @@ from datetime import datetime
 
 from config import settings
 from monitoring import logging_config
+from monitoring import metrics as monitoring_metrics
 
 logger = logging_config.get_logger(__name__)
 
@@ -23,13 +24,69 @@ class HealthCheck:
     async def check_memory_usage(self):
         return {"healthy": True, "used_percent": 45.0, "threshold_percent": 90.0}
 
+    async def check_oauth_health(self):
+        """Check OAuth integration health."""
+        try:
+            from prometheus_client import REGISTRY
+
+            # Get OAuth metrics
+            success_count = monitoring_metrics.oauth_connection_success_total._value.get()
+            failure_count = sum(
+                metric._value.get()
+                for metric in monitoring_metrics.oauth_connection_failure_total._value.values()
+            )
+            rate_limit_hits = monitoring_metrics.oauth_rate_limit_hits_total._value.get()
+            token_expiration_events = monitoring_metrics.oauth_token_expiration_events._value.get()
+            storage_error_count = sum(
+                metric._value.get()
+                for metric in monitoring_metrics.oauth_storage_errors_total._value.values()
+            )
+
+            # Determine OAuth health based on metrics
+            # If we have activity, calculate success rate
+            total_oauth_requests = success_count + failure_count
+            if total_oauth_requests > 0:
+                success_rate = success_count / total_oauth_requests
+                healthy = success_rate >= 0.8  # At least 80% success rate
+            else:
+                # No activity yet, consider healthy
+                healthy = True
+                success_rate = 1.0
+
+            return {
+                "healthy": healthy,
+                "success_rate": success_rate,
+                "success_count": success_count,
+                "failure_count": failure_count,
+                "total_requests": total_oauth_requests,
+                "rate_limit_hits": rate_limit_hits,
+                "token_expiration_events": token_expiration_events,
+                "storage_error_count": storage_error_count,
+                "github_configured": bool(
+                    settings.github_client_id and settings.github_client_secret
+                ),
+            }
+        except Exception as e:
+            logger.error("oauth_health_check_error", error=str(e))
+            return {
+                "healthy": False,
+                "error": str(e),
+            }
+
     async def check_all(self):
         db = await self.check_database()
         ai = await self.check_ai_provider()
         disk = await self.check_disk_space()
         memory = await self.check_memory_usage()
+        oauth = await self.check_oauth_health()
         overall = all(
-            [db["healthy"], ai["healthy"], disk["healthy"], memory["healthy"]]
+            [
+                db["healthy"],
+                ai["healthy"],
+                disk["healthy"],
+                memory["healthy"],
+                oauth["healthy"],
+            ]
         )
         return {
             "healthy": overall,
@@ -39,12 +96,14 @@ class HealthCheck:
                 "ai_provider": ai["healthy"],
                 "disk_space": disk["healthy"],
                 "memory_usage": memory["healthy"],
+                "oauth": oauth["healthy"],
             },
             "details": {
                 "database": db,
                 "ai_provider": ai,
                 "disk_space": disk,
                 "memory_usage": memory,
+                "oauth": oauth,
             },
         }
 

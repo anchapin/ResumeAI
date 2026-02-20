@@ -82,6 +82,49 @@ api_info.info(
     }
 )
 
+# OAuth-specific metrics
+oauth_connection_success_total = Counter(
+    "oauth_connection_success_total",
+    "Total successful OAuth connections",
+    ["provider"],
+    registry=registry,
+)
+oauth_connection_failure_total = Counter(
+    "oauth_connection_failure_total",
+    "Total failed OAuth connections",
+    ["provider", "error_type"],
+    registry=registry,
+)
+oauth_token_refresh_total = Counter(
+    "oauth_token_refresh_total",
+    "Total OAuth token refresh events",
+    ["provider", "status"],
+    registry=registry,
+)
+oauth_rate_limit_hits_total = Counter(
+    "oauth_rate_limit_hits_total",
+    "Total OAuth API rate limit hits",
+    ["provider"],
+    registry=registry,
+)
+oauth_token_expiration_events = Counter(
+    "oauth_token_expiration_events",
+    "Total OAuth token expiration events",
+    ["provider"],
+    registry=registry,
+)
+oauth_storage_errors_total = Counter(
+    "oauth_storage_errors_total",
+    "Total OAuth token storage errors",
+    ["error_type"],
+    registry=registry,
+)
+oauth_active_connections_gauge = Gauge(
+    "oauth_active_connections",
+    "Currently active OAuth connections",
+    registry=registry,
+)
+
 
 def increment_http_requests(method, endpoint, status_code):
     http_requests_total.labels(
@@ -145,3 +188,32 @@ def observe_db_query_duration(operation, duration_seconds):
 
 def increment_db_queries(operation):
     db_queries_total.labels(operation=operation).inc()
+
+
+# OAuth metric helper functions
+def increment_oauth_connection_success(provider="github"):
+    oauth_connection_success_total.labels(provider=provider).inc()
+
+
+def increment_oauth_connection_failure(provider="github", error_type="unknown"):
+    oauth_connection_failure_total.labels(provider=provider, error_type=error_type).inc()
+
+
+def increment_oauth_token_refresh(provider="github", status="success"):
+    oauth_token_refresh_total.labels(provider=provider, status=status).inc()
+
+
+def increment_oauth_rate_limit_hits(provider="github"):
+    oauth_rate_limit_hits_total.labels(provider=provider).inc()
+
+
+def increment_oauth_token_expiration_events(provider="github"):
+    oauth_token_expiration_events.labels(provider=provider).inc()
+
+
+def increment_oauth_storage_errors(error_type="unknown"):
+    oauth_storage_errors_total.labels(error_type=error_type).inc()
+
+
+def set_oauth_active_connections(count):
+    oauth_active_connections_gauge.set(count)
