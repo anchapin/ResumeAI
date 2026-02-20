@@ -10,7 +10,7 @@ from starlette.requests import Request
 from starlette.responses import Response
 
 from config import settings
-from monitoring import logging_config, metrics
+from monitoring import logging_config, analytics, metrics
 
 logger = logging_config.get_logger(__name__)
 
@@ -91,7 +91,7 @@ class MonitoringMiddleware(BaseHTTPMiddleware):
 
                 # Record analytics
                 if settings.enable_analytics:
-                    await metrics.analytics.record_request(
+                    await analytics.record_request(
                         endpoint=request.url.path,
                         method=request.method,
                         status_code=response.status_code,
@@ -129,7 +129,7 @@ class MonitoringMiddleware(BaseHTTPMiddleware):
 
                 # Record analytics
                 if settings.enable_analytics:
-                    await metrics.analytics.record_error(
+                    await analytics.record_error(
                         endpoint=request.url.path,
                         error_type=type(exc).__name__,
                         error_message=str(exc),

@@ -248,7 +248,7 @@ class UserEngagement(Base):
         String(100), nullable=False, index=True
     )  # e.g., "generate_pdf", "tailor_resume"
     endpoint = Column(String(500), nullable=True)
-    metadata = Column(JSON, nullable=True)
+    event_metadata = Column("metadata", JSON, nullable=True)
     timestamp = Column(DateTime(timezone=True), server_default=func.now(), index=True)
 
     __table_args__ = (

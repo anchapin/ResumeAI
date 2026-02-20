@@ -26,6 +26,7 @@ from slowapi.errors import RateLimitExceeded
 from routes.interviews import router as interviews_router
 from routes.salary import router as salary_router
 from routes.linkedin import router as linkedin_router
+from routes.github import router as github_router
 
 # Get logger
 logger = logging_config.get_logger(__name__)
@@ -222,6 +223,7 @@ app.include_router(router)
 app.include_router(interviews_router)
 app.include_router(salary_router)
 app.include_router(linkedin_router)
+app.include_router(github_router)
 
 
 # WebSocket endpoint for real-time collaboration
