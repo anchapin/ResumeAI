@@ -55,6 +55,53 @@ async function fetchGitHubConnectionStatus(): Promise<GitHubConnectionStatus> {
 }
 
 /**
+ * Get GitHub OAuth connect URL
+ */
+async function getGitHubConnectUrl(): Promise<{ authorization_url: string; state: string }> {
+  const token = getAuthToken();
+  if (!token) {
+    throw new Error('Not authenticated');
+  }
+
+  const response = await fetch(`${API_URL}/github/connect`, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ detail: 'Failed to get GitHub connect URL' }));
+    throw new Error(error.detail || 'Failed to get GitHub connect URL');
+  }
+
+  return response.json();
+}
+
+/**
+ * Process GitHub OAuth callback
+ */
+async function processGitHubCallback(code: string, state: string): Promise<void> {
+  const token = getAuthToken();
+  if (!token) {
+    throw new Error('Not authenticated');
+  }
+
+  const response = await fetch(`${API_URL}/github/callback?code=${encodeURIComponent(code)}&state=${encodeURIComponent(state)}`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ detail: 'Failed to connect GitHub' }));
+    throw new Error(error.detail || 'Failed to connect GitHub');
+  }
+}
+
+/**
  * Disconnect GitHub account
  */
 async function disconnectGitHub(): Promise<void> {
@@ -91,31 +138,9 @@ const GitHubSettings: React.FC = () => {
     connected: false,
   });
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isConnecting, setIsConnecting] = useState<boolean>(false);
   const [isDisconnecting, setIsDisconnecting] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-
-  // OAuth configuration
-  const OAUTH_CLIENT_ID = import.meta.env.VITE_GITHUB_CLIENT_ID || '';
-  const OAUTH_REDIRECT_URI = `${window.location.origin}/settings`;
-  const OAUTH_SCOPE = 'read:user,user:email';
-  const OAUTH_STATE = crypto.randomUUID();
-
-  // Generate OAuth URL
-  const getOAuthUrl = useCallback(() => {
-    if (!OAUTH_CLIENT_ID) {
-      console.error('GitHub OAuth client ID not configured');
-      return null;
-    }
-
-    const params = new URLSearchParams({
-      client_id: OAUTH_CLIENT_ID,
-      redirect_uri: OAUTH_REDIRECT_URI,
-      scope: OAUTH_SCOPE,
-      state: OAUTH_STATE,
-    });
-
-    return `https://github.com/login/oauth/authorize?${params.toString()}`;
-  }, [OAUTH_CLIENT_ID, OAUTH_REDIRECT_URI, OAUTH_SCOPE, OAUTH_STATE]);
 
   // Load connection status
   const loadConnectionStatus = useCallback(async () => {
@@ -153,27 +178,43 @@ const GitHubSettings: React.FC = () => {
 
     if (code && state) {
       // Handle successful OAuth callback
-      // The backend should handle the code exchange, so we just reload the status
-      toast.success('GitHub connected successfully!');
-      // Clear URL parameters
-      window.history.replaceState({}, '', window.location.pathname);
-      // Reload connection status after a short delay
-      setTimeout(() => {
-        loadConnectionStatus();
-      }, 500);
+      setIsConnecting(true);
+      processGitHubCallback(code, state)
+        .then(() => {
+          toast.success('GitHub connected successfully!');
+          // Clear URL parameters
+          window.history.replaceState({}, '', window.location.pathname);
+          // Reload connection status after a short delay
+          setTimeout(() => {
+            loadConnectionStatus();
+          }, 500);
+        })
+        .catch((err) => {
+          const errorMessage = err instanceof Error ? err.message : 'Failed to connect GitHub';
+          setError(errorMessage);
+          toast.error(errorMessage);
+        })
+        .finally(() => {
+          setIsConnecting(false);
+        });
     }
   }, [loadConnectionStatus]);
 
   // Handle GitHub connection
-  const handleConnectGitHub = () => {
-    const oauthUrl = getOAuthUrl();
-    if (!oauthUrl) {
-      toast.error('GitHub OAuth is not configured. Please set up the GitHub OAuth app.');
-      return;
-    }
+  const handleConnectGitHub = async () => {
+    setIsConnecting(true);
+    setError(null);
 
-    // Redirect to GitHub OAuth
-    window.location.href = oauthUrl;
+    try {
+      const { authorization_url } = await getGitHubConnectUrl();
+      // Redirect to GitHub OAuth
+      window.location.href = authorization_url;
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to connect GitHub';
+      setError(errorMessage);
+      toast.error(errorMessage);
+      setIsConnecting(false);
+    }
   };
 
   // Handle GitHub disconnection
@@ -217,14 +258,22 @@ const GitHubSettings: React.FC = () => {
       </div>
       <div className="p-6">
         {/* Loading State */}
-        {isLoading && (
+        {isLoading && !isConnecting && (
           <div className="flex items-center justify-center py-8">
             <span className="material-symbols-outlined animate-spin text-primary-600 text-3xl">progress_activity</span>
           </div>
         )}
 
+        {/* Connecting State */}
+        {isConnecting && (
+          <div className="flex flex-col items-center justify-center py-8">
+            <span className="material-symbols-outlined animate-spin text-primary-600 text-4xl mb-4">progress_activity</span>
+            <p className="text-slate-600 font-medium">Connecting to GitHub...</p>
+          </div>
+        )}
+
         {/* Error State */}
-        {error && !isLoading && (
+        {error && !isLoading && !isConnecting && (
           <div className="flex items-center gap-2 text-red-600 text-sm bg-red-50 p-4 rounded-lg mb-4">
             <span className="material-symbols-outlined text-[18px]">error</span>
             {error}
@@ -232,7 +281,7 @@ const GitHubSettings: React.FC = () => {
         )}
 
         {/* Connected State */}
-        {!isLoading && connectionStatus.connected && (
+        {!isLoading && !isConnecting && connectionStatus.connected && (
           <div className="space-y-4">
             <div className="flex items-center gap-3 p-4 bg-green-50 border border-green-200 rounded-lg">
               <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
@@ -302,7 +351,7 @@ const GitHubSettings: React.FC = () => {
         )}
 
         {/* Not Connected State */}
-        {!isLoading && !connectionStatus.connected && (
+        {!isLoading && !isConnecting && !connectionStatus.connected && (
           <div className="space-y-4">
             <div className="text-center py-6">
               <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -316,12 +365,13 @@ const GitHubSettings: React.FC = () => {
               </p>
               <button
                 onClick={handleConnectGitHub}
-                className="px-6 py-3 rounded-lg bg-[#24292e] text-white font-bold text-sm hover:bg-[#3c444d] transition-colors shadow-lg flex items-center gap-2 mx-auto"
+                disabled={isConnecting}
+                className="px-6 py-3 rounded-lg bg-[#24292e] text-white font-bold text-sm hover:bg-[#3c444d] transition-colors shadow-lg flex items-center gap-2 mx-auto disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
                 </svg>
-                Connect with GitHub
+                {isConnecting ? 'Connecting...' : 'Connect with GitHub'}
               </button>
             </div>
 
