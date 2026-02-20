@@ -13,11 +13,13 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # Encryption key for OAuth tokens
 # In production, this should be set via environment variable
-ENCRYPTION_KEY = os.getenv(
-    "ENCRYPTION_KEY",
-    Fernet.generate_key().decode()
+# Note: TOKEN_ENCRYPTION_KEY is the preferred name (matches PR #305)
+# ENCRYPTION_KEY is deprecated but kept for backward compatibility
+TOKEN_ENCRYPTION_KEY = os.getenv(
+    "TOKEN_ENCRYPTION_KEY",
+    os.getenv("ENCRYPTION_KEY", Fernet.generate_key().decode())
 )
-cipher_suite = Fernet(ENCRYPTION_KEY.encode())
+cipher_suite = Fernet(TOKEN_ENCRYPTION_KEY.encode())
 
 
 def hash_password(password: str) -> str:
