@@ -9,10 +9,13 @@ Provides endpoints for:
 
 import uuid
 from typing import Optional, Dict, Any
-from fastapi import APIRouter, HTTPException, Query, Depends
+from fastapi import APIRouter, HTTPException, Query, Depends, Request
 from pydantic import BaseModel, Field, HttpUrl
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from lib.token_encryption import get_encryption
+from database import GitHubConnection, get_db
 
 router = APIRouter(prefix="/api/github", tags=["github"])
 
@@ -299,7 +302,10 @@ async def github_connect(
 
 
 @router.get("/status", response_model=GitHubStatusResponse)
-async def github_status():
+async def github_status(
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+):
     """
     Check GitHub connection status.
 
@@ -313,18 +319,36 @@ async def github_status():
     try:
         import os
 
+        # Get user identifier from request (can be from API key, session, etc.)
+        # For now, use a default identifier
+        user_identifier = request.headers.get("X-User-Identifier", "default_user")
+
         # Check for feature flag
         auth_mode = os.getenv("GITHUB_AUTH_MODE", "oauth").lower()
 
         if auth_mode == "oauth":
             # Check database for OAuth connection
-            # For now, return not connected (will be implemented with database)
-            return GitHubStatusResponse(
-                connected=False,
-                username=None,
-                auth_mode="oauth",
-                scopes=None,
+            result = await db.execute(
+                select(GitHubConnection).where(
+                    GitHubConnection.user_identifier == user_identifier
+                ).where(GitHubConnection.is_active == True)
             )
+            connection = result.scalar_one_or_none()
+
+            if connection:
+                return GitHubStatusResponse(
+                    connected=True,
+                    username=connection.github_username,
+                    auth_mode="oauth",
+                    scopes=connection.scopes,
+                )
+            else:
+                return GitHubStatusResponse(
+                    connected=False,
+                    username=None,
+                    auth_mode="oauth",
+                    scopes=None,
+                )
         elif auth_mode == "cli":
             # Check for gh CLI authentication
             import subprocess
@@ -529,6 +553,8 @@ async def get_github_repositories(
 async def github_callback(
     code: str = Query(..., description="Authorization code from GitHub"),
     state: str = Query(..., description="State parameter from OAuth flow"),
+    request: Request,
+    db: AsyncSession = Depends(get_db),
 ):
     """
     Handle GitHub OAuth callback.
@@ -554,6 +580,7 @@ async def github_callback(
         import httpx
 
         async with httpx.AsyncClient() as client:
+            # Exchange code for access token
             response = await client.post(
                 "https://github.com/login/oauth/access_token",
                 data={
@@ -579,19 +606,58 @@ async def github_callback(
                 )
 
             access_token = token_data.get("access_token")
+            token_type = token_data.get("token_type", "bearer")
+            scopes = token_data.get("scope", "")
 
-            # Encrypt and store the token (will be implemented with database)
-            # For now, return success message
+            # Get GitHub user information
+            user_response = await client.get(
+                "https://api.github.com/user",
+                headers={"Authorization": f"token {access_token}"},
+            )
+
+            if user_response.status_code != 200:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Failed to get GitHub user information",
+                )
+
+            user_data = user_response.json()
+
+            # Encrypt and store the token in database
             encryption = get_encryption()
             encrypted_token = encryption.encrypt(access_token)
 
-            # TODO: Store encrypted token in database with user info
-            # TODO: Get user info and store in database
+            # Get user identifier from request
+            user_identifier = request.headers.get("X-User-Identifier", "default_user")
+
+            # Deactivate existing connections for this user
+            existing_connections = await db.execute(
+                select(GitHubConnection).where(
+                    GitHubConnection.user_identifier == user_identifier
+                )
+            )
+            for connection in existing_connections.scalars():
+                connection.is_active = False
+
+            # Create new GitHub connection
+            github_connection = GitHubConnection(
+                user_identifier=user_identifier,
+                github_user_id=user_data.get("id"),
+                github_username=user_data.get("login"),
+                github_email=user_data.get("email"),
+                access_token_encrypted=encrypted_token,
+                scopes=scopes,
+                token_type=token_type,
+                is_active=True,
+            )
+
+            db.add(github_connection)
+            await db.commit()
 
             return {
                 "success": True,
                 "message": "GitHub account connected successfully",
-                "note": "Token storage in database not yet implemented",
+                "username": user_data.get("login"),
             }
 
     except HTTPException:

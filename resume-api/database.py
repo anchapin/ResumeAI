@@ -277,6 +277,31 @@ class ErrorResponse(Base):
     )
 
 
+class GitHubConnection(Base):
+    """GitHub OAuth connection model for storing encrypted access tokens."""
+
+    __tablename__ = "github_connections"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_identifier = Column(String(255), unique=True, nullable=False, index=True)
+    github_user_id = Column(Integer, nullable=True, index=True)
+    github_username = Column(String(255), nullable=True, index=True)
+    github_email = Column(String(255), nullable=True)
+    access_token_encrypted = Column(Text, nullable=False)
+    scopes = Column(String(500), nullable=True)
+    token_type = Column(String(50), default="bearer")
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), index=True)
+    updated_at = Column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), index=True
+    )
+    is_active = Column(Boolean, default=True, index=True)
+
+    __table_args__ = (
+        Index("idx_github_user_updated", "user_identifier", "updated_at"),
+        Index("idx_github_username_updated", "github_username", "updated_at"),
+    )
+
+
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///./resumeai.db")
 
 engine = create_async_engine(
