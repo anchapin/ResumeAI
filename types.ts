@@ -230,3 +230,41 @@ export interface TemplateFilter {
   layout?: 'single' | 'double';
   color_theme?: string;
 }
+
+// GitHub Integration Types
+
+export interface GitHubConnectionStatus {
+  connected: boolean;
+  username?: string;
+  auth_mode: 'oauth' | 'cli' | 'none';
+  scopes?: string[];
+  last_synced_at?: string;
+}
+
+export interface GitHubRepository {
+  id: number;
+  name: string;
+  full_name: string;
+  description: string | null;
+  language: string | null;
+  stargazers_count: number;
+  forks_count: number;
+  updated_at: string;
+  private: boolean;
+  html_url: string;
+}
+
+export interface GitHubProject {
+  repo: GitHubRepository;
+  role: string;
+  start_date?: string;
+  end_date?: string;
+  highlights: string[];
+}
+
+export interface GitHubSyncOptions {
+  include_private?: boolean;
+  include_forks?: boolean;
+  language_filter?: string;
+  min_stars?: number;
+}

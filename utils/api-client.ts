@@ -11,6 +11,9 @@ import {
   UserSettings,
   ResumeData,
   SimpleResumeData,
+  GitHubConnectionStatus,
+  GitHubRepository,
+  GitHubProject,
 } from '../types';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
@@ -180,5 +183,58 @@ export async function updateUserSettings(userIdentifier: string, settings: Parti
   const response = await fetch(`${API_URL}/settings/${userIdentifier}`, { method: 'PUT', headers: getHeaders(), body: JSON.stringify(settings) });
   if (!response.ok) throw new Error('Failed to update settings');
   return response.json();
+}
+
+// GitHub Integration API functions
+
+export async function getGitHubConnectionStatus(): Promise<GitHubConnectionStatus> {
+  const response = await fetch(`${API_URL}/api/github/status`, { headers: getHeaders() });
+  if (!response.ok) {
+    // If the endpoint doesn't exist yet, return default status
+    if (response.status === 404) {
+      return { connected: false, auth_mode: 'none' };
+    }
+    throw new Error('Failed to get GitHub connection status');
+  }
+  return response.json();
+}
+
+export async function disconnectGitHub(): Promise<void> {
+  const response = await fetch(`${API_URL}/api/github/disconnect`, { method: 'DELETE', headers: getHeaders() });
+  if (!response.ok) {
+    // If the endpoint doesn't exist yet, handle gracefully
+    if (response.status === 404) {
+      console.warn('GitHub disconnect endpoint not implemented yet');
+      return;
+    }
+    throw new Error('Failed to disconnect GitHub');
+  }
+}
+
+export async function getGitHubRepositories(options?: { include_private?: boolean; include_forks?: boolean; language_filter?: string; min_stars?: number; }): Promise<GitHubRepository[]> {
+  const params = new URLSearchParams();
+  if (options?.include_private) params.append('include_private', 'true');
+  if (options?.include_forks) params.append('include_forks', 'true');
+  if (options?.language_filter) params.append('language_filter', options.language_filter);
+  if (options?.min_stars) params.append('min_stars', options.min_stars.toString());
+
+  const response = await fetch(`${API_URL}/api/github/repositories?${params}`, { headers: getHeaders() });
+  if (!response.ok) throw new Error('Failed to fetch GitHub repositories');
+  return response.json();
+}
+
+export async function syncGitHubProjects(repositoryIds: number[]): Promise<GitHubProject[]> {
+  const response = await fetch(`${API_URL}/api/github/sync`, {
+    method: 'POST',
+    headers: getHeaders(),
+    body: JSON.stringify({ repository_ids: repositoryIds }),
+  });
+  if (!response.ok) throw new Error('Failed to sync GitHub projects');
+  return response.json();
+}
+
+// Helper function to get GitHub OAuth URL
+export function getGitHubOAuthUrl(): string {
+  return `${API_URL}/api/github/connect`;
 }
 

@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useTheme } from '../hooks/useTheme';
+import GitHubSettings from '../components/GitHubSettings';
 
 /**
  * @component
  * @description Settings page component for managing user preferences and account settings
  * @returns {JSX.Element} The rendered settings page component
- * 
+ *
  * @example
  * ```tsx
  * <Settings />
@@ -200,6 +201,9 @@ const Settings: React.FC = () => {
             </div>
           </div>
         </section>
+
+        {/* GitHub Integration */}
+        <GitHubSettings />
 
         {/* Preferences */}
         <section className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
