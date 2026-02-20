@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { WorkExperience } from '../types';
 
 /**
@@ -73,6 +73,18 @@ const ExperienceItem = React.memo(({
     onRemoveTag
 }: ExperienceItemProps) => {
     const [isDeleting, setIsDeleting] = useState(false);
+    const deleteBtnRef = useRef<HTMLButtonElement>(null);
+    const confirmBtnRef = useRef<HTMLButtonElement>(null);
+    const prevIsDeleting = useRef(isDeleting);
+
+    useEffect(() => {
+        if (isDeleting && !prevIsDeleting.current) {
+            confirmBtnRef.current?.focus();
+        } else if (!isDeleting && prevIsDeleting.current) {
+            deleteBtnRef.current?.focus();
+        }
+        prevIsDeleting.current = isDeleting;
+    }, [isDeleting]);
 
     return (
         <div
@@ -105,6 +117,7 @@ const ExperienceItem = React.memo(({
                      {isDeleting ? (
                         <div className="flex items-center bg-slate-50 rounded-lg p-0.5 border border-slate-200 animate-in fade-in zoom-in duration-200">
                              <button
+                                ref={confirmBtnRef}
                                 onClick={(e) => { e.stopPropagation(); onDelete(exp.id); setIsDeleting(false); }}
                                 className="p-1.5 text-red-600 hover:bg-red-50 rounded-md transition-colors"
                                 aria-label="Confirm delete"
@@ -122,6 +135,7 @@ const ExperienceItem = React.memo(({
                         </div>
                      ) : (
                          <button
+                            ref={deleteBtnRef}
                             onClick={(e) => { e.stopPropagation(); setIsDeleting(true); }}
                             className="p-2 text-slate-400 hover:bg-red-50 hover:text-red-500 rounded-lg transition-colors"
                             aria-label="Delete experience"

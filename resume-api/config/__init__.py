@@ -93,6 +93,8 @@ class Settings(BaseSettings):
     github_client_id: Optional[str] = None  # GitHub OAuth App client ID
     github_client_secret: Optional[str] = None  # GitHub OAuth App client secret
     github_redirect_uri: Optional[str] = None  # OAuth redirect URI
+    github_callback_url: Optional[str] = None  # Callback URL for OAuth
+    frontend_url: str = "http://localhost:5173"
 
     @field_validator("github_auth_mode")
     @classmethod

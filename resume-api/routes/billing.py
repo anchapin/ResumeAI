@@ -317,7 +317,7 @@ async def create_checkout_session(
         success_url: URL to redirect after successful payment
         cancel_url: URL to redirect after canceled payment
         trial_period_days: Optional trial period in days
-        
+
     Note: This endpoint is currently disabled as billing is in 'coming soon' status.
     """
     # Check if billing is enabled
@@ -327,7 +327,7 @@ async def create_checkout_session(
             detail="Billing is coming soon. Subscription purchases will be available shortly. "
             "You can currently use the free tier with basic features.",
         )
-    
+
     # Get plan details
     plan = await stripe_service.get_plan_by_name(request.plan_name)
     if not plan:
