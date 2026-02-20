@@ -8,12 +8,10 @@ GitHub accounts and revoking tokens.
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 from fastapi import FastAPI
-from fastapi.testclient import TestClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from routes.github import router, _revoke_github_token
 from database import GitHubConnection
-from api.models import UserResponse
 
 
 # Create test app
@@ -99,8 +97,10 @@ async def test_disconnect_github_with_connection():
 
     # Create mock database session
     mock_db = AsyncMock(spec=AsyncSession)
-    mock_db.execute = AsyncMock()
-    mock_db.scalar_one_or_none = AsyncMock(return_value=mock_connection)
+    # Mock execute to return a mock result with scalar_one_or_none
+    mock_result = MagicMock()
+    mock_result.scalar_one_or_none = MagicMock(return_value=mock_connection)
+    mock_db.execute = AsyncMock(return_value=mock_result)
     mock_db.delete = AsyncMock()
     mock_db.commit = AsyncMock()
 
@@ -134,8 +134,10 @@ async def test_disconnect_github_without_connection():
 
     # Create mock database session
     mock_db = AsyncMock(spec=AsyncSession)
-    mock_db.execute = AsyncMock()
-    mock_db.scalar_one_or_none = AsyncMock(return_value=None)  # No connection
+    # Mock execute to return a mock result with scalar_one_or_none
+    mock_result = MagicMock()
+    mock_result.scalar_one_or_none = MagicMock(return_value=None)  # No connection
+    mock_db.execute = AsyncMock(return_value=mock_result)
     mock_db.delete = AsyncMock()
     mock_db.commit = AsyncMock()
 
@@ -166,9 +168,9 @@ def test_github_router_registration():
     assert router.prefix == "/github"
     assert "GitHub" in router.tags
 
-    # Check that the disconnect endpoint exists
+    # Check that the disconnect endpoint exists (includes prefix)
     routes = [route.path for route in router.routes]
-    assert "/disconnect" in routes
+    assert "/github/disconnect" in routes
 
 
 if __name__ == "__main__":
