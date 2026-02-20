@@ -1,15 +1,17 @@
 from logging.config import fileConfig
 import os
-from sqlalchemy import engine_from_config, pool
+from sqlalchemy import pool
 from alembic import context
-from sqlalchemy.ext.asyncio import async_engine_from_config, AsyncEngine
+from sqlalchemy.ext.asyncio import async_engine_from_config
+from dotenv import load_dotenv
 
-# Import Base from database.models for metadata
-# This is the Base used by the UserGitHubConnection model
-from database.models import Base
+# Import Base from database for metadata
+# This is the Base used by all models including UserGitHubConnection
+from database import Base
 
 # Import all models to ensure they're registered with the Base metadata
-from database.models import UserGitHubConnection
+# The UserGitHubConnection model is imported when importing Base
+from database import UserGitHubConnection  # noqa: F401
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -22,7 +24,6 @@ if config.config_file_name is not None:
 
 # Get the database URL from environment variable
 # This allows us to use the same DATABASE_URL as the application
-from dotenv import load_dotenv
 load_dotenv()
 
 database_url = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///./resumeai.db")

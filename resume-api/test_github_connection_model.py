@@ -8,10 +8,7 @@ This script verifies that:
 """
 
 import sys
-sys.path.insert(0, '/home/alexc/Projects/ResumeProject/feature-issue-277-create-database-schema-for-storing-github-oauth-co/resume-api')
-
-from database.models import UserGitHubConnection, Base
-from database import crud
+from database import UserGitHubConnection, Base
 
 
 def test_model_definition():
@@ -52,8 +49,8 @@ def test_model_definition():
         return False
 
     # Check unique constraints
-    unique_constraints = {c.name for c in UserGitHubConnection.__table__.constraints if isinstance(c, type(UserGitHubConnection.__table__.constraints).__bases__[0])}
     # This is a simplified check - in practice we'd check for proper unique constraints
+    _ = {c.name for c in UserGitHubConnection.__table__.constraints}  # noqa: F841
 
     print("  Model definition looks good!")
     return True
@@ -63,19 +60,16 @@ def test_crud_imports():
     """Test that CRUD operations can be imported."""
     print("Testing CRUD operations...")
 
-    crud_functions = [
-        'get_user_github_connection',
-        'create_user_github_connection',
-        'update_user_github_connection',
-        'delete_user_github_connection',
-        'get_github_connection_by_github_user_id',
-    ]
+    # Import all CRUD functions to verify they exist
+    from database import (
+        get_user_github_connection,  # noqa: F401
+        create_user_github_connection,  # noqa: F401
+        update_user_github_connection,  # noqa: F401
+        delete_user_github_connection,  # noqa: F401
+        get_github_connection_by_github_user_id,  # noqa: F401
+    )
 
-    for func_name in crud_functions:
-        if not hasattr(crud, func_name):
-            print(f"  ERROR: Missing CRUD function: {func_name}")
-            return False
-
+    # Just verify the functions exist (they've been imported above)
     print("  All CRUD operations are available!")
     return True
 
