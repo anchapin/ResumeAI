@@ -93,6 +93,18 @@ def setup_sentry():
         )
 
 
+def check_github_auth_mode():
+    """Check GitHub authentication mode and log deprecation warning for CLI mode."""
+    if getattr(settings, "github_auth_mode", "oauth") == "cli":
+        logger.warning(
+            "DEPRECATION_WARNING",
+            message="GitHub CLI mode is deprecated and will be removed in a future version. Please migrate to OAuth mode.",
+            mode="cli",
+            action="Set GITHUB_AUTH_MODE=oauth to use OAuth authentication",
+            documentation="See docs/github-oauth-migration.md for migration guide",
+        )
+
+
 def setup_prometheus(app: FastAPI):
     """Initialize Prometheus metrics instrumentation if enabled."""
     if getattr(settings, "enable_metrics", False):
@@ -131,6 +143,9 @@ async def lifespan(app: FastAPI):
     """Handle application startup and shutdown."""
     # Startup
     logger.info("application_startup", version=settings.app_version)
+
+    # Check GitHub authentication mode for deprecation warnings
+    check_github_auth_mode()
 
     # Initialize database tables
     await create_db_and_tables()
@@ -231,6 +246,12 @@ async def health_check():
 async def health_check_detailed():
     """Detailed health check with all components."""
     return await health.get_health_status(detailed=True)
+
+
+@app.get("/health/oauth", tags=["Health"])
+async def oauth_health_check():
+    """OAuth integration health check endpoint."""
+    return await health.health_checker.check_oauth_health()
 
 
 @app.get("/health/ready", tags=["Health"])

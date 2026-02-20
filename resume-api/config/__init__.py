@@ -96,6 +96,10 @@ class Settings(BaseSettings):
     )
     frontend_url: str = "http://localhost:5173"
 
+    # GitHub Authentication Mode (DEPRECATED: cli mode will be removed)
+    # Options: "oauth" (recommended, production default), "cli" (deprecated, will be removed)
+    github_auth_mode: str = "oauth"
+
     @field_validator("api_keys", mode="before")
     @classmethod
     def parse_api_keys(cls, v: Union[str, list, None]) -> Optional[list[str]]:

@@ -21,6 +21,7 @@ from config.dependencies import get_current_user
 from config.security import encrypt_token
 from config import settings
 from monitoring import logging_config
+from monitoring import metrics as monitoring_metrics
 
 # Get logger
 logger = logging_config.get_logger(__name__)
@@ -60,6 +61,9 @@ async def exchange_code_for_token(code: str) -> dict:
 
         if response.status_code != 200:
             logger.error("github_token_exchange_failed", status=response.status_code)
+            monitoring_metrics.increment_oauth_connection_failure(
+                provider="github", error_type="token_exchange_failed"
+            )
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Failed to exchange code for token",
@@ -68,7 +72,11 @@ async def exchange_code_for_token(code: str) -> dict:
         token_data = await response.json()
 
         if "error" in token_data:
-            logger.error("github_token_error", error=token_data.get("error"))
+            error = token_data.get("error")
+            logger.error("github_token_error", error=error)
+            monitoring_metrics.increment_oauth_connection_failure(
+                provider="github", error_type=error
+            )
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=token_data.get("error_description", "Token exchange failed"),
@@ -101,6 +109,9 @@ async def fetch_github_user(token: str) -> dict:
 
         if response.status_code != 200:
             logger.error("github_user_fetch_failed", status=response.status_code)
+            monitoring_metrics.increment_oauth_connection_failure(
+                provider="github", error_type="user_fetch_failed"
+            )
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Failed to fetch GitHub user profile",
@@ -249,6 +260,7 @@ async def github_oauth_callback(
                 github_user_id=github_user_id,
                 github_username=github_username,
             )
+            monitoring_metrics.increment_oauth_connection_success(provider="github")
         else:
             # Create new connection
             new_connection = UserGitHubConnection(
@@ -268,6 +280,7 @@ async def github_oauth_callback(
                 github_username=github_username,
                 user_id=oauth_state.user_id,
             )
+            monitoring_metrics.increment_oauth_connection_success(provider="github")
 
         # Clean up OAuth state
         await db.delete(oauth_state)
