@@ -16,6 +16,75 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
+@lru_cache(maxsize=1)
+def _get_variants_list(templates_dir: Path) -> tuple:
+    """
+    Get list of variants from templates directory.
+    This is a module-level function to avoid cache reference cycles.
+
+    Args:
+        templates_dir: Path to templates directory
+
+    Returns:
+        Tuple of variant names
+    """
+    variants = []
+
+    for item in templates_dir.iterdir():
+        if item.is_dir():
+            # Check if it has a main.tex file
+            if (item / "main.tex").exists():
+                variants.append(item.name)
+                logger.debug(f"Found variant: {item.name}")
+
+    logger.info(f"Found {len(variants)} variants")
+    return tuple(variants)
+
+
+@lru_cache(maxsize=128)
+def _get_variant_metadata_dict(templates_dir: Path, variant: str) -> Dict[str, Any]:
+    """
+    Get metadata for a specific variant.
+    This is a module-level function to avoid cache reference cycles.
+
+    Args:
+        templates_dir: Path to templates directory
+        variant: Variant name
+
+    Returns:
+        Dictionary containing variant metadata
+
+    Raises:
+        FileNotFoundError: If variant doesn't exist
+    """
+    variant_dir = templates_dir / variant
+
+    if not variant_dir.exists():
+        raise FileNotFoundError(f"Variant '{variant}' not found at {variant_dir}")
+
+    # Default metadata
+    metadata = {
+        "name": variant,
+        "display_name": variant.capitalize(),
+        "description": f"{variant.capitalize()} resume template",
+        "format": "latex",
+        "output_formats": ["pdf"],
+    }
+
+    # Try to load metadata.yaml if it exists
+    metadata_file = variant_dir / "metadata.yaml"
+    if metadata_file.exists():
+        try:
+            with open(metadata_file, "r") as f:
+                loaded_metadata = yaml.safe_load(f)
+                if loaded_metadata:
+                    metadata.update(loaded_metadata)
+        except Exception as e:
+            logger.warning(f"Failed to load metadata for '{variant}': {e}")
+
+    return metadata
+
+
 class VariantManager:
     """
     Manage resume template variants.
@@ -37,24 +106,6 @@ class VariantManager:
 
         logger.info(f"VariantManager initialized with: {self.templates_dir}")
 
-    @lru_cache(maxsize=1)
-    def _list_variants_cached(self) -> tuple:
-        """
-        Cached implementation of list_variants.
-        Returns a tuple to ensure immutability in cache.
-        """
-        variants = []
-
-        for item in self.templates_dir.iterdir():
-            if item.is_dir():
-                # Check if it has a main.tex file
-                if (item / "main.tex").exists():
-                    variants.append(item.name)
-                    logger.debug(f"Found variant: {item.name}")
-
-        logger.info(f"Found {len(variants)} variants")
-        return tuple(variants)
-
     def list_variants(self) -> List[str]:
         """
         List all available template variants.
@@ -67,37 +118,12 @@ class VariantManager:
         """
         return list(self._list_variants_cached())
 
-    @lru_cache(maxsize=128)
-    def _get_variant_metadata_cached(self, variant: str) -> Dict[str, Any]:
+    def _list_variants_cached(self) -> tuple:
         """
-        Cached implementation of get_variant_metadata.
+        Cached implementation of list_variants.
+        Returns a tuple to ensure immutability in cache.
         """
-        variant_dir = self.templates_dir / variant
-
-        if not variant_dir.exists():
-            raise FileNotFoundError(f"Variant '{variant}' not found at {variant_dir}")
-
-        # Default metadata
-        metadata = {
-            "name": variant,
-            "display_name": variant.capitalize(),
-            "description": f"{variant.capitalize()} resume template",
-            "format": "latex",
-            "output_formats": ["pdf"],
-        }
-
-        # Try to load metadata.yaml if it exists
-        metadata_file = variant_dir / "metadata.yaml"
-        if metadata_file.exists():
-            try:
-                with open(metadata_file, "r") as f:
-                    loaded_metadata = yaml.safe_load(f)
-                    if loaded_metadata:
-                        metadata.update(loaded_metadata)
-            except Exception as e:
-                logger.warning(f"Failed to load metadata for '{variant}': {e}")
-
-        return metadata
+        return _get_variants_list(self.templates_dir)
 
     def get_variant_metadata(self, variant: str) -> Dict[str, Any]:
         """
@@ -116,6 +142,12 @@ class VariantManager:
             FileNotFoundError: If variant doesn't exist
         """
         return copy.deepcopy(self._get_variant_metadata_cached(variant))
+
+    def _get_variant_metadata_cached(self, variant: str) -> Dict[str, Any]:
+        """
+        Cached implementation of get_variant_metadata.
+        """
+        return _get_variant_metadata_dict(self.templates_dir, variant)
 
     def validate_variant(self, variant: str) -> bool:
         """
