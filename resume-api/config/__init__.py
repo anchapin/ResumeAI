@@ -94,6 +94,7 @@ class Settings(BaseSettings):
     github_callback_url: Optional[str] = (
         None  # e.g., https://api.resumeai.example.com/github/callback
     )
+    frontend_url: str = "http://localhost:5173"
 
     @field_validator("api_keys", mode="before")
     @classmethod

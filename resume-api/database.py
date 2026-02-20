@@ -235,6 +235,28 @@ class User(Base):
     )
 
 
+class OAuthState(Base):
+    """OAuth state parameter for CSRF protection."""
+
+    __tablename__ = "oauth_states"
+
+    id = Column(Integer, primary_key=True, index=True)
+    state = Column(String(255), unique=True, nullable=False, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+
+    # OAuth provider (e.g., 'github', 'linkedin')
+    provider = Column(String(50), nullable=False)
+
+    # State expiration (typically 10 minutes)
+    expires_at = Column(DateTime(timezone=True), nullable=False)
+
+    # Metadata
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    # Relationships
+    user = relationship("User")
+
+
 class RefreshToken(Base):
     """Refresh token model for token rotation and revocation."""
 
