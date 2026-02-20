@@ -28,6 +28,7 @@ from routes.salary import router as salary_router
 from routes.linkedin import router as linkedin_router
 from routes.billing import router as billing_router
 from routes.auth import router as auth_router
+from routes.github import router as github_router
 from api.jd_routes import router as jd_router
 from api.api_key_routes import router as api_key_router
 from api.team_routes import router as team_router
@@ -248,6 +249,7 @@ app.include_router(salary_router)
 app.include_router(linkedin_router)
 app.include_router(billing_router)
 app.include_router(auth_router)
+app.include_router(github_router)
 app.include_router(jd_router)
 app.include_router(api_key_router)
 app.include_router(team_router)

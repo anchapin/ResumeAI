@@ -4,10 +4,20 @@ Security utilities for password hashing and verification.
 Uses bcrypt for secure password hashing.
 """
 
+import os
+from cryptography.fernet import Fernet
 from passlib.context import CryptContext
 
 # Password hashing context using bcrypt
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+# Encryption key for OAuth tokens
+# In production, this should be set via environment variable
+ENCRYPTION_KEY = os.getenv(
+    "ENCRYPTION_KEY",
+    Fernet.generate_key().decode()
+)
+cipher_suite = Fernet(ENCRYPTION_KEY.encode())
 
 
 def hash_password(password: str) -> str:
@@ -50,3 +60,37 @@ def needs_rehash(hashed_password: str) -> bool:
         True if the hash should be regenerated, False otherwise
     """
     return pwd_context.needs_update(hashed_password)
+
+
+def encrypt_token(token: str) -> str:
+    """
+    Encrypt an OAuth token for secure storage.
+
+    Args:
+        token: Plain text token to encrypt
+
+    Returns:
+        Encrypted token as base64 string
+    """
+    encrypted = cipher_suite.encrypt(token.encode())
+    return encrypted.decode()
+
+
+def decrypt_token(encrypted_token: str) -> str:
+    """
+    Decrypt an OAuth token from storage.
+
+    Args:
+        encrypted_token: Encrypted token string
+
+    Returns:
+        Plain text token
+
+    Raises:
+        ValueError: If decryption fails (invalid token)
+    """
+    try:
+        decrypted = cipher_suite.decrypt(encrypted_token.encode())
+        return decrypted.decode()
+    except Exception:
+        raise ValueError("Invalid encrypted token")

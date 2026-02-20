@@ -88,6 +88,11 @@ class Settings(BaseSettings):
     stripe_price_id_basic: Optional[str] = None  # Basic plan price ID
     stripe_price_id_premium: Optional[str] = None  # Premium plan price ID
 
+    # OAuth Configuration
+    github_client_id: Optional[str] = None
+    github_client_secret: Optional[str] = None
+    frontend_url: str = "http://localhost:5173"
+
     @field_validator("api_keys", mode="before")
     @classmethod
     def parse_api_keys(cls, v: Union[str, list, None]) -> Optional[list[str]]:

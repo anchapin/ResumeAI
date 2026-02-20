@@ -577,6 +577,72 @@ User.api_keys = relationship(
 )
 
 
+# OAuth State Management
+class OAuthState(Base):
+    """OAuth state parameter for CSRF protection."""
+
+    __tablename__ = "oauth_states"
+
+    id = Column(Integer, primary_key=True, index=True)
+    state = Column(String(255), unique=True, nullable=False, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+
+    # OAuth provider (e.g., 'github', 'linkedin')
+    provider = Column(String(50), nullable=False)
+
+    # State expiration (typically 10 minutes)
+    expires_at = Column(DateTime(timezone=True), nullable=False)
+
+    # Metadata
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    # Relationships
+    user = relationship("User")
+
+    __table_args__ = (
+        Index("idx_oauth_state_user", "user_id", "provider"),
+        Index("idx_oauth_state_expires", "expires_at"),
+    )
+
+
+class GitHubConnection(Base):
+    """GitHub OAuth connection for users."""
+
+    __tablename__ = "github_connections"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, unique=True, index=True)
+
+    # GitHub profile information
+    github_user_id = Column(String(50), nullable=False, index=True)
+    github_username = Column(String(100), nullable=False)
+    github_email = Column(String(255), nullable=True)
+
+    # Encrypted OAuth token
+    encrypted_access_token = Column(Text, nullable=False)
+    token_scope = Column(String(255), nullable=True)
+
+    # Token metadata
+    token_type = Column(String(50), default="bearer")
+
+    # Connection status
+    is_active = Column(Boolean, default=True, nullable=False)
+
+    # Metadata
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
+
+    # Relationships
+    user = relationship("User")
+
+    __table_args__ = (
+        Index("idx_github_connection_user", "user_id"),
+        Index("idx_github_connection_github_id", "github_user_id"),
+    )
+
+
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///./resumeai.db")
 
 engine = create_async_engine(
