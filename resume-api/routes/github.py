@@ -18,7 +18,7 @@ from httpx import AsyncClient
 
 from database import get_async_session, User, OAuthState, GitHubConnection
 from config.dependencies import get_current_user
-from config.security import encrypt_token, decrypt_token
+from config.security import encrypt_token
 from config import settings
 from monitoring import logging_config
 
@@ -65,7 +65,7 @@ async def exchange_code_for_token(code: str) -> dict:
                 detail="Failed to exchange code for token",
             )
 
-        token_data = response.json()
+        token_data = await response.json()
 
         if "error" in token_data:
             logger.error("github_token_error", error=token_data.get("error"))
@@ -106,12 +106,10 @@ async def fetch_github_user(token: str) -> dict:
                 detail="Failed to fetch GitHub user profile",
             )
 
-        return response.json()
+        return await response.json()
 
 
-async def validate_oauth_state(
-    state: str, db: AsyncSession
-) -> OAuthState:
+async def validate_oauth_state(state: str, db: AsyncSession) -> OAuthState:
     """
     Validate OAuth state parameter and return state record.
 
@@ -125,9 +123,7 @@ async def validate_oauth_state(
     Raises:
         HTTPException: If state is invalid or expired
     """
-    result = await db.execute(
-        select(OAuthState).where(OAuthState.state == state)
-    )
+    result = await db.execute(select(OAuthState).where(OAuthState.state == state))
     oauth_state = result.scalar_one_or_none()
 
     if not oauth_state:
@@ -143,6 +139,7 @@ async def validate_oauth_state(
     if expires_at.tzinfo is None:
         # If expires_at is naive, assume UTC
         from datetime import timezone as tz
+
         expires_at = expires_at.replace(tzinfo=tz.utc)
 
     now = datetime.now(timezone.utc)
@@ -317,7 +314,7 @@ async def github_oauth_callback(
         # Known HTTP exceptions - redirect with error
         logger.error(
             "github_oauth_http_error",
-            user_id=user_id if 'user_id' in locals() else None,
+            user_id=user_id if "user_id" in locals() else None,
             error=str(e.detail),
         )
         frontend_url = settings.frontend_url.rstrip("/")
@@ -329,7 +326,7 @@ async def github_oauth_callback(
         # Unexpected errors - log and redirect with generic error
         logger.error(
             "github_oauth_unexpected_error",
-            user_id=user_id if 'user_id' in locals() else None,
+            user_id=user_id if "user_id" in locals() else None,
             error=str(e),
         )
         frontend_url = settings.frontend_url.rstrip("/")
@@ -427,7 +424,9 @@ async def get_github_connection(
         "connected": True,
         "github_username": connection.github_username,
         "github_email": connection.github_email,
-        "connected_at": connection.created_at.isoformat() if connection.created_at else None,
+        "connected_at": (
+            connection.created_at.isoformat() if connection.created_at else None
+        ),
     }
 
 

@@ -12,13 +12,12 @@ Tests cover:
 8. Error handling (invalid state, expired state, invalid code)
 """
 
-import os
 import pytest
 import pytest_asyncio
 from datetime import datetime, timezone, timedelta
 from httpx import AsyncClient, ASGITransport
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
-from unittest.mock import AsyncMock, patch, MagicMock
+from unittest.mock import AsyncMock, patch
 
 from main import app
 from database import Base, User, OAuthState, GitHubConnection, get_async_session
@@ -208,6 +207,7 @@ class TestGitHubOAuthAuthorize:
             expires_at = oauth_state.expires_at
             if expires_at.tzinfo is None:
                 from datetime import timezone as tz
+
                 expires_at = expires_at.replace(tzinfo=tz.utc)
             assert expires_at > datetime.now(timezone.utc)
 
@@ -261,8 +261,15 @@ class TestGitHubOAuthCallback:
             mock_client.return_value.__aenter__.return_value = mock_client_instance
 
             # Mock the post and get methods to return the mock responses
-            mock_client_instance.post = AsyncMock(return_value=mock_token_response_obj)
-            mock_client_instance.get = AsyncMock(return_value=mock_user_response_obj)
+            # Use regular functions instead of AsyncMock since they return objects with async methods
+            async def mock_post(*args, **kwargs):
+                return mock_token_response_obj
+
+            async def mock_get(*args, **kwargs):
+                return mock_user_response_obj
+
+            mock_client_instance.post = mock_post
+            mock_client_instance.get = mock_get
 
             response = await client.get(
                 "/github/callback",
@@ -307,8 +314,15 @@ class TestGitHubOAuthCallback:
             mock_client_instance = AsyncMock()
             mock_client.return_value.__aenter__.return_value = mock_client_instance
 
-            mock_client_instance.post = AsyncMock(return_value=mock_token_response_obj)
-            mock_client_instance.get = AsyncMock(return_value=mock_user_response_obj)
+            # Use regular functions instead of AsyncMock
+            async def mock_post(*args, **kwargs):
+                return mock_token_response_obj
+
+            async def mock_get(*args, **kwargs):
+                return mock_user_response_obj
+
+            mock_client_instance.post = mock_post
+            mock_client_instance.get = mock_get
 
             await client.get(
                 "/github/callback",
@@ -378,7 +392,11 @@ class TestGitHubOAuthCallback:
             mock_client_instance = AsyncMock()
             mock_client.return_value.__aenter__.return_value = mock_client_instance
 
-            mock_client_instance.post = AsyncMock(return_value=mock_response)
+            # Use regular function instead of AsyncMock
+            async def mock_post(*args, **kwargs):
+                return mock_response
+
+            mock_client_instance.post = mock_post
 
             response = await client.get(
                 "/github/callback",
@@ -423,8 +441,15 @@ class TestGitHubOAuthCallback:
             mock_client_instance = AsyncMock()
             mock_client.return_value.__aenter__.return_value = mock_client_instance
 
-            mock_client_instance.post = AsyncMock(return_value=mock_token_response_obj)
-            mock_client_instance.get = AsyncMock(return_value=mock_user_response_obj)
+            # Use regular functions instead of AsyncMock
+            async def mock_post(*args, **kwargs):
+                return mock_token_response_obj
+
+            async def mock_get(*args, **kwargs):
+                return mock_user_response_obj
+
+            mock_client_instance.post = mock_post
+            mock_client_instance.get = mock_get
 
             await client.get(
                 "/github/callback",
@@ -540,9 +565,7 @@ class TestGitHubDisconnection:
             connection = result.fetchone()
             assert connection is None
 
-    async def test_disconnect_when_not_connected(
-        self, client, auth_tokens, test_user
-    ):
+    async def test_disconnect_when_not_connected(self, client, auth_tokens, test_user):
         """Test disconnecting when not connected."""
         response = await client.delete(
             "/github/connection",
