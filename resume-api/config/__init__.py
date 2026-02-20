@@ -91,7 +91,9 @@ class Settings(BaseSettings):
     # GitHub OAuth Configuration
     github_client_id: Optional[str] = None
     github_client_secret: Optional[str] = None
-    github_callback_url: Optional[str] = None  # e.g., https://api.resumeai.example.com/github/callback
+    github_callback_url: Optional[str] = (
+        None  # e.g., https://api.resumeai.example.com/github/callback
+    )
 
     @field_validator("api_keys", mode="before")
     @classmethod
