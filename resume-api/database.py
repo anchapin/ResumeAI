@@ -570,10 +570,47 @@ class APIKey(Base):
     )
 
 
+class GitHubConnection(Base):
+    """GitHub OAuth connection model for storing user GitHub connections."""
+
+    __tablename__ = "github_connections"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, unique=True, index=True)
+
+    # GitHub OAuth data
+    github_user_id = Column(String(100), nullable=False, index=True)  # GitHub user ID
+    github_username = Column(String(100), nullable=False)  # GitHub username
+    access_token = Column(Text, nullable=False)  # Encrypted access token
+    refresh_token = Column(Text, nullable=True)  # Encrypted refresh token (if applicable)
+    token_type = Column(String(50), default="bearer")  # Token type
+    scope = Column(Text, nullable=True)  # Granted scopes
+
+    # Token metadata
+    expires_at = Column(DateTime(timezone=True), nullable=True)  # Token expiration
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), index=True)
+    updated_at = Column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
+    last_used_at = Column(DateTime(timezone=True), nullable=True)
+    is_active = Column(Boolean, default=True, nullable=False, index=True)
+
+    # Relationships
+    user = relationship("User", back_populates="github_connections")
+
+    __table_args__ = (
+        Index("idx_github_github_user_id", "github_user_id"),
+        Index("idx_github_user_active", "user_id", "is_active"),
+    )
+
+
 # Add relationship to User model
 # Note: This is done by modifying the User class after it's defined
 User.api_keys = relationship(
     "APIKey", back_populates="user", cascade="all, delete-orphan"
+)
+User.github_connections = relationship(
+    "GitHubConnection", back_populates="user", cascade="all, delete-orphan"
 )
 
 
