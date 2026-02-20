@@ -1883,3 +1883,25 @@ class ResumeCommentUpdate(BaseModel):
                 raise ValueError("Comment content cannot be empty")
             return v
         return v
+
+
+# =============================================================================
+# GitHub Integration Models
+# =============================================================================
+
+
+class GitHubStatusResponse(BaseModel):
+    """Response model for GitHub connection status."""
+
+    connection_status: str = Field(
+        ..., description="Connection status: 'connected', 'not_connected', or 'error'"
+    )
+    auth_mode: str = Field(
+        ..., description="Authentication mode: 'oauth' or 'cli' (deprecated)"
+    )
+    github_username: Optional[str] = Field(
+        None, description="GitHub username if connected, null otherwise"
+    )
+    message: Optional[str] = Field(
+        None, description="Optional message providing additional context"
+    )

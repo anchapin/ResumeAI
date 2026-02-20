@@ -5,9 +5,11 @@ Provides endpoints for:
 - OAuth callback handling
 - GitHub user authentication
 - Token management and storage
+- Connection status checking
 """
 
 import secrets
+import subprocess
 from datetime import datetime, timezone, timedelta
 from typing import Annotated, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response, status
@@ -22,6 +24,7 @@ from config.security import encrypt_token
 from config import settings
 from monitoring import logging_config
 from monitoring import metrics as monitoring_metrics
+from api.models import GitHubStatusResponse
 
 # Get logger
 logger = logging_config.get_logger(__name__)
@@ -450,3 +453,138 @@ async def disconnect_github(
         )
 
     return None
+
+
+@router.get(
+    "/status",
+    response_model=GitHubStatusResponse,
+    responses={
+        200: {"description": "GitHub connection status retrieved"},
+        401: {"description": "Not authenticated"},
+    },
+    summary="Get GitHub connection status",
+)
+async def get_github_status(
+    current_user: Annotated[Optional[User], Depends(get_current_user)],
+):
+    """
+    Get the current GitHub connection status.
+
+    This endpoint checks the GitHub authentication mode and returns the
+    connection status for the authenticated user (if provided).
+
+    **Auth Modes:**
+    - `oauth`: Checks the database for OAuth connection
+    - `cli`: Checks if gh CLI is authenticated (deprecated mode)
+
+    **Response:**
+    - `connection_status`: "connected", "not_connected", or "error"
+    - `auth_mode`: "oauth" or "cli"
+    - `github_username`: GitHub username if connected, null otherwise
+    - `message`: Optional additional context
+
+    **Authentication:**
+    - If authenticated: Returns user-specific connection status
+    - If not authenticated: Returns auth mode and "not_connected" status
+    """
+    auth_mode = settings.github_auth_mode
+    connection_status = "not_connected"
+    github_username = None
+    message = None
+
+    try:
+        if auth_mode == "oauth":
+            # OAuth mode: Check database for user connection
+            if current_user:
+                # User is authenticated, check their GitHub connection
+                from database import get_async_session as get_session
+
+                async for db_session in get_session():
+                    result = await db_session.execute(
+                        select(UserGitHubConnection).where(
+                            UserGitHubConnection.user_id == current_user.id,
+                            UserGitHubConnection.is_active == True,
+                        )
+                    )
+                    connection = result.scalar_one_or_none()
+
+                    if connection:
+                        connection_status = "connected"
+                        github_username = connection.github_username
+                        logger.info(
+                            "github_oauth_status_connected",
+                            user_id=current_user.id,
+                            github_username=github_username,
+                        )
+                    else:
+                        connection_status = "not_connected"
+                        logger.info(
+                            "github_oauth_status_not_connected",
+                            user_id=current_user.id,
+                        )
+                    break
+            else:
+                # User not authenticated
+                connection_status = "not_connected"
+                message = "Authentication required to check connection status"
+                logger.info("github_oauth_status_no_auth")
+
+        elif auth_mode == "cli":
+            # CLI mode: Check if gh CLI is authenticated (deprecated)
+            try:
+                result = subprocess.run(
+                    ["gh", "auth", "status"],
+                    capture_output=True,
+                    text=True,
+                    timeout=5,
+                )
+                if result.returncode == 0:
+                    connection_status = "connected"
+                    # Add deprecation warning message
+                    message = "GitHub CLI mode is deprecated. Please migrate to OAuth mode. See docs/github-oauth-migration.md for details."
+                    # Try to extract username from output
+                    output_lines = result.stdout.split("\n")
+                    for line in output_lines:
+                        if "Logged in to" in line:
+                            # Extract username from line like "Logged in to github.com as username"
+                            parts = line.split()
+                            if len(parts) >= 6:
+                                github_username = parts[-1]
+                            break
+                    logger.warning(
+                        "github_cli_deprecated_mode",
+                        github_username=github_username,
+                        message="CLI mode is deprecated",
+                    )
+                else:
+                    connection_status = "not_connected"
+                    logger.info("github_cli_status_not_connected")
+            except FileNotFoundError:
+                connection_status = "not_connected"
+                message = "GitHub CLI (gh) not found on server"
+                logger.warning("github_cli_not_found")
+            except subprocess.TimeoutExpired:
+                connection_status = "error"
+                message = "GitHub CLI check timed out"
+                logger.warning("github_cli_check_timeout")
+            except Exception as e:
+                connection_status = "error"
+                message = f"Error checking GitHub CLI: {str(e)}"
+                logger.error("github_cli_check_error", error=str(e))
+        else:
+            # Invalid auth mode
+            connection_status = "error"
+            message = f"Invalid GitHub auth mode: {auth_mode}"
+            logger.error("github_invalid_auth_mode", mode=auth_mode)
+
+    except Exception as e:
+        connection_status = "error"
+        message = f"Unexpected error: {str(e)}"
+        logger.error("github_status_error", error=str(e))
+
+    return GitHubStatusResponse(
+        connection_status=connection_status,
+        auth_mode=auth_mode,
+        github_username=github_username,
+        message=message,
+    )

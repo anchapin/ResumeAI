@@ -10,6 +10,10 @@ ENV PYTHONUNBUFFERED=1 \
     PORT=8000
 
 # Install system dependencies including LaTeX for professional PDF generation
+# Note: GitHub CLI (gh) is intentionally NOT installed.
+# ResumeAI uses OAuth mode for GitHub authentication (GITHUB_AUTH_MODE=oauth).
+# CLI mode (GITHUB_AUTH_MODE=cli) is deprecated and will be removed.
+# OAuth provides per-user authentication, better security, and no shared credentials.
 RUN apt-get update && apt-get install -y \
     # LaTeX dependencies (minimal xetex installation)
     texlive-xetex \

@@ -3,6 +3,32 @@
 ## Overview
 The ResumeAI API provides endpoints for generating and tailoring professional resumes using LaTeX templates and AI technology.
 
+## Authentication
+
+The API supports two authentication methods:
+
+### 1. API Key Authentication (For 3rd Party Developers)
+Protected endpoints require an API key sent in the `X-API-KEY` header.
+
+```bash
+curl -H "X-API-KEY: your_api_key" https://api.resumeai.app/v1/render/pdf
+```
+
+**Note:** API keys are primarily for 3rd party integrations. The ResumeAI frontend uses JWT authentication.
+
+### 2. JWT Authentication (For User Accounts)
+User-facing endpoints (GitHub integration, account management) require a JWT access token sent in the `Authorization` header.
+
+```bash
+curl -H "Authorization: Bearer your_jwt_token" https://api.resumeai.app/github/status
+```
+
+**JWT Endpoints:**
+- `POST /api/auth/register` - Register a new user account
+- `POST /api/auth/login` - Login with email/password
+- `POST /api/auth/refresh` - Refresh expired access token
+- `POST /api/auth/logout` - Logout (invalidate token)
+
 ## Base URL
 ```
 https://api.resumeai.app
@@ -156,7 +182,7 @@ Get a list of available resume template variants.
 }
 ```
 
-### 4. Generate Cover Letter
+### 5. Generate Cover Letter
 Generate a personalized cover letter based on resume and job description using AI.
 
 **Endpoint:** `POST /v1/cover-letter`
@@ -229,6 +255,113 @@ Generate a personalized cover letter based on resume and job description using A
 - `closing`: Closing paragraph with call to action
 - `full_text`: Complete cover letter as a single string
 - `metadata`: Additional information including word count
+
+### 6. GitHub OAuth Integration
+
+#### Register User Account
+**Endpoint:** `POST /api/auth/register`
+
+**Headers:**
+- `Content-Type`: `application/json`
+
+**Request Body:**
+```json
+{
+  "email": "user@example.com",
+  "password": "securepassword123"
+}
+```
+
+**Response:**
+```json
+{
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "token_type": "bearer",
+  "expires_in": 1800
+}
+```
+
+#### Login
+**Endpoint:** `POST /api/auth/login`
+
+**Headers:**
+- `Content-Type`: `application/json`
+
+**Request Body:**
+```json
+{
+  "email": "user@example.com",
+  "password": "securepassword123"
+}
+```
+
+**Response:**
+```json
+{
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "token_type": "bearer",
+  "expires_in": 1800
+}
+```
+
+#### Initiate GitHub OAuth
+**Endpoint:** `GET /github/connect`
+
+**Headers:**
+- `Authorization`: `Bearer {access_token}` (required)
+
+**Query Parameters:**
+- `redirect_uri` (optional): Custom callback URL for different environments
+
+**Response:**
+- Status: `302 Found`
+- Location: GitHub OAuth authorization URL
+
+#### GitHub OAuth Callback
+**Endpoint:** `GET /github/callback`
+
+**Query Parameters:**
+- `code`: Authorization code from GitHub (required)
+- `state`: OAuth state parameter for CSRF protection (required)
+
+**Response:**
+- Status: `302 Found`
+- Location: Frontend URL with status query parameter
+  - `?status=success`: OAuth completed successfully
+  - `?status=error&error={message}`: OAuth failed
+
+#### Get GitHub Status
+**Endpoint:** `GET /github/status`
+
+**Headers:**
+- `Authorization`: `Bearer {access_token}` (required for user-specific status)
+
+**Response:**
+```json
+{
+  "connection_status": "connected",
+  "auth_mode": "oauth",
+  "github_username": "username",
+  "message": null
+}
+```
+
+**Response Fields:**
+- `connection_status`: Connection status ("connected", "not_connected", or "error")
+- `auth_mode`: Authentication mode (always "oauth" for production)
+- `github_username`: GitHub username if connected, null otherwise
+- `message`: Optional message providing additional context
+
+#### Disconnect GitHub Account
+**Endpoint:** `DELETE /github/disconnect`
+
+**Headers:**
+- `Authorization`: `Bearer {access_token}` (required)
+
+**Response:**
+- Status: `204 No Content`
+
+**Note:** This endpoint is idempotent - it returns success even if no GitHub connection exists.
 
 ## Error Handling
 All error responses follow this format:

@@ -119,6 +119,18 @@ HOST=0.0.0.0
 REQUIRE_API_KEY=false
 MASTER_API_KEY=rai_dev_key
 
+# JWT Configuration (required for user accounts and GitHub OAuth)
+# Generate with: python -c "import secrets; print(secrets.token_urlsafe(32))"
+JWT_SECRET=your-super-secret-jwt-key-change-in-production
+JWT_ALGORITHM=HS256
+JWT_ACCESS_TOKEN_EXPIRE_MINUTES=30
+
+# GitHub OAuth Configuration (required for GitHub integration)
+# Create OAuth App at https://github.com/settings/developers
+GITHUB_CLIENT_ID=Iv1.xxxxxxxxxxxxxxxxxxxxxx
+GITHUB_CLIENT_SECRET=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+GITHUB_AUTH_MODE=oauth  # OAuth mode only (CLI mode deprecated)
+
 # Rate limiting (disabled for local development)
 ENABLE_RATE_LIMITING=false
 
@@ -446,6 +458,43 @@ If you get 401 errors from the API:
    # In .env.local
    RESUMEAI_API_KEY=rai_your_key_here
    ```
+
+### GitHub OAuth Issues
+
+**OAuth Setup:**
+For GitHub integration to work in development, you need to create a GitHub OAuth App:
+
+1. Go to https://github.com/settings/developers
+2. Click "New OAuth App"
+3. Fill in the form:
+   - Application name: `ResumeAI Dev`
+   - Homepage URL: `http://localhost:5173`
+   - Authorization callback URL: `http://127.0.0.1:8000/github/callback`
+4. Copy the Client ID and generate a Client Secret
+5. Add to `resume-api/.env`:
+   ```bash
+   GITHUB_CLIENT_ID=Iv1.xxxxxxxxxxxxxxxxxxxxxx
+   GITHUB_CLIENT_SECRET=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+   GITHUB_AUTH_MODE=oauth
+   ```
+
+**"Invalid State" Error:**
+This occurs when the OAuth state parameter doesn't match:
+1. Clear browser cookies and localStorage
+2. Restart both frontend and backend
+3. Ensure `FRONTEND_URL` in backend matches your frontend URL
+
+**GitHub Connection Status Shows "Not Connected":**
+1. Verify user is logged in (check JWT token in localStorage)
+2. Call `/api/auth/login` to get a JWT token
+3. Ensure the token is sent in `Authorization` header
+4. Check `/github/status` endpoint response
+
+**Callback URL Mismatch:**
+If GitHub shows "Redirect URI mismatch" error:
+1. Verify the callback URL in your GitHub OAuth app settings
+2. It should match: `http://127.0.0.1:8000/github/callback` (dev)
+3. Or: `https://api.yourdomain.com/github/callback` (production)
 
 ### Database Errors
 

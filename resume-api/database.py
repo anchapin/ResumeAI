@@ -581,6 +581,7 @@ class GitHubConnection(Base):
     # GitHub OAuth data
     github_user_id = Column(String(100), nullable=False, index=True)  # GitHub user ID
     github_username = Column(String(100), nullable=False)  # GitHub username
+    github_email = Column(String(255), nullable=True)  # GitHub email
     access_token = Column(Text, nullable=False)  # Encrypted access token
     refresh_token = Column(Text, nullable=True)  # Encrypted refresh token (if applicable)
     token_type = Column(String(50), default="bearer")  # Token type
@@ -604,6 +605,31 @@ class GitHubConnection(Base):
     )
 
 
+# Alias for backward compatibility with existing imports
+UserGitHubConnection = GitHubConnection
+
+
+class OAuthState(Base):
+    """OAuth state model for storing OAuth flow state parameters."""
+
+    __tablename__ = "oauth_states"
+
+    id = Column(Integer, primary_key=True, index=True)
+    state = Column(String(100), unique=True, nullable=False, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    provider = Column(String(50), nullable=False, default="github")  # github, linkedin, etc.
+    expires_at = Column(DateTime(timezone=True), nullable=False, index=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    # Relationships
+    user = relationship("User")
+
+    __table_args__ = (
+        Index("idx_oauth_state", "state"),
+        Index("idx_oauth_user", "user_id"),
+    )
+
+
 # Add relationship to User model
 # Note: This is done by modifying the User class after it's defined
 User.api_keys = relationship(
@@ -611,6 +637,9 @@ User.api_keys = relationship(
 )
 User.github_connections = relationship(
     "GitHubConnection", back_populates="user", cascade="all, delete-orphan"
+)
+User.oauth_states = relationship(
+    "OAuthState", back_populates="user", cascade="all, delete-orphan"
 )
 
 

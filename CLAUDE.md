@@ -10,6 +10,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Backend:** FastAPI Python service with Resume CLI integration
 - **Architecture:** SPA (Single Page Application) with client-side state management
 - **Deployment:** Docker containers for API service, Vercel for frontend
+- **Authentication:** JWT-based user accounts with GitHub OAuth integration
 
 ## Development Commands
 
@@ -93,10 +94,15 @@ docker-compose --env-file .env up
 ### API Architecture
 - **Legacy Endpoints** (mock server in `server.py`): `/generate/preview`, `/generate/pdf`, `/generate/package`
 - **V1 API** (production): `/v1/render/pdf`, `/v1/tailor`, `/v1/variants`
-- **Authentication:** API Key middleware in `resume-api/config/dependencies.py`
-  - Required: `X-API-KEY` header for protected endpoints
-  - Optional: Public endpoints allow unauthenticated access
-  - Development Mode: Set `REQUIRE_API_KEY=false` to disable
+- **Authentication:**
+  - **API Key middleware** in `resume-api/config/dependencies.py` for 3rd party integrations
+    - Required: `X-API-KEY` header for protected endpoints
+    - Optional: Public endpoints allow unauthenticated access
+    - Development Mode: Set `REQUIRE_API_KEY=false` to disable
+  - **JWT authentication** for user accounts and GitHub OAuth
+    - Required: `Authorization: Bearer {token}` header for user endpoints
+    - Endpoints: `/api/auth/*`, `/github/*`
+    - Token storage: JWT with configurable expiration
 
 ### Backend Modules
 - **FastAPI:** Web framework with automatic OpenAPI docs (`/docs`)
@@ -104,6 +110,11 @@ docker-compose --env-file .env up
 - **Resume CLI Integration:** Vendor code in `resume-api/lib/cli/` wraps Python CLI library
 - **AI Abstraction:** `resume-api/lib/utils/ai.py` supports OpenAI, Claude, Gemini
 - **Template System:** YAML-based resume templates in `resume-api/templates/`
+- **GitHub OAuth:** OAuth flow implementation in `resume-api/routes/github.py`
+- **JWT Auth:** Token-based authentication in `resume-api/config/jwt_utils.py`
+- **Database:** SQLAlchemy async with SQLite (`resume-api/database.py`)
+  - Tables: User, OAuthState, UserGitHubConnection
+  - Token encryption: Fernet symmetric encryption
 
 ### Environment Configuration
 
@@ -127,6 +138,16 @@ GEMINI_API_KEY=...
 MASTER_API_KEY=rai_1234567890abcdef...  # For ResumeAI frontend
 API_KEYS=rai_xyz...,rai_abc...  # For 3rd party developers
 REQUIRE_API_KEY=true           # Set to false to disable auth
+
+# JWT Authentication (required for user accounts)
+JWT_SECRET=your-super-secret-jwt-key-change-in-production
+JWT_ALGORITHM=HS256
+JWT_ACCESS_TOKEN_EXPIRE_MINUTES=30
+
+# GitHub OAuth Configuration (required for GitHub integration)
+GITHUB_CLIENT_ID=Iv1.xxxxxxxxxxxxxxxxxxxxxx
+GITHUB_CLIENT_SECRET=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+GITHUB_AUTH_MODE=oauth  # OAuth mode only (CLI mode deprecated)
 
 # Server Configuration
 HOST=0.0.0.0
@@ -170,8 +191,10 @@ cd resume-api && docker build -t resume-api:test . && docker run --rm resume-api
 
 1. **Docker Build Time:** The `resume-api` Dockerfile includes `texlive` which is 2-4GB and can take 10+ minutes to build
 2. **Frontend Routing:** Using React state for routing instead of React Router means route changes require code deployment
-3. **API Key Storage:** Currently using `localStorage` - consider user accounts for production
-4. **CORS:** Enabled for all origins during development (`allow_origins=["*"]`)
+3. **GitHub OAuth Mode:** CLI mode is deprecated - only OAuth mode is supported for production
+4. **JWT Secret:** Must be set to a strong random string in production - never use default values
+5. **Token Encryption:** GitHub OAuth tokens are encrypted using Fernet - ensure encryption key is backed up
+6. **CORS:** Enabled for all origins during development (`allow_origins=["*"]`)
 
 ## Code Style & Conventions
 

@@ -95,13 +95,31 @@ def setup_sentry():
 
 def check_github_auth_mode():
     """Check GitHub authentication mode and log deprecation warning for CLI mode."""
-    if getattr(settings, "github_auth_mode", "oauth") == "cli":
+    auth_mode = getattr(settings, "github_auth_mode", "oauth")
+    logger.info(
+        "github_auth_mode_initialized",
+        mode=auth_mode,
+        environment="production" if not settings.debug else "development",
+    )
+
+    if auth_mode == "cli":
         logger.warning(
             "DEPRECATION_WARNING",
             message="GitHub CLI mode is deprecated and will be removed in a future version. Please migrate to OAuth mode.",
             mode="cli",
             action="Set GITHUB_AUTH_MODE=oauth to use OAuth authentication",
             documentation="See docs/github-oauth-migration.md for migration guide",
+        )
+    elif auth_mode == "oauth":
+        logger.info(
+            "github_oauth_enabled",
+            message="GitHub OAuth authentication is enabled",
+        )
+    else:
+        logger.error(
+            "github_auth_mode_invalid",
+            mode=auth_mode,
+            message=f"Invalid GITHUB_AUTH_MODE value: {auth_mode}. Expected 'oauth' or 'cli'.",
         )
 
 

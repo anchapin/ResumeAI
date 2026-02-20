@@ -44,6 +44,17 @@ MASTER_API_KEY=rai_1234567890abcdef1234567890abcdef
 API_KEYS=
 REQUIRE_API_KEY=true
 
+# JWT Authentication (IMPORTANT: Generate strong secret for production!)
+JWT_SECRET=your-super-secret-jwt-key-change-in-production
+JWT_ALGORITHM=HS256
+JWT_ACCESS_TOKEN_EXPIRE_MINUTES=30
+
+# GitHub OAuth Configuration (REQUIRED for GitHub integration)
+GITHUB_CLIENT_ID=Iv1.xxxxxxxxxxxxxxxxxxxxxx
+GITHUB_CLIENT_SECRET=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+GITHUB_AUTH_MODE=oauth
+FRONTEND_URL=https://yourdomain.com
+
 # Optional: CORS settings (comma-separated)
 # CORS_ORIGINS=https://yourdomain.com,https://app.vercel.app
 ```
@@ -121,6 +132,13 @@ Set these via `--set-env-vars` in the deployment command or in the Cloud Console
 | `MASTER_API_KEY` | Master API key for frontend | Yes | - |
 | `API_KEYS` | Comma-separated additional API keys | No | - |
 | `REQUIRE_API_KEY` | Require API key authentication | No | `true` |
+| `JWT_SECRET` | Secret key for JWT token signing | Yes | - |
+| `JWT_ALGORITHM` | JWT algorithm | No | `HS256` |
+| `JWT_ACCESS_TOKEN_EXPIRE_MINUTES` | JWT token expiration time | No | `30` |
+| `GITHUB_CLIENT_ID` | GitHub OAuth Client ID | If using GitHub integration | - |
+| `GITHUB_CLIENT_SECRET` | GitHub OAuth Client Secret | If using GitHub integration | - |
+| `GITHUB_AUTH_MODE` | GitHub auth mode (oauth only) | No | `oauth` |
+| `FRONTEND_URL` | Frontend application URL | Yes | - |
 
 ## Testing Deployment
 
