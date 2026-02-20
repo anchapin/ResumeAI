@@ -9,17 +9,14 @@ Provides endpoints for:
 import secrets
 import urllib.parse
 from typing import Annotated, Optional
-from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, status, Request, Query
 from pydantic import BaseModel, Field, field_validator
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
 
 from database import get_async_session
 from config import settings
-from config.dependencies import get_current_user, limiter
-from database import User
+from config.dependencies import limiter
 from monitoring import logging_config
 
 # Get logger
@@ -48,9 +45,7 @@ class GitHubConnectRequest(BaseModel):
         """Validate redirect URI format."""
         if v:
             if not v.startswith(("http://", "https://")):
-                raise ValueError(
-                    "Redirect URI must start with http:// or https://"
-                )
+                raise ValueError("Redirect URI must start with http:// or https://")
             # Basic URL validation
             try:
                 result = urllib.parse.urlparse(v)
@@ -68,11 +63,10 @@ class GitHubConnectResponse(BaseModel):
         ..., description="GitHub OAuth authorization URL to redirect user to"
     )
     state: str = Field(
-        ..., description="State parameter for CSRF protection (store this for callback verification)"
+        ...,
+        description="State parameter for CSRF protection (store this for callback verification)",
     )
-    expires_in: int = Field(
-        ..., description="Seconds until state parameter expires"
-    )
+    expires_in: int = Field(..., description="Seconds until state parameter expires")
 
 
 # =============================================================================
@@ -117,10 +111,12 @@ def _get_oauth_config():
     # For development/testing, you can use environment variables
     if not client_id:
         import os
+
         client_id = os.getenv("GITHUB_CLIENT_ID")
 
     if not client_secret:
         import os
+
         client_secret = os.getenv("GITHUB_CLIENT_SECRET")
 
     if not client_id or not client_secret:
@@ -290,7 +286,9 @@ async def github_connect(
 async def github_callback(
     request: Request,
     code: str = Query(..., description="OAuth authorization code from GitHub"),
-    state: Optional[str] = Query(None, description="State parameter for CSRF verification"),
+    state: Optional[str] = Query(
+        None, description="State parameter for CSRF verification"
+    ),
     db: Annotated[AsyncSession, Depends(get_async_session)] = None,
 ):
     """

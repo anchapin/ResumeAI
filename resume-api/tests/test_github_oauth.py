@@ -13,17 +13,20 @@ import sys
 import urllib.parse
 from pathlib import Path
 from unittest.mock import patch, MagicMock
-from typing import Generator
 
 import pytest
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 # Add resume-api to python path
 sys.path.insert(0, str(Path(__file__).parent.parent.absolute()))
 
-from routes.github import router, GitHubConnectRequest, _generate_state, _build_authorization_url
-
+from routes.github import (
+    router,
+    GitHubConnectRequest,
+    _generate_state,
+    _build_authorization_url,
+)
 
 # =============================================================================
 # Test Fixtures
@@ -129,6 +132,7 @@ def test_build_authorization_url_with_scopes():
     assert "scope=" in url
     # Parse the URL and check scopes parameter
     from urllib.parse import parse_qs
+
     parsed = urllib.parse.urlparse(url)
     params = parse_qs(parsed.query)
     assert "scope" in params
@@ -153,7 +157,9 @@ def test_github_connect_success(client, mock_settings):
     assert "expires_in" in data
 
     # Verify authorization_url
-    assert data["authorization_url"].startswith("https://github.com/login/oauth/authorize?")
+    assert data["authorization_url"].startswith(
+        "https://github.com/login/oauth/authorize?"
+    )
     assert "client_id=test_client_id" in data["authorization_url"]
     # Check scopes are in the URL (may be URL-encoded with + or %20)
     assert "scope=" in data["authorization_url"]
@@ -364,7 +370,11 @@ def test_github_connect_request_invalid_format():
 
     # The error message should mention the issue with the URI
     error_msg = str(exc_info.value)
-    assert "http" in error_msg.lower() or "redirect" in error_msg.lower() or "uri" in error_msg.lower()
+    assert (
+        "http" in error_msg.lower()
+        or "redirect" in error_msg.lower()
+        or "uri" in error_msg.lower()
+    )
 
 
 # =============================================================================
@@ -381,7 +391,7 @@ def test_state_parameter_uniqueness():
 
     # All should be different
     for i, state1 in enumerate(states):
-        for state2 in states[i + 1:]:
+        for state2 in states[i + 1 :]:
             assert state1 != state2
 
 
