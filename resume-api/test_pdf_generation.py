@@ -151,7 +151,11 @@ class TestResumeGenerator:
             pdf_bytes = generator.generate_pdf({}, "base")
             assert pdf_bytes[:4] == b"%PDF"
         except (RuntimeError, FileNotFoundError) as e:
-            if "xelatex" in str(e).lower() or "latex" in str(e).lower() or "No such file" in str(e):
+            if (
+                "xelatex" in str(e).lower()
+                or "latex" in str(e).lower()
+                or "No such file" in str(e)
+            ):
                 pytest.skip(f"LaTeX not installed: {e}")
             raise
 
@@ -162,7 +166,11 @@ class TestResumeGenerator:
             pdf_bytes = generator.generate_pdf(minimal_data, "base")
             assert pdf_bytes[:4] == b"%PDF"
         except (RuntimeError, FileNotFoundError) as e:
-            if "xelatex" in str(e).lower() or "latex" in str(e).lower() or "No such file" in str(e):
+            if (
+                "xelatex" in str(e).lower()
+                or "latex" in str(e).lower()
+                or "No such file" in str(e)
+            ):
                 pytest.skip(f"LaTeX not installed: {e}")
             raise
 

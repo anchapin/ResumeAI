@@ -1,7 +1,7 @@
-
 import unittest
 from markupsafe import Markup
 from lib.cli.generator import _latex_escape
+
 
 class TestLatexEscape(unittest.TestCase):
     def test_none(self):
@@ -49,5 +49,6 @@ class TestLatexEscape(unittest.TestCase):
     def test_integers(self):
         self.assertEqual(_latex_escape(123), Markup("123"))
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     unittest.main()
