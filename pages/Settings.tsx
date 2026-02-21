@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useTheme } from '../hooks/useTheme';
 import { toast } from 'react-toastify';
 import GitHubSettings from '../components/GitHubSettings';
+import { LinkedInSettings } from '../components/LinkedInSettings';
 
 /** Mock usage data - in production this would come from the API */
 interface UsageData {
@@ -437,45 +438,8 @@ const Settings: React.FC = () => {
         {/* GitHub Connection Settings */}
         <GitHubSettings />
 
-        {/* Team Preferences */}
-        <section className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-          <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50">
-            <h3 className="text-lg font-bold text-slate-900">Team Preferences</h3>
-            <p className="text-sm text-slate-500">Configure your team collaboration settings</p>
-          </div>
-          <div className="p-6 divide-y divide-slate-100">
-            <div className="flex items-center justify-between py-4 first:pt-0">
-              <div>
-                <h4 className="text-sm font-bold text-slate-900">Team Notifications</h4>
-                <p className="text-sm text-slate-500">Receive notifications for team activity</p>
-              </div>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input type="checkbox" defaultChecked className="sr-only peer" />
-                <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
-              </label>
-            </div>
-            <div className="flex items-center justify-between py-4">
-              <div>
-                <h4 className="text-sm font-bold text-slate-900">Email Invites</h4>
-                <p className="text-sm text-slate-500">Send email notifications when inviting members</p>
-              </div>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input type="checkbox" defaultChecked className="sr-only peer" />
-                <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
-              </label>
-            </div>
-            <div className="flex items-center justify-between py-4 last:pb-0">
-              <div>
-                <h4 className="text-sm font-bold text-slate-900">Auto-share New Resumes</h4>
-                <p className="text-sm text-slate-500">Automatically share new resumes with your teams</p>
-              </div>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input type="checkbox" className="sr-only peer" />
-                <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
-              </label>
-            </div>
-          </div>
-        </section>
+        {/* LinkedIn Connection Settings */}
+        <LinkedInSettings />
 
         {/* User-Specific API Keys Management */}
         <section className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
