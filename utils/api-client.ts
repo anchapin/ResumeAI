@@ -157,6 +157,11 @@ export async function resolveComment(commentId: number): Promise<Comment> {
   return response.json();
 }
 
+export async function deleteComment(commentId: number): Promise<void> {
+  const response = await fetch(`${API_URL}/comments/${commentId}`, { method: 'DELETE', headers: getHeaders() });
+  if (!response.ok) throw new Error('Failed to delete comment');
+}
+
 export async function shareResume(resumeId: number, options: { permissions?: 'view' | 'comment' | 'edit'; expires_at?: string; max_views?: number; password?: string; }): Promise<ShareLink> {
   const response = await fetch(`${API_URL}/resumes/${resumeId}/share`, { method: 'POST', headers: getHeaders(), body: JSON.stringify(options) });
   if (!response.ok) throw new Error('Failed to share resume');

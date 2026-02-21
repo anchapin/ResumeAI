@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
-import { Route, SimpleResumeData } from '../types';
+import { Route, SimpleResumeData, ResumeMetadata } from '../types';
 import { useGeneratePackage, convertToResumeData } from '../hooks/useGeneratePackage';
 import { useVariants } from '../hooks/useVariants';
 import { showErrorToast, showSuccessToast } from '../utils/toast';
+import { getResume, listResumeVersions, listComments } from '../utils/api-client';
 
 /**
  * @interface WorkspaceProps
@@ -56,6 +57,15 @@ const Workspace: React.FC<WorkspaceProps> = ({ resumeData, onNavigate }) => {
     const [jobDescription, setJobDescription] = useState('');
     const [variant, setVariant] = useState('base');
 
+    // Version and comment metadata
+    const [versionCount, setVersionCount] = useState<number>(0);
+    const [commentCount, setCommentCount] = useState<number>(0);
+    const [lastUpdated, setLastUpdated] = useState<string>('');
+    const [loadingMetadata, setLoadingMetadata] = useState<boolean>(true);
+
+    // Mock resume ID - in real app, this would come from props
+    const mockResumeId = 1;
+
     // Initialize with API variants once loaded
     useEffect(() => {
         if (apiVariants.length > 0) {
@@ -64,6 +74,49 @@ const Workspace: React.FC<WorkspaceProps> = ({ resumeData, onNavigate }) => {
             setVariant(defaultVariant);
         }
     }, [apiVariants]);
+
+    // Load resume metadata (versions, comments, last updated)
+    useEffect(() => {
+        const loadMetadata = async () => {
+            try {
+                setLoadingMetadata(true);
+                const [versions, comments] = await Promise.all([
+                    listResumeVersions(mockResumeId),
+                    listComments(mockResumeId),
+                ]);
+                setVersionCount(versions.length);
+                setCommentCount(comments.length);
+
+                // Set last updated based on the most recent version or comment
+                const allDates = [
+                    ...versions.map((v: any) => new Date(v.created_at)),
+                    ...comments.map((c: any) => new Date(c.created_at)),
+                ];
+                if (allDates.length > 0) {
+                    const latest = new Date(Math.max(...allDates.map(d => d.getTime())));
+                    setLastUpdated(formatTimeAgo(latest));
+                }
+            } catch (err) {
+                console.error('Failed to load metadata:', err);
+                // Silently fail - metadata is nice to have but not essential
+            } finally {
+                setLoadingMetadata(false);
+            }
+        };
+
+        loadMetadata();
+    }, [mockResumeId]);
+
+    // Helper function to format time ago
+    const formatTimeAgo = (date: Date): string => {
+        const now = new Date();
+        const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+
+        if (diffInSeconds < 60) return 'just now';
+        if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
+        if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
+        return `${Math.floor(diffInSeconds / 86400)}d ago`;
+    };
 
     // Update local data when tailored data arrives
     useEffect(() => {
@@ -332,6 +385,35 @@ const Workspace: React.FC<WorkspaceProps> = ({ resumeData, onNavigate }) => {
                      </div>
                 </div>
                 <div className="flex items-center gap-3">
+                     {/* Metadata indicators */}
+                     <div className="hidden md:flex items-center gap-3 px-4 py-2 bg-slate-50 rounded-lg border border-slate-200">
+                        {loadingMetadata ? (
+                            <div className="flex items-center gap-2">
+                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-slate-400"></div>
+                            </div>
+                        ) : (
+                            <>
+                                <div className="flex items-center gap-2">
+                                    <span className="material-symbols-outlined text-sm text-slate-500">history</span>
+                                    <span className="text-sm font-semibold text-slate-700">{versionCount} versions</span>
+                                </div>
+                                <div className="h-4 w-px bg-slate-300"></div>
+                                <div className="flex items-center gap-2">
+                                    <span className="material-symbols-outlined text-sm text-slate-500">chat_bubble_outline</span>
+                                    <span className="text-sm font-semibold text-slate-700">{commentCount} comments</span>
+                                </div>
+                                {lastUpdated && (
+                                    <>
+                                        <div className="h-4 w-px bg-slate-300"></div>
+                                        <div className="flex items-center gap-2">
+                                            <span className="material-symbols-outlined text-sm text-slate-500">update</span>
+                                            <span className="text-sm font-semibold text-slate-500">Updated {lastUpdated}</span>
+                                        </div>
+                                    </>
+                                )}
+                            </>
+                        )}
+                     </div>
                      <button
                         onClick={handleGenerate}
                         disabled={loading}

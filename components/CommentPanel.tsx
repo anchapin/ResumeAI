@@ -4,6 +4,7 @@ import {
   listComments,
   createComment,
   resolveComment,
+  deleteComment,
 } from '../utils/api-client';
 import { showSuccessToast, showErrorToast } from '../utils/toast';
 
@@ -72,6 +73,21 @@ const CommentPanel: React.FC<CommentPanelProps> = ({ resumeId }) => {
       await loadComments();
     } catch (error) {
       showErrorToast('Failed to resolve comment');
+      console.error(error);
+    }
+  };
+
+  const handleDeleteComment = async (commentId: number) => {
+    if (!confirm('Are you sure you want to delete this comment?')) {
+      return;
+    }
+
+    try {
+      await deleteComment(commentId);
+      showSuccessToast('Comment deleted');
+      await loadComments();
+    } catch (error) {
+      showErrorToast('Failed to delete comment');
       console.error(error);
     }
   };
@@ -241,6 +257,13 @@ const CommentPanel: React.FC<CommentPanelProps> = ({ resumeId }) => {
                       {new Date(comment.created_at).toLocaleString()}
                     </span>
                   </div>
+                  <button
+                    onClick={() => handleDeleteComment(comment.id)}
+                    className="p-1 text-slate-400 hover:bg-red-50 hover:text-red-500 rounded transition-colors"
+                    title="Delete comment"
+                  >
+                    <span className="material-symbols-outlined text-[18px]">delete</span>
+                  </button>
                 </div>
                 <p className="text-sm text-slate-700 mb-3">{comment.content}</p>
                 {!comment.is_resolved && (

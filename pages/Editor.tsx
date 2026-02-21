@@ -1,11 +1,14 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { SimpleResumeData, WorkExperience, EducationEntry, ProjectEntry } from '../types';
-import { convertToAPIData, generatePDF, getVariants, VariantMetadata } from '../utils/api-client';
+import { convertToAPIData, generatePDF, getVariants, VariantMetadata, getResume, updateResume } from '../utils/api-client';
 import { TemplateSelector } from '../components/TemplateSelector';
 import { LinkedInImportDialog } from '../components/LinkedInImportDialog';
 import ExperienceItem from '../components/ExperienceItem';
 import EducationItem from '../components/editor/EducationItem';
 import ResumePreview from '../components/ResumePreview';
+import VersionHistory from '../components/VersionHistory';
+import CommentPanel from '../components/CommentPanel';
+import { showSuccessToast, showErrorToast } from '../utils/toast';
 
 interface EducationItemProps {
     edu: EducationEntry;
@@ -440,6 +443,17 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, onBack, saveStatu
   // Drag and drop state for section reordering
   const [draggedItemId, setDraggedItemId] = useState<string | null>(null);
   const [dragOverItemId, setDragOverItemId] = useState<string | null>(null);
+
+  // Versioning state
+  const [showVersionHistory, setShowVersionHistory] = useState<boolean>(false);
+  const [showSaveVersionDialog, setShowSaveVersionDialog] = useState<boolean>(false);
+  const [versionDescription, setVersionDescription] = useState<string>('');
+  const [currentResumeId, setCurrentResumeId] = useState<number>(1); // Mock resume ID - in real app, this would come from props or context
+  const [savingVersion, setSavingVersion] = useState<boolean>(false);
+
+  // Comments state
+  const [showCommentPanel, setShowCommentPanel] = useState<boolean>(false);
+  const [unresolvedCommentCount, setUnresolvedCommentCount] = useState<number>(0);
   
   // Fetch variants on mount
   useEffect(() => {
@@ -482,7 +496,45 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, onBack, saveStatu
     setSelectedVariant(template);
     setShowTemplateSelector(false);
   }, []);
-  
+
+  // Handle Save Version
+  const handleSaveVersion = useCallback(async () => {
+    if (!versionDescription.trim()) {
+      showErrorToast('Please enter a version description');
+      return;
+    }
+
+    try {
+      setSavingVersion(true);
+      await updateResume(currentResumeId, {
+        data: convertToAPIData(resumeData),
+        change_description: versionDescription.trim(),
+      });
+      showSuccessToast('Version saved successfully!');
+      setVersionDescription('');
+      setShowSaveVersionDialog(false);
+    } catch (err) {
+      console.error('Failed to save version:', err);
+      showErrorToast('Failed to save version. Please try again.');
+    } finally {
+      setSavingVersion(false);
+    }
+  }, [currentResumeId, resumeData, versionDescription]);
+
+  // Handle Restore Version
+  const handleRestoreVersion = useCallback(async (version: any) => {
+    try {
+      onUpdate({
+        ...resumeData,
+        ...version.data,
+      });
+      showSuccessToast('Version restored successfully!');
+    } catch (err) {
+      console.error('Failed to restore version:', err);
+      showErrorToast('Failed to restore version. Please try again.');
+    }
+  }, [onUpdate, resumeData]);
+
   // Handle Save Profile
   const handleSaveProfile = useCallback(async () => {
     try {
@@ -769,7 +821,17 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, onBack, saveStatu
           <div className="space-y-6 pb-20">
             <div className="flex justify-between items-center">
                 <h2 className="text-2xl font-bold text-slate-900">Contact Information</h2>
-                <span className="text-sm font-medium text-slate-500">Basic profile details</span>
+                <div className="flex items-center gap-2">
+                    <button
+                        onClick={() => setShowCommentPanel(true)}
+                        className="flex items-center gap-1 text-sm font-bold text-slate-500 hover:text-primary-600 transition-colors"
+                        title="Add comment to this section"
+                    >
+                        <span className="material-symbols-outlined text-[18px]">chat_bubble_outline</span>
+                        <span>Add Comment</span>
+                    </button>
+                    <span className="text-sm font-medium text-slate-500">Basic profile details</span>
+                </div>
             </div>
 
             {/* LinkedIn Import Card */}
@@ -850,7 +912,17 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, onBack, saveStatu
           <div className="space-y-6 pb-20">
             <div className="flex justify-between items-center">
                 <h2 className="text-2xl font-bold text-slate-900">Professional Summary</h2>
-                <span className="text-sm font-medium text-slate-500">Brief introduction</span>
+                <div className="flex items-center gap-2">
+                    <button
+                        onClick={() => setShowCommentPanel(true)}
+                        className="flex items-center gap-1 text-sm font-bold text-slate-500 hover:text-primary-600 transition-colors"
+                        title="Add comment to this section"
+                    >
+                        <span className="material-symbols-outlined text-[18px]">chat_bubble_outline</span>
+                        <span>Add Comment</span>
+                    </button>
+                    <span className="text-sm font-medium text-slate-500">Brief introduction</span>
+                </div>
             </div>
 
             <div className="bg-white rounded-xl border border-slate-200 p-8 space-y-4">
@@ -874,7 +946,17 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, onBack, saveStatu
           <div className="space-y-6 pb-20">
             <div className="flex justify-between items-center">
                 <h2 className="text-2xl font-bold text-slate-900">Work Experience</h2>
-                <span className="text-sm font-medium text-slate-500">{experiences.length} positions listed</span>
+                <div className="flex items-center gap-2">
+                    <button
+                        onClick={() => setShowCommentPanel(true)}
+                        className="flex items-center gap-1 text-sm font-bold text-slate-500 hover:text-primary-600 transition-colors"
+                        title="Add comment to this section"
+                    >
+                        <span className="material-symbols-outlined text-[18px]">chat_bubble_outline</span>
+                        <span>Add Comment</span>
+                    </button>
+                    <span className="text-sm font-medium text-slate-500">{experiences.length} positions listed</span>
+                </div>
             </div>
 
             {/* Drag and Drop Hint */}
@@ -926,7 +1008,17 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, onBack, saveStatu
           <div className="space-y-6 pb-20">
             <div className="flex justify-between items-center">
                 <h2 className="text-2xl font-bold text-slate-900">Skills</h2>
-                <span className="text-sm font-medium text-slate-500">{resumeData.skills.length} skills listed</span>
+                <div className="flex items-center gap-2">
+                    <button
+                        onClick={() => setShowCommentPanel(true)}
+                        className="flex items-center gap-1 text-sm font-bold text-slate-500 hover:text-primary-600 transition-colors"
+                        title="Add comment to this section"
+                    >
+                        <span className="material-symbols-outlined text-[18px]">chat_bubble_outline</span>
+                        <span>Add Comment</span>
+                    </button>
+                    <span className="text-sm font-medium text-slate-500">{resumeData.skills.length} skills listed</span>
+                </div>
             </div>
 
             <div className="bg-white rounded-xl border border-slate-200 p-8 space-y-4">
@@ -969,7 +1061,17 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, onBack, saveStatu
           <div className="space-y-6 pb-20">
             <div className="flex justify-between items-center">
                 <h2 className="text-2xl font-bold text-slate-900">Education</h2>
-                <span className="text-sm font-medium text-slate-500">{education.length} entries listed</span>
+                <div className="flex items-center gap-2">
+                    <button
+                        onClick={() => setShowCommentPanel(true)}
+                        className="flex items-center gap-1 text-sm font-bold text-slate-500 hover:text-primary-600 transition-colors"
+                        title="Add comment to this section"
+                    >
+                        <span className="material-symbols-outlined text-[18px]">chat_bubble_outline</span>
+                        <span>Add Comment</span>
+                    </button>
+                    <span className="text-sm font-medium text-slate-500">{education.length} entries listed</span>
+                </div>
             </div>
 
             {education.map((edu) => (
@@ -998,7 +1100,17 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, onBack, saveStatu
           <div className="space-y-6 pb-20">
             <div className="flex justify-between items-center">
                 <h2 className="text-2xl font-bold text-slate-900">Projects</h2>
-                <span className="text-sm font-medium text-slate-500">{projects.length} projects listed</span>
+                <div className="flex items-center gap-2">
+                    <button
+                        onClick={() => setShowCommentPanel(true)}
+                        className="flex items-center gap-1 text-sm font-bold text-slate-500 hover:text-primary-600 transition-colors"
+                        title="Add comment to this section"
+                    >
+                        <span className="material-symbols-outlined text-[18px]">chat_bubble_outline</span>
+                        <span>Add Comment</span>
+                    </button>
+                    <span className="text-sm font-medium text-slate-500">{projects.length} projects listed</span>
+                </div>
             </div>
 
             {projects.map((proj) => (
@@ -1096,19 +1208,51 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, onBack, saveStatu
                     </p>
                 </div>
                 <div className="flex gap-3">
+                    {/* Comments Button */}
+                    <button
+                        onClick={() => setShowCommentPanel(true)}
+                        className="flex items-center gap-2 px-4 h-10 rounded-lg border border-slate-300 bg-white text-slate-700 font-bold text-sm hover:bg-slate-50 transition-colors shadow-sm relative"
+                        title="View comments"
+                    >
+                        <span className="material-symbols-outlined text-lg">chat_bubble_outline</span>
+                        <span className="hidden sm:inline">Comments</span>
+                        {unresolvedCommentCount > 0 && (
+                            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                                {unresolvedCommentCount}
+                            </span>
+                        )}
+                    </button>
+                    {/* View History Button */}
+                    <button
+                        onClick={() => setShowVersionHistory(true)}
+                        className="flex items-center gap-2 px-4 h-10 rounded-lg border border-slate-300 bg-white text-slate-700 font-bold text-sm hover:bg-slate-50 transition-colors shadow-sm"
+                        title="View version history"
+                    >
+                        <span className="material-symbols-outlined text-lg">history</span>
+                        <span className="hidden sm:inline">History</span>
+                    </button>
+                    {/* Save Version Button */}
+                    <button
+                        onClick={() => setShowSaveVersionDialog(true)}
+                        className="flex items-center gap-2 px-4 h-10 rounded-lg border border-slate-300 bg-white text-slate-700 font-bold text-sm hover:bg-slate-50 transition-colors shadow-sm"
+                        title="Save as new version"
+                    >
+                        <span className="material-symbols-outlined text-lg">save</span>
+                        <span className="hidden sm:inline">Save Version</span>
+                    </button>
                     {/* Preview Toggle Button */}
-                    <button 
+                    <button
                         onClick={() => setShowPreview(!showPreview)}
                         className={`flex items-center gap-2 px-4 h-10 rounded-lg border font-bold text-sm transition-colors shadow-sm ${
-                          showPreview 
-                            ? 'bg-primary-600 text-white border-primary-600' 
+                          showPreview
+                            ? 'bg-primary-600 text-white border-primary-600'
                             : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50'
                         }`}
                     >
                         <span className="material-symbols-outlined text-lg">{showPreview ? 'visibility_off' : 'visibility'}</span>
                         {showPreview ? 'Hide Preview' : 'Preview'}
                     </button>
-                    <button 
+                    <button
                         onClick={handleGeneratePDF}
                         disabled={isGeneratingPDF}
                         className="flex items-center gap-2 px-6 h-10 rounded-lg border border-slate-300 bg-white text-slate-700 font-bold text-sm hover:bg-slate-50 transition-colors shadow-sm"
@@ -1176,6 +1320,132 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, onBack, saveStatu
         onClose={() => setShowLinkedInImport(false)}
         onImport={handleLinkedInImport}
       />
+
+      {/* Version History Dialog */}
+      {showVersionHistory && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
+            <div className="flex items-center justify-between p-6 border-b border-slate-200">
+              <div className="flex items-center gap-3">
+                <span className="material-symbols-outlined text-primary-600 text-2xl">history</span>
+                <h2 className="text-xl font-bold text-slate-900">Version History</h2>
+              </div>
+              <button
+                onClick={() => setShowVersionHistory(false)}
+                className="p-2 text-slate-400 hover:bg-slate-100 rounded-lg transition-colors"
+              >
+                <span className="material-symbols-outlined text-2xl">close</span>
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-6">
+              <VersionHistory
+                resumeId={currentResumeId}
+                onRestore={handleRestoreVersion}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Save Version Dialog */}
+      {showSaveVersionDialog && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+            <div className="flex items-center justify-between p-6 border-b border-slate-200">
+              <div className="flex items-center gap-3">
+                <span className="material-symbols-outlined text-primary-600 text-2xl">save</span>
+                <h2 className="text-xl font-bold text-slate-900">Save as Version</h2>
+              </div>
+              <button
+                onClick={() => setShowSaveVersionDialog(false)}
+                className="p-2 text-slate-400 hover:bg-slate-100 rounded-lg transition-colors"
+              >
+                <span className="material-symbols-outlined text-2xl">close</span>
+              </button>
+            </div>
+            <div className="p-6">
+              <div className="space-y-4">
+                <div>
+                  <label
+                    htmlFor="version-description"
+                    className="block text-sm font-bold text-slate-700 mb-2"
+                  >
+                    Version Description
+                  </label>
+                  <textarea
+                    id="version-description"
+                    value={versionDescription}
+                    onChange={(e) => setVersionDescription(e.target.value)}
+                    placeholder="Describe the changes made in this version..."
+                    rows={4}
+                    className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all resize-none"
+                  />
+                </div>
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                  <div className="flex items-start gap-2">
+                    <span className="material-symbols-outlined text-amber-600 text-xl mt-0.5">
+                      info
+                    </span>
+                    <p className="text-sm text-amber-900">
+                      Saving a version creates a snapshot of your current resume data. You can restore any previous version later from the history.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center justify-end gap-3 p-6 border-t border-slate-200 bg-slate-50">
+              <button
+                onClick={() => {
+                  setShowSaveVersionDialog(false);
+                  setVersionDescription('');
+                }}
+                className="px-6 py-2.5 rounded-lg border border-slate-300 text-slate-700 font-bold text-sm hover:bg-slate-100 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSaveVersion}
+                disabled={savingVersion || !versionDescription.trim()}
+                className="px-6 py-2.5 rounded-lg bg-primary-600 text-white font-bold text-sm hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                {savingVersion ? (
+                  <>
+                    <span className="material-symbols-outlined animate-spin text-[18px]">
+                      progress_activity
+                    </span>
+                    <span>Saving...</span>
+                  </>
+                ) : (
+                  'Save Version'
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Comment Panel Dialog */}
+      {showCommentPanel && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
+            <div className="flex items-center justify-between p-6 border-b border-slate-200">
+              <div className="flex items-center gap-3">
+                <span className="material-symbols-outlined text-primary-600 text-2xl">chat_bubble_outline</span>
+                <h2 className="text-xl font-bold text-slate-900">Resume Comments</h2>
+              </div>
+              <button
+                onClick={() => setShowCommentPanel(false)}
+                className="p-2 text-slate-400 hover:bg-slate-100 rounded-lg transition-colors"
+              >
+                <span className="material-symbols-outlined text-2xl">close</span>
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto">
+              <CommentPanel resumeId={currentResumeId} />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
