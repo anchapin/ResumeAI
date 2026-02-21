@@ -254,6 +254,26 @@ class ResumeGenerator:
         return variants
 
 
+# Define translation table for LaTeX escaping
+# This is defined at module level for performance (computed once)
+_LATEX_SUBS = {
+    "&": r"\&",
+    "%": r"\%",
+    "$": r"\$",
+    "#": r"\#",
+    "_": r"\_",
+    "{": r"\{",
+    "}": r"\}",
+    "~": r"\textasciitilde{}",
+    "^": r"\^{}",
+    "\\": r"\textbackslash{}",
+    "<": r"\textless{}",
+    ">": r"\textgreater{}",
+}
+
+_LATEX_TRANSLATION_TABLE = str.maketrans(_LATEX_SUBS)
+
+
 def _latex_escape(text: Any) -> Markup:
     """
     Escape special LaTeX characters in text.
@@ -271,42 +291,8 @@ def _latex_escape(text: Any) -> Markup:
     if isinstance(text, Markup):
         return text  # Already marked up, return as-is
 
-    text_str = str(text)
-
-    # Process the string character by character to avoid replacement conflicts
-    result = []
-    i = 0
-    while i < len(text_str):
-        char = text_str[i]
-
-        # Check for backslash specially since it's part of escape sequences
-        if char == "\\":
-            # Check if this is part of an existing LaTeX command like \input{}
-            # For now, just escape the backslash itself
-            result.append(r"\textbackslash{}")
-        elif char in "&%$#_{}~^<>":
-            # Map characters to their escaped versions
-            escaped_map = {
-                "&": r"\&",
-                "%": r"\%",
-                "$": r"\$",
-                "#": r"\#",
-                "_": r"\_",
-                "{": r"\{",
-                "}": r"\}",
-                "~": r"\textasciitilde{}",
-                "^": r"\^{}",
-                "<": r"\textless{}",
-                ">": r"\textgreater{}",
-            }
-            result.append(escaped_map[char])
-        else:
-            # Regular character, just append as-is
-            result.append(char)
-
-        i += 1
-
-    return Markup("".join(result))
+    # Use translate for O(n) performance in C, much faster than Python loop
+    return Markup(str(text).translate(_LATEX_TRANSLATION_TABLE))
 
 
 # For testing purposes - create a simple mock PDF generator
