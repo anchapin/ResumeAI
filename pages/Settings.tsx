@@ -190,6 +190,7 @@ const Settings: React.FC = () => {
   const [newKeyExpiresInDays, setNewKeyExpiresInDays] = useState<number | ''>('');
   const [createdApiKey, setCreatedApiKey] = useState<string | null>(null);
   const [isCreatingKey, setIsCreatingKey] = useState<boolean>(false);
+  const [isCopied, setIsCopied] = useState<boolean>(false);
 
   // Usage tracking state
   const [usageHistory] = useState<UsageData[]>(generateMockUsageHistory);
@@ -319,7 +320,9 @@ const Settings: React.FC = () => {
   const copyToClipboard = async (text: string) => {
     try {
       await navigator.clipboard.writeText(text);
+      setIsCopied(true);
       toast.success('API key copied to clipboard');
+      setTimeout(() => setIsCopied(false), 2000);
     } catch {
       toast.error('Failed to copy to clipboard');
     }
@@ -816,9 +819,22 @@ const Settings: React.FC = () => {
                       />
                       <button
                         onClick={() => copyToClipboard(createdApiKey)}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1.5 bg-primary-600 text-white text-xs font-bold rounded hover:bg-primary-700 transition-colors"
+                        className={`absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1.5 text-xs font-bold rounded transition-colors flex items-center gap-1 ${
+                          isCopied
+                            ? 'bg-green-100 text-green-700'
+                            : 'bg-primary-600 text-white hover:bg-primary-700'
+                        }`}
                       >
-                        Copy
+                        {isCopied ? (
+                          <>
+                            <span className="material-symbols-outlined text-[14px]">
+                              check
+                            </span>
+                            <span>Copied</span>
+                          </>
+                        ) : (
+                          'Copy'
+                        )}
                       </button>
                     </div>
                     <div className="flex items-center gap-2 text-amber-600 text-sm bg-amber-50 p-3 rounded">

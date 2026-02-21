@@ -81,7 +81,7 @@ describe('GitHubSettings Component', () => {
 
     render(<GitHubSettings />);
 
-    expect(screen.getByText(/Loading/)).toBeInTheDocument();
+    expect(screen.getByText('progress_activity')).toBeInTheDocument();
   });
 
   it('displays benefits list when not connected', async () => {
