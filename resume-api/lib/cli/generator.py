@@ -65,14 +65,19 @@ class ResumeGenerator:
         self.jinja_env.filters["latex_escape"] = _latex_escape
 
         # Set up finalize function to auto-escape unfiltered variables
-        # Only apply to strings that are not already Markup objects to prevent double-escaping
+        # Only apply to strings that are not already Markup objects to
+        # prevent double-escaping
         from markupsafe import Markup
 
         self.jinja_env.finalize = lambda x: (
-            _latex_escape(x) if isinstance(x, str) and not isinstance(x, Markup) else x
+            _latex_escape(x)
+            if isinstance(x, str) and not isinstance(x, Markup)
+            else x
         )
 
-    def generate_pdf(self, resume_data: Dict[str, Any], variant: str = "base") -> bytes:
+    def generate_pdf(
+        self, resume_data: Dict[str, Any], variant: str = "base"
+    ) -> bytes:
         """
         Generate a PDF resume from resume data.
 
@@ -91,7 +96,8 @@ class ResumeGenerator:
         if not re.match(r"^[a-zA-Z0-9_-]+$", variant):
             raise ValueError(
                 f"Invalid variant name: '{variant}'. "
-                "Variant name must contain only letters, numbers, hyphens, and underscores."
+                "Variant name must contain only letters, numbers, hyphens, "
+                "and underscores."
             )
 
         variant_dir = self.templates_dir / variant
@@ -193,10 +199,14 @@ class ResumeGenerator:
             # Log warnings but continue
             if result.returncode != 0:
                 logger.warning(
-                    f"XeLaTeX run {i} completed with warnings (exit code: {result.returncode})"
+                    f"XeLaTeX run {i} completed with warnings "
+                    f"(exit code: {result.returncode})"
                 )
                 # Look for fatal errors in output
-                if "Fatal error" in result.stdout or "Fatal error" in result.stderr:
+                if (
+                    "Fatal error" in result.stdout
+                    or "Fatal error" in result.stderr
+                ):
                     raise RuntimeError(
                         f"XeLaTeX encountered a fatal error. "
                         f"Last 500 chars of output: {result.stdout[-500:]}"
@@ -282,7 +292,8 @@ def _latex_escape(text: Any) -> Markup:
         text: Text to escape (any type, will be converted to string)
 
     Returns:
-        Escaped text safe for LaTeX as a Markup object to prevent double escaping
+        Escaped text safe for LaTeX as a Markup object to prevent double
+        escaping
     """
     if text is None:
         return Markup("")
@@ -306,7 +317,9 @@ class MockResumeGenerator:
         self.templates_dir = templates_dir
         self.lib_dir = lib_dir
 
-    def generate_pdf(self, resume_data: Dict[str, Any], variant: str = "base") -> bytes:
+    def generate_pdf(
+        self, resume_data: Dict[str, Any], variant: str = "base"
+    ) -> bytes:
         """
         Generate a mock PDF placeholder.
 

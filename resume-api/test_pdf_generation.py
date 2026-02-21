@@ -23,8 +23,15 @@ SAMPLE_RESUME_DATA = {
         "email": "john.doe@example.com",
         "phone": "+1 234 567 8900",
         "url": "https://johndoe.com",
-        "summary": "Experienced software engineer with 5+ years of experience in web development.",
-        "location": {"city": "San Francisco", "region": "CA", "countryCode": "US"},
+        "summary": (
+            "Experienced software engineer with 5+ years of experience in "
+            "web development."
+        ),
+        "location": {
+            "city": "San Francisco",
+            "region": "CA",
+            "countryCode": "US",
+        },
     },
     "work": [
         {
@@ -75,7 +82,11 @@ SAMPLE_RESUME_DATA = {
         }
     ],
     "awards": [
-        {"title": "Best Developer Award", "date": "2021", "awarder": "Tech Corp"}
+        {
+            "title": "Best Developer Award",
+            "date": "2021",
+            "awarder": "Tech Corp",
+        }
     ],
     "certificates": [
         {"name": "AWS Solutions Architect", "date": "2022", "issuer": "Amazon"}
@@ -86,7 +97,14 @@ SAMPLE_RESUME_DATA = {
 }
 
 # Template variants to test
-TEMPLATE_VARIANTS = ["base", "modern", "technical", "executive", "creative", "academic"]
+TEMPLATE_VARIANTS = [
+    "base",
+    "modern",
+    "technical",
+    "executive",
+    "creative",
+    "academic",
+]
 
 
 class TestResumeGenerator:
@@ -95,7 +113,9 @@ class TestResumeGenerator:
     @pytest.fixture
     def generator(self):
         """Create a ResumeGenerator instance."""
-        templates_dir = Path(__file__).parent.parent / "resume-api" / "templates"
+        templates_dir = (
+            Path(__file__).parent.parent / "resume-api" / "templates"
+        )
         lib_dir = Path(__file__).parent.parent / "resume-api"
         return ResumeGenerator(str(templates_dir), str(lib_dir))
 
@@ -180,7 +200,9 @@ class TestLaTeXEscaping:
 
     @pytest.fixture
     def generator(self):
-        templates_dir = Path(__file__).parent.parent / "resume-api" / "templates"
+        templates_dir = (
+            Path(__file__).parent.parent / "resume-api" / "templates"
+        )
         lib_dir = Path(__file__).parent.parent / "resume-api"
         return ResumeGenerator(str(templates_dir), str(lib_dir))
 
@@ -196,7 +218,9 @@ class TestLaTeXEscaping:
         }
 
         try:
-            pdf_bytes = generator.generate_pdf(resume_with_special_chars, "base")
+            pdf_bytes = generator.generate_pdf(
+                resume_with_special_chars, "base"
+            )
             assert pdf_bytes[:4] == b"%PDF"
         except Exception as e:
             if "xelatex" in str(e).lower() or "latex" in str(e).lower():
