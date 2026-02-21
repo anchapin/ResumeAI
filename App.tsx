@@ -5,6 +5,7 @@ import Editor from './pages/Editor';
 import Workspace from './pages/Workspace';
 import JobApplications from './pages/JobApplications';
 import Settings from './pages/Settings';
+import Teams from './pages/Teams';
 import { Route, SimpleResumeData } from './types';
 import { loadResumeData, saveResumeData, StorageError } from './utils/storage';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -266,6 +267,17 @@ function App() {
                   onShowShortcuts={() => setShowShortcuts(true)}
                 />
                 <Settings />
+            </div>
+        );
+      case Route.TEAMS:
+        return (
+            <div className="flex min-h-screen bg-[#f6f6f8]">
+                <Sidebar
+                  currentRoute={currentRoute}
+                  onNavigate={setCurrentRoute}
+                  onShowShortcuts={() => setShowShortcuts(true)}
+                />
+                <Teams />
             </div>
         );
       default:

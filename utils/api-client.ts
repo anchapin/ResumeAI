@@ -11,6 +11,15 @@ import {
   UserSettings,
   ResumeData,
   SimpleResumeData,
+  Team,
+  TeamMember,
+  TeamActivity,
+  TeamResume,
+  CreateTeamRequest,
+  UpdateTeamRequest,
+  InviteMemberRequest,
+  UpdateMemberRoleRequest,
+  ShareResumeRequest,
 } from '../types';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
@@ -196,6 +205,134 @@ export async function checkATSScore(resumeData: ResumeDataForAPI, jobDescription
     body: JSON.stringify({ resume_data: resumeData, job_description: jobDescription }),
   });
   if (!response.ok) { const error = await response.json().catch(() => ({ detail: 'ATS check failed' })); throw new Error(error.detail || 'Failed to check ATS score'); }
+  return response.json();
+}
+
+// Team Management API Functions
+
+/**
+ * Create a new team
+ */
+export async function createTeam(request: CreateTeamRequest): Promise<Team> {
+  const response = await fetch(`${API_URL}/v1/teams`, {
+    method: 'POST',
+    headers: getHeaders(),
+    body: JSON.stringify(request),
+  });
+  if (!response.ok) { const error = await response.json().catch(() => ({ detail: 'Failed to create team' })); throw new Error(error.detail || 'Failed to create team'); }
+  return response.json();
+}
+
+/**
+ * Get all teams for the current user
+ */
+export async function getTeams(): Promise<Team[]> {
+  const response = await fetch(`${API_URL}/v1/teams`, { headers: getHeaders() });
+  if (!response.ok) { const error = await response.json().catch(() => ({ detail: 'Failed to fetch teams' })); throw new Error(error.detail || 'Failed to fetch teams'); }
+  return response.json();
+}
+
+/**
+ * Get a specific team by ID
+ */
+export async function getTeam(teamId: number): Promise<Team> {
+  const response = await fetch(`${API_URL}/v1/teams/${teamId}`, { headers: getHeaders() });
+  if (!response.ok) { const error = await response.json().catch(() => ({ detail: 'Failed to fetch team' })); throw new Error(error.detail || 'Failed to fetch team'); }
+  return response.json();
+}
+
+/**
+ * Update team details
+ */
+export async function updateTeam(teamId: number, request: UpdateTeamRequest): Promise<Team> {
+  const response = await fetch(`${API_URL}/v1/teams/${teamId}`, {
+    method: 'PUT',
+    headers: getHeaders(),
+    body: JSON.stringify(request),
+  });
+  if (!response.ok) { const error = await response.json().catch(() => ({ detail: 'Failed to update team' })); throw new Error(error.detail || 'Failed to update team'); }
+  return response.json();
+}
+
+/**
+ * Delete a team
+ */
+export async function deleteTeam(teamId: number): Promise<void> {
+  const response = await fetch(`${API_URL}/v1/teams/${teamId}`, { method: 'DELETE', headers: getHeaders() });
+  if (!response.ok) { const error = await response.json().catch(() => ({ detail: 'Failed to delete team' })); throw new Error(error.detail || 'Failed to delete team'); }
+}
+
+/**
+ * Invite a member to a team
+ */
+export async function inviteMember(teamId: number, request: InviteMemberRequest): Promise<TeamMember> {
+  const response = await fetch(`${API_URL}/v1/teams/${teamId}/members`, {
+    method: 'POST',
+    headers: getHeaders(),
+    body: JSON.stringify(request),
+  });
+  if (!response.ok) { const error = await response.json().catch(() => ({ detail: 'Failed to invite member' })); throw new Error(error.detail || 'Failed to invite member'); }
+  return response.json();
+}
+
+/**
+ * Get all members of a team
+ */
+export async function getTeamMembers(teamId: number): Promise<TeamMember[]> {
+  const response = await fetch(`${API_URL}/v1/teams/${teamId}/members`, { headers: getHeaders() });
+  if (!response.ok) { const error = await response.json().catch(() => ({ detail: 'Failed to fetch team members' })); throw new Error(error.detail || 'Failed to fetch team members'); }
+  return response.json();
+}
+
+/**
+ * Update a member's role
+ */
+export async function updateMemberRole(teamId: number, userId: number, request: UpdateMemberRoleRequest): Promise<TeamMember> {
+  const response = await fetch(`${API_URL}/v1/teams/${teamId}/members/${userId}`, {
+    method: 'PUT',
+    headers: getHeaders(),
+    body: JSON.stringify(request),
+  });
+  if (!response.ok) { const error = await response.json().catch(() => ({ detail: 'Failed to update member role' })); throw new Error(error.detail || 'Failed to update member role'); }
+  return response.json();
+}
+
+/**
+ * Remove a member from a team
+ */
+export async function removeMember(teamId: number, userId: number): Promise<void> {
+  const response = await fetch(`${API_URL}/v1/teams/${teamId}/members/${userId}`, { method: 'DELETE', headers: getHeaders() });
+  if (!response.ok) { const error = await response.json().catch(() => ({ detail: 'Failed to remove member' })); throw new Error(error.detail || 'Failed to remove member'); }
+}
+
+/**
+ * Share a resume with a team
+ */
+export async function shareResumeWithTeam(teamId: number, request: ShareResumeRequest): Promise<TeamResume> {
+  const response = await fetch(`${API_URL}/v1/teams/${teamId}/resumes`, {
+    method: 'POST',
+    headers: getHeaders(),
+    body: JSON.stringify(request),
+  });
+  if (!response.ok) { const error = await response.json().catch(() => ({ detail: 'Failed to share resume' })); throw new Error(error.detail || 'Failed to share resume'); }
+  return response.json();
+}
+
+/**
+ * Unshare a resume from a team
+ */
+export async function unshareResumeFromTeam(teamId: number, resumeId: number): Promise<void> {
+  const response = await fetch(`${API_URL}/v1/teams/${teamId}/resumes/${resumeId}`, { method: 'DELETE', headers: getHeaders() });
+  if (!response.ok) { const error = await response.json().catch(() => ({ detail: 'Failed to unshare resume' })); throw new Error(error.detail || 'Failed to unshare resume'); }
+}
+
+/**
+ * Get team activity feed
+ */
+export async function getTeamActivity(teamId: number, limit?: number): Promise<TeamActivity[]> {
+  const params = limit ? `?limit=${limit}` : '';
+  const response = await fetch(`${API_URL}/v1/teams/${teamId}/activity${params}`, { headers: getHeaders() });
+  if (!response.ok) { const error = await response.json().catch(() => ({ detail: 'Failed to fetch activity' })); throw new Error(error.detail || 'Failed to fetch activity'); }
   return response.json();
 }
 
