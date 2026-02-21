@@ -211,224 +211,121 @@ export async function checkATSScore(resumeData: ResumeDataForAPI, jobDescription
   return response.json();
 }
 
-// LinkedIn Integration API Functions
+// Webhook Management
 
-/**
- * Initiate LinkedIn OAuth flow
- * Opens a popup window for user authentication
- */
-export async function connectLinkedIn(): Promise<string> {
-  const response = await fetch(`${API_URL}/linkedin/connect`, {
-    method: 'GET',
-    headers: getHeaders(),
-  });
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({ detail: 'Failed to initiate LinkedIn connection' }));
-    throw new Error(error.detail || 'Failed to connect to LinkedIn');
-  }
-  const data = await response.json();
-  return data.auth_url;
+export interface Webhook {
+  id: number;
+  user_id: string;
+  url: string;
+  description?: string;
+  events: string[];
+  secret?: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+  last_triggered_at?: string;
+  success_count: number;
+  failure_count: number;
 }
 
-/**
- * Handle LinkedIn OAuth callback
- * Exchanges authorization code for access token
- */
-export async function handleLinkedInCallback(code: string, state: string): Promise<{ access_token: string; expires_in: number }> {
-  const response = await fetch(`${API_URL}/linkedin/callback`, {
-    method: 'GET',
-    headers: getHeaders(),
-  });
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({ detail: 'OAuth callback failed' }));
-    throw new Error(error.detail || 'Failed to complete OAuth');
-  }
-  const data = await response.json();
-  return {
-    access_token: data.access_token,
-    expires_in: data.expires_in,
-  };
+export interface WebhookCreateParams {
+  url: string;
+  description?: string;
+  events: string[];
+  secret?: string;
 }
 
-/**
- * Import LinkedIn profile data
- * Fetches and parses user's LinkedIn profile
- */
-export async function importLinkedInProfile(): Promise<LinkedInProfile> {
-  const response = await fetch(`${API_URL}/linkedin/profile`, {
-    method: 'GET',
-    headers: getHeaders(),
-  });
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({ detail: 'Failed to import LinkedIn profile' }));
-    throw new Error(error.detail || 'Failed to import LinkedIn profile');
-  }
-  return response.json();
+export interface WebhookUpdateParams {
+  url?: string;
+  description?: string;
+  events?: string[];
+  secret?: string;
+  is_active?: boolean;
 }
 
-/**
- * Fetch GitHub repositories linked to LinkedIn profile
- * Returns list of repositories for project selection
- */
-export async function fetchGitHubRepositories(): Promise<GitHubRepository[]> {
-  const response = await fetch(`${API_URL}/linkedin/projects`, {
-    method: 'GET',
-    headers: getHeaders(),
-  });
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({ detail: 'Failed to fetch GitHub repositories' }));
-    throw new Error(error.detail || 'Failed to fetch GitHub repositories');
-  }
-  return response.json();
+export interface WebhookDelivery {
+  id: number;
+  webhook_id: number;
+  event_type: string;
+  payload: Record<string, unknown>;
+  response_status?: number;
+  response_body?: string;
+  delivered_at?: string;
+  retry_count: number;
+  status: 'pending' | 'delivered' | 'failed';
+  error_message?: string;
+  next_retry_at?: string;
 }
 
-/**
- * Disconnect LinkedIn account
- * Revokes access token and clears connection
- */
-export async function disconnectLinkedIn(): Promise<void> {
-  const response = await fetch(`${API_URL}/linkedin/disconnect`, {
-    method: 'POST',
-    headers: getHeaders(),
-  });
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({ detail: 'Failed to disconnect LinkedIn' }));
-    throw new Error(error.detail || 'Failed to disconnect LinkedIn');
-  }
+export interface TestWebhookResponse {
+  success: boolean;
+  message: string;
+  delivery_id?: number;
 }
 
-// Salary Research & Offer Comparison API Functions
-
-/**
- * Research salary based on job title, location, and company
- * Returns salary range, insights, and recommendations
- */
-export async function researchSalary(request: SalaryResearchRequest): Promise<SalaryResearchResponse> {
-  const response = await fetch(`${API_URL}/api/salary/research`, {
+export async function createWebhook(params: WebhookCreateParams): Promise<Webhook> {
+  const response = await fetch(`${API_URL}/v1/webhooks`, {
     method: 'POST',
     headers: { ...getHeaders(), 'Content-Type': 'application/json' },
-    body: JSON.stringify(request),
+    body: JSON.stringify(params),
   });
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({ detail: 'Salary research failed' }));
-    throw new Error(error.detail || 'Failed to research salary');
-  }
+  if (!response.ok) { const error = await response.json().catch(() => ({ detail: 'Failed to create webhook' })); throw new Error(error.detail || 'Failed to create webhook'); }
   return response.json();
 }
 
-/**
- * Create a new job offer
- */
-export async function createOffer(offer: Omit<JobOffer, 'id' | 'createdAt' | 'updatedAt'>): Promise<JobOffer> {
-  const response = await fetch(`${API_URL}/api/salary/offers`, {
-    method: 'POST',
-    headers: { ...getHeaders(), 'Content-Type': 'application/json' },
-    body: JSON.stringify(offer),
-  });
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({ detail: 'Failed to create offer' }));
-    throw new Error(error.detail || 'Failed to create offer');
-  }
+export async function listWebhooks(): Promise<Webhook[]> {
+  const response = await fetch(`${API_URL}/v1/webhooks`, { headers: getHeaders() });
+  if (!response.ok) throw new Error('Failed to list webhooks');
+  const data = await response.json();
+  return data.webhooks || data;
+}
+
+export async function getWebhook(id: number): Promise<Webhook> {
+  const response = await fetch(`${API_URL}/v1/webhooks/${id}`, { headers: getHeaders() });
+  if (!response.ok) throw new Error('Failed to get webhook');
   return response.json();
 }
 
-/**
- * Update an existing job offer
- */
-export async function updateOffer(offerId: number, updates: Partial<JobOffer>): Promise<JobOffer> {
-  const response = await fetch(`${API_URL}/api/salary/offers/${offerId}`, {
+export async function updateWebhook(id: number, params: WebhookUpdateParams): Promise<Webhook> {
+  const response = await fetch(`${API_URL}/v1/webhooks/${id}`, {
     method: 'PUT',
     headers: { ...getHeaders(), 'Content-Type': 'application/json' },
-    body: JSON.stringify(updates),
+    body: JSON.stringify(params),
   });
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({ detail: 'Failed to update offer' }));
-    throw new Error(error.detail || 'Failed to update offer');
-  }
+  if (!response.ok) { const error = await response.json().catch(() => ({ detail: 'Failed to update webhook' })); throw new Error(error.detail || 'Failed to update webhook'); }
   return response.json();
 }
 
-/**
- * Delete a job offer
- */
-export async function deleteOffer(offerId: number): Promise<void> {
-  const response = await fetch(`${API_URL}/api/salary/offers/${offerId}`, {
+export async function deleteWebhook(id: number): Promise<void> {
+  const response = await fetch(`${API_URL}/v1/webhooks/${id}`, {
     method: 'DELETE',
     headers: getHeaders(),
   });
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({ detail: 'Failed to delete offer' }));
-    throw new Error(error.detail || 'Failed to delete offer');
-  }
+  if (!response.ok) throw new Error('Failed to delete webhook');
 }
 
-/**
- * List all job offers
- */
-export async function listOffers(filters?: { status?: string; sortBy?: string }): Promise<JobOffer[]> {
-  const params = new URLSearchParams();
-  if (filters?.status) params.append('status', filters.status);
-  if (filters?.sortBy) params.append('sort_by', filters.sortBy);
-
-  const response = await fetch(`${API_URL}/api/salary/offers?${params}`, {
-    method: 'GET',
-    headers: getHeaders(),
-  });
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({ detail: 'Failed to list offers' }));
-    throw new Error(error.detail || 'Failed to list offers');
-  }
-  return response.json();
-}
-
-/**
- * Compare multiple job offers with weighted scoring
- * Returns scored comparison with recommendations
- */
-export async function compareOffers(offerIds: number[], priorities?: ComparisonPriority): Promise<OfferComparison> {
-  const response = await fetch(`${API_URL}/api/salary/offers/compare`, {
+export async function testWebhook(id: number): Promise<TestWebhookResponse> {
+  const response = await fetch(`${API_URL}/v1/webhooks/${id}/test`, {
     method: 'POST',
-    headers: { ...getHeaders(), 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      offer_ids: offerIds,
-      priorities: priorities,
-    }),
-  });
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({ detail: 'Failed to compare offers' }));
-    throw new Error(error.detail || 'Failed to compare offers');
-  }
-  return response.json();
-}
-
-/**
- * Update comparison priorities
- */
-export async function updatePriorities(priorities: ComparisonPriority): Promise<ComparisonPriority> {
-  const response = await fetch(`${API_URL}/api/salary/offers/priorities`, {
-    method: 'PUT',
-    headers: { ...getHeaders(), 'Content-Type': 'application/json' },
-    body: JSON.stringify(priorities),
-  });
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({ detail: 'Failed to update priorities' }));
-    throw new Error(error.detail || 'Failed to update priorities');
-  }
-  return response.json();
-}
-
-/**
- * Get default comparison priorities
- */
-export async function getDefaultPriorities(): Promise<ComparisonPriority> {
-  const response = await fetch(`${API_URL}/api/salary/offers/priorities/default`, {
-    method: 'GET',
     headers: getHeaders(),
   });
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({ detail: 'Failed to get default priorities' }));
-    throw new Error(error.detail || 'Failed to get default priorities');
-  }
+  if (!response.ok) { const error = await response.json().catch(() => ({ detail: 'Failed to test webhook' })); throw new Error(error.detail || 'Failed to test webhook'); }
+  return response.json();
+}
+
+export async function getWebhookDeliveries(id: number): Promise<WebhookDelivery[]> {
+  const response = await fetch(`${API_URL}/v1/webhooks/${id}/deliveries`, { headers: getHeaders() });
+  if (!response.ok) throw new Error('Failed to get webhook deliveries');
+  const data = await response.json();
+  return data.deliveries || data;
+}
+
+export async function retryWebhookDelivery(webhookId: number, deliveryId: number): Promise<WebhookDelivery> {
+  const response = await fetch(`${API_URL}/v1/webhooks/${webhookId}/deliveries/${deliveryId}/retry`, {
+    method: 'POST',
+    headers: getHeaders(),
+  });
+  if (!response.ok) throw new Error('Failed to retry webhook delivery');
   return response.json();
 }
 
