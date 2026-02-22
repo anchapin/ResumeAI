@@ -7,7 +7,7 @@ import secrets
 from pathlib import Path
 from typing import Optional, Union
 
-from pydantic import field_validator
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings
 from pydantic_settings import SettingsConfigDict
 
@@ -48,7 +48,8 @@ class Settings(BaseSettings):
     cors_origins: list[str] = ["*"]
 
     # JWT Configuration
-    jwt_secret: str = "your-secret-key-change-in-production"
+    # Securely generate JWT secret if not provided
+    jwt_secret: str = Field(default_factory=lambda: secrets.token_urlsafe(32))
     jwt_algorithm: str = "HS256"
     jwt_access_token_expire_minutes: int = 30
 
@@ -98,8 +99,32 @@ class Settings(BaseSettings):
     github_callback_url: Optional[str] = None  # Callback URL for OAuth
     frontend_url: str = "http://localhost:5173"
 
-    # Token Encryption Key
-    token_encryption_key: Optional[str] = None
+    @field_validator("jwt_secret")
+    @classmethod
+    def validate_jwt_secret(cls, v: str) -> str:
+        """Validate JWT secret is secure."""
+        insecure_defaults = [
+            "your-secret-key-change-in-production",
+            "your-super-secret-jwt-key-change-in-production",
+        ]
+
+        if v in insecure_defaults:
+            logger = logging.getLogger("config")
+            logger.critical(
+                "SECURITY WARNING: Using insecure default JWT_SECRET! "
+                "Generating a random temporary secret. "
+                "Set JWT_SECRET environment variable in production."
+            )
+            return secrets.token_urlsafe(32)
+
+        if len(v) < 32:
+            logger = logging.getLogger("config")
+            logger.warning(
+                "SECURITY WARNING: JWT_SECRET is shorter than 32 characters. "
+                "Consider using a longer secret for better security."
+            )
+
+        return v
 
     @field_validator("github_auth_mode")
     @classmethod
