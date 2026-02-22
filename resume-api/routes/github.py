@@ -500,6 +500,12 @@ async def github_connect(
     - `state`: The CSRF state parameter
     - `expires_in`: Seconds until state expires
     """
+    if not settings.github_client_id:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="GitHub OAuth not configured",
+        )
+
     user_id = current_user.id
 
     if not settings.github_client_id:
@@ -535,7 +541,11 @@ async def github_connect(
         callback_url = f"{request.url.scheme}://{request.url.netloc}/github/callback"
 
     # Build OAuth authorization URL
-    callback_url = f"{request.url.scheme}://{request.url.netloc}/github/callback"
+    callback_url = (
+        redirect_uri
+        if redirect_uri
+        else f"{request.url.scheme}://{request.url.netloc}/github/callback"
+    )
     github_auth_url = build_github_authorization_url(
         client_id=settings.github_client_id,
         redirect_uri=callback_url,
