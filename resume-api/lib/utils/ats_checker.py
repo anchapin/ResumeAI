@@ -367,11 +367,15 @@ class ATSCompatibilityChecker:
             )
 
         # Calculate section score
-        required_found = len([s for s in sections_found if s in self.REQUIRED_SECTIONS])
+        found_reqs = [s for s in sections_found if s in self.REQUIRED_SECTIONS]
+        required_found = len(found_reqs)
         required_total = len(self.REQUIRED_SECTIONS)
-        report.formatting_score = (
-            int((required_found / required_total) * 100) if required_total > 0 else 0
-        )
+
+        if required_total > 0:
+            score = (required_found / required_total) * 100
+            report.formatting_score = int(score)
+        else:
+            report.formatting_score = 0
 
     def _has_field(self, data: Dict[str, Any], field_path: str) -> bool:
         """Check if a field exists in nested dictionary."""
@@ -436,22 +440,27 @@ class ATSCompatibilityChecker:
 
             for job in work:
                 bullets = job.get("bullets", []) or job.get("highlights", [])
-                description = job.get("summary", "") or job.get("description", "")
+                description = job.get("summary", "")
+                if not description:
+                    description = job.get("description", "")
+
+                bullet_texts = []
+                for b in bullets:
+                    if isinstance(b, dict):
+                        bullet_texts.append(b.get("text", str(b)))
+                    else:
+                        bullet_texts.append(str(b))
 
                 all_text = " ".join(
                     [
                         description,
-                        " ".join(
-                            [
-                                b.get("text", str(b)) if isinstance(b, dict) else str(b)
-                                for b in bullets
-                            ]
-                        ),
+                        " ".join(bullet_texts),
                     ]
                 ).lower()
 
                 # Check for metrics
-                if re.search(r"\d+%|\$\d+|\d+\s*[kKmMbB]|\d+x|\d{4}", all_text):
+                metric_re = r"\d+%|\$\d+|\d+\s*[kKmMbB]|\d+x|\d{4}"
+                if re.search(metric_re, all_text):
                     has_metrics = True
 
                 # Check for action verbs
@@ -461,20 +470,24 @@ class ATSCompatibilityChecker:
                         break
 
             if not has_metrics:
+                msg = "Consider adding quantifiable metrics to your "  # noqa: E501
+                msg += "experience"
                 issues.append(
                     {
                         "type": "content_quality",
                         "severity": "medium",
-                        "message": "Consider adding quantifiable metrics to your experience",
+                        "message": msg,
                     }
                 )
 
             if not has_action_verbs:
+                msg = "Use strong action verbs to describe your "  # noqa: E501
+                msg += "achievements"
                 issues.append(
                     {
                         "type": "content_quality",
                         "severity": "medium",
-                        "message": "Use strong action verbs to describe your achievements",
+                        "message": msg,
                     }
                 )
 
@@ -529,22 +542,31 @@ class ATSCompatibilityChecker:
         # Check for problematic patterns
         for pattern_name, pattern in self.PROBLEMATIC_PATTERNS.items():
             if re.search(pattern, resume_text, re.IGNORECASE):
+                readable_pattern = pattern_name.replace("_", " ")
+                msg = (
+                    f"Detected {readable_pattern} which may not parse "
+                    + "correctly in ATS systems"
+                )
                 issues.append(
                     {
                         "type": "formatting",
                         "severity": "high",
-                        "message": f"Detected {pattern_name.replace('_', ' ')} which may not parse correctly in ATS systems",
+                        "message": msg,  # noqa: E501
                     }
                 )
 
         # Check for special characters that might cause issues
         special_chars = re.findall(r"[^\w\s.,;:!?()'\-]", resume_text)
-        if len(special_chars) > len(resume_text) * 0.05:  # More than 5% special chars
+        if len(special_chars) > len(resume_text) * 0.05:
+            msg = (
+                "Resume contains many special characters that may not "
+                + "parse correctly"
+            )
             issues.append(
                 {
                     "type": "formatting",
                     "severity": "medium",
-                    "message": "Resume contains many special characters that may not parse correctly",
+                    "message": msg,  # noqa: E501
                 }
             )
 
@@ -555,11 +577,15 @@ class ATSCompatibilityChecker:
                 found_formats.append(pattern)
 
         if len(found_formats) > 1:
+            msg = (
+                "Inconsistent date formats detected. Use a consistent "
+                + "format throughout"
+            )
             issues.append(
                 {
                     "type": "formatting",
                     "severity": "low",
-                    "message": "Inconsistent date formats detected. Use a consistent format throughout",
+                    "message": msg,  # noqa: E501
                 }
             )
 
@@ -589,7 +615,10 @@ class ATSCompatibilityChecker:
             else:
                 missing_keywords.append(keyword)
 
-        match_rate = len(matched_keywords) / len(jd_keywords) if jd_keywords else 0
+        if jd_keywords:
+            match_rate = len(matched_keywords) / len(jd_keywords)
+        else:
+            match_rate = 0
         report.keyword_match_rate = match_rate
 
         report.skills_match = {
@@ -601,14 +630,17 @@ class ATSCompatibilityChecker:
 
         # Add issue if match rate is low
         if match_rate < 0.5 and jd_keywords:
-            report.issues.append(
-                {
-                    "type": "keyword_match",
-                    "severity": "high",
-                    "message": f"Low keyword match rate ({match_rate:.0%}). Consider incorporating more keywords from the job description.",
-                    "missing_keywords": missing_keywords[:10],
-                }
+            msg = (
+                f"Low keyword match rate ({match_rate:.0%}). "
+                + "Consider incorporating more keywords from the job description."  # noqa: E501
             )
+            issues = {
+                "type": "keyword_match",
+                "severity": "high",
+                "message": msg,  # noqa: E501
+                "missing_keywords": missing_keywords[:10],
+            }
+            report.issues.append(issues)
 
     def _extract_keywords(self, text: str) -> List[str]:
         """Extract important keywords from text."""
@@ -622,7 +654,9 @@ class ATSCompatibilityChecker:
                 word_count[word] = word_count.get(word, 0) + 1
 
         # Return top keywords by frequency
-        sorted_keywords = sorted(word_count.items(), key=lambda x: x[1], reverse=True)
+        sorted_keywords = sorted(
+            word_count.items(), key=lambda x: x[1], reverse=True
+        )  # noqa: E501
         return [kw for kw, count in sorted_keywords[:30]]
 
     def _extract_resume_text(self, resume_data: Dict[str, Any]) -> str:
@@ -637,7 +671,9 @@ class ATSCompatibilityChecker:
 
         # Extract from work experience
         for exp_key in ["work", "experience"]:
-            if exp_key in resume_data and isinstance(resume_data[exp_key], list):
+            if exp_key in resume_data and isinstance(
+                resume_data[exp_key], list
+            ):  # noqa: E501
                 for exp in resume_data[exp_key]:
                     if isinstance(exp, dict):
                         for key in [
@@ -651,10 +687,15 @@ class ATSCompatibilityChecker:
                                 text_parts.append(str(exp[key]))
                         # Extract from bullets
                         for bullet_key in ["bullets", "highlights"]:
-                            if bullet_key in exp and isinstance(exp[bullet_key], list):
+                            if bullet_key in exp and isinstance(
+                                exp[bullet_key], list
+                            ):  # noqa: E501
                                 for bullet in exp[bullet_key]:
-                                    if isinstance(bullet, dict) and "text" in bullet:
-                                        text_parts.append(str(bullet["text"]))
+                                    if isinstance(bullet, dict):
+                                        if "text" in bullet:
+                                            text_parts.append(
+                                                str(bullet["text"])
+                                            )  # noqa: E501
                                     elif isinstance(bullet, str):
                                         text_parts.append(bullet)
 
@@ -667,12 +708,16 @@ class ATSCompatibilityChecker:
                         if skill.get("name"):
                             text_parts.append(str(skill["name"]))
                         if skill.get("keywords"):
-                            text_parts.extend([str(k) for k in skill["keywords"]])
+                            text_parts.extend(
+                                [str(k) for k in skill["keywords"]]
+                            )  # noqa: E501
                     elif isinstance(skill, str):
                         text_parts.append(skill)
 
         # Extract from education
-        if "education" in resume_data and isinstance(resume_data["education"], list):
+        if "education" in resume_data and isinstance(
+            resume_data["education"], list
+        ):  # noqa: E501
             for edu in resume_data["education"]:
                 if isinstance(edu, dict):
                     for key in ["institution", "degree", "studyType", "area"]:
@@ -680,7 +725,9 @@ class ATSCompatibilityChecker:
                             text_parts.append(str(edu[key]))
 
         # Extract from projects
-        if "projects" in resume_data and isinstance(resume_data["projects"], list):
+        if "projects" in resume_data and isinstance(
+            resume_data["projects"], list
+        ):  # noqa: E501
             for proj in resume_data["projects"]:
                 if isinstance(proj, dict):
                     for key in ["name", "description"]:
@@ -698,7 +745,10 @@ class ATSCompatibilityChecker:
         scores.append(section_score * 0.4)
 
         # Content score (40% weight)
-        content_issues = len([i for i in report.issues if i.get("severity") == "high"])
+        high_severity_issues = [
+            i for i in report.issues if i.get("severity") == "high"
+        ]  # noqa: E501
+        content_issues = len(high_severity_issues)
         content_score = max(0, 100 - (content_issues * 20))
         scores.append(content_score * 0.4)
 
@@ -711,67 +761,79 @@ class ATSCompatibilityChecker:
         report.passed = report.overall_score >= 70
         report.content_score = content_score
 
-    def _generate_recommendations(self, report: ATSCompatibilityReport) -> None:
+    def _generate_recommendations(
+        self, report: ATSCompatibilityReport
+    ) -> None:  # noqa: E501
         """Generate recommendations based on issues found."""
         recommendations = []
 
         # Section recommendations
         for section in report.sections_missing:
-            recommendations.append(f"Add a '{section.title()}' section to your resume")
+            recommendations.append(
+                f"Add a '{section.title()}' section to your resume"
+            )  # noqa: E501
 
         # Issue-based recommendations
         for issue in report.issues:
             issue_type = issue.get("type")
+            msg = issue.get("message", "").lower()
 
             if issue_type == "missing_contact":
-                if "email" in issue.get("message", "").lower():
+                if "email" in msg:
                     recommendations.append(
                         "Add your email address to the contact section"
                     )
-                elif "phone" in issue.get("message", "").lower():
-                    recommendations.append("Add your phone number for easier contact")
-                elif "name" in issue.get("message", "").lower():
+                elif "phone" in msg:
+                    recommendations.append(
+                        "Add your phone number for easier contact"
+                    )  # noqa: E501
+                elif "name" in msg:
                     recommendations.append(
                         "Add your full name at the top of the resume"
                     )
 
             elif issue_type == "content_quality":
-                if "metrics" in issue.get("message", "").lower():
+                if "metrics" in msg:
                     recommendations.append(
-                        "Add quantifiable achievements (e.g., 'Increased revenue by 25%', "
-                        "'Reduced processing time by 40%')"
+                        "Add quantifiable achievements (e.g., 'Increased "
+                        + "revenue by 25%', 'Reduced processing time by 40%')"
                     )
-                elif "action verbs" in issue.get("message", "").lower():
+                elif "action verbs" in msg:
                     recommendations.append(
                         "Start bullet points with strong action verbs like "
-                        "'Achieved', 'Developed', 'Implemented', 'Led'"
+                        + "'Achieved', 'Developed', 'Implemented', 'Led'"
                     )
-                elif "skills" in issue.get("message", "").lower():
+                elif "skills" in msg:
                     recommendations.append(
-                        "Expand your skills section with relevant technologies and tools"
+                        "Expand your skills section with relevant "
+                        + "technologies and tools"
                     )
 
             elif issue_type == "formatting":
-                if "table" in issue.get("message", "").lower():
+                if "table" in msg:
                     recommendations.append(
-                        "Avoid using tables as they may not parse correctly in ATS systems"
+                        "Avoid using tables as they may not parse correctly "
+                        + "in ATS systems"
                     )
-                elif "date" in issue.get("message", "").lower():
+                elif "date" in msg:
                     recommendations.append(
-                        "Use consistent date formats throughout (e.g., 'Jan 2020 - Present')"
+                        "Use consistent date formats throughout (e.g., "
+                        + "'Jan 2020 - Present')"
                     )
 
             elif issue_type == "keyword_match":
                 missing = issue.get("missing_keywords", [])
                 if missing:
                     recommendations.append(
-                        f"Incorporate these keywords from the job description: {', '.join(missing[:5])}"
+                        "Incorporate these keywords from the job description: "
+                        + f"{', '.join(missing[:5])}"
                     )
 
         # Add general recommendations if score is low
         if report.overall_score < 50:
             recommendations.append(
-                "Consider using a simple, clean resume template with standard section headings"
+                "Consider using a simple, clean resume template with standard "
+                + "section headings"
             )
 
         # Remove duplicates while preserving order
@@ -804,7 +866,11 @@ def check_ats_compatibility(
         Dictionary with ATS compatibility report
     """
     checker = ATSCompatibilityChecker()
-    report = checker.check_compatibility(resume_data, job_description, resume_text)
+    report = checker.check_compatibility(
+        resume_data,
+        job_description,
+        resume_text,
+    )
 
     # Convert to dictionary
     return {
