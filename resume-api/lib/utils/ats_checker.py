@@ -163,6 +163,131 @@ class ATSCompatibilityChecker:
         "margin_max": 1.5,
     }
 
+    # Standard section mapping
+    SECTION_MAPPING = {
+        "contact": ["basics"],
+        "experience": ["work", "experience"],
+        "education": ["education"],
+        "skills": ["skills"],
+        "summary": ["basics.summary", "summary", "professional_summary"],
+        "projects": ["projects"],
+        "certifications": ["certificates", "certifications"],
+    }
+
+    # Date format patterns
+    DATE_PATTERNS = [
+        r"\d{4}\s*[-–]\s*\d{4}",
+        r"\d{2}/\d{2}/\d{4}",
+        r"[A-Z][a-z]+\s+\d{4}",
+        r"\d{4}\s*-\s*present",
+    ]
+
+    # Common stop words to exclude
+    STOP_WORDS = {
+        "the",
+        "a",
+        "an",
+        "and",
+        "or",
+        "but",
+        "in",
+        "on",
+        "at",
+        "to",
+        "for",
+        "of",
+        "with",
+        "by",
+        "from",
+        "as",
+        "is",
+        "was",
+        "are",
+        "were",
+        "been",
+        "be",
+        "have",
+        "has",
+        "had",
+        "do",
+        "does",
+        "did",
+        "will",
+        "would",
+        "could",
+        "should",
+        "may",
+        "might",
+        "must",
+        "shall",
+        "can",
+        "need",
+        "this",
+        "that",
+        "these",
+        "those",
+        "i",
+        "you",
+        "he",
+        "she",
+        "it",
+        "we",
+        "they",
+        "what",
+        "which",
+        "who",
+        "whom",
+        "whose",
+        "where",
+        "when",
+        "why",
+        "how",
+        "all",
+        "each",
+        "every",
+        "both",
+        "few",
+        "more",
+        "most",
+        "other",
+        "some",
+        "such",
+        "no",
+        "nor",
+        "not",
+        "only",
+        "own",
+        "same",
+        "so",
+        "than",
+        "too",
+        "very",
+        "just",
+        "also",
+        "now",
+        "our",
+        "your",
+        "their",
+        "its",
+        "his",
+        "her",
+        "me",
+        "us",
+        "them",
+        # Job description specific
+        "responsibilities",
+        "requirements",
+        "qualifications",
+        "skills",
+        "experience",
+        "years",
+        "work",
+        "team",
+        "company",
+        "role",
+        "position",
+    }
+
     def __init__(self):
         """Initialize the ATS compatibility checker."""
         pass
@@ -215,18 +340,7 @@ class ATSCompatibilityChecker:
         sections_found = []
         sections_missing = []
 
-        # Map JSON Resume fields to standard section names
-        section_mapping = {
-            "contact": ["basics"],
-            "experience": ["work", "experience"],
-            "education": ["education"],
-            "skills": ["skills"],
-            "summary": ["basics.summary", "summary", "professional_summary"],
-            "projects": ["projects"],
-            "certifications": ["certificates", "certifications"],
-        }
-
-        for section_name, field_paths in section_mapping.items():
+        for section_name, field_paths in self.SECTION_MAPPING.items():
             found = False
             for field_path in field_paths:
                 if self._has_field(resume_data, field_path):
@@ -435,15 +549,8 @@ class ATSCompatibilityChecker:
             )
 
         # Check for consistent date formats
-        date_patterns = [
-            r"\d{4}\s*[-–]\s*\d{4}",
-            r"\d{2}/\d{2}/\d{4}",
-            r"[A-Z][a-z]+\s+\d{4}",
-            r"\d{4}\s*-\s*present",
-        ]
-
         found_formats = []
-        for pattern in date_patterns:
+        for pattern in self.DATE_PATTERNS:
             if re.search(pattern, resume_text, re.IGNORECASE):
                 found_formats.append(pattern)
 
@@ -505,119 +612,13 @@ class ATSCompatibilityChecker:
 
     def _extract_keywords(self, text: str) -> List[str]:
         """Extract important keywords from text."""
-        # Common stop words to exclude
-        stop_words = {
-            "the",
-            "a",
-            "an",
-            "and",
-            "or",
-            "but",
-            "in",
-            "on",
-            "at",
-            "to",
-            "for",
-            "of",
-            "with",
-            "by",
-            "from",
-            "as",
-            "is",
-            "was",
-            "are",
-            "were",
-            "been",
-            "be",
-            "have",
-            "has",
-            "had",
-            "do",
-            "does",
-            "did",
-            "will",
-            "would",
-            "could",
-            "should",
-            "may",
-            "might",
-            "must",
-            "shall",
-            "can",
-            "need",
-            "this",
-            "that",
-            "these",
-            "those",
-            "i",
-            "you",
-            "he",
-            "she",
-            "it",
-            "we",
-            "they",
-            "what",
-            "which",
-            "who",
-            "whom",
-            "whose",
-            "where",
-            "when",
-            "why",
-            "how",
-            "all",
-            "each",
-            "every",
-            "both",
-            "few",
-            "more",
-            "most",
-            "other",
-            "some",
-            "such",
-            "no",
-            "nor",
-            "not",
-            "only",
-            "own",
-            "same",
-            "so",
-            "than",
-            "too",
-            "very",
-            "just",
-            "also",
-            "now",
-            "our",
-            "your",
-            "their",
-            "its",
-            "his",
-            "her",
-            "me",
-            "us",
-            "them",
-            # Job description specific
-            "responsibilities",
-            "requirements",
-            "qualifications",
-            "skills",
-            "experience",
-            "years",
-            "work",
-            "team",
-            "company",
-            "role",
-            "position",
-        }
-
         # Extract words
         words = re.findall(r"\b[a-zA-Z]{3,}\b", text.lower())
 
         # Filter and count
         word_count = {}
         for word in words:
-            if word not in stop_words:
+            if word not in self.STOP_WORDS:
                 word_count[word] = word_count.get(word, 0) + 1
 
         # Return top keywords by frequency
