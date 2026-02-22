@@ -32,7 +32,7 @@ router = APIRouter(prefix="/github", tags=["GitHub"])
 
 
 def generate_oauth_state() -> str:
-    """Generate a secure random state parameter for OAuth."""
+    """Generate a secure random state string for OAuth."""
     return secrets.token_urlsafe(32)
 
 
@@ -40,28 +40,16 @@ def build_github_authorization_url(
     client_id: str,
     redirect_uri: str,
     state: str,
-    scopes: str = "read:user public_repo",
+    scopes: str = "user:email",
 ) -> str:
-    """
-    Build the GitHub OAuth authorization URL.
-
-    Args:
-        client_id: GitHub Client ID
-        redirect_uri: Callback URL
-        state: CSRF protection state
-        scopes: Space-separated OAuth scopes
-
-    Returns:
-        Full authorization URL
-    """
-    params = {
-        "client_id": client_id,
-        "redirect_uri": redirect_uri,
-        "scope": scopes,
-        "state": state,
-    }
-    query_string = urllib.parse.urlencode(params)
-    return f"https://github.com/login/oauth/authorize?{query_string}"
+    """Build the GitHub OAuth authorization URL."""
+    return (
+        f"https://github.com/login/oauth/authorize"
+        f"?client_id={client_id}"
+        f"&redirect_uri={redirect_uri}"
+        f"&scope={scopes}"
+        f"&state={state}"
+    )
 
 
 async def exchange_code_for_token(code: str) -> dict:
@@ -547,11 +535,12 @@ async def github_connect(
         callback_url = f"{request.url.scheme}://{request.url.netloc}/github/callback"
 
     # Build OAuth authorization URL
+    callback_url = f"{request.url.scheme}://{request.url.netloc}/github/callback"
     github_auth_url = build_github_authorization_url(
         client_id=settings.github_client_id,
         redirect_uri=callback_url,
         state=state,
-        scopes="read:user public_repo",
+        scopes="user:email",
     )
 
     logger.info(
