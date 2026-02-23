@@ -1,8 +1,9 @@
 """
 Tests for security-related configuration.
 """
-import os
-import pytest
+
+import pytest  # noqa: F401 - pytest provides monkeypatch fixture
+
 from config import Settings
 
 
