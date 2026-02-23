@@ -163,7 +163,7 @@ class ATSCompatibilityChecker:
         "margin_max": 1.5,
     }
 
-    # Standard section mapping
+    # Map JSON Resume fields to standard section names
     SECTION_MAPPING = {
         "contact": ["basics"],
         "experience": ["work", "experience"],
@@ -174,7 +174,7 @@ class ATSCompatibilityChecker:
         "certifications": ["certificates", "certifications"],
     }
 
-    # Date format patterns
+    # Check for consistent date formats
     DATE_PATTERNS = [
         r"\d{4}\s*[-–]\s*\d{4}",
         r"\d{2}/\d{2}/\d{4}",
@@ -340,7 +340,10 @@ class ATSCompatibilityChecker:
         sections_found = []
         sections_missing = []
 
-        for section_name, field_paths in self.SECTION_MAPPING.items():
+        # Map JSON Resume fields to standard section names
+        section_mapping = self.SECTION_MAPPING
+
+        for section_name, field_paths in section_mapping.items():
             found = False
             for field_path in field_paths:
                 if self._has_field(resume_data, field_path):
@@ -571,6 +574,8 @@ class ATSCompatibilityChecker:
             )
 
         # Check for consistent date formats
+        date_patterns = self.DATE_PATTERNS
+
         found_formats = []
         for pattern in self.DATE_PATTERNS:
             if re.search(pattern, resume_text, re.IGNORECASE):
@@ -644,6 +649,9 @@ class ATSCompatibilityChecker:
 
     def _extract_keywords(self, text: str) -> List[str]:
         """Extract important keywords from text."""
+        # Common stop words to exclude
+        stop_words = self.STOP_WORDS
+
         # Extract words
         words = re.findall(r"\b[a-zA-Z]{3,}\b", text.lower())
 
