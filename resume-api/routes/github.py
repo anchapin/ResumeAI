@@ -13,7 +13,6 @@ from typing import Annotated, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-import httpx
 from httpx import AsyncClient
 
 from database import get_async_session, User, GitHubOAuthState, GitHubConnection
@@ -32,7 +31,7 @@ router = APIRouter(prefix="/github", tags=["GitHub"])
 
 
 def generate_oauth_state() -> str:
-    """Generate a secure random state parameter for OAuth."""
+    """Generate a secure random state string for OAuth."""
     return secrets.token_urlsafe(32)
 
 
@@ -40,28 +39,16 @@ def build_github_authorization_url(
     client_id: str,
     redirect_uri: str,
     state: str,
-    scopes: str = "read:user public_repo",
+    scopes: str = "user:email",
 ) -> str:
-    """
-    Build the GitHub OAuth authorization URL.
-
-    Args:
-        client_id: GitHub Client ID
-        redirect_uri: Callback URL
-        state: CSRF protection state
-        scopes: Space-separated OAuth scopes
-
-    Returns:
-        Full authorization URL
-    """
-    params = {
-        "client_id": client_id,
-        "redirect_uri": redirect_uri,
-        "scope": scopes,
-        "state": state,
-    }
-    query_string = urllib.parse.urlencode(params)
-    return f"https://github.com/login/oauth/authorize?{query_string}"
+    """Build the GitHub OAuth authorization URL."""
+    return (
+        f"https://github.com/login/oauth/authorize"
+        f"?client_id={client_id}"
+        f"&redirect_uri={redirect_uri}"
+        f"&scope={scopes}"
+        f"&state={state}"
+    )
 
 
 async def exchange_code_for_token(code: str) -> dict:
@@ -170,7 +157,7 @@ async def _revoke_github_token(token: str) -> bool:
         True if revocation succeeded or failed gracefully, False on critical error
     """
     try:
-        async with httpx.AsyncClient(timeout=10.0) as client:
+        async with AsyncClient(timeout=10.0) as client:
             # GitHub API endpoint for revoking OAuth tokens
             # Note: This endpoint may not work for all OAuth flows
             response = await client.post(
@@ -343,6 +330,90 @@ async def github_oauth_callback(
         )
 
 
+async def _get_cli_status() -> GitHubStatusResponse:
+    """Helper to check GitHub CLI status."""
+    try:
+        status = await check_gh_cli_status()
+
+        if status.get("authenticated"):
+            return GitHubStatusResponse(
+                authenticated=True,
+                mode="cli",
+                username=status.get("username"),
+                github_user_id=None,
+                connected_at=None,
+                error=None,
+            )
+        else:
+            return GitHubStatusResponse(
+                authenticated=False,
+                mode="cli",
+                username=None,
+                github_user_id=None,
+                connected_at=None,
+                error=status.get("error", "GitHub CLI not authenticated"),
+            )
+    except Exception as e:
+        logger.error("github_cli_status_error", error=str(e))
+        return GitHubStatusResponse(
+            authenticated=False,
+            mode="cli",
+            username=None,
+            github_user_id=None,
+            connected_at=None,
+            error=f"Failed to check CLI status: {str(e)}",
+        )
+
+
+async def _get_oauth_status(user_id: int, db: AsyncSession) -> GitHubStatusResponse:
+    """Helper to check OAuth connection status."""
+    try:
+        result = await db.execute(
+            select(GitHubConnection).where(
+                GitHubConnection.user_id == user_id,
+                GitHubConnection.is_active.is_(True),
+            )
+        )
+        connection = result.scalar_one_or_none()
+
+        if connection:
+            logger.info(
+                "github_oauth_connected",
+                user_id=user_id,
+                github_username=connection.github_username,
+            )
+            return GitHubStatusResponse(
+                authenticated=True,
+                mode="oauth",
+                username=connection.github_username,
+                github_user_id=str(connection.github_user_id),
+                connected_at=(
+                    connection.created_at.isoformat() if connection.created_at else None
+                ),
+                error=None,
+            )
+        else:
+            logger.info("github_oauth_not_connected", user_id=user_id)
+            return GitHubStatusResponse(
+                authenticated=False,
+                mode="oauth",
+                username=None,
+                github_user_id=None,
+                connected_at=None,
+                error="No GitHub connection found",
+            )
+    except Exception as e:
+        logger.error("github_oauth_status_error", user_id=user_id, error=str(e))
+        return GitHubStatusResponse(
+            authenticated=False,
+            mode="oauth",
+            username=None,
+            github_user_id=None,
+            connected_at=None,
+            error=f"Failed to check OAuth status: {str(e)}",
+        )
+
+
 @router.get(
     "/status",
     response_model=GitHubStatusResponse,
@@ -380,78 +451,9 @@ async def get_github_status(
     logger.info("github_status_check", mode=auth_mode, user_id=current_user.id)
 
     if auth_mode == "cli":
-        # CLI mode: Check GitHub CLI authentication status
-        try:
-            cli_status = await check_gh_cli_status()
-            return GitHubStatusResponse(
-                authenticated=cli_status.get("authenticated", False),
-                mode="cli",
-                username=cli_status.get("username"),
-                github_user_id=None,  # CLI mode doesn't provide GitHub user ID
-                connected_at=None,  # CLI mode doesn't have connection timestamp
-                error=cli_status.get("error"),
-            )
-        except Exception as e:
-            logger.error("github_cli_status_error", user_id=current_user.id, error=str(e))
-            return GitHubStatusResponse(
-                authenticated=False,
-                mode="cli",
-                username=None,
-                github_user_id=None,
-                connected_at=None,
-                error=f"Failed to check CLI status: {str(e)}",
-            )
+        return await _get_cli_status()
     else:
-        # OAuth mode: Check database connection
-        try:
-            result = await db.execute(
-                select(GitHubConnection).where(
-                    GitHubConnection.user_id == current_user.id,
-                    GitHubConnection.is_active.is_(True),
-                )
-            )
-            connection = result.scalar_one_or_none()
-
-            if connection:
-                logger.info(
-                    "github_oauth_connected",
-                    user_id=current_user.id,
-                    github_username=connection.github_username,
-                )
-                return GitHubStatusResponse(
-                    authenticated=True,
-                    mode="oauth",
-                    username=connection.github_username,
-                    github_user_id=str(connection.github_user_id),
-                    connected_at=(
-                        connection.created_at.isoformat()
-                        if connection.created_at
-                        else None
-                    ),
-                    error=None,
-                )
-            else:
-                logger.info("github_oauth_not_connected", user_id=current_user.id)
-                return GitHubStatusResponse(
-                    authenticated=False,
-                    mode="oauth",
-                    username=None,
-                    github_user_id=None,
-                    connected_at=None,
-                    error="No GitHub connection found",
-                )
-        except Exception as e:
-            logger.error(
-                "github_oauth_status_error", user_id=current_user.id, error=str(e)
-            )
-            return GitHubStatusResponse(
-                authenticated=False,
-                mode="oauth",
-                username=None,
-                github_user_id=None,
-                connected_at=None,
-                error=f"Failed to check OAuth status: {str(e)}",
-            )
+        return await _get_oauth_status(current_user.id, db)
 
 
 @router.get(
@@ -497,6 +499,12 @@ async def github_connect(
     - `state`: The CSRF state parameter
     - `expires_in`: Seconds until state expires
     """
+    if not settings.github_client_id:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="GitHub OAuth not configured",
+        )
+
     user_id = current_user.id
 
     if not settings.github_client_id:
@@ -532,11 +540,16 @@ async def github_connect(
         callback_url = f"{request.url.scheme}://{request.url.netloc}/github/callback"
 
     # Build OAuth authorization URL
+    callback_url = (
+        redirect_uri
+        if redirect_uri
+        else f"{request.url.scheme}://{request.url.netloc}/github/callback"
+    )
     github_auth_url = build_github_authorization_url(
         client_id=settings.github_client_id,
         redirect_uri=callback_url,
         state=state,
-        scopes="read:user public_repo",
+        scopes="user:email",
     )
 
     logger.info(

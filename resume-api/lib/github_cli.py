@@ -8,9 +8,10 @@ and interact with the gh command-line tool.
 import asyncio
 import subprocess
 from typing import Optional, Dict, Any
-import logging
 
-logger = logging.getLogger(__name__)
+from monitoring import logging_config
+
+logger = logging_config.get_logger(__name__)
 
 
 class GitHubCLIError(Exception):

@@ -5,6 +5,8 @@ Tests the lib.github_cli module for checking GitHub CLI
 authentication status.
 """
 
+import subprocess
+
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 from lib.github_cli import (  # noqa: F401
@@ -12,7 +14,6 @@ from lib.github_cli import (  # noqa: F401
     get_gh_cli_token,
     get_gh_cli_user_info,
     is_gh_cli_installed,
-    GitHubCLIError,
 )
 
 
@@ -172,7 +173,7 @@ def test_is_gh_cli_installed_false():
 def test_is_gh_cli_installed_timeout():
     """Test checking if gh CLI is installed when command times out."""
     with patch("lib.github_cli.subprocess.run") as mock_run:
-        mock_run.side_effect = Exception("timeout")
+        mock_run.side_effect = subprocess.TimeoutExpired("gh", 5)
 
         installed = is_gh_cli_installed()
 
