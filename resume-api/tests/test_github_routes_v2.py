@@ -15,7 +15,7 @@ from datetime import datetime, timezone, timedelta
 import httpx  # noqa: F401
 
 from database import GitHubConnection
-from api.models import UserResponse  # noqa: F401
+from api.models import UserResponse
 
 # Create test app with all necessary dependencies
 from routes.github import router

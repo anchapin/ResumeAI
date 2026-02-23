@@ -96,6 +96,9 @@ class Settings(BaseSettings):
     github_callback_url: Optional[str] = None  # Callback URL for OAuth
     frontend_url: str = "http://localhost:5173"
 
+    # Token Encryption Key
+    token_encryption_key: Optional[str] = None
+
     @field_validator("github_auth_mode")
     @classmethod
     def validate_github_auth_mode(cls, v: str) -> str:

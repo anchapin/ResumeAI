@@ -4,6 +4,7 @@ Unit tests for GitHub OAuth endpoints.
 
 import os
 import pytest
+import pytest_asyncio
 from datetime import datetime, timedelta
 from httpx import AsyncClient, Response  # noqa: F401
 
@@ -334,7 +335,7 @@ class TestGitHubAuthorizationURL:
 
 
 # Fixtures
-@pytest.fixture
+@pytest_asyncio.fixture
 async def db_session():
     """Get database session for tests."""
     from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
@@ -361,13 +362,14 @@ async def db_session():
     await test_engine.dispose()
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def client():
     """Create test client."""
     from main import app
-    from database import get_db
+    from database import get_async_session
     from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
     from database import Base
+    import httpx
 
     # Create test database for client
     test_engine = create_async_engine("sqlite+aiosqlite:///:memory:", echo=False)
@@ -381,16 +383,13 @@ async def client():
         await conn.run_sync(Base.metadata.create_all)
 
     # Override dependency to use the test session
-    async def override_get_db():
+    async def override_get_async_session():
         async with test_session_maker() as session:
             yield session
 
-    app.dependency_overrides[get_db] = override_get_db
+    app.dependency_overrides[get_async_session] = override_get_async_session
 
-    from httpx import AsyncClient, ASGITransport
-
-    transport = ASGITransport(app=app)
-    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+    async with AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://test") as ac:
         yield ac
 
     # Clean up
