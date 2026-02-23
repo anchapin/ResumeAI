@@ -17,7 +17,6 @@ from database import GitHubConnection
 from api.models import UserResponse, GitHubStatusResponse
 from config import settings
 
-
 # Create test app
 app = FastAPI()
 app.include_router(router)
@@ -48,7 +47,7 @@ async def test_get_github_status_oauth_mode_connected():
     mock_request = MagicMock()
 
     # Mock settings to use OAuth mode
-    with patch.object(settings, 'github_auth_mode', 'oauth'):
+    with patch.object(settings, "github_auth_mode", "oauth"):
         with patch("routes.github.get_current_user", return_value=mock_user):
             with patch("routes.github.get_async_session", return_value=mock_db):
                 response = await get_github_status(mock_request, mock_user, mock_db)
@@ -81,7 +80,7 @@ async def test_get_github_status_oauth_mode_not_connected():
     mock_request = MagicMock()
 
     # Mock settings to use OAuth mode
-    with patch.object(settings, 'github_auth_mode', 'oauth'):
+    with patch.object(settings, "github_auth_mode", "oauth"):
         with patch("routes.github.get_current_user", return_value=mock_user):
             with patch("routes.github.get_async_session", return_value=mock_db):
                 response = await get_github_status(mock_request, mock_user, mock_db)

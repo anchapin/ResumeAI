@@ -15,15 +15,28 @@ def test_model_definition():
     print("Testing GitHubConnection model...")
 
     # Check table name
-    assert GitHubConnection.__tablename__ == "github_connections", \
-        f"Expected table name 'github_connections', got '{GitHubConnection.__tablename__}'"
+    assert (
+        GitHubConnection.__tablename__ == "github_connections"
+    ), f"Expected table name 'github_connections', got '{GitHubConnection.__tablename__}'"
 
     # Check that model has expected columns
     columns = {c.name for c in GitHubConnection.__table__.columns}
     expected_columns = {
-        'id', 'user_id', 'github_user_id', 'github_username', 'github_display_name',
-        'access_token', 'refresh_token', 'token_type', 'scope', 'expires_at',
-        'is_active', 'revoked_at', 'last_used_at', 'created_at', 'updated_at'
+        "id",
+        "user_id",
+        "github_user_id",
+        "github_username",
+        "github_display_name",
+        "access_token",
+        "refresh_token",
+        "token_type",
+        "scope",
+        "expires_at",
+        "is_active",
+        "revoked_at",
+        "last_used_at",
+        "created_at",
+        "updated_at",
     }
     missing_columns = expected_columns - columns
     extra_columns = columns - expected_columns
@@ -56,11 +69,13 @@ def test_base_metadata():
 
     # Check if GitHubConnection is in Base metadata
     table_names = Base.metadata.tables.keys()
-    if 'github_connections' in table_names:
+    if "github_connections" in table_names:
         print("  GitHubConnection is registered in Base metadata!")
         return True
     else:
-        print(f"  ERROR: GitHubConnection not found in Base metadata. Tables: {table_names}")
+        print(
+            f"  ERROR: GitHubConnection not found in Base metadata. Tables: {table_names}"
+        )
         return False
 
 
