@@ -15,7 +15,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from httpx import AsyncClient
 
-from database import get_async_session, User, GitHubOAuthState as OAuthState, GitHubConnection
+from database import (
+    get_async_session,
+    User,
+    GitHubOAuthState as OAuthState,
+    GitHubConnection,
+)
 from config.dependencies import get_current_user
 from config.security import encrypt_token
 from config import settings
@@ -461,7 +466,9 @@ async def get_github_status(
                 error=cli_status.get("error"),
             )
         except Exception as e:
-            logger.error("github_cli_status_error", user_id=current_user.id, error=str(e))
+            logger.error(
+                "github_cli_status_error", user_id=current_user.id, error=str(e)
+            )
             return GitHubStatusResponse(
                 authenticated=False,
                 mode="cli",

@@ -19,7 +19,7 @@ import sys
 import os
 
 # Add resume-api to path to import lib modules
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'resume-api'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "resume-api"))
 
 from lib.token_encryption import generate_encryption_key
 
