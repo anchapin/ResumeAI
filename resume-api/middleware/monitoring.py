@@ -44,7 +44,7 @@ class MonitoringMiddleware(BaseHTTPMiddleware):
                 "request_started",
                 method=request.method,
                 path=request.url.path,
-                query_params=str(request.query_params),
+                query_params=self._sanitize_query_params(request.query_params),
                 user_agent=request.headers.get("user-agent", ""),
             )
 
@@ -139,6 +139,55 @@ class MonitoringMiddleware(BaseHTTPMiddleware):
 
                 # Re-raise to let FastAPI handle it
                 raise
+
+    def _sanitize_query_params(self, params) -> str:
+        """Sanitize query parameters for logging."""
+        if not params:
+            return ""
+
+        # List of sensitive keys to redact (exact match)
+        sensitive_exact = {
+            "token",
+            "code",
+            "state",
+            "key",
+            "authorization",
+            "password",
+            "secret",
+        }
+
+        # Suffixes that indicate sensitivity
+        sensitive_suffixes = (
+            "_token",
+            "_key",
+            "_secret",
+            "_password",
+            "_hash",
+            "_signature",
+        )
+
+        try:
+            # params is a Starlette QueryParams object which behaves like a dict
+            sanitized = []
+            for key, value in params.items():
+                key_lower = key.lower()
+
+                is_sensitive = (
+                    key_lower in sensitive_exact
+                    or key_lower.endswith(sensitive_suffixes)
+                    or "password" in key_lower
+                    or "secret" in key_lower
+                )
+
+                if is_sensitive:
+                    sanitized.append(f"{key}=[REDACTED]")
+                else:
+                    sanitized.append(f"{key}={value}")
+
+            return "&".join(sanitized)
+        except Exception:
+            # Fallback for unexpected types
+            return str(params)
 
     def _get_client_ip(self, request: Request) -> str:
         """Extract client IP address from request."""
