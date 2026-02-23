@@ -477,7 +477,7 @@ export const LinkedInImportDialog: React.FC<LinkedInImportDialogProps> = ({
                       Upload your LinkedIn data export (ZIP, JSON, or CSV files) to import your profile offline.
                     </p>
                     <p className="text-xs text-slate-500 mt-2">
-                      Get your export from LinkedIn Settings > Data Privacy > Get a copy of your data
+                      Get your export from LinkedIn Settings {'>'} Data Privacy {'>'} Get a copy of your data
                     </p>
                   </div>
                   {importMethod === 'file' && (
