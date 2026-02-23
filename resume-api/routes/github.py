@@ -16,12 +16,7 @@ from sqlalchemy import select
 import httpx
 from httpx import AsyncClient
 
-from database import (
-    get_async_session,
-    User,
-    GitHubOAuthState as OAuthState,
-    GitHubConnection,
-)
+from database import get_async_session, User, OAuthState, GitHubConnection
 from config.dependencies import get_current_user
 from config.security import encrypt_token
 from config import settings
