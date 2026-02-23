@@ -2,8 +2,6 @@
 Tests for security-related configuration.
 """
 
-import pytest  # noqa: F401 - pytest provides monkeypatch fixture
-
 from config import Settings
 
 
@@ -11,7 +9,7 @@ class TestConfigSecurity:
     """Tests for configuration security."""
 
     def test_insecure_default_jwt_secret_replaced(self, monkeypatch):
-        """Test that the insecure default JWT secret is replaced with a secure random one."""
+        """Test that the insecure default JWT secret is replaced."""
         # Ensure JWT_SECRET is not in environment
         monkeypatch.delenv("JWT_SECRET", raising=False)
 
