@@ -594,11 +594,7 @@ async def github_connect(
     expires_at = datetime.now(timezone.utc) + timedelta(minutes=10)
 
     # Store OAuth state in database
-    oauth_state = GitHubOAuthState(
-        state=state,
-        user_id=user_id,
-        expires_at=expires_at,
-    )
+    oauth_state = GitHubOAuthState(state=state, user_id=user_id, expires_at=expires_at)
     db.add(oauth_state)
     await db.commit()
 
