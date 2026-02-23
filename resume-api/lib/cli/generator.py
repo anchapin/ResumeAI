@@ -70,14 +70,10 @@ class ResumeGenerator:
         from markupsafe import Markup
 
         self.jinja_env.finalize = lambda x: (
-            _latex_escape(x)
-            if isinstance(x, str) and not isinstance(x, Markup)
-            else x
+            _latex_escape(x) if isinstance(x, str) and not isinstance(x, Markup) else x
         )
 
-    def generate_pdf(
-        self, resume_data: Dict[str, Any], variant: str = "base"
-    ) -> bytes:
+    def generate_pdf(self, resume_data: Dict[str, Any], variant: str = "base") -> bytes:
         """
         Generate a PDF resume from resume data.
 
@@ -203,10 +199,7 @@ class ResumeGenerator:
                     f"(exit code: {result.returncode})"
                 )
                 # Look for fatal errors in output
-                if (
-                    "Fatal error" in result.stdout
-                    or "Fatal error" in result.stderr
-                ):
+                if "Fatal error" in result.stdout or "Fatal error" in result.stderr:
                     raise RuntimeError(
                         f"XeLaTeX encountered a fatal error. "
                         f"Last 500 chars of output: {result.stdout[-500:]}"
@@ -317,9 +310,7 @@ class MockResumeGenerator:
         self.templates_dir = templates_dir
         self.lib_dir = lib_dir
 
-    def generate_pdf(
-        self, resume_data: Dict[str, Any], variant: str = "base"
-    ) -> bytes:
+    def generate_pdf(self, resume_data: Dict[str, Any], variant: str = "base") -> bytes:
         """
         Generate a mock PDF placeholder.
 

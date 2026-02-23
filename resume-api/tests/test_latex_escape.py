@@ -43,8 +43,7 @@ class TestLatexEscape(unittest.TestCase):
 
     def test_complex_string(self):
         text = (
-            r"Combined & Complex % String # With _ Special "
-            r"{ Characters } ~ ^ \ < >"
+            r"Combined & Complex % String # With _ Special " r"{ Characters } ~ ^ \ < >"
         )
         expected = (
             r"Combined \& Complex \% String \# With \_ Special "

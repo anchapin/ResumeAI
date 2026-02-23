@@ -113,9 +113,7 @@ class TestResumeGenerator:
     @pytest.fixture
     def generator(self):
         """Create a ResumeGenerator instance."""
-        templates_dir = (
-            Path(__file__).parent.parent / "resume-api" / "templates"
-        )
+        templates_dir = Path(__file__).parent.parent / "resume-api" / "templates"
         lib_dir = Path(__file__).parent.parent / "resume-api"
         return ResumeGenerator(str(templates_dir), str(lib_dir))
 
@@ -200,9 +198,7 @@ class TestLaTeXEscaping:
 
     @pytest.fixture
     def generator(self):
-        templates_dir = (
-            Path(__file__).parent.parent / "resume-api" / "templates"
-        )
+        templates_dir = Path(__file__).parent.parent / "resume-api" / "templates"
         lib_dir = Path(__file__).parent.parent / "resume-api"
         return ResumeGenerator(str(templates_dir), str(lib_dir))
 
@@ -218,9 +214,7 @@ class TestLaTeXEscaping:
         }
 
         try:
-            pdf_bytes = generator.generate_pdf(
-                resume_with_special_chars, "base"
-            )
+            pdf_bytes = generator.generate_pdf(resume_with_special_chars, "base")
             assert pdf_bytes[:4] == b"%PDF"
         except Exception as e:
             if "xelatex" in str(e).lower() or "latex" in str(e).lower():
