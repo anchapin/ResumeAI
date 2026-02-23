@@ -150,6 +150,7 @@ export enum Route {
   SHARE = 'share',
   IMPORT = 'import',
   BULK = 'bulk',
+  SALARY_RESEARCH = 'salary-research',
 }
 
 // Advanced Features Types
@@ -258,18 +259,161 @@ export interface ATSReport {
   };
 }
 
-// Bulk Operations Types
+// LinkedIn Integration Types
 
-export type BulkOperationType = 'delete' | 'duplicate' | 'tag' | 'export';
-
-export interface BulkOperationRequest {
-  operation: BulkOperationType;
-  resume_ids: number[];
-  tags?: string[];
-  export_format?: string;
+export interface LinkedInProfile {
+  firstName?: string;
+  lastName?: string;
+  fullName?: string;
+  headline?: string;
+  email?: string;
+  phone?: string;
+  location?: string;
+  summary?: string;
+  skills?: string[];
+  experience?: LinkedInExperience[];
+  education?: LinkedInEducation[];
+  projects?: LinkedInProject[];
+  connectedAt?: string;
 }
 
-export interface BulkOperationResult {
-  successful: number[];
-  failed: Array<{ id: number; error: string }>;
+export interface LinkedInExperience {
+  company?: string;
+  title?: string;
+  startDate?: string;
+  endDate?: string;
+  description?: string;
+  current?: boolean;
+  location?: string;
+}
+
+export interface LinkedInEducation {
+  institution?: string;
+  degree?: string;
+  field?: string;
+  startDate?: string;
+  endDate?: string;
+  activities?: string;
+}
+
+export interface LinkedInProject {
+  id?: number;
+  name?: string;
+  description?: string;
+  url?: string;
+  languages?: string[];
+  stars?: number;
+  forks?: number;
+}
+
+export interface GitHubRepository {
+  id: number;
+  name: string;
+  description: string | null;
+  url: string;
+  languages: string[];
+  stars: number;
+  forks: number;
+  topics: string[];
+}
+
+// Salary Research & Offer Comparison Types
+
+export interface SalaryResearchRequest {
+  jobTitle: string;
+  location: string;
+  company?: string;
+  experienceLevel?: 'entry' | 'mid' | 'senior' | 'executive';
+}
+
+export interface SalaryRange {
+  min: number;
+  median: number;
+  max: number;
+  currency: string;
+}
+
+export interface SalaryInsight {
+  category: string;
+  title: string;
+  description: string;
+  importance: 'high' | 'medium' | 'low';
+}
+
+export interface SalaryResearchResponse {
+  jobTitle: string;
+  location: string;
+  company?: string;
+  experienceLevel?: string;
+  salaryRange: SalaryRange;
+  insights: SalaryInsight[];
+  factors: {
+    experience: string;
+    education: string;
+    industry: string;
+    location: string;
+  };
+  recommendations: string[];
+}
+
+export interface JobOffer {
+  id: number;
+  companyName: string;
+  jobTitle: string;
+  location: string;
+  baseSalary: number;
+  currency: string;
+  bonus?: number;
+  equity?: {
+    type: string;
+    value: number;
+    vesting: string;
+  };
+  benefits: string[];
+  growthPotential?: number;
+  workLifeBalance?: number;
+  cultureScore?: number;
+  startDate?: string;
+  status: 'pending' | 'accepted' | 'rejected' | 'negotiating';
+  notes?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface ComparisonPriority {
+  salary: number;
+  growth: number;
+  workLifeBalance: number;
+  benefits: number;
+  culture: number;
+}
+
+export interface OfferScore {
+  offerId: number;
+  totalScore: number;
+  breakdown: {
+    salary: number;
+    growth: number;
+    workLifeBalance: number;
+    benefits: number;
+    culture: number;
+  };
+  reasoning: string;
+  pros: string[];
+  cons: string[];
+}
+
+export interface OfferComparison {
+  offers: JobOffer[];
+  priorities: ComparisonPriority;
+  scores: OfferScore[];
+  recommendation: {
+    topOfferId: number;
+    reason: string;
+  };
+  createdAt: string;
+}
+
+export interface ExportFormat {
+  format: 'pdf' | 'csv' | 'json';
 }

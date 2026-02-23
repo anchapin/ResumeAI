@@ -11,15 +11,13 @@ import {
   UserSettings,
   ResumeData,
   SimpleResumeData,
-  Team,
-  TeamMember,
-  TeamActivity,
-  TeamResume,
-  CreateTeamRequest,
-  UpdateTeamRequest,
-  InviteMemberRequest,
-  UpdateMemberRoleRequest,
-  ShareResumeRequest,
+  LinkedInProfile,
+  GitHubRepository,
+  SalaryResearchRequest,
+  SalaryResearchResponse,
+  JobOffer,
+  ComparisonPriority,
+  OfferComparison,
 } from '../types';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
@@ -208,131 +206,224 @@ export async function checkATSScore(resumeData: ResumeDataForAPI, jobDescription
   return response.json();
 }
 
-// Team Management API Functions
+// LinkedIn Integration API Functions
 
 /**
- * Create a new team
+ * Initiate LinkedIn OAuth flow
+ * Opens a popup window for user authentication
  */
-export async function createTeam(request: CreateTeamRequest): Promise<Team> {
-  const response = await fetch(`${API_URL}/v1/teams`, {
+export async function connectLinkedIn(): Promise<string> {
+  const response = await fetch(`${API_URL}/linkedin/connect`, {
+    method: 'GET',
+    headers: getHeaders(),
+  });
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ detail: 'Failed to initiate LinkedIn connection' }));
+    throw new Error(error.detail || 'Failed to connect to LinkedIn');
+  }
+  const data = await response.json();
+  return data.auth_url;
+}
+
+/**
+ * Handle LinkedIn OAuth callback
+ * Exchanges authorization code for access token
+ */
+export async function handleLinkedInCallback(code: string, state: string): Promise<{ access_token: string; expires_in: number }> {
+  const response = await fetch(`${API_URL}/linkedin/callback`, {
+    method: 'GET',
+    headers: getHeaders(),
+  });
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ detail: 'OAuth callback failed' }));
+    throw new Error(error.detail || 'Failed to complete OAuth');
+  }
+  const data = await response.json();
+  return {
+    access_token: data.access_token,
+    expires_in: data.expires_in,
+  };
+}
+
+/**
+ * Import LinkedIn profile data
+ * Fetches and parses user's LinkedIn profile
+ */
+export async function importLinkedInProfile(): Promise<LinkedInProfile> {
+  const response = await fetch(`${API_URL}/linkedin/profile`, {
+    method: 'GET',
+    headers: getHeaders(),
+  });
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ detail: 'Failed to import LinkedIn profile' }));
+    throw new Error(error.detail || 'Failed to import LinkedIn profile');
+  }
+  return response.json();
+}
+
+/**
+ * Fetch GitHub repositories linked to LinkedIn profile
+ * Returns list of repositories for project selection
+ */
+export async function fetchGitHubRepositories(): Promise<GitHubRepository[]> {
+  const response = await fetch(`${API_URL}/linkedin/projects`, {
+    method: 'GET',
+    headers: getHeaders(),
+  });
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ detail: 'Failed to fetch GitHub repositories' }));
+    throw new Error(error.detail || 'Failed to fetch GitHub repositories');
+  }
+  return response.json();
+}
+
+/**
+ * Disconnect LinkedIn account
+ * Revokes access token and clears connection
+ */
+export async function disconnectLinkedIn(): Promise<void> {
+  const response = await fetch(`${API_URL}/linkedin/disconnect`, {
     method: 'POST',
     headers: getHeaders(),
+  });
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ detail: 'Failed to disconnect LinkedIn' }));
+    throw new Error(error.detail || 'Failed to disconnect LinkedIn');
+  }
+}
+
+// Salary Research & Offer Comparison API Functions
+
+/**
+ * Research salary based on job title, location, and company
+ * Returns salary range, insights, and recommendations
+ */
+export async function researchSalary(request: SalaryResearchRequest): Promise<SalaryResearchResponse> {
+  const response = await fetch(`${API_URL}/api/salary/research`, {
+    method: 'POST',
+    headers: { ...getHeaders(), 'Content-Type': 'application/json' },
     body: JSON.stringify(request),
   });
-  if (!response.ok) { const error = await response.json().catch(() => ({ detail: 'Failed to create team' })); throw new Error(error.detail || 'Failed to create team'); }
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ detail: 'Salary research failed' }));
+    throw new Error(error.detail || 'Failed to research salary');
+  }
   return response.json();
 }
 
 /**
- * Get all teams for the current user
+ * Create a new job offer
  */
-export async function getTeams(): Promise<Team[]> {
-  const response = await fetch(`${API_URL}/v1/teams`, { headers: getHeaders() });
-  if (!response.ok) { const error = await response.json().catch(() => ({ detail: 'Failed to fetch teams' })); throw new Error(error.detail || 'Failed to fetch teams'); }
+export async function createOffer(offer: Omit<JobOffer, 'id' | 'createdAt' | 'updatedAt'>): Promise<JobOffer> {
+  const response = await fetch(`${API_URL}/api/salary/offers`, {
+    method: 'POST',
+    headers: { ...getHeaders(), 'Content-Type': 'application/json' },
+    body: JSON.stringify(offer),
+  });
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ detail: 'Failed to create offer' }));
+    throw new Error(error.detail || 'Failed to create offer');
+  }
   return response.json();
 }
 
 /**
- * Get a specific team by ID
+ * Update an existing job offer
  */
-export async function getTeam(teamId: number): Promise<Team> {
-  const response = await fetch(`${API_URL}/v1/teams/${teamId}`, { headers: getHeaders() });
-  if (!response.ok) { const error = await response.json().catch(() => ({ detail: 'Failed to fetch team' })); throw new Error(error.detail || 'Failed to fetch team'); }
-  return response.json();
-}
-
-/**
- * Update team details
- */
-export async function updateTeam(teamId: number, request: UpdateTeamRequest): Promise<Team> {
-  const response = await fetch(`${API_URL}/v1/teams/${teamId}`, {
+export async function updateOffer(offerId: number, updates: Partial<JobOffer>): Promise<JobOffer> {
+  const response = await fetch(`${API_URL}/api/salary/offers/${offerId}`, {
     method: 'PUT',
-    headers: getHeaders(),
-    body: JSON.stringify(request),
+    headers: { ...getHeaders(), 'Content-Type': 'application/json' },
+    body: JSON.stringify(updates),
   });
-  if (!response.ok) { const error = await response.json().catch(() => ({ detail: 'Failed to update team' })); throw new Error(error.detail || 'Failed to update team'); }
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ detail: 'Failed to update offer' }));
+    throw new Error(error.detail || 'Failed to update offer');
+  }
   return response.json();
 }
 
 /**
- * Delete a team
+ * Delete a job offer
  */
-export async function deleteTeam(teamId: number): Promise<void> {
-  const response = await fetch(`${API_URL}/v1/teams/${teamId}`, { method: 'DELETE', headers: getHeaders() });
-  if (!response.ok) { const error = await response.json().catch(() => ({ detail: 'Failed to delete team' })); throw new Error(error.detail || 'Failed to delete team'); }
+export async function deleteOffer(offerId: number): Promise<void> {
+  const response = await fetch(`${API_URL}/api/salary/offers/${offerId}`, {
+    method: 'DELETE',
+    headers: getHeaders(),
+  });
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ detail: 'Failed to delete offer' }));
+    throw new Error(error.detail || 'Failed to delete offer');
+  }
 }
 
 /**
- * Invite a member to a team
+ * List all job offers
  */
-export async function inviteMember(teamId: number, request: InviteMemberRequest): Promise<TeamMember> {
-  const response = await fetch(`${API_URL}/v1/teams/${teamId}/members`, {
+export async function listOffers(filters?: { status?: string; sortBy?: string }): Promise<JobOffer[]> {
+  const params = new URLSearchParams();
+  if (filters?.status) params.append('status', filters.status);
+  if (filters?.sortBy) params.append('sort_by', filters.sortBy);
+
+  const response = await fetch(`${API_URL}/api/salary/offers?${params}`, {
+    method: 'GET',
+    headers: getHeaders(),
+  });
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ detail: 'Failed to list offers' }));
+    throw new Error(error.detail || 'Failed to list offers');
+  }
+  return response.json();
+}
+
+/**
+ * Compare multiple job offers with weighted scoring
+ * Returns scored comparison with recommendations
+ */
+export async function compareOffers(offerIds: number[], priorities?: ComparisonPriority): Promise<OfferComparison> {
+  const response = await fetch(`${API_URL}/api/salary/offers/compare`, {
     method: 'POST',
-    headers: getHeaders(),
-    body: JSON.stringify(request),
+    headers: { ...getHeaders(), 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      offer_ids: offerIds,
+      priorities: priorities,
+    }),
   });
-  if (!response.ok) { const error = await response.json().catch(() => ({ detail: 'Failed to invite member' })); throw new Error(error.detail || 'Failed to invite member'); }
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ detail: 'Failed to compare offers' }));
+    throw new Error(error.detail || 'Failed to compare offers');
+  }
   return response.json();
 }
 
 /**
- * Get all members of a team
+ * Update comparison priorities
  */
-export async function getTeamMembers(teamId: number): Promise<TeamMember[]> {
-  const response = await fetch(`${API_URL}/v1/teams/${teamId}/members`, { headers: getHeaders() });
-  if (!response.ok) { const error = await response.json().catch(() => ({ detail: 'Failed to fetch team members' })); throw new Error(error.detail || 'Failed to fetch team members'); }
-  return response.json();
-}
-
-/**
- * Update a member's role
- */
-export async function updateMemberRole(teamId: number, userId: number, request: UpdateMemberRoleRequest): Promise<TeamMember> {
-  const response = await fetch(`${API_URL}/v1/teams/${teamId}/members/${userId}`, {
+export async function updatePriorities(priorities: ComparisonPriority): Promise<ComparisonPriority> {
+  const response = await fetch(`${API_URL}/api/salary/offers/priorities`, {
     method: 'PUT',
-    headers: getHeaders(),
-    body: JSON.stringify(request),
+    headers: { ...getHeaders(), 'Content-Type': 'application/json' },
+    body: JSON.stringify(priorities),
   });
-  if (!response.ok) { const error = await response.json().catch(() => ({ detail: 'Failed to update member role' })); throw new Error(error.detail || 'Failed to update member role'); }
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ detail: 'Failed to update priorities' }));
+    throw new Error(error.detail || 'Failed to update priorities');
+  }
   return response.json();
 }
 
 /**
- * Remove a member from a team
+ * Get default comparison priorities
  */
-export async function removeMember(teamId: number, userId: number): Promise<void> {
-  const response = await fetch(`${API_URL}/v1/teams/${teamId}/members/${userId}`, { method: 'DELETE', headers: getHeaders() });
-  if (!response.ok) { const error = await response.json().catch(() => ({ detail: 'Failed to remove member' })); throw new Error(error.detail || 'Failed to remove member'); }
-}
-
-/**
- * Share a resume with a team
- */
-export async function shareResumeWithTeam(teamId: number, request: ShareResumeRequest): Promise<TeamResume> {
-  const response = await fetch(`${API_URL}/v1/teams/${teamId}/resumes`, {
-    method: 'POST',
+export async function getDefaultPriorities(): Promise<ComparisonPriority> {
+  const response = await fetch(`${API_URL}/api/salary/offers/priorities/default`, {
+    method: 'GET',
     headers: getHeaders(),
-    body: JSON.stringify(request),
   });
-  if (!response.ok) { const error = await response.json().catch(() => ({ detail: 'Failed to share resume' })); throw new Error(error.detail || 'Failed to share resume'); }
-  return response.json();
-}
-
-/**
- * Unshare a resume from a team
- */
-export async function unshareResumeFromTeam(teamId: number, resumeId: number): Promise<void> {
-  const response = await fetch(`${API_URL}/v1/teams/${teamId}/resumes/${resumeId}`, { method: 'DELETE', headers: getHeaders() });
-  if (!response.ok) { const error = await response.json().catch(() => ({ detail: 'Failed to unshare resume' })); throw new Error(error.detail || 'Failed to unshare resume'); }
-}
-
-/**
- * Get team activity feed
- */
-export async function getTeamActivity(teamId: number, limit?: number): Promise<TeamActivity[]> {
-  const params = limit ? `?limit=${limit}` : '';
-  const response = await fetch(`${API_URL}/v1/teams/${teamId}/activity${params}`, { headers: getHeaders() });
-  if (!response.ok) { const error = await response.json().catch(() => ({ detail: 'Failed to fetch activity' })); throw new Error(error.detail || 'Failed to fetch activity'); }
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ detail: 'Failed to get default priorities' }));
+    throw new Error(error.detail || 'Failed to get default priorities');
+  }
   return response.json();
 }
 

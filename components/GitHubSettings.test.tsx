@@ -81,7 +81,9 @@ describe('GitHubSettings Component', () => {
 
     render(<GitHubSettings />);
 
-    expect(screen.getByText('progress_activity')).toBeInTheDocument();
+    // Component shows a spinner icon in loading state, not text
+    const spinner = document.querySelector('.material-symbols-outlined.animate-spin');
+    expect(spinner).toBeInTheDocument();
   });
 
   it('displays benefits list when not connected', async () => {
