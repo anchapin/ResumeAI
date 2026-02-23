@@ -8,14 +8,11 @@ endpoint for fetching user repositories.
 
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
-from fastapi import FastAPI  # noqa: F401
-from fastapi.testclient import TestClient  # noqa: F401
+from fastapi import FastAPI
 from sqlalchemy.ext.asyncio import AsyncSession
 from datetime import datetime, timezone, timedelta
-import httpx  # noqa: F401
 
 from database import GitHubConnection
-from api.models import UserResponse
 
 # Create test app with all necessary dependencies
 from routes.github import router

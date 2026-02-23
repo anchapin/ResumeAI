@@ -258,70 +258,18 @@ export interface ATSReport {
   };
 }
 
-// Team Management Types
+// Bulk Operations Types
 
-export type MemberRole = 'owner' | 'admin' | 'member';
+export type BulkOperationType = 'delete' | 'duplicate' | 'tag' | 'export';
 
-export interface Team {
-  id: number;
-  name: string;
-  description?: string;
-  owner_id: number;
-  created_at: string;
-  updated_at: string;
-  member_count?: number;
-  resume_count?: number;
+export interface BulkOperationRequest {
+  operation: BulkOperationType;
+  resume_ids: number[];
+  tags?: string[];
+  export_format?: string;
 }
 
-export interface TeamMember {
-  user_id: number;
-  email?: string;
-  name?: string;
-  role: MemberRole;
-  joined_at: string;
-  is_owner: boolean;
-}
-
-export type ActivityType = 'team_created' | 'member_joined' | 'member_left' | 'role_changed' | 'resume_shared' | 'resume_unshared' | 'team_updated' | 'team_deleted';
-
-export interface TeamActivity {
-  id: number;
-  type: ActivityType;
-  user_id: number;
-  user_name?: string;
-  description: string;
-  metadata?: Record<string, unknown>;
-  created_at: string;
-}
-
-export interface TeamResume {
-  id: number;
-  resume_id: number;
-  resume_title: string;
-  shared_by_user_id: number;
-  shared_by_user_name?: string;
-  shared_at: string;
-}
-
-export interface CreateTeamRequest {
-  name: string;
-  description?: string;
-}
-
-export interface UpdateTeamRequest {
-  name?: string;
-  description?: string;
-}
-
-export interface InviteMemberRequest {
-  email: string;
-  role: MemberRole;
-}
-
-export interface UpdateMemberRoleRequest {
-  role: MemberRole;
-}
-
-export interface ShareResumeRequest {
-  resume_id: number;
+export interface BulkOperationResult {
+  successful: number[];
+  failed: Array<{ id: number; error: string }>;
 }

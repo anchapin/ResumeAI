@@ -4,10 +4,8 @@ Unit tests for GitHub OAuth endpoints.
 
 import os
 import pytest
-import pytest_asyncio
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 from httpx import AsyncClient
-from unittest.mock import patch
 
 from database import GitHubConnection, GitHubOAuthState
 from lib.token_encryption import generate_encryption_key
@@ -24,8 +22,20 @@ class TestGitHubOAuthConnect:
         with patch.object(settings, "github_client_id", None):
             response = await client.get("/github/connect")
 
-            assert response.status_code == 500
-            assert "GitHub OAuth not configured" in response.json()["detail"]
+        # Force settings reload
+        import importlib
+        import config
+
+        importlib.reload(config)
+
+        response = await client.get("/github/connect")
+
+        # Restore original value
+        if original_client_id:
+            os.environ["GITHUB_CLIENT_ID"] = original_client_id
+
+        assert response.status_code == 500
+        assert "GitHub OAuth not configured" in response.json()["detail"]
 
     @pytest.mark.asyncio
     async def test_connect_with_custom_redirect_uri(self, client: AsyncClient):
@@ -34,9 +44,11 @@ class TestGitHubOAuthConnect:
             # We don't need to patch callback URL as it's not used in this flow directly
             # (it's constructed from request url or passed as param)
 
-            response = await client.get(
-                "/github/connect", params={"redirect_uri": "http://custom/callback"}
-            )
+        # Force settings reload
+        import importlib
+        import config
+
+        importlib.reload(config)
 
             assert response.status_code == 302
             # Check header instead of JSON for redirect
@@ -49,12 +61,16 @@ class TestGitHubOAuthConnect:
     @pytest.mark.asyncio
     async def test_connect_generates_secure_state(self, client: AsyncClient):
         """Test that connect generates a secure state parameter."""
-        with patch.object(settings, "github_client_id", "test_client_id"):
-            response1 = await client.get("/github/connect")
-            response2 = await client.get("/github/connect")
+        os.environ["GITHUB_CLIENT_ID"] = "test_client_id"
+        os.environ["GITHUB_OAUTH_CALLBACK_URL"] = (
+            "http://127.0.0.1:8000/github/callback"
+        )
 
-            assert response1.status_code == 302
-            assert response2.status_code == 302
+        # Force settings reload
+        import importlib
+        import config
+
+        importlib.reload(config)
 
             # Extract state from Location header
             from urllib.parse import urlparse, parse_qs
@@ -76,11 +92,19 @@ class TestGitHubOAuthCallback:
     @pytest.mark.asyncio
     async def test_callback_without_config(self, client: AsyncClient, db_session):
         """Test that callback fails without GitHub OAuth configuration."""
-        # Create valid state so we get past the state check
-        state = GitHubOAuthState(
-            state="test_state",
-            user_id=1,
-            expires_at=datetime.now(timezone.utc) + timedelta(minutes=10),
+        original_client_id = os.environ.get("GITHUB_CLIENT_ID")
+        original_client_secret = os.environ.get("GITHUB_CLIENT_SECRET")
+        os.environ.pop("GITHUB_CLIENT_ID", None)
+        os.environ.pop("GITHUB_CLIENT_SECRET", None)
+
+        # Force settings reload
+        import importlib
+        import config
+
+        importlib.reload(config)
+
+        response = await client.get(
+            "/github/callback", params={"code": "test_code", "state": "test_state"}
         )
         db_session.add(state)
         await db_session.commit()
@@ -107,12 +131,31 @@ class TestGitHubOAuthCallback:
                     params={"code": "test_code", "state": "invalid_state"},
                 )
 
-                assert response.status_code == 302
-                assert "error=invalid_state" in response.headers["location"]
+        # Force settings reload
+        import importlib
+        import config
+
+        importlib.reload(config)
+
+        response = await client.get(
+            "/github/callback", params={"code": "test_code", "state": "invalid_state"}
+        )
+
+        assert response.status_code == 400
+        assert "Invalid or expired state parameter" in response.json()["detail"]
 
     @pytest.mark.asyncio
     async def test_callback_expired_state(self, client: AsyncClient, db_session):
         """Test that callback fails with expired state."""
+        os.environ["GITHUB_CLIENT_ID"] = "test_client_id"
+        os.environ["GITHUB_CLIENT_SECRET"] = "test_client_secret"
+
+        # Force settings reload
+        import importlib
+        import config
+
+        importlib.reload(config)
+
         # Create expired state
         expired_state = GitHubOAuthState(
             state="expired_state",
@@ -138,13 +181,16 @@ class TestGitHubStateStorage:
     @pytest.mark.asyncio
     async def test_state_stored_in_database(self, client: AsyncClient, db_session):
         """Test that state is stored in database after connect."""
-        # Override get_current_user to return a mock user ID 1
-        from main import app
-        from config.dependencies import get_current_user
+        os.environ["GITHUB_CLIENT_ID"] = "test_client_id"
+        os.environ["GITHUB_OAUTH_CALLBACK_URL"] = (
+            "http://127.0.0.1:8000/github/callback"
+        )
 
-        app.dependency_overrides[get_current_user] = lambda: type(
-            "User", (), {"id": 1}
-        )()
+        # Force settings reload
+        import importlib
+        import config
+
+        importlib.reload(config)
 
         with patch.object(settings, "github_client_id", "test_client_id"):
             response = await client.get("/github/connect")
@@ -152,7 +198,13 @@ class TestGitHubStateStorage:
 
             from urllib.parse import urlparse, parse_qs
 
-            state = parse_qs(urlparse(response.headers["location"]).query)["state"][0]
+        # Check that state exists in database
+        from sqlalchemy import select
+
+        result = await db_session.execute(
+            select(GitHubOAuthState).where(GitHubOAuthState.state == state)
+        )
+        oauth_state = result.scalar_one_or_none()
 
             # Check that state exists in database
             from sqlalchemy import select
@@ -196,7 +248,13 @@ class TestGitHubConnectionStorage:
             import config.security
             import importlib
 
-            importlib.reload(config.security)
+        # Retrieve and verify
+        from sqlalchemy import select
+
+        result = await db_session.execute(
+            select(GitHubConnection).where(GitHubConnection.id == connection.id)
+        )
+        stored_connection = result.scalar_one()
 
             # Create connection
             connection = GitHubConnection(
@@ -240,9 +298,13 @@ class TestGitHubConnectionStorage:
 
             from config.security import encrypt_token, decrypt_token
 
-            # Create connection
-            plaintext_token = "ghp_test_token_67890"
-            encrypted_token = encrypt_token(plaintext_token)
+        # Retrieve and decrypt
+        from sqlalchemy import select
+
+        result = await db_session.execute(
+            select(GitHubConnection).where(GitHubConnection.id == connection.id)
+        )
+        stored_connection = result.scalar_one()
 
             connection = GitHubConnection(
                 user_id=1,
@@ -347,8 +409,20 @@ async def db_session():
 async def client(db_session):
     """Create test client."""
     from main import app
-    from database import get_db, get_async_session
-    from config.dependencies import get_current_user
+    from database import get_db
+    from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
+    from database import Base
+
+    # Create test database for client
+    test_engine = create_async_engine("sqlite+aiosqlite:///:memory:", echo=False)
+    test_session_maker = async_sessionmaker(
+        test_engine,
+        expire_on_commit=False,
+    )
+
+    # Create tables
+    async with test_engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
 
     # Override dependency to use the test session
     async def override_get_db():
@@ -366,7 +440,10 @@ async def client(db_session):
     app.dependency_overrides[get_async_session] = override_get_async_session
     app.dependency_overrides[get_current_user] = override_get_current_user
 
-    async with AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://test") as ac:
+    from httpx import AsyncClient, ASGITransport
+
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
         yield ac
 
     # Clean up

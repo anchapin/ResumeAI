@@ -224,9 +224,7 @@ async def github_oauth_callback(
     """
     try:
         # Verify OAuth state
-        result = await db.execute(
-            select(GitHubOAuthState).where(GitHubOAuthState.state == state)
-        )
+        result = await db.execute(select(OAuthState).where(OAuthState.state == state))
         oauth_state = result.scalar_one_or_none()
 
         if not oauth_state:
@@ -453,7 +451,56 @@ async def get_github_status(
     if auth_mode == "cli":
         return await _get_cli_status()
     else:
-        return await _get_oauth_status(current_user.id, db)
+        # OAuth mode: Check database connection
+        try:
+            result = await db.execute(
+                select(GitHubConnection).where(
+                    GitHubConnection.user_id == current_user.id,
+                    GitHubConnection.is_active.is_(True),
+                )
+            )
+            connection = result.scalar_one_or_none()
+
+            if connection:
+                logger.info(
+                    "github_oauth_connected",
+                    user_id=current_user.id,
+                    github_username=connection.github_username,
+                )
+                return GitHubStatusResponse(
+                    authenticated=True,
+                    mode="oauth",
+                    username=connection.github_username,
+                    github_user_id=str(connection.github_user_id),
+                    connected_at=(
+                        connection.created_at.isoformat()
+                        if connection.created_at
+                        else None
+                    ),
+                    error=None,
+                )
+            else:
+                logger.info("github_oauth_not_connected", user_id=current_user.id)
+                return GitHubStatusResponse(
+                    authenticated=False,
+                    mode="oauth",
+                    username=None,
+                    github_user_id=None,
+                    connected_at=None,
+                    error="No GitHub connection found",
+                )
+        except Exception as e:
+            logger.error(
+                "github_oauth_status_error", user_id=current_user.id, error=str(e)
+            )
+            return GitHubStatusResponse(
+                authenticated=False,
+                mode="oauth",
+                username=None,
+                github_user_id=None,
+                connected_at=None,
+                error=f"Failed to check OAuth status: {str(e)}",
+            )
 
 
 @router.get(

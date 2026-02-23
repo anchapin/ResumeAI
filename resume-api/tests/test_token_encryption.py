@@ -5,7 +5,6 @@ Unit tests for token encryption utilities.
 import base64
 import os
 import pytest
-from cryptography.fernet import InvalidToken  # noqa: F401
 
 from lib.token_encryption import (
     TokenEncryption,

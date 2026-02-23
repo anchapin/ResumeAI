@@ -19,6 +19,7 @@ interface SidebarProps {
 
 const NAV_ITEMS = [
   { id: Route.DASHBOARD, label: 'Dashboard', icon: 'dashboard' },
+  { id: Route.BULK, label: 'My Resumes', icon: 'description' },
   { id: Route.EDITOR, label: 'My Master Profile', icon: 'account_circle' },
   { id: Route.APPLICATIONS, label: 'Job Applications', icon: 'work' },
   { id: Route.TEAMS, label: 'Teams', icon: 'groups' },
@@ -73,7 +74,7 @@ const Sidebar: React.FC<SidebarProps> = React.memo(({ currentRoute, onNavigate, 
                 type="button"
                 aria-current={isActive ? 'page' : undefined}
                 onClick={() => {
-                    if (item.id === Route.DASHBOARD || item.id === Route.EDITOR || item.id === Route.APPLICATIONS || item.id === Route.TEAMS || item.id === Route.SETTINGS) {
+                    if (item.id === Route.DASHBOARD || item.id === Route.BULK || item.id === Route.EDITOR || item.id === Route.APPLICATIONS || item.id === Route.SETTINGS) {
                         onNavigate(item.id as Route);
                     }
                 }}
