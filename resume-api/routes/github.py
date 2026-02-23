@@ -16,7 +16,7 @@ from sqlalchemy import select
 import httpx
 from httpx import AsyncClient
 
-from database import get_async_session, User, GitHubOAuthState as OAuthState, GitHubConnection
+from database import get_async_session, User, GitHubOAuthState, GitHubConnection
 from config.dependencies import get_current_user
 from config.security import encrypt_token
 from config import settings
@@ -237,7 +237,9 @@ async def github_oauth_callback(
     """
     try:
         # Verify OAuth state
-        result = await db.execute(select(OAuthState).where(OAuthState.state == state))
+        result = await db.execute(
+            select(GitHubOAuthState).where(GitHubOAuthState.state == state)
+        )
         oauth_state = result.scalar_one_or_none()
 
         if not oauth_state:
@@ -510,10 +512,9 @@ async def github_connect(
     expires_at = datetime.now(timezone.utc) + timedelta(minutes=10)
 
     # Store OAuth state in database
-    oauth_state = OAuthState(
+    oauth_state = GitHubOAuthState(
         state=state,
         user_id=user_id,
-        provider="github",
         expires_at=expires_at,
     )
     db.add(oauth_state)
