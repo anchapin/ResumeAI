@@ -95,6 +95,84 @@ async def test_get_github_status_oauth_mode_not_connected():
                 assert response.error is not None
 
 
+@pytest.mark.asyncio
+async def test_get_github_status_cli_mode_authenticated():
+    """Test GitHub status in CLI mode when CLI is authenticated."""
+    # Create mock user
+    mock_user = MagicMock()
+    mock_user.id = 1
+    mock_user.email = "test@example.com"
+
+    # Create mock database session (not used in CLI mode)
+    mock_db = AsyncMock(spec=AsyncSession)
+
+    # Create mock request
+    mock_request = MagicMock()
+
+    # Mock CLI status check to return authenticated
+    mock_cli_status = {
+        "authenticated": True,
+        "username": "cliuser",
+        "error": None
+    }
+
+    # Mock settings to use CLI mode
+    with patch.object(settings, 'github_auth_mode', 'cli'):
+        with patch("routes.github.get_current_user", return_value=mock_user):
+            with patch("routes.github.get_async_session", return_value=mock_db):
+                with patch("lib.github_cli.check_gh_cli_status", return_value=mock_cli_status):
+                    response = await get_github_status(mock_request, mock_user, mock_db)
+
+                    # Assert response structure
+                    assert isinstance(response, GitHubStatusResponse)
+                    assert response.authenticated is True
+                    assert response.mode == "cli"
+                    assert response.username == "cliuser"
+                    assert response.github_user_id is None  # CLI mode doesn't have GitHub user ID
+                    assert response.connected_at is None  # CLI mode doesn't have connection time
+                    assert response.error is None
+
+
+@pytest.mark.asyncio
+async def test_get_github_status_cli_mode_not_authenticated():
+    """Test GitHub status in CLI mode when CLI is not authenticated."""
+    # Create mock user
+    mock_user = MagicMock()
+    mock_user.id = 1
+    mock_user.email = "test@example.com"
+
+    # Create mock database session (not used in CLI mode)
+    mock_db = AsyncMock(spec=AsyncSession)
+
+    # Create mock request
+    mock_request = MagicMock()
+
+    # Mock CLI status check to return not authenticated
+    mock_cli_status = {
+        "authenticated": False,
+        "username": None,
+        "error": "GitHub CLI not authenticated"
+    }
+
+    # Mock settings to use CLI mode
+    with patch.object(settings, 'github_auth_mode', 'cli'):
+        with patch("routes.github.get_current_user", return_value=mock_user):
+            with patch("routes.github.get_async_session", return_value=mock_db):
+                with patch("lib.github_cli.check_gh_cli_status", return_value=mock_cli_status):
+                    response = await get_github_status(mock_request, mock_user, mock_db)
+
+                    # Assert response structure
+                    assert isinstance(response, GitHubStatusResponse)
+                    assert response.authenticated is False
+                    assert response.mode == "cli"
+                    assert response.username is None
+                    assert response.github_user_id is None
+                    assert response.connected_at is None
+                    assert response.error == "GitHub CLI not authenticated"
+
+
+
+
 def test_github_status_endpoint_exists():
     """Test that the status endpoint is registered."""
     routes = [route.path for route in router.routes]
