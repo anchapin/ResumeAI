@@ -163,6 +163,131 @@ class ATSCompatibilityChecker:
         "margin_max": 1.5,
     }
 
+    # Standard section mapping
+    SECTION_MAPPING = {
+        "contact": ["basics"],
+        "experience": ["work", "experience"],
+        "education": ["education"],
+        "skills": ["skills"],
+        "summary": ["basics.summary", "summary", "professional_summary"],
+        "projects": ["projects"],
+        "certifications": ["certificates", "certifications"],
+    }
+
+    # Date format patterns
+    DATE_PATTERNS = [
+        r"\d{4}\s*[-–]\s*\d{4}",
+        r"\d{2}/\d{2}/\d{4}",
+        r"[A-Z][a-z]+\s+\d{4}",
+        r"\d{4}\s*-\s*present",
+    ]
+
+    # Common stop words to exclude
+    STOP_WORDS = {
+        "the",
+        "a",
+        "an",
+        "and",
+        "or",
+        "but",
+        "in",
+        "on",
+        "at",
+        "to",
+        "for",
+        "of",
+        "with",
+        "by",
+        "from",
+        "as",
+        "is",
+        "was",
+        "are",
+        "were",
+        "been",
+        "be",
+        "have",
+        "has",
+        "had",
+        "do",
+        "does",
+        "did",
+        "will",
+        "would",
+        "could",
+        "should",
+        "may",
+        "might",
+        "must",
+        "shall",
+        "can",
+        "need",
+        "this",
+        "that",
+        "these",
+        "those",
+        "i",
+        "you",
+        "he",
+        "she",
+        "it",
+        "we",
+        "they",
+        "what",
+        "which",
+        "who",
+        "whom",
+        "whose",
+        "where",
+        "when",
+        "why",
+        "how",
+        "all",
+        "each",
+        "every",
+        "both",
+        "few",
+        "more",
+        "most",
+        "other",
+        "some",
+        "such",
+        "no",
+        "nor",
+        "not",
+        "only",
+        "own",
+        "same",
+        "so",
+        "than",
+        "too",
+        "very",
+        "just",
+        "also",
+        "now",
+        "our",
+        "your",
+        "their",
+        "its",
+        "his",
+        "her",
+        "me",
+        "us",
+        "them",
+        # Job description specific
+        "responsibilities",
+        "requirements",
+        "qualifications",
+        "skills",
+        "experience",
+        "years",
+        "work",
+        "team",
+        "company",
+        "role",
+        "position",
+    }
+
     def __init__(self):
         """Initialize the ATS compatibility checker."""
         pass
@@ -215,18 +340,7 @@ class ATSCompatibilityChecker:
         sections_found = []
         sections_missing = []
 
-        # Map JSON Resume fields to standard section names
-        section_mapping = {
-            "contact": ["basics"],
-            "experience": ["work", "experience"],
-            "education": ["education"],
-            "skills": ["skills"],
-            "summary": ["basics.summary", "summary", "professional_summary"],
-            "projects": ["projects"],
-            "certifications": ["certificates", "certifications"],
-        }
-
-        for section_name, field_paths in section_mapping.items():
+        for section_name, field_paths in self.SECTION_MAPPING.items():
             found = False
             for field_path in field_paths:
                 if self._has_field(resume_data, field_path):
@@ -253,11 +367,15 @@ class ATSCompatibilityChecker:
             )
 
         # Calculate section score
-        required_found = len([s for s in sections_found if s in self.REQUIRED_SECTIONS])
+        found_reqs = [s for s in sections_found if s in self.REQUIRED_SECTIONS]
+        required_found = len(found_reqs)
         required_total = len(self.REQUIRED_SECTIONS)
-        report.formatting_score = (
-            int((required_found / required_total) * 100) if required_total > 0 else 0
-        )
+
+        if required_total > 0:
+            score = (required_found / required_total) * 100
+            report.formatting_score = int(score)
+        else:
+            report.formatting_score = 0
 
     def _has_field(self, data: Dict[str, Any], field_path: str) -> bool:
         """Check if a field exists in nested dictionary."""
@@ -322,22 +440,27 @@ class ATSCompatibilityChecker:
 
             for job in work:
                 bullets = job.get("bullets", []) or job.get("highlights", [])
-                description = job.get("summary", "") or job.get("description", "")
+                description = job.get("summary", "")
+                if not description:
+                    description = job.get("description", "")
+
+                bullet_texts = []
+                for b in bullets:
+                    if isinstance(b, dict):
+                        bullet_texts.append(b.get("text", str(b)))
+                    else:
+                        bullet_texts.append(str(b))
 
                 all_text = " ".join(
                     [
                         description,
-                        " ".join(
-                            [
-                                b.get("text", str(b)) if isinstance(b, dict) else str(b)
-                                for b in bullets
-                            ]
-                        ),
+                        " ".join(bullet_texts),
                     ]
                 ).lower()
 
                 # Check for metrics
-                if re.search(r"\d+%|\$\d+|\d+\s*[kKmMbB]|\d+x|\d{4}", all_text):
+                metric_re = r"\d+%|\$\d+|\d+\s*[kKmMbB]|\d+x|\d{4}"
+                if re.search(metric_re, all_text):
                     has_metrics = True
 
                 # Check for action verbs
@@ -347,20 +470,24 @@ class ATSCompatibilityChecker:
                         break
 
             if not has_metrics:
+                msg = "Consider adding quantifiable metrics to your "
+                msg += "experience"
                 issues.append(
                     {
                         "type": "content_quality",
                         "severity": "medium",
-                        "message": "Consider adding quantifiable metrics to your experience",
+                        "message": msg,
                     }
                 )
 
             if not has_action_verbs:
+                msg = "Use strong action verbs to describe your "
+                msg += "achievements"
                 issues.append(
                     {
                         "type": "content_quality",
                         "severity": "medium",
-                        "message": "Use strong action verbs to describe your achievements",
+                        "message": msg,
                     }
                 )
 
@@ -415,44 +542,50 @@ class ATSCompatibilityChecker:
         # Check for problematic patterns
         for pattern_name, pattern in self.PROBLEMATIC_PATTERNS.items():
             if re.search(pattern, resume_text, re.IGNORECASE):
+                readable_pattern = pattern_name.replace("_", " ")
+                msg = (
+                    f"Detected {readable_pattern} which may not parse "
+                    + "correctly in ATS systems"
+                )
                 issues.append(
                     {
                         "type": "formatting",
                         "severity": "high",
-                        "message": f"Detected {pattern_name.replace('_', ' ')} which may not parse correctly in ATS systems",
+                        "message": msg,
                     }
                 )
 
         # Check for special characters that might cause issues
         special_chars = re.findall(r"[^\w\s.,;:!?()'\-]", resume_text)
-        if len(special_chars) > len(resume_text) * 0.05:  # More than 5% special chars
+        if len(special_chars) > len(resume_text) * 0.05:
+            msg = (
+                "Resume contains many special characters that may not "
+                + "parse correctly"
+            )
             issues.append(
                 {
                     "type": "formatting",
                     "severity": "medium",
-                    "message": "Resume contains many special characters that may not parse correctly",
+                    "message": msg,
                 }
             )
 
         # Check for consistent date formats
-        date_patterns = [
-            r"\d{4}\s*[-–]\s*\d{4}",
-            r"\d{2}/\d{2}/\d{4}",
-            r"[A-Z][a-z]+\s+\d{4}",
-            r"\d{4}\s*-\s*present",
-        ]
-
         found_formats = []
-        for pattern in date_patterns:
+        for pattern in self.DATE_PATTERNS:
             if re.search(pattern, resume_text, re.IGNORECASE):
                 found_formats.append(pattern)
 
         if len(found_formats) > 1:
+            msg = (
+                "Inconsistent date formats detected. Use a consistent "
+                + "format throughout"
+            )
             issues.append(
                 {
                     "type": "formatting",
                     "severity": "low",
-                    "message": "Inconsistent date formats detected. Use a consistent format throughout",
+                    "message": msg,
                 }
             )
 
@@ -482,7 +615,10 @@ class ATSCompatibilityChecker:
             else:
                 missing_keywords.append(keyword)
 
-        match_rate = len(matched_keywords) / len(jd_keywords) if jd_keywords else 0
+        if jd_keywords:
+            match_rate = len(matched_keywords) / len(jd_keywords)
+        else:
+            match_rate = 0
         report.keyword_match_rate = match_rate
 
         report.skills_match = {
@@ -494,130 +630,27 @@ class ATSCompatibilityChecker:
 
         # Add issue if match rate is low
         if match_rate < 0.5 and jd_keywords:
-            report.issues.append(
-                {
-                    "type": "keyword_match",
-                    "severity": "high",
-                    "message": f"Low keyword match rate ({match_rate:.0%}). Consider incorporating more keywords from the job description.",
-                    "missing_keywords": missing_keywords[:10],
-                }
+            msg = (
+                f"Low keyword match rate ({match_rate:.0%}). "
+                + "Consider incorporating more keywords from the job description."
             )
+            issues = {
+                "type": "keyword_match",
+                "severity": "high",
+                "message": msg,
+                "missing_keywords": missing_keywords[:10],
+            }
+            report.issues.append(issues)
 
     def _extract_keywords(self, text: str) -> List[str]:
         """Extract important keywords from text."""
-        # Common stop words to exclude
-        stop_words = {
-            "the",
-            "a",
-            "an",
-            "and",
-            "or",
-            "but",
-            "in",
-            "on",
-            "at",
-            "to",
-            "for",
-            "of",
-            "with",
-            "by",
-            "from",
-            "as",
-            "is",
-            "was",
-            "are",
-            "were",
-            "been",
-            "be",
-            "have",
-            "has",
-            "had",
-            "do",
-            "does",
-            "did",
-            "will",
-            "would",
-            "could",
-            "should",
-            "may",
-            "might",
-            "must",
-            "shall",
-            "can",
-            "need",
-            "this",
-            "that",
-            "these",
-            "those",
-            "i",
-            "you",
-            "he",
-            "she",
-            "it",
-            "we",
-            "they",
-            "what",
-            "which",
-            "who",
-            "whom",
-            "whose",
-            "where",
-            "when",
-            "why",
-            "how",
-            "all",
-            "each",
-            "every",
-            "both",
-            "few",
-            "more",
-            "most",
-            "other",
-            "some",
-            "such",
-            "no",
-            "nor",
-            "not",
-            "only",
-            "own",
-            "same",
-            "so",
-            "than",
-            "too",
-            "very",
-            "just",
-            "also",
-            "now",
-            "our",
-            "your",
-            "their",
-            "its",
-            "his",
-            "her",
-            "me",
-            "us",
-            "them",
-            # Job description specific
-            "responsibilities",
-            "requirements",
-            "qualifications",
-            "skills",
-            "experience",
-            "years",
-            "work",
-            "team",
-            "company",
-            "role",
-            "position",
-        }
-
         # Extract words
         words = re.findall(r"\b[a-zA-Z]{3,}\b", text.lower())
 
         # Filter and count
         word_count = {}
         for word in words:
-            if word not in stop_words:
+            if word not in self.STOP_WORDS:
                 word_count[word] = word_count.get(word, 0) + 1
 
         # Return top keywords by frequency
@@ -652,8 +685,9 @@ class ATSCompatibilityChecker:
                         for bullet_key in ["bullets", "highlights"]:
                             if bullet_key in exp and isinstance(exp[bullet_key], list):
                                 for bullet in exp[bullet_key]:
-                                    if isinstance(bullet, dict) and "text" in bullet:
-                                        text_parts.append(str(bullet["text"]))
+                                    if isinstance(bullet, dict):
+                                        if "text" in bullet:
+                                            text_parts.append(str(bullet["text"]))
                                     elif isinstance(bullet, str):
                                         text_parts.append(bullet)
 
@@ -697,7 +731,8 @@ class ATSCompatibilityChecker:
         scores.append(section_score * 0.4)
 
         # Content score (40% weight)
-        content_issues = len([i for i in report.issues if i.get("severity") == "high"])
+        high_severity_issues = [i for i in report.issues if i.get("severity") == "high"]
+        content_issues = len(high_severity_issues)
         content_score = max(0, 100 - (content_issues * 20))
         scores.append(content_score * 0.4)
 
@@ -721,56 +756,62 @@ class ATSCompatibilityChecker:
         # Issue-based recommendations
         for issue in report.issues:
             issue_type = issue.get("type")
+            msg = issue.get("message", "").lower()
 
             if issue_type == "missing_contact":
-                if "email" in issue.get("message", "").lower():
+                if "email" in msg:
                     recommendations.append(
                         "Add your email address to the contact section"
                     )
-                elif "phone" in issue.get("message", "").lower():
+                elif "phone" in msg:
                     recommendations.append("Add your phone number for easier contact")
-                elif "name" in issue.get("message", "").lower():
+                elif "name" in msg:
                     recommendations.append(
                         "Add your full name at the top of the resume"
                     )
 
             elif issue_type == "content_quality":
-                if "metrics" in issue.get("message", "").lower():
+                if "metrics" in msg:
                     recommendations.append(
-                        "Add quantifiable achievements (e.g., 'Increased revenue by 25%', "
-                        "'Reduced processing time by 40%')"
+                        "Add quantifiable achievements (e.g., 'Increased "
+                        + "revenue by 25%', 'Reduced processing time by 40%')"
                     )
-                elif "action verbs" in issue.get("message", "").lower():
+                elif "action verbs" in msg:
                     recommendations.append(
                         "Start bullet points with strong action verbs like "
-                        "'Achieved', 'Developed', 'Implemented', 'Led'"
+                        + "'Achieved', 'Developed', 'Implemented', 'Led'"
                     )
-                elif "skills" in issue.get("message", "").lower():
+                elif "skills" in msg:
                     recommendations.append(
-                        "Expand your skills section with relevant technologies and tools"
+                        "Expand your skills section with relevant "
+                        + "technologies and tools"
                     )
 
             elif issue_type == "formatting":
-                if "table" in issue.get("message", "").lower():
+                if "table" in msg:
                     recommendations.append(
-                        "Avoid using tables as they may not parse correctly in ATS systems"
+                        "Avoid using tables as they may not parse correctly "
+                        + "in ATS systems"
                     )
-                elif "date" in issue.get("message", "").lower():
+                elif "date" in msg:
                     recommendations.append(
-                        "Use consistent date formats throughout (e.g., 'Jan 2020 - Present')"
+                        "Use consistent date formats throughout (e.g., "
+                        + "'Jan 2020 - Present')"
                     )
 
             elif issue_type == "keyword_match":
                 missing = issue.get("missing_keywords", [])
                 if missing:
                     recommendations.append(
-                        f"Incorporate these keywords from the job description: {', '.join(missing[:5])}"
+                        "Incorporate these keywords from the job description: "
+                        + f"{', '.join(missing[:5])}"
                     )
 
         # Add general recommendations if score is low
         if report.overall_score < 50:
             recommendations.append(
-                "Consider using a simple, clean resume template with standard section headings"
+                "Consider using a simple, clean resume template with standard "
+                + "section headings"
             )
 
         # Remove duplicates while preserving order
@@ -803,7 +844,11 @@ def check_ats_compatibility(
         Dictionary with ATS compatibility report
     """
     checker = ATSCompatibilityChecker()
-    report = checker.check_compatibility(resume_data, job_description, resume_text)
+    report = checker.check_compatibility(
+        resume_data,
+        job_description,
+        resume_text,
+    )
 
     # Convert to dictionary
     return {
