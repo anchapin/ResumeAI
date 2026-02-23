@@ -57,7 +57,7 @@ class OAuthAuthenticationFailureRule(AlertRule):
             # In a real implementation, you would query a time-series database
             # or use a sliding window counter. For now, we'll use the
             # prometheus_client metrics which accumulate over time.
-            from prometheus_client import REGISTRY  # noqa: F401
+            pass
 
             # Get OAuth connection metrics
             success_count = (
