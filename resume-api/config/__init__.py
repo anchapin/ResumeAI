@@ -2,6 +2,8 @@
 Configuration for Resume API.
 """
 
+import logging
+import secrets
 from pathlib import Path
 from typing import Optional, Union
 
@@ -120,6 +122,21 @@ class Settings(BaseSettings):
         if isinstance(v, list):
             return v
         return [key.strip() for key in str(v).split(",") if key.strip()]
+
+    @field_validator("jwt_secret")
+    @classmethod
+    def validate_jwt_secret(cls, v: str) -> str:
+        """Validate JWT secret and replace insecure default."""
+        if v == "your-secret-key-change-in-production":
+            new_secret = secrets.token_urlsafe(32)
+            # Use standard logging as app logger might not be configured yet
+            logging.warning(
+                "SECURITY WARNING: Default JWT secret detected. "
+                "Generated a temporary secure random secret. "
+                "Set JWT_SECRET environment variable for persistence."
+            )
+            return new_secret
+        return v
 
     model_config = SettingsConfigDict(env_file=".env", case_sensitive=False)
 
