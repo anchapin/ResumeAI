@@ -23,6 +23,7 @@ from config import settings
 from monitoring import logging_config
 from monitoring import metrics as monitoring_metrics
 from api.models import GitHubStatusResponse
+from lib.github_cli import check_gh_cli_status
 
 # Get logger
 logger = logging_config.get_logger(__name__)
@@ -344,15 +345,27 @@ async def get_github_status(
     logger.info("github_status_check", mode=auth_mode, user_id=current_user.id)
 
     if auth_mode == "cli":
-        # CLI mode: Return CLI status (not implemented in main)
-        return GitHubStatusResponse(
-            authenticated=False,
-            mode="cli",
-            username=None,
-            github_user_id=None,
-            connected_at=None,
-            error="CLI mode not implemented in this version",
-        )
+        # CLI mode: Check GitHub CLI authentication status
+        try:
+            cli_status = await check_gh_cli_status()
+            return GitHubStatusResponse(
+                authenticated=cli_status.get("authenticated", False),
+                mode="cli",
+                username=cli_status.get("username"),
+                github_user_id=None,  # CLI mode doesn't provide GitHub user ID
+                connected_at=None,  # CLI mode doesn't have connection timestamp
+                error=cli_status.get("error"),
+            )
+        except Exception as e:
+            logger.error("github_cli_status_error", user_id=current_user.id, error=str(e))
+            return GitHubStatusResponse(
+                authenticated=False,
+                mode="cli",
+                username=None,
+                github_user_id=None,
+                connected_at=None,
+                error=f"Failed to check CLI status: {str(e)}",
+            )
     else:
         # OAuth mode: Check database connection
         try:
