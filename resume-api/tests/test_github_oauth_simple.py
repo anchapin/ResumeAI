@@ -2,8 +2,6 @@
 Simple unit tests for GitHub OAuth endpoints (no complex fixtures).
 """
 
-import pytest  # noqa: F401
-
 from lib.token_encryption import generate_encryption_key, TokenEncryption
 
 

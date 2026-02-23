@@ -27,7 +27,7 @@ class HealthCheck:
     async def check_oauth_health(self):
         """Check OAuth integration health."""
         try:
-            from prometheus_client import REGISTRY  # noqa: F401
+            pass
 
             # Get OAuth metrics
             success_count = (
