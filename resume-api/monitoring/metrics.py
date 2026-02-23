@@ -196,7 +196,9 @@ def increment_oauth_connection_success(provider="github"):
 
 
 def increment_oauth_connection_failure(provider="github", error_type="unknown"):
-    oauth_connection_failure_total.labels(provider=provider, error_type=error_type).inc()
+    oauth_connection_failure_total.labels(
+        provider=provider, error_type=error_type
+    ).inc()
 
 
 def increment_oauth_token_refresh(provider="github", status="success"):

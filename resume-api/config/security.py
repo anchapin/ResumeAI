@@ -16,8 +16,7 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 # Note: TOKEN_ENCRYPTION_KEY is the preferred name (matches PR #305)
 # ENCRYPTION_KEY is deprecated but kept for backward compatibility
 TOKEN_ENCRYPTION_KEY = os.getenv(
-    "TOKEN_ENCRYPTION_KEY",
-    os.getenv("ENCRYPTION_KEY", Fernet.generate_key().decode())
+    "TOKEN_ENCRYPTION_KEY", os.getenv("ENCRYPTION_KEY", Fernet.generate_key().decode())
 )
 cipher_suite = Fernet(TOKEN_ENCRYPTION_KEY.encode())
 

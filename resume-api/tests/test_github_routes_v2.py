@@ -8,15 +8,14 @@ endpoint for fetching user repositories.
 
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
-from fastapi import FastAPI
-from fastapi.testclient import TestClient
+from fastapi import FastAPI  # noqa: F401
+from fastapi.testclient import TestClient  # noqa: F401
 from sqlalchemy.ext.asyncio import AsyncSession
 from datetime import datetime, timezone, timedelta
-import httpx
+import httpx  # noqa: F401
 
 from database import GitHubConnection
-from api.models import UserResponse
-
+from api.models import UserResponse  # noqa: F401
 
 # Create test app with all necessary dependencies
 from routes.github import router
@@ -96,7 +95,9 @@ async def test_get_github_projects_success(mock_current_user, mock_github_connec
             with patch("routes.github.GitHubAPIClient") as mock_client_class:
                 # Create mock client instance
                 mock_client = AsyncMock()
-                mock_client.get_user_repositories = AsyncMock(return_value=[MockGitHubRepository()])
+                mock_client.get_user_repositories = AsyncMock(
+                    return_value=[MockGitHubRepository()]
+                )
                 mock_client_class.return_value = mock_client
 
                 # Import the function after patching
@@ -107,7 +108,13 @@ async def test_get_github_projects_success(mock_current_user, mock_github_connec
 
                 # Call the function
                 result = await get_github_projects(
-                    mock_request, mock_current_user, mock_db, sort="updated", per_page=30, page=1, repo_type="all"
+                    mock_request,
+                    mock_current_user,
+                    mock_db,
+                    sort="updated",
+                    per_page=30,
+                    page=1,
+                    repo_type="all",
                 )
 
                 # Assert result
@@ -138,7 +145,13 @@ async def test_get_github_projects_no_connection(mock_current_user):
             # Call the function and expect HTTPException
             with pytest.raises(Exception) as exc_info:
                 await get_github_projects(
-                    mock_request, mock_current_user, mock_db, sort="updated", per_page=30, page=1, repo_type="all"
+                    mock_request,
+                    mock_current_user,
+                    mock_db,
+                    sort="updated",
+                    per_page=30,
+                    page=1,
+                    repo_type="all",
                 )
 
             # Assert it's an HTTPException with 403 status
@@ -147,7 +160,9 @@ async def test_get_github_projects_no_connection(mock_current_user):
 
 
 @pytest.mark.asyncio
-async def test_get_github_projects_token_expired(mock_current_user, mock_github_connection):
+async def test_get_github_projects_token_expired(
+    mock_current_user, mock_github_connection
+):
     """Test fetching projects when token is expired."""
     # Set token as expired
     mock_github_connection.expires_at = datetime.now(timezone.utc) - timedelta(days=1)
@@ -168,7 +183,13 @@ async def test_get_github_projects_token_expired(mock_current_user, mock_github_
             # Call the function and expect HTTPException
             with pytest.raises(Exception) as exc_info:
                 await get_github_projects(
-                    mock_request, mock_current_user, mock_db, sort="updated", per_page=30, page=1, repo_type="all"
+                    mock_request,
+                    mock_current_user,
+                    mock_db,
+                    sort="updated",
+                    per_page=30,
+                    page=1,
+                    repo_type="all",
                 )
 
             # Assert it's an HTTPException with 403 status
@@ -177,7 +198,9 @@ async def test_get_github_projects_token_expired(mock_current_user, mock_github_
 
 
 @pytest.mark.asyncio
-async def test_get_github_projects_invalid_token(mock_current_user, mock_github_connection):
+async def test_get_github_projects_invalid_token(
+    mock_current_user, mock_github_connection
+):
     """Test fetching projects when token is invalid (401 from GitHub)."""
     # Create mock database session
     mock_db = AsyncMock(spec=AsyncSession)
@@ -203,7 +226,13 @@ async def test_get_github_projects_invalid_token(mock_current_user, mock_github_
                 # Call the function and expect HTTPException
                 with pytest.raises(Exception) as exc_info:
                     await get_github_projects(
-                        mock_request, mock_current_user, mock_db, sort="updated", per_page=30, page=1, repo_type="all"
+                        mock_request,
+                        mock_current_user,
+                        mock_db,
+                        sort="updated",
+                        per_page=30,
+                        page=1,
+                        repo_type="all",
                     )
 
                 # Assert it's an HTTPException with 403 status
@@ -212,7 +241,9 @@ async def test_get_github_projects_invalid_token(mock_current_user, mock_github_
 
 
 @pytest.mark.asyncio
-async def test_get_github_projects_rate_limited(mock_current_user, mock_github_connection):
+async def test_get_github_projects_rate_limited(
+    mock_current_user, mock_github_connection
+):
     """Test fetching projects when GitHub API rate limit is exceeded."""
     # Create mock database session
     mock_db = AsyncMock(spec=AsyncSession)
@@ -238,7 +269,13 @@ async def test_get_github_projects_rate_limited(mock_current_user, mock_github_c
                 # Call the function and expect HTTPException
                 with pytest.raises(Exception) as exc_info:
                     await get_github_projects(
-                        mock_request, mock_current_user, mock_db, sort="updated", per_page=30, page=1, repo_type="all"
+                        mock_request,
+                        mock_current_user,
+                        mock_db,
+                        sort="updated",
+                        per_page=30,
+                        page=1,
+                        repo_type="all",
                     )
 
                 # Assert it's an HTTPException with 403 status
@@ -262,7 +299,13 @@ async def test_get_github_projects_invalid_sort_parameter(mock_current_user):
             # Call the function with invalid sort parameter and expect HTTPException
             with pytest.raises(Exception) as exc_info:
                 await get_github_projects(
-                    mock_request, mock_current_user, mock_db, sort="invalid", per_page=30, page=1, repo_type="all"
+                    mock_request,
+                    mock_current_user,
+                    mock_db,
+                    sort="invalid",
+                    per_page=30,
+                    page=1,
+                    repo_type="all",
                 )
 
             # Assert it's an HTTPException with 422 status
@@ -286,7 +329,13 @@ async def test_get_github_projects_invalid_per_page(mock_current_user):
             # Call the function with invalid per_page parameter and expect HTTPException
             with pytest.raises(Exception) as exc_info:
                 await get_github_projects(
-                    mock_request, mock_current_user, mock_db, sort="updated", per_page=200, page=1, repo_type="all"
+                    mock_request,
+                    mock_current_user,
+                    mock_db,
+                    sort="updated",
+                    per_page=200,
+                    page=1,
+                    repo_type="all",
                 )
 
             # Assert it's an HTTPException with 422 status
@@ -310,7 +359,13 @@ async def test_get_github_projects_invalid_repo_type(mock_current_user):
             # Call the function with invalid repo_type parameter and expect HTTPException
             with pytest.raises(Exception) as exc_info:
                 await get_github_projects(
-                    mock_request, mock_current_user, mock_db, sort="updated", per_page=30, page=1, repo_type="invalid"
+                    mock_request,
+                    mock_current_user,
+                    mock_db,
+                    sort="updated",
+                    per_page=30,
+                    page=1,
+                    repo_type="invalid",
                 )
 
             # Assert it's an HTTPException with 422 status

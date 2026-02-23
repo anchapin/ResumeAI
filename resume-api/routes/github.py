@@ -203,9 +203,7 @@ async def github_oauth_callback(
     """
     try:
         # Verify OAuth state
-        result = await db.execute(
-            select(OAuthState).where(OAuthState.state == state)
-        )
+        result = await db.execute(select(OAuthState).where(OAuthState.state == state))
         oauth_state = result.scalar_one_or_none()
 
         if not oauth_state:
@@ -213,7 +211,9 @@ async def github_oauth_callback(
             frontend_url = settings.frontend_url
             return Response(
                 status_code=302,
-                headers={"Location": f"{frontend_url}?status=error&error=invalid_state"},
+                headers={
+                    "Location": f"{frontend_url}?status=error&error=invalid_state"
+                },
             )
 
         if datetime.now(timezone.utc) > oauth_state.expires_at:
@@ -223,7 +223,9 @@ async def github_oauth_callback(
             frontend_url = settings.frontend_url
             return Response(
                 status_code=302,
-                headers={"Location": f"{frontend_url}?status=error&error=expired_state"},
+                headers={
+                    "Location": f"{frontend_url}?status=error&error=expired_state"
+                },
             )
 
         # Exchange code for token
@@ -373,7 +375,11 @@ async def get_github_status(
                     mode="oauth",
                     username=connection.github_username,
                     github_user_id=str(connection.github_user_id),
-                    connected_at=connection.created_at.isoformat() if connection.created_at else None,
+                    connected_at=(
+                        connection.created_at.isoformat()
+                        if connection.created_at
+                        else None
+                    ),
                     error=None,
                 )
             else:
@@ -387,7 +393,9 @@ async def get_github_status(
                     error="No GitHub connection found",
                 )
         except Exception as e:
-            logger.error("github_oauth_status_error", user_id=current_user.id, error=str(e))
+            logger.error(
+                "github_oauth_status_error", user_id=current_user.id, error=str(e)
+            )
             return GitHubStatusResponse(
                 authenticated=False,
                 mode="oauth",
