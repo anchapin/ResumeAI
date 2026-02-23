@@ -2,9 +2,6 @@
 Simple unit tests for GitHub OAuth endpoints (no complex fixtures).
 """
 
-import os  # noqa: F401
-import pytest  # noqa: F401
-
 from lib.token_encryption import generate_encryption_key, TokenEncryption
 
 
@@ -154,6 +151,5 @@ class TestGitHubOAuthConfig:
         """Test that settings has default callback URL."""
         from config import settings
 
-        # This might be None in test environment if not set
-        if settings.github_callback_url is not None:
-            assert settings.github_callback_url.endswith("/github/callback")
+        # The default is None - it's computed from request URL in production
+        assert settings.github_callback_url is None

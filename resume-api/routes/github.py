@@ -13,7 +13,6 @@ from typing import Annotated, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-import httpx
 from httpx import AsyncClient
 
 from database import get_async_session, User, GitHubOAuthState, GitHubConnection
@@ -158,7 +157,7 @@ async def _revoke_github_token(token: str) -> bool:
         True if revocation succeeded or failed gracefully, False on critical error
     """
     try:
-        async with httpx.AsyncClient(timeout=10.0) as client:
+        async with AsyncClient(timeout=10.0) as client:
             # GitHub API endpoint for revoking OAuth tokens
             # Note: This endpoint may not work for all OAuth flows
             response = await client.post(
@@ -388,9 +387,9 @@ async def _get_oauth_status(user_id: int, db: AsyncSession) -> GitHubStatusRespo
                 mode="oauth",
                 username=connection.github_username,
                 github_user_id=str(connection.github_user_id),
-                connected_at=connection.created_at.isoformat()
-                if connection.created_at
-                else None,
+                connected_at=(
+                    connection.created_at.isoformat() if connection.created_at else None
+                ),
                 error=None,
             )
         else:

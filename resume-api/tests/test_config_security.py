@@ -1,15 +1,13 @@
-
 import os
 import secrets
 from unittest import mock
-import pytest
-from pydantic import ValidationError
 
 # We need to mock environment variables before importing settings
 # But settings is instantiated at module level in config/__init__.py
 # So we need to reload the module or patch the Settings class
 
 from config import Settings
+
 
 def test_secure_default_jwt_secret():
     """Test that a random secret is generated if no env var is present."""
@@ -20,6 +18,7 @@ def test_secure_default_jwt_secret():
         assert settings.jwt_secret is not None
         assert len(settings.jwt_secret) >= 32
         assert settings.jwt_secret != "your-secret-key-change-in-production"
+
 
 def test_insecure_jwt_secret_replacement():
     """Test that the insecure default secret is replaced with a warning."""
@@ -36,6 +35,7 @@ def test_insecure_jwt_secret_replacement():
             # Verify critical log was called
             mock_logger.return_value.critical.assert_called()
 
+
 def test_short_jwt_secret_warning():
     """Test that a short secret triggers a warning."""
     short_secret = "short_secret"
@@ -48,6 +48,7 @@ def test_short_jwt_secret_warning():
 
             # Verify warning log was called
             mock_logger.return_value.warning.assert_called()
+
 
 def test_valid_custom_jwt_secret():
     """Test that a valid custom secret is accepted."""

@@ -6,7 +6,7 @@ import os
 import pytest
 import pytest_asyncio
 from datetime import datetime, timedelta, timezone
-from httpx import AsyncClient, Response
+from httpx import AsyncClient
 from unittest.mock import patch
 
 from database import GitHubConnection, GitHubOAuthState
@@ -40,7 +40,9 @@ class TestGitHubOAuthConnect:
 
             assert response.status_code == 302
             # Check header instead of JSON for redirect
-            assert response.headers["location"].startswith("https://github.com/login/oauth/authorize")
+            assert response.headers["location"].startswith(
+                "https://github.com/login/oauth/authorize"
+            )
             # Note: The implementation currently does not URL-encode the redirect_uri in the string construction
             assert "redirect_uri=http://custom/callback" in response.headers["location"]
 
@@ -56,6 +58,7 @@ class TestGitHubOAuthConnect:
 
             # Extract state from Location header
             from urllib.parse import urlparse, parse_qs
+
             state1 = parse_qs(urlparse(response1.headers["location"]).query)["state"][0]
             state2 = parse_qs(urlparse(response2.headers["location"]).query)["state"][0]
 
@@ -86,7 +89,8 @@ class TestGitHubOAuthCallback:
         with patch.object(settings, "github_client_id", None):
             with patch.object(settings, "github_client_secret", None):
                 response = await client.get(
-                    "/github/callback", params={"code": "test_code", "state": "test_state"}
+                    "/github/callback",
+                    params={"code": "test_code", "state": "test_state"},
                 )
 
                 assert response.status_code == 500
@@ -99,7 +103,8 @@ class TestGitHubOAuthCallback:
         with patch.object(settings, "github_client_id", "test_client_id"):
             with patch.object(settings, "github_client_secret", "test_client_secret"):
                 response = await client.get(
-                    "/github/callback", params={"code": "test_code", "state": "invalid_state"}
+                    "/github/callback",
+                    params={"code": "test_code", "state": "invalid_state"},
                 )
 
                 assert response.status_code == 302
@@ -119,7 +124,8 @@ class TestGitHubOAuthCallback:
         with patch.object(settings, "github_client_id", "test_client_id"):
             with patch.object(settings, "github_client_secret", "test_client_secret"):
                 response = await client.get(
-                    "/github/callback", params={"code": "test_code", "state": "expired_state"}
+                    "/github/callback",
+                    params={"code": "test_code", "state": "expired_state"},
                 )
 
                 assert response.status_code == 302
@@ -135,17 +141,22 @@ class TestGitHubStateStorage:
         # Override get_current_user to return a mock user ID 1
         from main import app
         from config.dependencies import get_current_user
-        app.dependency_overrides[get_current_user] = lambda: type("User", (), {"id": 1})()
+
+        app.dependency_overrides[get_current_user] = lambda: type(
+            "User", (), {"id": 1}
+        )()
 
         with patch.object(settings, "github_client_id", "test_client_id"):
             response = await client.get("/github/connect")
             assert response.status_code == 302
 
             from urllib.parse import urlparse, parse_qs
+
             state = parse_qs(urlparse(response.headers["location"]).query)["state"][0]
 
             # Check that state exists in database
             from sqlalchemy import select
+
             result = await db_session.execute(
                 select(GitHubOAuthState).where(GitHubOAuthState.state == state)
             )
@@ -184,6 +195,7 @@ class TestGitHubConnectionStorage:
             # Reload security to pick up new key
             import config.security
             import importlib
+
             importlib.reload(config.security)
 
             # Create connection
@@ -195,6 +207,7 @@ class TestGitHubConnectionStorage:
             )
             # Manually encrypt because model doesn't auto-encrypt
             from config.security import encrypt_token
+
             connection.access_token = encrypt_token("ghp_test_token_12345")
 
             db_session.add(connection)
@@ -202,6 +215,7 @@ class TestGitHubConnectionStorage:
 
             # Retrieve and verify
             from sqlalchemy import select
+
             result = await db_session.execute(
                 select(GitHubConnection).where(GitHubConnection.id == connection.id)
             )
@@ -221,6 +235,7 @@ class TestGitHubConnectionStorage:
             # Reload security
             import config.security
             import importlib
+
             importlib.reload(config.security)
 
             from config.security import encrypt_token, decrypt_token
@@ -240,6 +255,7 @@ class TestGitHubConnectionStorage:
 
             # Retrieve and decrypt
             from sqlalchemy import select
+
             result = await db_session.execute(
                 select(GitHubConnection).where(GitHubConnection.id == connection.id)
             )
@@ -333,9 +349,6 @@ async def client(db_session):
     from main import app
     from database import get_db, get_async_session
     from config.dependencies import get_current_user
-    from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
-    from database import Base
-    import httpx
 
     # Override dependency to use the test session
     async def override_get_db():
