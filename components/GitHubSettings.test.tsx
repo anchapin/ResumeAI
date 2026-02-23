@@ -81,7 +81,10 @@ describe('GitHubSettings Component', () => {
 
     render(<GitHubSettings />);
 
-    expect(screen.getByText(/Loading/)).toBeInTheDocument();
+    // Check for the loading spinner with proper accessibility attributes
+    const loadingSpinner = screen.getByRole('status', { name: 'Loading' });
+    expect(loadingSpinner).toBeInTheDocument();
+    expect(loadingSpinner).toHaveClass('material-symbols-outlined', 'animate-spin');
   });
 
   it('displays benefits list when not connected', async () => {

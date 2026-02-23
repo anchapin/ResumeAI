@@ -260,14 +260,26 @@ const GitHubSettings: React.FC = () => {
         {/* Loading State */}
         {isLoading && !isConnecting && (
           <div className="flex items-center justify-center py-8">
-            <span className="material-symbols-outlined animate-spin text-primary-600 text-3xl">progress_activity</span>
+            <span
+              className="material-symbols-outlined animate-spin text-primary-600 text-3xl"
+              aria-label="Loading"
+              role="status"
+            >
+              progress_activity
+            </span>
           </div>
         )}
 
         {/* Connecting State */}
         {isConnecting && (
           <div className="flex flex-col items-center justify-center py-8">
-            <span className="material-symbols-outlined animate-spin text-primary-600 text-4xl mb-4">progress_activity</span>
+            <span
+              className="material-symbols-outlined animate-spin text-primary-600 text-4xl mb-4"
+              aria-label="Connecting"
+              role="status"
+            >
+              progress_activity
+            </span>
             <p className="text-slate-600 font-medium">Connecting to GitHub...</p>
           </div>
         )}
@@ -336,12 +348,18 @@ const GitHubSettings: React.FC = () => {
               >
                 {isDisconnecting ? (
                   <>
-                    <span className="material-symbols-outlined animate-spin text-[18px]">progress_activity</span>
+                    <span
+                      className="material-symbols-outlined animate-spin text-[18px]"
+                      aria-label="Disconnecting"
+                      role="status"
+                    >
+                      progress_activity
+                    </span>
                     Disconnecting...
                   </>
                 ) : (
                   <>
-                    <span className="material-symbols-outlined text-[18px]">link_off</span>
+                    <span className="material-symbols-outlined text-[18px]" aria-hidden="true">link_off</span>
                     Disconnect GitHub
                   </>
                 )}
