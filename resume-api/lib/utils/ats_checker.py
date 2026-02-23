@@ -470,7 +470,7 @@ class ATSCompatibilityChecker:
                         break
 
             if not has_metrics:
-                msg = "Consider adding quantifiable metrics to your "  # noqa: E501
+                msg = "Consider adding quantifiable metrics to your "
                 msg += "experience"
                 issues.append(
                     {
@@ -481,7 +481,7 @@ class ATSCompatibilityChecker:
                 )
 
             if not has_action_verbs:
-                msg = "Use strong action verbs to describe your "  # noqa: E501
+                msg = "Use strong action verbs to describe your "
                 msg += "achievements"
                 issues.append(
                     {
@@ -551,7 +551,7 @@ class ATSCompatibilityChecker:
                     {
                         "type": "formatting",
                         "severity": "high",
-                        "message": msg,  # noqa: E501
+                        "message": msg,
                     }
                 )
 
@@ -566,7 +566,7 @@ class ATSCompatibilityChecker:
                 {
                     "type": "formatting",
                     "severity": "medium",
-                    "message": msg,  # noqa: E501
+                    "message": msg,
                 }
             )
 
@@ -585,7 +585,7 @@ class ATSCompatibilityChecker:
                 {
                     "type": "formatting",
                     "severity": "low",
-                    "message": msg,  # noqa: E501
+                    "message": msg,
                 }
             )
 
@@ -632,12 +632,12 @@ class ATSCompatibilityChecker:
         if match_rate < 0.5 and jd_keywords:
             msg = (
                 f"Low keyword match rate ({match_rate:.0%}). "
-                + "Consider incorporating more keywords from the job description."  # noqa: E501
+                + "Consider incorporating more keywords from the job description."
             )
             issues = {
                 "type": "keyword_match",
                 "severity": "high",
-                "message": msg,  # noqa: E501
+                "message": msg,
                 "missing_keywords": missing_keywords[:10],
             }
             report.issues.append(issues)
@@ -654,9 +654,7 @@ class ATSCompatibilityChecker:
                 word_count[word] = word_count.get(word, 0) + 1
 
         # Return top keywords by frequency
-        sorted_keywords = sorted(
-            word_count.items(), key=lambda x: x[1], reverse=True
-        )  # noqa: E501
+        sorted_keywords = sorted(word_count.items(), key=lambda x: x[1], reverse=True)
         return [kw for kw, count in sorted_keywords[:30]]
 
     def _extract_resume_text(self, resume_data: Dict[str, Any]) -> str:
@@ -671,9 +669,7 @@ class ATSCompatibilityChecker:
 
         # Extract from work experience
         for exp_key in ["work", "experience"]:
-            if exp_key in resume_data and isinstance(
-                resume_data[exp_key], list
-            ):  # noqa: E501
+            if exp_key in resume_data and isinstance(resume_data[exp_key], list):
                 for exp in resume_data[exp_key]:
                     if isinstance(exp, dict):
                         for key in [
@@ -687,15 +683,11 @@ class ATSCompatibilityChecker:
                                 text_parts.append(str(exp[key]))
                         # Extract from bullets
                         for bullet_key in ["bullets", "highlights"]:
-                            if bullet_key in exp and isinstance(
-                                exp[bullet_key], list
-                            ):  # noqa: E501
+                            if bullet_key in exp and isinstance(exp[bullet_key], list):
                                 for bullet in exp[bullet_key]:
                                     if isinstance(bullet, dict):
                                         if "text" in bullet:
-                                            text_parts.append(
-                                                str(bullet["text"])
-                                            )  # noqa: E501
+                                            text_parts.append(str(bullet["text"]))
                                     elif isinstance(bullet, str):
                                         text_parts.append(bullet)
 
@@ -708,16 +700,12 @@ class ATSCompatibilityChecker:
                         if skill.get("name"):
                             text_parts.append(str(skill["name"]))
                         if skill.get("keywords"):
-                            text_parts.extend(
-                                [str(k) for k in skill["keywords"]]
-                            )  # noqa: E501
+                            text_parts.extend([str(k) for k in skill["keywords"]])
                     elif isinstance(skill, str):
                         text_parts.append(skill)
 
         # Extract from education
-        if "education" in resume_data and isinstance(
-            resume_data["education"], list
-        ):  # noqa: E501
+        if "education" in resume_data and isinstance(resume_data["education"], list):
             for edu in resume_data["education"]:
                 if isinstance(edu, dict):
                     for key in ["institution", "degree", "studyType", "area"]:
@@ -725,9 +713,7 @@ class ATSCompatibilityChecker:
                             text_parts.append(str(edu[key]))
 
         # Extract from projects
-        if "projects" in resume_data and isinstance(
-            resume_data["projects"], list
-        ):  # noqa: E501
+        if "projects" in resume_data and isinstance(resume_data["projects"], list):
             for proj in resume_data["projects"]:
                 if isinstance(proj, dict):
                     for key in ["name", "description"]:
@@ -745,9 +731,7 @@ class ATSCompatibilityChecker:
         scores.append(section_score * 0.4)
 
         # Content score (40% weight)
-        high_severity_issues = [
-            i for i in report.issues if i.get("severity") == "high"
-        ]  # noqa: E501
+        high_severity_issues = [i for i in report.issues if i.get("severity") == "high"]
         content_issues = len(high_severity_issues)
         content_score = max(0, 100 - (content_issues * 20))
         scores.append(content_score * 0.4)
@@ -761,17 +745,13 @@ class ATSCompatibilityChecker:
         report.passed = report.overall_score >= 70
         report.content_score = content_score
 
-    def _generate_recommendations(
-        self, report: ATSCompatibilityReport
-    ) -> None:  # noqa: E501
+    def _generate_recommendations(self, report: ATSCompatibilityReport) -> None:
         """Generate recommendations based on issues found."""
         recommendations = []
 
         # Section recommendations
         for section in report.sections_missing:
-            recommendations.append(
-                f"Add a '{section.title()}' section to your resume"
-            )  # noqa: E501
+            recommendations.append(f"Add a '{section.title()}' section to your resume")
 
         # Issue-based recommendations
         for issue in report.issues:
@@ -784,9 +764,7 @@ class ATSCompatibilityChecker:
                         "Add your email address to the contact section"
                     )
                 elif "phone" in msg:
-                    recommendations.append(
-                        "Add your phone number for easier contact"
-                    )  # noqa: E501
+                    recommendations.append("Add your phone number for easier contact")
                 elif "name" in msg:
                     recommendations.append(
                         "Add your full name at the top of the resume"
