@@ -6,8 +6,8 @@ Tests the GitHubAPIClient class for making authenticated requests to GitHub's RE
 
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
-import httpx
-from datetime import datetime, timezone
+import httpx  # noqa: F401
+from datetime import datetime, timezone  # noqa: F401
 
 from lib.github_client import GitHubAPIClient, GitHubRepository
 

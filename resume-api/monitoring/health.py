@@ -27,16 +27,20 @@ class HealthCheck:
     async def check_oauth_health(self):
         """Check OAuth integration health."""
         try:
-            from prometheus_client import REGISTRY
-
             # Get OAuth metrics
-            success_count = monitoring_metrics.oauth_connection_success_total._value.get()
+            success_count = (
+                monitoring_metrics.oauth_connection_success_total._value.get()
+            )
             failure_count = sum(
                 metric._value.get()
                 for metric in monitoring_metrics.oauth_connection_failure_total._value.values()
             )
-            rate_limit_hits = monitoring_metrics.oauth_rate_limit_hits_total._value.get()
-            token_expiration_events = monitoring_metrics.oauth_token_expiration_events._value.get()
+            rate_limit_hits = (
+                monitoring_metrics.oauth_rate_limit_hits_total._value.get()
+            )
+            token_expiration_events = (
+                monitoring_metrics.oauth_token_expiration_events._value.get()
+            )
             storage_error_count = sum(
                 metric._value.get()
                 for metric in monitoring_metrics.oauth_storage_errors_total._value.values()

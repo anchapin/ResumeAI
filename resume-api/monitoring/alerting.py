@@ -57,10 +57,11 @@ class OAuthAuthenticationFailureRule(AlertRule):
             # In a real implementation, you would query a time-series database
             # or use a sliding window counter. For now, we'll use the
             # prometheus_client metrics which accumulate over time.
-            from prometheus_client import REGISTRY
 
             # Get OAuth connection metrics
-            success_count = monitoring_metrics.oauth_connection_success_total._value.get()
+            success_count = (
+                monitoring_metrics.oauth_connection_success_total._value.get()
+            )
             failure_count = sum(
                 metric._value.get()
                 for metric in monitoring_metrics.oauth_connection_failure_total._value.values()
@@ -99,7 +100,9 @@ class OAuthRateLimitRule(AlertRule):
         """Check if OAuth rate limit hits exceed threshold."""
         try:
             # Get rate limit hits from metrics
-            rate_limit_hits = monitoring_metrics.oauth_rate_limit_hits_total._value.get()
+            rate_limit_hits = (
+                monitoring_metrics.oauth_rate_limit_hits_total._value.get()
+            )
 
             if rate_limit_hits > self.threshold:
                 return Alert(
@@ -127,7 +130,9 @@ class OAuthTokenExpirationRule(AlertRule):
         """Check if OAuth token expiration events exceed threshold."""
         try:
             # Get token expiration events from metrics
-            expiration_count = monitoring_metrics.oauth_token_expiration_events._value.get()
+            expiration_count = (
+                monitoring_metrics.oauth_token_expiration_events._value.get()
+            )
 
             if expiration_count > self.threshold:
                 return Alert(

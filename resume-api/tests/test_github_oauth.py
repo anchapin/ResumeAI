@@ -5,7 +5,7 @@ Unit tests for GitHub OAuth endpoints.
 import os
 import pytest
 from datetime import datetime, timedelta
-from httpx import AsyncClient, Response
+from httpx import AsyncClient, Response  # noqa: F401
 
 from database import GitHubConnection, GitHubOAuthState
 from lib.token_encryption import generate_encryption_key
@@ -24,6 +24,7 @@ class TestGitHubOAuthConnect:
         # Force settings reload
         import importlib
         import config
+
         importlib.reload(config)
 
         response = await client.get("/github/connect")
@@ -44,6 +45,7 @@ class TestGitHubOAuthConnect:
         # Force settings reload
         import importlib
         import config
+
         importlib.reload(config)
 
         response = await client.get(
@@ -62,11 +64,14 @@ class TestGitHubOAuthConnect:
     async def test_connect_generates_secure_state(self, client: AsyncClient):
         """Test that connect generates a secure state parameter."""
         os.environ["GITHUB_CLIENT_ID"] = "test_client_id"
-        os.environ["GITHUB_OAUTH_CALLBACK_URL"] = "http://127.0.0.1:8000/github/callback"
+        os.environ["GITHUB_OAUTH_CALLBACK_URL"] = (
+            "http://127.0.0.1:8000/github/callback"
+        )
 
         # Force settings reload
         import importlib
         import config
+
         importlib.reload(config)
 
         response1 = await client.get("/github/connect")
@@ -100,6 +105,7 @@ class TestGitHubOAuthCallback:
         # Force settings reload
         import importlib
         import config
+
         importlib.reload(config)
 
         response = await client.get(
@@ -124,6 +130,7 @@ class TestGitHubOAuthCallback:
         # Force settings reload
         import importlib
         import config
+
         importlib.reload(config)
 
         response = await client.get(
@@ -142,6 +149,7 @@ class TestGitHubOAuthCallback:
         # Force settings reload
         import importlib
         import config
+
         importlib.reload(config)
 
         # Create expired state
@@ -167,11 +175,14 @@ class TestGitHubStateStorage:
     async def test_state_stored_in_database(self, client: AsyncClient, db_session):
         """Test that state is stored in database after connect."""
         os.environ["GITHUB_CLIENT_ID"] = "test_client_id"
-        os.environ["GITHUB_OAUTH_CALLBACK_URL"] = "http://127.0.0.1:8000/github/callback"
+        os.environ["GITHUB_OAUTH_CALLBACK_URL"] = (
+            "http://127.0.0.1:8000/github/callback"
+        )
 
         # Force settings reload
         import importlib
         import config
+
         importlib.reload(config)
 
         response = await client.get("/github/connect")
@@ -181,6 +192,7 @@ class TestGitHubStateStorage:
 
         # Check that state exists in database
         from sqlalchemy import select
+
         result = await db_session.execute(
             select(GitHubOAuthState).where(GitHubOAuthState.state == state)
         )
@@ -227,6 +239,7 @@ class TestGitHubConnectionStorage:
 
         # Retrieve and verify
         from sqlalchemy import select
+
         result = await db_session.execute(
             select(GitHubConnection).where(GitHubConnection.id == connection.id)
         )
@@ -260,6 +273,7 @@ class TestGitHubConnectionStorage:
 
         # Retrieve and decrypt
         from sqlalchemy import select
+
         result = await db_session.execute(
             select(GitHubConnection).where(GitHubConnection.id == connection.id)
         )
@@ -327,9 +341,7 @@ async def db_session():
     from database import Base
 
     # Create test database
-    test_engine = create_async_engine(
-        "sqlite+aiosqlite:///:memory:", echo=False
-    )
+    test_engine = create_async_engine("sqlite+aiosqlite:///:memory:", echo=False)
     test_session_maker = async_sessionmaker(
         test_engine,
         expire_on_commit=False,
@@ -358,9 +370,7 @@ async def client():
     from database import Base
 
     # Create test database for client
-    test_engine = create_async_engine(
-        "sqlite+aiosqlite:///:memory:", echo=False
-    )
+    test_engine = create_async_engine("sqlite+aiosqlite:///:memory:", echo=False)
     test_session_maker = async_sessionmaker(
         test_engine,
         expire_on_commit=False,
@@ -378,6 +388,7 @@ async def client():
     app.dependency_overrides[get_db] = override_get_db
 
     from httpx import AsyncClient, ASGITransport
+
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         yield ac

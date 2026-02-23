@@ -8,13 +8,13 @@ status in OAuth mode.
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 from fastapi import FastAPI
-from fastapi.testclient import TestClient
+from fastapi.testclient import TestClient  # noqa: F401
 from sqlalchemy.ext.asyncio import AsyncSession
 from datetime import datetime
 
 from routes.github import router, get_github_status
 from database import GitHubConnection
-from api.models import UserResponse, GitHubStatusResponse
+from api.models import GitHubStatusResponse
 from config import settings
 
 # Create test app

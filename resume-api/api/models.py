@@ -1896,9 +1896,7 @@ class GitHubStatusResponse(BaseModel):
     authenticated: bool = Field(
         ..., description="Whether user is authenticated with GitHub"
     )
-    mode: str = Field(
-        ..., description="Authentication mode being used (oauth or cli)"
-    )
+    mode: str = Field(..., description="Authentication mode being used (oauth or cli)")
     username: Optional[str] = Field(
         None, description="GitHub username if authenticated"
     )
@@ -1908,9 +1906,7 @@ class GitHubStatusResponse(BaseModel):
     connected_at: Optional[str] = Field(
         None, description="Timestamp when connection was established (OAuth mode only)"
     )
-    error: Optional[str] = Field(
-        None, description="Error message if check failed"
-    )
+    error: Optional[str] = Field(None, description="Error message if check failed")
 
 
 class GitHubDisconnectResponse(BaseModel):

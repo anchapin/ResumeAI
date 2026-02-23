@@ -129,9 +129,7 @@ async def get_api_key(x_api_key: str = Header(None)) -> str:
             if secrets.compare_digest(x_api_key, key):
                 return x_api_key
 
-    raise HTTPException(
-        status_code=status.HTTP_403_FORBIDDEN, detail="Invalid API key"
-    )
+    raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid API key")
 
 
 AuthorizedAPIKey = Annotated[str, Depends(get_api_key)]
@@ -143,9 +141,7 @@ AuthorizedAPIKey = Annotated[str, Depends(get_api_key)]
 
 
 async def get_current_user(
-    credentials: Annotated[
-        Optional[HTTPAuthorizationCredentials], Depends(security)
-    ],
+    credentials: Annotated[Optional[HTTPAuthorizationCredentials], Depends(security)],
     db: Annotated[AsyncSession, Depends(get_async_session)],
 ) -> User:
     """
@@ -222,9 +218,7 @@ CurrentUser = Annotated[User, Depends(get_current_user)]
 
 
 async def get_current_user_optional(
-    credentials: Annotated[
-        Optional[HTTPAuthorizationCredentials], Depends(security)
-    ],
+    credentials: Annotated[Optional[HTTPAuthorizationCredentials], Depends(security)],
     db: Annotated[AsyncSession, Depends(get_async_session)],
 ) -> Optional[User]:
     """
@@ -259,9 +253,7 @@ async def get_current_user_optional(
     return None
 
 
-CurrentUserOptional = Annotated[
-    Optional[User], Depends(get_current_user_optional)
-]
+CurrentUserOptional = Annotated[Optional[User], Depends(get_current_user_optional)]
 
 
 # =============================================================================

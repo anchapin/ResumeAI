@@ -18,7 +18,6 @@ from sqlalchemy import (
     JSON,
     Index,
     Float,
-    ForeignKeyConstraint,
 )
 from sqlalchemy.ext.asyncio import (
     AsyncSession,
@@ -67,7 +66,10 @@ class Resume(Base):
     # Version tracking
     # Note: use_alter=True breaks the circular FK dependency with resume_versions
     current_version_id = Column(
-        Integer, ForeignKey("resume_versions.id", use_alter=True, name="fk_resume_current_version")
+        Integer,
+        ForeignKey(
+            "resume_versions.id", use_alter=True, name="fk_resume_current_version"
+        ),
     )
     current_version = relationship("ResumeVersion", foreign_keys=[current_version_id])
 
@@ -576,7 +578,9 @@ class GitHubConnection(Base):
     __tablename__ = "github_connections"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, unique=True, index=True)
+    user_id = Column(
+        Integer, ForeignKey("users.id"), nullable=False, unique=True, index=True
+    )
 
     # GitHub account details
     github_user_id = Column(String(100), nullable=False, index=True)  # GitHub user ID
@@ -590,7 +594,9 @@ class GitHubConnection(Base):
     scope = Column(String(500), nullable=True)  # Space-separated scopes
 
     # Token metadata
-    expires_at = Column(DateTime(timezone=True), nullable=True)  # OAuth token expiration
+    expires_at = Column(
+        DateTime(timezone=True), nullable=True
+    )  # OAuth token expiration
 
     # Connection status
     is_active = Column(Boolean, default=True, nullable=False, index=True)
@@ -630,7 +636,10 @@ class GitHubOAuthState(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now(), index=True)
     expires_at = Column(DateTime(timezone=True), nullable=False, index=True)
     is_used = Column(Boolean, default=False, nullable=False, index=True)
+
+
 # Add relationship to User model
+
 # Note: This is done by modifying the User class after it's defined
 User.api_keys = relationship(
     "APIKey", back_populates="user", cascade="all, delete-orphan"

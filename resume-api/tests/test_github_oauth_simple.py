@@ -2,8 +2,8 @@
 Simple unit tests for GitHub OAuth endpoints (no complex fixtures).
 """
 
-import os
-import pytest
+import os  # noqa: F401
+import pytest  # noqa: F401
 
 from lib.token_encryption import generate_encryption_key, TokenEncryption
 
@@ -92,11 +92,13 @@ class TestGitHubDatabaseModels:
     def test_github_connection_model_import(self):
         """Test that GitHubConnection model can be imported."""
         from database import GitHubConnection
+
         assert GitHubConnection is not None
 
     def test_github_oauth_state_model_import(self):
         """Test that GitHubOAuthState model can be imported."""
         from database import GitHubOAuthState
+
         assert GitHubOAuthState is not None
 
     def test_github_connection_has_required_fields(self):
@@ -152,4 +154,7 @@ class TestGitHubOAuthConfig:
         """Test that settings has default callback URL."""
         from config import settings
 
-        assert settings.github_oauth_callback_url == "http://127.0.0.1:8000/github/callback"
+        assert (
+            settings.github_oauth_callback_url
+            == "http://127.0.0.1:8000/github/callback"
+        )
