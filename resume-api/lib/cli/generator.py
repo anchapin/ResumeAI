@@ -65,7 +65,8 @@ class ResumeGenerator:
         self.jinja_env.filters["latex_escape"] = _latex_escape
 
         # Set up finalize function to auto-escape unfiltered variables
-        # Only apply to strings that are not already Markup objects to prevent double-escaping
+        # Only apply to strings that are not already Markup objects to
+        # prevent double-escaping
         from markupsafe import Markup
 
         self.jinja_env.finalize = lambda x: (
@@ -91,7 +92,8 @@ class ResumeGenerator:
         if not re.match(r"^[a-zA-Z0-9_-]+$", variant):
             raise ValueError(
                 f"Invalid variant name: '{variant}'. "
-                "Variant name must contain only letters, numbers, hyphens, and underscores."
+                "Variant name must contain only letters, numbers, hyphens, "
+                "and underscores."
             )
 
         variant_dir = self.templates_dir / variant
@@ -193,7 +195,8 @@ class ResumeGenerator:
             # Log warnings but continue
             if result.returncode != 0:
                 logger.warning(
-                    f"XeLaTeX run {i} completed with warnings (exit code: {result.returncode})"
+                    f"XeLaTeX run {i} completed with warnings "
+                    f"(exit code: {result.returncode})"
                 )
                 # Look for fatal errors in output
                 if "Fatal error" in result.stdout or "Fatal error" in result.stderr:
@@ -254,6 +257,26 @@ class ResumeGenerator:
         return variants
 
 
+# Define translation table for LaTeX escaping
+# This is defined at module level for performance (computed once)
+_LATEX_SUBS = {
+    "&": r"\&",
+    "%": r"\%",
+    "$": r"\$",
+    "#": r"\#",
+    "_": r"\_",
+    "{": r"\{",
+    "}": r"\}",
+    "~": r"\textasciitilde{}",
+    "^": r"\^{}",
+    "\\": r"\textbackslash{}",
+    "<": r"\textless{}",
+    ">": r"\textgreater{}",
+}
+
+_LATEX_TRANSLATION_TABLE = str.maketrans(_LATEX_SUBS)
+
+
 def _latex_escape(text: Any) -> Markup:
     """
     Escape special LaTeX characters in text.
@@ -262,7 +285,8 @@ def _latex_escape(text: Any) -> Markup:
         text: Text to escape (any type, will be converted to string)
 
     Returns:
-        Escaped text safe for LaTeX as a Markup object to prevent double escaping
+        Escaped text safe for LaTeX as a Markup object to prevent double
+        escaping
     """
     if text is None:
         return Markup("")
@@ -271,42 +295,8 @@ def _latex_escape(text: Any) -> Markup:
     if isinstance(text, Markup):
         return text  # Already marked up, return as-is
 
-    text_str = str(text)
-
-    # Process the string character by character to avoid replacement conflicts
-    result = []
-    i = 0
-    while i < len(text_str):
-        char = text_str[i]
-
-        # Check for backslash specially since it's part of escape sequences
-        if char == "\\":
-            # Check if this is part of an existing LaTeX command like \input{}
-            # For now, just escape the backslash itself
-            result.append(r"\textbackslash{}")
-        elif char in "&%$#_{}~^<>":
-            # Map characters to their escaped versions
-            escaped_map = {
-                "&": r"\&",
-                "%": r"\%",
-                "$": r"\$",
-                "#": r"\#",
-                "_": r"\_",
-                "{": r"\{",
-                "}": r"\}",
-                "~": r"\textasciitilde{}",
-                "^": r"\^{}",
-                "<": r"\textless{}",
-                ">": r"\textgreater{}",
-            }
-            result.append(escaped_map[char])
-        else:
-            # Regular character, just append as-is
-            result.append(char)
-
-        i += 1
-
-    return Markup("".join(result))
+    # Use translate for O(n) performance in C, much faster than Python loop
+    return Markup(str(text).translate(_LATEX_TRANSLATION_TABLE))
 
 
 # For testing purposes - create a simple mock PDF generator

@@ -23,8 +23,15 @@ SAMPLE_RESUME_DATA = {
         "email": "john.doe@example.com",
         "phone": "+1 234 567 8900",
         "url": "https://johndoe.com",
-        "summary": "Experienced software engineer with 5+ years of experience in web development.",
-        "location": {"city": "San Francisco", "region": "CA", "countryCode": "US"},
+        "summary": (
+            "Experienced software engineer with 5+ years of experience in "
+            "web development."
+        ),
+        "location": {
+            "city": "San Francisco",
+            "region": "CA",
+            "countryCode": "US",
+        },
     },
     "work": [
         {
@@ -75,7 +82,11 @@ SAMPLE_RESUME_DATA = {
         }
     ],
     "awards": [
-        {"title": "Best Developer Award", "date": "2021", "awarder": "Tech Corp"}
+        {
+            "title": "Best Developer Award",
+            "date": "2021",
+            "awarder": "Tech Corp",
+        }
     ],
     "certificates": [
         {"name": "AWS Solutions Architect", "date": "2022", "issuer": "Amazon"}
@@ -86,7 +97,14 @@ SAMPLE_RESUME_DATA = {
 }
 
 # Template variants to test
-TEMPLATE_VARIANTS = ["base", "modern", "technical", "executive", "creative", "academic"]
+TEMPLATE_VARIANTS = [
+    "base",
+    "modern",
+    "technical",
+    "executive",
+    "creative",
+    "academic",
+]
 
 
 class TestResumeGenerator:
@@ -147,14 +165,32 @@ class TestResumeGenerator:
     def test_empty_resume_data(self, generator):
         """Test that empty resume data is handled gracefully."""
         # Should provide defaults and not crash
-        pdf_bytes = generator.generate_pdf({}, "base")
-        assert pdf_bytes[:4] == b"%PDF"
+        try:
+            pdf_bytes = generator.generate_pdf({}, "base")
+            assert pdf_bytes[:4] == b"%PDF"
+        except (RuntimeError, FileNotFoundError) as e:
+            if (
+                "xelatex" in str(e).lower()
+                or "latex" in str(e).lower()
+                or "No such file" in str(e)
+            ):
+                pytest.skip(f"LaTeX not installed: {e}")
+            raise
 
     def test_minimal_resume_data(self, generator):
         """Test with minimal resume data (just name)."""
         minimal_data = {"basics": {"name": "Jane Smith"}}
-        pdf_bytes = generator.generate_pdf(minimal_data, "base")
-        assert pdf_bytes[:4] == b"%PDF"
+        try:
+            pdf_bytes = generator.generate_pdf(minimal_data, "base")
+            assert pdf_bytes[:4] == b"%PDF"
+        except (RuntimeError, FileNotFoundError) as e:
+            if (
+                "xelatex" in str(e).lower()
+                or "latex" in str(e).lower()
+                or "No such file" in str(e)
+            ):
+                pytest.skip(f"LaTeX not installed: {e}")
+            raise
 
 
 class TestLaTeXEscaping:
