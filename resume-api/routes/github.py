@@ -23,12 +23,45 @@ from config import settings
 from monitoring import logging_config
 from monitoring import metrics as monitoring_metrics
 from api.models import GitHubStatusResponse
-from lib.github_cli import check_gh_cli_status
+import urllib.parse
 
 # Get logger
 logger = logging_config.get_logger(__name__)
 
 router = APIRouter(prefix="/github", tags=["GitHub"])
+
+
+def generate_oauth_state() -> str:
+    """Generate a secure random state parameter for OAuth."""
+    return secrets.token_urlsafe(32)
+
+
+def build_github_authorization_url(
+    client_id: str,
+    redirect_uri: str,
+    state: str,
+    scopes: str = "read:user public_repo",
+) -> str:
+    """
+    Build the GitHub OAuth authorization URL.
+
+    Args:
+        client_id: GitHub Client ID
+        redirect_uri: Callback URL
+        state: CSRF protection state
+        scopes: Space-separated OAuth scopes
+
+    Returns:
+        Full authorization URL
+    """
+    params = {
+        "client_id": client_id,
+        "redirect_uri": redirect_uri,
+        "scope": scopes,
+        "state": state,
+    }
+    query_string = urllib.parse.urlencode(params)
+    return f"https://github.com/login/oauth/authorize?{query_string}"
 
 
 async def exchange_code_for_token(code: str) -> dict:
@@ -456,13 +489,22 @@ async def github_connect(
     different environments (development, staging, production).
 
     **Response:**
-    Returns the authorization URL that the frontend should redirect the user to,
-    along with a state parameter for CSRF protection.
+    Returns a JSON object with:
+    - `success`: true
+    - `authorization_url`: The URL to redirect the user to
+    - `state`: The CSRF state parameter
+    - `expires_in`: Seconds until state expires
     """
     user_id = current_user.id
 
+    if not settings.github_client_id:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="GitHub OAuth not configured",
+        )
+
     # Generate cryptographically secure random state
-    state = secrets.token_urlsafe(16)
+    state = generate_oauth_state()
 
     # Calculate expiration time (10 minutes from now)
     expires_at = datetime.now(timezone.utc) + timedelta(minutes=10)
@@ -477,14 +519,23 @@ async def github_connect(
     db.add(oauth_state)
     await db.commit()
 
+    # Determine redirect URI
+    if redirect_uri:
+        callback_url = redirect_uri
+    elif settings.github_redirect_uri:
+        callback_url = settings.github_redirect_uri
+    elif settings.github_callback_url:
+        callback_url = settings.github_callback_url
+    else:
+        # Fallback to current request host
+        callback_url = f"{request.url.scheme}://{request.url.netloc}/github/callback"
+
     # Build OAuth authorization URL
-    callback_url = f"{request.url.scheme}://{request.url.netloc}/github/callback"
-    github_auth_url = (
-        f"https://github.com/login/oauth/authorize"
-        f"?client_id={settings.github_client_id}"
-        f"&redirect_uri={callback_url}"
-        f"&scope=user:email"
-        f"&state={state}"
+    github_auth_url = build_github_authorization_url(
+        client_id=settings.github_client_id,
+        redirect_uri=callback_url,
+        state=state,
+        scopes="read:user public_repo",
     )
 
     logger.info(
@@ -493,7 +544,12 @@ async def github_connect(
         state=state,
     )
 
-    return Response(status_code=302, headers={"Location": github_auth_url})
+    return {
+        "success": True,
+        "authorization_url": github_auth_url,
+        "state": state,
+        "expires_in": 600,
+    }
 
 
 @router.delete(
