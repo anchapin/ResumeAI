@@ -42,28 +42,9 @@ from lib.cli import (  # noqa: E402
 )
 
 # Import authentication and rate limiting
-from config.dependencies import AuthorizedAPIKey, limiter  # noqa: E402
+from config.dependencies import AuthorizedAPIKey, rate_limit  # noqa: E402
 from config import settings  # noqa: E402
 from monitoring import logging_config  # noqa: E402
-
-
-# Helper function to conditionally apply rate limiting
-def rate_limit(limit_value: str):
-    """
-    Decorator that applies rate limiting only when enabled.
-
-    Args:
-        limit_value: Rate limit string (e.g., "10/minute")
-
-    Returns:
-        Decorator function or identity if disabled
-    """
-    if settings.enable_rate_limiting:
-        return limiter.limit(limit_value)
-    else:
-        # Return identity decorator (no-op)
-        return lambda f: f
-
 
 # Configure logging
 logger = logging_config.get_logger(__name__)
