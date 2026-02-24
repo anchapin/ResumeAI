@@ -42,10 +42,9 @@ from lib.cli import (  # noqa: E402
 )
 
 # Import authentication and rate limiting
-from config.dependencies import AuthorizedAPIKey, limiter, rate_limit  # noqa: E402
+from config.dependencies import AuthorizedAPIKey, rate_limit  # noqa: E402
 from config import settings  # noqa: E402
 from monitoring import logging_config  # noqa: E402
-
 
 # Configure logging
 logger = logging_config.get_logger(__name__)
