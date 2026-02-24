@@ -65,8 +65,8 @@ describe('EducationItem', () => {
         await user.click(deleteButton);
 
         // Check for confirmation buttons
-        const confirmButton = screen.getByRole('button', { name: /confirm delete/i });
-        const cancelButton = screen.getByRole('button', { name: /cancel delete/i });
+        const confirmButton = screen.getByLabelText('Confirm delete');
+        const cancelButton = screen.getByLabelText('Cancel delete');
         expect(confirmButton).toBeInTheDocument();
         expect(cancelButton).toBeInTheDocument();
 
@@ -90,14 +90,14 @@ describe('EducationItem', () => {
         await user.click(deleteButton);
 
         // Click cancel
-        const cancelButton = screen.getByRole('button', { name: /cancel delete/i });
+        const cancelButton = screen.getByLabelText('Cancel delete');
         await user.click(cancelButton);
 
         // onDelete should NOT have been called
         expect(onDelete).not.toHaveBeenCalled();
 
         // Confirmation buttons should be gone, delete button back
-        expect(screen.queryByRole('button', { name: /confirm delete/i })).not.toBeInTheDocument();
+        expect(screen.queryByLabelText('Confirm delete')).not.toBeInTheDocument();
         expect(screen.getByRole('button', { name: /delete/i })).toBeInTheDocument();
     });
 
