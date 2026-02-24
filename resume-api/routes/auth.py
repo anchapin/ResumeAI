@@ -38,7 +38,7 @@ from config.jwt_utils import (
     create_refresh_token,
     verify_refresh_token,
 )
-from config.dependencies import get_current_user
+from config.dependencies import get_current_user, rate_limit
 from monitoring import logging_config
 
 # Get logger
@@ -63,10 +63,13 @@ def _hash_token(token: str) -> str:
         201: {"model": UserResponse, "description": "User registered successfully"},
         400: {"description": "Invalid input data"},
         409: {"description": "Email or username already exists"},
+        429: {"description": "Too many requests"},
     },
     summary="Register new user",
 )
+@rate_limit("5/minute")
 async def register(
+    request: Request,
     user_data: UserCreate,
     db: Annotated[AsyncSession, Depends(get_async_session)],
 ):
@@ -139,13 +142,15 @@ async def register(
         200: {"model": TokenResponse, "description": "Login successful"},
         401: {"description": "Invalid email or password"},
         403: {"description": "Account is disabled"},
+        429: {"description": "Too many requests"},
     },
     summary="User login",
 )
+@rate_limit("5/minute")
 async def login(
+    request: Request,
     credentials: UserLogin,
     db: Annotated[AsyncSession, Depends(get_async_session)],
-    request: Request,
 ):
     """
     Authenticate user and return access and refresh tokens.
@@ -241,10 +246,13 @@ async def login(
             "description": "Token refreshed successfully",
         },
         401: {"description": "Invalid or expired refresh token"},
+        429: {"description": "Too many requests"},
     },
     summary="Refresh access token",
 )
+@rate_limit("20/minute")
 async def refresh_token(
+    request: Request,
     token_request: RefreshTokenRequest,
     db: Annotated[AsyncSession, Depends(get_async_session)],
 ):
@@ -316,10 +324,13 @@ async def refresh_token(
     responses={
         200: {"model": MessageResponse, "description": "Logout successful"},
         401: {"description": "Invalid refresh token"},
+        429: {"description": "Too many requests"},
     },
     summary="User logout",
 )
+@rate_limit("20/minute")
 async def logout(
+    request: Request,
     token_request: RefreshTokenRequest,
     db: Annotated[AsyncSession, Depends(get_async_session)],
 ):
@@ -425,10 +436,13 @@ async def update_current_user(
         200: {"model": MessageResponse, "description": "Password changed successfully"},
         401: {"description": "Not authenticated"},
         400: {"description": "Invalid current password"},
+        429: {"description": "Too many requests"},
     },
     summary="Change password",
 )
+@rate_limit("5/minute")
 async def change_password(
+    request: Request,
     password_data: PasswordChangeRequest,
     current_user: Annotated[User, Depends(get_current_user)],
     db: Annotated[AsyncSession, Depends(get_async_session)],

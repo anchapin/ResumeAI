@@ -273,3 +273,25 @@ async def rate_limit_exceeded_handler(
             "retry_after": 60,
         },
     )
+
+
+# =============================================================================
+# Rate Limit Decorator
+# =============================================================================
+
+
+def rate_limit(limit_value: str):
+    """
+    Decorator that applies rate limiting only when enabled.
+
+    Args:
+        limit_value: Rate limit string (e.g., "10/minute")
+
+    Returns:
+        Decorator function or identity if disabled
+    """
+    if settings.enable_rate_limiting:
+        return limiter.limit(limit_value)
+    else:
+        # Return identity decorator (no-op)
+        return lambda f: f
