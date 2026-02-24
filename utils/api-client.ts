@@ -329,3 +329,83 @@ export async function retryWebhookDelivery(webhookId: number, deliveryId: number
   return response.json();
 }
 
+// LinkedIn Functions (Stubs)
+export async function connectLinkedIn(): Promise<string> {
+  // Return mock auth URL
+  return `${API_URL}/auth/linkedin/connect`;
+}
+
+export async function handleLinkedInCallback(code: string, state: string): Promise<void> {
+  // Mock success
+  console.log('LinkedIn callback handled', code, state);
+  return Promise.resolve();
+}
+
+export async function importLinkedInProfile(): Promise<LinkedInProfile> {
+  // Return mock profile
+  return {
+    firstName: 'Imported',
+    lastName: 'User',
+    headline: 'Software Engineer',
+    summary: 'Imported summary from LinkedIn',
+    emailAddress: 'imported@example.com',
+    positions: [],
+    educations: [],
+    skills: []
+  };
+}
+
+export async function fetchGitHubRepositories(): Promise<GitHubRepository[]> {
+  return [];
+}
+
+export async function disconnectLinkedIn(): Promise<void> {
+  return Promise.resolve();
+}
+
+// Salary Research Functions (Stubs)
+export async function researchSalary(request: SalaryResearchRequest): Promise<SalaryResearchResponse> {
+  // Mock response
+  return {
+    jobTitle: request.jobTitle,
+    location: request.location,
+    salaryRange: { min: 100000, max: 150000, median: 125000, currency: 'USD' },
+    experienceLevel: request.experienceLevel,
+    factors: { location: 'High', industry: 'Tech', experience: 'Mid', education: 'Bachelor' },
+    insights: [],
+    recommendations: []
+  };
+}
+
+export async function createOffer(offer: any): Promise<JobOffer> {
+  return { ...offer, id: Math.random(), createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
+}
+
+export async function updateOffer(id: number, offer: any): Promise<JobOffer> {
+  return { ...offer, id, updatedAt: new Date().toISOString() } as JobOffer;
+}
+
+export async function deleteOffer(id: number): Promise<void> {
+  return Promise.resolve();
+}
+
+export async function listOffers(): Promise<JobOffer[]> {
+  return [];
+}
+
+export async function compareOffers(offerIds: number[], priorities?: ComparisonPriority): Promise<OfferComparison> {
+  return {
+    offers: [],
+    scores: {},
+    winnerId: 0,
+    insights: []
+  };
+}
+
+export async function getDefaultPriorities(): Promise<ComparisonPriority> {
+  return { salary: 1, growth: 1, workLifeBalance: 1, culture: 1, benefits: 1 };
+}
+
+export async function updatePriorities(priorities: ComparisonPriority): Promise<ComparisonPriority> {
+  return priorities;
+}
