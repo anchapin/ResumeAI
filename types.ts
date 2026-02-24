@@ -267,33 +267,49 @@ export interface LinkedInProfile {
   fullName?: string;
   headline?: string;
   email?: string;
+  emailAddress?: string;
   phone?: string;
   location?: string;
   summary?: string;
   skills?: string[];
   experience?: LinkedInExperience[];
+  positions?: LinkedInExperience[];
   education?: LinkedInEducation[];
+  educations?: LinkedInEducation[];
   projects?: LinkedInProject[];
   connectedAt?: string;
 }
 
 export interface LinkedInExperience {
   company?: string;
+  companyName?: string;
   title?: string;
   startDate?: string;
   endDate?: string;
   description?: string;
   current?: boolean;
   location?: string;
+  locationName?: string;
+  timePeriod?: {
+    startDate?: { month?: number; year?: number };
+    endDate?: { month?: number; year?: number };
+  };
 }
 
 export interface LinkedInEducation {
   institution?: string;
+  schoolName?: string;
   degree?: string;
+  degreeName?: string;
   field?: string;
+  fieldOfStudy?: string;
   startDate?: string;
   endDate?: string;
   activities?: string;
+  timePeriod?: {
+    startDate?: { year?: number };
+    endDate?: { year?: number };
+  };
 }
 
 export interface LinkedInProject {
@@ -407,13 +423,77 @@ export interface OfferComparison {
   offers: JobOffer[];
   priorities: ComparisonPriority;
   scores: OfferScore[];
-  recommendation: {
+  winnerId: number;
+  insights: string[];
+  recommendation?: {
     topOfferId: number;
     reason: string;
   };
-  createdAt: string;
+  createdAt?: string;
 }
 
 export interface ExportFormat {
   format: 'pdf' | 'csv' | 'json';
+}
+
+// Team Collaboration Types
+export interface Team {
+  id: string;
+  name: string;
+  description: string;
+  ownerId: string;
+  createdAt: string;
+  updatedAt: string;
+  members: TeamMember[];
+}
+
+export interface TeamMember {
+  id: string;
+  userId: string;
+  name: string;
+  email: string;
+  role: MemberRole;
+  joinedAt: string;
+}
+
+export type MemberRole = 'owner' | 'admin' | 'editor' | 'viewer';
+
+export interface CreateTeamRequest {
+  name: string;
+  description?: string;
+}
+
+export interface InviteMemberRequest {
+  email: string;
+  role: MemberRole;
+}
+
+export interface TeamActivity {
+  id: string;
+  teamId: string;
+  userId: string;
+  userName: string;
+  action: string;
+  details?: string;
+  createdAt: string;
+}
+
+export interface TeamResume {
+  id: string;
+  title: string;
+  ownerId: string;
+  ownerName: string;
+  updatedAt: string;
+  sharedAt: string;
+  permissions: 'view' | 'edit' | 'comment';
+}
+
+export interface BulkOperationType {
+  type: 'delete' | 'export' | 'tag';
+}
+
+export interface BulkOperationResult {
+  success: boolean;
+  count: number;
+  errors?: string[];
 }
