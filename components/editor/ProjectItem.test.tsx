@@ -2,22 +2,23 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import React from 'react';
-import EducationItem from './EducationItem';
-import { EducationEntry } from '../../types';
+import ProjectItem from './ProjectItem';
+import { ProjectEntry } from '../../types';
 
-describe('EducationItem', () => {
-    const mockEdu: EducationEntry = {
-        id: 'edu-1',
-        institution: 'Test University',
-        area: 'Computer Science',
-        studyType: 'Bachelor',
-        startDate: '2015',
-        endDate: '2019',
-        courses: ['CS101', 'Algorithms']
+describe('ProjectItem', () => {
+    const mockProject: ProjectEntry = {
+        id: 'proj-1',
+        name: 'Test Project',
+        description: 'A cool project',
+        url: 'https://example.com',
+        startDate: '2020',
+        endDate: '2021',
+        roles: ['Developer', 'Designer'],
+        highlights: ['Built a thing', 'Fixed a bug']
     };
 
     const defaultProps = {
-        edu: mockEdu,
+        project: mockProject,
         isExpanded: false,
         onToggleExpand: vi.fn(),
         onDelete: vi.fn(),
@@ -25,40 +26,39 @@ describe('EducationItem', () => {
     };
 
     it('renders collapsed state correctly', () => {
-        render(<EducationItem {...defaultProps} />);
+        render(<ProjectItem {...defaultProps} />);
 
-        expect(screen.getByText('Test University')).toBeInTheDocument();
-        expect(screen.getByText('Bachelor in Computer Science | 2015 - 2019')).toBeInTheDocument();
+        expect(screen.getByText('Test Project')).toBeInTheDocument();
+        expect(screen.getByText('2020 - 2021')).toBeInTheDocument();
         // Should not show form fields
-        expect(screen.queryByLabelText('Institution')).not.toBeInTheDocument();
+        expect(screen.queryByLabelText('Project Name')).not.toBeInTheDocument();
     });
 
     it('renders expanded state with form fields', () => {
-        render(<EducationItem {...defaultProps} isExpanded={true} />);
+        render(<ProjectItem {...defaultProps} isExpanded={true} />);
 
-        expect(screen.getByLabelText('Institution')).toHaveValue('Test University');
-        expect(screen.getByLabelText('Degree Type')).toHaveValue('Bachelor');
-        expect(screen.getByLabelText('Field of Study')).toHaveValue('Computer Science');
-        expect(screen.getByLabelText('Start Date')).toHaveValue('2015');
-        expect(screen.getByLabelText('End Date')).toHaveValue('2019');
+        expect(screen.getByLabelText('Project Name')).toHaveValue('Test Project');
+        expect(screen.getByLabelText('Description')).toHaveValue('A cool project');
+        expect(screen.getByLabelText('Project URL')).toHaveValue('https://example.com');
+        expect(screen.getByLabelText('Start Date')).toHaveValue('2020');
+        expect(screen.getByLabelText('End Date')).toHaveValue('2021');
     });
 
     it('calls onToggleExpand when header is clicked', async () => {
         const onToggleExpand = vi.fn();
         const user = userEvent.setup();
-        render(<EducationItem {...defaultProps} onToggleExpand={onToggleExpand} />);
+        render(<ProjectItem {...defaultProps} onToggleExpand={onToggleExpand} />);
 
-        // Find the toggle button - anticipating semantic button implementation
         const toggleButton = screen.getByRole('button', { name: /expand/i });
         await user.click(toggleButton);
 
-        expect(onToggleExpand).toHaveBeenCalledWith('edu-1');
+        expect(onToggleExpand).toHaveBeenCalledWith('proj-1');
     });
 
     it('calls onDelete when delete button is clicked and confirmed', async () => {
         const onDelete = vi.fn();
         const user = userEvent.setup();
-        render(<EducationItem {...defaultProps} onDelete={onDelete} />);
+        render(<ProjectItem {...defaultProps} onDelete={onDelete} />);
 
         // Click delete button (initiates confirmation)
         const deleteButton = screen.getByRole('button', { name: /delete/i });
@@ -77,13 +77,13 @@ describe('EducationItem', () => {
         await user.click(confirmButton);
 
         // Now onDelete should be called
-        expect(onDelete).toHaveBeenCalledWith('edu-1');
+        expect(onDelete).toHaveBeenCalledWith('proj-1');
     });
 
     it('does not call onDelete when delete is cancelled', async () => {
         const onDelete = vi.fn();
         const user = userEvent.setup();
-        render(<EducationItem {...defaultProps} onDelete={onDelete} />);
+        render(<ProjectItem {...defaultProps} onDelete={onDelete} />);
 
         // Click delete button
         const deleteButton = screen.getByRole('button', { name: /delete/i });
@@ -104,27 +104,26 @@ describe('EducationItem', () => {
     it('calls onUpdate when input changes', async () => {
         const onUpdate = vi.fn();
         const user = userEvent.setup();
-        render(<EducationItem {...defaultProps} isExpanded={true} onUpdate={onUpdate} />);
+        render(<ProjectItem {...defaultProps} isExpanded={true} onUpdate={onUpdate} />);
 
-        const institutionInput = screen.getByLabelText('Institution');
-        await user.type(institutionInput, ' New');
+        const nameInput = screen.getByLabelText('Project Name');
+        await user.type(nameInput, ' Updated');
 
-        // Check if onUpdate was called. Note: userEvent.type calls onChange for each character
         expect(onUpdate).toHaveBeenCalled();
-        expect(onUpdate).toHaveBeenCalledWith('edu-1', 'institution', expect.stringContaining('Test University'));
+        expect(onUpdate).toHaveBeenCalledWith('proj-1', 'name', expect.stringContaining('Test Project'));
     });
 
     it('has accessible attributes', () => {
-        render(<EducationItem {...defaultProps} />);
+        render(<ProjectItem {...defaultProps} />);
 
         // Check for aria-expanded on the main toggle button
         const toggleButton = screen.getByRole('button', { name: /expand/i });
         expect(toggleButton).toHaveAttribute('aria-expanded', 'false');
 
         // Check for accessible label on edit button
-        expect(screen.getByLabelText('Edit education')).toBeInTheDocument();
+        expect(screen.getByLabelText('Edit project Test Project')).toBeInTheDocument();
 
         // Check for accessible label on delete button
-        expect(screen.getByLabelText('Delete education')).toBeInTheDocument();
+        expect(screen.getByLabelText('Delete project Test Project')).toBeInTheDocument();
     });
 });
