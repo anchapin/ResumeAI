@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { SimpleResumeData, WorkExperience, EducationEntry, ProjectEntry } from '../types';
-import { convertToAPIData, generatePDF, getVariants, VariantMetadata, getResume, updateResume } from '../utils/api-client';
+import { convertToAPIData, generatePDF, getVariants, VariantMetadata, getResume, updateResume, listComments } from '../utils/api-client';
 import { TemplateSelector } from '../components/TemplateSelector';
 import { LinkedInImportDialog } from '../components/LinkedInImportDialog';
 import ExperienceItem from '../components/ExperienceItem';
@@ -250,6 +250,20 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, onBack, saveStatu
   useEffect(() => {
     resumeDataRef.current = resumeData;
   }, [resumeData]);
+
+  // Load unresolved comment count
+  useEffect(() => {
+    const loadCommentCount = async () => {
+      try {
+        const comments = await listComments(currentResumeId);
+        const unresolvedCount = comments.filter((c: any) => !c.is_resolved).length;
+        setUnresolvedCommentCount(unresolvedCount);
+      } catch (err) {
+        console.error('Failed to load comments:', err);
+      }
+    };
+    loadCommentCount();
+  }, [currentResumeId]);
 
   // Contact Info handlers
   const updateContact = useCallback((field: keyof SimpleResumeData, value: string) => {
