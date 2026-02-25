@@ -6,7 +6,7 @@ import os
 import pytest
 import pytest_asyncio
 from datetime import datetime, timedelta, timezone
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 from httpx import AsyncClient
 
 from database import GitHubConnection, GitHubOAuthState
@@ -304,7 +304,7 @@ async def db_session():
 async def client(db_session):
     """Create test client."""
     from main import app
-    from database import get_db, get_async_session
+    from database import get_async_session
     from config.dependencies import get_current_user
 
     # Override dependency to use the test session
