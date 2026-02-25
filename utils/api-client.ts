@@ -409,3 +409,150 @@ export async function getDefaultPriorities(): Promise<ComparisonPriority> {
 export async function updatePriorities(priorities: ComparisonPriority): Promise<ComparisonPriority> {
   return priorities;
 }
+
+// Job Application Types
+export type ApplicationStatus = 'draft' | 'applied' | 'screening' | 'interviewing' | 'offer' | 'accepted' | 'rejected' | 'withdrawn';
+
+export interface JobApplication {
+  id: number;
+  company_name: string;
+  job_title: string;
+  job_url?: string;
+  location?: string;
+  status: ApplicationStatus;
+  salary_min?: number;
+  salary_max?: number;
+  salary_currency: string;
+  resume_id?: number;
+  notes?: string;
+  tags: string[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface JobApplicationCreate {
+  company_name: string;
+  job_title: string;
+  job_url?: string;
+  location?: string;
+  salary_min?: number;
+  salary_max?: number;
+  salary_currency?: string;
+  resume_id?: number;
+  notes?: string;
+  tags?: string[];
+}
+
+export interface JobApplicationUpdate {
+  status?: ApplicationStatus;
+  company_name?: string;
+  job_title?: string;
+  notes?: string;
+  tags?: string[];
+}
+
+export interface ApplicationStats {
+  total_applications: number;
+  by_status: Record<string, number>;
+  response_rate: number;
+  interview_rate: number;
+  offer_rate: number;
+}
+
+export interface ApplicationFunnel {
+  stages: Array<{
+    name: string;
+    count: number;
+    percentage: number;
+  }>;
+  total_applications: number;
+}
+
+export interface ApplicationTimeline {
+  timeline: Array<{
+    date: string;
+    count: number;
+    status: string;
+  }>;
+}
+
+export interface UpcomingEvent {
+  id: number;
+  title: string;
+  date: string;
+  type: 'interview' | 'follow_up' | 'deadline';
+  application_id: number;
+  company_name: string;
+}
+
+// Job Application API Functions
+
+export async function createJobApplication(app: JobApplicationCreate): Promise<JobApplication> {
+  const response = await fetch(`${API_URL}/v1/applications`, {
+    method: 'POST',
+    headers: { ...getHeaders(), 'Content-Type': 'application/json' },
+    body: JSON.stringify(app),
+  });
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ detail: 'Failed to create application' }));
+    throw new Error(error.detail || 'Failed to create application');
+  }
+  return response.json();
+}
+
+export async function listJobApplications(status?: ApplicationStatus, limit = 50, offset = 0): Promise<JobApplication[]> {
+  const params = new URLSearchParams();
+  if (status) params.append('status', status);
+  params.append('limit', limit.toString());
+  params.append('offset', offset.toString());
+  
+  const response = await fetch(`${API_URL}/v1/applications?${params}`, { headers: getHeaders() });
+  if (!response.ok) throw new Error('Failed to list applications');
+  return response.json();
+}
+
+export async function getJobApplication(id: number): Promise<JobApplication> {
+  const response = await fetch(`${API_URL}/v1/applications/${id}`, { headers: getHeaders() });
+  if (!response.ok) throw new Error('Failed to get application');
+  return response.json();
+}
+
+export async function updateJobApplication(id: number, updates: JobApplicationUpdate): Promise<JobApplication> {
+  const response = await fetch(`${API_URL}/v1/applications/${id}`, {
+    method: 'PUT',
+    headers: { ...getHeaders(), 'Content-Type': 'application/json' },
+    body: JSON.stringify(updates),
+  });
+  if (!response.ok) throw new Error('Failed to update application');
+  return response.json();
+}
+
+export async function deleteJobApplication(id: number): Promise<void> {
+  const response = await fetch(`${API_URL}/v1/applications/${id}`, { method: 'DELETE', headers: getHeaders() });
+  if (!response.ok) throw new Error('Failed to delete application');
+}
+
+export async function getApplicationStats(days = 30): Promise<ApplicationStats> {
+  const response = await fetch(`${API_URL}/v1/applications/analytics/stats?days=${days}`, { headers: getHeaders() });
+  if (!response.ok) throw new Error('Failed to get application stats');
+  return response.json();
+}
+
+export async function getApplicationFunnel(days = 30): Promise<ApplicationFunnel> {
+  const response = await fetch(`${API_URL}/v1/applications/analytics/funnel?days=${days}`, { headers: getHeaders() });
+  if (!response.ok) throw new Error('Failed to get application funnel');
+  return response.json();
+}
+
+export async function getApplicationTimeline(days = 30): Promise<ApplicationTimeline> {
+  const response = await fetch(`${API_URL}/v1/applications/analytics/timeline?days=${days}`, { headers: getHeaders() });
+  if (!response.ok) throw new Error('Failed to get application timeline');
+  return response.json();
+}
+
+export async function getUpcomingEvents(days = 7): Promise<UpcomingEvent[]> {
+  const response = await fetch(`${API_URL}/v1/applications/analytics/upcoming?days=${days}`, { headers: getHeaders() });
+  if (!response.ok) throw new Error('Failed to get upcoming events');
+  const data = await response.json();
+  return data.events || [];
+}
