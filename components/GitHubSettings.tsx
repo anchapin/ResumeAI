@@ -14,6 +14,35 @@ interface GitHubConnectionStatus {
 }
 
 /**
+ * Hook for managing GitHub connection status
+ */
+export function useGitHubConnection() {
+  const [status, setStatus] = useState<GitHubConnectionStatus>({ connected: false });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const refresh = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const connectionStatus = await fetchGitHubConnectionStatus();
+      setStatus(connectionStatus);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load connection status');
+      setStatus({ connected: false });
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    refresh();
+  }, [refresh]);
+
+  return { status, loading, error, refresh };
+}
+
+/**
  * Get JWT token from localStorage
  */
 function getAuthToken(): string | null {
