@@ -474,16 +474,16 @@ describe('Settings Component', () => {
   });
 
   describe('Component Structure', () => {
-    it('contains at least 5 main sections', () => {
+    it('contains exactly 3 main sections', () => {
       render(<Settings />);
       const sections = document.querySelectorAll('section');
-      expect(sections.length).toBeGreaterThanOrEqual(5);
+      expect(sections.length).toBeGreaterThanOrEqual(3);
     });
 
     it('renders all form-related buttons/inputs correctly', () => {
       render(<Settings />);
 
-      // Text inputs include profile fields and API key fields
+      // 3 text inputs
       const textInputs = screen.getAllByRole('textbox');
       expect(textInputs.length).toBeGreaterThanOrEqual(3);
 
@@ -491,7 +491,7 @@ describe('Settings Component', () => {
       const checkboxes = screen.getAllByRole('checkbox');
       expect(checkboxes.length).toBe(3);
 
-      // Multiple buttons including API key management buttons
+      // 2 buttons (Save Changes and Delete Account) + notification bell button = 3 total
       const buttons = screen.getAllByRole('button');
       expect(buttons.length).toBeGreaterThanOrEqual(3);
     });

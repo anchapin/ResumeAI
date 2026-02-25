@@ -91,6 +91,7 @@ export function getShortcutForAction(action: string): string | null {
  */
 export function formatShortcutForDisplay(key: string): string {
   if (typeof navigator !== 'undefined' && navigator.platform?.startsWith('Mac')) {
+    // First replace modifier keys with symbols, then remove all + characters
     return key
       .replace(/Ctrl/g, '⌘')
       .replace(/Alt/g, '⌥')
@@ -114,12 +115,11 @@ export function registerShortcuts(
   const handler = (e: KeyboardEvent) => {
     // Ignore if user is typing in an input field
     const target = e.target as HTMLElement | null;
+    const tagName = target?.tagName;
     if (
-      target && (
-        target.tagName === 'INPUT' ||
-        target.tagName === 'TEXTAREA' ||
-        target.isContentEditable
-      )
+      tagName === 'INPUT' ||
+      tagName === 'TEXTAREA' ||
+      target?.isContentEditable
     ) {
       return;
     }
