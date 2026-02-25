@@ -10,12 +10,13 @@ import { showSuccessToast, showErrorToast } from '../utils/toast';
 
 interface CommentPanelProps {
   resumeId: number;
+  onCommentCountChange?: (count: number) => void;
 }
 
 /**
  * Comment panel component for collaboration
  */
-const CommentPanel: React.FC<CommentPanelProps> = ({ resumeId }) => {
+const CommentPanel: React.FC<CommentPanelProps> = ({ resumeId, onCommentCountChange }) => {
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
   const [showNewComment, setShowNewComment] = useState(false);
@@ -27,6 +28,14 @@ const CommentPanel: React.FC<CommentPanelProps> = ({ resumeId }) => {
   useEffect(() => {
     loadComments();
   }, [resumeId]);
+
+  // Notify parent of unresolved comment count whenever comments change
+  useEffect(() => {
+    if (onCommentCountChange) {
+      const unresolvedCount = comments.filter(c => !c.is_resolved).length;
+      onCommentCountChange(unresolvedCount);
+    }
+  }, [comments, onCommentCountChange]);
 
   const loadComments = async () => {
     try {
