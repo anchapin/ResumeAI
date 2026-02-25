@@ -1,41 +1,86 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { JobApplication, SimpleResumeData, ATSReport } from '../types';
 import StatusBadge from '../components/StatusBadge';
-import { convertToAPIData, tailorResume, checkATSScore, TailoredResumeResponse } from '../utils/api-client';
+import { convertToAPIData, tailorResume, checkATSScore, TailoredResumeResponse, 
+  listJobApplications, createJobApplication, updateJobApplication, deleteJobApplication,
+  getApplicationStats, ApplicationStats, ApplicationStatus } from '../utils/api-client';
+
+/** Map API status to display status */
+const mapApiStatusToDisplay = (status: ApplicationStatus): string => {
+  const statusMap: Record<ApplicationStatus, string> = {
+    'draft': 'Draft',
+    'applied': 'Applied',
+    'screening': 'Screening',
+    'interviewing': 'Interview',
+    'offer': 'Offer',
+    'accepted': 'Accepted',
+    'rejected': 'Rejected',
+    'withdrawn': 'Withdrawn'
+  };
+  return statusMap[status] || status;
+};
+
+/** Map display status to API status */
+const mapDisplayToApiStatus = (status: string): ApplicationStatus => {
+  const statusMap: Record<string, ApplicationStatus> = {
+    'Draft': 'draft',
+    'Applied': 'applied',
+    'Screening': 'screening',
+    'Interview': 'interviewing',
+    'Offer': 'offer',
+    'Accepted': 'accepted',
+    'Rejected': 'rejected',
+    'Withdrawn': 'withdrawn'
+  };
+  return statusMap[status] || 'draft';
+};
 
 /** Extended JobApplication type with tracking fields */
-interface TrackedJobApplication extends JobApplication {
+interface TrackedJobApplication {
+  id: number;
+  company_name: string;
+  job_title: string;
+  job_url?: string;
+  location?: string;
+  status: ApplicationStatus;
   resumeVariant?: string;
   applicationMethod?: 'LinkedIn' | 'Direct' | 'Referral' | 'Indeed' | 'Other';
-  jobUrl?: string;
   notes?: string;
+  tags: string[];
+  created_at: string;
+  updated_at: string;
+  dateApplied?: string;
+  logo?: string;
 }
 
 /** Stats calculation from applications */
-const calculateStats = (apps: TrackedJobApplication[]) => {
+const calculateStats = (apps: TrackedJobApplication[], apiStats?: ApplicationStats) => {
+  // Use API stats if available
+  if (apiStats) {
+    return {
+      total: apiStats.total_applications,
+      sent: apiStats.total_applications,
+      pending: apiStats.by_status['applied'] || 0,
+      interviews: apiStats.by_status['interviewing'] || 0,
+      offers: apiStats.by_status['offer'] || 0,
+      rejected: apiStats.by_status['rejected'] || 0,
+      interviewRate: Math.round(apiStats.interview_rate * 100)
+    };
+  }
+  
+  // Fall back to calculating from apps array
   const total = apps.length;
   const sent = total;
-  const pending = apps.filter(a => a.status === 'Applied').length;
-  const interviews = apps.filter(a => a.status === 'Interview').length;
-  const offers = apps.filter(a => a.status === 'Offer').length;
-  const rejected = apps.filter(a => a.status === 'Rejected').length;
+  const pending = apps.filter(a => a.status === 'applied').length;
+  const interviews = apps.filter(a => a.status === 'interviewing').length;
+  const offers = apps.filter(a => a.status === 'offer').length;
+  const rejected = apps.filter(a => a.status === 'rejected').length;
   
   const responded = interviews + offers + rejected;
   const interviewRate = responded > 0 ? Math.round((interviews / responded) * 100) : 0;
   
   return { total, sent, pending, interviews, offers, rejected, interviewRate };
 };
-
-/** Mock data for job applications */
-const initialApplications: TrackedJobApplication[] = [
-  { id: '1', company: 'Google', role: 'Software Engineer', status: 'Applied', dateApplied: 'Oct 24, 2023', logo: 'https://lh3.googleusercontent.com/COxitqgJr1sJnIDe8-Ca402YwzGNcjqg84afM42nzQ7kXDD0jf986hws20DaEvp_ejg', resumeVariant: 'v1.0.0-backend', applicationMethod: 'LinkedIn', jobUrl: 'https://linkedin.com/jobs/123' },
-  { id: '2', company: 'Stripe', role: 'Product Designer', status: 'Interview', dateApplied: 'Oct 22, 2023', logo: 'https://b.stripecdn.com/docs-statics-srv/assets/b411c60/company-logos/dark/stripe.svg', resumeVariant: 'v1.0.0-design', applicationMethod: 'Referral', jobUrl: 'https://stripe.com/careers/456' },
-  { id: '3', company: 'Vercel', role: 'Frontend Developer', status: 'Offer', dateApplied: 'Oct 15, 2023', logo: 'https://assets.vercel.com/image/upload/front/favicon/vercel/180x180.png', resumeVariant: 'v1.0.0-frontend', applicationMethod: 'Direct', jobUrl: 'https://vercel.com/careers/789' },
-  { id: '4', company: 'Netflix', role: 'Senior UI Engineer', status: 'Rejected', dateApplied: 'Sep 28, 2023', logo: 'https://assets.nflxext.com/us/ffe/siteui/common/icons/nficon2016.png', resumeVariant: 'v1.0.0-backend', applicationMethod: 'LinkedIn' },
-  { id: '5', company: 'Airbnb', role: 'Full Stack Developer', status: 'Applied', dateApplied: 'Nov 01, 2023', logo: 'https://a0.muscache.com/airbnb/static/icons/android/airbnb-logo-256x256.png', resumeVariant: 'v1.0.0-fullstack', applicationMethod: 'Indeed' },
-  { id: '6', company: 'Microsoft', role: 'Software Engineer II', status: 'Interview', dateApplied: 'Oct 05, 2023', logo: 'https://img-prod-cms-rt-microsoft-com.akamaized.net/cms/api/am/imageFileData/RE1Mu3b?ver=5c31', resumeVariant: 'v1.0.0-backend', applicationMethod: 'Referral' },
-  { id: '7', company: 'Amazon', role: 'Frontend Engineer', status: 'Applied', dateApplied: 'Nov 03, 2023', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a9/Amazon_logo.svg/1024px-Amazon_logo.svg.png', resumeVariant: 'v1.0.0-frontend', applicationMethod: 'LinkedIn' },
-];
 
 /**
  * @component
@@ -44,7 +89,9 @@ const initialApplications: TrackedJobApplication[] = [
  */
 const JobApplications: React.FC = () => {
   // Applications state
-  const [applications, setApplications] = useState<TrackedJobApplication[]>(initialApplications);
+  const [applications, setApplications] = useState<TrackedJobApplication[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
   
   // Resume tailoring state
   const [showTailorModal, setShowTailorModal] = useState<boolean>(false);
@@ -61,6 +108,36 @@ const JobApplications: React.FC = () => {
   const [isCheckingATS, setIsCheckingATS] = useState<boolean>(false);
   const [atsError, setAtsError] = useState<string | null>(null);
   const [atsReport, setAtsReport] = useState<ATSReport | null>(null);
+  
+  // Fetch applications from API on mount
+  useEffect(() => {
+    const fetchApplications = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        const apps = await listJobApplications();
+        // Map API response to display format
+        const mappedApps: TrackedJobApplication[] = apps.map(app => ({
+          ...app,
+          dateApplied: new Date(app.created_at).toLocaleDateString('en-US', { 
+            month: 'short', 
+            day: 'numeric', 
+            year: 'numeric' 
+          }),
+          company: app.company_name,
+          role: app.job_title,
+        }));
+        setApplications(mappedApps);
+      } catch (err) {
+        console.error('Failed to load applications:', err);
+        setError(err instanceof Error ? err.message : 'Failed to load applications');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchApplications();
+  }, []);
   
   // Calculate stats from applications
   const stats = useMemo(() => calculateStats(applications), [applications]);
@@ -283,31 +360,67 @@ const JobApplications: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {applications.map((app) => (
-                  <tr key={app.id} className="hover:bg-slate-50 transition-colors cursor-pointer group">
-                    <td className="px-6 py-5">
-                      <div className="flex items-center gap-4">
-                        <div className="bg-white rounded-lg size-10 flex items-center justify-center p-1 border border-slate-100 shadow-sm">
-                           <img src={app.logo} alt={app.company} className="max-w-full max-h-full object-contain" onError={(e) => { (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${app.company}&background=random` }}/>
-                        </div>
-                        <span className="text-slate-900 font-bold text-sm group-hover:text-primary-600 transition-colors">{app.company}</span>
+                {isLoading ? (
+                  <tr>
+                    <td colSpan={5} className="px-6 py-12 text-center">
+                      <div className="flex flex-col items-center justify-center">
+                        <span className="material-symbols-outlined animate-spin text-primary-600 text-4xl mb-4">progress_activity</span>
+                        <p className="text-slate-500 font-medium">Loading applications...</p>
                       </div>
                     </td>
-                    <td className="px-6 py-5 text-slate-700 text-sm font-medium">{app.role}</td>
-                    <td className="px-6 py-5 text-center"><StatusBadge status={app.status} /></td>
-                    <td className="px-6 py-5 text-slate-500 text-sm text-right font-medium">{app.dateApplied}</td>
-                    <td className="px-6 py-5 text-right">
-                        <button
-                            type="button"
-                            className="text-slate-400 hover:text-primary-600 transition-colors"
-                            aria-label="More options"
-                            title="More options"
+                  </tr>
+                ) : error ? (
+                  <tr>
+                    <td colSpan={5} className="px-6 py-12 text-center">
+                      <div className="flex flex-col items-center justify-center text-red-500">
+                        <span className="material-symbols-outlined text-4xl mb-4">error</span>
+                        <p className="font-medium">{error}</p>
+                        <button 
+                          onClick={() => window.location.reload()}
+                          className="mt-4 px-4 py-2 bg-primary-600 text-white rounded-lg font-medium hover:bg-primary-700"
                         >
-                            <span className="material-symbols-outlined" aria-hidden="true">more_vert</span>
+                          Retry
                         </button>
+                      </div>
                     </td>
                   </tr>
-                ))}
+                ) : applications.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="px-6 py-12 text-center">
+                      <div className="flex flex-col items-center justify-center text-slate-400">
+                        <span className="material-symbols-outlined text-6xl mb-4">work_off</span>
+                        <p className="font-medium text-slate-500">No job applications yet</p>
+                        <p className="text-sm">Click "Add Application" to track your first job application</p>
+                      </div>
+                    </td>
+                  </tr>
+                ) : (
+                  applications.map((app) => (
+                    <tr key={app.id} className="hover:bg-slate-50 transition-colors cursor-pointer group">
+                      <td className="px-6 py-5">
+                        <div className="flex items-center gap-4">
+                          <div className="bg-white rounded-lg size-10 flex items-center justify-center p-1 border border-slate-100 shadow-sm">
+                            <img src={app.logo} alt={app.company_name} className="max-w-full max-h-full object-contain" onError={(e) => { (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(app.company_name)}&background=random` }}/>
+                          </div>
+                          <span className="text-slate-900 font-bold text-sm group-hover:text-primary-600 transition-colors">{app.company_name}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-5 text-slate-700 text-sm font-medium">{app.job_title}</td>
+                      <td className="px-6 py-5 text-center"><StatusBadge status={mapApiStatusToDisplay(app.status)} /></td>
+                      <td className="px-6 py-5 text-slate-500 text-sm text-right font-medium">{app.dateApplied}</td>
+                      <td className="px-6 py-5 text-right">
+                          <button
+                              type="button"
+                              className="text-slate-400 hover:text-primary-600 transition-colors"
+                              aria-label="More options"
+                              title="More options"
+                          >
+                              <span className="material-symbols-outlined" aria-hidden="true">more_vert</span>
+                          </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
         </div>
