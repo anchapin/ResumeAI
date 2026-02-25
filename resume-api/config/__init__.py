@@ -92,7 +92,6 @@ class Settings(BaseSettings):
     stripe_price_id_premium: Optional[str] = None  # Premium plan price ID
 
     # GitHub Configuration
-    github_auth_mode: str = "oauth"  # oauth, cli
     github_client_id: Optional[str] = None  # GitHub OAuth App client ID
     github_client_secret: Optional[str] = None  # GitHub OAuth App client secret
     github_redirect_uri: Optional[str] = None  # OAuth redirect URI
@@ -124,18 +123,6 @@ class Settings(BaseSettings):
                 "Consider using a longer secret for better security."
             )
 
-        return v
-
-    @field_validator("github_auth_mode")
-    @classmethod
-    def validate_github_auth_mode(cls, v: str) -> str:
-        """Validate GitHub authentication mode."""
-        valid_modes = ["oauth", "cli"]
-        v = v.strip().lower()
-        if v not in valid_modes:
-            raise ValueError(
-                f"Invalid GITHUB_AUTH_MODE: '{v}'. Must be one of: {', '.join(valid_modes)}"
-            )
         return v
 
     @field_validator("api_keys", mode="before")

@@ -91,17 +91,6 @@ def setup_sentry():
         logger.info("sentry_initialized", environment=settings.sentry_environment)
 
 
-def check_github_auth_mode():
-    """Check GitHub authentication mode and log deprecation warning for CLI mode."""
-    if getattr(settings, "github_auth_mode", "oauth") == "cli":
-        logger.warning(
-            "DEPRECATION_WARNING",
-            message="GitHub CLI mode is deprecated and will be removed in a future version. Please migrate to OAuth mode.",
-            mode="cli",
-            action="Set GITHUB_AUTH_MODE=oauth to use OAuth authentication",
-            documentation="See docs/github-oauth-migration.md for migration guide",
-        )
-
 
 def setup_prometheus(app: FastAPI):
     """Initialize Prometheus metrics instrumentation if enabled."""
@@ -143,7 +132,6 @@ async def lifespan(app: FastAPI):
     logger.info("application_startup", version=settings.app_version)
 
     # Check GitHub authentication mode for deprecation warnings
-    check_github_auth_mode()
 
     # Initialize database tables
     await create_db_and_tables()
