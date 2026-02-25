@@ -329,38 +329,93 @@ export async function retryWebhookDelivery(webhookId: number, deliveryId: number
   return response.json();
 }
 
-// LinkedIn Functions (Stubs)
+// LinkedIn Functions (Real Implementation)
 export async function connectLinkedIn(): Promise<string> {
-  // Return mock auth URL
-  return `${API_URL}/auth/linkedin/connect`;
+  const response = await fetch(`${API_URL}/api/linkedin/oauth/start`, {
+    method: 'GET',
+    headers: getHeaders(),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to initiate LinkedIn OAuth: ${response.statusText}`);
+  }
+
+  const data = await response.json();
+  return data.auth_url;
 }
 
-export async function handleLinkedInCallback(code: string, state: string): Promise<void> {
-  // Mock success
-  console.log('LinkedIn callback handled', code, state);
-  return Promise.resolve();
+export async function handleLinkedInCallback(code: string, state: string): Promise<LinkedInProfile> {
+  const response = await fetch(`${API_URL}/api/linkedin/oauth/callback`, {
+    method: 'POST',
+    headers: getHeaders(),
+    body: JSON.stringify({ code, state }),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.detail || 'Failed to exchange authorization code');
+  }
+
+  const data = await response.json();
+  
+  // Store the access token for future API calls
+  if (data.access_token) {
+    localStorage.setItem('LINKEDIN_ACCESS_TOKEN', data.access_token);
+  }
+
+  return data.profile as LinkedInProfile;
 }
 
 export async function importLinkedInProfile(): Promise<LinkedInProfile> {
-  // Return mock profile
-  return {
-    firstName: 'Imported',
-    lastName: 'User',
-    headline: 'Software Engineer',
-    summary: 'Imported summary from LinkedIn',
-    emailAddress: 'imported@example.com',
-    positions: [],
-    educations: [],
-    skills: []
-  };
+  const token = localStorage.getItem('LINKEDIN_ACCESS_TOKEN');
+  
+  if (!token) {
+    throw new Error('No LinkedIn access token found. Please authenticate first.');
+  }
+
+  const response = await fetch(`${API_URL}/api/linkedin/profile`, {
+    method: 'GET',
+    headers: {
+      ...getHeaders(),
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch LinkedIn profile: ${response.statusText}`);
+  }
+
+  return await response.json();
 }
 
 export async function fetchGitHubRepositories(): Promise<GitHubRepository[]> {
-  return [];
+  const response = await fetch(`${API_URL}/api/github/repositories`, {
+    method: 'GET',
+    headers: getHeaders(),
+  });
+
+  if (!response.ok) {
+    console.warn(`Failed to fetch GitHub repositories: ${response.statusText}`);
+    return [];
+  }
+
+  const data = await response.json();
+  return data.repositories || [];
 }
 
 export async function disconnectLinkedIn(): Promise<void> {
-  return Promise.resolve();
+  // Clear stored token
+  localStorage.removeItem('LINKEDIN_ACCESS_TOKEN');
+  
+  // Optionally notify backend to revoke token
+  try {
+    await fetch(`${API_URL}/api/linkedin/disconnect`, {
+      method: 'POST',
+      headers: getHeaders(),
+    });
+  } catch (error) {
+    console.warn('Failed to notify backend of disconnect:', error);
+  }
 }
 
 // Salary Research Functions (Stubs)

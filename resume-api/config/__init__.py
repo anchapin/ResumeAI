@@ -99,6 +99,11 @@ class Settings(BaseSettings):
     github_callback_url: Optional[str] = None  # Callback URL for OAuth
     frontend_url: str = "http://localhost:5173"
 
+    # LinkedIn OAuth Configuration
+    linkedin_client_id: Optional[str] = None  # LinkedIn OAuth App client ID
+    linkedin_client_secret: Optional[str] = None  # LinkedIn OAuth App client secret
+    linkedin_redirect_uri: Optional[str] = None  # LinkedIn OAuth redirect URI
+
     @field_validator("jwt_secret")
     @classmethod
     def validate_jwt_secret(cls, v: str) -> str:

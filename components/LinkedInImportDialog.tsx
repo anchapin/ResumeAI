@@ -123,23 +123,32 @@ export const LinkedInImportDialog: React.FC<LinkedInImportDialogProps> = ({
 
   const handleOAuthSuccess = async (code: string, state: string) => {
     try {
-      await handleLinkedInCallback(code, state);
+      // Exchange code for profile data
+      const profile = await handleLinkedInCallback(code, state);
       setLinkedInConnected(true);
-
-      // Import profile data
-      const profile = await importLinkedInProfile();
       setLinkedInProfile(profile);
 
-      // Populate form fields
-      setEditedName(profile.fullName || `${profile.firstName || ''} ${profile.lastName || ''}`.trim());
-      setEditedEmail(profile.email || '');
+      // Populate form fields from profile data
+      const fullName = profile.fullName || `${profile.firstName || ''} ${profile.lastName || ''}`.trim();
+      setEditedName(fullName);
+      setEditedEmail(profile.email || profile.emailAddress || '');
       setEditedPhone(profile.phone || '');
       setEditedLocation(profile.location || '');
       setEditedRole(profile.headline || '');
       setEditedSummary(profile.summary || '');
-      setEditedSkills(profile.skills || []);
+      
+      // Extract skills from profile
+      const skills = profile.skills || [];
+      setEditedSkills(Array.isArray(skills) ? skills : []);
+
+      // Extract experience
+      const experience = profile.experience || profile.positions || [];
+      
+      // Extract education
+      const education = profile.education || profile.educations || [];
 
       setCurrentStep('import');
+      showSuccessToast('LinkedIn profile imported successfully!');
 
     } catch (error) {
       console.error('LinkedIn import error:', error);
