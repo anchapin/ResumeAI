@@ -5,6 +5,7 @@ import GitHubSettings from '../components/GitHubSettings';
 import { LinkedInSettings } from '../components/LinkedInSettings';
 import WebhookList from '../components/WebhookList';
 import WebhookForm from '../components/WebhookForm';
+import DeliveryLogs from '../components/DeliveryLogs';
 import { type Webhook } from '../utils/api-client';
 
 /** Mock usage data - in production this would come from the API */
@@ -204,6 +205,8 @@ const Settings: React.FC = () => {
   const [showWebhookModal, setShowWebhookModal] = useState<boolean>(false);
   const [editingWebhook, setEditingWebhook] = useState<Webhook | undefined>(undefined);
   const [webhookRefreshKey, setWebhookRefreshKey] = useState<number>(0);
+  const [showDeliveryLogs, setShowDeliveryLogs] = useState<boolean>(false);
+  const [selectedWebhookId, setSelectedWebhookId] = useState<number | null>(null);
 
   // Calculate usage percentage
   const usagePercentage = useMemo(() => {
@@ -474,8 +477,8 @@ const Settings: React.FC = () => {
                 setShowWebhookModal(true);
               }}
               onViewDeliveries={(webhookId) => {
-                // TODO: Implement delivery logs view
-                toast.info('Delivery logs coming soon');
+                setSelectedWebhookId(webhookId);
+                setShowDeliveryLogs(true);
               }}
               onRefresh={() => setWebhookRefreshKey(k => k + 1)}
             />
@@ -1026,6 +1029,21 @@ const Settings: React.FC = () => {
                 }}
               />
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delivery Logs Modal */}
+      {showDeliveryLogs && selectedWebhookId && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-xl max-w-3xl w-full max-h-[80vh] overflow-hidden">
+            <DeliveryLogs
+              webhookId={selectedWebhookId}
+              onClose={() => {
+                setShowDeliveryLogs(false);
+                setSelectedWebhookId(null);
+              }}
+            />
           </div>
         </div>
       )}
