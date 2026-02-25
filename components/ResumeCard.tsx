@@ -8,6 +8,7 @@ interface ResumeCardProps {
   onEdit: () => void;
   onDuplicate: () => void;
   onDelete: () => void;
+  onShare: () => void;
 }
 
 /**
@@ -23,6 +24,7 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
   onEdit,
   onDuplicate,
   onDelete,
+  onShare,
 }) => {
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -69,6 +71,14 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
 
           {/* Action buttons */}
           <div className="flex items-center gap-1">
+            <button
+              onClick={onShare}
+              className="p-2 text-slate-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
+              title="Share Resume"
+              aria-label="Share Resume"
+            >
+              <span className="material-symbols-outlined text-[20px]">share</span>
+            </button>
             <button
               onClick={onEdit}
               className="p-2 text-slate-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
