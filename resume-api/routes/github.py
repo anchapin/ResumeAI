@@ -599,8 +599,28 @@ async def github_connect(
     db.add(oauth_state)
     await db.commit()
 
+    # Determine valid redirect URIs
+    default_callback = str(request.url_for("github_oauth_callback"))
+    allowed_uris = {default_callback}
+
+    if settings.github_redirect_uri:
+        allowed_uris.add(settings.github_redirect_uri)
+    if settings.github_callback_url:
+        allowed_uris.add(settings.github_callback_url)
+
     # Determine redirect URI
     if redirect_uri:
+        # Validate redirect_uri to prevent Open Redirect vulnerability
+        if redirect_uri not in allowed_uris:
+            logger.warning(
+                "github_oauth_invalid_redirect_uri",
+                redirect_uri=redirect_uri,
+                allowed_uris=list(allowed_uris),
+            )
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid redirect_uri",
+            )
         callback_url = redirect_uri
     elif settings.github_redirect_uri:
         callback_url = settings.github_redirect_uri
@@ -608,14 +628,9 @@ async def github_connect(
         callback_url = settings.github_callback_url
     else:
         # Fallback to current request host
-        callback_url = f"{request.url.scheme}://{request.url.netloc}/github/callback"
+        callback_url = default_callback
 
     # Build OAuth authorization URL
-    callback_url = (
-        redirect_uri
-        if redirect_uri
-        else f"{request.url.scheme}://{request.url.netloc}/github/callback"
-    )
     github_auth_url = build_github_authorization_url(
         client_id=settings.github_client_id,
         redirect_uri=callback_url,
