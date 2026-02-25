@@ -1921,3 +1921,102 @@ class GitHubCLIStatus(BaseModel):
     authenticated: bool
     username: Optional[str] = None
     error: Optional[str] = None
+
+
+# Interview Practice Models
+
+class InterviewQuestion(BaseModel):
+    """Interview question model."""
+
+    id: str = Field(..., description="Unique question ID")
+    question: str = Field(..., description="The interview question")
+    category: str = Field(
+        ..., description="Question category: technical, behavioral, situational, domain"
+    )
+    difficulty: str = Field(
+        ..., description="Difficulty level: easy, medium, hard"
+    )
+    tips: Optional[List[str]] = Field(None, description="Tips for answering the question")
+
+
+class InterviewAnswer(BaseModel):
+    """Interview answer model."""
+
+    id: str = Field(..., description="Unique answer ID")
+    question_id: str = Field(..., description="The question ID")
+    answer: str = Field(..., description="The user's answer text")
+    video_url: Optional[str] = Field(None, description="URL to recorded video")
+    recording_duration: Optional[int] = Field(None, description="Duration in seconds")
+    timestamp: str = Field(..., description="ISO format timestamp")
+
+
+class InterviewFeedback(BaseModel):
+    """Feedback on an interview answer."""
+
+    id: str = Field(..., description="Unique feedback ID")
+    answer_id: str = Field(..., description="The answer ID")
+    score: int = Field(..., ge=1, le=10, description="Score from 1-10")
+    strengths: List[str] = Field(..., description="Strengths identified")
+    improvements: List[str] = Field(..., description="Areas for improvement")
+    summary: str = Field(..., description="Summary of feedback")
+    suggested_answer: Optional[str] = Field(None, description="Suggested answer")
+
+
+class InterviewSession(BaseModel):
+    """Interview practice session model."""
+
+    id: str = Field(..., description="Unique session ID")
+    created_at: str = Field(..., description="ISO format creation timestamp")
+    updated_at: str = Field(..., description="ISO format update timestamp")
+    status: str = Field(..., description="Status: in_progress, completed, paused")
+    job_title: Optional[str] = Field(None, description="Target job title")
+    company: Optional[str] = Field(None, description="Target company")
+    questions: List[InterviewQuestion] = Field(..., description="Interview questions")
+    answers: List[InterviewAnswer] = Field(default_factory=list, description="User answers")
+    feedback: Optional[List[InterviewFeedback]] = Field(None, description="Feedback on answers")
+    completion_percentage: int = Field(..., description="Percentage of interview completed")
+    average_score: Optional[float] = Field(None, description="Average score across answers")
+
+
+class GenerateQuestionsRequest(BaseModel):
+    """Request to generate interview questions."""
+
+    job_title: Optional[str] = Field(None, description="Target job title")
+    company: Optional[str] = Field(None, description="Target company")
+    count: int = Field(default=5, ge=1, le=20, description="Number of questions to generate")
+    difficulty: Optional[str] = Field(None, description="Difficulty level filter")
+    categories: Optional[List[str]] = Field(None, description="Question categories")
+    resume_data: Optional[Dict[str, Any]] = Field(None, description="User's resume data for context")
+
+
+class GenerateQuestionsResponse(BaseModel):
+    """Response with generated interview questions."""
+
+    questions: List[InterviewQuestion] = Field(..., description="Generated questions")
+    session_id: str = Field(..., description="Unique session ID for tracking")
+
+
+class SubmitAnswerRequest(BaseModel):
+    """Request to submit an interview answer."""
+
+    session_id: str = Field(..., description="Session ID")
+    question_id: str = Field(..., description="Question ID")
+    answer: str = Field(..., description="The answer text")
+    video_url: Optional[str] = Field(None, description="Optional video recording URL")
+    recording_duration: Optional[int] = Field(None, description="Duration in seconds")
+
+
+class GetFeedbackRequest(BaseModel):
+    """Request to get AI feedback on an answer."""
+
+    answer: str = Field(..., description="The answer text to review")
+    question: str = Field(..., description="The question asked")
+    category: str = Field(..., description="Question category")
+
+
+class SessionHistoryResponse(BaseModel):
+    """Response with user's interview session history."""
+
+    sessions: List[InterviewSession] = Field(..., description="List of past sessions")
+    total_sessions: int = Field(..., description="Total number of sessions")
+    average_score: Optional[float] = Field(None, description="Average score across all sessions")

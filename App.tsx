@@ -6,6 +6,7 @@ import Workspace from './pages/Workspace';
 import JobApplications from './pages/JobApplications';
 import Settings from './pages/Settings';
 import { SalaryResearch } from './pages/SalaryResearch';
+import InterviewPractice from './pages/InterviewPractice';
 import { Route, SimpleResumeData } from './types';
 import { loadResumeData, saveResumeData, StorageError } from './utils/storage';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -268,6 +269,10 @@ function App() {
                 />
                 <SalaryResearch />
             </div>
+        );
+      case Route.INTERVIEW_PRACTICE:
+        return (
+            <InterviewPractice />
         );
       case Route.SETTINGS:
         return (

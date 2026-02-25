@@ -151,6 +151,7 @@ export enum Route {
   IMPORT = 'import',
   BULK = 'bulk',
   SALARY_RESEARCH = 'salary-research',
+  INTERVIEW_PRACTICE = 'interview-practice',
 }
 
 // Advanced Features Types
@@ -496,4 +497,56 @@ export interface BulkOperationResult {
   success: boolean;
   count: number;
   errors?: string[];
+}
+
+// Interview Practice Types
+
+export interface InterviewQuestion {
+  id: string;
+  question: string;
+  category: 'technical' | 'behavioral' | 'situational' | 'domain';
+  difficulty: 'easy' | 'medium' | 'hard';
+  tips?: string[];
+}
+
+export interface InterviewAnswer {
+  id: string;
+  questionId: string;
+  answer: string;
+  videoUrl?: string;
+  recordingDuration?: number;
+  timestamp: string;
+}
+
+export interface InterviewFeedback {
+  id: string;
+  answerId: string;
+  score: number; // 1-10
+  strengths: string[];
+  improvements: string[];
+  summary: string;
+  suggestedAnswer?: string;
+}
+
+export interface InterviewSession {
+  id: string;
+  sessionId: string;
+  createdAt: string;
+  updatedAt: string;
+  status: 'in_progress' | 'completed' | 'paused';
+  jobTitle?: string;
+  company?: string;
+  questions: InterviewQuestion[];
+  answers: InterviewAnswer[];
+  feedback?: InterviewFeedback[];
+  completionPercentage: number;
+  averageScore?: number;
+}
+
+export interface GenerateQuestionsRequest {
+  jobTitle?: string;
+  company?: string;
+  count?: number;
+  difficulty?: 'easy' | 'medium' | 'hard';
+  categories?: string[];
 }
