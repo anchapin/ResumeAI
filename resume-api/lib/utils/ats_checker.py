@@ -671,7 +671,7 @@ class ATSCompatibilityChecker:
         # Filter and count
         word_count = {}
         for word in words:
-            if word not in self.STOP_WORDS:
+            if word not in stop_words:
                 word_count[word] = word_count.get(word, 0) + 1
 
         # Return top keywords by frequency
