@@ -19,6 +19,7 @@ describe('ResumeCard', () => {
     const onEdit = vi.fn();
     const onDuplicate = vi.fn();
     const onDelete = vi.fn();
+    const onShare = vi.fn();
 
     render(
       <ResumeCard
@@ -28,6 +29,7 @@ describe('ResumeCard', () => {
         onEdit={onEdit}
         onDuplicate={onDuplicate}
         onDelete={onDelete}
+        onShare={onShare}
       />
     );
 
@@ -49,6 +51,7 @@ describe('ResumeCard', () => {
         onEdit={vi.fn()}
         onDuplicate={vi.fn()}
         onDelete={vi.fn()}
+        onShare={vi.fn()}
       />
     );
 
@@ -66,6 +69,7 @@ describe('ResumeCard', () => {
         onEdit={vi.fn()}
         onDuplicate={vi.fn()}
         onDelete={vi.fn()}
+        onShare={vi.fn()}
       />
     );
 
@@ -85,6 +89,7 @@ describe('ResumeCard', () => {
         onEdit={onEdit}
         onDuplicate={vi.fn()}
         onDelete={vi.fn()}
+        onShare={vi.fn()}
       />
     );
 
@@ -104,6 +109,7 @@ describe('ResumeCard', () => {
         onEdit={vi.fn()}
         onDuplicate={onDuplicate}
         onDelete={vi.fn()}
+        onShare={vi.fn()}
       />
     );
 
@@ -123,6 +129,7 @@ describe('ResumeCard', () => {
         onEdit={vi.fn()}
         onDuplicate={vi.fn()}
         onDelete={onDelete}
+        onShare={vi.fn()}
       />
     );
 
@@ -130,6 +137,26 @@ describe('ResumeCard', () => {
     fireEvent.click(deleteButton);
 
     expect(onDelete).toHaveBeenCalledTimes(1);
+  });
+
+  it('calls onShare when share button is clicked', () => {
+    const onShare = vi.fn();
+    render(
+      <ResumeCard
+        resume={mockResume}
+        isSelected={false}
+        onSelect={vi.fn()}
+        onEdit={vi.fn()}
+        onDuplicate={vi.fn()}
+        onDelete={vi.fn()}
+        onShare={onShare}
+      />
+    );
+
+    const shareButton = screen.getByTitle('Share Resume');
+    fireEvent.click(shareButton);
+
+    expect(onShare).toHaveBeenCalledTimes(1);
   });
 
   it('shows private badge when is_public is false', () => {
@@ -146,6 +173,7 @@ describe('ResumeCard', () => {
         onEdit={vi.fn()}
         onDuplicate={vi.fn()}
         onDelete={vi.fn()}
+        onShare={vi.fn()}
       />
     );
 
@@ -166,6 +194,7 @@ describe('ResumeCard', () => {
         onEdit={vi.fn()}
         onDuplicate={vi.fn()}
         onDelete={vi.fn()}
+        onShare={vi.fn()}
       />
     );
 

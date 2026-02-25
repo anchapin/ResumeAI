@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import Sidebar from '../components/Sidebar';
 import ResumeCard from '../components/ResumeCard';
+import ShareDialog from '../components/ShareDialog';
 import { Route, ResumeMetadata, BulkOperationType, BulkOperationResult } from '../types';
 import { listResumes, bulkOperation } from '../utils/api-client';
 import { showErrorToast, showSuccessToast } from '../utils/toast';
@@ -22,6 +23,7 @@ const ResumeManagement: React.FC = () => {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showTagDialog, setShowTagDialog] = useState(false);
   const [showResultDialog, setShowResultDialog] = useState(false);
+  const [sharingResumeId, setSharingResumeId] = useState<number | null>(null);
   const [tagInput, setTagInput] = useState('');
   const [operationResult, setOperationResult] = useState<BulkOperationResult | null>(null);
   const [pendingOperation, setPendingOperation] = useState<BulkOperationType | null>(null);
@@ -227,6 +229,10 @@ const ResumeManagement: React.FC = () => {
     }
   };
 
+  const handleShare = (id: number) => {
+    setSharingResumeId(id);
+  };
+
   // Get selected resumes for display
   const selectedResumes = resumes.filter((r) => selectedIds.has(r.id));
 
@@ -371,12 +377,21 @@ const ResumeManagement: React.FC = () => {
                   onEdit={() => handleEdit(resume.id)}
                   onDuplicate={() => handleDuplicate(resume.id)}
                   onDelete={() => handleDelete(resume.id)}
+                  onShare={() => handleShare(resume.id)}
                 />
               ))}
             </div>
           )}
         </main>
       </div>
+
+      {/* Share Dialog */}
+      {sharingResumeId !== null && (
+        <ShareDialog
+          resumeId={sharingResumeId}
+          onClose={() => setSharingResumeId(null)}
+        />
+      )}
 
       {/* Delete Confirmation Dialog */}
       {showDeleteDialog && (

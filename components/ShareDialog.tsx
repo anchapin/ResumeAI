@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { ShareLink } from '../types';
 import { shareResume } from '../utils/api-client';
 import { showSuccessToast, showErrorToast } from '../utils/toast';
@@ -23,6 +23,63 @@ const ShareDialog: React.FC<ShareDialogProps> = ({ resumeId, onClose }) => {
   const [maxViews, setMaxViews] = useState<number | null>(null);
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+
+  const dialogRef = useRef<HTMLDivElement>(null);
+
+  // Focus trap and Escape key handling
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+        return;
+      }
+
+      if (e.key === 'Tab' && dialogRef.current) {
+        const focusables = dialogRef.current.querySelectorAll(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+        if (focusables.length === 0) return;
+
+        const first = focusables[0] as HTMLElement;
+        const last = focusables[focusables.length - 1] as HTMLElement;
+
+        if (e.shiftKey && document.activeElement === first) {
+          last.focus();
+          e.preventDefault();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          first.focus();
+          e.preventDefault();
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+
+    // Initial focus on the first interactive element or the container
+    // We prefer focusing the container to avoid surprising context shifts,
+    // but focusing the first input is standard for modals.
+    // Here, let's focus the close button or the first permission button.
+    const firstInput = dialogRef.current?.querySelector('button, input, select') as HTMLElement;
+    if (firstInput) {
+        firstInput.focus();
+    } else {
+        dialogRef.current?.focus();
+    }
+
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
+
+  // Auto-focus copy button when share link is created
+  useEffect(() => {
+    if (shareLink && dialogRef.current) {
+      // Small timeout to allow render
+      setTimeout(() => {
+        // Find the copy button by its distinctive class or aria-label
+        const copyBtn = dialogRef.current?.querySelector('button[aria-label="Copy share link"]') as HTMLElement;
+        copyBtn?.focus();
+      }, 50);
+    }
+  }, [shareLink]);
 
   const handleCreateShare = async () => {
     try {
@@ -75,8 +132,10 @@ const ShareDialog: React.FC<ShareDialogProps> = ({ resumeId, onClose }) => {
       aria-modal="true"
     >
       <div
-        className="bg-white rounded-2xl shadow-2xl max-w-md w-full"
+        ref={dialogRef}
+        className="bg-white rounded-2xl shadow-2xl max-w-md w-full outline-none"
         onClick={(e) => e.stopPropagation()}
+        tabIndex={-1}
       >
         <div className="p-6 border-b border-slate-200 flex justify-between items-center">
           <h2 id="share-dialog-title" className="text-xl font-bold text-slate-900">
@@ -167,6 +226,7 @@ const ShareDialog: React.FC<ShareDialogProps> = ({ resumeId, onClose }) => {
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                    aria-label={showPassword ? "Hide password" : "Show password"}
                   >
                     <span className="material-symbols-outlined text-[20px]">
                       {showPassword ? 'visibility_off' : 'visibility'}
@@ -199,7 +259,10 @@ const ShareDialog: React.FC<ShareDialogProps> = ({ resumeId, onClose }) => {
             </div>
           ) : (
             <div className="space-y-4">
-              <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+              <div
+                className="p-4 bg-green-50 border border-green-200 rounded-lg"
+                role="alert"
+              >
                 <div className="flex items-center gap-2 text-green-800">
                   <span className="material-symbols-outlined text-[24px]">
                     check_circle
@@ -221,6 +284,7 @@ const ShareDialog: React.FC<ShareDialogProps> = ({ resumeId, onClose }) => {
                   />
                   <button
                     onClick={handleCopyLink}
+                    aria-label="Copy share link"
                     className="px-4 py-2.5 bg-primary-600 text-white font-bold rounded-lg hover:bg-primary-700 transition-colors flex items-center gap-2"
                   >
                     <span className="material-symbols-outlined text-[20px]">
