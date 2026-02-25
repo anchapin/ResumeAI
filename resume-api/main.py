@@ -60,6 +60,12 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
             "geolocation=(), microphone=(), camera=()"
         )
 
+        # Add deprecation notice for CLI authentication mode
+        response.headers["X-Deprecated-Notice"] = (
+            "CLI authentication mode is deprecated. Please migrate to OAuth. "
+            "See documentation for migration guide."
+        )
+
         # Content Security Policy
         csp = (
             "default-src 'self'; "
@@ -132,6 +138,14 @@ async def lifespan(app: FastAPI):
     logger.info("application_startup", version=settings.app_version)
 
     # Check GitHub authentication mode for deprecation warnings
+    # Note: CLI mode has been deprecated in favor of OAuth
+    # Users should migrate to OAuth authentication
+    logger.warning(
+        "github_authentication_notice",
+        message="GitHub OAuth is the recommended authentication method. "
+        "CLI authentication mode has been deprecated and will be removed in a future version. "
+        "Please use OAuth for GitHub integration."
+    )
 
     # Initialize database tables
     await create_db_and_tables()
