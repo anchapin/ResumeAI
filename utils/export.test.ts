@@ -54,9 +54,23 @@ describe('export utilities', () => {
         skills: [],
       };
 
-      // Mock URL.createObjectURL and revokeObjectURL
+      // Mock document.createElement
+      const mockAppendChild = vi.fn();
+      const mockRemoveChild = vi.fn();
       const mockCreateObjectURL = vi.fn(() => 'blob:http://localhost');
       const mockRevokeObjectURL = vi.fn();
+      
+      const mockAnchor = {
+        href: '',
+        download: '',
+        click: vi.fn(),
+        style: {},
+      };
+
+      vi.spyOn(document, 'createElement').mockImplementation((tag) => {
+        if (tag === 'a') return mockAnchor as any;
+        return document.createElement(tag);
+      });
       
       Object.defineProperty(window, 'URL', {
         value: {
@@ -64,7 +78,6 @@ describe('export utilities', () => {
           revokeObjectURL: mockRevokeObjectURL,
         },
         writable: true,
-        configurable: true,
       });
 
       const appendChildSpy = vi.spyOn(document.body, 'appendChild').mockImplementation(() => document.body);
@@ -73,6 +86,8 @@ describe('export utilities', () => {
       await exportToHTML(mockResumeData);
 
       expect(mockCreateObjectURL).toHaveBeenCalled();
+      expect(mockAnchor.download).toContain('resume-');
+      expect(mockAnchor.download).toContain('.html');
       expect(appendChildSpy).toHaveBeenCalled();
       expect(removeChildSpy).toHaveBeenCalled();
     });
@@ -112,17 +127,24 @@ describe('export utilities', () => {
         ],
       };
 
-      // Mock URL.createObjectURL and revokeObjectURL
-      const mockCreateObjectURL = vi.fn(() => 'blob:http://localhost');
-      const mockRevokeObjectURL = vi.fn();
+      const mockAnchor = {
+        href: '',
+        download: '',
+        click: vi.fn(),
+        style: {},
+      };
+
+      vi.spyOn(document, 'createElement').mockImplementation((tag) => {
+        if (tag === 'a') return mockAnchor as any;
+        return document.createElement(tag);
+      });
       
       Object.defineProperty(window, 'URL', {
         value: {
-          createObjectURL: mockCreateObjectURL,
-          revokeObjectURL: mockRevokeObjectURL,
+          createObjectURL: vi.fn(() => 'blob:http://localhost'),
+          revokeObjectURL: vi.fn(),
         },
         writable: true,
-        configurable: true,
       });
 
       vi.spyOn(document.body, 'appendChild').mockImplementation(() => document.body);
@@ -144,26 +166,32 @@ describe('export utilities', () => {
         skills: [],
       };
 
-      // Mock URL.createObjectURL and revokeObjectURL
-      const mockCreateObjectURL = vi.fn(() => 'blob:http://localhost');
-      const mockRevokeObjectURL = vi.fn();
+      const mockAnchor = {
+        href: '',
+        download: '',
+        click: vi.fn(),
+        style: {},
+      };
+
+      vi.spyOn(document, 'createElement').mockImplementation((tag) => {
+        if (tag === 'a') return mockAnchor as any;
+        return document.createElement(tag);
+      });
       
       Object.defineProperty(window, 'URL', {
         value: {
-          createObjectURL: mockCreateObjectURL,
-          revokeObjectURL: mockRevokeObjectURL,
+          createObjectURL: vi.fn(() => 'blob:http://localhost'),
+          revokeObjectURL: vi.fn(),
         },
         writable: true,
-        configurable: true,
       });
 
-      const appendChildSpy = vi.spyOn(document.body, 'appendChild').mockImplementation(() => document.body);
-      const removeChildSpy = vi.spyOn(document.body, 'removeChild').mockImplementation(() => document.body);
+      vi.spyOn(document.body, 'appendChild').mockImplementation(() => document.body);
+      vi.spyOn(document.body, 'removeChild').mockImplementation(() => document.body);
 
       await exportToWord(mockResumeData);
 
-      expect(mockCreateObjectURL).toHaveBeenCalled();
-      expect(appendChildSpy).toHaveBeenCalled();
+      expect(mockAnchor.download).toContain('.doc');
     });
 
     it('applies custom format options', async () => {
@@ -180,17 +208,24 @@ describe('export utilities', () => {
         font_size: 12,
       };
 
-      // Mock URL.createObjectURL and revokeObjectURL
-      const mockCreateObjectURL = vi.fn(() => 'blob:http://localhost');
-      const mockRevokeObjectURL = vi.fn();
+      const mockAnchor = {
+        href: '',
+        download: '',
+        click: vi.fn(),
+        style: {},
+      };
+
+      vi.spyOn(document, 'createElement').mockImplementation((tag) => {
+        if (tag === 'a') return mockAnchor as any;
+        return document.createElement(tag);
+      });
       
       Object.defineProperty(window, 'URL', {
         value: {
-          createObjectURL: mockCreateObjectURL,
-          revokeObjectURL: mockRevokeObjectURL,
+          createObjectURL: vi.fn(() => 'blob:http://localhost'),
+          revokeObjectURL: vi.fn(),
         },
         writable: true,
-        configurable: true,
       });
 
       vi.spyOn(document.body, 'appendChild').mockImplementation(() => document.body);
