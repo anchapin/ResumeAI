@@ -3,6 +3,9 @@ import { useTheme } from '../hooks/useTheme';
 import { toast } from 'react-toastify';
 import GitHubSettings from '../components/GitHubSettings';
 import { LinkedInSettings } from '../components/LinkedInSettings';
+import WebhookList from '../components/WebhookList';
+import WebhookForm from '../components/WebhookForm';
+import { type Webhook } from '../utils/api-client';
 
 /** Mock usage data - in production this would come from the API */
 interface UsageData {
@@ -196,6 +199,11 @@ const Settings: React.FC = () => {
   // Usage tracking state
   const [usageHistory] = useState<UsageData[]>(generateMockUsageHistory);
   const [usageAlertThreshold, setUsageAlertThreshold] = useState<number>(80);
+
+  // Webhooks state
+  const [showWebhookModal, setShowWebhookModal] = useState<boolean>(false);
+  const [editingWebhook, setEditingWebhook] = useState<Webhook | undefined>(undefined);
+  const [webhookRefreshKey, setWebhookRefreshKey] = useState<number>(0);
 
   // Calculate usage percentage
   const usagePercentage = useMemo(() => {
@@ -440,6 +448,39 @@ const Settings: React.FC = () => {
 
         {/* LinkedIn Connection Settings */}
         <LinkedInSettings />
+
+        {/* Webhooks Section */}
+        <section className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+          <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-bold text-slate-900">Webhooks</h3>
+              <p className="text-sm text-slate-500">Configure webhooks to receive event notifications</p>
+            </div>
+            <button
+              onClick={() => {
+                setEditingWebhook(undefined);
+                setShowWebhookModal(true);
+              }}
+              className="px-4 py-2 rounded-lg bg-primary-600 text-white font-bold text-sm hover:bg-primary-700 transition-colors shadow-lg shadow-primary-600/20 flex items-center gap-2"
+            >
+              <span className="material-symbols-outlined text-[18px]">add</span>
+              New Webhook
+            </button>
+          </div>
+          <div className="p-6">
+            <WebhookList
+              onEdit={(webhook) => {
+                setEditingWebhook(webhook);
+                setShowWebhookModal(true);
+              }}
+              onViewDeliveries={(webhookId) => {
+                // TODO: Implement delivery logs view
+                toast.info('Delivery logs coming soon');
+              }}
+              onRefresh={() => setWebhookRefreshKey(k => k + 1)}
+            />
+          </div>
+        </section>
 
         {/* User-Specific API Keys Management */}
         <section className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
@@ -946,6 +987,44 @@ const Settings: React.FC = () => {
                   </div>
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Webhook Modal */}
+      {showWebhookModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
+            <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between sticky top-0 bg-white rounded-t-2xl">
+              <h3 className="text-lg font-bold text-slate-900">
+                {editingWebhook ? 'Edit Webhook' : 'Create New Webhook'}
+              </h3>
+              <button
+                onClick={() => {
+                  setShowWebhookModal(false);
+                  setEditingWebhook(undefined);
+                }}
+                className="p-2 text-slate-400 hover:text-slate-600 transition-colors"
+              >
+                <span className="material-symbols-outlined">close</span>
+              </button>
+            </div>
+
+            <div className="p-6">
+              <WebhookForm
+                webhook={editingWebhook}
+                onSuccess={() => {
+                  setShowWebhookModal(false);
+                  setEditingWebhook(undefined);
+                  setWebhookRefreshKey(k => k + 1);
+                  toast.success(editingWebhook ? 'Webhook updated successfully' : 'Webhook created successfully');
+                }}
+                onCancel={() => {
+                  setShowWebhookModal(false);
+                  setEditingWebhook(undefined);
+                }}
+              />
             </div>
           </div>
         </div>
