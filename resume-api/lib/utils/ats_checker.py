@@ -182,6 +182,18 @@ class ATSCompatibilityChecker:
         r"\d{4}\s*-\s*present",
     ]
 
+    # Pre-compiled regex patterns for performance
+    PROBLEMATIC_PATTERNS_RE = {
+        name: re.compile(pattern, re.IGNORECASE)
+        for name, pattern in PROBLEMATIC_PATTERNS.items()
+    }
+
+    DATE_PATTERNS_RE = [re.compile(pattern, re.IGNORECASE) for pattern in DATE_PATTERNS]
+
+    METRIC_PATTERN = re.compile(r"\d+%|\$\d+|\d+\s*[kKmMbB]|\d+x|\d{4}")
+
+    WORD_PATTERN = re.compile(r"\b[a-zA-Z]{3,}\b")
+
     # Common stop words to exclude
     STOP_WORDS = {
         "the",
@@ -442,6 +454,9 @@ class ATSCompatibilityChecker:
             has_action_verbs = False
 
             for job in work:
+                if has_metrics and has_action_verbs:
+                    break
+
                 bullets = job.get("bullets", []) or job.get("highlights", [])
                 description = job.get("summary", "")
                 if not description:
@@ -462,15 +477,15 @@ class ATSCompatibilityChecker:
                 ).lower()
 
                 # Check for metrics
-                metric_re = r"\d+%|\$\d+|\d+\s*[kKmMbB]|\d+x|\d{4}"
-                if re.search(metric_re, all_text):
+                if not has_metrics and self.METRIC_PATTERN.search(all_text):
                     has_metrics = True
 
                 # Check for action verbs
-                for verb in self.ACTION_VERBS:
-                    if verb in all_text:
-                        has_action_verbs = True
-                        break
+                if not has_action_verbs:
+                    for verb in self.ACTION_VERBS:
+                        if verb in all_text:
+                            has_action_verbs = True
+                            break
 
             if not has_metrics:
                 msg = "Consider adding quantifiable metrics to your "
@@ -543,8 +558,8 @@ class ATSCompatibilityChecker:
         issues = []
 
         # Check for problematic patterns
-        for pattern_name, pattern in self.PROBLEMATIC_PATTERNS.items():
-            if re.search(pattern, resume_text, re.IGNORECASE):
+        for pattern_name, pattern_re in self.PROBLEMATIC_PATTERNS_RE.items():
+            if pattern_re.search(resume_text):
                 readable_pattern = pattern_name.replace("_", " ")
                 msg = (
                     f"Detected {readable_pattern} which may not parse "
@@ -574,12 +589,10 @@ class ATSCompatibilityChecker:
             )
 
         # Check for consistent date formats
-        date_patterns = self.DATE_PATTERNS
-
         found_formats = []
-        for pattern in self.DATE_PATTERNS:
-            if re.search(pattern, resume_text, re.IGNORECASE):
-                found_formats.append(pattern)
+        for pattern_re in self.DATE_PATTERNS_RE:
+            if pattern_re.search(resume_text):
+                found_formats.append(pattern_re.pattern)
 
         if len(found_formats) > 1:
             msg = (
@@ -653,7 +666,7 @@ class ATSCompatibilityChecker:
         stop_words = self.STOP_WORDS
 
         # Extract words
-        words = re.findall(r"\b[a-zA-Z]{3,}\b", text.lower())
+        words = self.WORD_PATTERN.findall(text.lower())
 
         # Filter and count
         word_count = {}
