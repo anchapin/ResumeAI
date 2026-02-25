@@ -130,11 +130,62 @@ GEMINI_API_KEY=...
 MASTER_API_KEY=rai_your_master_api_key_here
 REQUIRE_API_KEY=true  # Set to false for development
 
+# GitHub OAuth Configuration (REQUIRED)
+GITHUB_CLIENT_ID=your_github_client_id_here
+GITHUB_CLIENT_SECRET=your_github_client_secret_here
+GITHUB_REDIRECT_URI=http://localhost:5173/auth/github/callback
+
 # Server
 HOST=0.0.0.0
 PORT=8000
 DEBUG=false
 ```
+
+#### GitHub OAuth Setup
+
+1. **Register a GitHub OAuth App**:
+   - Go to https://github.com/settings/developers
+   - Click "New OAuth App"
+   - Fill in the application details:
+     - Application name: `ResumeAI`
+     - Homepage URL: `http://localhost:5173` (for development)
+     - Application description: `Resume builder with GitHub integration`
+     - Authorization callback URL: `http://localhost:8000/github/callback`
+   - Copy the **Client ID** and **Client Secret**
+
+2. **Configure Environment Variables**:
+   - Add `GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET` to your `.env` file
+   - Set `GITHUB_REDIRECT_URI` to match your deployment environment
+
+3. **Frontend OAuth Configuration** (.env.local):
+   ```bash
+   # Backend API URL
+   VITE_API_URL=http://127.0.0.1:8000
+   ```
+
+## GitHub Integration
+
+ResumeAI uses GitHub OAuth for secure authentication and integration:
+
+### OAuth Flow
+
+1. **User clicks "Connect GitHub"** in the settings or sync dialog
+2. **Frontend requests OAuth URL** from backend (`GET /github/connect`)
+3. **User is redirected to GitHub** to authorize the application
+4. **GitHub redirects back** to the callback endpoint with authorization code
+5. **Backend exchanges code for access token** (`GET /github/callback`)
+6. **Token is encrypted and stored** in the database
+7. **User can now sync GitHub projects** and manage their repositories
+
+### API Endpoints
+
+- `GET /github/connect` - Initiate OAuth authorization flow
+- `GET /github/callback` - Handle OAuth callback from GitHub
+- `GET /github/status` - Check current GitHub connection status
+- `GET /github/repositories` - Fetch user's GitHub repositories
+- `DELETE /github/disconnect` - Disconnect GitHub account and revoke token
+
+For detailed API documentation, see [API_DOCUMENTATION.md](API_DOCUMENTATION.md).
 
 ## API Documentation
 
@@ -223,6 +274,26 @@ See [CLAUDE.md](CLAUDE.md) for detailed Git workflow guidelines.
 
 ## Troubleshooting
 
+### GitHub Connection Issues
+
+If you see errors connecting to GitHub:
+
+1. **Verify GitHub OAuth App credentials**:
+   - Check that `GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET` are correctly set
+   - Ensure your OAuth App exists at https://github.com/settings/developers
+
+2. **Check callback URL**:
+   - Make sure `GITHUB_REDIRECT_URI` in backend `.env` matches the authorization callback URL in your GitHub OAuth App
+
+3. **Clear browser session**:
+   - Clear browser cookies and localStorage
+   - Try connecting again
+
+4. **Check backend logs** for detailed error messages:
+   ```bash
+   docker logs <container_id>
+   ```
+
 ### PDF Generation Fails
 
 Ensure LaTeX is installed:
@@ -251,6 +322,15 @@ npm install
 rm -rf dist
 npm run build
 ```
+
+### CLI Authentication (Deprecated)
+
+⚠️ **DEPRECATED**: The GitHub CLI authentication mode has been deprecated and will be removed in a future version. Please use OAuth instead.
+
+If you see warnings about CLI mode:
+1. Update to the latest version
+2. Use OAuth for authentication
+3. See the GitHub Integration section above for setup instructions
 
 ## License
 
