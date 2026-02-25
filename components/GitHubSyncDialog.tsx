@@ -36,6 +36,7 @@ interface GitHubSyncDialogProps {
   isOpen: boolean;
   onClose: () => void;
   onSyncComplete?: (repositories: GitHubRepository[]) => void;
+  redirectUri?: string;
 }
 
 /**
@@ -75,13 +76,18 @@ async function fetchGitHubConnectionStatus(): Promise<GitHubConnectionStatus> {
 /**
  * Get GitHub OAuth connect URL
  */
-async function getGitHubConnectUrl(): Promise<{ authorization_url: string; state: string }> {
+async function getGitHubConnectUrl(redirectUri?: string): Promise<{ authorization_url: string; state: string }> {
   const token = getAuthToken();
   if (!token) {
     throw new Error('Not authenticated');
   }
 
-  const response = await fetch(`${API_URL}/github/connect`, {
+  let url = `${API_URL}/github/connect`;
+  if (redirectUri) {
+    url += `?redirect_uri=${encodeURIComponent(redirectUri)}`;
+  }
+
+  const response = await fetch(url, {
     headers: {
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json',
@@ -131,6 +137,7 @@ export const GitHubSyncDialog: React.FC<GitHubSyncDialogProps> = ({
   isOpen,
   onClose,
   onSyncComplete,
+  redirectUri,
 }) => {
   const [connectionStatus, setConnectionStatus] = useState<GitHubConnectionStatus | null>(null);
   const [repositories, setRepositories] = useState<GitHubRepository[]>([]);
@@ -194,7 +201,7 @@ export const GitHubSyncDialog: React.FC<GitHubSyncDialogProps> = ({
     setError(null);
 
     try {
-      const { authorization_url } = await getGitHubConnectUrl();
+      const { authorization_url } = await getGitHubConnectUrl(redirectUri);
       // Redirect to GitHub OAuth
       window.location.href = authorization_url;
     } catch (err) {
