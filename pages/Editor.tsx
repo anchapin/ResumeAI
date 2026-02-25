@@ -105,6 +105,10 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, onBack, saveStatu
   const [showCommentPanel, setShowCommentPanel] = useState<boolean>(false);
   const [unresolvedCommentCount, setUnresolvedCommentCount] = useState<number>(0);
   
+  const handleCommentCountChange = useCallback((count: number) => {
+    setUnresolvedCommentCount(count);
+  }, []);
+  
   // Fetch variants on mount
   useEffect(() => {
     const loadVariants = async () => {
@@ -488,11 +492,16 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, onBack, saveStatu
                 <div className="flex items-center gap-2">
                     <button
                         onClick={() => setShowCommentPanel(true)}
-                        className="flex items-center gap-1 text-sm font-bold text-slate-500 hover:text-primary-600 transition-colors"
+                        className="flex items-center gap-1 text-sm font-bold text-slate-500 hover:text-primary-600 transition-colors relative"
                         title="Add comment to this section"
                     >
                         <span className="material-symbols-outlined text-[18px]">chat_bubble_outline</span>
                         <span>Add Comment</span>
+                        {unresolvedCommentCount > 0 && (
+                          <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center">
+                            {unresolvedCommentCount}
+                          </span>
+                        )}
                     </button>
                     <span className="text-sm font-medium text-slate-500">Basic profile details</span>
                 </div>
@@ -1095,7 +1104,14 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, onBack, saveStatu
             <div className="flex items-center justify-between p-6 border-b border-slate-200">
               <div className="flex items-center gap-3">
                 <span className="material-symbols-outlined text-primary-600 text-2xl">chat_bubble_outline</span>
-                <h2 className="text-xl font-bold text-slate-900">Resume Comments</h2>
+                <div>
+                  <h2 className="text-xl font-bold text-slate-900">Resume Comments</h2>
+                  {unresolvedCommentCount > 0 && (
+                    <p className="text-sm text-amber-600 font-medium">
+                      {unresolvedCommentCount} unresolved comment{unresolvedCommentCount !== 1 ? 's' : ''}
+                    </p>
+                  )}
+                </div>
               </div>
               <button
                 onClick={() => setShowCommentPanel(false)}
@@ -1105,7 +1121,7 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, onBack, saveStatu
               </button>
             </div>
             <div className="flex-1 overflow-y-auto">
-              <CommentPanel resumeId={currentResumeId} />
+              <CommentPanel resumeId={currentResumeId} onCommentCountChange={handleCommentCountChange} />
             </div>
           </div>
         </div>
