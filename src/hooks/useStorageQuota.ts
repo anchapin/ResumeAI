@@ -1,108 +1,66 @@
 import { useState, useEffect, useCallback } from 'react';
-import { getStorageQuota, checkStorageWarning, StorageManager } from '../lib/storage';
+import { getStorageQuota, checkStorageWarning } from '../lib/storage';
 
-export interface StorageQuotaInfo {
-  percentUsed: number;
-  estimatedQuota: number;
-  estimatedUsage: number;
-  shouldWarn: boolean;
+export interface StorageStats {
+  usedBytes: number;
+  totalBytes: number;
+  usagePercent: number;
+  canStore: boolean;
+}
+
+export interface UseStorageQuotaReturn {
+  stats: StorageStats | null;
+  isWarning: boolean;
   isCritical: boolean;
+  refresh: () => void;
 }
 
 /**
- * Hook to monitor storage quota and provide warnings
- * @param checkInterval - Interval in ms to check quota (default: 30000ms)
- * @returns Storage quota information and utilities
+ * Hook for monitoring localStorage quota usage
+ * Periodically checks storage stats and returns warning states
+ * @param warningThreshold - Percentage at which to show warning (default 80)
+ * @param criticalThreshold - Percentage at which to show critical alert (default 95)
+ * @param pollInterval - How often to check storage in ms (default 30000)
  */
-export function useStorageQuota(checkInterval: number = 30000) {
-  const [quotaInfo, setQuotaInfo] = useState<StorageQuotaInfo | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+export function useStorageQuota(
+  warningThreshold: number = 80,
+  criticalThreshold: number = 95,
+  pollInterval: number = 30000
+): UseStorageQuotaReturn {
+  const [stats, setStats] = useState<StorageStats | null>(null);
 
-  const checkQuota = useCallback(async () => {
+  const refresh = useCallback(async () => {
     try {
-      setError(null);
       const quota = await getStorageQuota();
-      const warning = await checkStorageWarning();
-
-      setQuotaInfo({
-        percentUsed: quota.percentUsed,
-        estimatedQuota: quota.estimatedQuota,
-        estimatedUsage: quota.estimatedUsage,
-        shouldWarn: warning.shouldWarn,
-        isCritical: quota.percentUsed > 95
-      });
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to check storage quota';
-      setError(message);
-      console.error('Storage quota check error:', err);
-    } finally {
-      setIsLoading(false);
+      const newStats: StorageStats = {
+        usedBytes: quota.estimatedUsage,
+        totalBytes: quota.estimatedQuota,
+        usagePercent: quota.percentUsed,
+        canStore: quota.percentUsed < 95,
+      };
+      setStats(newStats);
+    } catch (error) {
+      console.error('Error refreshing storage stats:', error);
     }
   }, []);
 
-  // Initial check on mount
   useEffect(() => {
-    checkQuota();
-  }, [checkQuota]);
+    // Initial check
+    refresh();
 
-  // Set up periodic checks
-  useEffect(() => {
-    const interval = setInterval(checkQuota, checkInterval);
+    // Set up interval for periodic checks
+    const interval = setInterval(refresh, pollInterval);
+
     return () => clearInterval(interval);
-  }, [checkQuota, checkInterval]);
+  }, [refresh, pollInterval]);
 
-  const clearOldData = useCallback(async () => {
-    try {
-      const keysToKeep = ['resumeai_master_profile'];
-      
-      for (const key in localStorage) {
-        if (key.startsWith('resumeai_') && !keysToKeep.includes(key)) {
-          localStorage.removeItem(key);
-        }
-      }
-
-      // Re-check quota after clearing
-      await checkQuota();
-      return true;
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to clear storage';
-      setError(message);
-      console.error('Storage clear error:', err);
-      return false;
-    }
-  }, [checkQuota]);
-
-  const clearAllStorage = useCallback(async () => {
-    try {
-      StorageManager.clear();
-      
-      // Re-check quota after clearing
-      await checkQuota();
-      return true;
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to clear all storage';
-      setError(message);
-      console.error('Storage clear all error:', err);
-      return false;
-    }
-  }, [checkQuota]);
-
-  const formatBytes = (bytes: number): string => {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
-  };
+  const isWarning = stats ? stats.usagePercent >= warningThreshold : false;
+  const isCritical = stats ? stats.usagePercent >= criticalThreshold : false;
 
   return {
-    quotaInfo,
-    isLoading,
-    error,
-    checkQuota,
-    clearOldData,
-    clearAllStorage,
-    formatBytes
+    stats,
+    isWarning,
+    isCritical,
+    refresh,
   };
 }
