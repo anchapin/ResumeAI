@@ -445,6 +445,7 @@ export async function accessSharedResume(shareToken: string, password?: string):
   if (password) params.append('password', password);
   const response = await fetchWithRetry(
     `${API_URL}/share/${shareToken}?${params}`,
+    {},
     DEFAULT_RETRY_CONFIG,
   );
   if (!response.ok) throw new Error('Failed to access shared resume');
@@ -798,26 +799,91 @@ export async function disconnectLinkedIn(): Promise<void> {
   }
 }
 
-// Salary Research Functions (Stubs)
+// Salary Research Functions (Real Implementation)
 export async function researchSalary(
   request: SalaryResearchRequest,
 ): Promise<SalaryResearchResponse> {
-  // Mock response
+  const response = await fetchWithRetry(
+    `${API_URL}/api/salary/research`,
+    {
+      method: 'POST',
+      headers: { ...getHeaders(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title: request.jobTitle,
+        location: request.location,
+        company: request.company,
+        experience_level: request.experienceLevel,
+      }),
+    },
+    DEFAULT_RETRY_CONFIG,
+  );
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ detail: 'Salary research failed' }));
+    throw new Error(error.detail || 'Failed to research salary');
+  }
+
+  const data = await response.json();
+
+  // Map backend response to frontend types
+  const salaryData = data.salary_data || {};
   return {
-    jobTitle: request.jobTitle,
-    location: request.location,
-    salaryRange: { min: 100000, max: 150000, median: 125000, currency: 'USD' },
-    experienceLevel: request.experienceLevel,
-    factors: { location: 'High', industry: 'Tech', experience: 'Mid', education: 'Bachelor' },
-    insights: [],
-    recommendations: [],
+    jobTitle: data.title || request.jobTitle,
+    location: data.location || request.location,
+    salaryRange: {
+      min: salaryData.min_salary || 0,
+      max: salaryData.max_salary || 0,
+      median: salaryData.median_salary || 0,
+      currency: 'USD',
+    },
+    experienceLevel: data.experience_level || request.experienceLevel,
+    factors: {
+      location: 'High',
+      industry: 'Tech',
+      experience: 'Mid',
+      education: 'Bachelor',
+    },
+    insights:
+      data.insights?.key_insights?.map((insight: any) => ({
+        title: insight.title || 'Insight',
+        description: insight.description || '',
+        importance: insight.importance || 'medium',
+      })) || [],
+    recommendations: data.insights?.recommendations || [],
   };
 }
 
 export async function createOffer(offer: any): Promise<JobOffer> {
+  const response = await fetchWithRetry(
+    `${API_URL}/api/salary/offers`,
+    {
+      method: 'POST',
+      headers: { ...getHeaders(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        company: offer.companyName,
+        title: offer.jobTitle,
+        base_salary: offer.baseSalary,
+        signing_bonus: offer.bonus,
+        equity: offer.equity,
+        work_life_balance: offer.workLifeBalance,
+        growth_opportunities: offer.growthPotential,
+        culture_score: offer.cultureScore,
+        benefits: offer.benefits || {},
+        location: offer.location,
+      }),
+    },
+    DEFAULT_RETRY_CONFIG,
+  );
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ detail: 'Failed to create offer' }));
+    throw new Error(error.detail || 'Failed to create offer');
+  }
+
+  const data = await response.json();
   return {
     ...offer,
-    id: Math.random(),
+    id: Date.now(),
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };
@@ -839,22 +905,121 @@ export async function compareOffers(
   offerIds: number[],
   priorities?: ComparisonPriority,
 ): Promise<OfferComparison> {
+  const response = await fetchWithRetry(
+    `${API_URL}/api/salary/offers/compare`,
+    {
+      method: 'POST',
+      headers: { ...getHeaders(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        offers: [],
+        priorities: priorities
+          ? {
+              salary: priorities.salary,
+              growth: priorities.growth,
+              work_life_balance: priorities.workLifeBalance,
+              culture: priorities.culture,
+              benefits: priorities.benefits,
+            }
+          : undefined,
+      }),
+    },
+    DEFAULT_RETRY_CONFIG,
+  );
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ detail: 'Failed to compare offers' }));
+    throw new Error(error.detail || 'Failed to compare offers');
+  }
+
+  const data = await response.json();
   return {
-    offers: [],
-    scores: {},
-    winnerId: 0,
-    insights: [],
+    offers:
+      data.offers?.map((o: any) => ({
+        ...o,
+        id: o.id || 0,
+        companyName: o.company || '',
+        jobTitle: o.title || '',
+        baseSalary: o.base_salary || 0,
+        bonus: o.signing_bonus || 0,
+        currency: 'USD',
+        location: o.location || '',
+        status: 'pending',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      })) || [],
+    priorities: priorities || { salary: 1, growth: 1, workLifeBalance: 1, culture: 1, benefits: 1 },
+    scores:
+      data.offers?.map((o: any, idx: number) => ({
+        offerId: o.id || idx,
+        totalScore: o.total_score || 0,
+        breakdown: {
+          salary: o.breakdown?.salary || 0,
+          growth: o.breakdown?.growth || 0,
+          workLifeBalance: o.breakdown?.work_life_balance || 0,
+          benefits: o.breakdown?.benefits || 0,
+          culture: o.breakdown?.culture || 0,
+        },
+        reasoning: o.reasoning || '',
+        pros: o.pros || [],
+        cons: o.cons || [],
+      })) || [],
+    winnerId: data.recommendation?.topOfferId || 0,
+    insights: data.insights || [],
+    recommendation: data.recommendation
+      ? {
+          topOfferId: data.recommendation.topOfferId,
+          reason: data.recommendation.reason,
+        }
+      : undefined,
   };
 }
 
 export async function getDefaultPriorities(): Promise<ComparisonPriority> {
-  return { salary: 1, growth: 1, workLifeBalance: 1, culture: 1, benefits: 1 };
+  const response = await fetchWithRetry(
+    `${API_URL}/api/salary/offers/priorities/default`,
+    { headers: getHeaders() },
+    DEFAULT_RETRY_CONFIG,
+  );
+  if (!response.ok) throw new Error('Failed to get default priorities');
+  const data = await response.json();
+  return {
+    salary: data.salary || 1,
+    growth: data.growth || 1,
+    workLifeBalance: data.work_life_balance || 1,
+    culture: data.culture || 1,
+    benefits: data.benefits || 1,
+  };
 }
 
 export async function updatePriorities(
   priorities: ComparisonPriority,
 ): Promise<ComparisonPriority> {
-  return priorities;
+  const response = await fetchWithRetry(
+    `${API_URL}/api/salary/offers/priorities`,
+    {
+      method: 'PUT',
+      headers: { ...getHeaders(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        priorities: {
+          salary: priorities.salary,
+          growth: priorities.growth,
+          work_life_balance: priorities.workLifeBalance,
+          culture: priorities.culture,
+          benefits: priorities.benefits,
+        },
+      }),
+    },
+    DEFAULT_RETRY_CONFIG,
+  );
+  if (!response.ok) throw new Error('Failed to update priorities');
+  const data = await response.json();
+  return {
+    salary: data.salary || priorities.salary,
+    growth: data.growth || priorities.growth,
+    workLifeBalance: data.work_life_balance || priorities.workLifeBalance,
+    culture: data.culture || priorities.culture,
+    benefits: data.benefits || priorities.benefits,
+  };
 }
 
 // Job Application Types
