@@ -1,0 +1,186 @@
+# Docker Compose configuration for Prometheus + Grafana monitoring stack
+# 
+# Usage:
+#   docker-compose -f docker-compose-monitoring.yml up
+#   docker-compose -f docker-compose-monitoring.yml down
+#
+# Access:
+#   - Prometheus: http://localhost:9090
+#   - Grafana: http://localhost:3000 (admin/admin)
+#   - Resume API: http://localhost:8000
+#
+# Volumes are created for data persistence:
+#   - prometheus_data: Prometheus TSDB
+#   - grafana_data: Grafana configuration and dashboards
+
+version: '3.8'
+
+services:
+  # Prometheus - Metrics collection and storage
+  prometheus:
+    image: prom/prometheus:v2.50.1
+    container_name: resumeai-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      # Mount configuration files
+      - ./resume-api/config/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./resume-api/config/alert_rules.yml:/etc/prometheus/alert_rules.yml:ro
+      - ./resume-api/config/recording_rules.yml:/etc/prometheus/recording_rules.yml:ro
+      # Data persistence
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=30d'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+      - '--web.enable-lifecycle'
+      - '--log.level=info'
+    networks:
+      - monitoring
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD', 'wget', '--spider', '-q', 'http://localhost:9090/-/healthy']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+    labels:
+      - "description=Prometheus metrics server"
+
+  # Alertmanager - Alert routing and notifications
+  alertmanager:
+    image: prom/alertmanager:v0.26.0
+    container_name: resumeai-alertmanager
+    ports:
+      - "9093:9093"
+    volumes:
+      # Mount alertmanager configuration
+      - ./resume-api/config/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+      # Data persistence
+      - alertmanager_data:/alertmanager
+    command:
+      - '--config.file=/etc/alertmanager/alertmanager.yml'
+      - '--storage.path=/alertmanager'
+      - '--log.level=info'
+    networks:
+      - monitoring
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD', 'wget', '--spider', '-q', 'http://localhost:9093/-/healthy']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+    labels:
+      - "description=Alert routing and notification"
+
+  # Grafana - Metrics visualization and dashboards
+  grafana:
+    image: grafana/grafana:11.0.0
+    container_name: resumeai-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      # Grafana admin credentials
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      # Disable signup
+      - GF_USERS_ALLOW_SIGN_UP=false
+      # Auto-login
+      - GF_AUTH_ANONYMOUS_ENABLED=false
+      # Database
+      - GF_DATABASE_TYPE=sqlite3
+      # Logging
+      - GF_LOG_MODE=console
+      - GF_LOG_LEVEL=info
+      # Server
+      - GF_SERVER_ROOT_URL=http://localhost:3000
+      - GF_INSTALL_PLUGINS=grafana-clock-panel,grafana-simple-json-datasource
+    volumes:
+      # Mount provisioning configuration
+      - ./resume-api/config/grafana/provisioning:/etc/grafana/provisioning:ro
+      # Mount dashboards
+      - ./resume-api/dashboards:/var/lib/grafana/dashboards:ro
+      # Data persistence
+      - grafana_data:/var/lib/grafana
+    networks:
+      - monitoring
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD', 'wget', '--spider', '-q', 'http://localhost:3000/api/health']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    labels:
+      - "description=Grafana dashboard and visualization"
+
+  # Resume API - The service being monitored
+  resume-api:
+    build:
+      context: ./resume-api
+      dockerfile: Dockerfile
+    container_name: resumeai-api
+    ports:
+      - "8000:8000"
+    environment:
+      - AI_PROVIDER=openai
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - DEBUG=${DEBUG:-false}
+      - ENABLE_METRICS=true
+      - METRICS_PATH=/metrics
+    volumes:
+      - ./resume-api/templates:/app/templates
+    networks:
+      - monitoring
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD', 'python', '-c', "import httpx; r = httpx.get('http://localhost:8000/health'); r.raise_for_status(); exit(0 if r.json().get('status') == 'healthy' else 1)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+    labels:
+      - "description=Resume API service"
+
+  # Node Exporter - System metrics (optional)
+  node-exporter:
+    image: prom/node-exporter:v1.7.0
+    container_name: resumeai-node-exporter
+    ports:
+      - "9100:9100"
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+    networks:
+      - monitoring
+    restart: unless-stopped
+    labels:
+      - "description=System metrics exporter"
+
+networks:
+  monitoring:
+    driver: bridge
+    name: resumeai-monitoring
+
+volumes:
+  prometheus_data:
+    driver: local
+    name: resumeai-prometheus-data
+  alertmanager_data:
+    driver: local
+    name: resumeai-alertmanager-data
+  grafana_data:
+    driver: local
+    name: resumeai-grafana-data
