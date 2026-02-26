@@ -23,7 +23,7 @@ export default defineConfig(({ mode }) => {
           },
         },
         coverage: {
-          provider: 'v8',
+          provider: 'istanbul',
           reporter: ['text', 'json', 'html'],
           exclude: [
             'node_modules/',
