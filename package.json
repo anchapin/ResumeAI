@@ -8,6 +8,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest",
+    "test:coverage": "vitest --coverage",
     "docs": "typedoc --out docs --entryPoints components/ pages/ utils/ hooks/ --excludeNotDocumented --excludeInternal --theme default"
   },
   "dependencies": {

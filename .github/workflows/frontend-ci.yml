@@ -43,7 +43,19 @@ jobs:
         run: npm ci
 
       - name: Run tests
-        run: npm run test -- --run --reporter=verbose --exclude="utils/storage.test.ts" || true
+        run: npm run test -- --run --reporter=verbose --exclude="utils/storage.test.ts"
+
+      - name: Run tests with coverage
+        run: npm run test:coverage -- --run
+        continue-on-error: false
+
+      - name: Upload coverage reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-coverage
+          path: coverage/
+          retention-days: 30
 
       - name: Type check
         run: npx tsc --noEmit

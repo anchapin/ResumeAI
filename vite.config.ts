@@ -16,15 +16,10 @@ export default defineConfig(({ mode }) => {
         environment: 'happy-dom',
         globals: true,
         setupFiles: './vitest.setup.ts',
-        pool: 'forks',
-        poolOptions: {
-          forks: {
-            singleFork: true,
-          },
-        },
+        singleFork: true,
         coverage: {
           provider: 'istanbul',
-          reporter: ['text', 'json', 'html'],
+          reporter: ['text', 'json', 'html', 'lcov'],
           exclude: [
             'node_modules/',
             'tests/',
@@ -37,6 +32,16 @@ export default defineConfig(({ mode }) => {
             'vitest.config.ts',
             'vite.config.ts',
           ],
+          thresholds: {
+            lines: 60,
+            functions: 60,
+            branches: 60,
+            statements: 60,
+          },
+          lines: 60,
+          functions: 60,
+          branches: 60,
+          statements: 60,
         },
       },
       plugins: [react()],

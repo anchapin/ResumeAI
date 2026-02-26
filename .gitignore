@@ -29,6 +29,9 @@ __pycache__/
 
 # Coverage
 coverage/
+coverage_html/
+.coverage
+htmlcov/
 
 # Backup files
 *.backup

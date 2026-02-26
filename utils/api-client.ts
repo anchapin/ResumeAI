@@ -19,6 +19,7 @@ import {
   ComparisonPriority,
   OfferComparison,
 } from '../types';
+import { fetchWithTimeout, TIMEOUT_CONFIG } from './fetch-timeout';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
 
@@ -52,11 +53,11 @@ export function convertToAPIData(resumeData: SimpleResumeData): ResumeDataForAPI
 }
 
 export async function generatePDF(resumeData: ResumeDataForAPI, variant: string = 'modern'): Promise<Blob> {
-  const response = await fetch(`${API_URL}/v1/render/pdf`, {
+  const response = await fetchWithTimeout(`${API_URL}/v1/render/pdf`, {
     method: 'POST',
     headers: { ...getHeaders(), 'Content-Type': 'application/json' },
     body: JSON.stringify({ resume_data: resumeData, variant }),
-  });
+  }, TIMEOUT_CONFIG.PDF_GENERATION);
   if (!response.ok) { const error = await response.json().catch(() => ({ detail: 'PDF generation failed' })); throw new Error(error.detail || 'Failed to generate PDF'); }
   return response.blob();
 }
@@ -69,7 +70,7 @@ export async function getVariants(filters?: { search?: string; category?: string
   if (filters?.search) params.append('search', filters.search);
   if (filters?.category) params.append('category', filters.category);
   if (filters?.tags) params.append('tags', filters.tags.join(','));
-  const response = await fetch(`${API_URL}/v1/variants?${params}`, { headers: getHeaders() });
+  const response = await fetchWithTimeout(`${API_URL}/v1/variants?${params}`, { headers: getHeaders() }, TIMEOUT_CONFIG.STANDARD);
   if (!response.ok) throw new Error('Failed to fetch variants');
   const data: VariantsResponse = await response.json();
   return data.variants;
@@ -78,11 +79,11 @@ export async function getVariants(filters?: { search?: string; category?: string
 export interface TailoredResumeResponse { resume_data: ResumeDataForAPI; keywords: string[]; suggestions: string[]; }
 
 export async function tailorResume(resumeData: ResumeDataForAPI, jobDescription: string, companyName?: string, jobTitle?: string): Promise<TailoredResumeResponse> {
-  const response = await fetch(`${API_URL}/v1/tailor`, {
+  const response = await fetchWithTimeout(`${API_URL}/v1/tailor`, {
     method: 'POST',
     headers: { ...getHeaders(), 'Content-Type': 'application/json' },
     body: JSON.stringify({ resume_data: resumeData, job_description: jobDescription, company_name: companyName, job_title: jobTitle }),
-  });
+  }, TIMEOUT_CONFIG.AI_OPERATION);
   if (!response.ok) { const error = await response.json().catch(() => ({ detail: 'Resume tailoring failed' })); throw new Error(error.detail || 'Failed to tailor resume'); }
   return response.json();
 }
@@ -202,11 +203,11 @@ export interface ATSCheckRequest {
 }
 
 export async function checkATSScore(resumeData: ResumeDataForAPI, jobDescription: string): Promise<import('../types').ATSReport> {
-  const response = await fetch(`${API_URL}/v1/ats/check`, {
+  const response = await fetchWithTimeout(`${API_URL}/v1/ats/check`, {
     method: 'POST',
     headers: { ...getHeaders(), 'Content-Type': 'application/json' },
     body: JSON.stringify({ resume_data: resumeData, job_description: jobDescription }),
-  });
+  }, TIMEOUT_CONFIG.AI_OPERATION);
   if (!response.ok) { const error = await response.json().catch(() => ({ detail: 'ATS check failed' })); throw new Error(error.detail || 'Failed to check ATS score'); }
   return response.json();
 }

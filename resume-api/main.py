@@ -23,6 +23,7 @@ from config.dependencies import (
 )
 from database import create_db_and_tables, User
 from middleware.monitoring import MonitoringMiddleware
+from middleware.timeout import TimeoutMiddleware
 from monitoring import logging_config, health, alerting, analytics
 from slowapi.errors import RateLimitExceeded
 
@@ -208,6 +209,9 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
         content={"detail": "Validation error in resume data. Check all fields."},
     )
 
+
+# Add timeout middleware (must be added before monitoring)
+app.add_middleware(TimeoutMiddleware, timeout_seconds=30)
 
 # Add monitoring middleware (must be added before security middleware)
 app.add_middleware(MonitoringMiddleware)
