@@ -1,22 +1,11 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { ToastContainer } from 'react-toastify';
 import StorageWarning from './StorageWarning';
-import * as storageLib from '../lib/storage';
+import * as hooks from '../hooks/useStorageQuota';
 
-// Mock the storage library
-vi.mock('../lib/storage', () => ({
-  getStorageQuota: vi.fn(),
-  checkStorageWarning: vi.fn(),
-  StorageManager: {
-    clear: vi.fn(),
-    setItem: vi.fn(),
-    getItem: vi.fn(),
-    removeItem: vi.fn(),
-    getItemSize: vi.fn(),
-    getUsedSize: vi.fn(),
-    getStats: vi.fn()
-  }
+// Mock the hook
+vi.mock('../hooks/useStorageQuota', () => ({
+  useStorageQuota: vi.fn()
 }));
 
 describe('StorageWarning Component', () => {
@@ -29,59 +18,61 @@ describe('StorageWarning Component', () => {
     localStorage.clear();
   });
 
-  it('should not display when storage quota is below 80%', async () => {
-    vi.mocked(storageLib.getStorageQuota).mockResolvedValue({
-      estimatedQuota: 10000,
-      estimatedUsage: 1000,
-      percentUsed: 10
+  it('should not display when storage is below 80%', async () => {
+    vi.mocked(hooks.useStorageQuota).mockReturnValue({
+      stats: { usedBytes: 1000, totalBytes: 10000, usagePercent: 10 },
+      isWarning: false,
+      isCritical: false,
+      refresh: vi.fn(),
+      isLoading: false,
+      error: null,
+      clearOldData: vi.fn(),
+      clearAllStorage: vi.fn(),
+      formatBytes: (b: number) => `${b}B`
     });
 
-    render(
-      <>
-        <StorageWarning />
-        <ToastContainer />
-      </>
-    );
+    render(<StorageWarning />);
 
-    // Component should not be visible
     await waitFor(() => {
-      expect(screen.queryByText(/Storage Getting Full/i)).not.toBeInTheDocument();
+      expect(screen.queryByText(/Storage Warning/i)).not.toBeInTheDocument();
     }, { timeout: 1000 });
   });
 
-  it('should display warning when storage quota exceeds 80%', async () => {
-    vi.mocked(storageLib.getStorageQuota).mockResolvedValue({
-      estimatedQuota: 10000,
-      estimatedUsage: 8500,
-      percentUsed: 85
+  it('should display warning when storage exceeds 80%', async () => {
+    vi.mocked(hooks.useStorageQuota).mockReturnValue({
+      stats: { usedBytes: 8500, totalBytes: 10000, usagePercent: 85 },
+      isWarning: true,
+      isCritical: false,
+      refresh: vi.fn(),
+      isLoading: false,
+      error: null,
+      clearOldData: vi.fn(),
+      clearAllStorage: vi.fn(),
+      formatBytes: (b: number) => `${b}B`
     });
 
-    render(
-      <>
-        <StorageWarning />
-        <ToastContainer />
-      </>
-    );
+    render(<StorageWarning />);
 
     await waitFor(() => {
-      expect(screen.getByText(/Storage Getting Full/i)).toBeInTheDocument();
+      expect(screen.getByText(/Storage Warning/i)).toBeInTheDocument();
       expect(screen.getByText(/85%/)).toBeInTheDocument();
     });
   });
 
-  it('should display critical warning when storage quota exceeds 95%', async () => {
-    vi.mocked(storageLib.getStorageQuota).mockResolvedValue({
-      estimatedQuota: 10000,
-      estimatedUsage: 9600,
-      percentUsed: 96
+  it('should display critical warning when storage exceeds 95%', async () => {
+    vi.mocked(hooks.useStorageQuota).mockReturnValue({
+      stats: { usedBytes: 9600, totalBytes: 10000, usagePercent: 96 },
+      isWarning: true,
+      isCritical: true,
+      refresh: vi.fn(),
+      isLoading: false,
+      error: null,
+      clearOldData: vi.fn(),
+      clearAllStorage: vi.fn(),
+      formatBytes: (b: number) => `${b}B`
     });
 
-    render(
-      <>
-        <StorageWarning />
-        <ToastContainer />
-      </>
-    );
+    render(<StorageWarning />);
 
     await waitFor(() => {
       expect(screen.getByText(/Storage Critical/i)).toBeInTheDocument();
@@ -89,125 +80,45 @@ describe('StorageWarning Component', () => {
     });
   });
 
-  it('should have dismiss button', async () => {
-    vi.mocked(storageLib.getStorageQuota).mockResolvedValue({
-      estimatedQuota: 10000,
-      estimatedUsage: 8500,
-      percentUsed: 85
+  it('should have refresh button', async () => {
+    const mockRefresh = vi.fn();
+    vi.mocked(hooks.useStorageQuota).mockReturnValue({
+      stats: { usedBytes: 8500, totalBytes: 10000, usagePercent: 85 },
+      isWarning: true,
+      isCritical: false,
+      refresh: mockRefresh,
+      isLoading: false,
+      error: null,
+      clearOldData: vi.fn(),
+      clearAllStorage: vi.fn(),
+      formatBytes: (b: number) => `${b}B`
     });
 
-    render(
-      <>
-        <StorageWarning />
-        <ToastContainer />
-      </>
-    );
+    render(<StorageWarning />);
 
     await waitFor(() => {
-      const dismissButton = screen.getByText('Dismiss');
-      expect(dismissButton).toBeInTheDocument();
+      const refreshButton = screen.getByText('Refresh');
+      expect(refreshButton).toBeInTheDocument();
     });
   });
 
-  it('should have clean storage button', async () => {
-    vi.mocked(storageLib.getStorageQuota).mockResolvedValue({
-      estimatedQuota: 10000,
-      estimatedUsage: 8500,
-      percentUsed: 85
+  it('should show manage storage button in critical state', async () => {
+    vi.mocked(hooks.useStorageQuota).mockReturnValue({
+      stats: { usedBytes: 9600, totalBytes: 10000, usagePercent: 96 },
+      isWarning: true,
+      isCritical: true,
+      refresh: vi.fn(),
+      isLoading: false,
+      error: null,
+      clearOldData: vi.fn(),
+      clearAllStorage: vi.fn(),
+      formatBytes: (b: number) => `${b}B`
     });
 
-    render(
-      <>
-        <StorageWarning />
-        <ToastContainer />
-      </>
-    );
+    render(<StorageWarning />);
 
     await waitFor(() => {
-      expect(screen.getByText('Clean Storage')).toBeInTheDocument();
+      expect(screen.getByText('Manage Storage')).toBeInTheDocument();
     });
-  });
-
-  it('should have clear all button', async () => {
-    vi.mocked(storageLib.getStorageQuota).mockResolvedValue({
-      estimatedQuota: 10000,
-      estimatedUsage: 8500,
-      percentUsed: 85
-    });
-
-    render(
-      <>
-        <StorageWarning />
-        <ToastContainer />
-      </>
-    );
-
-    await waitFor(() => {
-      expect(screen.getByText('Clear All')).toBeInTheDocument();
-    });
-  });
-
-  it('should call onStorageCleaned callback when storage is cleaned', async () => {
-    const mockCallback = vi.fn();
-    vi.mocked(storageLib.getStorageQuota).mockResolvedValue({
-      estimatedQuota: 10000,
-      estimatedUsage: 8500,
-      percentUsed: 85
-    });
-
-    const { rerender } = render(
-      <>
-        <StorageWarning onStorageCleaned={mockCallback} />
-        <ToastContainer />
-      </>
-    );
-
-    await waitFor(() => {
-      expect(screen.getByText('Clean Storage')).toBeInTheDocument();
-    });
-
-    // Set up localStorage items to clean
-    localStorage.setItem('resumeai_old_data', 'some data');
-    
-    const cleanButton = screen.getByText('Clean Storage');
-    fireEvent.click(cleanButton);
-
-    // After cleaning, quota should be re-checked
-    vi.mocked(storageLib.getStorageQuota).mockResolvedValue({
-      estimatedQuota: 10000,
-      estimatedUsage: 2000,
-      percentUsed: 20
-    });
-
-    await waitFor(() => {
-      expect(mockCallback).toHaveBeenCalled();
-    }, { timeout: 2000 });
-  });
-
-  it('should check storage quota periodically', async () => {
-    vi.mocked(storageLib.getStorageQuota).mockResolvedValue({
-      estimatedQuota: 10000,
-      estimatedUsage: 5000,
-      percentUsed: 50
-    });
-
-    const { unmount } = render(
-      <>
-        <StorageWarning />
-        <ToastContainer />
-      </>
-    );
-
-    // Wait for initial check
-    await waitFor(() => {
-      expect(storageLib.getStorageQuota).toHaveBeenCalledTimes(1);
-    });
-
-    // Fast-forward time and check periodic update
-    vi.useFakeTimers();
-    vi.advanceTimersByTime(31000); // 31 seconds
-
-    vi.useRealTimers();
-    unmount();
   });
 });
