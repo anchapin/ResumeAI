@@ -619,7 +619,7 @@ class GitHubConnection(Base):
 
 
 class GitHubOAuthState(Base):
-    """Temporary storage for OAuth state parameters during flow."""
+    """Temporary storage for OAuth state parameters during flow with PKCE support."""
 
     __tablename__ = "github_oauth_states"
 
@@ -631,6 +631,11 @@ class GitHubOAuthState(Base):
 
     # Redirect URI (to redirect back after OAuth)
     redirect_uri = Column(String(500), nullable=True)
+
+    # PKCE (Proof Key for Public Clients) - RFC 7636
+    code_challenge = Column(String(128), nullable=True, index=True)
+    code_challenge_method = Column(String(10), nullable=True)  # "S256" for SHA256
+    code_verifier = Column(String(128), nullable=True)  # For backend verification
 
     # State metadata
     created_at = Column(DateTime(timezone=True), server_default=func.now(), index=True)

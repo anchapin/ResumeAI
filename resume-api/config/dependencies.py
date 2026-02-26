@@ -29,6 +29,7 @@ from sqlalchemy import select
 from . import settings
 from database import get_async_session, User
 from config.jwt_utils import verify_access_token
+from lib.security import verify_api_key, is_hashed_key
 
 # Secret key for JWT tokens - should be set in environment variables
 SECRET_KEY = settings.jwt_secret
@@ -108,6 +109,10 @@ async def get_api_key(x_api_key: str = Header(None)) -> str:
     """
     Validate API key from X-API-KEY header.
 
+    Supports both plaintext and hashed API key verification. If keys are hashed
+    (start with $2b$, $2a$, or $2y$), uses bcrypt verification. Otherwise,
+    uses constant-time string comparison for backward compatibility.
+
     Returns the API key if valid, or "anonymous" if authentication is disabled.
     """
     if not settings.require_api_key:
@@ -117,17 +122,29 @@ async def get_api_key(x_api_key: str = Header(None)) -> str:
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="API key is required",
         )
-    # Use secrets.compare_digest for constant-time string comparison
-    # to prevent timing attacks
-    if settings.master_api_key and secrets.compare_digest(
-        x_api_key, settings.master_api_key
-    ):
-        return x_api_key
 
-    if settings.api_keys:
-        for key in settings.api_keys:
-            if secrets.compare_digest(x_api_key, key):
+    # Check master API key (plaintext comparison)
+    if settings.master_api_key:
+        if is_hashed_key(settings.master_api_key):
+            # Master key is hashed
+            if verify_api_key(x_api_key, settings.master_api_key):
                 return x_api_key
+        else:
+            # Master key is plaintext (backward compatibility)
+            if secrets.compare_digest(x_api_key, settings.master_api_key):
+                return x_api_key
+
+    # Check user API keys
+    if settings.api_keys:
+        for key_hash in settings.api_keys:
+            if is_hashed_key(key_hash):
+                # Key is hashed - use bcrypt verification
+                if verify_api_key(x_api_key, key_hash):
+                    return x_api_key
+            else:
+                # Key is plaintext (backward compatibility)
+                if secrets.compare_digest(x_api_key, key_hash):
+                    return x_api_key
 
     raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid API key")
 
