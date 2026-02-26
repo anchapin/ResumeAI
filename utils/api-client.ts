@@ -89,7 +89,7 @@ export async function tailorResume(resumeData: ResumeDataForAPI, jobDescription:
 }
 
 export async function createResume(title: string, data: ResumeData, tags: string[] = []): Promise<any> {
-  const response = await fetch(`${API_URL}/resumes`, { method: 'POST', headers: getHeaders(), body: JSON.stringify({ title, data, tags }) });
+  const response = await fetchWithRetry(`${API_URL}/resumes`, { method: 'POST', headers: getHeaders(), body: JSON.stringify({ title, data, tags }) }, DEFAULT_RETRY_CONFIG);
   if (!response.ok) throw new Error('Failed to create resume');
   return response.json();
 }
@@ -100,7 +100,7 @@ export async function listResumes(filters?: { search?: string; tag?: string; ski
   if (filters?.tag) params.append('tag', filters.tag);
   if (filters?.skip !== undefined) params.append('skip', filters.skip.toString());
   if (filters?.limit !== undefined) params.append('limit', filters.limit.toString());
-  const response = await fetch(`${API_URL}/resumes?${params}`, { headers: getHeaders() });
+  const response = await fetchWithRetry(`${API_URL}/resumes?${params}`, { headers: getHeaders() }, DEFAULT_RETRY_CONFIG);
   if (!response.ok) throw new Error('Failed to list resumes');
   return response.json();
 }

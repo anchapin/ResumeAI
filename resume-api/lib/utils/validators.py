@@ -6,11 +6,14 @@ This module provides functions for:
 2. Input validation (length, format, etc.)
 3. Email and URL validation
 4. XSS prevention
+5. File upload validation (size, type, content)
+6. Markdown XSS protection
 """
 
 import re
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, Tuple
 from urllib.parse import urlparse
+from pathlib import Path
 
 
 # LaTeX special characters that need escaping
