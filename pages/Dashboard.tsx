@@ -1,42 +1,14 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { BarChart, Bar, ResponsiveContainer, XAxis, Tooltip, Cell } from 'recharts';
 import { JobApplication } from '../types';
 import StatusBadge from '../components/StatusBadge';
-
-/** Mock data for the application funnel chart */
-const data = [
-  { name: 'Sent', value: 25, color: '#4f46e5' },
-  { name: 'Interview', value: 8, color: '#4f46e5' }, // Using same color but will fade via opacity in custom shape if needed, or distinct colors
-  { name: 'Offer', value: 2, color: '#4f46e5' },
-];
-
-/** Mock data for recent job applications */
-const recentApps: JobApplication[] = [
-  {
-    id: '1',
-    company: 'Google',
-    role: 'Software Engineer',
-    status: 'Applied',
-    dateApplied: 'Oct 24, 2023',
-    logo: 'https://lh3.googleusercontent.com/COxitqgJr1sJnIDe8-Ca402YwzGNcjqg84afM42nzQ7kXDD0jf986hws20DaEvp_ejg',
-  },
-  {
-    id: '2',
-    company: 'Stripe',
-    role: 'Product Designer',
-    status: 'Interview',
-    dateApplied: 'Oct 22, 2023',
-    logo: 'https://b.stripecdn.com/docs-statics-srv/assets/b411c60/company-logos/dark/stripe.svg',
-  },
-  {
-    id: '3',
-    company: 'Vercel',
-    role: 'Frontend Developer',
-    status: 'Offer',
-    dateApplied: 'Oct 15, 2023',
-    logo: 'https://assets.vercel.com/image/upload/front/favicon/vercel/180x180.png',
-  },
-];
+import {
+  getApplicationStats,
+  getApplicationFunnel,
+  listJobApplications,
+  ApplicationStats,
+  ApplicationFunnel,
+} from '../utils/api-client';
 
 /**
  * @component
@@ -49,6 +21,94 @@ const recentApps: JobApplication[] = [
  * ```
  */
 const Dashboard: React.FC = () => {
+  const [stats, setStats] = useState<ApplicationStats | null>(null);
+  const [funnel, setFunnel] = useState<ApplicationFunnel | null>(null);
+  const [recentApps, setRecentApps] = useState<JobApplication[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    loadDashboardData();
+  }, []);
+
+  const loadDashboardData = async () => {
+    try {
+      setIsLoading(true);
+      const [statsData, funnelData, appsData] = await Promise.all([
+        getApplicationStats(30),
+        getApplicationFunnel(30),
+        listJobApplications(undefined, 10, 0),
+      ]);
+      setStats(statsData);
+      setFunnel(funnelData);
+      setRecentApps(
+        appsData.map((app) => {
+          let mappedStatus: 'Applied' | 'Interview' | 'Offer' | 'Rejected' = 'Applied';
+          if (app.status === 'interviewing') mappedStatus = 'Interview';
+          else if (app.status === 'offer') mappedStatus = 'Offer';
+          else if (app.status === 'rejected') mappedStatus = 'Rejected';
+
+          return {
+            id: String(app.id),
+            company: app.company_name,
+            role: app.job_title,
+            status: mappedStatus,
+            dateApplied: new Date(app.created_at).toLocaleDateString('en-US', {
+              month: 'short',
+              day: 'numeric',
+              year: 'numeric',
+            }),
+            logo: `https://ui-avatars.com/api/?name=${encodeURIComponent(app.company_name)}&background=random`,
+          };
+        }),
+      );
+    } catch (err) {
+      console.error('Failed to load dashboard data:', err);
+      setError('Failed to load dashboard data. Please try again later.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const formatFunnelData = () => {
+    if (!funnel) return [];
+    return funnel.stages.map((stage, idx) => ({
+      name: stage.name.charAt(0).toUpperCase() + stage.name.slice(1),
+      value: stage.count,
+      color: '#4f46e5',
+      percentage: stage.percentage,
+    }));
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex-1 min-h-screen bg-[#f6f6f8] pl-72 flex items-center justify-center">
+        <span className="material-symbols-outlined animate-spin text-primary-600 text-4xl">
+          progress_activity
+        </span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex-1 min-h-screen bg-[#f6f6f8] pl-72 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-slate-500 mb-4">{error}</p>
+          <button
+            onClick={loadDashboardData}
+            className="px-4 py-2 rounded-lg bg-primary-600 text-white font-bold hover:bg-primary-700 transition-colors"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const funnelData = formatFunnelData();
+  const pendingCount = stats?.by_status?.['applied'] || 0;
+
   return (
     <div className="flex-1 min-h-screen bg-[#f6f6f8] pl-72">
       {/* Header */}
@@ -77,10 +137,12 @@ const Dashboard: React.FC = () => {
               </div>
             </div>
             <div>
-              <p className="text-slate-900 text-4xl font-bold tracking-tight">25</p>
+              <p className="text-slate-900 text-4xl font-bold tracking-tight">
+                {stats?.total_applications || 0}
+              </p>
               <p className="text-emerald-600 text-sm font-semibold flex items-center gap-1 mt-1">
                 <span className="material-symbols-outlined text-[16px]">trending_up</span>
-                +12% this month
+                Last 30 days
               </p>
             </div>
           </div>
@@ -93,10 +155,12 @@ const Dashboard: React.FC = () => {
               </div>
             </div>
             <div>
-              <p className="text-slate-900 text-4xl font-bold tracking-tight">32%</p>
+              <p className="text-slate-900 text-4xl font-bold tracking-tight">
+                {stats?.interview_rate ? `${(stats.interview_rate * 100).toFixed(0)}%` : '0%'}
+              </p>
               <p className="text-emerald-600 text-sm font-semibold flex items-center gap-1 mt-1">
                 <span className="material-symbols-outlined text-[16px]">trending_up</span>
-                +5% from last week
+                Based on interviews
               </p>
             </div>
           </div>
@@ -109,8 +173,10 @@ const Dashboard: React.FC = () => {
               </div>
             </div>
             <div>
-              <p className="text-slate-900 text-4xl font-bold tracking-tight">5</p>
-              <p className="text-slate-400 text-sm font-medium mt-1">No change</p>
+              <p className="text-slate-900 text-4xl font-bold tracking-tight">{pendingCount}</p>
+              <p className="text-slate-400 text-sm font-medium mt-1">
+                Applications awaiting response
+              </p>
             </div>
           </div>
         </div>
@@ -124,59 +190,61 @@ const Dashboard: React.FC = () => {
             </button>
           </div>
           <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-slate-50/50 border-b border-slate-100">
-                  <th className="px-6 py-4 text-slate-500 text-xs font-bold uppercase tracking-wider">
-                    Company
-                  </th>
-                  <th className="px-6 py-4 text-slate-500 text-xs font-bold uppercase tracking-wider">
-                    Role
-                  </th>
-                  <th className="px-6 py-4 text-slate-500 text-xs font-bold uppercase tracking-wider text-center">
-                    Status
-                  </th>
-                  <th className="px-6 py-4 text-slate-500 text-xs font-bold uppercase tracking-wider text-right">
-                    Date Applied
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {recentApps.map((app) => (
-                  <tr
-                    key={app.id}
-                    className="hover:bg-slate-50 transition-colors cursor-pointer group"
-                  >
-                    <td className="px-6 py-5">
-                      <div className="flex items-center gap-4">
-                        <div className="bg-white rounded-lg size-10 flex items-center justify-center p-1 border border-slate-100 shadow-sm">
-                          {/* Using a placeholder if logo fails, but styled nicely */}
-                          <img
-                            src={app.logo}
-                            alt={app.company}
-                            className="max-w-full max-h-full object-contain"
-                            onError={(e) => {
-                              (e.target as HTMLImageElement).src =
-                                `https://ui-avatars.com/api/?name=${app.company}&background=random`;
-                            }}
-                          />
-                        </div>
-                        <span className="text-slate-900 font-bold text-sm group-hover:text-primary-600 transition-colors">
-                          {app.company}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-5 text-slate-700 text-sm font-medium">{app.role}</td>
-                    <td className="px-6 py-5 text-center">
-                      <StatusBadge status={app.status} />
-                    </td>
-                    <td className="px-6 py-5 text-slate-500 text-sm text-right font-medium">
-                      {app.dateApplied}
-                    </td>
+            {recentApps.length === 0 ? (
+              <div className="text-center py-12">
+                <p className="text-slate-500 mb-2">No applications yet</p>
+                <p className="text-sm text-slate-400">Start tracking your job applications</p>
+              </div>
+            ) : (
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-slate-50/50 border-b border-slate-100">
+                    <th className="px-6 py-4 text-slate-500 text-xs font-bold uppercase tracking-wider">
+                      Company
+                    </th>
+                    <th className="px-6 py-4 text-slate-500 text-xs font-bold uppercase tracking-wider">
+                      Role
+                    </th>
+                    <th className="px-6 py-4 text-slate-500 text-xs font-bold uppercase tracking-wider text-center">
+                      Status
+                    </th>
+                    <th className="px-6 py-4 text-slate-500 text-xs font-bold uppercase tracking-wider text-right">
+                      Date Applied
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {recentApps.map((app) => (
+                    <tr
+                      key={app.id}
+                      className="hover:bg-slate-50 transition-colors cursor-pointer group"
+                    >
+                      <td className="px-6 py-5">
+                        <div className="flex items-center gap-4">
+                          <div className="bg-white rounded-lg size-10 flex items-center justify-center p-1 border border-slate-100 shadow-sm">
+                            <img
+                              src={app.logo}
+                              alt={app.company}
+                              className="max-w-full max-h-full object-contain"
+                            />
+                          </div>
+                          <span className="text-slate-900 font-bold text-sm group-hover:text-primary-600 transition-colors">
+                            {app.company}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-5 text-slate-700 text-sm font-medium">{app.role}</td>
+                      <td className="px-6 py-5 text-center">
+                        <StatusBadge status={app.status} />
+                      </td>
+                      <td className="px-6 py-5 text-slate-500 text-sm text-right font-medium">
+                        {app.dateApplied}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
           </div>
         </div>
 
@@ -186,54 +254,69 @@ const Dashboard: React.FC = () => {
             Application Funnel
           </h3>
           <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-8">
-            <div className="h-64 w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart
-                  layout="vertical"
-                  data={data}
-                  margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-                  barSize={32}
-                >
-                  <XAxis type="number" hide />
-                  <Tooltip cursor={{ fill: 'transparent' }} />
-                  {/* Background bars */}
-                  <Bar
-                    dataKey="value"
-                    fill="#e0e7ff"
-                    radius={[4, 4, 4, 4]}
-                    background={{ fill: '#f1f5f9', radius: 4 }}
-                  >
-                    {data.map((entry, index) => (
-                      <Cell
-                        key={`cell-${index}`}
-                        fill={entry.color}
-                        fillOpacity={1 - index * 0.3}
-                      />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-            {/* Custom Labels below chart for aesthetics */}
-            <div className="flex flex-col gap-2 mt-4">
-              {data.map((item, idx) => (
-                <div
-                  key={idx}
-                  className="flex items-center justify-between text-sm border-b border-slate-50 last:border-0 py-2"
-                >
-                  <div className="flex items-center gap-2">
-                    <div
-                      className="w-3 h-3 rounded-full"
-                      style={{ backgroundColor: item.color, opacity: 1 - idx * 0.3 }}
-                    ></div>
-                    <span className="font-medium text-slate-600">{item.name}</span>
-                  </div>
-                  <span className="font-bold text-slate-900">
-                    {item.value} ({idx === 0 ? '100%' : idx === 1 ? '32%' : '8%'})
-                  </span>
+            {funnelData.length === 0 ? (
+              <div className="text-center py-12">
+                <p className="text-slate-500 mb-2">No data available</p>
+                <p className="text-sm text-slate-400">
+                  Start tracking applications to see funnel data
+                </p>
+              </div>
+            ) : (
+              <>
+                <div className="h-64 w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
+                      layout="vertical"
+                      data={funnelData}
+                      margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                      barSize={32}
+                    >
+                      <XAxis type="number" hide />
+                      <Tooltip cursor={{ fill: 'transparent' }} />
+                      <Bar
+                        dataKey="value"
+                        fill="#e0e7ff"
+                        radius={[4, 4, 4, 4]}
+                        background={{ fill: '#f1f5f9', radius: 4 }}
+                      >
+                        {funnelData.map((entry, index) => (
+                          <Cell
+                            key={`cell-${index}`}
+                            fill={entry.color}
+                            fillOpacity={1 - index * 0.3}
+                          />
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
                 </div>
-              ))}
-            </div>
+                <div className="flex flex-col gap-2 mt-4">
+                  {funnelData.map((item, idx) => (
+                    <div
+                      key={idx}
+                      className="flex items-center justify-between text-sm border-b border-slate-50 last:border-0 py-2"
+                    >
+                      <div className="flex items-center gap-2">
+                        <div
+                          className="w-3 h-3 rounded-full"
+                          style={{ backgroundColor: item.color, opacity: 1 - idx * 0.3 }}
+                        ></div>
+                        <span className="font-medium text-slate-600">{item.name}</span>
+                      </div>
+                      <span className="font-bold text-slate-900">
+                        {item.value} (
+                        {item.percentage
+                          ? `${item.percentage.toFixed(0)}%`
+                          : idx === 0
+                            ? '100%'
+                            : '0%'}
+                        )
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>
