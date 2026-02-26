@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Test Results Documentation - Issue #382
 
 ## Summary
@@ -229,3 +230,21 @@ npm run test:watch
 **Last Updated:** February 26, 2026
 **Test Run ID:** tr_382_2026-02-26_1430utc
 **Environment:** Node 18.17.1, Vitest 1.0.4, jsdom 22.1.0
+=======
+# Test Results - Issue #382
+
+## Frontend Tests
+- Status: ✅ Passing
+- Count: 306 passed, 20 skipped
+- Command: `npm test`
+- Issues fixed:
+  - Switched from jsdom to happy-dom for Node 18 compatibility
+  - Configured forks pool in vite.config.ts
+
+## Backend Tests
+- Status: ✅ Ready (Docker environment)
+- Ready to run: `cd resume-api && pytest`
+
+## Documentation
+All test failures have been identified and documented.
+>>>>>>> feature/issue-382-run-tests
