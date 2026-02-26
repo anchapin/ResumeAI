@@ -1,10 +1,10 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { StorageWarning } from './StorageWarning';
-import * as storageLib from '../lib/storage';
+import * as storageLib from '../src/lib/storage';
 
 // Mock the storage library
-vi.mock('../lib/storage', () => ({
+vi.mock('../src/lib/storage', () => ({
   getStorageQuota: vi.fn(),
   checkStorageWarning: vi.fn(),
   StorageManager: {

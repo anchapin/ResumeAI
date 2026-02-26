@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { StorageManager, getStorageQuota } from '../lib/storage';
+import { StorageManager, getStorageQuota } from '../src/lib/storage';
 import { toast } from 'react-toastify';
 
 interface StorageWarningProps {
