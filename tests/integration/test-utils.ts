@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import type { Resume } from '@/types';
 
 export interface TestContext {
@@ -347,7 +346,7 @@ export async function waitFor(
     await wait(interval);
   }
 }
-=======
+
 // Integration test utilities
 export const mockPdfResponse = {
   pdf_url: "https://storage.example.com/resume.pdf",
@@ -369,6 +368,5 @@ export function setupApiMocks() {
   global.fetch = () => Promise.resolve({
     ok: true,
     json: () => Promise.resolve(mockPdfResponse)
-  });
+  }) as any;
 }
->>>>>>> feature/issue-383-api-integration-tests

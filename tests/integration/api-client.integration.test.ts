@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
+import { describe as _describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
 import type { TestContext } from './test-utils';
 import { setupTestAPI, cleanupTestAPI, createMockResume } from './test-utils';
 
