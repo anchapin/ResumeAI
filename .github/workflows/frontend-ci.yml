@@ -45,7 +45,7 @@ jobs:
       - name: Run tests
         run: npm run test -- --run --reporter=verbose --exclude="utils/storage.test.ts"
 
-      - name: Run tests with coverage
+      - name: Run tests with coverage (enforces 60% minimum)
         run: npm run test:coverage -- --run
         continue-on-error: false
 

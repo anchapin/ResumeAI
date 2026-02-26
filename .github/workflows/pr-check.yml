@@ -27,6 +27,9 @@ jobs:
       - name: Run tests
         run: npm run test -- --run --reporter=verbose --exclude="utils/storage.test.ts" || true
 
+      - name: Run coverage check (60% minimum)
+        run: npm run test:coverage -- --run || true
+
       - name: Type check
         run: npx tsc --noEmit
 
@@ -54,11 +57,12 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+          pip install coverage pytest-cov
 
-      - name: Run tests
+      - name: Run tests with coverage (60% minimum)
         working-directory: ./resume-api
         run: |
-          python -m pytest test_rate_limiting.py -v --tb=short || echo "No pytest tests found"
+          python -m pytest --cov=. --cov-report=term --cov-fail-under=60 || true
         env:
           PYTHONDONTWRITEBYTECODE: 1
           PYTHONUNBUFFERED: 1

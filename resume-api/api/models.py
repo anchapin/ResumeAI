@@ -4,6 +4,7 @@ Pydantic models for request/response validation.
 
 import re
 from datetime import datetime
+from enum import Enum
 from typing import Dict, Any, Optional, List, Tuple
 from pydantic import BaseModel, Field, field_validator, model_validator
 
@@ -2044,3 +2045,120 @@ class SessionHistoryResponse(BaseModel):
     sessions: List[InterviewSession] = Field(..., description="List of past sessions")
     total_sessions: int = Field(..., description="Total number of sessions")
     average_score: Optional[float] = Field(None, description="Average score across all sessions")
+
+
+# ========================
+# Job Queue Models (Issue #417)
+# ========================
+
+class JobStatus(str, Enum):
+    """Job status values."""
+    PENDING = "pending"
+    PROCESSING = "processing"
+    COMPLETED = "completed"
+    FAILED = "failed"
+    CANCELLED = "cancelled"
+
+
+class JobPriorityLevel(str, Enum):
+    """Job priority levels."""
+    LOW = "low"
+    NORMAL = "normal"
+    HIGH = "high"
+    CRITICAL = "critical"
+
+
+class SubmitPDFRenderJobRequest(BaseModel):
+    """Request to submit an async PDF render job."""
+
+    resume_data: Dict[str, Any] = Field(..., description="Resume data to render")
+    variant: Optional[str] = Field("default", description="Resume variant/template")
+    priority: JobPriorityLevel = Field(JobPriorityLevel.NORMAL, description="Job priority")
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "resume_data": {
+                    "firstName": "John",
+                    "lastName": "Doe",
+                    "email": "john@example.com",
+                },
+                "variant": "default",
+                "priority": "normal",
+            }
+        }
+
+
+class JobStatusResponse(BaseModel):
+    """Response with job status."""
+
+    job_id: str = Field(..., description="Unique job ID")
+    state: JobStatus = Field(..., description="Current job state")
+    progress: float = Field(..., description="Progress percentage (0-100)")
+    eta_seconds: Optional[int] = Field(None, description="Estimated time to completion")
+    error: Optional[str] = Field(None, description="Error message if failed")
+    retry_count: int = Field(..., description="Number of retries attempted")
+    created_at: str = Field(..., description="ISO format creation timestamp")
+    started_at: Optional[str] = Field(None, description="ISO format start timestamp")
+    completed_at: Optional[str] = Field(None, description="ISO format completion timestamp")
+    result: Optional[Dict[str, Any]] = Field(None, description="Job result data")
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "job_id": "550e8400-e29b-41d4-a716-446655440000",
+                "state": "processing",
+                "progress": 45.5,
+                "eta_seconds": 15,
+                "error": None,
+                "retry_count": 0,
+                "created_at": "2024-02-26T10:30:00Z",
+                "started_at": "2024-02-26T10:30:05Z",
+                "completed_at": None,
+                "result": None,
+            }
+        }
+
+
+class SubmitPDFRenderJobResponse(BaseModel):
+    """Response when submitting an async PDF render job."""
+
+    job_id: str = Field(..., description="Unique job ID for tracking")
+    status: JobStatus = Field(..., description="Initial job status")
+    message: str = Field(..., description="Confirmation message")
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "job_id": "550e8400-e29b-41d4-a716-446655440000",
+                "status": "pending",
+                "message": "PDF render job submitted successfully",
+            }
+        }
+
+
+class QueueStatsResponse(BaseModel):
+    """Response with queue statistics."""
+
+    total_jobs: int = Field(..., description="Total jobs in queue")
+    pending: int = Field(..., description="Number of pending jobs")
+    processing: int = Field(..., description="Number of processing jobs")
+    completed: int = Field(..., description="Number of completed jobs")
+    failed: int = Field(..., description="Number of failed jobs")
+    cancelled: int = Field(..., description="Number of cancelled jobs")
+    worker_active_jobs: int = Field(..., description="Active jobs in worker")
+    worker_running: bool = Field(..., description="Worker running status")
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "total_jobs": 42,
+                "pending": 5,
+                "processing": 2,
+                "completed": 30,
+                "failed": 3,
+                "cancelled": 2,
+                "worker_active_jobs": 2,
+                "worker_running": True,
+            }
+        }

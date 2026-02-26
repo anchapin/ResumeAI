@@ -1,0 +1,41 @@
+version: '3.9'
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: resume-api/Dockerfile
+      cache_from:
+        - type=registry,ref=anchapin/resumeai-api:buildcache
+    image: anchapin/resumeai-api:latest
+    container_name: resumeai-api
+    ports:
+      - "8000:8000"
+    environment:
+      - PORT=8000
+      - HOST=0.0.0.0
+      - DEBUG=false
+      - AI_PROVIDER=${AI_PROVIDER:-openai}
+      - AI_MODEL=${AI_MODEL:-gpt-4o}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - MASTER_API_KEY=${MASTER_API_KEY}
+      - REQUIRE_API_KEY=true
+    healthcheck:
+      test: ["CMD", "python", "-c", "import httpx; httpx.get('http://localhost:8000/health', timeout=10).raise_for_status()"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+    restart: unless-stopped
+    networks:
+      - resumeai
+    security_opt:
+      - no-new-privileges:true
+    read_only_root_filesystem: true
+    tmpfs:
+      - /tmp
+      - /run
+
+networks:
+  resumeai:
+    driver: bridge

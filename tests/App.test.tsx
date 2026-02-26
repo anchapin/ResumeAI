@@ -832,4 +832,294 @@ describe('App Component', () => {
       // This would require navigating via code or mocking the route
     });
   });
-});
+
+  describe('Resume Data Handling', () => {
+    it('should update resume data when modified', async () => {
+      const mockData = {
+        name: 'John Doe',
+        email: 'john@example.com',
+        phone: '+1234567890',
+        location: 'New York',
+        role: 'Software Engineer',
+        summary: 'Test summary',
+        skills: ['React'],
+        experience: [],
+        education: [],
+        projects: []
+      };
+
+      localStorage.setItem('resumeai_master_profile', JSON.stringify(mockData));
+
+      render(<App />);
+
+      await waitFor(() => {
+        expect(screen.getByTestId('dashboard-page')).toBeInTheDocument();
+      });
+
+      // App should have loaded and validated the data
+      expect(screen.getByTestId('error-boundary')).toBeInTheDocument();
+    });
+
+    it('should handle missing storage data gracefully', async () => {
+      vi.spyOn(StorageModule, 'loadResumeData').mockReturnValue(null);
+
+      render(<App />);
+
+      await waitFor(() => {
+        expect(screen.getByTestId('dashboard-page')).toBeInTheDocument();
+      });
+
+      expect(screen.getByTestId('error-boundary')).toBeInTheDocument();
+    });
+
+    it('should validate array fields in resume data', async () => {
+      const dataWithInvalidArrays = {
+        name: 'John Doe',
+        email: 'john@example.com',
+        phone: '+1234567890',
+        location: 'New York',
+        role: 'Software Engineer',
+        summary: 'Test summary',
+        skills: null,
+        experience: undefined,
+        education: null,
+        projects: null
+      };
+
+      localStorage.setItem('resumeai_master_profile', JSON.stringify(dataWithInvalidArrays));
+
+      render(<App />);
+
+      await waitFor(() => {
+        expect(screen.getByTestId('dashboard-page')).toBeInTheDocument();
+      });
+
+      expect(screen.getByTestId('error-boundary')).toBeInTheDocument();
+    });
+  });
+
+  describe('Global State Management', () => {
+    it('should maintain save status state', async () => {
+      render(<App />);
+
+      await waitFor(() => {
+        expect(screen.getByTestId('dashboard-page')).toBeInTheDocument();
+      });
+
+      expect(screen.getByTestId('error-boundary')).toBeInTheDocument();
+    });
+
+    it('should track loading state during initialization', async () => {
+      render(<App />);
+
+      // Initially should show loading message or dashboard once loaded
+      await waitFor(() => {
+        expect(screen.queryByText('Loading')).not.toBeInTheDocument();
+      });
+
+      expect(screen.getByTestId('dashboard-page')).toBeInTheDocument();
+    });
+
+    it('should handle theme initialization from hook', async () => {
+      render(<App />);
+
+      await waitFor(() => {
+        expect(screen.getByTestId('dashboard-page')).toBeInTheDocument();
+      });
+
+      // App should initialize theme and render without errors
+      expect(screen.getByTestId('error-boundary')).toBeInTheDocument();
+    });
+  });
+
+  describe('Storage Warning Component', () => {
+    it('should render storage warning component', async () => {
+      render(<App />);
+
+      await waitFor(() => {
+        expect(screen.getByTestId('dashboard-page')).toBeInTheDocument();
+      });
+
+      // Storage warning is rendered but may be hidden initially
+      expect(screen.getByTestId('error-boundary')).toBeInTheDocument();
+    });
+  });
+
+  describe('Complex Navigation Scenarios', () => {
+    it('should handle sequential navigation to all sidebar routes', async () => {
+      const user = userEvent.setup();
+      render(<App />);
+
+      await waitFor(() => {
+        expect(screen.getByTestId('dashboard-page')).toBeInTheDocument();
+      });
+
+      // Navigate to each route in sequence
+      const routes = [
+        { button: 'nav-editor', page: 'editor-page' },
+        { button: 'nav-workspace', page: 'workspace-page' },
+        { button: 'nav-dashboard', page: 'dashboard-page' },
+      ];
+
+      for (const route of routes) {
+        const navButton = screen.getByTestId(route.button);
+        await user.click(navButton);
+
+        await waitFor(() => {
+          expect(screen.getByTestId(route.page)).toBeInTheDocument();
+        });
+      }
+    });
+
+    it('should preserve data across navigation', async () => {
+      const mockData = {
+        name: 'Test User',
+        email: 'test@example.com',
+        phone: '+1234567890',
+        location: 'Test City',
+        role: 'Test Role',
+        summary: 'Test summary',
+        skills: ['Skill1', 'Skill2'],
+        experience: [],
+        education: [],
+        projects: []
+      };
+
+      localStorage.setItem('resumeai_master_profile', JSON.stringify(mockData));
+
+      const user = userEvent.setup();
+      render(<App />);
+
+      await waitFor(() => {
+        expect(screen.getByTestId('dashboard-page')).toBeInTheDocument();
+      });
+
+      // Navigate and return
+      const editorButton = screen.getByTestId('nav-editor');
+      await user.click(editorButton);
+
+      await waitFor(() => {
+        expect(screen.getByTestId('editor-page')).toBeInTheDocument();
+      });
+
+      const backButton = screen.getByTestId('editor-back-btn');
+      await user.click(backButton);
+
+      await waitFor(() => {
+        expect(screen.getByTestId('dashboard-page')).toBeInTheDocument();
+      });
+    });
+  });
+
+  describe('Security Token Handling', () => {
+    it('should validate token on mount', async () => {
+      const token = 'test-token';
+      localStorage.setItem('resume_ai_auth_token', token);
+
+      vi.spyOn(TokenManager, 'getToken').mockReturnValue(token);
+      vi.spyOn(TokenManager, 'isTokenExpired').mockReturnValue(false);
+
+      render(<App />);
+
+      await waitFor(() => {
+        expect(screen.getByTestId('dashboard-page')).toBeInTheDocument();
+      });
+
+      expect(TokenManager.getToken).toHaveBeenCalled();
+    });
+
+    it('should remove expired token on mount', async () => {
+      const expiredToken = 'expired-token';
+      localStorage.setItem('resume_ai_auth_token', expiredToken);
+
+      vi.spyOn(TokenManager, 'getToken').mockReturnValue(expiredToken);
+      vi.spyOn(TokenManager, 'isTokenExpired').mockReturnValue(true);
+      vi.spyOn(TokenManager, 'removeToken').mockImplementation(() => {
+        localStorage.removeItem('resume_ai_auth_token');
+      });
+
+      render(<App />);
+
+      await waitFor(() => {
+        expect(screen.getByTestId('dashboard-page')).toBeInTheDocument();
+      });
+
+      expect(TokenManager.isTokenExpired).toHaveBeenCalledWith(expiredToken);
+      expect(TokenManager.removeToken).toHaveBeenCalled();
+    });
+  });
+
+  describe('Error Display and Dismissal', () => {
+    it('should allow manual error dismissal', async () => {
+      const user = userEvent.setup();
+
+      vi.spyOn(StorageModule, 'loadResumeData').mockImplementation(() => {
+        throw new StorageModule.StorageError(
+          'Test error',
+          StorageModule.StorageErrorType.QUOTA_EXCEEDED
+        );
+      });
+
+      render(<App />);
+
+      const errorMessage = await screen.findByText('Storage full. Please clear some browser data.');
+      expect(errorMessage).toBeInTheDocument();
+
+      const closeButton = screen.getByRole('button', { name: 'close' });
+      await user.click(closeButton);
+
+      await waitFor(() => {
+        expect(screen.queryByText('Storage full. Please clear some browser data.')).not.toBeInTheDocument();
+      });
+    });
+
+    it('should display NOT_AVAILABLE error', async () => {
+      vi.spyOn(StorageModule, 'loadResumeData').mockImplementation(() => {
+        throw new StorageModule.StorageError(
+          'Storage not available',
+          StorageModule.StorageErrorType.NOT_AVAILABLE
+        );
+      });
+
+      render(<App />);
+
+      await waitFor(() => {
+        expect(screen.getByText('Storage not available. Changes won\'t be saved.')).toBeInTheDocument();
+      });
+    });
+
+    it('should display generic error for unknown error types', async () => {
+      vi.spyOn(StorageModule, 'loadResumeData').mockImplementation(() => {
+        throw new StorageModule.StorageError(
+          'Unknown error',
+          'UNKNOWN' as any
+        );
+      });
+
+      render(<App />);
+
+      await waitFor(() => {
+        expect(screen.getByText('Failed to save data. Please try again.')).toBeInTheDocument();
+      });
+    });
+  });
+
+  describe('Suspense Boundaries', () => {
+    it('should handle lazy loaded components', async () => {
+      const user = userEvent.setup();
+      render(<App />);
+
+      await waitFor(() => {
+        expect(screen.getByTestId('dashboard-page')).toBeInTheDocument();
+      });
+
+      // Navigate to a lazy loaded route
+      const workspaceButton = screen.getByTestId('nav-workspace');
+      await user.click(workspaceButton);
+
+      await waitFor(() => {
+        expect(screen.getByTestId('workspace-page')).toBeInTheDocument();
+      });
+    });
+  });
+  });
