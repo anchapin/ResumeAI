@@ -19,6 +19,7 @@
     "recharts": "^3.7.0"
   },
   "devDependencies": {
+    "@axe-core/react": "^4.11.1",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
@@ -29,6 +30,7 @@
     "@types/react-toastify": "^4.0.2",
     "@vitejs/plugin-react": "^5.0.0",
     "@vitest/coverage-istanbul": "^4.0.18",
+    "axe-core": "^4.11.1",
     "happy-dom": "^20.7.0",
     "jsdom": "^28.0.0",
     "typedoc": "^0.28.17",
