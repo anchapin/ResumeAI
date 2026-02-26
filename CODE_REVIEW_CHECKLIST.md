@@ -5,6 +5,7 @@ This document outlines the mandatory requirements for all pull requests before t
 ## Before Submitting PR
 
 ### Code Quality
+
 - [ ] Code follows project style guide (ESLint, Prettier)
 - [ ] No console.log() or debugger statements
 - [ ] No hardcoded credentials or secrets
@@ -12,18 +13,21 @@ This document outlines the mandatory requirements for all pull requests before t
 - [ ] DRY principle applied (no copy-paste code)
 
 ### Testing
+
 - [ ] Test coverage > 60% for new code
 - [ ] All tests pass locally (`npm run test` or `pytest`)
 - [ ] Edge cases and error scenarios tested
 - [ ] Integration tests added for API changes
 
 ### Documentation
+
 - [ ] README/docs updated if behavior changed
 - [ ] New environment variables documented in `.env.example`
 - [ ] Commit messages follow conventional commits (feat:, fix:, chore:)
 - [ ] Type definitions added (TypeScript/Pydantic models)
 
 ### Security
+
 - [ ] No SQL injection vulnerabilities
 - [ ] No XSS vulnerabilities (proper escaping)
 - [ ] API keys/tokens never logged
@@ -31,6 +35,7 @@ This document outlines the mandatory requirements for all pull requests before t
 - [ ] Dependencies checked for vulnerabilities (`npm audit`, `pip-audit`)
 
 ### Performance
+
 - [ ] No unnecessary API calls or loops
 - [ ] Algorithms optimized (avoid O(n²) in hot paths)
 - [ ] Large objects properly cleaned up
@@ -41,24 +46,28 @@ This document outlines the mandatory requirements for all pull requests before t
 ## Reviewer Checklist
 
 ### Functionality
+
 - [ ] Code solves the stated problem
 - [ ] No regressions in existing features
 - [ ] Edge cases handled properly
 - [ ] Error messages are helpful and clear
 
 ### Code Review
+
 - [ ] Code is readable and maintainable
 - [ ] Naming conventions followed
 - [ ] No overly complex logic (functions <50 lines preferred)
 - [ ] Performance impact acceptable
 
 ### Testing
+
 - [ ] Test coverage >= 60%
 - [ ] Tests are meaningful (not just lines of code)
 - [ ] Error handling tested
 - [ ] Integration tests pass
 
 ### Security Review
+
 - [ ] ✅ No hardcoded secrets/credentials
 - [ ] ✅ Input validation present
 - [ ] ✅ No unauthorized data access
@@ -67,12 +76,14 @@ This document outlines the mandatory requirements for all pull requests before t
 - [ ] ✅ API endpoints properly secured
 
 ### Documentation
+
 - [ ] Code is self-documenting
 - [ ] Complex sections explained
 - [ ] API documentation updated
 - [ ] Type definitions correct
 
 ### Dependencies
+
 - [ ] No unnecessary dependencies added
 - [ ] Dependency versions pinned (no loose ^)
 - [ ] No security vulnerabilities in deps
@@ -85,6 +96,7 @@ This document outlines the mandatory requirements for all pull requests before t
 Before merging, **all** of the following must be satisfied:
 
 ### 1. **Test Coverage** ✅
+
 ```
 - [ ] Frontend: >= 60% coverage
 - [ ] Backend: >= 60% coverage
@@ -92,6 +104,7 @@ Before merging, **all** of the following must be satisfied:
 ```
 
 ### 2. **Security Review** ✅
+
 ```
 - [ ] No hardcoded credentials
 - [ ] No secrets in logs
@@ -101,6 +114,7 @@ Before merging, **all** of the following must be satisfied:
 ```
 
 ### 3. **Code Quality** ✅
+
 ```
 - [ ] ESLint/Prettier passing
 - [ ] Type checking passing
@@ -109,6 +123,7 @@ Before merging, **all** of the following must be satisfied:
 ```
 
 ### 4. **Error Handling** ✅
+
 ```
 - [ ] All error cases handled
 - [ ] User-friendly error messages
@@ -117,6 +132,7 @@ Before merging, **all** of the following must be satisfied:
 ```
 
 ### 5. **Documentation** ✅
+
 ```
 - [ ] README updated (if needed)
 - [ ] Code comments sufficient
@@ -130,19 +146,24 @@ Before merging, **all** of the following must be satisfied:
 
 ```markdown
 ## Issue
+
 Closes #XXX
 
 ## Description
+
 Brief description of changes
 
 ## Changes
+
 - [ ] Change 1
 - [ ] Change 2
 
 ## Testing
+
 How to test these changes
 
 ## Checklist
+
 - [ ] Tests pass
 - [ ] Coverage > 60%
 - [ ] No hardcoded secrets
@@ -158,6 +179,7 @@ How to test these changes
 ### Commands to Run Before Submitting
 
 **Frontend:**
+
 ```bash
 npm run lint
 npm run type-check
@@ -166,6 +188,7 @@ npm run test:coverage
 ```
 
 **Backend:**
+
 ```bash
 cd resume-api
 pylint **/*.py
@@ -177,11 +200,13 @@ pytest --cov=. --cov-report=term
 ### Common Issues
 
 **Failing ESLint?**
+
 ```bash
 npm run lint -- --fix
 ```
 
 **Type errors?**
+
 ```bash
 npm run type-check
 # or
@@ -189,6 +214,7 @@ cd resume-api && mypy --strict .
 ```
 
 **Tests not passing?**
+
 ```bash
 npm run test -- --run
 # or
@@ -196,6 +222,7 @@ cd resume-api && pytest -v
 ```
 
 **Coverage too low?**
+
 ```bash
 npm run test:coverage
 # Fix: Add test cases for uncovered lines
@@ -217,24 +244,78 @@ npm run test:coverage
 ## Examples
 
 ### Good PR
+
 ✅ Test coverage 72%, all tests pass  
 ✅ No console.log statements  
 ✅ Error handling complete  
 ✅ Documentation updated  
-✅ Security review passed  
+✅ Security review passed
 
 ### Bad PR
+
 ❌ Test coverage 45% (below 60%)  
 ❌ Console.log statements left in code  
 ❌ Missing error handling  
 ❌ No documentation updates  
-❌ Hardcoded API key in constants  
+❌ Hardcoded API key in constants
+
+---
+
+## Automated Checks
+
+The following checks run automatically in CI/CD pipeline:
+
+### Frontend
+
+- **ESLint**: Code style consistency
+- **Prettier**: Code formatting
+- **TypeScript**: Type safety (`tsc --noEmit`)
+- **Tests**: Unit and integration tests (`npm run test`)
+- **Coverage**: Code coverage report (must be >= 60%)
+
+### Backend
+
+- **Pylint**: Python code style
+- **MyPy**: Type checking (`mypy --strict .`)
+- **Pytest**: Unit and integration tests
+- **Coverage**: Code coverage report (must be >= 60%)
+
+✅ **All automated checks must pass before review**
+
+---
+
+## Reviewer Sign-Off Requirement
+
+### Minimum Requirements for Merge
+
+1. ✅ **All automated checks passing** (CI/CD green)
+2. ✅ **Test coverage >= 60%** (both frontend and backend)
+3. ✅ **Security review approved** (no secrets, proper escaping)
+4. ✅ **Code quality approved** (linting, type safety, naming)
+5. ✅ **At least one approved review** from team lead
+
+### Review Process
+
+- **Author**: Ensures all pre-submission checks pass
+- **Reviewer**: Verifies code logic, security, and completeness
+- **CI/CD**: Validates automated checks
+- **Merge**: Only authorized after all approvals
+
+### What Reviewers Should Check
+
+1. **Does it solve the issue?** (check issue #XXX)
+2. **Any regressions?** (test against existing features)
+3. **Error handling complete?** (happy path AND edge cases)
+4. **Security concerns?** (auth, validation, logging)
+5. **Performance impact?** (no O(n²) algorithms, bundle size acceptable)
 
 ---
 
 ## Questions?
 
 Refer to project documentation:
+
 - `CLAUDE.md` - Architecture and conventions
 - `README.md` - Setup and development
 - `API_DOCUMENTATION.md` - API endpoints
+- `CONTRIBUTING.md` - Contribution guidelines
