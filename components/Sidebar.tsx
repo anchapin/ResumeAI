@@ -120,6 +120,7 @@ const Sidebar: React.FC<SidebarProps> = React.memo(
           <button
             type="button"
             onClick={() => onNavigate(Route.WORKSPACE)}
+            data-testid="nav-workspace"
             className="flex w-full items-center justify-center gap-2 rounded-xl h-12 bg-primary-600 text-white text-sm font-bold shadow-lg shadow-primary-600/30 hover:bg-primary-700 hover:shadow-primary-600/40 transition-all transform active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary-600"
           >
             <span className="material-symbols-outlined text-[20px]" aria-hidden="true">
