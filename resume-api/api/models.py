@@ -7,6 +7,12 @@ from datetime import datetime
 from typing import Dict, Any, Optional, List, Tuple
 from pydantic import BaseModel, Field, field_validator, model_validator
 
+# Import validators
+try:
+    from lib.utils.validators import escape_latex
+except ImportError:
+    escape_latex = lambda x: x
+
 # Validation constants
 MAX_STRING_LENGTH = 1000
 MAX_LONG_STRING_LENGTH = 10000
@@ -171,8 +177,11 @@ class BasicInfo(BaseModel):
     @field_validator("name", "label", "summary")
     @classmethod
     def sanitize_text_fields(cls, v: Optional[str]) -> Optional[str]:
-        """Sanitize text fields to prevent injection attacks."""
-        return sanitize_html(v) if v else v
+        """Sanitize text fields and escape LaTeX."""
+        if not v:
+            return v
+        v = sanitize_html(v)
+        return escape_latex(v) if v else v
 
 
 class Location(BaseModel):
@@ -328,7 +337,7 @@ class WorkItem(BaseModel):
     @field_validator("highlights")
     @classmethod
     def validate_highlights(cls, v: Optional[List[str]]) -> List[str]:
-        """Validate highlights list."""
+        """Validate highlights list with LaTeX escaping."""
         if v is None:
             return []
 
@@ -346,7 +355,8 @@ class WorkItem(BaseModel):
                     raise ValueError(
                         f"Work highlight exceeds maximum length of {MAX_STRING_LENGTH} characters"
                     )
-                validated.append(sanitized)
+                escaped = escape_latex(sanitized)
+                validated.append(escaped)
 
         return validated
 
@@ -384,8 +394,11 @@ class WorkItem(BaseModel):
     @field_validator("company", "position", "summary")
     @classmethod
     def sanitize_text_fields(cls, v: Optional[str]) -> Optional[str]:
-        """Sanitize text fields."""
-        return sanitize_html(v) if v else v
+        """Sanitize text fields and escape LaTeX."""
+        if not v:
+            return v
+        v = sanitize_html(v)
+        return escape_latex(v) if v else v
 
 
 class EducationItem(BaseModel):
@@ -423,7 +436,7 @@ class EducationItem(BaseModel):
     @field_validator("courses")
     @classmethod
     def validate_courses(cls, v: Optional[List[str]]) -> List[str]:
-        """Validate courses list."""
+        """Validate courses list with LaTeX escaping."""
         if v is None:
             return []
 
@@ -441,7 +454,8 @@ class EducationItem(BaseModel):
                     raise ValueError(
                         f"Course name exceeds maximum length of {MAX_STRING_LENGTH} characters"
                     )
-                validated.append(sanitized)
+                escaped = escape_latex(sanitized)
+                validated.append(escaped)
 
         return validated
 
@@ -477,8 +491,11 @@ class EducationItem(BaseModel):
     @field_validator("institution", "area", "studyType")
     @classmethod
     def sanitize_text_fields(cls, v: Optional[str]) -> Optional[str]:
-        """Sanitize text fields."""
-        return sanitize_html(v) if v else v
+        """Sanitize text fields and escape LaTeX."""
+        if not v:
+            return v
+        v = sanitize_html(v)
+        return escape_latex(v) if v else v
 
 
 class ProjectItem(BaseModel):

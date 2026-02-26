@@ -6,11 +6,14 @@ This module provides functions for:
 2. Input validation (length, format, etc.)
 3. Email and URL validation
 4. XSS prevention
+5. File upload validation (size, type, content)
+6. Markdown XSS protection
 """
 
 import re
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, Tuple
 from urllib.parse import urlparse
+from pathlib import Path
 
 
 # LaTeX special characters that need escaping
@@ -40,6 +43,17 @@ MAX_LONG_STRING_LENGTH = 10000
 MAX_SUMMARY_LENGTH = 5000
 MAX_HIGHLIGHT_LENGTH = 500
 MAX_DESCRIPTION_LENGTH = 2000
+
+# File upload validation
+MAX_FILE_SIZE_MB = 10  # Maximum 10MB
+MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024
+ALLOWED_FILE_EXTENSIONS = {".pdf", ".docx", ".doc", ".txt"}
+ALLOWED_MIME_TYPES = {
+    "application/pdf",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "application/vnd.ms-word.document",
+    "text/plain",
+}
 
 
 def escape_latex(text: Optional[str]) -> Optional[str]:
@@ -538,3 +552,95 @@ def validate_language_item(item: Dict[str, Any]) -> Dict[str, Any]:
         )
 
     return validated
+
+
+# =============================================================================
+# File Upload Validation
+# =============================================================================
+
+
+def validate_file_upload(
+    filename: str,
+    file_size: int,
+    content_type: Optional[str] = None,
+) -> Tuple[bool, Optional[str]]:
+    """Validate file upload."""
+    if not filename or not filename.strip():
+        return False, "Filename is required"
+
+    file_ext = Path(filename).suffix.lower()
+    if file_ext not in ALLOWED_FILE_EXTENSIONS:
+        return False, f"Invalid file type: {file_ext}"
+
+    if file_size == 0:
+        return False, "File is empty"
+
+    if file_size > MAX_FILE_SIZE_BYTES:
+        return False, f"File too large"
+
+    if content_type and content_type not in ALLOWED_MIME_TYPES:
+        return False, "Invalid MIME type"
+
+    return True, None
+
+
+def validate_file_content(
+    file_bytes: bytes,
+    file_type: str,
+) -> Tuple[bool, Optional[str]]:
+    """Validate file content."""
+    if not file_bytes:
+        return False, "File is empty"
+
+    file_type = file_type.lower()
+
+    if file_type == ".pdf":
+        if not file_bytes.startswith(b"%PDF"):
+            return False, "Invalid PDF"
+
+    elif file_type == ".docx":
+        if not file_bytes.startswith(b"PK"):
+            return False, "Invalid DOCX"
+
+    elif file_type == ".txt":
+        if b"\x00" in file_bytes[:8192]:
+            return False, "Binary file"
+
+    return True, None
+
+
+def sanitize_markdown(text: Optional[str]) -> Optional[str]:
+    """Sanitize markdown for XSS."""
+    if not text:
+        return None
+
+    text = sanitize_html(text)
+    if not text:
+        return None
+
+    # Remove dangerous markdown patterns
+    text = re.sub(r"!\[.*?\]\(data:.*?\)", "", text, flags=re.IGNORECASE)
+    text = re.sub(r"\[.*?\]\(javascript:.*?\)", "", text, flags=re.IGNORECASE)
+    text = re.sub(r"\[.*?\]\(data:.*?\)", "", text, flags=re.IGNORECASE)
+
+    return text.strip() if text else None
+
+
+def validate_markdown_field(
+    text: Optional[str],
+    field_name: str = "Content",
+    max_length: int = MAX_LONG_STRING_LENGTH,
+) -> Optional[str]:
+    """Validate markdown field."""
+    if not text:
+        return None
+
+    if len(text) > max_length:
+        raise ValueError(f"{field_name} too long")
+
+    text = sanitize_markdown(text)
+
+    if not text:
+        raise ValueError(f"{field_name} empty after sanitization")
+
+    return text
