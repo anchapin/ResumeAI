@@ -43,6 +43,8 @@ from lib.cli import (  # noqa: E402
 from lib.utils.validators import (  # noqa: E402
     validate_resume_data,
     escape_latex,
+    validate_file_upload,
+    validate_file_content,
 )
 
 # Import authentication and rate limiting
@@ -800,22 +802,26 @@ async def import_pdf(
     Returns:
         ResumeData in JSON Resume format
     """
-    # Check file type
-    if file.content_type != "application/pdf":
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid file type. Only PDF files are accepted.",
-        )
-
     try:
         # Read file content
         content = await file.read()
 
-        # Check file size (max 10MB)
-        if len(content) > 10 * 1024 * 1024:
+        # Validate file upload
+        is_valid, error = validate_file_upload(
+            file.filename, len(content), file.content_type
+        )
+        if not is_valid:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="File too large. Maximum size is 10MB.",
+                detail=error,
+            )
+
+        # Validate file content
+        is_valid, error = validate_file_content(content, ".pdf")
+        if not is_valid:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=error,
             )
 
         # Extract text from PDF
@@ -824,9 +830,14 @@ async def import_pdf(
         # Parse into JSON Resume format
         resume_data = parse_resume_text(text)
 
+        # Validate and escape data
+        resume_data = validate_resume_data(resume_data)
+
         # Validate and return
         return ResumeData(**resume_data)
 
+    except HTTPException:
+        raise
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except Exception as e:
@@ -887,26 +898,26 @@ async def import_docx(
 
     Rate limit: 10 requests per minute per API key.
     """
-    # Check file type
-    content_type = file.content_type
-    if content_type not in [
-        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-        "application/vnd.ms-word.document",
-    ]:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid file type. Only DOCX files are accepted.",
-        )
-
     try:
         # Read file content
         content = await file.read()
 
-        # Check file size (max 10MB)
-        if len(content) > 10 * 1024 * 1024:
+        # Validate file upload
+        is_valid, error = validate_file_upload(
+            file.filename, len(content), file.content_type
+        )
+        if not is_valid:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="File too large. Maximum size is 10MB.",
+                detail=error,
+            )
+
+        # Validate file content
+        is_valid, error = validate_file_content(content, ".docx")
+        if not is_valid:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=error,
             )
 
         # Extract text from DOCX
@@ -915,9 +926,14 @@ async def import_docx(
         # Parse into JSON Resume format
         resume_data = parse_resume_text(text)
 
+        # Validate and escape data
+        resume_data = validate_resume_data(resume_data)
+
         # Validate and return
         return ResumeData(**resume_data)
 
+    except HTTPException:
+        raise
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except Exception as e:
