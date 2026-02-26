@@ -20,10 +20,10 @@ interface WorkspaceProps {
 }
 
 /** Available tab types for the workspace */
-type TabType = 'Resume' | 'Keywords' | 'Suggestions' | 'Adjust';
+type TabType = 'Resume' | 'Cover Letter' | 'Keywords' | 'Suggestions' | 'Adjust';
 
 /** Available tabs for the workspace */
-const TABS: TabType[] = ['Resume', 'Keywords', 'Suggestions', 'Adjust'];
+const TABS: TabType[] = ['Resume', 'Cover Letter', 'Keywords', 'Suggestions', 'Adjust'];
 
 /**
  * @component
@@ -42,8 +42,17 @@ const TABS: TabType[] = ['Resume', 'Keywords', 'Suggestions', 'Adjust'];
  * ```
  */
 const Workspace: React.FC<WorkspaceProps> = ({ resumeData, onNavigate }) => {
-  const { generatePackage, downloadPDF, renderMarkdown, loading, error, data } =
-    useGeneratePackage();
+  const {
+    generatePackage,
+    generateCoverLetterRequest,
+    downloadPDF,
+    renderMarkdown,
+    loading,
+    error,
+    data,
+    coverLetter,
+    coverLetterLoading,
+  } = useGeneratePackage();
   const { variants: apiVariants, loading: variantsLoading, error: variantsError } = useVariants();
   const [activeTab, setActiveTab] = useState<TabType>('Resume');
 
@@ -164,6 +173,18 @@ const Workspace: React.FC<WorkspaceProps> = ({ resumeData, onNavigate }) => {
       });
       showSuccessToast('Resume package generated successfully!');
       setActiveTab('Resume');
+
+      // Generate cover letter in the background if company and job title provided
+      if (companyName && jobTitle) {
+        generateCoverLetterRequest({
+          resume_data: localResumeData,
+          job_description: jobDescription,
+          company_name: companyName,
+          job_title: jobTitle,
+        }).catch((err) => {
+          console.error('Cover letter generation failed:', err);
+        });
+      }
     } catch (e) {
       console.error(e);
       showErrorToast('Failed to generate resume package. Please try again.');
@@ -267,6 +288,69 @@ const Workspace: React.FC<WorkspaceProps> = ({ resumeData, onNavigate }) => {
                 </div>
               )}
             </div>
+          </div>
+        );
+      case 'Cover Letter':
+        return (
+          <div className="w-full max-w-[800px] bg-white shadow-2xl rounded-sm p-12 min-h-[600px] animate-in fade-in duration-500">
+            {coverLetterLoading ? (
+              <div className="flex flex-col items-center justify-center h-64 gap-4">
+                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary-600"></div>
+                <p className="text-slate-500 font-medium">Generating cover letter...</p>
+              </div>
+            ) : coverLetter ? (
+              <div className="prose prose-slate max-w-none">
+                <div className="text-sm text-slate-500 mb-6 whitespace-pre-line">
+                  {coverLetter.header}
+                </div>
+                <div className="mb-4">
+                  <p className="text-slate-700 leading-relaxed">{coverLetter.introduction}</p>
+                </div>
+                <div className="mb-4">
+                  <p className="text-slate-700 leading-relaxed whitespace-pre-line">
+                    {coverLetter.body}
+                  </p>
+                </div>
+                <div className="mb-6">
+                  <p className="text-slate-700 leading-relaxed whitespace-pre-line">
+                    {coverLetter.closing}
+                  </p>
+                </div>
+                {coverLetter.metadata?.word_count && (
+                  <p className="text-xs text-slate-400 border-t border-slate-100 pt-4">
+                    Word count: {String(coverLetter.metadata.word_count)}
+                  </p>
+                )}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center h-64 text-center gap-4 opacity-60">
+                <span className="material-symbols-outlined text-5xl text-primary-300">mail</span>
+                <div>
+                  <h3 className="text-xl font-bold text-slate-900 mb-2">Cover Letter</h3>
+                  <p className="text-slate-500 max-w-sm">
+                    Enter a company name, job title, and job description, then click &quot;Generate
+                    Package&quot; to create a tailored cover letter.
+                  </p>
+                </div>
+                {companyName && jobTitle && jobDescription && (
+                  <button
+                    onClick={() => {
+                      generateCoverLetterRequest({
+                        resume_data: localResumeData,
+                        job_description: jobDescription,
+                        company_name: companyName,
+                        job_title: jobTitle,
+                      }).catch(() => {
+                        showErrorToast('Failed to generate cover letter.');
+                      });
+                    }}
+                    className="mt-2 px-4 py-2 bg-primary-600 text-white rounded-lg font-bold text-sm hover:bg-primary-700"
+                  >
+                    Generate Cover Letter
+                  </button>
+                )}
+              </div>
+            )}
           </div>
         );
       case 'Keywords':

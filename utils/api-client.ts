@@ -232,6 +232,14 @@ export async function tailorResume(
   return response.json();
 }
 
+export interface CoverLetterRequest {
+  resume_data: ResumeDataForAPI;
+  job_description: string;
+  company_name: string;
+  job_title: string;
+  tone?: string;
+}
+
 export interface CoverLetterResponse {
   header: string;
   introduction: string;
@@ -242,14 +250,6 @@ export interface CoverLetterResponse {
     word_count: number;
     note?: string;
   };
-}
-
-export interface CoverLetterRequest {
-  resume_data: ResumeDataForAPI;
-  job_description: string;
-  company_name: string;
-  job_title: string;
-  tone?: string;
 }
 
 export async function generateCoverLetter(
