@@ -66,8 +66,8 @@ router = APIRouter()
 )
 async def create_resume(
     request: CreateResumeRequest,
-    db: AsyncSession = Depends(get_db),
     auth: AuthorizedAPIKey,
+    db: AsyncSession = Depends(get_db),
 ):
     """
     Create a new resume with initial version.
@@ -135,12 +135,12 @@ async def create_resume(
     tags=["Resumes"],
 )
 async def list_resumes(
+    auth: AuthorizedAPIKey,
     skip: int = Query(0, ge=0, description="Number of results to skip"),
     limit: int = Query(50, ge=1, le=100, description="Number of results to return"),
     search: Optional[str] = Query(None, description="Search by title"),
     tag: Optional[str] = Query(None, description="Filter by tag"),
     db: AsyncSession = Depends(get_db),
-    auth: AuthorizedAPIKey,
 ):
     """
     List all resumes with optional filtering.
@@ -187,8 +187,8 @@ async def list_resumes(
 )
 async def get_resume(
     resume_id: int,
-    db: AsyncSession = Depends(get_db),
     auth: AuthorizedAPIKey,
+    db: AsyncSession = Depends(get_db),
 ):
     """
     Get a specific resume by ID.
@@ -236,8 +236,8 @@ async def get_resume(
 async def update_resume(
     resume_id: int,
     request: UpdateResumeRequest,
-    db: AsyncSession = Depends(get_db),
     auth: AuthorizedAPIKey,
+    db: AsyncSession = Depends(get_db),
 ):
     """
     Update a resume and create a new version.
@@ -323,8 +323,8 @@ async def update_resume(
 )
 async def delete_resume(
     resume_id: int,
-    db: AsyncSession = Depends(get_db),
     auth: AuthorizedAPIKey,
+    db: AsyncSession = Depends(get_db),
 ):
     """Delete a resume and all its versions."""
     try:
@@ -361,8 +361,8 @@ async def delete_resume(
 )
 async def list_resume_versions(
     resume_id: int,
-    db: AsyncSession = Depends(get_db),
     auth: AuthorizedAPIKey,
+    db: AsyncSession = Depends(get_db),
 ):
     """
     List all versions of a resume.
@@ -416,8 +416,8 @@ async def list_resume_versions(
 async def get_resume_version(
     resume_id: int,
     version_id: int,
-    db: AsyncSession = Depends(get_db),
     auth: AuthorizedAPIKey,
+    db: AsyncSession = Depends(get_db),
 ):
     """
     Get a specific version of a resume.
@@ -466,8 +466,8 @@ async def get_resume_version(
 async def restore_resume_version(
     resume_id: int,
     version_id: int,
-    db: AsyncSession = Depends(get_db),
     auth: AuthorizedAPIKey,
+    db: AsyncSession = Depends(get_db),
 ):
     """
     Restore a resume to a previous version.
@@ -557,8 +557,8 @@ async def restore_resume_version(
 )
 async def list_comments(
     resume_id: int,
-    db: AsyncSession = Depends(get_db),
     auth: AuthorizedAPIKey,
+    db: AsyncSession = Depends(get_db),
 ):
     """List all comments for a resume."""
     try:
@@ -612,8 +612,8 @@ async def list_comments(
 async def create_comment(
     resume_id: int,
     request: CommentRequest,
-    db: AsyncSession = Depends(get_db),
     auth: AuthorizedAPIKey,
+    db: AsyncSession = Depends(get_db),
 ):
     """Add a comment to a resume."""
     try:
@@ -667,8 +667,8 @@ async def create_comment(
 )
 async def resolve_comment(
     comment_id: int,
-    db: AsyncSession = Depends(get_db),
     auth: AuthorizedAPIKey,
+    db: AsyncSession = Depends(get_db),
 ):
     """Mark a comment as resolved."""
     try:
@@ -717,8 +717,8 @@ async def resolve_comment(
 async def share_resume(
     resume_id: int,
     request: ShareResumeRequest,
-    db: AsyncSession = Depends(get_db),
     auth: AuthorizedAPIKey,
+    db: AsyncSession = Depends(get_db),
 ):
     """
     Create a shareable link for a resume.
@@ -907,8 +907,8 @@ async def access_shared_resume(
 )
 async def bulk_operations(
     request: BulkOperationRequest,
-    db: AsyncSession = Depends(get_db),
     auth: AuthorizedAPIKey,
+    db: AsyncSession = Depends(get_db),
 ):
     """
     Perform bulk operations on multiple resumes.
@@ -1006,8 +1006,8 @@ async def bulk_operations(
 )
 async def get_user_settings(
     user_identifier: str,
-    db: AsyncSession = Depends(get_db),
     auth: AuthorizedAPIKey,
+    db: AsyncSession = Depends(get_db),
 ):
     """Get user settings."""
     try:
@@ -1047,8 +1047,8 @@ async def get_user_settings(
 async def update_user_settings(
     user_identifier: str,
     request: UserSettingsRequest,
-    db: AsyncSession = Depends(get_db),
     auth: AuthorizedAPIKey,
+    db: AsyncSession = Depends(get_db),
 ):
     """Update user settings."""
     try:
