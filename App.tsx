@@ -1,13 +1,15 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import Sidebar from './components/Sidebar';
 import Dashboard from './pages/Dashboard';
-import Editor from './pages/Editor';
-import Workspace from './pages/Workspace';
-import JobApplications from './pages/JobApplications';
-import Settings from './pages/Settings';
-import ResumeManagement from './pages/ResumeManagement';
-import { SalaryResearch } from './pages/SalaryResearch';
-import InterviewPractice from './pages/InterviewPractice';
+
+// Lazy load page components for better code splitting
+const Editor = lazy(() => import('./pages/Editor'));
+const Workspace = lazy(() => import('./pages/Workspace'));
+const JobApplications = lazy(() => import('./pages/JobApplications'));
+const Settings = lazy(() => import('./pages/Settings'));
+const ResumeManagement = lazy(() => import('./pages/ResumeManagement'));
+const SalaryResearch = lazy(() => import('./pages/SalaryResearch').then(m => ({ default: m.SalaryResearch })));
+const InterviewPractice = lazy(() => import('./pages/InterviewPractice'));
 import { Route, SimpleResumeData } from './types';
 import { loadResumeData, saveResumeData, StorageError } from './utils/storage';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -21,6 +23,18 @@ import './components/toast-styles.css';
 import KeyboardShortcutsHelp from './components/KeyboardShortcutsHelp';
 import { DEFAULT_SHORTCUTS, registerShortcuts } from './utils/shortcuts';
 import StorageWarning from './src/components/StorageWarning';
+
+/**
+ * Loading fallback for code-split chunks
+ */
+const PageLoader = () => (
+  <div className="flex items-center justify-center min-h-screen bg-[#f6f6f8]">
+    <div className="flex items-center gap-3">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+      <span className="text-slate-600 font-medium">Loading page...</span>
+    </div>
+  </div>
+);
 
 const initialResumeData: SimpleResumeData = {
   name: "Alex Rivera",
@@ -241,67 +255,81 @@ function App() {
         );
       case Route.APPLICATIONS:
         return (
-            <div className="flex min-h-screen bg-[#f6f6f8]">
-                <Sidebar
-                  currentRoute={currentRoute}
-                  onNavigate={setCurrentRoute}
-                  onShowShortcuts={() => setShowShortcuts(true)}
-                />
-                <JobApplications />
-            </div>
+            <Suspense fallback={<PageLoader />}>
+              <div className="flex min-h-screen bg-[#f6f6f8]">
+                  <Sidebar
+                    currentRoute={currentRoute}
+                    onNavigate={setCurrentRoute}
+                    onShowShortcuts={() => setShowShortcuts(true)}
+                  />
+                  <JobApplications />
+              </div>
+            </Suspense>
         );
       case Route.EDITOR:
         return (
-          <Editor
-            resumeData={resumeData}
-            onUpdate={handleUpdateResumeData}
-            onBack={() => setCurrentRoute(Route.DASHBOARD)}
-            saveStatus={saveStatus}
-          />
+          <Suspense fallback={<PageLoader />}>
+            <Editor
+              resumeData={resumeData}
+              onUpdate={handleUpdateResumeData}
+              onBack={() => setCurrentRoute(Route.DASHBOARD)}
+              saveStatus={saveStatus}
+            />
+          </Suspense>
         );
       case Route.WORKSPACE:
         return (
-          <Workspace
-            resumeData={resumeData}
-            onNavigate={setCurrentRoute}
-          />
+          <Suspense fallback={<PageLoader />}>
+            <Workspace
+              resumeData={resumeData}
+              onNavigate={setCurrentRoute}
+            />
+          </Suspense>
         );
       case Route.SALARY_RESEARCH:
         return (
-            <div className="flex min-h-screen bg-[#f6f6f8]">
-                <Sidebar
-                  currentRoute={currentRoute}
-                  onNavigate={setCurrentRoute}
-                  onShowShortcuts={() => setShowShortcuts(true)}
-                />
-                <SalaryResearch />
-            </div>
+            <Suspense fallback={<PageLoader />}>
+              <div className="flex min-h-screen bg-[#f6f6f8]">
+                  <Sidebar
+                    currentRoute={currentRoute}
+                    onNavigate={setCurrentRoute}
+                    onShowShortcuts={() => setShowShortcuts(true)}
+                  />
+                  <SalaryResearch />
+              </div>
+            </Suspense>
         );
       case Route.INTERVIEW_PRACTICE:
         return (
-            <InterviewPractice />
+            <Suspense fallback={<PageLoader />}>
+              <InterviewPractice />
+            </Suspense>
         );
       case Route.SETTINGS:
         return (
-            <div className="flex min-h-screen bg-[#f6f6f8]">
-                <Sidebar
-                  currentRoute={currentRoute}
-                  onNavigate={setCurrentRoute}
-                  onShowShortcuts={() => setShowShortcuts(true)}
-                />
-                <Settings />
-            </div>
+            <Suspense fallback={<PageLoader />}>
+              <div className="flex min-h-screen bg-[#f6f6f8]">
+                  <Sidebar
+                    currentRoute={currentRoute}
+                    onNavigate={setCurrentRoute}
+                    onShowShortcuts={() => setShowShortcuts(true)}
+                  />
+                  <Settings />
+              </div>
+            </Suspense>
         );
       case Route.BULK:
         return (
-            <div className="flex min-h-screen bg-[#f6f6f8]">
-                <Sidebar
-                  currentRoute={currentRoute}
-                  onNavigate={setCurrentRoute}
-                  onShowShortcuts={() => setShowShortcuts(true)}
-                />
-                <ResumeManagement />
-            </div>
+            <Suspense fallback={<PageLoader />}>
+              <div className="flex min-h-screen bg-[#f6f6f8]">
+                  <Sidebar
+                    currentRoute={currentRoute}
+                    onNavigate={setCurrentRoute}
+                    onShowShortcuts={() => setShowShortcuts(true)}
+                  />
+                  <ResumeManagement />
+              </div>
+            </Suspense>
         );
       default:
         return <Dashboard />;
