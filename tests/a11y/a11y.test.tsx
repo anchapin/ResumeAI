@@ -6,7 +6,6 @@
 import { describe, it, expect } from 'vitest';
 import { render } from '@testing-library/react';
 import { axe, toHaveNoViolations } from 'jest-axe';
-import type { AxeResults } from 'jest-axe';
 
 // Extend Vitest matchers
 expect.extend(toHaveNoViolations);
@@ -15,7 +14,7 @@ describe('Accessibility (WCAG 2.1 AA)', () => {
   /**
    * Helper function to run axe accessibility checks
    */
-  async function checkAccessibility(element: HTMLElement): Promise<AxeResults> {
+  async function checkAccessibility(element: HTMLElement): Promise<any> {
     return axe(element, {
       rules: {
         // Configure rules for WCAG 2.1 Level AA

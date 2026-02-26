@@ -34,12 +34,14 @@ describe('API Client - Retry Logic Integration', () => {
         );
 
       const testData: ResumeData = {
-        name: 'Test User',
-        email: 'test@example.com',
-        phone: '',
-        location: '',
-        summary: '',
-        experience: [],
+        basics: {
+          name: 'Test User',
+          email: 'test@example.com',
+          phone: '',
+          summary: '',
+        },
+        location: { city: '', region: '' },
+        work: [],
         education: [],
         skills: [],
         projects: [],
@@ -59,12 +61,14 @@ describe('API Client - Retry Logic Integration', () => {
         );
 
       const testData: ResumeData = {
-        name: 'Test User 2',
-        email: 'test2@example.com',
-        phone: '',
-        location: '',
-        summary: '',
-        experience: [],
+        basics: {
+          name: 'Test User 2',
+          email: 'test2@example.com',
+          phone: '',
+          summary: '',
+        },
+        location: { city: '', region: '' },
+        work: [],
         education: [],
         skills: [],
         projects: [],

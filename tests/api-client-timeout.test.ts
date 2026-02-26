@@ -11,7 +11,8 @@ import {
   convertToAPIData,
 } from '../utils/api-client';
 import { isTimeoutError } from '../utils/fetch-timeout';
-import type { ResumeDataForAPI, SimpleResumeData } from '../types';
+import type { SimpleResumeData } from '../types';
+import type { ResumeDataForAPI } from '../utils/api-client';
 
 // Mock the fetch-timeout module
 vi.mock('../utils/fetch-timeout', () => ({
@@ -198,7 +199,6 @@ describe('API Client with Timeout', () => {
   describe('isTimeoutError', () => {
     it('should identify AbortError as timeout', () => {
       const error = new DOMException('Aborted', 'AbortError');
-      const { isTimeoutError: check } = vi.mocked(isTimeoutError);
       const result = isTimeoutError(error);
       expect(result).toBe(true);
     });

@@ -6,7 +6,6 @@
 import { describe, it, expect } from 'vitest';
 import { render } from '@testing-library/react';
 import { axe, toHaveNoViolations } from 'jest-axe';
-import type { AxeResults } from 'jest-axe';
 
 expect.extend(toHaveNoViolations);
 
@@ -60,7 +59,7 @@ function MockTabs() {
 }
 
 describe('Component Accessibility', () => {
-  async function checkComponentA11y(element: HTMLElement): Promise<AxeResults> {
+  async function checkComponentA11y(element: HTMLElement): Promise<any> {
     return axe(element);
   }
 

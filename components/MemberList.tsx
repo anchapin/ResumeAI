@@ -5,8 +5,8 @@ import { showSuccessToast, showErrorToast } from '../utils/toast';
 
 interface MemberListProps {
   members: TeamMember[];
-  teamId: number;
-  currentUserId?: number;
+  teamId: number | string;
+  currentUserId?: string;
   currentUserRole?: MemberRole;
   onRefresh?: () => void;
 }
@@ -21,8 +21,8 @@ const MemberList: React.FC<MemberListProps> = ({
   currentUserRole = 'member',
   onRefresh,
 }) => {
-  const [loadingUserId, setLoadingUserId] = useState<number | null>(null);
-  const [updatingUserId, setUpdatingUserId] = useState<number | null>(null);
+  const [loadingUserId, setLoadingUserId] = useState<string | null>(null);
+  const [updatingUserId, setUpdatingUserId] = useState<string | null>(null);
 
   const canManageMember = (member: TeamMember): boolean => {
     // Owner can manage everyone except themselves
@@ -50,7 +50,7 @@ const MemberList: React.FC<MemberListProps> = ({
 
     setUpdatingUserId(member.user_id);
     try {
-      await updateMemberRole(teamId, member.user_id, { role: newRole });
+      await updateMemberRole(teamId, member.user_id, newRole);
       showSuccessToast(`${member.name || member.email}'s role updated to ${newRole}`);
       if (onRefresh) {
         onRefresh();

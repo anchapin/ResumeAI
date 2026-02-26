@@ -18,6 +18,7 @@ import {
   JobOffer,
   ComparisonPriority,
   OfferComparison,
+  MemberRole,
 } from '../types';
 import { fetchWithTimeout, TIMEOUT_CONFIG } from './fetch-timeout';
 import { fetchWithRetry, RetryConfig } from './retryLogic';
@@ -1218,4 +1219,149 @@ export async function getUpcomingEvents(days = 7): Promise<UpcomingEvent[]> {
   if (!response.ok) throw new Error('Failed to get upcoming events');
   const data = await response.json();
   return data.events || [];
+}
+
+// Team management functions (stubs for unblocking CI)
+export async function getTeams(): Promise<any[]> {
+  const response = await fetchWithRetry(
+    `${API_URL}/v1/teams`,
+    { headers: getHeaders() },
+    DEFAULT_RETRY_CONFIG,
+  );
+  if (!response.ok) throw new Error('Failed to get teams');
+  return response.json();
+}
+
+export async function getTeam(teamId: number | string): Promise<any> {
+  const response = await fetchWithRetry(
+    `${API_URL}/v1/teams/${teamId}`,
+    { headers: getHeaders() },
+    DEFAULT_RETRY_CONFIG,
+  );
+  if (!response.ok) throw new Error('Failed to get team');
+  return response.json();
+}
+
+export async function createTeam(params: any): Promise<any> {
+  const response = await fetchWithRetry(
+    `${API_URL}/v1/teams`,
+    {
+      method: 'POST',
+      headers: { ...getHeaders(), 'Content-Type': 'application/json' },
+      body: JSON.stringify(params),
+    },
+    DEFAULT_RETRY_CONFIG,
+  );
+  if (!response.ok) throw new Error('Failed to create team');
+  return response.json();
+}
+
+export async function updateTeam(teamId: number | string, params: any): Promise<any> {
+  const response = await fetchWithRetry(
+    `${API_URL}/v1/teams/${teamId}`,
+    {
+      method: 'PUT',
+      headers: { ...getHeaders(), 'Content-Type': 'application/json' },
+      body: JSON.stringify(params),
+    },
+    DEFAULT_RETRY_CONFIG,
+  );
+  if (!response.ok) throw new Error('Failed to update team');
+  return response.json();
+}
+
+export async function deleteTeam(teamId: number | string): Promise<void> {
+  const response = await fetchWithRetry(
+    `${API_URL}/v1/teams/${teamId}`,
+    { method: 'DELETE', headers: getHeaders() },
+    DEFAULT_RETRY_CONFIG,
+  );
+  if (!response.ok) throw new Error('Failed to delete team');
+}
+
+export async function getTeamMembers(teamId: number | string): Promise<any[]> {
+  const response = await fetchWithRetry(
+    `${API_URL}/v1/teams/${teamId}/members`,
+    { headers: getHeaders() },
+    DEFAULT_RETRY_CONFIG,
+  );
+  if (!response.ok) throw new Error('Failed to get team members');
+  return response.json();
+}
+
+export async function inviteMember(teamId: number | string, params: any): Promise<any> {
+  const response = await fetchWithRetry(
+    `${API_URL}/v1/teams/${teamId}/members/invite`,
+    {
+      method: 'POST',
+      headers: { ...getHeaders(), 'Content-Type': 'application/json' },
+      body: JSON.stringify(params),
+    },
+    DEFAULT_RETRY_CONFIG,
+  );
+  if (!response.ok) throw new Error('Failed to invite member');
+  return response.json();
+}
+
+export async function updateMemberRole(
+  teamId: number | string,
+  memberId: string,
+  role: MemberRole,
+): Promise<any> {
+  const response = await fetchWithRetry(
+    `${API_URL}/v1/teams/${teamId}/members/${memberId}`,
+    {
+      method: 'PATCH',
+      headers: { ...getHeaders(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ role }),
+    },
+    DEFAULT_RETRY_CONFIG,
+  );
+  if (!response.ok) throw new Error('Failed to update member role');
+  return response.json();
+}
+
+export async function removeMember(teamId: number | string, memberId: string): Promise<void> {
+  const response = await fetchWithRetry(
+    `${API_URL}/v1/teams/${teamId}/members/${memberId}`,
+    { method: 'DELETE', headers: getHeaders() },
+    DEFAULT_RETRY_CONFIG,
+  );
+  if (!response.ok) throw new Error('Failed to remove member');
+}
+
+export async function shareResumeWithTeam(resumeId: number, teamId: number | string): Promise<any> {
+  const response = await fetchWithRetry(
+    `${API_URL}/v1/resumes/${resumeId}/share`,
+    {
+      method: 'POST',
+      headers: { ...getHeaders(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ teamId }),
+    },
+    DEFAULT_RETRY_CONFIG,
+  );
+  if (!response.ok) throw new Error('Failed to share resume with team');
+  return response.json();
+}
+
+export async function unshareResumeFromTeam(
+  resumeId: number,
+  teamId: number | string,
+): Promise<void> {
+  const response = await fetchWithRetry(
+    `${API_URL}/v1/resumes/${resumeId}/share/${teamId}`,
+    { method: 'DELETE', headers: getHeaders() },
+    DEFAULT_RETRY_CONFIG,
+  );
+  if (!response.ok) throw new Error('Failed to unshare resume from team');
+}
+
+export async function getTeamActivity(teamId: number | string, days = 30): Promise<any[]> {
+  const response = await fetchWithRetry(
+    `${API_URL}/v1/teams/${teamId}/activity?days=${days}`,
+    { headers: getHeaders() },
+    DEFAULT_RETRY_CONFIG,
+  );
+  if (!response.ok) throw new Error('Failed to get team activity');
+  return response.json();
 }

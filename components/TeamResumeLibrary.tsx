@@ -5,7 +5,7 @@ import { showSuccessToast, showErrorToast } from '../utils/toast';
 
 interface TeamResumeLibraryProps {
   sharedResumes: TeamResume[];
-  teamId: number;
+  teamId: number | string;
   onRefresh?: () => void;
 }
 
@@ -21,7 +21,7 @@ const TeamResumeLibrary: React.FC<TeamResumeLibraryProps> = ({
   const [userResumes, setUserResumes] = useState<ResumeMetadata[]>([]);
   const [isLoadingResumes, setIsLoadingResumes] = useState(false);
   const [sharingResumeId, setSharingResumeId] = useState<number | null>(null);
-  const [unsharingResumeId, setUnsharingResumeId] = useState<number | null>(null);
+  const [unsharingResumeId, setUnsharingResumeId] = useState<string | null>(null);
 
   const loadUserResumes = useCallback(async () => {
     setIsLoadingResumes(true);
@@ -49,7 +49,7 @@ const TeamResumeLibrary: React.FC<TeamResumeLibraryProps> = ({
   const handleShareResume = async (resumeId: number) => {
     setSharingResumeId(resumeId);
     try {
-      await shareResumeWithTeam(teamId, { resume_id: resumeId });
+      await shareResumeWithTeam(resumeId, teamId);
       showSuccessToast('Resume shared with team');
       setIsShareDialogOpen(false);
       if (onRefresh) {
@@ -63,14 +63,14 @@ const TeamResumeLibrary: React.FC<TeamResumeLibraryProps> = ({
     }
   };
 
-  const handleUnshareResume = async (sharedResumeId: number, resumeId: number) => {
+  const handleUnshareResume = async (sharedResumeId: string, resumeId: string) => {
     if (!confirm('Are you sure you want to unshare this resume from the team?')) {
       return;
     }
 
     setUnsharingResumeId(sharedResumeId);
     try {
-      await unshareResumeFromTeam(teamId, resumeId);
+      await unshareResumeFromTeam(parseInt(resumeId, 10), teamId);
       showSuccessToast('Resume unshared from team');
       if (onRefresh) {
         onRefresh();
@@ -215,7 +215,7 @@ const TeamResumeLibrary: React.FC<TeamResumeLibraryProps> = ({
               ) : (
                 <div className="space-y-2">
                   {userResumes.map((resume) => {
-                    const isShared = sharedResumes.some((sr) => sr.resume_id === resume.id);
+                    const isShared = sharedResumes.some((sr) => sr.resume_id === String(resume.id));
 
                     return (
                       <div

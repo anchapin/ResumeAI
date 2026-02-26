@@ -42,7 +42,7 @@ const Teams: React.FC = () => {
   );
 
   // Mock current user ID - in a real app, this would come from authentication
-  const currentUserId = 1;
+  const currentUserId = '1';
 
   // Load teams on mount
   useEffect(() => {

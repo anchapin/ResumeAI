@@ -200,9 +200,7 @@ describe('ProjectItem Component', () => {
       // TODO: Fix - component doesn't expose onRemoveHighlight callback
       const onRemoveHighlight = vi.fn();
       const user = userEvent.setup();
-      render(
-        <ProjectItem {...defaultProps} isExpanded={true} onRemoveHighlight={onRemoveHighlight} />,
-      );
+      render(<ProjectItem {...defaultProps} isExpanded={true} />);
 
       const removeButtons = screen.getAllByRole('button', { name: /close/i });
       if (removeButtons.length > 0) {
@@ -216,7 +214,7 @@ describe('ProjectItem Component', () => {
       // TODO: Fix - component doesn't expose onAddHighlight callback
       const onAddHighlight = vi.fn();
       const user = userEvent.setup();
-      render(<ProjectItem {...defaultProps} isExpanded={true} onAddHighlight={onAddHighlight} />);
+      render(<ProjectItem {...defaultProps} isExpanded={true} />);
 
       const highlightInput = screen.getByPlaceholderText('+ Add Highlight') as HTMLInputElement;
       await user.type(highlightInput, 'AWS{Enter}');
@@ -227,7 +225,7 @@ describe('ProjectItem Component', () => {
     it('should clear input after adding highlight', async () => {
       const onAddHighlight = vi.fn();
       const user = userEvent.setup();
-      render(<ProjectItem {...defaultProps} isExpanded={true} onAddHighlight={onAddHighlight} />);
+      render(<ProjectItem {...defaultProps} isExpanded={true} />);
 
       const highlightInput = screen.getByPlaceholderText('+ Add Highlight') as HTMLInputElement;
       await user.type(highlightInput, 'Docker{Enter}');
@@ -257,7 +255,7 @@ describe('ProjectItem Component', () => {
     it.skip('should trim whitespace from highlight input', async () => {
       const onAddHighlight = vi.fn();
       const user = userEvent.setup();
-      render(<ProjectItem {...defaultProps} isExpanded={true} onAddHighlight={onAddHighlight} />);
+      render(<ProjectItem {...defaultProps} isExpanded={true} />);
 
       const highlightInput = screen.getByPlaceholderText('+ Add Highlight');
       await user.type(highlightInput, '  Kubernetes  {Enter}');

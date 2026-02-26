@@ -426,7 +426,7 @@ describe('App Component', () => {
         .spyOn(StorageModule, 'saveResumeData')
         .mockImplementation(() => {});
 
-      vi.spyOn(StorageModule, 'loadResumeData').mockImplementation(() => {
+      vi.spyOn(StorageModule, 'loadResumeData').mockImplementation((): any => {
         return new Promise((resolve) => setTimeout(() => resolve(null), 100));
       });
 
