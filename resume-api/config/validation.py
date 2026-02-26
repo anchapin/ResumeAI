@@ -32,16 +32,30 @@ class SecretValidator:
 
     # Variables that should never be logged or printed
     SENSITIVE_VARS = {
+        # AI Provider Keys
         'OPENAI_API_KEY',
         'ANTHROPIC_API_KEY',
         'GEMINI_API_KEY',
+        # Authentication & Encryption
         'MASTER_API_KEY',
         'SECRET_KEY',
+        'JWT_SECRET',
+        'TOKEN_ENCRYPTION_KEY',
+        # OAuth Secrets
         'GITHUB_CLIENT_SECRET',
+        'GITHUB_CLIENT_ID',  # Can be public but often kept secret
         'LINKEDIN_CLIENT_SECRET',
+        'LINKEDIN_CLIENT_ID',
+        # Payment Processing
+        'STRIPE_SECRET_KEY',
+        'STRIPE_WEBHOOK_SECRET',
+        # Infrastructure
         'SMTP_PASSWORD',
         'REDIS_PASSWORD',
         'DATABASE_URL',
+        'DATABASE_REPLICA_URLS',
+        # Monitoring & Error Tracking
+        'SENTRY_DSN',
     }
 
     @staticmethod
