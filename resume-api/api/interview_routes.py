@@ -7,7 +7,9 @@ import uuid
 from datetime import datetime
 from typing import List, Optional, Dict, Any
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, status, Depends
+from pydantic import BaseModel
+
 from .models import (
     GenerateQuestionsRequest,
     GenerateQuestionsResponse,
@@ -155,11 +157,9 @@ def generate_questions(
         if category not in QUESTION_TEMPLATES:
             continue
 
-        templates = QUESTION_TEMPLATES[category].get(
-            difficulty, QUESTION_TEMPLATES[category].get("medium", [])
-        )
+        templates = QUESTION_TEMPLATES[category].get(difficulty, QUESTION_TEMPLATES[category].get("medium", []))
 
-        for template in templates[: max(1, count // len(categories))]:
+        for template in templates[:max(1, count // len(categories))]:
             # Format template with available context
             question_text = template
             if "{job_title}" in question_text and job_title:
@@ -167,17 +167,8 @@ def generate_questions(
             if "{company}" in question_text and company:
                 question_text = question_text.replace("{company}", company)
             if "{skill}" in question_text:
-                skills = [
-                    "Python",
-                    "JavaScript",
-                    "React",
-                    "System Design",
-                    "AWS",
-                    "Database Design",
-                ]
-                question_text = question_text.replace(
-                    "{skill}", skills[question_id % len(skills)]
-                )
+                skills = ["Python", "JavaScript", "React", "System Design", "AWS", "Database Design"]
+                question_text = question_text.replace("{skill}", skills[question_id % len(skills)])
 
             tips = ANSWER_TIPS.get(category, [])
 
@@ -235,15 +226,9 @@ Respond with only valid JSON, no markdown formatting.
                 id=feedback_id,
                 answer_id=answer_id,
                 score=min(10, max(1, int(feedback_data.get("score", 5)))),
-                strengths=feedback_data.get(
-                    "strengths", ["Good effort", "Clear communication"]
-                ),
-                improvements=feedback_data.get(
-                    "improvements", ["Provide more examples", "Explain your reasoning"]
-                ),
-                summary=feedback_data.get(
-                    "summary", "Good answer with room for improvement"
-                ),
+                strengths=feedback_data.get("strengths", ["Good effort", "Clear communication"]),
+                improvements=feedback_data.get("improvements", ["Provide more examples", "Explain your reasoning"]),
+                summary=feedback_data.get("summary", "Good answer with room for improvement"),
                 suggested_answer=feedback_data.get("suggested_answer"),
             )
         except Exception as e:
@@ -265,10 +250,7 @@ Respond with only valid JSON, no markdown formatting.
         answer_id=answer_id,
         score=score,
         strengths=["Clear communication", "Demonstrates experience"],
-        improvements=[
-            "Add more specific examples",
-            "Explain the impact of your actions",
-        ],
+        improvements=["Add more specific examples", "Explain the impact of your actions"],
         summary="Good answer. Consider providing more concrete examples to strengthen your response.",
     )
 
@@ -276,7 +258,7 @@ Respond with only valid JSON, no markdown formatting.
 @router.post("/generate-questions", response_model=GenerateQuestionsResponse)
 async def generate_interview_questions(
     request: GenerateQuestionsRequest,
-    api_key: AuthorizedAPIKey,
+    api_key: AuthorizedAPIKey = Depends(),
 ) -> GenerateQuestionsResponse:
     """
     Generate interview questions based on job title, company, and difficulty.
@@ -319,9 +301,7 @@ async def generate_interview_questions(
         )
         _sessions[session_id] = session
 
-        logger.info(
-            f"Generated {len(questions)} interview questions for session {session_id}"
-        )
+        logger.info(f"Generated {len(questions)} interview questions for session {session_id}")
 
         return GenerateQuestionsResponse(questions=questions, session_id=session_id)
 
@@ -338,7 +318,7 @@ async def generate_interview_questions(
 @router.post("/submit-answer")
 async def submit_interview_answer(
     request: SubmitAnswerRequest,
-    api_key: AuthorizedAPIKey,
+    api_key: AuthorizedAPIKey = Depends(),
 ) -> Dict[str, Any]:
     """
     Submit an answer to an interview question.
@@ -359,9 +339,7 @@ async def submit_interview_answer(
             )
 
         # Find the question
-        question = next(
-            (q for q in session.questions if q.id == request.question_id), None
-        )
+        question = next((q for q in session.questions if q.id == request.question_id), None)
         if not question:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -391,9 +369,7 @@ async def submit_interview_answer(
         session.feedback.append(feedback)
 
         # Update session progress
-        session.completion_percentage = int(
-            (len(session.answers) / len(session.questions)) * 100
-        )
+        session.completion_percentage = int((len(session.answers) / len(session.questions)) * 100)
 
         # Calculate average score
         if session.feedback:
@@ -402,9 +378,7 @@ async def submit_interview_answer(
 
         session.updated_at = datetime.utcnow().isoformat()
 
-        logger.info(
-            f"Submitted answer to question {request.question_id} in session {request.session_id}"
-        )
+        logger.info(f"Submitted answer to question {request.question_id} in session {request.session_id}")
 
         return {
             "answer_id": answer.id,
@@ -426,7 +400,7 @@ async def submit_interview_answer(
 @router.get("/session/{session_id}")
 async def get_session(
     session_id: str,
-    api_key: AuthorizedAPIKey,
+    api_key: AuthorizedAPIKey = Depends(),
 ) -> InterviewSession:
     """
     Get details of an interview session.
@@ -451,7 +425,7 @@ async def get_session(
 @router.post("/session/{session_id}/complete")
 async def complete_session(
     session_id: str,
-    api_key: AuthorizedAPIKey,
+    api_key: AuthorizedAPIKey = Depends(),
 ) -> Dict[str, Any]:
     """
     Mark an interview session as completed.
@@ -487,7 +461,7 @@ async def complete_session(
 
 @router.get("/history")
 async def get_session_history(
-    api_key: AuthorizedAPIKey,
+    api_key: AuthorizedAPIKey = Depends(),
 ) -> SessionHistoryResponse:
     """
     Get the user's interview session history.
@@ -520,7 +494,7 @@ async def get_session_history(
 @router.post("/feedback")
 async def get_answer_feedback(
     request: GetFeedbackRequest,
-    api_key: AuthorizedAPIKey,
+    api_key: AuthorizedAPIKey = Depends(),
 ) -> InterviewFeedback:
     """
     Get AI feedback on an interview answer.
