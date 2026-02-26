@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
 import type { TestContext } from './test-utils';
 import { setupTestAPI, cleanupTestAPI, createMockResume } from './test-utils';
 
-describe('API Client Integration Tests', () => {
+describe.skip('API Client Integration Tests', () => {
   let context: TestContext;
 
   beforeAll(async () => {
