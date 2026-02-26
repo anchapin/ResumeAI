@@ -1,0 +1,9 @@
+node_modules
+dist
+.venv
+coverage
+build
+*.lock
+*.yaml
+*.yml
+.git

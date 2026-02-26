@@ -12,7 +12,11 @@
     "test:coverage": "vitest --coverage",
     "test:a11y": "vitest tests/a11y --run",
     "a11y:scan": "node scripts/a11y-scan.js",
-    "docs": "typedoc --out docs --entryPoints components/ pages/ utils/ hooks/ --excludeNotDocumented --excludeInternal --theme default"
+    "docs": "typedoc --out docs --entryPoints components/ pages/ utils/ hooks/ --excludeNotDocumented --excludeInternal --theme default",
+    "lint": "eslint . --ext .ts,.tsx",
+    "lint:fix": "eslint . --ext .ts,.tsx --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "dependencies": {
     "react": "^19.2.4",
@@ -23,6 +27,7 @@
   },
   "devDependencies": {
     "@axe-core/react": "^4.10.2",
+    "@eslint/js": "^10.0.1",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
@@ -31,14 +36,22 @@
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@types/react-toastify": "^4.0.2",
+    "@typescript-eslint/eslint-plugin": "^8.56.1",
+    "@typescript-eslint/parser": "^8.56.1",
     "@vitejs/plugin-react": "^5.0.0",
     "@vitest/coverage-istanbul": "^4.0.18",
     "axe-core": "^4.10.2",
+    "eslint": "^9.39.3",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^7.0.1",
     "happy-dom": "^20.7.0",
     "jest-axe": "^8.0.0",
     "jsdom": "^28.0.0",
+    "prettier": "^3.8.1",
     "typedoc": "^0.28.17",
     "typescript": "~5.8.2",
+    "typescript-eslint": "^8.56.1",
     "vite": "^6.2.0",
     "vitest": "^4.0.18"
   }
