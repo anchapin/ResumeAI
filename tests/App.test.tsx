@@ -946,8 +946,7 @@ describe('App Component', () => {
   });
 
   describe('Complex Navigation Scenarios', () => {
-    it.skip('should handle sequential navigation to all sidebar routes', async () => {
-      // TODO: Fix - test routes don't match all app routes
+    it('should handle sequential navigation to all sidebar routes', async () => {
       const user = userEvent.setup();
       render(<App />);
 
