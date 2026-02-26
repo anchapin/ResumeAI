@@ -75,7 +75,7 @@ const Sidebar: React.FC<SidebarProps> = React.memo(({ currentRoute, onNavigate, 
                 type="button"
                 aria-current={isActive ? 'page' : undefined}
                 onClick={() => {
-                    if (item.id === Route.DASHBOARD || item.id === Route.EDITOR || item.id === Route.APPLICATIONS || item.id === Route.SALARY_RESEARCH || item.id === Route.INTERVIEW_PRACTICE || item.id === Route.SETTINGS) {
+                    if (item.id === Route.DASHBOARD || item.id === Route.EDITOR || item.id === Route.APPLICATIONS || item.id === Route.SALARY_RESEARCH || item.id === Route.INTERVIEW_PRACTICE || item.id === Route.SETTINGS || item.id === Route.BULK) {
                         onNavigate(item.id as Route);
                     }
                 }}

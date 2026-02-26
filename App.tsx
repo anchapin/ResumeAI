@@ -5,6 +5,7 @@ import Editor from './pages/Editor';
 import Workspace from './pages/Workspace';
 import JobApplications from './pages/JobApplications';
 import Settings from './pages/Settings';
+import ResumeManagement from './pages/ResumeManagement';
 import { SalaryResearch } from './pages/SalaryResearch';
 import InterviewPractice from './pages/InterviewPractice';
 import { Route, SimpleResumeData } from './types';

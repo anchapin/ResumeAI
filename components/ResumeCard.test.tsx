@@ -119,7 +119,7 @@ describe('ResumeCard', () => {
     expect(onDuplicate).toHaveBeenCalledTimes(1);
   });
 
-  it('calls onDelete when delete button is clicked', () => {
+  it('calls onDelete when delete button is clicked and confirmed', () => {
     const onDelete = vi.fn();
     render(
       <ResumeCard
@@ -136,7 +136,62 @@ describe('ResumeCard', () => {
     const deleteButton = screen.getByTitle('Delete Resume');
     fireEvent.click(deleteButton);
 
+    expect(onDelete).not.toHaveBeenCalled();
+
+    const confirmButton = screen.getByTitle('Confirm Delete');
+    fireEvent.click(confirmButton);
+
     expect(onDelete).toHaveBeenCalledTimes(1);
+  });
+
+  it('cancels deletion when cancel button is clicked', () => {
+    const onDelete = vi.fn();
+    render(
+      <ResumeCard
+        resume={mockResume}
+        isSelected={false}
+        onSelect={vi.fn()}
+        onEdit={vi.fn()}
+        onDuplicate={vi.fn()}
+        onDelete={onDelete}
+        onShare={vi.fn()}
+      />
+    );
+
+    const deleteButton = screen.getByTitle('Delete Resume');
+    fireEvent.click(deleteButton);
+
+    const cancelButton = screen.getByTitle('Cancel Delete');
+    fireEvent.click(cancelButton);
+
+    expect(onDelete).not.toHaveBeenCalled();
+    expect(screen.getByTitle('Delete Resume')).toBeInTheDocument();
+  });
+
+  it('manages focus between delete and confirm buttons', () => {
+    render(
+      <ResumeCard
+        resume={mockResume}
+        isSelected={false}
+        onSelect={vi.fn()}
+        onEdit={vi.fn()}
+        onDuplicate={vi.fn()}
+        onDelete={vi.fn()}
+        onShare={vi.fn()}
+      />
+    );
+
+    const deleteButton = screen.getByTitle('Delete Resume');
+    fireEvent.click(deleteButton);
+
+    const confirmButton = screen.getByTitle('Confirm Delete');
+    expect(document.activeElement).toBe(confirmButton);
+
+    const cancelButton = screen.getByTitle('Cancel Delete');
+    fireEvent.click(cancelButton);
+
+    const restoredDeleteButton = screen.getByTitle('Delete Resume');
+    expect(document.activeElement).toBe(restoredDeleteButton);
   });
 
   it('calls onShare when share button is clicked', () => {

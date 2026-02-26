@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { ResumeMetadata } from '../types';
 
 interface ResumeCardProps {
@@ -26,6 +26,20 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
   onDelete,
   onShare,
 }) => {
+  const [isDeleting, setIsDeleting] = useState(false);
+  const deleteBtnRef = useRef<HTMLButtonElement>(null);
+  const confirmBtnRef = useRef<HTMLButtonElement>(null);
+  const prevIsDeleting = useRef(isDeleting);
+
+  useEffect(() => {
+    if (isDeleting && !prevIsDeleting.current) {
+        confirmBtnRef.current?.focus();
+    } else if (!isDeleting && prevIsDeleting.current) {
+        deleteBtnRef.current?.focus();
+    }
+    prevIsDeleting.current = isDeleting;
+  }, [isDeleting]);
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
@@ -58,6 +72,7 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
                 checked={isSelected}
                 onChange={(e) => onSelect(e.target.checked)}
                 className="w-5 h-5 rounded border-2 border-slate-300 text-primary-600 focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 cursor-pointer"
+                aria-label={`Select ${resume.title}`}
               />
             </label>
             <div className="flex-1">
@@ -83,6 +98,7 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
               onClick={onEdit}
               className="p-2 text-slate-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
               title="Edit Resume"
+              aria-label="Edit Resume"
             >
               <span className="material-symbols-outlined text-[20px]">edit</span>
             </button>
@@ -90,16 +106,43 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
               onClick={onDuplicate}
               className="p-2 text-slate-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
               title="Duplicate Resume"
+              aria-label="Duplicate Resume"
             >
               <span className="material-symbols-outlined text-[20px]">content_copy</span>
             </button>
-            <button
-              onClick={onDelete}
-              className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-              title="Delete Resume"
-            >
-              <span className="material-symbols-outlined text-[20px]">delete</span>
-            </button>
+
+            {isDeleting ? (
+                <div className="flex items-center bg-slate-50 rounded-lg p-0.5 border border-slate-200 animate-in fade-in zoom-in duration-200">
+                     <button
+                        ref={confirmBtnRef}
+                        onClick={(e) => { e.stopPropagation(); onDelete(); setIsDeleting(false); }}
+                        className="p-1.5 text-red-600 hover:bg-red-50 rounded-md transition-colors"
+                        aria-label="Confirm delete"
+                        title="Confirm Delete"
+                     >
+                        <span className="material-symbols-outlined text-[18px] font-bold">check</span>
+                     </button>
+                     <div className="w-px h-4 bg-slate-200 mx-0.5"></div>
+                     <button
+                        onClick={(e) => { e.stopPropagation(); setIsDeleting(false); }}
+                        className="p-1.5 text-slate-400 hover:bg-slate-100 rounded-md transition-colors"
+                        aria-label="Cancel delete"
+                        title="Cancel Delete"
+                     >
+                        <span className="material-symbols-outlined text-[18px]">close</span>
+                     </button>
+                </div>
+             ) : (
+                 <button
+                    ref={deleteBtnRef}
+                    onClick={(e) => { e.stopPropagation(); setIsDeleting(true); }}
+                    className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                    title="Delete Resume"
+                    aria-label="Delete Resume"
+                 >
+                    <span className="material-symbols-outlined text-[20px]">delete</span>
+                 </button>
+             )}
           </div>
         </div>
 
