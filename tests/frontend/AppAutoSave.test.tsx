@@ -57,17 +57,23 @@ describe('App AutoSave', () => {
     vi.useRealTimers();
     render(<App />);
 
-    await screen.findByTestId('dashboard');
+    // Wait for dashboard to appear
+    await screen.findByTestId('dashboard', {}, { timeout: 3000 });
+
+    // Switch to fake timers before interacting
+    vi.useFakeTimers();
 
     await act(async () => {
         screen.getByText('Go to Editor').click();
     });
 
-    // Now switch to fake timers
-    vi.useFakeTimers();
-
     // Reset mock to clear any previous calls
     vi.mocked(storage.saveResumeData).mockClear();
+
+    // Wait a bit for editor to render
+    await act(async () => {
+        vi.advanceTimersByTime(100);
+    });
 
     // Trigger update
     await act(async () => {
