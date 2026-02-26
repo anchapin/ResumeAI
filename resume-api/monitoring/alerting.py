@@ -181,6 +181,77 @@ class OAuthStorageErrorRule(AlertRule):
         return None
 
 
+class HighErrorRateRule(AlertRule):
+    """Issue #402: Alert rule for high error rate (> 0.1%)."""
+
+    def __init__(self, threshold=0.001, window_minutes=5, enabled=True):
+        super().__init__("high_error_rate", enabled)
+        self.threshold = threshold  # 0.1% = 0.001
+        self.window_minutes = window_minutes
+
+    async def check(self):
+        """Check if error rate exceeds threshold."""
+        try:
+            # This would be evaluated by Prometheus in production
+            pass
+        except Exception as e:
+            logger.error("high_error_rate_rule_check_error", error=str(e))
+        return None
+
+
+class PDFGenerationSlowRule(AlertRule):
+    """Issue #402: Alert rule for slow PDF generation (p95 > 5s)."""
+
+    def __init__(self, threshold_seconds=5, percentile=0.95, enabled=True):
+        super().__init__("pdf_generation_slow", enabled)
+        self.threshold_seconds = threshold_seconds
+        self.percentile = percentile
+
+    async def check(self):
+        """Check if PDF generation is slow."""
+        try:
+            # This would be evaluated by Prometheus in production
+            pass
+        except Exception as e:
+            logger.error("pdf_generation_slow_rule_check_error", error=str(e))
+        return None
+
+
+class DatabaseConnectionPoolExhaustedRule(AlertRule):
+    """Issue #402: Alert rule for database connection pool exhaustion."""
+
+    def __init__(self, enabled=True):
+        super().__init__("database_connection_pool_exhausted", enabled)
+        self.alert_cooldown = timedelta(minutes=2)
+
+    async def check(self):
+        """Check if database connection pool is exhausted."""
+        try:
+            # This would be evaluated by Prometheus in production
+            pass
+        except Exception as e:
+            logger.error("database_connection_pool_exhausted_rule_check_error", error=str(e))
+        return None
+
+
+class APIKeyInvalidRule(AlertRule):
+    """Issue #402: Alert rule for repeated 401 Unauthorized responses (invalid API keys)."""
+
+    def __init__(self, threshold_per_second=1, window_minutes=5, enabled=True):
+        super().__init__("api_key_invalid", enabled)
+        self.threshold_per_second = threshold_per_second
+        self.window_minutes = window_minutes
+
+    async def check(self):
+        """Check for repeated 401 responses."""
+        try:
+            # This would be evaluated by Prometheus in production
+            pass
+        except Exception as e:
+            logger.error("api_key_invalid_rule_check_error", error=str(e))
+        return None
+
+
 class AlertManager:
     def __init__(self):
         self.rules = []
@@ -196,7 +267,13 @@ class AlertManager:
 
     def add_default_rules(self):
         """Add default alert rules."""
-        # Add OAuth-specific alert rules
+        # Issue #402: Prometheus alert rules
+        self.add_rule(HighErrorRateRule(threshold=0.001))  # > 0.1%
+        self.add_rule(PDFGenerationSlowRule(threshold_seconds=5, percentile=0.95))  # p95 > 5s
+        self.add_rule(DatabaseConnectionPoolExhaustedRule())
+        self.add_rule(APIKeyInvalidRule(threshold_per_second=1))
+
+        # OAuth-specific alert rules
         self.add_rule(OAuthAuthenticationFailureRule())
         self.add_rule(OAuthRateLimitRule())
         self.add_rule(OAuthTokenExpirationRule())
@@ -204,6 +281,7 @@ class AlertManager:
 
     def add_default_handlers(self):
         self.add_handler(self.log_alert)
+        self.add_handler(self.notify_alert)
 
     def log_alert(self, alert):
         logger.warning(
@@ -212,6 +290,33 @@ class AlertManager:
             severity=alert.severity,
             message=alert.message,
         )
+
+    def notify_alert(self, alert):
+        """Send alert notification to monitoring systems."""
+        try:
+            # Send to Sentry for frontend-related errors
+            if alert.alert_type in ["api_key_invalid", "high_error_rate"]:
+                self._send_to_sentry(alert)
+            # Additional notification channels can be added here
+            # (Slack, PagerDuty, Email, etc.)
+        except Exception as e:
+            logger.error("alert_notification_error", error=str(e))
+
+    def _send_to_sentry(self, alert):
+        """Send alert to Sentry."""
+        try:
+            import sentry_sdk
+
+            with sentry_sdk.push_scope() as scope:
+                scope.set_tag("alert_type", alert.alert_type)
+                scope.set_tag("severity", alert.severity)
+                scope.set_context("alert", alert.details)
+                sentry_sdk.capture_message(
+                    alert.message,
+                    level="warning" if alert.severity == "warning" else "error",
+                )
+        except Exception as e:
+            logger.error("sentry_send_error", error=str(e))
 
     async def check_all_rules(self):
         alerts = []
