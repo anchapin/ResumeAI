@@ -68,6 +68,7 @@ export async function cleanupTestAPI(context: TestContext): Promise<void> {
 function createMockAPIClient(): MockAPIClient {
   const storage: Map<string, any> = new Map();
   const pdfCache: Map<string, any> = new Map();
+  const renderPdfCache: Map<string, string> = new Map();
   let restorationCount = 0;
 
   return {
@@ -282,12 +283,34 @@ function createMockAPIClient(): MockAPIClient {
       }
 
       try {
-        // Simulate PDF generation
+        // Create cache key from resume data and variant
+        const cacheKey = JSON.stringify({ resume: resumeData, variant });
+
+        // Check cache first
+        if (renderPdfCache.has(cacheKey)) {
+          const cachedUrl = renderPdfCache.get(cacheKey)!;
+          const pdfBuffer = Buffer.from('PDF_MOCK_DATA');
+          return {
+            status: 200,
+            data: {
+              pdf_url: cachedUrl,
+              size: pdfBuffer.length,
+              generated_at: new Date().toISOString(),
+              variant: variant || 'standard',
+            },
+            cached: true,
+          };
+        }
+
+        // Generate new PDF URL and cache it
+        const pdfUrl = 'https://storage.example.com/resume-' + Date.now() + '.pdf';
+        renderPdfCache.set(cacheKey, pdfUrl);
+
         const pdfBuffer = Buffer.from('PDF_MOCK_DATA');
         return {
           status: 200,
           data: {
-            pdf_url: 'https://storage.example.com/resume-' + Date.now() + '.pdf',
+            pdf_url: pdfUrl,
             size: pdfBuffer.length,
             generated_at: new Date().toISOString(),
             variant: variant || 'standard',
