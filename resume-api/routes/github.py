@@ -8,6 +8,8 @@ Provides endpoints for:
 """
 
 import secrets
+import hashlib
+import base64
 from datetime import datetime, timezone, timedelta
 from typing import Annotated, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response, status
@@ -34,6 +36,59 @@ def generate_oauth_state() -> str:
     return secrets.token_urlsafe(32)
 
 
+def generate_pkce_code_verifier() -> str:
+    """
+    Generate a PKCE code verifier (RFC 7636).
+    
+    Returns a 128-character cryptographically random string using only
+    unreserved characters: [A-Z] [a-z] [0-9] - . _ ~
+    
+    Returns:
+        A 128-character code verifier string
+    """
+    # Generate 96 random bytes and base64url encode to get ~128 chars
+    random_bytes = secrets.token_bytes(96)
+    # Use urlsafe base64 and remove padding
+    verifier = base64.urlsafe_b64encode(random_bytes).decode('utf-8').rstrip('=')
+    return verifier[:128]  # Ensure exactly 128 chars
+
+
+def generate_pkce_code_challenge(verifier: str) -> str:
+    """
+    Generate PKCE code challenge from a code verifier (RFC 7636).
+    
+    Creates a SHA256 hash of the verifier and base64url encodes it.
+    
+    Args:
+        verifier: The code verifier string
+        
+    Returns:
+        Base64url-encoded SHA256 hash of the verifier
+    """
+    # Hash the verifier with SHA-256
+    sha256_hash = hashlib.sha256(verifier.encode('utf-8')).digest()
+    
+    # Base64url encode without padding
+    challenge = base64.urlsafe_b64encode(sha256_hash).decode('utf-8').rstrip('=')
+    return challenge
+
+
+def verify_pkce_challenge(verifier: str, challenge: str) -> bool:
+    """
+    Verify that a code verifier matches a code challenge.
+    
+    Args:
+        verifier: The code verifier to verify
+        challenge: The code challenge to verify against
+        
+    Returns:
+        True if verifier matches challenge, False otherwise
+    """
+    generated_challenge = generate_pkce_code_challenge(verifier)
+    # Use constant-time comparison to prevent timing attacks
+    return secrets.compare_digest(generated_challenge, challenge)
+
+
 def build_github_authorization_url(
     client_id: str,
     redirect_uri: str,
@@ -50,24 +105,48 @@ def build_github_authorization_url(
     )
 
 
-async def exchange_code_for_token(code: str) -> dict:
+async def exchange_code_for_token(
+    code: str,
+    code_verifier: Optional[str] = None,
+    code_challenge: Optional[str] = None,
+) -> dict:
     """
     Exchange OAuth authorization code for access token.
+    
+    Supports both standard OAuth and PKCE flows (RFC 7636).
 
     Args:
         code: Authorization code from GitHub
+        code_verifier: PKCE code verifier (for PKCE flow validation)
+        code_challenge: PKCE code challenge (for PKCE flow validation)
 
     Returns:
         Dictionary with access_token, scope, token_type
 
     Raises:
-        HTTPException: If token exchange fails
+        HTTPException: If token exchange fails or PKCE validation fails
     """
     if not settings.github_client_id or not settings.github_client_secret:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="GitHub OAuth not configured",
         )
+
+    # Validate PKCE if both verifier and challenge are provided
+    if code_verifier and code_challenge:
+        if not verify_pkce_challenge(code_verifier, code_challenge):
+            logger.warning(
+                "github_pkce_verification_failed",
+                code_challenge=code_challenge[:20] + "...",
+            )
+            monitoring_metrics.increment_oauth_connection_failure(
+                provider="github", error_type="pkce_verification_failed"
+            )
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="PKCE verification failed",
+            )
+        logger.info("github_pkce_verification_success")
 
     async with AsyncClient() as client:
         response = await client.post(
@@ -250,8 +329,12 @@ async def github_oauth_callback(
                 },
             )
 
-        # Exchange code for token
-        token_data = await exchange_code_for_token(code)
+        # Exchange code for token with PKCE validation
+        token_data = await exchange_code_for_token(
+            code=code,
+            code_verifier=oauth_state.code_verifier,
+            code_challenge=oauth_state.code_challenge,
+        )
         access_token = token_data.get("access_token")
 
         # Fetch GitHub user
@@ -475,11 +558,14 @@ async def github_connect(
     redirect_uri: Annotated[Optional[str], Query()] = None,
 ):
     """
-    Initiate GitHub OAuth authorization flow.
+    Initiate GitHub OAuth authorization flow with PKCE security.
 
     This endpoint generates a GitHub OAuth authorization URL for the frontend
     to redirect the user to. The user will be prompted to authorize the
     application to access their GitHub account.
+    
+    Uses OAuth 2.0 PKCE (RFC 7636) to protect against authorization code
+    interception attacks by public clients.
 
     **OAuth Scopes Requested:**
     - `read:user`: Access to user profile information
@@ -489,6 +575,12 @@ async def github_connect(
     A cryptographically secure random state parameter is generated and stored.
     This must be stored (e.g., in session storage) and verified in the callback
     to prevent CSRF attacks.
+    
+    **PKCE (Proof Key for Public Clients):**
+    RFC 7636 PKCE is implemented with:
+    - Code verifier: 128-character cryptographic random string
+    - Code challenge: SHA256(verifier) base64url-encoded
+    - Challenge method: S256 (SHA256)
 
     **Custom Redirect URI:**
     By default, the callback URI is configured via `GITHUB_OAUTH_REDIRECT_URI`
@@ -499,8 +591,9 @@ async def github_connect(
     **Response:**
     Returns a JSON object with:
     - `success`: true
-    - `authorization_url`: The URL to redirect the user to
+    - `authorization_url`: The URL to redirect the user to (includes PKCE parameters)
     - `state`: The CSRF state parameter
+    - `code_challenge`: The PKCE code challenge (for frontend tracking)
     - `expires_in`: Seconds until state expires
     """
     if not settings.github_client_id:
@@ -519,14 +612,21 @@ async def github_connect(
 
     # Generate cryptographically secure random state
     state = generate_oauth_state()
+    
+    # Generate PKCE code verifier and challenge
+    code_verifier = generate_pkce_code_verifier()
+    code_challenge = generate_pkce_code_challenge(code_verifier)
 
     # Calculate expiration time (10 minutes from now)
     expires_at = datetime.now(timezone.utc) + timedelta(minutes=10)
 
-    # Store OAuth state in database
+    # Store OAuth state in database with PKCE
     oauth_state = GitHubOAuthState(
         state=state,
         user_id=user_id,
+        code_challenge=code_challenge,
+        code_challenge_method="S256",  # SHA256 method
+        code_verifier=code_verifier,
         expires_at=expires_at,
     )
     db.add(oauth_state)
@@ -563,24 +663,29 @@ async def github_connect(
         # Fallback to current request host
         callback_url = default_callback
 
-    # Build OAuth authorization URL
+    # Build OAuth authorization URL with PKCE parameters
     github_auth_url = build_github_authorization_url(
         client_id=settings.github_client_id,
         redirect_uri=callback_url,
         state=state,
         scopes="user:email",
     )
+    
+    # Add PKCE parameters to URL
+    github_auth_url += f"&code_challenge={code_challenge}&code_challenge_method=S256"
 
     logger.info(
         "github_oauth_authorize",
         user_id=user_id,
         state=state,
+        code_challenge_method="S256",
     )
 
     return {
         "success": True,
         "authorization_url": github_auth_url,
         "state": state,
+        "code_challenge": code_challenge,  # Return for frontend tracking
         "expires_in": 600,
     }
 

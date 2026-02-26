@@ -19,8 +19,16 @@ import {
   ComparisonPriority,
   OfferComparison,
 } from '../types';
+import { fetchWithRetry, RetryConfig } from './retryLogic';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
+
+// Default retry configuration for API calls
+const DEFAULT_RETRY_CONFIG: RetryConfig = {
+  maxRetries: 3,
+  initialDelay: 100,
+  maxDelay: 10000,
+};
 
 function getAPIKey(): string | null {
   return localStorage.getItem('RESUMEAI_API_KEY');
@@ -52,11 +60,11 @@ export function convertToAPIData(resumeData: SimpleResumeData): ResumeDataForAPI
 }
 
 export async function generatePDF(resumeData: ResumeDataForAPI, variant: string = 'modern'): Promise<Blob> {
-  const response = await fetch(`${API_URL}/v1/render/pdf`, {
+  const response = await fetchWithRetry(`${API_URL}/v1/render/pdf`, {
     method: 'POST',
     headers: { ...getHeaders(), 'Content-Type': 'application/json' },
     body: JSON.stringify({ resume_data: resumeData, variant }),
-  });
+  }, DEFAULT_RETRY_CONFIG);
   if (!response.ok) { const error = await response.json().catch(() => ({ detail: 'PDF generation failed' })); throw new Error(error.detail || 'Failed to generate PDF'); }
   return response.blob();
 }
@@ -69,7 +77,7 @@ export async function getVariants(filters?: { search?: string; category?: string
   if (filters?.search) params.append('search', filters.search);
   if (filters?.category) params.append('category', filters.category);
   if (filters?.tags) params.append('tags', filters.tags.join(','));
-  const response = await fetch(`${API_URL}/v1/variants?${params}`, { headers: getHeaders() });
+  const response = await fetchWithRetry(`${API_URL}/v1/variants?${params}`, { headers: getHeaders() }, DEFAULT_RETRY_CONFIG);
   if (!response.ok) throw new Error('Failed to fetch variants');
   const data: VariantsResponse = await response.json();
   return data.variants;
@@ -78,17 +86,17 @@ export async function getVariants(filters?: { search?: string; category?: string
 export interface TailoredResumeResponse { resume_data: ResumeDataForAPI; keywords: string[]; suggestions: string[]; }
 
 export async function tailorResume(resumeData: ResumeDataForAPI, jobDescription: string, companyName?: string, jobTitle?: string): Promise<TailoredResumeResponse> {
-  const response = await fetch(`${API_URL}/v1/tailor`, {
+  const response = await fetchWithRetry(`${API_URL}/v1/tailor`, {
     method: 'POST',
     headers: { ...getHeaders(), 'Content-Type': 'application/json' },
     body: JSON.stringify({ resume_data: resumeData, job_description: jobDescription, company_name: companyName, job_title: jobTitle }),
-  });
+  }, DEFAULT_RETRY_CONFIG);
   if (!response.ok) { const error = await response.json().catch(() => ({ detail: 'Resume tailoring failed' })); throw new Error(error.detail || 'Failed to tailor resume'); }
   return response.json();
 }
 
 export async function createResume(title: string, data: ResumeData, tags: string[] = []): Promise<any> {
-  const response = await fetch(`${API_URL}/resumes`, { method: 'POST', headers: getHeaders(), body: JSON.stringify({ title, data, tags }) });
+  const response = await fetchWithRetry(`${API_URL}/resumes`, { method: 'POST', headers: getHeaders(), body: JSON.stringify({ title, data, tags }) }, DEFAULT_RETRY_CONFIG);
   if (!response.ok) throw new Error('Failed to create resume');
   return response.json();
 }
@@ -99,25 +107,25 @@ export async function listResumes(filters?: { search?: string; tag?: string; ski
   if (filters?.tag) params.append('tag', filters.tag);
   if (filters?.skip !== undefined) params.append('skip', filters.skip.toString());
   if (filters?.limit !== undefined) params.append('limit', filters.limit.toString());
-  const response = await fetch(`${API_URL}/resumes?${params}`, { headers: getHeaders() });
+  const response = await fetchWithRetry(`${API_URL}/resumes?${params}`, { headers: getHeaders() }, DEFAULT_RETRY_CONFIG);
   if (!response.ok) throw new Error('Failed to list resumes');
   return response.json();
 }
 
 export async function getResume(resumeId: number): Promise<any> {
-  const response = await fetch(`${API_URL}/resumes/${resumeId}`, { headers: getHeaders() });
+  const response = await fetchWithRetry(`${API_URL}/resumes/${resumeId}`, { headers: getHeaders() }, DEFAULT_RETRY_CONFIG);
   if (!response.ok) throw new Error('Failed to get resume');
   return response.json();
 }
 
 export async function updateResume(resumeId: number, updates: { title?: string; data?: ResumeData; tags?: string[]; change_description?: string; }): Promise<any> {
-  const response = await fetch(`${API_URL}/resumes/${resumeId}`, { method: 'PUT', headers: getHeaders(), body: JSON.stringify(updates) });
+  const response = await fetchWithRetry(`${API_URL}/resumes/${resumeId}`, { method: 'PUT', headers: getHeaders(), body: JSON.stringify(updates) }, DEFAULT_RETRY_CONFIG);
   if (!response.ok) throw new Error('Failed to update resume');
   return response.json();
 }
 
 export async function deleteResume(resumeId: number): Promise<void> {
-  const response = await fetch(`${API_URL}/resumes/${resumeId}`, { method: 'DELETE', headers: getHeaders() });
+  const response = await fetchWithRetry(`${API_URL}/resumes/${resumeId}`, { method: 'DELETE', headers: getHeaders() }, DEFAULT_RETRY_CONFIG);
   if (!response.ok) throw new Error('Failed to delete resume');
 }
 
@@ -202,11 +210,11 @@ export interface ATSCheckRequest {
 }
 
 export async function checkATSScore(resumeData: ResumeDataForAPI, jobDescription: string): Promise<import('../types').ATSReport> {
-  const response = await fetch(`${API_URL}/v1/ats/check`, {
+  const response = await fetchWithRetry(`${API_URL}/v1/ats/check`, {
     method: 'POST',
     headers: { ...getHeaders(), 'Content-Type': 'application/json' },
     body: JSON.stringify({ resume_data: resumeData, job_description: jobDescription }),
-  });
+  }, DEFAULT_RETRY_CONFIG);
   if (!response.ok) { const error = await response.json().catch(() => ({ detail: 'ATS check failed' })); throw new Error(error.detail || 'Failed to check ATS score'); }
   return response.json();
 }
