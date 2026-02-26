@@ -13,13 +13,13 @@ export default defineConfig(({ mode }) => {
         exclude: ['docs'],
       },
       test: {
-        environment: 'jsdom',
+        environment: 'happy-dom',
         globals: true,
         setupFiles: './vitest.setup.ts',
-        pool: 'threads',
+        pool: 'forks',
         poolOptions: {
-          threads: {
-            singleThread: true,
+          forks: {
+            singleFork: true,
           },
         },
         coverage: {

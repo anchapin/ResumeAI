@@ -28,6 +28,7 @@
     "@types/react-toastify": "^4.0.2",
     "@vitejs/plugin-react": "^5.0.0",
     "@vitest/coverage-v8": "^4.0.18",
+    "happy-dom": "^20.7.0",
     "jsdom": "^28.0.0",
     "typedoc": "^0.28.17",
     "typescript": "~5.8.2",
