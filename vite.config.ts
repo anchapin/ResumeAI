@@ -17,6 +17,7 @@ export default defineConfig(({ mode }) => {
         globals: true,
         setupFiles: './vitest.setup.ts',
         singleFork: true,
+        testTimeout: 15000,
         coverage: {
           provider: 'istanbul',
           reporter: ['text', 'json', 'html', 'lcov'],
@@ -49,6 +50,25 @@ export default defineConfig(({ mode }) => {
         alias: {
           '@': path.resolve(__dirname, '.'),
         }
+      },
+      build: {
+        rollupOptions: {
+          output: {
+            manualChunks: (id) => {
+              // Vendor chunk for core dependencies
+              if (id.includes('node_modules/react') || id.includes('node_modules/react-dom')) {
+                return 'vendor';
+              }
+              // UI libraries chunk
+              if (id.includes('node_modules/react-toastify') || 
+                  id.includes('node_modules/recharts') ||
+                  id.includes('node_modules/react-markdown')) {
+                return 'ui-libs';
+              }
+            }
+          }
+        },
+        chunkSizeWarningLimit: 500
       }
     };
 });

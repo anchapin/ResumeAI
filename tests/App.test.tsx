@@ -249,18 +249,21 @@ describe('App Component', () => {
     });
 
     it('should navigate to Editor when clicking Editor button', async () => {
-      const user = userEvent.setup();
-      render(<App />);
+     const user = userEvent.setup();
+     render(<App />);
 
-      await waitFor(() => {
-        expect(screen.getByTestId('dashboard-page')).toBeInTheDocument();
-      });
+     await waitFor(() => {
+       expect(screen.getByTestId('dashboard-page')).toBeInTheDocument();
+     });
 
-      const editorButton = screen.getByTestId('nav-editor');
-      await user.click(editorButton);
+     const editorButton = screen.getByTestId('nav-editor');
+     await user.click(editorButton);
 
-      expect(screen.getByTestId('editor-page')).toBeInTheDocument();
-      expect(screen.queryByTestId('dashboard-page')).not.toBeInTheDocument();
+     // Wait for lazy-loaded Editor component to load
+     await waitFor(() => {
+       expect(screen.getByTestId('editor-page')).toBeInTheDocument();
+     });
+     expect(screen.queryByTestId('dashboard-page')).not.toBeInTheDocument();
     });
 
     it('should navigate to Workspace', async () => {
@@ -274,7 +277,9 @@ describe('App Component', () => {
       const workspaceButton = screen.getByTestId('nav-workspace');
       await user.click(workspaceButton);
 
-      expect(screen.getByTestId('workspace-page')).toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.getByTestId('workspace-page')).toBeInTheDocument();
+      });
     });
 
     it('should navigate to Settings', async () => {
@@ -288,7 +293,9 @@ describe('App Component', () => {
       const settingsButton = screen.getByTestId('nav-settings');
       await user.click(settingsButton);
 
-      expect(screen.getByTestId('settings-page')).toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.getByTestId('settings-page')).toBeInTheDocument();
+      });
     });
 
     it('should navigate to Applications', async () => {
@@ -302,7 +309,9 @@ describe('App Component', () => {
       const applicationsButton = screen.getByTestId('nav-applications');
       await user.click(applicationsButton);
 
-      expect(screen.getByTestId('applications-page')).toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.getByTestId('applications-page')).toBeInTheDocument();
+      });
     });
 
     it('should navigate to Bulk Resume Management', async () => {
@@ -316,7 +325,9 @@ describe('App Component', () => {
       const bulkButton = screen.getByTestId('nav-bulk');
       await user.click(bulkButton);
 
-      expect(screen.getByTestId('bulk-page')).toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.getByTestId('bulk-page')).toBeInTheDocument();
+      });
     });
 
     it('should navigate to Salary Research', async () => {
@@ -330,7 +341,9 @@ describe('App Component', () => {
       const salaryButton = screen.getByTestId('nav-salary');
       await user.click(salaryButton);
 
-      expect(screen.getByTestId('salary-page')).toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.getByTestId('salary-page')).toBeInTheDocument();
+      });
     });
 
     it('should return to Dashboard from Editor', async () => {
