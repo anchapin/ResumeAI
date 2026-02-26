@@ -1,0 +1,22 @@
+{
+  "annotations": {"list": [{"builtIn": 1,"datasource": {"type": "grafana","uid": "-- Grafana --"},"enable": true,"hide": true,"iconColor": "rgba(0, 211, 255, 1)","name": "Annotations & Alerts","type": "dashboard"}]},
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "liveNow": false,
+  "panels": [{"datasource": {"type": "prometheus","uid": "prometheus"},"description": "HTTP request rate by endpoint over the last 5 minutes","fieldConfig": {"defaults": {"color": {"mode": "palette-classic"},"custom": {"axisCenteredZero": false,"axisColorMode": "text","axisLabel": "Requests/sec","axisPlacement": "auto","barAlignment": 0,"drawStyle": "line","fillOpacity": 10,"gradientMode": "none","hideFrom": {"tooltip": false,"viz": false,"legend": false},"lineInterpolation": "linear","lineWidth": 1,"pointSize": 5,"scaleDistribution": {"type": "linear"},"showPoints": "auto","spanNulls": false,"stacking": {"group": "A","mode": "none"},"thresholdsStyle": {"mode": "off"}},"mappings": [],"thresholds": {"mode": "absolute","steps": [{"color": "green","value": null}]},"unit": "reqps"},"overrides": []},"gridPos": {"h": 8,"w": 12,"x": 0,"y": 0},"id": 1,"options": {"legend": {"calcs": ["mean","max","last"],"displayMode": "table","placement": "right","showLegend": true},"tooltip": {"mode": "multi","sort": "none"}},"pluginVersion": "10.0.0","targets": [{"expr": "sum(rate(http_requests_total[5m])) by (endpoint)","format": "time_series","interval": "","legendFormat": "{{endpoint}}","refId": "A"}],"title": "HTTP Request Rate by Endpoint","type": "timeseries"}],
+  "refresh": "10s",
+  "schemaVersion": 38,
+  "style": "dark",
+  "tags": ["requests","http","endpoints"],
+  "templating": {"list": []},
+  "time": {"from": "now-1h","to": "now"},
+  "timepicker": {},
+  "timezone": "",
+  "title": "Request Metrics by Endpoint",
+  "uid": "request-metrics",
+  "version": 1,
+  "weekStart": ""
+}
