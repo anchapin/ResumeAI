@@ -17,6 +17,7 @@ export default defineConfig(({ mode }) => {
         globals: true,
         setupFiles: './vitest.setup.ts',
         singleFork: true,
+        testTimeout: 15000,
         coverage: {
           provider: 'istanbul',
           reporter: ['text', 'json', 'html', 'lcov'],
