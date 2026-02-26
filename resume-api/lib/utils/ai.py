@@ -3,6 +3,9 @@ AI Integration Utilities.
 
 This module provides utilities for AI-powered resume tailoring,
 including keyword extraction and improvement suggestions.
+
+Also includes circuit breaker protection and provider management for
+resilient AI service calls with automatic fallback.
 """
 
 import logging
@@ -20,6 +23,18 @@ from .circuit_breaker import (
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+# Import provider manager for easy access
+try:
+    from .ai_provider_manager import (
+        AIProviderManager,
+        ProviderType,
+        ProviderStatus,
+    )
+except ImportError:
+    AIProviderManager = None
+    ProviderType = None
+    ProviderStatus = None
 
 
 class AIProvider(ABC):
