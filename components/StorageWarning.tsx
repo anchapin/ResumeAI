@@ -1,5 +1,5 @@
 import React from 'react';
-import { useStorageQuota } from '../hooks/useStorageQuota';
+import { useStorageQuota } from '../src/hooks/useStorageQuota';
 
 /**
  * StorageWarning Component
