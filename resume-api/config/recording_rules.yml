@@ -1,0 +1,213 @@
+# Prometheus Recording Rules for Resume API
+# Pre-computed metrics for faster dashboard queries
+
+groups:
+  # HTTP Request Metrics
+  - name: http_metrics
+    interval: 30s
+    rules:
+      # Request rate by endpoint
+      - record: http:requests:rate5m
+        expr: sum(rate(http_requests_total[5m])) by (endpoint, method)
+
+      # Request rate by status
+      - record: http:requests:by_status:rate5m
+        expr: sum(rate(http_requests_total[5m])) by (status_code)
+
+      # Error rate
+      - record: http:errors:rate5m
+        expr: sum(rate(http_requests_total{status_code=~"5.."}[5m])) by (endpoint)
+
+      # Error rate percentage
+      - record: http:error_rate:percentage
+        expr: |
+          (sum(rate(http_requests_total{status_code=~"5.."}[5m])) by (endpoint))
+          /
+          (sum(rate(http_requests_total[5m])) by (endpoint)) * 100
+
+      # P50 latency
+      - record: http:latency:p50
+        expr: histogram_quantile(0.50, rate(http_request_duration_seconds_bucket[5m]))
+
+      # P95 latency
+      - record: http:latency:p95
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m]))
+
+      # P99 latency
+      - record: http:latency:p99
+        expr: histogram_quantile(0.99, rate(http_request_duration_seconds_bucket[5m]))
+
+      # Average latency
+      - record: http:latency:avg
+        expr: sum(rate(http_request_duration_seconds_sum[5m])) by (endpoint) / sum(rate(http_request_duration_seconds_count[5m])) by (endpoint)
+
+  # Business Metrics
+  - name: business_metrics
+    interval: 30s
+    rules:
+      # PDF generation rate
+      - record: business:pdfs:rate5m
+        expr: sum(rate(pdfs_generated_total[5m])) by (variant)
+
+      # Resume tailor rate
+      - record: business:tailors:rate5m
+        expr: sum(rate(resumes_tailored_total[5m])) by (ai_provider)
+
+      # API usage rate
+      - record: business:api_calls:rate5m
+        expr: sum(rate(http_requests_total[5m])) by (job)
+
+  # AI Provider Metrics
+  - name: ai_metrics
+    interval: 30s
+    rules:
+      # AI request rate by provider
+      - record: ai:requests:rate5m
+        expr: sum(rate(ai_requests_total[5m])) by (provider, model)
+
+      # AI error rate
+      - record: ai:errors:rate5m
+        expr: sum(rate(ai_requests_total{status="failed"}[5m])) by (provider, model)
+
+      # AI error percentage
+      - record: ai:error_rate:percentage
+        expr: |
+          (sum(rate(ai_requests_total{status="failed"}[5m])) by (provider, model))
+          /
+          (sum(rate(ai_requests_total[5m])) by (provider, model)) * 100
+
+      # P50 latency
+      - record: ai:latency:p50
+        expr: histogram_quantile(0.50, rate(ai_request_duration_seconds_bucket[5m]))
+
+      # P95 latency
+      - record: ai:latency:p95
+        expr: histogram_quantile(0.95, rate(ai_request_duration_seconds_bucket[5m]))
+
+      # P99 latency
+      - record: ai:latency:p99
+        expr: histogram_quantile(0.99, rate(ai_request_duration_seconds_bucket[5m]))
+
+  # Database Metrics
+  - name: database_metrics
+    interval: 30s
+    rules:
+      # Query rate by operation
+      - record: db:queries:rate5m
+        expr: sum(rate(db_queries_total[5m])) by (operation)
+
+      # P50 query latency
+      - record: db:latency:p50
+        expr: histogram_quantile(0.50, rate(db_query_duration_seconds_bucket[5m]))
+
+      # P95 query latency
+      - record: db:latency:p95
+        expr: histogram_quantile(0.95, rate(db_query_duration_seconds_bucket[5m]))
+
+      # P99 query latency
+      - record: db:latency:p99
+        expr: histogram_quantile(0.99, rate(db_query_duration_seconds_bucket[5m]))
+
+      # Slow queries (>2s)
+      - record: db:slow_queries:count
+        expr: count(histogram_quantile(0.99, rate(db_query_duration_seconds_bucket[5m])) > 2)
+
+  # Cache Metrics
+  - name: cache_metrics
+    interval: 30s
+    rules:
+      # Cache hit rate
+      - record: cache:hit_rate:percentage
+        expr: |
+          (sum(rate(cache_hits_total[5m])))
+          /
+          (sum(rate(cache_hits_total[5m])) + sum(rate(cache_misses_total[5m]))) * 100
+
+      # Cache hit count
+      - record: cache:hits:rate5m
+        expr: sum(rate(cache_hits_total[5m]))
+
+      # Cache miss count
+      - record: cache:misses:rate5m
+        expr: sum(rate(cache_misses_total[5m]))
+
+      # Cache eviction rate
+      - record: cache:evictions:rate5m
+        expr: sum(rate(cache_evictions_total[5m]))
+
+  # OAuth Metrics
+  - name: oauth_metrics
+    interval: 30s
+    rules:
+      # OAuth success rate
+      - record: oauth:success_rate:percentage
+        expr: |
+          (sum(rate(oauth_connection_success_total[5m])) by (provider))
+          /
+          (sum(rate(oauth_connection_success_total[5m]) + rate(oauth_connection_failure_total[5m])) by (provider)) * 100
+
+      # OAuth connection rate
+      - record: oauth:connections:rate5m
+        expr: sum(rate(oauth_connection_success_total[5m])) by (provider)
+
+      # OAuth failure rate
+      - record: oauth:failures:rate5m
+        expr: sum(rate(oauth_connection_failure_total[5m])) by (provider)
+
+      # OAuth token refresh rate
+      - record: oauth:token_refreshes:rate5m
+        expr: sum(rate(oauth_token_refresh_total[5m])) by (provider, status)
+
+  # Resource Metrics
+  - name: resource_metrics
+    interval: 30s
+    rules:
+      # CPU usage
+      - record: resource:cpu:usage
+        expr: rate(process_cpu_seconds_total[5m])
+
+      # Memory usage in MB
+      - record: resource:memory:mb
+        expr: process_resident_memory_bytes / 1024 / 1024
+
+      # Memory usage percentage (assuming 4GB container)
+      - record: resource:memory:percentage
+        expr: (process_resident_memory_bytes / (4 * 1024 * 1024 * 1024)) * 100
+
+      # File descriptors in use
+      - record: resource:fd:in_use
+        expr: process_open_fds
+
+  # Summary Metrics
+  - name: summary_metrics
+    interval: 1m
+    rules:
+      # Total requests in 24h
+      - record: summary:requests:24h
+        expr: sum(increase(http_requests_total[24h]))
+
+      # Total errors in 24h
+      - record: summary:errors:24h
+        expr: sum(increase(http_requests_total{status_code=~"5.."}[24h]))
+
+      # Error rate in 24h
+      - record: summary:error_rate:24h
+        expr: |
+          (sum(increase(http_requests_total{status_code=~"5.."}[24h])))
+          /
+          (sum(increase(http_requests_total[24h]))) * 100
+
+      # Total PDFs generated in 24h
+      - record: summary:pdfs:24h
+        expr: sum(increase(pdfs_generated_total[24h]))
+
+      # Total resumes tailored in 24h
+      - record: summary:tailors:24h
+        expr: sum(increase(resumes_tailored_total[24h]))
+
+      # Average response time in 24h
+      - record: summary:latency:avg:24h
+        expr: |
+          sum(increase(http_request_duration_seconds_sum[24h]))
+          /
+          sum(increase(http_request_duration_seconds_count[24h]))

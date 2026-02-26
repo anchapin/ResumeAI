@@ -1,0 +1,126 @@
+# Prometheus Configuration for Resume API
+# Comprehensive monitoring setup with alerting and recording rules
+
+global:
+  # Default scrape interval
+  scrape_interval: 15s
+  # Default evaluation interval for rules
+  evaluation_interval: 15s
+  # How long until a scrape request times out
+  scrape_timeout: 10s
+  # Global default labels
+  external_labels:
+    cluster: 'resumeai-prod'
+    service: 'resume-api'
+    environment: '{{ ENVIRONMENT | default("production") }}'
+
+# Alertmanager configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+            - localhost:9093
+      relabel_configs:
+        - source_labels: [__address__]
+          regex: '([^:]+)(?::\d+)?'
+          replacement: '${1}:9093'
+          target_label: __address__
+
+# Load rules once and periodically evaluate them
+rule_files:
+  - alert_rules.yml
+  - recording_rules.yml
+
+scrape_configs:
+  # Prometheus itself
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+    metrics_path: '/metrics'
+
+  # Resume API service
+  - job_name: 'resume-api'
+    static_configs:
+      - targets: ['localhost:8000']
+        labels:
+          instance: 'resume-api-1'
+          service: 'resume-api'
+    metrics_path: '/metrics'
+    scrape_interval: 15s
+    scrape_timeout: 10s
+    
+    # Relabel configs for enrichment
+    relabel_configs:
+      # Add service label
+      - source_labels: [__scheme__, __address__, __metrics_path__]
+        regex: '([^:]+)(?::\d+)?;([^:]+)(?::\d+)?;(.*)'
+        replacement: '${1}://${2}${3}'
+        target_label: __url__
+      
+      # Add environment label
+      - target_label: environment
+        replacement: 'production'
+      
+      # Add cluster label
+      - target_label: cluster
+        replacement: 'resumeai-prod'
+
+  # Node Exporter (if available)
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['localhost:9100']
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+    scrape_timeout: 10s
+    relabel_configs:
+      - source_labels: [__address__]
+        regex: '([^:]+)(?::\d+)?'
+        replacement: '${1}:9100'
+        target_label: __address__
+
+  # Docker metrics (if available)
+  - job_name: 'docker'
+    static_configs:
+      - targets: ['localhost:9323']
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+    scrape_timeout: 10s
+
+  # Redis metrics (if available)
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['localhost:6379']
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+    scrape_timeout: 10s
+
+  # PostgreSQL metrics (if available)
+  - job_name: 'postgres'
+    static_configs:
+      - targets: ['localhost:9187']
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+    scrape_timeout: 10s
+
+# Service discovery for Kubernetes (if applicable)
+# uncomment and configure for K8s environments
+# 
+# kubernetes_sd_configs:
+#   - role: pod
+#     namespaces:
+#       names:
+#         - resumeai
+#
+# relabel_configs:
+#   - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+#     action: keep
+#     regex: 'true'
+#   - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
+#     action: replace
+#     target_label: __metrics_path__
+#     regex: '(.+)'
+#   - source_labels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
+#     action: replace
+#     regex: '([^:]+)(?::\d+)?;(\d+)'
+#     replacement: '$1:$2'
+#     target_label: __address__

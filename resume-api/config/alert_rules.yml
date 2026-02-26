@@ -1,0 +1,390 @@
+# Prometheus Alert Rules for Resume API
+# Critical alerts for production observability
+
+groups:
+  # API Performance Alerts
+  - name: api_performance
+    interval: 30s
+    rules:
+      # High error rate alert
+      - alert: HighErrorRate
+        expr: |
+          (sum(rate(http_requests_total{status=~"5.."}[5m])) by (job)) 
+          / 
+          (sum(rate(http_requests_total[5m])) by (job)) > 0.05
+        for: 5m
+        labels:
+          severity: critical
+          service: resume-api
+          component: http
+        annotations:
+          summary: "High error rate detected ({{ $value | humanizePercentage }})"
+          description: |
+            Service {{ $labels.job }} has error rate of {{ $value | humanizePercentage }}
+            over the last 5 minutes. This indicates a critical issue requiring immediate attention.
+          runbook: "https://docs.resumeai.com/runbooks/high-error-rate"
+
+      # High response time alert
+      - alert: HighResponseTime
+        expr: |
+          histogram_quantile(0.99, rate(http_request_duration_seconds_bucket[5m])) > 5
+        for: 5m
+        labels:
+          severity: warning
+          service: resume-api
+          component: http
+        annotations:
+          summary: "High response time detected ({{ $value }}s)"
+          description: |
+            P99 response time is {{ $value | humanizeDuration }} on {{ $labels.job }}.
+            This may indicate performance degradation or resource constraints.
+          runbook: "https://docs.resumeai.com/runbooks/high-response-time"
+
+      # High request rate alert
+      - alert: HighRequestRate
+        expr: |
+          sum(rate(http_requests_total[5m])) by (job) > 1000
+        for: 5m
+        labels:
+          severity: warning
+          service: resume-api
+          component: http
+        annotations:
+          summary: "High request rate detected ({{ $value | humanize }}/sec)"
+          description: |
+            Request rate is {{ $value | humanize }}/sec on {{ $labels.job }}.
+            Verify traffic patterns and check for potential DDoS or load spike.
+
+      # 4xx error spike
+      - alert: ClientErrorSpike
+        expr: |
+          (sum(rate(http_requests_total{status=~"4.."}[5m])) by (job)) > 100
+        for: 3m
+        labels:
+          severity: warning
+          service: resume-api
+          component: http
+        annotations:
+          summary: "Spike in 4xx errors detected ({{ $value | humanize }}/sec)"
+          description: |
+            High rate of client errors ({{ $value | humanize }}/sec) on {{ $labels.job }}.
+            Investigate for API contract changes or invalid client requests.
+
+  # Business Metrics Alerts
+  - name: business_metrics
+    interval: 30s
+    rules:
+      # Low PDF generation success rate
+      - alert: LowPDFGenerationSuccessRate
+        expr: |
+          (sum(rate(pdfs_generated_total[5m])) by (job)) > 0
+          and
+          (sum(rate(http_errors_total{endpoint="/v1/render/pdf", status_code="500"}[5m])) by (job))
+          /
+          (sum(rate(http_requests_total{endpoint="/v1/render/pdf"}[5m])) by (job)) > 0.1
+        for: 5m
+        labels:
+          severity: critical
+          service: resume-api
+          component: business
+        annotations:
+          summary: "Low PDF generation success rate ({{ $value | humanizePercentage }})"
+          description: |
+            PDF generation failure rate is {{ $value | humanizePercentage }}.
+            This is a critical business metric. Investigate PDF service and LaTeX availability.
+
+      # Low resume tailor success rate
+      - alert: LowResumeTailorSuccessRate
+        expr: |
+          (sum(rate(http_errors_total{endpoint="/v1/tailor", status_code="500"}[5m])) by (job))
+          /
+          (sum(rate(http_requests_total{endpoint="/v1/tailor"}[5m])) by (job)) > 0.05
+        for: 5m
+        labels:
+          severity: critical
+          service: resume-api
+          component: ai
+        annotations:
+          summary: "Low resume tailor success rate ({{ $value | humanizePercentage }})"
+          description: |
+            Resume tailoring failure rate is {{ $value | humanizePercentage }}.
+            Check AI provider availability and API quotas (OpenAI, Claude, Gemini).
+
+  # Queue & Job Alerts
+  - name: queue_and_jobs
+    interval: 30s
+    rules:
+      # Queue backlog alert
+      - alert: QueueBacklogHigh
+        expr: |
+          (max(async_queue_depth) by (job)) > 100
+        for: 5m
+        labels:
+          severity: warning
+          service: resume-api
+          component: queue
+        annotations:
+          summary: "Queue backlog is high ({{ $value }} jobs)"
+          description: |
+            Async queue has {{ $value }} jobs waiting. 
+            Check background worker health and increase processing capacity if needed.
+
+      # Job processing failure rate
+      - alert: JobProcessingFailureRate
+        expr: |
+          (sum(rate(async_job_failures_total[5m])) by (job))
+          /
+          (sum(rate(async_jobs_total[5m])) by (job)) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+          service: resume-api
+          component: queue
+        annotations:
+          summary: "Job processing failure rate high ({{ $value | humanizePercentage }})"
+          description: |
+            {{ $value | humanizePercentage }} of jobs are failing.
+            Check worker logs and investigate failed job types.
+
+  # Resource Alerts
+  - name: resource_utilization
+    interval: 30s
+    rules:
+      # High memory usage
+      - alert: HighMemoryUsage
+        expr: |
+          (process_resident_memory_bytes / 1024 / 1024 / 1024) > 2
+        for: 5m
+        labels:
+          severity: warning
+          service: resume-api
+          component: resource
+        annotations:
+          summary: "High memory usage detected ({{ $value | humanize }}GB)"
+          description: |
+            Process is using {{ $value | humanize }}GB of memory.
+            Monitor for memory leaks or increase container memory limits.
+
+      # High CPU usage
+      - alert: HighCPUUsage
+        expr: |
+          rate(process_cpu_seconds_total[5m]) > 0.8
+        for: 5m
+        labels:
+          severity: warning
+          service: resume-api
+          component: resource
+        annotations:
+          summary: "High CPU usage detected ({{ $value | humanizePercentage }})"
+          description: |
+            Process CPU usage is {{ $value | humanizePercentage }}.
+            Consider scaling horizontally or optimizing hot code paths.
+
+  # Database Alerts
+  - name: database
+    interval: 30s
+    rules:
+      # High database connection count
+      - alert: HighDBConnectionCount
+        expr: |
+          db_connections_active > 20
+        for: 5m
+        labels:
+          severity: warning
+          service: resume-api
+          component: database
+        annotations:
+          summary: "High database connection count ({{ $value }} connections)"
+          description: |
+            Database has {{ $value }} active connections.
+            Monitor connection pool health and consider connection pooling optimization.
+
+      # Slow database queries
+      - alert: SlowDatabaseQueries
+        expr: |
+          histogram_quantile(0.99, rate(db_query_duration_seconds_bucket[5m])) > 2
+        for: 5m
+        labels:
+          severity: warning
+          service: resume-api
+          component: database
+        annotations:
+          summary: "Slow database queries detected ({{ $value | humanizeDuration }})"
+          description: |
+            P99 database query time is {{ $value | humanizeDuration }}.
+            Review slow query logs and consider query optimization or indexing.
+
+  # Cache Alerts
+  - name: cache_performance
+    interval: 30s
+    rules:
+      # Low cache hit rate
+      - alert: LowCacheHitRate
+        expr: |
+          (sum(rate(cache_hits_total[5m])) by (job))
+          /
+          (sum(rate(cache_hits_total[5m]) + rate(cache_misses_total[5m])) by (job)) < 0.7
+        for: 5m
+        labels:
+          severity: warning
+          service: resume-api
+          component: cache
+        annotations:
+          summary: "Low cache hit rate ({{ $value | humanizePercentage }})"
+          description: |
+            Cache hit rate is {{ $value | humanizePercentage }}.
+            Consider cache eviction policies or increase cache size.
+
+      # Cache eviction rate high
+      - alert: HighCacheEvictionRate
+        expr: |
+          rate(cache_evictions_total[5m]) > 100
+        for: 5m
+        labels:
+          severity: warning
+          service: resume-api
+          component: cache
+        annotations:
+          summary: "High cache eviction rate ({{ $value | humanize }}/sec)"
+          description: |
+            Cache is evicting {{ $value | humanize }} items/sec.
+            Increase cache size or optimize cache key strategy.
+
+  # OAuth & Authentication Alerts
+  - name: oauth_and_auth
+    interval: 30s
+    rules:
+      # High OAuth failure rate
+      - alert: HighOAuthFailureRate
+        expr: |
+          (sum(rate(oauth_connection_failure_total[5m])) by (provider))
+          /
+          (sum(rate(oauth_connection_failure_total[5m]) + rate(oauth_connection_success_total[5m])) by (provider)) > 0.05
+        for: 5m
+        labels:
+          severity: critical
+          service: resume-api
+          component: oauth
+        annotations:
+          summary: "High OAuth failure rate for {{ $labels.provider }} ({{ $value | humanizePercentage }})"
+          description: |
+            {{ $labels.provider }} OAuth has {{ $value | humanizePercentage }} failure rate.
+            Check OAuth provider status and credentials configuration.
+
+      # OAuth token refresh failures
+      - alert: OAuthTokenRefreshFailures
+        expr: |
+          rate(oauth_token_refresh_total{status="failed"}[5m]) > 0
+        for: 5m
+        labels:
+          severity: warning
+          service: resume-api
+          component: oauth
+        annotations:
+          summary: "OAuth token refresh failures detected"
+          description: |
+            {{ $labels.provider }} OAuth token refresh is failing.
+            Users may lose access. Investigate token endpoint connectivity.
+
+      # OAuth rate limit hits
+      - alert: OAuthRateLimitHits
+        expr: |
+          rate(oauth_rate_limit_hits_total[5m]) > 0
+        for: 5m
+        labels:
+          severity: warning
+          service: resume-api
+          component: oauth
+        annotations:
+          summary: "OAuth rate limit hits detected"
+          description: |
+            {{ $labels.provider }} OAuth API rate limit is being hit.
+            Implement request batching or increase rate limit quota.
+
+  # AI Provider Alerts
+  - name: ai_providers
+    interval: 30s
+    rules:
+      # AI request failures
+      - alert: HighAIRequestFailureRate
+        expr: |
+          (sum(rate(ai_requests_total{status="failed"}[5m])) by (provider, model))
+          /
+          (sum(rate(ai_requests_total[5m])) by (provider, model)) > 0.1
+        for: 5m
+        labels:
+          severity: critical
+          service: resume-api
+          component: ai
+        annotations:
+          summary: "High AI request failure rate ({{ $labels.provider }}/{{ $labels.model }})"
+          description: |
+            {{ $labels.provider }} {{ $labels.model }} has {{ $value | humanizePercentage }} failure rate.
+            Check API credentials, quota, and provider status page.
+
+      # Slow AI responses
+      - alert: SlowAIResponses
+        expr: |
+          histogram_quantile(0.99, rate(ai_request_duration_seconds_bucket[5m])) > 30
+        for: 5m
+        labels:
+          severity: warning
+          service: resume-api
+          component: ai
+        annotations:
+          summary: "Slow AI responses detected ({{ $value | humanizeDuration }})"
+          description: |
+            P99 AI response time is {{ $value | humanizeDuration }} for {{ $labels.provider }}/{{ $labels.model }}.
+            May indicate provider degradation or high latency.
+
+  # Service Health Alerts
+  - name: service_health
+    interval: 30s
+    rules:
+      # Service down
+      - alert: ServiceDown
+        expr: |
+          up{job="resume-api"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: resume-api
+          component: system
+        annotations:
+          summary: "Resume API service is down"
+          description: |
+            Resume API has been unreachable for 1 minute.
+            Check service logs and container status immediately.
+
+      # Service restart frequent
+      - alert: FrequentServiceRestarts
+        expr: |
+          rate(process_start_time_seconds[1h]) > 0
+        for: 5m
+        labels:
+          severity: warning
+          service: resume-api
+          component: system
+        annotations:
+          summary: "Service is restarting frequently"
+          description: |
+            Service restart detected. Check logs for crash causes.
+
+  # Rate Limiting Alerts
+  - name: rate_limiting
+    interval: 30s
+    rules:
+      # High rate limit violations
+      - alert: HighRateLimitViolations
+        expr: |
+          rate(rate_limit_exceeded_total[5m]) > 100
+        for: 5m
+        labels:
+          severity: warning
+          service: resume-api
+          component: rate_limit
+        annotations:
+          summary: "High rate limit violations ({{ $value | humanize }}/sec)"
+          description: |
+            Rate limit is being exceeded {{ $value | humanize }} times per second.
+            Investigate traffic patterns or adjust rate limits if needed.
