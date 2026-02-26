@@ -6,12 +6,12 @@ groups:
   - name: api_performance
     interval: 30s
     rules:
-      # High error rate alert
+      # Issue #402: High error rate alert (> 0.1% / 0.001)
       - alert: HighErrorRate
         expr: |
           (sum(rate(http_requests_total{status=~"5.."}[5m])) by (job)) 
           / 
-          (sum(rate(http_requests_total[5m])) by (job)) > 0.05
+          (sum(rate(http_requests_total[5m])) by (job)) > 0.001
         for: 5m
         labels:
           severity: critical
@@ -23,6 +23,22 @@ groups:
             Service {{ $labels.job }} has error rate of {{ $value | humanizePercentage }}
             over the last 5 minutes. This indicates a critical issue requiring immediate attention.
           runbook: "https://docs.resumeai.com/runbooks/high-error-rate"
+
+      # Issue #402: PDF generation slow alert (p95 > 5s)
+      - alert: PDFGenerationSlow
+        expr: |
+          histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{endpoint="/v1/render/pdf"}[5m])) > 5
+        for: 5m
+        labels:
+          severity: warning
+          service: resume-api
+          component: pdf
+        annotations:
+          summary: "PDF generation slow (P95: {{ $value | humanizeDuration }})"
+          description: |
+            PDF generation P95 response time is {{ $value | humanizeDuration }} on {{ $labels.job }}.
+            Threshold: 5 seconds. This may indicate LaTeX rendering issues or resource constraints.
+          runbook: "https://docs.resumeai.com/runbooks/pdf-generation-slow"
 
       # High response time alert
       - alert: HighResponseTime
@@ -184,6 +200,23 @@ groups:
   - name: database
     interval: 30s
     rules:
+      # Issue #402: Database connection pool exhaustion alert
+      - alert: DatabaseConnectionPoolExhausted
+        expr: |
+          db_connections_active >= db_connections_max
+        for: 2m
+        labels:
+          severity: critical
+          service: resume-api
+          component: database
+        annotations:
+          summary: "Database connection pool exhausted"
+          description: |
+            Database connection pool is exhausted ({{ $value }} active connections).
+            New connections cannot be created. This will cause request failures.
+            Investigate connection leaks and increase pool size if needed.
+          runbook: "https://docs.resumeai.com/runbooks/database-connection-pool-exhaustion"
+
       # High database connection count
       - alert: HighDBConnectionCount
         expr: |
@@ -254,6 +287,23 @@ groups:
   - name: oauth_and_auth
     interval: 30s
     rules:
+      # Issue #402: API key invalid - repeated 401 responses
+      - alert: APIKeyInvalidRepeated401s
+        expr: |
+          rate(http_requests_total{status="401", endpoint=~"/v1/.*"}[5m]) > 1
+        for: 3m
+        labels:
+          severity: warning
+          service: resume-api
+          component: authentication
+        annotations:
+          summary: "Repeated 401 Unauthorized responses ({{ $value | humanize }}/sec)"
+          description: |
+            API endpoint {{ $labels.endpoint }} is receiving {{ $value | humanize }}/sec 401 responses.
+            This indicates clients are using invalid or expired API keys.
+            Consider rate limiting to prevent credential stuffing attacks.
+          runbook: "https://docs.resumeai.com/runbooks/api-key-invalid"
+
       # High OAuth failure rate
       - alert: HighOAuthFailureRate
         expr: |
