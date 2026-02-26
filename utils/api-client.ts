@@ -39,6 +39,27 @@ function getAPIKey(): string | null {
 
 function getHeaders(): HeadersInit {
   const headers: HeadersInit = { 'Content-Type': 'application/json' };
+
+  // Try JWT token first (Issue 477 - Bearer token auth)
+  const token = localStorage.getItem('resume_ai_auth_token');
+  if (token) {
+    try {
+      // Check if token is expired
+      const parts = token.split('.');
+      if (parts.length === 3) {
+        const payload = JSON.parse(atob(parts[1]));
+        const currentTime = Math.floor(Date.now() / 1000);
+        if (!payload.exp || payload.exp >= currentTime) {
+          headers['Authorization'] = `Bearer ${token}`;
+          return headers;
+        }
+      }
+    } catch {
+      // Invalid token, fall through to API key
+    }
+  }
+
+  // Fall back to API key authentication
   const apiKey = getAPIKey();
   if (apiKey) headers['X-API-KEY'] = apiKey;
   return headers;
@@ -207,6 +228,55 @@ export async function tailorResume(
   if (!response.ok) {
     const error = await response.json().catch(() => ({ detail: 'Resume tailoring failed' }));
     throw new Error(error.detail || 'Failed to tailor resume');
+  }
+  return response.json();
+}
+
+export interface CoverLetterResponse {
+  header: string;
+  introduction: string;
+  body: string;
+  closing: string;
+  full_text: string;
+  metadata: {
+    word_count: number;
+    note?: string;
+  };
+}
+
+export interface CoverLetterRequest {
+  resume_data: ResumeDataForAPI;
+  job_description: string;
+  company_name: string;
+  job_title: string;
+  tone?: string;
+}
+
+export async function generateCoverLetter(
+  resumeData: ResumeDataForAPI,
+  jobDescription: string,
+  companyName: string,
+  jobTitle: string,
+  tone: string = 'professional',
+): Promise<CoverLetterResponse> {
+  const response = await fetchWithTimeout(
+    `${API_URL}/v1/cover-letter`,
+    {
+      method: 'POST',
+      headers: { ...getHeaders(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        resume_data: resumeData,
+        job_description: jobDescription,
+        company_name: companyName,
+        job_title: jobTitle,
+        tone,
+      }),
+    },
+    TIMEOUT_CONFIG.AI_OPERATION,
+  );
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ detail: 'Cover letter generation failed' }));
+    throw new Error(error.detail || 'Failed to generate cover letter');
   }
   return response.json();
 }

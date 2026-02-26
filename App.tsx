@@ -12,11 +12,14 @@ const SalaryResearch = lazy(() =>
   import('./pages/SalaryResearch').then((m) => ({ default: m.SalaryResearch })),
 );
 const InterviewPractice = lazy(() => import('./pages/InterviewPractice'));
+const Login = lazy(() => import('./pages/Login'));
+const Register = lazy(() => import('./pages/Register'));
 import { Route, SimpleResumeData } from './types';
 import { loadResumeData, saveResumeData, StorageError } from './utils/storage';
 import ErrorBoundary from './components/ErrorBoundary';
 import ErrorDisplay from './components/ErrorDisplay';
 import { TokenManager } from './utils/security';
+import { useAuth } from './hooks/useAuth';
 import { useTheme } from './hooks/useTheme';
 import { useGlobalErrors } from './hooks/useGlobalErrors';
 import { ToastContainer } from 'react-toastify';
@@ -119,6 +122,18 @@ function App() {
   const [resumeData, setResumeData] = useState<SimpleResumeData>(initialResumeData);
   const [isLoaded, setIsLoaded] = useState(false);
   const [storageError, setStorageError] = useState<string | null>(null);
+
+  // Authentication
+  const {
+    user,
+    isAuthenticated,
+    isLoading: authLoading,
+    error: authError,
+    login,
+    register,
+    logout,
+    clearError: clearAuthError,
+  } = useAuth();
 
   // Initialize theme (dark mode support)
   const { theme } = useTheme();
@@ -253,7 +268,57 @@ function App() {
     [],
   );
 
+  const handleLogin = async (email: string, password: string) => {
+    clearAuthError();
+    const result = await login(email, password);
+    if (result) {
+      setCurrentRoute(Route.DASHBOARD);
+    }
+    return result;
+  };
+
+  const handleRegister = async (
+    email: string,
+    username: string,
+    password: string,
+    fullName?: string,
+  ) => {
+    clearAuthError();
+    return register(email, username, password, fullName);
+  };
+
+  const handleLogout = async () => {
+    await logout();
+    setCurrentRoute(Route.LOGIN);
+  };
+
   const renderContent = () => {
+    // Show auth pages when not authenticated
+    if (currentRoute === Route.LOGIN || currentRoute === Route.REGISTER) {
+      if (currentRoute === Route.LOGIN) {
+        return (
+          <Suspense fallback={<PageLoader />}>
+            <Login
+              onLogin={handleLogin}
+              onNavigate={setCurrentRoute}
+              error={authError}
+              isLoading={authLoading}
+            />
+          </Suspense>
+        );
+      }
+      return (
+        <Suspense fallback={<PageLoader />}>
+          <Register
+            onRegister={handleRegister}
+            onNavigate={setCurrentRoute}
+            error={authError}
+            isLoading={authLoading}
+          />
+        </Suspense>
+      );
+    }
+
     switch (currentRoute) {
       case Route.DASHBOARD:
         return (
@@ -262,6 +327,9 @@ function App() {
               currentRoute={currentRoute}
               onNavigate={setCurrentRoute}
               onShowShortcuts={() => setShowShortcuts(true)}
+              isAuthenticated={isAuthenticated}
+              username={user?.username}
+              onLogout={handleLogout}
             />
             <Dashboard />
           </div>
@@ -274,6 +342,9 @@ function App() {
                 currentRoute={currentRoute}
                 onNavigate={setCurrentRoute}
                 onShowShortcuts={() => setShowShortcuts(true)}
+                isAuthenticated={isAuthenticated}
+                username={user?.username}
+                onLogout={handleLogout}
               />
               <JobApplications />
             </div>
@@ -304,6 +375,9 @@ function App() {
                 currentRoute={currentRoute}
                 onNavigate={setCurrentRoute}
                 onShowShortcuts={() => setShowShortcuts(true)}
+                isAuthenticated={isAuthenticated}
+                username={user?.username}
+                onLogout={handleLogout}
               />
               <SalaryResearch />
             </div>
@@ -323,6 +397,9 @@ function App() {
                 currentRoute={currentRoute}
                 onNavigate={setCurrentRoute}
                 onShowShortcuts={() => setShowShortcuts(true)}
+                isAuthenticated={isAuthenticated}
+                username={user?.username}
+                onLogout={handleLogout}
               />
               <Settings />
             </div>
@@ -336,6 +413,9 @@ function App() {
                 currentRoute={currentRoute}
                 onNavigate={setCurrentRoute}
                 onShowShortcuts={() => setShowShortcuts(true)}
+                isAuthenticated={isAuthenticated}
+                username={user?.username}
+                onLogout={handleLogout}
               />
               <ResumeManagement />
             </div>
