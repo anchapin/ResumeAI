@@ -33,18 +33,6 @@ vi.mock('recharts', async () => {
   };
 });
 
-// Mock the StatusBadge component
-vi.mock('../../components/StatusBadge', async () => {
-  const actual = await vi.importActual('../../components/StatusBadge');
-  return {
-    default: ({ status }: { status: string }) => (
-      <span data-testid="status-badge" data-status={status}>
-        {status}
-      </span>
-    ),
-  };
-});
-
 describe('Dashboard Component', () => {
   beforeEach(() => {
     vi.clearAllMocks();
