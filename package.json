@@ -26,15 +26,6 @@
     "react-toastify": "^11.0.5",
     "recharts": "^3.7.0"
   },
-  "lint-staged": {
-    "*.{ts,tsx}": [
-      "eslint --fix",
-      "prettier --write"
-    ],
-    "*.{js,jsx,json,css,md}": [
-      "prettier --write"
-    ]
-  },
   "devDependencies": {
     "@axe-core/react": "^4.10.2",
     "@eslint/js": "^10.0.1",
