@@ -4,13 +4,13 @@ Infrastructure sizing recommendations for different user loads.
 
 ## Quick Reference
 
-| Concurrent Users | Instance Type | CPU | RAM | Status |
-|------------------|---------------|-----|-----|--------|
-| 0-50 | t3.small | 2 | 2GB | MVP |
-| 51-200 | c5.large | 2 | 4GB | Production |
-| 201-500 | c5.xlarge | 4 | 8GB | Growth |
-| 501-1000 | 2-3 x c5.large | 8+ | 12GB+ | Scale |
-| 1000+ | Auto-scaling cluster | 12+ | 24GB+ | Enterprise |
+| Concurrent Users | Instance Type        | CPU | RAM   | Status     |
+| ---------------- | -------------------- | --- | ----- | ---------- |
+| 0-50             | t3.small             | 2   | 2GB   | MVP        |
+| 51-200           | c5.large             | 2   | 4GB   | Production |
+| 201-500          | c5.xlarge            | 4   | 8GB   | Growth     |
+| 501-1000         | 2-3 x c5.large       | 8+  | 12GB+ | Scale      |
+| 1000+            | Auto-scaling cluster | 12+ | 24GB+ | Enterprise |
 
 ---
 
@@ -19,6 +19,7 @@ Infrastructure sizing recommendations for different user loads.
 **Target**: MVP, beta testing
 
 **Infrastructure**:
+
 - Instance: t3.small (2 vCPU, 2GB RAM)
 - Database: Single PostgreSQL instance
 - Cache: Optional Redis
@@ -32,6 +33,7 @@ Infrastructure sizing recommendations for different user loads.
 **Target**: Production launch
 
 **Infrastructure**:
+
 - Load Balancer: ALB
 - API Instances: 2x c5.large
 - Database: Multi-AZ PostgreSQL with read replicas
@@ -46,6 +48,7 @@ Infrastructure sizing recommendations for different user loads.
 **Target**: Growing product
 
 **Infrastructure**:
+
 - Load Balancer: ALB with multiple AZs
 - API Instances: 4x c5.large + auto-scaling
 - Database: Aurora PostgreSQL with 3 read replicas
@@ -59,16 +62,19 @@ Infrastructure sizing recommendations for different user loads.
 ## Endpoint-Specific Scaling
 
 ### PDF Rendering (`/v1/render/pdf`)
+
 - **Impact**: High CPU/Memory
 - **Workers**: 4 per 100 users
 - **Optimization**: Caching, async processing
 
 ### Resume Tailoring (`/v1/tailor`)
+
 - **Impact**: High latency (external API)
 - **Queue Size**: 100 per 100 users
 - **Optimization**: Request queuing, timeout limits (30s)
 
 ### Variant Generation (`/v1/variants`)
+
 - **Impact**: Medium CPU/Memory
 - **Workers**: 2 per 100 users
 - **Optimization**: Parallel processing, streaming
@@ -78,11 +84,13 @@ Infrastructure sizing recommendations for different user loads.
 ## Database Sizing
 
 **Storage Estimation**:
+
 - Year 1: 100GB
 - Year 2: 250GB
 - Year 3: 500GB+
 
 **Connection Pool**:
+
 - Small: 20 connections
 - Medium: 40-80 connections
 - Large: 100-150 connections

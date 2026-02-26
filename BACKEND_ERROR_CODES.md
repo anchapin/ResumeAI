@@ -23,6 +23,7 @@ All API errors follow this JSON structure:
 ## Error Codes (25+)
 
 ### Client Errors (4xx)
+
 - `INVALID_REQUEST` (400) - Malformed request
 - `VALIDATION_ERROR` (400) - Input validation failed
 - `MISSING_FIELD` (400) - Required field missing
@@ -34,18 +35,21 @@ All API errors follow this JSON structure:
 - `RATE_LIMITED` (429) - Rate limit exceeded
 
 ### Resume Errors (4xx/5xx)
+
 - `RESUME_NOT_FOUND` (404) - Resume not found
 - `RESUME_INVALID` (400) - Invalid resume data
 - `RESUME_LOCKED` (403) - Resume locked
 - `RESUME_ARCHIVED` (403) - Resume archived
 
 ### PDF Errors (4xx/5xx)
+
 - `PDF_GENERATION_FAILED` (500) - PDF generation error
 - `PDF_NOT_FOUND` (404) - PDF not found
 - `PDF_INVALID_TEMPLATE` (400) - Invalid template
 - `PDF_RENDERING_ERROR` (500) - Rendering error
 
 ### OAuth Errors (4xx/5xx)
+
 - `OAUTH_INVALID_CODE` (400) - Invalid auth code
 - `OAUTH_INVALID_STATE` (400) - State mismatch (CSRF)
 - `OAUTH_SCOPE_DENIED` (403) - Scope denied
@@ -53,6 +57,7 @@ All API errors follow this JSON structure:
 - `OAUTH_TOKEN_EXPIRED` (401) - Token expired
 
 ### Server Errors (5xx)
+
 - `INTERNAL_SERVER_ERROR` (500) - Unexpected error
 - `SERVICE_UNAVAILABLE` (503) - Service down
 - `DATABASE_ERROR` (500) - Database error
@@ -72,6 +77,7 @@ All API errors follow this JSON structure:
 ## Implementation
 
 Files created:
+
 - `resume-api/error_schemas.py` - Pydantic models for error responses
 - `resume-api/error_helpers.py` - Helper functions for error creation
 - `resume-api/middleware/error_handling.py` - Middleware for centralized error handling

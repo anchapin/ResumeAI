@@ -30,7 +30,7 @@ describe('ResumeCard', () => {
         onDuplicate={onDuplicate}
         onDelete={onDelete}
         onShare={onShare}
-      />
+      />,
     );
 
     expect(screen.getByText('Software Engineer Resume')).toBeInTheDocument();
@@ -52,7 +52,7 @@ describe('ResumeCard', () => {
         onDuplicate={vi.fn()}
         onDelete={vi.fn()}
         onShare={vi.fn()}
-      />
+      />,
     );
 
     const checkbox = screen.getByRole('checkbox') as HTMLInputElement;
@@ -70,7 +70,7 @@ describe('ResumeCard', () => {
         onDuplicate={vi.fn()}
         onDelete={vi.fn()}
         onShare={vi.fn()}
-      />
+      />,
     );
 
     const checkbox = screen.getByRole('checkbox');
@@ -90,7 +90,7 @@ describe('ResumeCard', () => {
         onDuplicate={vi.fn()}
         onDelete={vi.fn()}
         onShare={vi.fn()}
-      />
+      />,
     );
 
     const editButton = screen.getByTitle('Edit Resume');
@@ -110,7 +110,7 @@ describe('ResumeCard', () => {
         onDuplicate={onDuplicate}
         onDelete={vi.fn()}
         onShare={vi.fn()}
-      />
+      />,
     );
 
     const duplicateButton = screen.getByTitle('Duplicate Resume');
@@ -130,7 +130,7 @@ describe('ResumeCard', () => {
         onDuplicate={vi.fn()}
         onDelete={onDelete}
         onShare={vi.fn()}
-      />
+      />,
     );
 
     const deleteButton = screen.getByTitle('Delete Resume');
@@ -155,7 +155,7 @@ describe('ResumeCard', () => {
         onDuplicate={vi.fn()}
         onDelete={onDelete}
         onShare={vi.fn()}
-      />
+      />,
     );
 
     const deleteButton = screen.getByTitle('Delete Resume');
@@ -178,7 +178,7 @@ describe('ResumeCard', () => {
         onDuplicate={vi.fn()}
         onDelete={vi.fn()}
         onShare={vi.fn()}
-      />
+      />,
     );
 
     const deleteButton = screen.getByTitle('Delete Resume');
@@ -205,7 +205,7 @@ describe('ResumeCard', () => {
         onDuplicate={vi.fn()}
         onDelete={vi.fn()}
         onShare={onShare}
-      />
+      />,
     );
 
     const shareButton = screen.getByTitle('Share Resume');
@@ -229,7 +229,7 @@ describe('ResumeCard', () => {
         onDuplicate={vi.fn()}
         onDelete={vi.fn()}
         onShare={vi.fn()}
-      />
+      />,
     );
 
     expect(screen.getByText('Private')).toBeInTheDocument();
@@ -250,7 +250,7 @@ describe('ResumeCard', () => {
         onDuplicate={vi.fn()}
         onDelete={vi.fn()}
         onShare={vi.fn()}
-      />
+      />,
     );
 
     expect(screen.getByText('Tag1')).toBeInTheDocument();

@@ -16,7 +16,7 @@ describe.skip('OAuth Flow Integration Tests', () => {
   describe('GitHub OAuth', () => {
     it('should initiate GitHub OAuth flow', async () => {
       const response = await context.apiClient.initiateOAuth('github');
-      
+
       expect(response.status).toBe(200);
       expect(response.data.authUrl).toBeDefined();
       expect(response.data.authUrl).toContain('github.com');
@@ -26,9 +26,9 @@ describe.skip('OAuth Flow Integration Tests', () => {
     it('should handle GitHub OAuth callback', async () => {
       const state = 'test-state-' + Date.now();
       const code = 'mock-github-code';
-      
+
       const response = await context.apiClient.handleOAuthCallback('github', { code, state });
-      
+
       expect(response.status).toBe(200);
       expect(response.data.accessToken).toBeDefined();
       expect(response.data.user).toBeDefined();
@@ -37,9 +37,9 @@ describe.skip('OAuth Flow Integration Tests', () => {
     it('should validate state parameter', async () => {
       const response = await context.apiClient.handleOAuthCallback('github', {
         code: 'mock-code',
-        state: 'invalid-state'
+        state: 'invalid-state',
       });
-      
+
       expect(response.status).toBe(400);
       expect(response.error).toContain('state');
     });
@@ -47,9 +47,9 @@ describe.skip('OAuth Flow Integration Tests', () => {
     it('should handle GitHub API errors', async () => {
       const response = await context.apiClient.handleOAuthCallback('github', {
         code: 'invalid-code',
-        state: 'valid-state'
+        state: 'valid-state',
       });
-      
+
       expect(response.status).toBe(401);
       expect(response.error).toBeDefined();
     });
@@ -60,9 +60,9 @@ describe.skip('OAuth Flow Integration Tests', () => {
       const token = await context.apiClient.storeOAuthToken('github', {
         accessToken: 'mock-token',
         refreshToken: 'mock-refresh',
-        expiresAt: Date.now() + 3600000
+        expiresAt: Date.now() + 3600000,
       });
-      
+
       expect(token.status).toBe(200);
       expect(token.data.stored).toBe(true);
     });
@@ -70,7 +70,7 @@ describe.skip('OAuth Flow Integration Tests', () => {
     it('should refresh expired OAuth token', async () => {
       const oldToken = 'expired-token';
       const response = await context.apiClient.refreshOAuthToken('github', oldToken);
-      
+
       expect(response.status).toBe(200);
       expect(response.data.accessToken).not.toBe(oldToken);
       expect(response.data.expiresAt).toBeGreaterThan(Date.now());
@@ -78,7 +78,7 @@ describe.skip('OAuth Flow Integration Tests', () => {
 
     it('should revoke OAuth token', async () => {
       const response = await context.apiClient.revokeOAuthToken('github');
-      
+
       expect(response.status).toBe(200);
       expect(response.data.revoked).toBe(true);
     });
@@ -87,7 +87,7 @@ describe.skip('OAuth Flow Integration Tests', () => {
   describe('OAuth User Profile', () => {
     it('should fetch user profile from OAuth provider', async () => {
       const response = await context.apiClient.getOAuthUserProfile('github');
-      
+
       expect(response.status).toBe(200);
       expect(response.data.id).toBeDefined();
       expect(response.data.email).toBeDefined();
@@ -96,7 +96,7 @@ describe.skip('OAuth Flow Integration Tests', () => {
 
     it('should sync OAuth user data', async () => {
       const response = await context.apiClient.syncOAuthProfile('github');
-      
+
       expect(response.status).toBe(200);
       expect(response.data.synced).toBe(true);
       expect(response.data.lastSync).toBeDefined();
@@ -106,9 +106,9 @@ describe.skip('OAuth Flow Integration Tests', () => {
   describe('OAuth Scopes', () => {
     it('should request correct GitHub scopes', async () => {
       const response = await context.apiClient.initiateOAuth('github', {
-        scopes: ['user:email', 'read:user']
+        scopes: ['user:email', 'read:user'],
       });
-      
+
       expect(response.status).toBe(200);
       expect(response.data.requestedScopes).toEqual(['user:email', 'read:user']);
     });
@@ -117,9 +117,9 @@ describe.skip('OAuth Flow Integration Tests', () => {
       const response = await context.apiClient.handleOAuthCallback('github', {
         code: 'mock-code',
         state: 'valid-state',
-        error: 'access_denied'
+        error: 'access_denied',
       });
-      
+
       expect(response.status).toBe(403);
       expect(response.error).toContain('permission');
     });
@@ -128,18 +128,18 @@ describe.skip('OAuth Flow Integration Tests', () => {
   describe('OAuth Error Recovery', () => {
     it('should handle network errors gracefully', async () => {
       vi.spyOn(global, 'fetch').mockRejectedValueOnce(new Error('Network error'));
-      
+
       const response = await context.apiClient.initiateOAuth('github');
-      
+
       expect(response.status).toBe(503);
       expect(response.error).toBeDefined();
     });
 
     it('should retry failed OAuth calls', async () => {
       const response = await context.apiClient.initiateOAuth('github', {
-        retries: 3
+        retries: 3,
       });
-      
+
       expect(response.status).toBeGreaterThanOrEqual(200);
       expect(response.data).toBeDefined();
     });
@@ -148,7 +148,7 @@ describe.skip('OAuth Flow Integration Tests', () => {
   describe('Multi-Provider OAuth', () => {
     it('should support multiple OAuth providers', async () => {
       const providers = ['github', 'google'];
-      
+
       for (const provider of providers) {
         const response = await context.apiClient.initiateOAuth(provider);
         expect(response.status).toBe(200);
@@ -158,7 +158,7 @@ describe.skip('OAuth Flow Integration Tests', () => {
 
     it('should link multiple OAuth accounts to user', async () => {
       const response = await context.apiClient.linkOAuthAccounts(['github', 'google']);
-      
+
       expect(response.status).toBe(200);
       expect(response.data.accounts).toHaveLength(2);
     });

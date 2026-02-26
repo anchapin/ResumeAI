@@ -8,7 +8,9 @@ const Workspace = lazy(() => import('./pages/Workspace'));
 const JobApplications = lazy(() => import('./pages/JobApplications'));
 const Settings = lazy(() => import('./pages/Settings'));
 const ResumeManagement = lazy(() => import('./pages/ResumeManagement'));
-const SalaryResearch = lazy(() => import('./pages/SalaryResearch').then(m => ({ default: m.SalaryResearch })));
+const SalaryResearch = lazy(() =>
+  import('./pages/SalaryResearch').then((m) => ({ default: m.SalaryResearch })),
+);
 const InterviewPractice = lazy(() => import('./pages/InterviewPractice'));
 import { Route, SimpleResumeData } from './types';
 import { loadResumeData, saveResumeData, StorageError } from './utils/storage';
@@ -37,22 +39,23 @@ const PageLoader = () => (
 );
 
 const initialResumeData: SimpleResumeData = {
-  name: "Alex Rivera",
-  email: "alex.rivera@example.com",
-  phone: "+1 (555) 012-3456",
-  location: "San Francisco, CA",
-  role: "Senior Product Designer",
-  summary: "Passionate and detail-oriented Senior Product Designer with 8+ years of experience creating user-centered digital experiences. Expertise in UX research, interaction design, and design systems. Proven track record of delivering products that drive business growth and user satisfaction.",
+  name: 'Alex Rivera',
+  email: 'alex.rivera@example.com',
+  phone: '+1 (555) 012-3456',
+  location: 'San Francisco, CA',
+  role: 'Senior Product Designer',
+  summary:
+    'Passionate and detail-oriented Senior Product Designer with 8+ years of experience creating user-centered digital experiences. Expertise in UX research, interaction design, and design systems. Proven track record of delivering products that drive business growth and user satisfaction.',
   skills: [
-    "Figma",
-    "Sketch",
-    "Adobe XD",
-    "User Research",
-    "Prototyping",
-    "Design Systems",
-    "React",
-    "TypeScript",
-    "HTML/CSS"
+    'Figma',
+    'Sketch',
+    'Adobe XD',
+    'User Research',
+    'Prototyping',
+    'Design Systems',
+    'React',
+    'TypeScript',
+    'HTML/CSS',
   ],
   experience: [
     {
@@ -62,8 +65,9 @@ const initialResumeData: SimpleResumeData = {
       startDate: 'Jan 2020',
       endDate: 'Present',
       current: true,
-      description: 'Led the migration of legacy monolithic architecture to microservices using AWS and Node.js, improving system scalability by 40%.',
-      tags: ['AWS', 'Microservices']
+      description:
+        'Led the migration of legacy monolithic architecture to microservices using AWS and Node.js, improving system scalability by 40%.',
+      tags: ['AWS', 'Microservices'],
     },
     {
       id: '2',
@@ -72,9 +76,10 @@ const initialResumeData: SimpleResumeData = {
       startDate: 'Jun 2017',
       endDate: 'Dec 2019',
       current: false,
-      description: 'Mentored a team of 5 junior developers and implemented CI/CD pipelines reducing deployment time by 50%.',
-      tags: ['Mentorship', 'CI/CD']
-    }
+      description:
+        'Mentored a team of 5 junior developers and implemented CI/CD pipelines reducing deployment time by 50%.',
+      tags: ['Mentorship', 'CI/CD'],
+    },
   ],
   education: [
     {
@@ -84,21 +89,26 @@ const initialResumeData: SimpleResumeData = {
       studyType: 'Bachelor of Science',
       startDate: '2013',
       endDate: '2017',
-      courses: ['Data Structures', 'Algorithms', 'Machine Learning', 'Human-Computer Interaction']
-    }
+      courses: ['Data Structures', 'Algorithms', 'Machine Learning', 'Human-Computer Interaction'],
+    },
   ],
   projects: [
     {
       id: '1',
       name: 'E-commerce Platform Redesign',
-      description: 'Led a complete UX overhaul of a major e-commerce platform, resulting in a 35% increase in conversion rates.',
+      description:
+        'Led a complete UX overhaul of a major e-commerce platform, resulting in a 35% increase in conversion rates.',
       url: 'https://github.com/alexrivera/ecommerce-redesign',
       roles: ['Lead Designer', 'UX Researcher'],
       startDate: '2022',
       endDate: '2023',
-      highlights: ['User interviews with 50+ customers', 'A/B testing of new designs', 'Design system creation']
-    }
-  ]
+      highlights: [
+        'User interviews with 50+ customers',
+        'A/B testing of new designs',
+        'Design system creation',
+      ],
+    },
+  ],
 };
 
 /** Save status enum for tracking auto-save state */
@@ -109,9 +119,9 @@ function App() {
   const [resumeData, setResumeData] = useState<SimpleResumeData>(initialResumeData);
   const [isLoaded, setIsLoaded] = useState(false);
   const [storageError, setStorageError] = useState<string | null>(null);
-  
+
   // Initialize theme (dark mode support)
-  const { theme, isDark, toggleTheme } = useTheme();
+  const { theme } = useTheme();
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
   const [showShortcuts, setShowShortcuts] = useState(false);
 
@@ -122,7 +132,7 @@ function App() {
   useEffect(() => {
     return registerShortcuts(DEFAULT_SHORTCUTS, (action) => {
       if (action === 'Show keyboard shortcuts') {
-        setShowShortcuts(prev => !prev);
+        setShowShortcuts((prev) => !prev);
       }
     });
   }, []);
@@ -153,7 +163,7 @@ function App() {
         console.log('Resume data loaded and validated:', {
           skills: validatedData.skills.length,
           education: validatedData.education.length,
-          experience: validatedData.experience.length
+          experience: validatedData.experience.length,
         });
       } else {
         console.log('No saved resume data found, using initial data');
@@ -189,7 +199,7 @@ function App() {
         saveResumeData(resumeData);
         setSaveStatus('saved');
         console.log('Resume data saved to localStorage');
-        
+
         // Reset to idle after 3 seconds
         setTimeout(() => setSaveStatus('idle'), 3000);
       } catch (error) {
@@ -204,7 +214,7 @@ function App() {
         } else {
           console.error('Unexpected error saving resume data:', error);
         }
-        
+
         // Reset to idle after 5 seconds
         setTimeout(() => setSaveStatus('idle'), 5000);
       }
@@ -223,9 +233,9 @@ function App() {
       case 'PARSE_ERROR':
         return 'Data corrupted. Using default resume.';
       case 'ACCESS_DENIED':
-        return 'Storage access denied. Changes won\'t be saved.';
+        return "Storage access denied. Changes won't be saved.";
       case 'NOT_AVAILABLE':
-        return 'Storage not available. Changes won\'t be saved.';
+        return "Storage not available. Changes won't be saved.";
       default:
         return 'Failed to save data. Please try again.';
     }
@@ -236,35 +246,38 @@ function App() {
    * This is mainly for type consistency, but could be extended
    * with additional logic in the future.
    */
-  const handleUpdateResumeData = useCallback((newData: SimpleResumeData | ((prev: SimpleResumeData) => SimpleResumeData)) => {
-    setResumeData(newData);
-  }, []);
+  const handleUpdateResumeData = useCallback(
+    (newData: SimpleResumeData | ((prev: SimpleResumeData) => SimpleResumeData)) => {
+      setResumeData(newData);
+    },
+    [],
+  );
 
   const renderContent = () => {
     switch (currentRoute) {
       case Route.DASHBOARD:
         return (
-            <div className="flex min-h-screen bg-[#f6f6f8]">
-                <Sidebar
-                  currentRoute={currentRoute}
-                  onNavigate={setCurrentRoute}
-                  onShowShortcuts={() => setShowShortcuts(true)}
-                />
-                <Dashboard />
-            </div>
+          <div className="flex min-h-screen bg-[#f6f6f8]">
+            <Sidebar
+              currentRoute={currentRoute}
+              onNavigate={setCurrentRoute}
+              onShowShortcuts={() => setShowShortcuts(true)}
+            />
+            <Dashboard />
+          </div>
         );
       case Route.APPLICATIONS:
         return (
-            <Suspense fallback={<PageLoader />}>
-              <div className="flex min-h-screen bg-[#f6f6f8]">
-                  <Sidebar
-                    currentRoute={currentRoute}
-                    onNavigate={setCurrentRoute}
-                    onShowShortcuts={() => setShowShortcuts(true)}
-                  />
-                  <JobApplications />
-              </div>
-            </Suspense>
+          <Suspense fallback={<PageLoader />}>
+            <div className="flex min-h-screen bg-[#f6f6f8]">
+              <Sidebar
+                currentRoute={currentRoute}
+                onNavigate={setCurrentRoute}
+                onShowShortcuts={() => setShowShortcuts(true)}
+              />
+              <JobApplications />
+            </div>
+          </Suspense>
         );
       case Route.EDITOR:
         return (
@@ -280,56 +293,53 @@ function App() {
       case Route.WORKSPACE:
         return (
           <Suspense fallback={<PageLoader />}>
-            <Workspace
-              resumeData={resumeData}
-              onNavigate={setCurrentRoute}
-            />
+            <Workspace resumeData={resumeData} onNavigate={setCurrentRoute} />
           </Suspense>
         );
       case Route.SALARY_RESEARCH:
         return (
-            <Suspense fallback={<PageLoader />}>
-              <div className="flex min-h-screen bg-[#f6f6f8]">
-                  <Sidebar
-                    currentRoute={currentRoute}
-                    onNavigate={setCurrentRoute}
-                    onShowShortcuts={() => setShowShortcuts(true)}
-                  />
-                  <SalaryResearch />
-              </div>
-            </Suspense>
+          <Suspense fallback={<PageLoader />}>
+            <div className="flex min-h-screen bg-[#f6f6f8]">
+              <Sidebar
+                currentRoute={currentRoute}
+                onNavigate={setCurrentRoute}
+                onShowShortcuts={() => setShowShortcuts(true)}
+              />
+              <SalaryResearch />
+            </div>
+          </Suspense>
         );
       case Route.INTERVIEW_PRACTICE:
         return (
-            <Suspense fallback={<PageLoader />}>
-              <InterviewPractice />
-            </Suspense>
+          <Suspense fallback={<PageLoader />}>
+            <InterviewPractice />
+          </Suspense>
         );
       case Route.SETTINGS:
         return (
-            <Suspense fallback={<PageLoader />}>
-              <div className="flex min-h-screen bg-[#f6f6f8]">
-                  <Sidebar
-                    currentRoute={currentRoute}
-                    onNavigate={setCurrentRoute}
-                    onShowShortcuts={() => setShowShortcuts(true)}
-                  />
-                  <Settings />
-              </div>
-            </Suspense>
+          <Suspense fallback={<PageLoader />}>
+            <div className="flex min-h-screen bg-[#f6f6f8]">
+              <Sidebar
+                currentRoute={currentRoute}
+                onNavigate={setCurrentRoute}
+                onShowShortcuts={() => setShowShortcuts(true)}
+              />
+              <Settings />
+            </div>
+          </Suspense>
         );
       case Route.BULK:
         return (
-            <Suspense fallback={<PageLoader />}>
-              <div className="flex min-h-screen bg-[#f6f6f8]">
-                  <Sidebar
-                    currentRoute={currentRoute}
-                    onNavigate={setCurrentRoute}
-                    onShowShortcuts={() => setShowShortcuts(true)}
-                  />
-                  <ResumeManagement />
-              </div>
-            </Suspense>
+          <Suspense fallback={<PageLoader />}>
+            <div className="flex min-h-screen bg-[#f6f6f8]">
+              <Sidebar
+                currentRoute={currentRoute}
+                onNavigate={setCurrentRoute}
+                onShowShortcuts={() => setShowShortcuts(true)}
+              />
+              <ResumeManagement />
+            </div>
+          </Suspense>
         );
       default:
         return <Dashboard />;
@@ -341,9 +351,7 @@ function App() {
       {/* Global error display */}
       <ErrorDisplay error={currentError} onDismiss={dismissError} />
 
-      {showShortcuts && (
-        <KeyboardShortcutsHelp onClose={() => setShowShortcuts(false)} />
-      )}
+      {showShortcuts && <KeyboardShortcutsHelp onClose={() => setShowShortcuts(false)} />}
       {storageError && (
         <div className="fixed top-4 right-4 z-50 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg shadow-lg flex items-center gap-2 animate-in slide-in-from-top-2 fade-in">
           <span className="material-symbols-outlined text-red-500">error</span>
@@ -367,7 +375,7 @@ function App() {
       ) : (
         renderContent()
       )}
-      <ToastContainer 
+      <ToastContainer
         position="top-right"
         autoClose={5000}
         hideProgressBar={true}

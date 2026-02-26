@@ -18,6 +18,7 @@ The implementation provides comprehensive monitoring dashboards for the ResumeAI
 **Purpose**: Monitor HTTP request patterns and error rates across all API endpoints.
 
 **Panels**:
+
 - **HTTP Request Rate by Endpoint**: Shows requests/sec for each endpoint with mean, max, and last values
 - **HTTP Error Rate by Endpoint**: Displays error rate (5xx, 4xx) broken down by endpoint and status code
 - **Request Distribution by Method**: Pie chart showing request volume by HTTP method (GET, POST, PUT, DELETE)
@@ -30,6 +31,7 @@ The implementation provides comprehensive monitoring dashboards for the ResumeAI
 **Datasource**: Prometheus
 
 **Key Metrics**:
+
 ```promql
 sum(rate(http_requests_total[5m])) by (endpoint)
 sum(rate(http_errors_total[5m])) by (endpoint, status_code)
@@ -42,6 +44,7 @@ sum(increase(http_errors_total[5m])) by (status_code)
 **Purpose**: Monitor application performance with detailed latency distribution and percentiles.
 
 **Panels**:
+
 - **PDF Generation Latency - Percentiles**: Shows p50, p95, p99 for PDF generation with thresholds
   - Green: < 3s
   - Yellow: 3-5s
@@ -60,6 +63,7 @@ sum(increase(http_errors_total[5m])) by (status_code)
 **Datasource**: Prometheus
 
 **Key Metrics**:
+
 ```promql
 # PDF Generation Percentiles
 histogram_quantile(0.50, sum(rate(http_request_duration_seconds_bucket{endpoint="/generate/pdf"}[5m])) by (le))
@@ -78,12 +82,14 @@ histogram_quantile(0.95, sum(rate(ai_request_duration_seconds_bucket[5m])) by (p
 ### Request Metrics
 
 #### `http_requests_total` (Counter)
+
 - **Labels**: `method`, `endpoint`, `status_code`
 - **Unit**: Count
 - **Description**: Total HTTP requests received
 - **Used in**: Request Metrics Dashboard
 
 #### `http_request_duration_seconds` (Histogram)
+
 - **Labels**: `method`, `endpoint`
 - **Unit**: Seconds
 - **Buckets**: `0.01, 0.05, 0.1, 0.5, 1.0, 2.5, 5.0, 10.0`
@@ -92,6 +98,7 @@ histogram_quantile(0.95, sum(rate(ai_request_duration_seconds_bucket[5m])) by (p
 - **Supports**: p50, p95, p99 calculation
 
 #### `http_errors_total` (Counter)
+
 - **Labels**: `method`, `endpoint`, `status_code`
 - **Unit**: Count
 - **Description**: Total HTTP errors by endpoint
@@ -100,6 +107,7 @@ histogram_quantile(0.95, sum(rate(ai_request_duration_seconds_bucket[5m])) by (p
 ### Database Metrics
 
 #### `db_query_duration_seconds` (Histogram)
+
 - **Labels**: `operation`
 - **Unit**: Seconds
 - **Buckets**: `0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1.0, 2.0`
@@ -109,12 +117,14 @@ histogram_quantile(0.95, sum(rate(ai_request_duration_seconds_bucket[5m])) by (p
 - **Operations**: `select`, `insert`, `update`, `delete`
 
 #### `db_queries_total` (Counter)
+
 - **Labels**: `operation`
 - **Unit**: Count
 - **Description**: Total database queries by operation
 - **Used in**: System Health Dashboard
 
 #### `db_connections_active` (Gauge)
+
 - **Unit**: Count
 - **Description**: Current active database connections
 - **Used in**: System Health Dashboard
@@ -122,6 +132,7 @@ histogram_quantile(0.95, sum(rate(ai_request_duration_seconds_bucket[5m])) by (p
 ### AI Provider Metrics
 
 #### `ai_request_duration_seconds` (Histogram)
+
 - **Labels**: `provider`, `model`
 - **Unit**: Seconds
 - **Buckets**: `0.5, 1, 2.5, 5, 10, 30, 60, 120`
@@ -131,6 +142,7 @@ histogram_quantile(0.95, sum(rate(ai_request_duration_seconds_bucket[5m])) by (p
 - **Providers**: `openai`, `anthropic`, `gemini`
 
 #### `ai_requests_total` (Counter)
+
 - **Labels**: `provider`, `model`, `status`
 - **Unit**: Count
 - **Description**: Total AI requests
@@ -139,11 +151,13 @@ histogram_quantile(0.95, sum(rate(ai_request_duration_seconds_bucket[5m])) by (p
 ### OAuth Metrics
 
 #### `oauth_connection_success_total` (Counter)
+
 - **Labels**: `provider`
 - **Description**: Successful OAuth connections
 - **Providers**: `github`, `linkedin`
 
 #### `oauth_connection_failure_total` (Counter)
+
 - **Labels**: `provider`, `error_type`
 - **Description**: Failed OAuth connections
 
@@ -152,17 +166,23 @@ histogram_quantile(0.95, sum(rate(ai_request_duration_seconds_bucket[5m])) by (p
 Histogram buckets have been carefully configured to support accurate percentile calculations:
 
 ### HTTP Request Latency
+
 Buckets: `0.01, 0.05, 0.1, 0.5, 1.0, 2.5, 5.0, 10.0` seconds
+
 - Supports p50, p95, p99 across typical request latencies
 - Optimized for sub-second and multi-second requests
 
 ### Database Query Latency
+
 Buckets: `0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1.0, 2.0` seconds
+
 - Microsecond-level precision for fast queries
 - Supports detection of slow query thresholds
 
 ### AI Provider Latency
+
 Buckets: `0.5, 1, 2.5, 5, 10, 30, 60, 120` seconds
+
 - Covers typical AI API response times
 - Supports long-running requests up to 2 minutes
 
@@ -171,11 +191,13 @@ Buckets: `0.5, 1, 2.5, 5, 10, 30, 60, 120` seconds
 ### Prerequisites
 
 1. Start the monitoring stack:
+
 ```bash
 docker-compose -f docker-compose-monitoring.yml up -d
 ```
 
 2. Access Grafana:
+
 - URL: `http://localhost:3000`
 - Username: `admin`
 - Password: `admin`
@@ -194,6 +216,7 @@ docker-compose -f docker-compose-monitoring.yml up -d
 ### Dashboard Navigation
 
 Each dashboard includes:
+
 - **Refresh Rate**: Auto-refresh every 10 seconds
 - **Time Range Selector**: Top-right corner to adjust time window
 - **Legend**: Click legend items to toggle series on/off
@@ -210,6 +233,7 @@ pytest tests/test_prometheus_metrics_issue_401.py -v
 ```
 
 **Test Coverage**:
+
 - ✅ All metrics are registered and accessible
 - ✅ Histogram buckets are properly configured
 - ✅ Labels support Grafana filtering
@@ -219,6 +243,7 @@ pytest tests/test_prometheus_metrics_issue_401.py -v
 ### Manual Testing
 
 1. Generate load on the API:
+
 ```bash
 # From root directory
 python benchmarks/server_perf.py
@@ -228,23 +253,26 @@ locust -f locustfile.py
 ```
 
 2. Check metrics endpoint:
+
 ```bash
 curl http://localhost:8000/metrics
 ```
 
 3. Query Prometheus:
+
 - URL: `http://localhost:9090`
 - Try queries like:
+
   ```promql
   # Request rate
   rate(http_requests_total[5m])
-  
+
   # Error rate
   rate(http_errors_total[5m])
-  
+
   # PDF generation p95
   histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{endpoint="/generate/pdf"}[5m]))
-  
+
   # Database query latency
   histogram_quantile(0.95, rate(db_query_duration_seconds_bucket[5m]))
   ```
@@ -269,13 +297,13 @@ curl http://localhost:8000/metrics
 
 Recommended alert thresholds based on dashboard metrics:
 
-| Metric | Warning | Critical |
-|--------|---------|----------|
-| PDF Generation (p95) | > 5s | > 10s |
-| DB Query (p95) | > 0.5s | > 1s |
-| HTTP Error Rate | > 5% | > 10% |
-| AI Provider (p95) | > 30s | > 60s |
-| Active DB Connections | > 20 | > 30 |
+| Metric                | Warning | Critical |
+| --------------------- | ------- | -------- |
+| PDF Generation (p95)  | > 5s    | > 10s    |
+| DB Query (p95)        | > 0.5s  | > 1s     |
+| HTTP Error Rate       | > 5%    | > 10%    |
+| AI Provider (p95)     | > 30s   | > 60s    |
+| Active DB Connections | > 20    | > 30     |
 
 ## Common Queries
 
@@ -314,6 +342,7 @@ histogram_quantile(0.95, sum(rate(ai_request_duration_seconds_bucket[5m])) by (p
    - Verify resume-api is "UP"
 
 2. **Check if app is exporting metrics**:
+
    ```bash
    curl http://localhost:8000/metrics | grep http_requests_total
    ```
@@ -328,10 +357,11 @@ histogram_quantile(0.95, sum(rate(ai_request_duration_seconds_bucket[5m])) by (p
    - Buckets need observations above quantile
 
 2. Verify query syntax:
+
    ```promql
    # Correct
    histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m]))
-   
+
    # Wrong (missing _bucket suffix)
    histogram_quantile(0.95, rate(http_request_duration_seconds[5m]))
    ```

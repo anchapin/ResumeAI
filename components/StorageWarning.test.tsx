@@ -14,16 +14,16 @@ vi.mock('../src/lib/storage', () => ({
     removeItem: vi.fn(),
     getItemSize: vi.fn(),
     getUsedSize: vi.fn(),
-    getStats: vi.fn()
-  }
+    getStats: vi.fn(),
+  },
 }));
 
 // Mock toast
 vi.mock('react-toastify', () => ({
   toast: {
     success: vi.fn(),
-    error: vi.fn()
-  }
+    error: vi.fn(),
+  },
 }));
 
 describe('StorageWarning Component', () => {
@@ -40,22 +40,25 @@ describe('StorageWarning Component', () => {
     vi.mocked(storageLib.getStorageQuota).mockResolvedValue({
       estimatedQuota: 10000,
       estimatedUsage: 1000,
-      percentUsed: 10
+      percentUsed: 10,
     });
 
     render(<StorageWarning />);
 
-    await waitFor(() => {
-      expect(screen.queryByText(/Storage Critical/i)).not.toBeInTheDocument();
-      expect(screen.queryByText(/Storage Getting Full/i)).not.toBeInTheDocument();
-    }, { timeout: 1000 });
+    await waitFor(
+      () => {
+        expect(screen.queryByText(/Storage Critical/i)).not.toBeInTheDocument();
+        expect(screen.queryByText(/Storage Getting Full/i)).not.toBeInTheDocument();
+      },
+      { timeout: 1000 },
+    );
   });
 
   it('should display warning when storage exceeds 80%', async () => {
     vi.mocked(storageLib.getStorageQuota).mockResolvedValue({
       estimatedQuota: 10000,
       estimatedUsage: 8500,
-      percentUsed: 85
+      percentUsed: 85,
     });
 
     render(<StorageWarning />);
@@ -70,7 +73,7 @@ describe('StorageWarning Component', () => {
     vi.mocked(storageLib.getStorageQuota).mockResolvedValue({
       estimatedQuota: 10000,
       estimatedUsage: 9600,
-      percentUsed: 96
+      percentUsed: 96,
     });
 
     render(<StorageWarning />);
@@ -85,7 +88,7 @@ describe('StorageWarning Component', () => {
     vi.mocked(storageLib.getStorageQuota).mockResolvedValue({
       estimatedQuota: 10000,
       estimatedUsage: 8500,
-      percentUsed: 85
+      percentUsed: 85,
     });
 
     render(<StorageWarning />);
@@ -99,7 +102,7 @@ describe('StorageWarning Component', () => {
     vi.mocked(storageLib.getStorageQuota).mockResolvedValue({
       estimatedQuota: 10000,
       estimatedUsage: 8500,
-      percentUsed: 85
+      percentUsed: 85,
     });
 
     render(<StorageWarning />);

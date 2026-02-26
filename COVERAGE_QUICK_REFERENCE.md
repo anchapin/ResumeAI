@@ -7,11 +7,13 @@
 ### Run Coverage Tests
 
 **Frontend:**
+
 ```bash
 npm run test:coverage
 ```
 
 **Backend:**
+
 ```bash
 cd resume-api && python -m pytest --cov=resume-api --cov-report=html
 ```
@@ -25,14 +27,14 @@ cd resume-api && python -m pytest --cov=resume-api --cov-report=html
 
 ## Common Commands
 
-| Task | Command |
-|------|---------|
-| Frontend tests only | `npm test` |
-| Frontend with coverage | `npm run test:coverage` |
-| Backend tests only | `cd resume-api && python -m pytest` |
-| Backend with coverage | `cd resume-api && python -m pytest --cov=resume-api --cov-report=html` |
-| Check if coverage passes | `npm run test:coverage -- --run` |
-| Open coverage report | `open coverage/index.html` (macOS) or `start coverage/index.html` (Windows) |
+| Task                     | Command                                                                     |
+| ------------------------ | --------------------------------------------------------------------------- |
+| Frontend tests only      | `npm test`                                                                  |
+| Frontend with coverage   | `npm run test:coverage`                                                     |
+| Backend tests only       | `cd resume-api && python -m pytest`                                         |
+| Backend with coverage    | `cd resume-api && python -m pytest --cov=resume-api --cov-report=html`      |
+| Check if coverage passes | `npm run test:coverage -- --run`                                            |
+| Open coverage report     | `open coverage/index.html` (macOS) or `start coverage/index.html` (Windows) |
 
 ---
 
@@ -53,6 +55,7 @@ All must be ≥ 60%
 ❌ **Tests FAIL if:** Coverage < 60%
 
 Coverage is checked automatically on:
+
 - Pull requests
 - Pushes to main/develop
 

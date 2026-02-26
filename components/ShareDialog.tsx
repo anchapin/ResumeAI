@@ -16,9 +16,7 @@ const ShareDialog: React.FC<ShareDialogProps> = ({ resumeId, onClose }) => {
   const [shareLink, setShareLink] = useState<ShareLink | null>(null);
   const [copied, setCopied] = useState(false);
 
-  const [permissions, setPermissions] = useState<'view' | 'comment' | 'edit'>(
-    'view'
-  );
+  const [permissions, setPermissions] = useState<'view' | 'comment' | 'edit'>('view');
   const [expiresIn, setExpiresIn] = useState<number | null>(null);
   const [maxViews, setMaxViews] = useState<number | null>(null);
   const [password, setPassword] = useState('');
@@ -36,7 +34,7 @@ const ShareDialog: React.FC<ShareDialogProps> = ({ resumeId, onClose }) => {
 
       if (e.key === 'Tab' && dialogRef.current) {
         const focusables = dialogRef.current.querySelectorAll(
-          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
         );
         if (focusables.length === 0) return;
 
@@ -61,9 +59,9 @@ const ShareDialog: React.FC<ShareDialogProps> = ({ resumeId, onClose }) => {
     // Here, let's focus the close button or the first permission button.
     const firstInput = dialogRef.current?.querySelector('button, input, select') as HTMLElement;
     if (firstInput) {
-        firstInput.focus();
+      firstInput.focus();
     } else {
-        dialogRef.current?.focus();
+      dialogRef.current?.focus();
     }
 
     return () => document.removeEventListener('keydown', handleKeyDown);
@@ -75,7 +73,9 @@ const ShareDialog: React.FC<ShareDialogProps> = ({ resumeId, onClose }) => {
       // Small timeout to allow render
       setTimeout(() => {
         // Find the copy button by its distinctive class or aria-label
-        const copyBtn = dialogRef.current?.querySelector('button[aria-label="Copy share link"]') as HTMLElement;
+        const copyBtn = dialogRef.current?.querySelector(
+          'button[aria-label="Copy share link"]',
+        ) as HTMLElement;
         copyBtn?.focus();
       }, 50);
     }
@@ -154,16 +154,12 @@ const ShareDialog: React.FC<ShareDialogProps> = ({ resumeId, onClose }) => {
           {!shareLink ? (
             <div className="space-y-5">
               <div>
-                <label className="block text-sm font-bold text-slate-700 mb-2">
-                  Permissions
-                </label>
+                <label className="block text-sm font-bold text-slate-700 mb-2">Permissions</label>
                 <div className="grid grid-cols-3 gap-2">
                   {['view', 'comment', 'edit'].map((perm) => (
                     <button
                       key={perm}
-                      onClick={() =>
-                        setPermissions(perm as 'view' | 'comment' | 'edit')
-                      }
+                      onClick={() => setPermissions(perm as 'view' | 'comment' | 'edit')}
                       className={`px-4 py-3 rounded-lg border-2 font-bold text-sm capitalize transition-all ${
                         permissions === perm
                           ? 'border-primary-600 bg-primary-50 text-primary-700'
@@ -182,9 +178,7 @@ const ShareDialog: React.FC<ShareDialogProps> = ({ resumeId, onClose }) => {
                 </label>
                 <select
                   value={expiresIn || ''}
-                  onChange={(e) =>
-                    setExpiresIn(e.target.value ? Number(e.target.value) : null)
-                  }
+                  onChange={(e) => setExpiresIn(e.target.value ? Number(e.target.value) : null)}
                   className="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all text-sm"
                 >
                   <option value="">Never</option>
@@ -202,9 +196,7 @@ const ShareDialog: React.FC<ShareDialogProps> = ({ resumeId, onClose }) => {
                   type="number"
                   min="1"
                   value={maxViews || ''}
-                  onChange={(e) =>
-                    setMaxViews(e.target.value ? Number(e.target.value) : null)
-                  }
+                  onChange={(e) => setMaxViews(e.target.value ? Number(e.target.value) : null)}
                   placeholder="Unlimited"
                   className="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all text-sm"
                 />
@@ -226,7 +218,7 @@ const ShareDialog: React.FC<ShareDialogProps> = ({ resumeId, onClose }) => {
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
-                    aria-label={showPassword ? "Hide password" : "Show password"}
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
                   >
                     <span className="material-symbols-outlined text-[20px]">
                       {showPassword ? 'visibility_off' : 'visibility'}
@@ -249,9 +241,7 @@ const ShareDialog: React.FC<ShareDialogProps> = ({ resumeId, onClose }) => {
                   </>
                 ) : (
                   <>
-                    <span className="material-symbols-outlined text-[18px]">
-                      share
-                    </span>
+                    <span className="material-symbols-outlined text-[18px]">share</span>
                     <span>Create Share Link</span>
                   </>
                 )}
@@ -259,22 +249,15 @@ const ShareDialog: React.FC<ShareDialogProps> = ({ resumeId, onClose }) => {
             </div>
           ) : (
             <div className="space-y-4">
-              <div
-                className="p-4 bg-green-50 border border-green-200 rounded-lg"
-                role="alert"
-              >
+              <div className="p-4 bg-green-50 border border-green-200 rounded-lg" role="alert">
                 <div className="flex items-center gap-2 text-green-800">
-                  <span className="material-symbols-outlined text-[24px]">
-                    check_circle
-                  </span>
+                  <span className="material-symbols-outlined text-[24px]">check_circle</span>
                   <span className="font-bold">Share link created!</span>
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-bold text-slate-700 mb-2">
-                  Share Link
-                </label>
+                <label className="block text-sm font-bold text-slate-700 mb-2">Share Link</label>
                 <div className="flex gap-2">
                   <input
                     type="text"
@@ -327,9 +310,7 @@ const ShareDialog: React.FC<ShareDialogProps> = ({ resumeId, onClose }) => {
                     </span>
                     <span>
                       Max views:{' '}
-                      <span className="font-bold text-slate-900">
-                        {shareLink.max_views}
-                      </span>
+                      <span className="font-bold text-slate-900">{shareLink.max_views}</span>
                     </span>
                   </div>
                 )}

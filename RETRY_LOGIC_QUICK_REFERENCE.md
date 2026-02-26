@@ -9,6 +9,7 @@ Automatic retry with exponential backoff is now built into all API calls. Transi
 ## Frontend Usage
 
 ### Default (Recommended)
+
 ```typescript
 import { fetchWithRetry } from './utils/retryLogic';
 
@@ -17,8 +18,9 @@ const response = await fetchWithRetry('/api/endpoint');
 ```
 
 ### Custom Configuration
+
 ```typescript
-const response = await fetchWithRetry('/api/endpoint', 
+const response = await fetchWithRetry('/api/endpoint',
   { method: 'POST', headers: { ... } },
   {
     maxRetries: 5,         // More retries for critical operations
@@ -30,16 +32,18 @@ const response = await fetchWithRetry('/api/endpoint',
 ```
 
 ### Already Integrated in API Client
+
 ```typescript
 // These already have retry logic built-in:
-await generatePDF(resumeData);           // ✅ retries
-await getVariants();                     // ✅ retries
-await tailorResume(data, jobDesc);       // ✅ retries
-await checkATSScore(data, jobDesc);      // ✅ retries
+await generatePDF(resumeData); // ✅ retries
+await getVariants(); // ✅ retries
+await tailorResume(data, jobDesc); // ✅ retries
+await checkATSScore(data, jobDesc); // ✅ retries
 // ... and more
 ```
 
 ### Error Handling
+
 ```typescript
 try {
   const response = await fetchWithRetry('/api/endpoint');
@@ -56,6 +60,7 @@ try {
 ## Backend Usage
 
 ### Decorator Pattern (Recommended)
+
 ```python
 from lib.utils.retry import retry_with_backoff, RetryConfig
 
@@ -70,6 +75,7 @@ async def fetch_external_data():
 ```
 
 ### Manual Invocation
+
 ```python
 from lib.utils.retry import retry_async_call, RetryConfig
 
@@ -81,6 +87,7 @@ result = await retry_async_call(
 ```
 
 ### Error Handling
+
 ```python
 from lib.utils.retry import RetryError
 
@@ -96,6 +103,7 @@ except RetryError as e:
 ## Retry Behavior
 
 ### What Retries (Automatic)
+
 - ✅ HTTP 500 (Internal Server Error)
 - ✅ HTTP 502 (Bad Gateway)
 - ✅ HTTP 503 (Service Unavailable)
@@ -105,6 +113,7 @@ except RetryError as e:
 - ✅ Network errors (connection, timeout)
 
 ### What Doesn't Retry (Fails Immediately)
+
 - ❌ HTTP 400 (Bad Request)
 - ❌ HTTP 401 (Unauthorized)
 - ❌ HTTP 403 (Forbidden)
@@ -113,6 +122,7 @@ except RetryError as e:
 - ❌ Validation errors
 
 ### Timing Example (3 retries, defaults)
+
 ```
 Request 1: Immediate
   ↓ Error: 503
@@ -135,32 +145,36 @@ Request 4: After ~770ms
 
 ## Configuration Options
 
-| Option | Default | Range | Purpose |
-|--------|---------|-------|---------|
-| `maxRetries` | 3 | 0-10 | Number of retries after initial attempt |
-| `initialDelay` | 100ms | 50-1000ms | Starting delay between retries |
-| `maxDelay` | 10s | 1-60s | Ceiling for backoff delays |
-| `backoffMultiplier` | 2 | 1.5-3 | Exponential growth factor |
-| `jitterFraction` | 0.1 | 0-0.5 | Random variance (0-10%) |
+| Option              | Default | Range     | Purpose                                 |
+| ------------------- | ------- | --------- | --------------------------------------- |
+| `maxRetries`        | 3       | 0-10      | Number of retries after initial attempt |
+| `initialDelay`      | 100ms   | 50-1000ms | Starting delay between retries          |
+| `maxDelay`          | 10s     | 1-60s     | Ceiling for backoff delays              |
+| `backoffMultiplier` | 2       | 1.5-3     | Exponential growth factor               |
+| `jitterFraction`    | 0.1     | 0-0.5     | Random variance (0-10%)                 |
 
 ### Preset Configurations
 
 **Fast Endpoints (Low Latency)**
+
 ```typescript
 { maxRetries: 2, initialDelay: 50, maxDelay: 5000 }
 ```
 
 **Slow Endpoints (High Latency)**
+
 ```typescript
 { maxRetries: 5, initialDelay: 500, maxDelay: 30000 }
 ```
 
 **Rate-Limited Endpoints**
+
 ```typescript
 { maxRetries: 5, initialDelay: 1000, maxDelay: 60000 }
 ```
 
 **Critical Operations**
+
 ```typescript
 { maxRetries: 5, initialDelay: 100, maxDelay: 20000 }
 ```
@@ -170,6 +184,7 @@ Request 4: After ~770ms
 ## Logging
 
 ### Frontend Console Messages
+
 ```
 Retryable status 503 for POST /api/generate-pdf. Attempt 1/3, retrying in 105ms
 Retryable status 429 for GET /api/variants. Attempt 1/3, retrying in 103ms
@@ -177,6 +192,7 @@ Network error for POST /api/tailor: TypeError: Failed to fetch. Attempt 1/3, ret
 ```
 
 ### Backend Log Messages
+
 ```
 Retryable error in fetch_user_data: ConnectionError: Connection refused. Attempt 1/3, retrying in 0.10s
 Retryable error in fetch_user_data: TimeoutError: Request timed out. Attempt 2/3, retrying in 0.25s
@@ -187,6 +203,7 @@ Retryable error in fetch_user_data: TimeoutError: Request timed out. Attempt 2/3
 ## Testing Locally
 
 ### Test Retry Behavior
+
 ```bash
 # Run frontend retry tests (21 tests)
 npm test -- utils/retryLogic.test.ts
@@ -196,11 +213,10 @@ cd resume-api && python -m pytest tests/test_retry.py -v
 ```
 
 ### Simulate Failures
+
 ```typescript
 // Frontend: Mock 503 error
-global.fetch = vi.fn().mockRejectedValueOnce(
-  new Response('Service Unavailable', { status: 503 })
-);
+global.fetch = vi.fn().mockRejectedValueOnce(new Response('Service Unavailable', { status: 503 }));
 const response = await fetchWithRetry('/api/endpoint');
 // Will retry and eventually fail with clear error message
 ```
@@ -210,15 +226,19 @@ const response = await fetchWithRetry('/api/endpoint');
 ## Common Issues & Solutions
 
 ### Issue: Requests taking too long
+
 **Solution:** Increase `initialDelay` only if network is slow, not for validation errors
 
 ### Issue: Too many retries
+
 **Solution:** Decrease `maxRetries` to 2 for user-facing operations
 
 ### Issue: All retries failing
+
 **Solution:** Check if error is retryable. Non-retryable errors (4xx) won't be retried
 
 ### Issue: Need different retry per endpoint
+
 **Solution:** Pass custom config to `fetchWithRetry()` or `retry_async_call()`
 
 ---
@@ -226,12 +246,14 @@ const response = await fetchWithRetry('/api/endpoint');
 ## Performance Tips
 
 ✅ **Good Practices**
+
 - Use defaults for most endpoints
 - Only increase retries for critical operations
 - Keep initialDelay under 500ms for user-facing ops
 - Test with real network conditions
 
 ❌ **Anti-Patterns**
+
 - Setting maxRetries > 5 (diminishing returns)
 - initialDelay > 1000ms for fast endpoints (user perceives slowness)
 - Retrying non-idempotent operations (use with caution)
@@ -242,12 +264,14 @@ const response = await fetchWithRetry('/api/endpoint');
 ## Monitoring
 
 ### Metrics to Track
+
 1. **Retry rate** - % of requests that retry
 2. **Success rate** - % of retries that succeed
 3. **Failure rate** - % that fail after max retries
 4. **Average delay** - total time added by retries
 
 ### How to Collect
+
 ```typescript
 // Frontend - intercept and log
 const response = await fetchWithRetry(url, opts, config);

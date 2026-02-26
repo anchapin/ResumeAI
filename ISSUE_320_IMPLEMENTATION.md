@@ -1,6 +1,7 @@
 # GitHub Issue #320: Mock Interview Practice Feature
 
 ## Overview
+
 Implemented a comprehensive Mock Interview Practice feature for ResumeAI that allows users to generate AI-powered interview questions based on their target job and company, practice answering, and receive AI-generated feedback.
 
 ## Implementation Summary
@@ -8,6 +9,7 @@ Implemented a comprehensive Mock Interview Practice feature for ResumeAI that al
 ### 1. **Frontend Components**
 
 #### `pages/InterviewPractice.tsx`
+
 - **Location**: `/pages/InterviewPractice.tsx`
 - **Features**:
   - Setup tab for configuring interview session parameters (job title, company, difficulty level, question count)
@@ -19,13 +21,15 @@ Implemented a comprehensive Mock Interview Practice feature for ResumeAI that al
   - Navigation between questions with Previous/Next buttons
 
 #### Sidebar Integration
+
 - **File**: `components/Sidebar.tsx`
 - **Changes**: Added "Interview Practice" navigation item with psychology icon
 - **Route**: `Route.INTERVIEW_PRACTICE`
 
 #### App Router Integration
+
 - **File**: `App.tsx`
-- **Changes**: 
+- **Changes**:
   - Added import for `InterviewPractice` component
   - Added new route case for `Route.INTERVIEW_PRACTICE`
   - Renders the full-page interview practice component
@@ -33,6 +37,7 @@ Implemented a comprehensive Mock Interview Practice feature for ResumeAI that al
 ### 2. **Backend API Implementation**
 
 #### `resume-api/api/interview_routes.py`
+
 - **Location**: `/resume-api/api/interview_routes.py`
 - **Endpoints**:
 
@@ -69,6 +74,7 @@ Implemented a comprehensive Mock Interview Practice feature for ResumeAI that al
    - Returns: Feedback object with analysis
 
 #### Features:
+
 - **Question Generation**:
   - 48+ pre-built question templates across 4 categories
   - Context-aware templates that fill in job title and company
@@ -92,6 +98,7 @@ Implemented a comprehensive Mock Interview Practice feature for ResumeAI that al
 ### 3. **Type Definitions**
 
 #### `types.ts` - Interview Practice Types
+
 - `Route.INTERVIEW_PRACTICE` - New route enum value
 - `InterviewQuestion` - Question data structure with category, difficulty, tips
 - `InterviewAnswer` - User's answer with video recording support
@@ -100,6 +107,7 @@ Implemented a comprehensive Mock Interview Practice feature for ResumeAI that al
 - `GenerateQuestionsRequest` - Request parameters for question generation
 
 #### Backend Models (`resume-api/api/models.py`)
+
 - `InterviewQuestion` - Pydantic model for questions
 - `InterviewAnswer` - Pydantic model for answers
 - `InterviewFeedback` - Pydantic model for feedback
@@ -113,15 +121,18 @@ Implemented a comprehensive Mock Interview Practice feature for ResumeAI that al
 ### 4. **API Integration Points**
 
 #### Authentication
+
 - All endpoints require `X-API-KEY` header (API key authentication)
 - Uses existing `AuthorizedAPIKey` dependency from `config/dependencies.py`
 
 #### Configuration
+
 - AI provider selection via environment variables
 - Support for multiple AI backends (OpenAI, Claude, Gemini)
 - Rate limiting via existing `@rate_limit` decorator
 
 #### Error Handling
+
 - HTTP exceptions with meaningful error messages
 - Validation using Pydantic models
 - Logging of all operations
@@ -129,11 +140,13 @@ Implemented a comprehensive Mock Interview Practice feature for ResumeAI that al
 ### 5. **Frontend-Backend Communication**
 
 #### API Base URL
+
 - Uses `import.meta.env.VITE_API_URL` environment variable
 - Defaults to `http://127.0.0.1:8000` for local development
 - Sends API key from localStorage in X-API-KEY header
 
 #### Data Flow
+
 1. User sets up interview session parameters
 2. Frontend calls POST `/v1/interview/generate-questions`
 3. Backend generates questions and returns with session ID
@@ -146,12 +159,14 @@ Implemented a comprehensive Mock Interview Practice feature for ResumeAI that al
 ## Key Features
 
 ✅ **Question Generation**
+
 - 48+ template-based questions
 - Multi-category support (technical, behavioral, situational, domain)
 - Difficulty level filtering (easy, medium, hard)
 - Context-aware customization
 
 ✅ **AI-Powered Feedback**
+
 - Score calculation (1-10)
 - Strength identification
 - Improvement suggestions
@@ -159,12 +174,14 @@ Implemented a comprehensive Mock Interview Practice feature for ResumeAI that al
 - Fallback template feedback
 
 ✅ **Session Management**
+
 - Persistent session tracking
 - Progress percentage calculation
 - Average score tracking
 - Session status (in_progress, completed, paused)
 
 ✅ **User Experience**
+
 - Intuitive multi-tab interface (Setup, Practice, History)
 - Real-time feedback display
 - Question navigation
@@ -172,6 +189,7 @@ Implemented a comprehensive Mock Interview Practice feature for ResumeAI that al
 - Progress visualization
 
 ✅ **API Documentation**
+
 - OpenAPI/Swagger documentation via FastAPI
 - Detailed docstrings for all endpoints
 - Request/response models clearly defined
@@ -187,7 +205,7 @@ from sqlalchemy.orm import relationship
 
 class InterviewSessionDB(Base):
     __tablename__ = "interview_sessions"
-    
+
     id = Column(String, primary_key=True)
     user_id = Column(String, ForeignKey("user.id"))
     created_at = Column(DateTime)
@@ -205,6 +223,7 @@ class InterviewSessionDB(Base):
 ## Configuration Required
 
 Add to `.env`:
+
 ```bash
 # Interview Practice
 INTERVIEW_AI_PROVIDER=openai  # or claude, gemini
@@ -214,16 +233,19 @@ INTERVIEW_ENABLE=true
 ## Testing
 
 ### Frontend Build
+
 ```bash
 npm run build  # ✓ Builds successfully
 ```
 
 ### Backend Syntax Validation
+
 ```bash
 python3 -m py_compile resume-api/api/interview_routes.py  # ✓ Valid syntax
 ```
 
 ### Integration
+
 - Interview routes module imports correctly
 - Models are properly defined and validated
 - All endpoints have proper request/response models
@@ -231,10 +253,12 @@ python3 -m py_compile resume-api/api/interview_routes.py  # ✓ Valid syntax
 ## Files Modified/Created
 
 ### New Files:
+
 - ✅ `/pages/InterviewPractice.tsx` - Full-featured interview practice component
 - ✅ `/resume-api/api/interview_routes.py` - All interview endpoints
 
 ### Modified Files:
+
 - ✅ `/types.ts` - Added Route.INTERVIEW_PRACTICE and interview types
 - ✅ `/App.tsx` - Added import and route case
 - ✅ `/components/Sidebar.tsx` - Added navigation item
@@ -242,14 +266,17 @@ python3 -m py_compile resume-api/api/interview_routes.py  # ✓ Valid syntax
 - ✅ `/resume-api/api/__init__.py` - Exported interview_router
 
 ### To Be Manually Updated (Permission Issue):
+
 - ⚠️ `/resume-api/main.py` - Needs manual addition of:
+
   ```python
   from api.interview_routes import router as interview_router
   # ... later in file:
   app.include_router(interview_router)
   ```
-  
+
   **Solution**: Run the following to update main.py:
+
   ```bash
   python3 << 'EOF'
   with open('resume-api/main.py', 'r') as f:

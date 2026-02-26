@@ -53,10 +53,7 @@ export const DEFAULT_SHORTCUTS: KeyboardShortcut[] = [
  * @param shortcut - Shortcut to check
  * @returns True if the event matches the shortcut
  */
-export function matchesShortcut(
-  event: KeyboardEvent,
-  shortcut: string
-): boolean {
+export function matchesShortcut(event: KeyboardEvent, shortcut: string): boolean {
   const parts = shortcut.split('+');
   const key = parts.pop()?.toLowerCase();
 
@@ -80,7 +77,7 @@ export function matchesShortcut(
  * @returns Shortcut key or null
  */
 export function getShortcutForAction(action: string): string | null {
-  const shortcut = DEFAULT_SHORTCUTS.find(s => s.action === action);
+  const shortcut = DEFAULT_SHORTCUTS.find((s) => s.action === action);
   return shortcut ? shortcut.key : null;
 }
 
@@ -110,17 +107,13 @@ export function formatShortcutForDisplay(key: string): string {
  */
 export function registerShortcuts(
   shortcuts: KeyboardShortcut[],
-  callback: (action: string, event: KeyboardEvent) => void
+  callback: (action: string, event: KeyboardEvent) => void,
 ): () => void {
   const handler = (e: KeyboardEvent) => {
     // Ignore if user is typing in an input field
     const target = e.target as HTMLElement | null;
     const tagName = target?.tagName;
-    if (
-      tagName === 'INPUT' ||
-      tagName === 'TEXTAREA' ||
-      target?.isContentEditable
-    ) {
+    if (tagName === 'INPUT' || tagName === 'TEXTAREA' || target?.isContentEditable) {
       return;
     }
 

@@ -25,7 +25,7 @@ interface TemplateSelectorProps {
 export const TemplateSelector: React.FC<TemplateSelectorProps> = ({
   selectedTemplate,
   onTemplateChange,
-  onPreview
+  onPreview,
 }) => {
   const [templates, setTemplates] = useState<TemplateMetadata[]>([]);
   const [loading, setLoading] = useState(true);
@@ -54,9 +54,8 @@ export const TemplateSelector: React.FC<TemplateSelectorProps> = ({
     }
   };
 
-  const filteredTemplates = categoryFilter === 'all'
-    ? templates
-    : templates.filter(t => t.category === categoryFilter);
+  const filteredTemplates =
+    categoryFilter === 'all' ? templates : templates.filter((t) => t.category === categoryFilter);
 
   const categories = [
     { value: 'all', label: 'All Templates' },
@@ -65,7 +64,7 @@ export const TemplateSelector: React.FC<TemplateSelectorProps> = ({
     { value: 'executive', label: 'Executive' },
     { value: 'modern', label: 'Modern' },
     { value: 'academic', label: 'Academic' },
-    { value: 'general', label: 'General' }
+    { value: 'general', label: 'General' },
   ];
 
   const getTemplateIcon = (category: string): string => {
@@ -75,13 +74,13 @@ export const TemplateSelector: React.FC<TemplateSelectorProps> = ({
       executive: 'military_tech',
       modern: 'auto_awesome',
       academic: 'school',
-      general: 'description'
+      general: 'description',
     };
     return icons[category] || 'description';
   };
 
   const rgbToHex = (rgb: number[]): string => {
-    return `#${rgb.map(x => x.toString(16).padStart(2, '0')).join('')}`;
+    return `#${rgb.map((x) => x.toString(16).padStart(2, '0')).join('')}`;
   };
 
   if (loading) {
@@ -112,7 +111,7 @@ export const TemplateSelector: React.FC<TemplateSelectorProps> = ({
       <div>
         <label className="block text-sm font-bold text-slate-700 mb-2">Filter by Category</label>
         <div className="flex flex-wrap gap-2">
-          {categories.map(cat => (
+          {categories.map((cat) => (
             <button
               key={cat.value}
               onClick={() => setCategoryFilter(cat.value)}
@@ -130,7 +129,7 @@ export const TemplateSelector: React.FC<TemplateSelectorProps> = ({
 
       {/* Template List */}
       <div className="space-y-3">
-        {filteredTemplates.map(template => (
+        {filteredTemplates.map((template) => (
           <div
             key={template.name}
             className={`bg-white rounded-lg border-2 transition-all ${
@@ -142,34 +141,34 @@ export const TemplateSelector: React.FC<TemplateSelectorProps> = ({
             {/* Template Header */}
             <div
               className="p-4 cursor-pointer"
-              onClick={() => setExpandedTemplate(
-                expandedTemplate === template.name ? null : template.name
-              )}
+              onClick={() =>
+                setExpandedTemplate(expandedTemplate === template.name ? null : template.name)
+              }
             >
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3">
-                  <div className={`p-2 rounded-lg ${
-                    selectedTemplate === template.name
-                      ? 'bg-primary-100 text-primary-600'
-                      : 'bg-slate-100 text-slate-600'
-                  }`}>
+                  <div
+                    className={`p-2 rounded-lg ${
+                      selectedTemplate === template.name
+                        ? 'bg-primary-100 text-primary-600'
+                        : 'bg-slate-100 text-slate-600'
+                    }`}
+                  >
                     <span className="material-symbols-outlined text-[24px]">
                       {getTemplateIcon(template.category)}
                     </span>
                   </div>
                   <div className="flex-1">
-                    <h3 className="text-lg font-bold text-slate-900">
-                      {template.display_name}
-                    </h3>
-                    <p className="text-sm text-slate-500 mt-1">
-                      {template.description}
-                    </p>
+                    <h3 className="text-lg font-bold text-slate-900">{template.display_name}</h3>
+                    <p className="text-sm text-slate-500 mt-1">{template.description}</p>
                   </div>
                 </div>
                 <button className="p-2 text-slate-400 hover:text-slate-600">
-                  <span className={`material-symbols-outlined transition-transform ${
-                    expandedTemplate === template.name ? 'rotate-180' : ''
-                  }`}>
+                  <span
+                    className={`material-symbols-outlined transition-transform ${
+                      expandedTemplate === template.name ? 'rotate-180' : ''
+                    }`}
+                  >
                     expand_more
                   </span>
                 </button>
@@ -208,7 +207,7 @@ export const TemplateSelector: React.FC<TemplateSelectorProps> = ({
                           key={idx}
                           className="inline-flex items-center px-2.5 py-1 bg-slate-100 text-slate-700 rounded-md text-xs font-medium"
                         >
-                          {feature.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                          {feature.replace('_', ' ').replace(/\b\w/g, (l) => l.toUpperCase())}
                         </span>
                       ))}
                     </div>
@@ -223,7 +222,7 @@ export const TemplateSelector: React.FC<TemplateSelectorProps> = ({
                           key={idx}
                           className="inline-flex items-center px-2.5 py-1 bg-primary-50 text-primary-700 rounded-md text-xs font-medium"
                         >
-                          {role.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                          {role.replace('_', ' ').replace(/\b\w/g, (l) => l.toUpperCase())}
                         </span>
                       ))}
                     </div>
@@ -234,11 +233,7 @@ export const TemplateSelector: React.FC<TemplateSelectorProps> = ({
                     <h4 className="text-sm font-bold text-slate-700 mb-2">Color Schemes</h4>
                     <div className="flex gap-2">
                       {template.color_schemes.map((scheme, idx) => (
-                        <div
-                          key={idx}
-                          className="flex gap-1"
-                          title={scheme.name}
-                        >
+                        <div key={idx} className="flex gap-1" title={scheme.name}>
                           <div
                             className="w-6 h-6 rounded-full border border-slate-200"
                             style={{ backgroundColor: rgbToHex(scheme.primary) }}
@@ -255,7 +250,8 @@ export const TemplateSelector: React.FC<TemplateSelectorProps> = ({
                       ))}
                     </div>
                     <p className="text-xs text-slate-500 mt-2">
-                      {template.color_schemes.length} color scheme{template.color_schemes.length > 1 ? 's' : ''} available
+                      {template.color_schemes.length} color scheme
+                      {template.color_schemes.length > 1 ? 's' : ''} available
                     </p>
                   </div>
 
@@ -267,9 +263,7 @@ export const TemplateSelector: React.FC<TemplateSelectorProps> = ({
                         <span className="material-symbols-outlined text-[16px] text-slate-500">
                           style
                         </span>
-                        <span className="text-sm text-slate-700 capitalize">
-                          {template.style}
-                        </span>
+                        <span className="text-sm text-slate-700 capitalize">{template.style}</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <span className="material-symbols-outlined text-[16px] text-slate-500">
@@ -290,9 +284,7 @@ export const TemplateSelector: React.FC<TemplateSelectorProps> = ({
                       onClick={() => onPreview(template.name)}
                       className="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors text-sm font-medium"
                     >
-                      <span className="material-symbols-outlined text-[18px]">
-                        visibility
-                      </span>
+                      <span className="material-symbols-outlined text-[18px]">visibility</span>
                       Preview Template
                     </button>
                   </div>

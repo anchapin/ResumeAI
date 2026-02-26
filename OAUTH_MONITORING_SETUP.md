@@ -3,6 +3,7 @@
 ## Quick Start
 
 ### 1. Files Already Created
+
 ✅ `resume-api/monitoring/oauth_monitor.py` - Core monitoring engine
 ✅ `resume-api/api/metrics_routes.py` - REST API endpoints
 ✅ `resume-api/test_oauth_monitoring.py` - Test suite
@@ -16,11 +17,13 @@
 #### Step 1: Update `main.py`
 
 Add metrics router import (around line 40):
+
 ```python
 from api.metrics_routes import router as metrics_router
 ```
 
 Register metrics router (after line 282):
+
 ```python
 app.include_router(metrics_router)
 ```
@@ -30,12 +33,14 @@ app.include_router(metrics_router)
 #### Step 2: Update `routes/github.py`
 
 Add imports after existing imports (around line 10):
+
 ```python
 import time
 from monitoring.oauth_monitor import oauth_monitor, OAuthEvent
 ```
 
 Add helper functions after logger definition (around line 30):
+
 ```python
 def _get_client_ip(request: Request) -> str:
     """Extract client IP from request."""
@@ -76,17 +81,20 @@ def _record_oauth_event(
 Update function: `exchange_code_for_token()` (around line 54)
 
 Replace:
+
 ```python
 async def exchange_code_for_token(code: str) -> dict:
 ```
 
 With:
+
 ```python
 async def exchange_code_for_token(code: str, request: Optional[Request] = None) -> dict:
     start_time = time.time()
 ```
 
 In error handling (around line 84):
+
 ```python
 if response.status_code != 200:
     logger.error("github_token_exchange_failed", status=response.status_code)
@@ -106,9 +114,10 @@ if response.status_code != 200:
 ```
 
 In success path (after line 107):
+
 ```python
         return token_data
-    
+
     # Add monitoring on success
     _record_oauth_event(
         event_type="token_exchange",
@@ -121,12 +130,14 @@ In success path (after line 107):
 #### Step 4: Update `fetch_github_user()` (around line 110)
 
 Add at function start:
+
 ```python
 async def fetch_github_user(token: str, request: Optional[Request] = None) -> dict:
     start_time = time.time()
 ```
 
 In error handling (around line 132):
+
 ```python
         if response.status_code != 200:
             logger.error("github_user_fetch_failed", status=response.status_code)
@@ -145,9 +156,10 @@ In error handling (around line 132):
 ```
 
 Before return (around line 142):
+
 ```python
         return await response.json()
-    
+
     # Add monitoring on success
     _record_oauth_event(
         event_type="user_fetch",
@@ -161,6 +173,7 @@ Before return (around line 142):
 #### Step 5: Update `github_oauth_callback()` (around line 196)
 
 Add at function start:
+
 ```python
 async def github_oauth_callback(
     request: Request,
@@ -173,6 +186,7 @@ async def github_oauth_callback(
 ```
 
 Add success monitoring before redirect (around line 400):
+
 ```python
         # Record success
         _record_oauth_event(
@@ -182,7 +196,7 @@ Add success monitoring before redirect (around line 400):
             duration_ms=(time.time() - start_time) * 1000,
             request=request,
         )
-        
+
         frontend_url = settings.frontend_url
         return Response(
             status_code=302,
@@ -191,6 +205,7 @@ Add success monitoring before redirect (around line 400):
 ```
 
 Add failure monitoring in error handlers:
+
 ```python
         # Record failure for invalid state
         _record_oauth_event(
@@ -206,13 +221,14 @@ Add failure monitoring in error handlers:
 #### Step 6: Update `github_connect()` (around line 538)
 
 Add monitoring at end before return:
+
 ```python
     logger.info(
         "github_oauth_authorize",
         user_id=user_id,
         state=state,
     )
-    
+
     # Record connect event
     _record_oauth_event(
         event_type="connect",
@@ -232,18 +248,19 @@ Add monitoring at end before return:
 #### Step 7: Update `disconnect_github()` (around line 665)
 
 Add monitoring after deletion:
+
 ```python
     # If connection exists, revoke the token with GitHub API and delete from database
     if connection:
         # ... existing code ...
-        
+
         logger.info(
             "github_disconnect_success",
             user_id=user_id,
             connection_id=connection.id,
             github_username=connection.github_username,
         )
-        
+
         # Record disconnect event
         _record_oauth_event(
             event_type="disconnect",
@@ -256,6 +273,7 @@ Add monitoring after deletion:
 #### Step 8: Update `github_status()` (around line 450)
 
 Add monitoring after checking connection:
+
 ```python
             if connection:
                 logger.info(
@@ -263,7 +281,7 @@ Add monitoring after checking connection:
                     user_id=current_user.id,
                     github_username=connection.github_username,
                 )
-                
+
                 # Record status check
                 _record_oauth_event(
                     event_type="status_check",
@@ -271,24 +289,27 @@ Add monitoring after checking connection:
                     user_id=str(current_user.id),
                     request=request,
                 )
-                
+
                 return GitHubStatusResponse(...)
 ```
 
 ### 3. Validation
 
 #### Install Dependencies
+
 ```bash
 cd resume-api
 pip install -r requirements.txt
 ```
 
 #### Run Validation Script
+
 ```bash
 python3 validate_oauth_monitoring.py
 ```
 
 Expected output:
+
 ```
 ============================================================
 OAuth Monitoring System Validation
@@ -308,6 +329,7 @@ ALL TESTS PASSED ✓
 ```
 
 #### Run Test Suite
+
 ```bash
 python -m pytest test_oauth_monitoring.py -v
 ```
@@ -324,11 +346,13 @@ python main.py
 In another terminal:
 
 #### Test 1: OAuth Health
+
 ```bash
 curl http://localhost:8000/metrics/oauth/health | jq .
 ```
 
 Expected response:
+
 ```json
 {
   "status": "success",
@@ -349,21 +373,25 @@ Expected response:
 ```
 
 #### Test 2: Get Metrics
+
 ```bash
 curl "http://localhost:8000/metrics/oauth/metrics?provider=github&window_minutes=5" | jq .
 ```
 
 #### Test 3: Check Anomalies
+
 ```bash
 curl http://localhost:8000/metrics/oauth/anomalies | jq .
 ```
 
 #### Test 4: Prometheus Export
+
 ```bash
 curl http://localhost:8000/metrics/prometheus
 ```
 
 #### Test 5: Endpoint Health
+
 ```bash
 curl http://localhost:8000/metrics/oauth/endpoint-health | jq .
 ```
@@ -380,7 +408,7 @@ File Updates:
   [ ] main.py - Registered metrics router
   [ ] routes/github.py - Added monitoring imports
   [ ] routes/github.py - Added helper functions
-  
+
 Endpoint Instrumentation:
   [ ] exchange_code_for_token() - Added monitoring
   [ ] fetch_github_user() - Added monitoring
@@ -412,23 +440,30 @@ Deployment:
 ## Troubleshooting
 
 ### Issue: "Module not found: monitoring.oauth_monitor"
+
 **Solution**: Ensure `PYTHONPATH` includes `/app` or `resume-api` directory
 
 ### Issue: Metrics endpoints return 404
+
 **Solution**: Check that metrics router was registered in `main.py`
 
 ### Issue: Events not being recorded
+
 **Solution**: Verify helper functions are defined in `routes/github.py`
 
 ### Issue: High memory usage
+
 **Solution**: Run cleanup endpoint or increase cleanup frequency:
+
 ```bash
 curl -X POST http://localhost:8000/metrics/oauth/cleanup?max_age_hours=24 \
   -H "Authorization: Bearer <token>"
 ```
 
 ### Issue: Tests fail with import errors
+
 **Solution**: Install dependencies:
+
 ```bash
 pip install prometheus-client sqlalchemy fastapi
 ```
@@ -436,7 +471,9 @@ pip install prometheus-client sqlalchemy fastapi
 ## Performance Tuning
 
 ### Reduce Event Retention
+
 In `oauth_monitor.py`, modify cleanup schedule:
+
 ```python
 # Run cleanup every hour instead of 24 hours
 import asyncio
@@ -449,14 +486,18 @@ async def cleanup_task():
 ```
 
 ### Adjust Anomaly Thresholds
+
 In `oauth_monitor.py`:
+
 ```python
 oauth_monitor.failure_rate_threshold = 0.20  # 20% instead of 15%
 oauth_monitor.rate_limit_hit_threshold = 10  # 10 instead of 5
 ```
 
 ### Enable Prometheus Scraping
+
 Set in `.env`:
+
 ```bash
 ENABLE_METRICS=true
 METRICS_PATH=/metrics/prometheus
@@ -465,6 +506,7 @@ METRICS_PATH=/metrics/prometheus
 ## Monitoring the Monitor
 
 ### Health Checks
+
 ```bash
 # Check if monitoring is working
 curl http://localhost:8000/metrics/oauth/health
@@ -474,13 +516,16 @@ curl http://localhost:8000/metrics/health/dashboard | jq .
 ```
 
 ### Log Monitoring
+
 ```bash
 # Look for oauth monitoring logs
 tail -f logs/app.log | grep oauth_monitor
 ```
 
 ### Alert Setup
+
 Configure webhooks in `config/settings.py`:
+
 ```python
 ALERTING_WEBHOOK_URL = "https://hooks.slack.com/services/..."
 ENABLE_ALERTING = True
@@ -499,6 +544,7 @@ ENABLE_ALERTING = True
 ## Support
 
 For help:
+
 1. Check `OAUTH_MONITORING_INTEGRATION.md` for code examples
 2. Review `test_oauth_monitoring.py` for usage patterns
 3. Run `validate_oauth_monitoring.py` to verify setup

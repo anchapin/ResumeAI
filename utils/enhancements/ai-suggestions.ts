@@ -1,9 +1,9 @@
 /**
  * AI-Powered Suggestions Module
- * 
+ *
  * Provides smart recommendations based on job descriptions
  * and resume content analysis.
- * 
+ *
  * Features:
  * - Job description keyword extraction
  * - Resume improvement suggestions
@@ -52,21 +52,66 @@ export interface Suggestion {
  */
 export function extractJobKeywords(jobDescription: string): string[] {
   const commonWords = new Set([
-    'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for',
-    'of', 'with', 'by', 'from', 'as', 'is', 'was', 'are', 'were', 'been',
-    'be', 'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would',
-    'could', 'should', 'may', 'might', 'must', 'shall', 'can', 'need',
-    'this', 'that', 'these', 'those', 'i', 'you', 'he', 'she', 'it', 'we', 'they'
+    'the',
+    'a',
+    'an',
+    'and',
+    'or',
+    'but',
+    'in',
+    'on',
+    'at',
+    'to',
+    'for',
+    'of',
+    'with',
+    'by',
+    'from',
+    'as',
+    'is',
+    'was',
+    'are',
+    'were',
+    'been',
+    'be',
+    'have',
+    'has',
+    'had',
+    'do',
+    'does',
+    'did',
+    'will',
+    'would',
+    'could',
+    'should',
+    'may',
+    'might',
+    'must',
+    'shall',
+    'can',
+    'need',
+    'this',
+    'that',
+    'these',
+    'those',
+    'i',
+    'you',
+    'he',
+    'she',
+    'it',
+    'we',
+    'they',
   ]);
 
-  const words = jobDescription.toLowerCase()
+  const words = jobDescription
+    .toLowerCase()
     .replace(/[^a-z0-9\s]/g, ' ')
     .split(/\s+/)
-    .filter(word => word.length > 2 && !commonWords.has(word));
+    .filter((word) => word.length > 2 && !commonWords.has(word));
 
   // Count frequency
   const frequency: Record<string, number> = {};
-  words.forEach(word => {
+  words.forEach((word) => {
     frequency[word] = (frequency[word] || 0) + 1;
   });
 
@@ -82,26 +127,26 @@ export function extractJobKeywords(jobDescription: string): string[] {
  */
 export function analyzeSkillsGap(
   resumeSkills: string[],
-  jobRequirements: string[]
+  jobRequirements: string[],
 ): { matched: string[]; missing: string[]; partial: string[] } {
-  const resumeSkillsLower = resumeSkills.map(s => s.toLowerCase());
-  
+  const resumeSkillsLower = resumeSkills.map((s) => s.toLowerCase());
+
   const matched: string[] = [];
   const missing: string[] = [];
   const partial: string[] = [];
 
-  jobRequirements.forEach(req => {
+  jobRequirements.forEach((req) => {
     const reqLower = req.toLowerCase();
-    const found = resumeSkillsLower.find(s => 
-      s === reqLower || s.includes(reqLower) || reqLower.includes(s)
+    const found = resumeSkillsLower.find(
+      (s) => s === reqLower || s.includes(reqLower) || reqLower.includes(s),
     );
-    
+
     if (found) {
       matched.push(req);
     } else if (reqLower.split(' ').length > 1) {
       // Check for partial matches in multi-word skills
-      const hasPartial = resumeSkillsLower.some(s => 
-        reqLower.split(' ').some(part => part.length > 3 && s.includes(part))
+      const hasPartial = resumeSkillsLower.some((s) =>
+        reqLower.split(' ').some((part) => part.length > 3 && s.includes(part)),
       );
       if (hasPartial) {
         partial.push(req);
@@ -125,7 +170,7 @@ export function calculateATSScore(resumeData: any): number {
 
   // Check for required sections (40 points)
   const requiredSections = ['basics', 'work', 'education', 'skills'];
-  const hasAllSections = requiredSections.every(section => resumeData[section]);
+  const hasAllSections = requiredSections.every((section) => resumeData[section]);
   if (hasAllSections) score += 40;
 
   // Check for contact info (20 points)
@@ -134,8 +179,8 @@ export function calculateATSScore(resumeData: any): number {
 
   // Check for work experience details (20 points)
   if (resumeData.work?.length > 0) {
-    const hasDetails = resumeData.work.every((job: any) => 
-      job.summary || (job.highlights?.length > 0)
+    const hasDetails = resumeData.work.every(
+      (job: any) => job.summary || job.highlights?.length > 0,
     );
     if (hasDetails) score += 20;
   }
@@ -149,19 +194,16 @@ export function calculateATSScore(resumeData: any): number {
 /**
  * Generate improvement suggestions based on job description
  */
-export function generateSuggestions(
-  resumeData: any,
-  jobDescription: string
-): Suggestion[] {
+export function generateSuggestions(resumeData: any, jobDescription: string): Suggestion[] {
   const suggestions: Suggestion[] = [];
-  
+
   // Extract job keywords
   const jobKeywords = extractJobKeywords(jobDescription);
-  
+
   // Analyze skills gap
   const resumeSkills = resumeData.skills || [];
   const skillsAnalysis = analyzeSkillsGap(resumeSkills, jobKeywords);
-  
+
   // Add skills suggestions
   if (skillsAnalysis.missing.length > 0) {
     suggestions.push({
@@ -169,7 +211,7 @@ export function generateSuggestions(
       priority: 'high',
       title: 'Add missing skills',
       description: `Consider adding these skills mentioned in the job: ${skillsAnalysis.missing.slice(0, 5).join(', ')}`,
-      action: 'Update your skills section'
+      action: 'Update your skills section',
     });
   }
 
@@ -181,22 +223,23 @@ export function generateSuggestions(
       priority: 'high',
       title: 'Improve ATS compatibility',
       description: `Your resume scores ${atsScore}/100 on ATS compatibility. Add more details to improve visibility.`,
-      action: 'Review ATS checklist'
+      action: 'Review ATS checklist',
     });
   }
 
   // Check for quantifiable achievements
   const hasQuantifiedAchievements = resumeData.work?.some((job: any) =>
-    job.highlights?.some((h: string) => /\d+/.test(h))
+    job.highlights?.some((h: string) => /\d+/.test(h)),
   );
-  
+
   if (!hasQuantifiedAchievements) {
     suggestions.push({
       category: 'experience',
       priority: 'medium',
       title: 'Add quantified achievements',
-      description: 'Use numbers and metrics to describe your achievements (e.g., "Increased sales by 25%")',
-      action: 'Update work experience'
+      description:
+        'Use numbers and metrics to describe your achievements (e.g., "Increased sales by 25%")',
+      action: 'Update work experience',
     });
   }
 
@@ -211,28 +254,27 @@ export function generateSuggestions(
  */
 export function getFormattingSuggestions(resumeData: any): Suggestion[] {
   const suggestions: Suggestion[] = [];
-  
+
   // Check summary length
   if (resumeData.basics?.summary?.length > 200) {
     suggestions.push({
       category: 'formatting',
       priority: 'low',
       title: 'Shorten summary',
-      description: 'Your summary is quite long. Consider keeping it under 200 characters.'
+      description: 'Your summary is quite long. Consider keeping it under 200 characters.',
     });
   }
 
   // Check bullet points
-  const totalBullets = resumeData.work?.reduce((sum: number, job: any) => 
-    sum + (job.highlights?.length || 0), 0
-  ) || 0;
-  
+  const totalBullets =
+    resumeData.work?.reduce((sum: number, job: any) => sum + (job.highlights?.length || 0), 0) || 0;
+
   if (totalBullets < 5) {
     suggestions.push({
       category: 'formatting',
       priority: 'medium',
       title: 'Add more bullet points',
-      description: `You have ${totalBullets} bullet points. Consider adding more to highlight your achievements.`
+      description: `You have ${totalBullets} bullet points. Consider adding more to highlight your achievements.`,
     });
   }
 

@@ -5,7 +5,7 @@ export enum LogLevel {
   DEBUG = 'debug',
   INFO = 'info',
   WARN = 'warn',
-  ERROR = 'error'
+  ERROR = 'error',
 }
 
 /**
@@ -26,7 +26,7 @@ const defaultConfig: LoggerConfig = {
   level: getLogLevelFromEnvironment(),
   enabled: true,
   timestamp: true,
-  environment: getEnvironment()
+  environment: getEnvironment(),
 };
 
 /**
@@ -34,7 +34,7 @@ const defaultConfig: LoggerConfig = {
  */
 function getLogLevelFromEnvironment(): LogLevel {
   const env = getEnvironment();
-  
+
   switch (env) {
     case 'production':
       return LogLevel.WARN; // In production, only show warnings and errors by default
@@ -57,7 +57,7 @@ function getEnvironment(): 'development' | 'production' | 'test' {
     if (nodeEnv.includes('test')) return 'test';
     return 'development';
   }
-  
+
   // For browser environments
   if (typeof window !== 'undefined') {
     // Check for Vite environment variables
@@ -68,7 +68,7 @@ function getEnvironment(): 'development' | 'production' | 'test' {
       return 'development';
     }
   }
-  
+
   // Default to development
   return 'development';
 }
@@ -95,11 +95,16 @@ class Logger {
    */
   private getLevelValue(level: LogLevel): number {
     switch (level) {
-      case LogLevel.DEBUG: return 0;
-      case LogLevel.INFO: return 1;
-      case LogLevel.WARN: return 2;
-      case LogLevel.ERROR: return 3;
-      default: return 1; // Default to INFO level
+      case LogLevel.DEBUG:
+        return 0;
+      case LogLevel.INFO:
+        return 1;
+      case LogLevel.WARN:
+        return 2;
+      case LogLevel.ERROR:
+        return 3;
+      default:
+        return 1; // Default to INFO level
     }
   }
 
@@ -110,10 +115,10 @@ class Logger {
     if (!this.config.enabled) {
       return false;
     }
-    
+
     const currentLevelValue = this.getLevelValue(this.config.level);
     const messageLevelValue = this.getLevelValue(level);
-    
+
     return messageLevelValue >= currentLevelValue;
   }
 
@@ -122,22 +127,22 @@ class Logger {
    */
   private formatMessage(level: LogLevel, message: any[]): string {
     let formattedMessage = '';
-    
+
     if (this.config.timestamp) {
       formattedMessage += `[${new Date().toISOString()}] `;
     }
-    
+
     if (this.config.prefix) {
       formattedMessage += `[${this.config.prefix}] `;
     }
-    
+
     formattedMessage += `[${level.toUpperCase()}] `;
-    
+
     // Convert all message parts to string
-    const messageParts = message.map(part => 
-      typeof part === 'object' ? JSON.stringify(part, null, 2) : String(part)
+    const messageParts = message.map((part) =>
+      typeof part === 'object' ? JSON.stringify(part, null, 2) : String(part),
     );
-    
+
     return formattedMessage + messageParts.join(' ');
   }
 
@@ -183,17 +188,17 @@ class Logger {
   public child(prefix: string): Logger {
     return new Logger({
       ...this.config,
-      prefix
+      prefix,
     });
   }
-  
+
   /**
    * Enable/disable logging based on environment
    */
   public setEnabledByEnvironment(): void {
     const env = getEnvironment();
     this.updateConfig({
-      enabled: env !== 'production' || this.config.level !== LogLevel.DEBUG // Disable debug logs in production
+      enabled: env !== 'production' || this.config.level !== LogLevel.DEBUG, // Disable debug logs in production
     });
   }
 }
@@ -215,5 +220,5 @@ export const consoleLike = {
   info: defaultLogger.info,
   warn: defaultLogger.warn,
   error: defaultLogger.error,
-  debug: defaultLogger.debug
+  debug: defaultLogger.debug,
 };

@@ -23,10 +23,22 @@ interface Step {
 }
 
 const STEPS: Step[] = [
-  { id: 'upload', title: 'Choose Import Method', description: 'Select how you want to import your data' },
-  { id: 'oauth', title: 'Connect LinkedIn', description: 'Authorize access to your LinkedIn profile' },
+  {
+    id: 'upload',
+    title: 'Choose Import Method',
+    description: 'Select how you want to import your data',
+  },
+  {
+    id: 'oauth',
+    title: 'Connect LinkedIn',
+    description: 'Authorize access to your LinkedIn profile',
+  },
   { id: 'import', title: 'Review Data', description: 'Preview and edit imported information' },
-  { id: 'projects', title: 'Select Projects', description: 'Choose GitHub projects to add to your resume' },
+  {
+    id: 'projects',
+    title: 'Select Projects',
+    description: 'Choose GitHub projects to add to your resume',
+  },
   { id: 'complete', title: 'Import Complete', description: 'Your resume has been updated' },
 ];
 
@@ -66,7 +78,7 @@ export const LinkedInImportDialog: React.FC<LinkedInImportDialogProps> = ({
 
   if (!isOpen) return null;
 
-  const getStepIndex = () => STEPS.findIndex(s => s.id === currentStep);
+  const getStepIndex = () => STEPS.findIndex((s) => s.id === currentStep);
 
   // Handle OAuth flow
   const handleOAuthConnect = async () => {
@@ -78,7 +90,7 @@ export const LinkedInImportDialog: React.FC<LinkedInImportDialogProps> = ({
       const popup = window.open(
         authUrl,
         'linkedin-oauth',
-        'width=600,height=700,scrollbars=yes,resizable=yes'
+        'width=600,height=700,scrollbars=yes,resizable=yes',
       );
 
       if (!popup) {
@@ -113,7 +125,6 @@ export const LinkedInImportDialog: React.FC<LinkedInImportDialogProps> = ({
           }
         }
       }, 500);
-
     } catch (error) {
       console.error('LinkedIn OAuth error:', error);
       showErrorToast(error instanceof Error ? error.message : 'Failed to connect to LinkedIn');
@@ -129,27 +140,27 @@ export const LinkedInImportDialog: React.FC<LinkedInImportDialogProps> = ({
       setLinkedInProfile(profile);
 
       // Populate form fields from profile data
-      const fullName = profile.fullName || `${profile.firstName || ''} ${profile.lastName || ''}`.trim();
+      const fullName =
+        profile.fullName || `${profile.firstName || ''} ${profile.lastName || ''}`.trim();
       setEditedName(fullName);
       setEditedEmail(profile.email || profile.emailAddress || '');
       setEditedPhone(profile.phone || '');
       setEditedLocation(profile.location || '');
       setEditedRole(profile.headline || '');
       setEditedSummary(profile.summary || '');
-      
+
       // Extract skills from profile
       const skills = profile.skills || [];
       setEditedSkills(Array.isArray(skills) ? skills : []);
 
       // Extract experience
       const experience = profile.experience || profile.positions || [];
-      
+
       // Extract education
       const education = profile.education || profile.educations || [];
 
       setCurrentStep('import');
       showSuccessToast('LinkedIn profile imported successfully!');
-
     } catch (error) {
       console.error('LinkedIn import error:', error);
       showErrorToast(error instanceof Error ? error.message : 'Failed to import LinkedIn profile');
@@ -171,7 +182,9 @@ export const LinkedInImportDialog: React.FC<LinkedInImportDialogProps> = ({
       setCurrentStep('projects');
     } catch (error) {
       console.error('GitHub fetch error:', error);
-      showErrorToast(error instanceof Error ? error.message : 'Failed to fetch GitHub repositories');
+      showErrorToast(
+        error instanceof Error ? error.message : 'Failed to fetch GitHub repositories',
+      );
       // Still proceed to projects step even if no repos
       setCurrentStep('projects');
     }
@@ -179,10 +192,8 @@ export const LinkedInImportDialog: React.FC<LinkedInImportDialogProps> = ({
 
   // Handle project selection
   const toggleRepoSelection = (repoId: number) => {
-    setSelectedRepoIds(prev =>
-      prev.includes(repoId)
-        ? prev.filter(id => id !== repoId)
-        : [...prev, repoId]
+    setSelectedRepoIds((prev) =>
+      prev.includes(repoId) ? prev.filter((id) => id !== repoId) : [...prev, repoId],
     );
   };
 
@@ -196,27 +207,29 @@ export const LinkedInImportDialog: React.FC<LinkedInImportDialogProps> = ({
       role: editedRole,
       summary: editedSummary,
       skills: editedSkills,
-      experience: linkedInProfile?.experience?.map((exp, idx) => ({
-        id: `li-exp-${idx}`,
-        company: exp.company || '',
-        role: exp.title || '',
-        startDate: exp.startDate || '',
-        endDate: exp.endDate || '',
-        current: exp.current || !exp.endDate,
-        description: exp.description || '',
-        tags: [],
-      })) || [],
-      education: linkedInProfile?.education?.map((edu, idx) => ({
-        id: `li-edu-${idx}`,
-        institution: edu.institution || '',
-        area: edu.field || '',
-        studyType: edu.degree || '',
-        startDate: edu.startDate || '',
-        endDate: edu.endDate || '',
-        courses: [],
-      })) || [],
-      projects: selectedRepoIds.map(repoId => {
-        const repo = githubRepos.find(r => r.id === repoId);
+      experience:
+        linkedInProfile?.experience?.map((exp, idx) => ({
+          id: `li-exp-${idx}`,
+          company: exp.company || '',
+          role: exp.title || '',
+          startDate: exp.startDate || '',
+          endDate: exp.endDate || '',
+          current: exp.current || !exp.endDate,
+          description: exp.description || '',
+          tags: [],
+        })) || [],
+      education:
+        linkedInProfile?.education?.map((edu, idx) => ({
+          id: `li-edu-${idx}`,
+          institution: edu.institution || '',
+          area: edu.field || '',
+          studyType: edu.degree || '',
+          startDate: edu.startDate || '',
+          endDate: edu.endDate || '',
+          courses: [],
+        })) || [],
+      projects: selectedRepoIds.map((repoId) => {
+        const repo = githubRepos.find((r) => r.id === repoId);
         return {
           id: `gh-${repoId}`,
           name: repo?.name || '',
@@ -251,13 +264,15 @@ export const LinkedInImportDialog: React.FC<LinkedInImportDialogProps> = ({
 
   // File import handlers (existing functionality)
   const handleFileSelect = async (files: File | FileList) => {
-    const fileList = files instanceof FileList ? Array.from(files) : (Array.isArray(files) ? files : [files]);
+    const fileList =
+      files instanceof FileList ? Array.from(files) : Array.isArray(files) ? files : [files];
     if (fileList.length === 0) return;
 
     if (fileList.length === 1) {
       const file = fileList[0];
       const isJson = file.type === 'application/json' || file.name.endsWith('.json');
-      const isZip = file.type === 'application/zip' ||
+      const isZip =
+        file.type === 'application/zip' ||
         file.type === 'application/x-zip-compressed' ||
         file.name.endsWith('.zip');
       const isCsv = file.name.endsWith('.csv');
@@ -280,7 +295,7 @@ export const LinkedInImportDialog: React.FC<LinkedInImportDialogProps> = ({
         return;
       }
 
-      const hasCsv = fileList.some(f => f.name.toLowerCase().endsWith('.csv'));
+      const hasCsv = fileList.some((f) => f.name.toLowerCase().endsWith('.csv'));
       if (!hasCsv) {
         showErrorToast('Selected files do not contain any CSV files.');
         return;
@@ -299,36 +314,39 @@ export const LinkedInImportDialog: React.FC<LinkedInImportDialogProps> = ({
         location: resumeData.location?.city || resumeData.location?.region || '',
         role: resumeData.basics?.label || '',
         summary: resumeData.basics?.summary || '',
-        skills: resumeData.skills?.map(s => s.name || '').filter(Boolean) || [],
-        experience: resumeData.work?.map(work => ({
-          id: Math.random().toString(36).substring(2, 9),
-          company: work.company || '',
-          role: work.position || '',
-          startDate: work.startDate || '',
-          endDate: work.endDate || '',
-          current: !work.endDate,
-          description: work.summary || '',
-          tags: [],
-        })) || [],
-        education: resumeData.education?.map(edu => ({
-          id: Math.random().toString(36).substring(2, 9),
-          institution: edu.institution || '',
-          area: edu.area || '',
-          studyType: edu.studyType || '',
-          startDate: edu.startDate || '',
-          endDate: edu.endDate || '',
-          courses: edu.courses || [],
-        })) || [],
-        projects: resumeData.projects?.map(proj => ({
-          id: Math.random().toString(36).substring(2, 9),
-          name: proj.name || '',
-          description: proj.description || '',
-          url: proj.url || '',
-          roles: proj.roles || [],
-          startDate: proj.startDate || '',
-          endDate: proj.endDate || '',
-          highlights: proj.highlights || [],
-        })) || [],
+        skills: resumeData.skills?.map((s) => s.name || '').filter(Boolean) || [],
+        experience:
+          resumeData.work?.map((work) => ({
+            id: Math.random().toString(36).substring(2, 9),
+            company: work.company || '',
+            role: work.position || '',
+            startDate: work.startDate || '',
+            endDate: work.endDate || '',
+            current: !work.endDate,
+            description: work.summary || '',
+            tags: [],
+          })) || [],
+        education:
+          resumeData.education?.map((edu) => ({
+            id: Math.random().toString(36).substring(2, 9),
+            institution: edu.institution || '',
+            area: edu.area || '',
+            studyType: edu.studyType || '',
+            startDate: edu.startDate || '',
+            endDate: edu.endDate || '',
+            courses: edu.courses || [],
+          })) || [],
+        projects:
+          resumeData.projects?.map((proj) => ({
+            id: Math.random().toString(36).substring(2, 9),
+            name: proj.name || '',
+            description: proj.description || '',
+            url: proj.url || '',
+            roles: proj.roles || [],
+            startDate: proj.startDate || '',
+            endDate: proj.endDate || '',
+            highlights: proj.highlights || [],
+          })) || [],
       };
 
       onImport(importedData);
@@ -421,13 +439,17 @@ export const LinkedInImportDialog: React.FC<LinkedInImportDialogProps> = ({
                     )}
                   </div>
                   <div className="ml-2 hidden sm:block">
-                    <p className={`text-xs font-bold ${idx <= getStepIndex() ? 'text-slate-900' : 'text-slate-400'}`}>
+                    <p
+                      className={`text-xs font-bold ${idx <= getStepIndex() ? 'text-slate-900' : 'text-slate-400'}`}
+                    >
                       {step.title}
                     </p>
                   </div>
                 </div>
                 {idx < STEPS.length - 1 && (
-                  <div className={`flex-1 h-0.5 mx-2 ${idx < getStepIndex() ? 'bg-green-500' : 'bg-slate-200'}`} />
+                  <div
+                    className={`flex-1 h-0.5 mx-2 ${idx < getStepIndex() ? 'bg-green-500' : 'bg-slate-200'}`}
+                  />
                 )}
               </React.Fragment>
             ))}
@@ -454,15 +476,22 @@ export const LinkedInImportDialog: React.FC<LinkedInImportDialogProps> = ({
                   <div className="flex-1">
                     <h3 className="font-bold text-slate-900 mb-1">Connect with LinkedIn</h3>
                     <p className="text-sm text-slate-600">
-                      Securely connect your LinkedIn account to import your profile, experience, and skills in real-time.
+                      Securely connect your LinkedIn account to import your profile, experience, and
+                      skills in real-time.
                     </p>
                     <div className="flex items-center gap-2 mt-2">
-                      <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs font-medium rounded-full">Recommended</span>
-                      <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">Real-time</span>
+                      <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs font-medium rounded-full">
+                        Recommended
+                      </span>
+                      <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">
+                        Real-time
+                      </span>
                     </div>
                   </div>
                   {importMethod === 'oauth' && (
-                    <span className="material-symbols-outlined text-primary-600">radio_button_checked</span>
+                    <span className="material-symbols-outlined text-primary-600">
+                      radio_button_checked
+                    </span>
                   )}
                 </div>
               </div>
@@ -483,14 +512,18 @@ export const LinkedInImportDialog: React.FC<LinkedInImportDialogProps> = ({
                   <div className="flex-1">
                     <h3 className="font-bold text-slate-900 mb-1">Upload LinkedIn Export</h3>
                     <p className="text-sm text-slate-600">
-                      Upload your LinkedIn data export (ZIP, JSON, or CSV files) to import your profile offline.
+                      Upload your LinkedIn data export (ZIP, JSON, or CSV files) to import your
+                      profile offline.
                     </p>
                     <p className="text-xs text-slate-500 mt-2">
-                      Get your export from LinkedIn Settings {'>'} Data Privacy {'>'} Get a copy of your data
+                      Get your export from LinkedIn Settings {'>'} Data Privacy {'>'} Get a copy of
+                      your data
                     </p>
                   </div>
                   {importMethod === 'file' && (
-                    <span className="material-symbols-outlined text-primary-600">radio_button_checked</span>
+                    <span className="material-symbols-outlined text-primary-600">
+                      radio_button_checked
+                    </span>
                   )}
                 </div>
               </div>
@@ -583,7 +616,7 @@ export const LinkedInImportDialog: React.FC<LinkedInImportDialogProps> = ({
                     >
                       {skill}
                       <button
-                        onClick={() => setEditedSkills(prev => prev.filter((_, i) => i !== idx))}
+                        onClick={() => setEditedSkills((prev) => prev.filter((_, i) => i !== idx))}
                         className="hover:text-red-500"
                       >
                         <span className="material-symbols-outlined text-[14px]">close</span>
@@ -596,12 +629,18 @@ export const LinkedInImportDialog: React.FC<LinkedInImportDialogProps> = ({
               {/* Preview Experience */}
               {linkedInProfile.experience && linkedInProfile.experience.length > 0 && (
                 <div className="mt-4">
-                  <h4 className="text-sm font-bold text-slate-700 mb-2">Experience ({linkedInProfile.experience.length})</h4>
+                  <h4 className="text-sm font-bold text-slate-700 mb-2">
+                    Experience ({linkedInProfile.experience.length})
+                  </h4>
                   <div className="max-h-40 overflow-y-auto space-y-2">
                     {linkedInProfile.experience.slice(0, 3).map((exp, idx) => (
                       <div key={idx} className="text-sm bg-slate-50 p-3 rounded-lg">
-                        <p className="font-medium text-slate-900">{exp.title} at {exp.company}</p>
-                        <p className="text-slate-600 text-xs">{exp.startDate} - {exp.endDate || 'Present'}</p>
+                        <p className="font-medium text-slate-900">
+                          {exp.title} at {exp.company}
+                        </p>
+                        <p className="text-slate-600 text-xs">
+                          {exp.startDate} - {exp.endDate || 'Present'}
+                        </p>
                       </div>
                     ))}
                     {linkedInProfile.experience.length > 3 && (
@@ -616,12 +655,16 @@ export const LinkedInImportDialog: React.FC<LinkedInImportDialogProps> = ({
               {/* Preview Education */}
               {linkedInProfile.education && linkedInProfile.education.length > 0 && (
                 <div className="mt-4">
-                  <h4 className="text-sm font-bold text-slate-700 mb-2">Education ({linkedInProfile.education.length})</h4>
+                  <h4 className="text-sm font-bold text-slate-700 mb-2">
+                    Education ({linkedInProfile.education.length})
+                  </h4>
                   <div className="max-h-40 overflow-y-auto space-y-2">
                     {linkedInProfile.education.slice(0, 3).map((edu, idx) => (
                       <div key={idx} className="text-sm bg-slate-50 p-3 rounded-lg">
                         <p className="font-medium text-slate-900">{edu.institution}</p>
-                        <p className="text-slate-600 text-xs">{edu.degree} in {edu.field}</p>
+                        <p className="text-slate-600 text-xs">
+                          {edu.degree} in {edu.field}
+                        </p>
                       </div>
                     ))}
                     {linkedInProfile.education.length > 3 && (
@@ -638,9 +681,7 @@ export const LinkedInImportDialog: React.FC<LinkedInImportDialogProps> = ({
           {currentStep === 'projects' && (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <h3 className="font-bold text-slate-900">
-                  GitHub Projects ({githubRepos.length})
-                </h3>
+                <h3 className="font-bold text-slate-900">GitHub Projects ({githubRepos.length})</h3>
                 <button
                   onClick={() => fetchRepos()}
                   className="text-sm text-primary-600 hover:text-primary-700 font-medium"
@@ -651,13 +692,17 @@ export const LinkedInImportDialog: React.FC<LinkedInImportDialogProps> = ({
 
               {githubRepos.length === 0 ? (
                 <div className="text-center py-8">
-                  <span className="material-symbols-outlined text-slate-300 text-5xl">folder_open</span>
+                  <span className="material-symbols-outlined text-slate-300 text-5xl">
+                    folder_open
+                  </span>
                   <p className="text-slate-500 mt-2">No GitHub repositories found</p>
-                  <p className="text-sm text-slate-400">You can still proceed without adding projects</p>
+                  <p className="text-sm text-slate-400">
+                    You can still proceed without adding projects
+                  </p>
                 </div>
               ) : (
                 <div className="space-y-2 max-h-64 overflow-y-auto">
-                  {githubRepos.map(repo => (
+                  {githubRepos.map((repo) => (
                     <div
                       key={repo.id}
                       onClick={() => toggleRepoSelection(repo.id)}
@@ -683,16 +728,22 @@ export const LinkedInImportDialog: React.FC<LinkedInImportDialogProps> = ({
                               {repo.stars}
                             </span>
                             <span className="flex items-center gap-1">
-                              <span className="material-symbols-outlined text-[14px]">fork_right</span>
+                              <span className="material-symbols-outlined text-[14px]">
+                                fork_right
+                              </span>
                               {repo.forks}
                             </span>
                           </div>
                         </div>
                         <div className="ml-4">
                           {selectedRepoIds.includes(repo.id) ? (
-                            <span className="material-symbols-outlined text-primary-600 text-2xl">check_box</span>
+                            <span className="material-symbols-outlined text-primary-600 text-2xl">
+                              check_box
+                            </span>
                           ) : (
-                            <span className="material-symbols-outlined text-slate-300 text-2xl">check_box_outline_blank</span>
+                            <span className="material-symbols-outlined text-slate-300 text-2xl">
+                              check_box_outline_blank
+                            </span>
                           )}
                         </div>
                       </div>
@@ -713,7 +764,9 @@ export const LinkedInImportDialog: React.FC<LinkedInImportDialogProps> = ({
                 <span className="material-symbols-outlined text-green-600 text-3xl">check</span>
               </div>
               <h3 className="text-xl font-bold text-slate-900 mb-2">Import Complete!</h3>
-              <p className="text-slate-600">Your LinkedIn profile has been imported successfully.</p>
+              <p className="text-slate-600">
+                Your LinkedIn profile has been imported successfully.
+              </p>
             </div>
           )}
 
@@ -725,9 +778,10 @@ export const LinkedInImportDialog: React.FC<LinkedInImportDialogProps> = ({
               onClick={handleButtonClick}
               className={`
                 border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all
-                ${dragOver
-                  ? 'border-primary-500 bg-primary-50 scale-[1.02]'
-                  : 'border-slate-300 hover:border-primary-400 hover:bg-slate-50'
+                ${
+                  dragOver
+                    ? 'border-primary-500 bg-primary-50 scale-[1.02]'
+                    : 'border-slate-300 hover:border-primary-400 hover:bg-slate-50'
                 }
                 ${isImporting ? 'opacity-50 pointer-events-none' : ''}
               `}
@@ -748,7 +802,9 @@ export const LinkedInImportDialog: React.FC<LinkedInImportDialogProps> = ({
                 </div>
               ) : (
                 <div className="flex flex-col items-center gap-3">
-                  <span className="material-symbols-outlined text-5xl text-slate-400">cloud_upload</span>
+                  <span className="material-symbols-outlined text-5xl text-slate-400">
+                    cloud_upload
+                  </span>
                   <div>
                     <p className="text-slate-700 font-semibold">
                       Drop your LinkedIn export file here
@@ -800,7 +856,11 @@ export const LinkedInImportDialog: React.FC<LinkedInImportDialogProps> = ({
               disabled={isImporting}
               className="px-5 py-2 rounded-lg bg-primary-600 text-white font-bold text-sm hover:bg-primary-700 transition-colors shadow-lg shadow-primary-600/20 disabled:opacity-50"
             >
-              {isImporting ? 'Processing...' : currentStep === 'import' ? 'Next: Projects' : 'Complete Import'}
+              {isImporting
+                ? 'Processing...'
+                : currentStep === 'import'
+                  ? 'Next: Projects'
+                  : 'Complete Import'}
             </button>
           )}
 
@@ -821,6 +881,7 @@ export const LinkedInImportDialog: React.FC<LinkedInImportDialogProps> = ({
         type="file"
         // @ts-expect-error - webkitdirectory is non-standard but supported
         webkitdirectory=""
+        // eslint-disable-next-line react/no-unknown-property
         directory=""
         onChange={handleInputChange}
         className="hidden"

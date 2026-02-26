@@ -85,7 +85,7 @@ describe('API Client with Timeout', () => {
           method: 'POST',
           headers: expect.objectContaining({ 'Content-Type': 'application/json' }),
         }),
-        15000 // PDF_GENERATION timeout
+        15000, // PDF_GENERATION timeout
       );
     });
 
@@ -99,10 +99,9 @@ describe('API Client with Timeout', () => {
 
     it('should throw error on non-ok response', async () => {
       const { fetchWithTimeout } = await import('../utils/fetch-timeout');
-      const mockResponse = new Response(
-        JSON.stringify({ detail: 'PDF generation failed' }),
-        { status: 500 }
-      );
+      const mockResponse = new Response(JSON.stringify({ detail: 'PDF generation failed' }), {
+        status: 500,
+      });
       vi.mocked(fetchWithTimeout).mockResolvedValueOnce(mockResponse);
 
       await expect(generatePDF(mockResumeData, 'modern')).rejects.toThrow();
@@ -118,7 +117,7 @@ describe('API Client with Timeout', () => {
           keywords: ['keyword1'],
           suggestions: ['suggestion1'],
         }),
-        { status: 200 }
+        { status: 200 },
       );
       vi.mocked(fetchWithTimeout).mockResolvedValueOnce(mockResponse);
 
@@ -127,7 +126,7 @@ describe('API Client with Timeout', () => {
       expect(fetchWithTimeout).toHaveBeenCalledWith(
         expect.stringContaining('/v1/tailor'),
         expect.objectContaining({ method: 'POST' }),
-        15000 // AI_OPERATION timeout
+        15000, // AI_OPERATION timeout
       );
     });
 
@@ -136,9 +135,7 @@ describe('API Client with Timeout', () => {
       const error = new DOMException('Aborted', 'AbortError');
       vi.mocked(fetchWithTimeout).mockRejectedValueOnce(error);
 
-      await expect(
-        tailorResume(mockResumeData, 'Job Description')
-      ).rejects.toThrow();
+      await expect(tailorResume(mockResumeData, 'Job Description')).rejects.toThrow();
     });
   });
 
@@ -160,7 +157,7 @@ describe('API Client with Timeout', () => {
             },
           ],
         }),
-        { status: 200 }
+        { status: 200 },
       );
       vi.mocked(fetchWithTimeout).mockResolvedValueOnce(mockResponse);
 
@@ -169,7 +166,7 @@ describe('API Client with Timeout', () => {
       expect(fetchWithTimeout).toHaveBeenCalledWith(
         expect.stringContaining('/v1/variants'),
         expect.objectContaining({ headers: expect.any(Object) }),
-        10000 // STANDARD timeout
+        10000, // STANDARD timeout
       );
     });
   });
@@ -184,7 +181,7 @@ describe('API Client with Timeout', () => {
           formatting_issues: [],
           recommendations: [],
         }),
-        { status: 200 }
+        { status: 200 },
       );
       vi.mocked(fetchWithTimeout).mockResolvedValueOnce(mockResponse);
 
@@ -193,7 +190,7 @@ describe('API Client with Timeout', () => {
       expect(fetchWithTimeout).toHaveBeenCalledWith(
         expect.stringContaining('/v1/ats/check'),
         expect.objectContaining({ method: 'POST' }),
-        15000 // AI_OPERATION timeout
+        15000, // AI_OPERATION timeout
       );
     });
   });

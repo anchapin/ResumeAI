@@ -42,7 +42,7 @@ const recentApps: JobApplication[] = [
  * @component
  * @description Dashboard page component showing job search overview with statistics and charts
  * @returns {JSX.Element} The rendered dashboard page component
- * 
+ *
  * @example
  * ```tsx
  * <Dashboard />
@@ -119,37 +119,60 @@ const Dashboard: React.FC = () => {
         <div className="space-y-4">
           <div className="flex items-center justify-between px-1">
             <h3 className="text-slate-900 text-xl font-bold tracking-tight">Recent Applications</h3>
-            <button className="text-primary-600 text-sm font-bold hover:text-primary-700 hover:underline">View all</button>
+            <button className="text-primary-600 text-sm font-bold hover:text-primary-700 hover:underline">
+              View all
+            </button>
           </div>
           <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-slate-50/50 border-b border-slate-100">
-                  <th className="px-6 py-4 text-slate-500 text-xs font-bold uppercase tracking-wider">Company</th>
-                  <th className="px-6 py-4 text-slate-500 text-xs font-bold uppercase tracking-wider">Role</th>
-                  <th className="px-6 py-4 text-slate-500 text-xs font-bold uppercase tracking-wider text-center">Status</th>
-                  <th className="px-6 py-4 text-slate-500 text-xs font-bold uppercase tracking-wider text-right">Date Applied</th>
+                  <th className="px-6 py-4 text-slate-500 text-xs font-bold uppercase tracking-wider">
+                    Company
+                  </th>
+                  <th className="px-6 py-4 text-slate-500 text-xs font-bold uppercase tracking-wider">
+                    Role
+                  </th>
+                  <th className="px-6 py-4 text-slate-500 text-xs font-bold uppercase tracking-wider text-center">
+                    Status
+                  </th>
+                  <th className="px-6 py-4 text-slate-500 text-xs font-bold uppercase tracking-wider text-right">
+                    Date Applied
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {recentApps.map((app) => (
-                  <tr key={app.id} className="hover:bg-slate-50 transition-colors cursor-pointer group">
+                  <tr
+                    key={app.id}
+                    className="hover:bg-slate-50 transition-colors cursor-pointer group"
+                  >
                     <td className="px-6 py-5">
                       <div className="flex items-center gap-4">
                         <div className="bg-white rounded-lg size-10 flex items-center justify-center p-1 border border-slate-100 shadow-sm">
-                           {/* Using a placeholder if logo fails, but styled nicely */}
-                           <img src={app.logo} alt={app.company} className="max-w-full max-h-full object-contain" onError={(e) => {
-                             (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${app.company}&background=random`
-                           }}/>
+                          {/* Using a placeholder if logo fails, but styled nicely */}
+                          <img
+                            src={app.logo}
+                            alt={app.company}
+                            className="max-w-full max-h-full object-contain"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src =
+                                `https://ui-avatars.com/api/?name=${app.company}&background=random`;
+                            }}
+                          />
                         </div>
-                        <span className="text-slate-900 font-bold text-sm group-hover:text-primary-600 transition-colors">{app.company}</span>
+                        <span className="text-slate-900 font-bold text-sm group-hover:text-primary-600 transition-colors">
+                          {app.company}
+                        </span>
                       </div>
                     </td>
                     <td className="px-6 py-5 text-slate-700 text-sm font-medium">{app.role}</td>
                     <td className="px-6 py-5 text-center">
                       <StatusBadge status={app.status} />
                     </td>
-                    <td className="px-6 py-5 text-slate-500 text-sm text-right font-medium">{app.dateApplied}</td>
+                    <td className="px-6 py-5 text-slate-500 text-sm text-right font-medium">
+                      {app.dateApplied}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -159,40 +182,59 @@ const Dashboard: React.FC = () => {
 
         {/* Funnel Chart */}
         <div className="space-y-4 pb-12">
-            <h3 className="text-slate-900 text-xl font-bold tracking-tight px-1">Application Funnel</h3>
-            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-8">
-                <div className="h-64 w-full">
-                    <ResponsiveContainer width="100%" height="100%">
-                        <BarChart
-                            layout="vertical"
-                            data={data}
-                            margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-                            barSize={32}
-                        >
-                            <XAxis type="number" hide />
-                            <Tooltip cursor={{fill: 'transparent'}} />
-                            {/* Background bars */}
-                            <Bar dataKey="value" fill="#e0e7ff" radius={[4, 4, 4, 4]} background={{ fill: '#f1f5f9', radius: 4 }}>
-                              {data.map((entry, index) => (
-                                <Cell key={`cell-${index}`} fill={entry.color} fillOpacity={1 - (index * 0.3)} />
-                              ))}
-                            </Bar>
-                        </BarChart>
-                    </ResponsiveContainer>
-                </div>
-                {/* Custom Labels below chart for aesthetics */}
-                <div className="flex flex-col gap-2 mt-4">
-                    {data.map((item, idx) => (
-                        <div key={idx} className="flex items-center justify-between text-sm border-b border-slate-50 last:border-0 py-2">
-                             <div className="flex items-center gap-2">
-                                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color, opacity: 1 - (idx * 0.3) }}></div>
-                                <span className="font-medium text-slate-600">{item.name}</span>
-                             </div>
-                             <span className="font-bold text-slate-900">{item.value} ({idx === 0 ? '100%' : idx === 1 ? '32%' : '8%'})</span>
-                        </div>
+          <h3 className="text-slate-900 text-xl font-bold tracking-tight px-1">
+            Application Funnel
+          </h3>
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-8">
+            <div className="h-64 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  layout="vertical"
+                  data={data}
+                  margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                  barSize={32}
+                >
+                  <XAxis type="number" hide />
+                  <Tooltip cursor={{ fill: 'transparent' }} />
+                  {/* Background bars */}
+                  <Bar
+                    dataKey="value"
+                    fill="#e0e7ff"
+                    radius={[4, 4, 4, 4]}
+                    background={{ fill: '#f1f5f9', radius: 4 }}
+                  >
+                    {data.map((entry, index) => (
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={entry.color}
+                        fillOpacity={1 - index * 0.3}
+                      />
                     ))}
-                </div>
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
             </div>
+            {/* Custom Labels below chart for aesthetics */}
+            <div className="flex flex-col gap-2 mt-4">
+              {data.map((item, idx) => (
+                <div
+                  key={idx}
+                  className="flex items-center justify-between text-sm border-b border-slate-50 last:border-0 py-2"
+                >
+                  <div className="flex items-center gap-2">
+                    <div
+                      className="w-3 h-3 rounded-full"
+                      style={{ backgroundColor: item.color, opacity: 1 - idx * 0.3 }}
+                    ></div>
+                    <span className="font-medium text-slate-600">{item.name}</span>
+                  </div>
+                  <span className="font-bold text-slate-900">
+                    {item.value} ({idx === 0 ? '100%' : idx === 1 ? '32%' : '8%'})
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     </div>

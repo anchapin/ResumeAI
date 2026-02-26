@@ -5,6 +5,7 @@ This document describes how to rotate the token encryption key for OAuth tokens 
 ## Overview
 
 Token encryption keys should be rotated periodically to maintain security. This guide covers:
+
 - Why key rotation is important
 - How to rotate the encryption key
 - How to re-encrypt existing encrypted tokens
@@ -13,6 +14,7 @@ Token encryption keys should be rotated periodically to maintain security. This 
 ## Why Rotate Keys?
 
 Key rotation is important for:
+
 - **Security best practices**: Regular rotation limits the impact of a compromised key
 - **Compliance**: Many security standards require periodic key rotation
 - **Risk mitigation**: If a key is leaked, rotating limits the exposure window
@@ -144,6 +146,7 @@ if __name__ == "__main__":
 ### 5. Retire the Old Key
 
 After successful rotation and verification:
+
 1. Securely delete the old encryption key
 2. Remove any backups of the old key after an appropriate retention period
 3. Document the rotation in your security audit log
@@ -151,6 +154,7 @@ After successful rotation and verification:
 ## Rotation Frequency
 
 Recommended rotation frequencies:
+
 - **Standard**: Every 90 days
 - **High-security**: Every 30 days
 - **After incident**: Immediately if key compromise is suspected
@@ -187,16 +191,20 @@ If you suspect the current key has been compromised:
 ## Key Storage Recommendations
 
 ### Development Environment
+
 ```bash
 # .env file (gitignored)
 TOKEN_ENCRYPTION_KEY=<your_dev_key>
 ```
 
 ### Staging Environment
+
 Use environment-specific secret management or encrypted configuration files.
 
 ### Production Environment
+
 Use a proper secret management system:
+
 - AWS Secrets Manager
 - Azure Key Vault
 - Google Secret Manager
@@ -210,6 +218,7 @@ Use a proper secret management system:
 **Cause**: Tokens not successfully re-encrypted with new key
 
 **Solution**:
+
 1. Check the rotation script logs
 2. Verify database was successfully updated
 3. You may need to restore from backup and retry rotation
@@ -219,6 +228,7 @@ Use a proper secret management system:
 **Cause**: Database connection issue or token corruption
 
 **Solution**:
+
 1. The script is designed to continue on individual token failures
 2. Check logs for failed token IDs
 3. Manually investigate and fix problematic tokens
@@ -229,6 +239,7 @@ Use a proper secret management system:
 **Cause**: New key not properly deployed to all instances
 
 **Solution**:
+
 1. Verify environment variable is set on all instances
 2. Restart affected services
 3. Check secret management system replication

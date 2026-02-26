@@ -7,6 +7,7 @@ A comprehensive guide to diagnose and resolve common issues in the ResumeAI Fast
 ## PDF Generation Timeout
 
 ### Overview
+
 PDF generation timeouts occur when the PDF rendering service takes too long to process a resume document.
 
 ### Root Causes
@@ -23,6 +24,7 @@ PDF generation timeouts occur when the PDF rendering service takes too long to p
 #### Immediate Fixes
 
 1. **Increase Timeout Value**
+
    ```python
    # In config.py or environment variables
    PDF_GENERATION_TIMEOUT = 60  # Increase from default 30 seconds
@@ -39,6 +41,7 @@ PDF generation timeouts occur when the PDF rendering service takes too long to p
    - Use standard fonts instead of custom web fonts
 
 4. **Retry with Exponential Backoff**
+
    ```python
    import asyncio
    from tenacity import retry, stop_after_attempt, wait_exponential
@@ -60,11 +63,12 @@ PDF generation timeouts occur when the PDF rendering service takes too long to p
    - Use polling or WebSocket to check status
 
 2. **Add Caching Layer**
+
    ```python
    from redis import Redis
-   
+
    redis_client = Redis(host='localhost', port=6379)
-   
+
    def get_cached_pdf(user_id, resume_id):
        cache_key = f"pdf:{user_id}:{resume_id}"
        return redis_client.get(cache_key)
@@ -76,9 +80,10 @@ PDF generation timeouts occur when the PDF rendering service takes too long to p
    - Monitor queue depth and auto-scale
 
 4. **Monitor with Metrics**
+
    ```python
    from prometheus_client import Histogram
-   
+
    pdf_generation_time = Histogram(
        'pdf_generation_seconds',
        'Time spent generating PDF'
@@ -98,6 +103,7 @@ PDF generation timeouts occur when the PDF rendering service takes too long to p
 ## GitHub OAuth 401
 
 ### Overview
+
 GitHub OAuth authentication returns a 401 Unauthorized error, preventing user login.
 
 ### Root Causes
@@ -115,20 +121,22 @@ GitHub OAuth authentication returns a 401 Unauthorized error, preventing user lo
 #### Immediate Fixes
 
 1. **Verify OAuth Credentials**
+
    ```bash
    # Check environment variables
    echo $GITHUB_CLIENT_ID
    echo $GITHUB_CLIENT_SECRET
-   
+
    # Verify credentials at https://github.com/settings/developers
    ```
 
 2. **Check Authorization Code**
+
    ```python
    # In your OAuth callback handler
    import time
    from urllib.parse import parse_qs, urlparse
-   
+
    def handle_oauth_callback(request):
        code = request.query_params.get('code')
        # Code is valid for 10 minutes only
@@ -138,6 +146,7 @@ GitHub OAuth authentication returns a 401 Unauthorized error, preventing user lo
    ```
 
 3. **Verify Redirect URI**
+
    ```python
    # Must match exactly in GitHub OAuth app settings
    GITHUB_REDIRECT_URI = "https://yourdomain.com/api/auth/github/callback"
@@ -147,10 +156,11 @@ GitHub OAuth authentication returns a 401 Unauthorized error, preventing user lo
    ```
 
 4. **Check Token Expiration**
+
    ```python
    import jwt
    from datetime import datetime
-   
+
    def validate_token(token):
        try:
            decoded = jwt.decode(token, options={"verify_signature": False})
@@ -165,6 +175,7 @@ GitHub OAuth authentication returns a 401 Unauthorized error, preventing user lo
 #### Long-term Solutions
 
 1. **Implement Token Refresh Logic**
+
    ```python
    async def refresh_oauth_token(refresh_token):
        async with httpx.AsyncClient() as client:
@@ -182,11 +193,12 @@ GitHub OAuth authentication returns a 401 Unauthorized error, preventing user lo
    ```
 
 2. **Add PKCE Flow for Extra Security**
+
    ```python
    import secrets
    import hashlib
    import base64
-   
+
    def create_pkce_pair():
        code_verifier = base64.urlsafe_b64encode(
            secrets.token_bytes(32)
@@ -198,11 +210,12 @@ GitHub OAuth authentication returns a 401 Unauthorized error, preventing user lo
    ```
 
 3. **Implement Token Storage with Encryption**
+
    ```python
    from cryptography.fernet import Fernet
-   
+
    cipher = Fernet(ENCRYPTION_KEY)
-   
+
    def store_oauth_token(user_id, token):
        encrypted = cipher.encrypt(token.encode())
        db.store(user_id, encrypted)
@@ -223,6 +236,7 @@ GitHub OAuth authentication returns a 401 Unauthorized error, preventing user lo
 ## API Rate Limit Exceeded
 
 ### Overview
+
 Too many requests to the API result in 429 Too Many Requests responses.
 
 ### Root Causes
@@ -240,10 +254,11 @@ Too many requests to the API result in 429 Too Many Requests responses.
 #### Immediate Fixes
 
 1. **Implement Exponential Backoff**
+
    ```python
    import asyncio
    import random
-   
+
    async def call_api_with_backoff(endpoint, max_retries=5):
        for attempt in range(max_retries):
            try:
@@ -264,12 +279,13 @@ Too many requests to the API result in 429 Too Many Requests responses.
    ```
 
 2. **Add Client-Side Rate Limiting**
+
    ```python
    from slowapi import Limiter
    from slowapi.util import get_remote_address
-   
+
    limiter = Limiter(key_func=get_remote_address)
-   
+
    @app.get("/api/resumes")
    @limiter.limit("10/minute")
    async def get_resumes(request: Request):
@@ -278,15 +294,16 @@ Too many requests to the API result in 429 Too Many Requests responses.
    ```
 
 3. **Implement Request Caching**
+
    ```python
    from functools import lru_cache
    import aiocache
-   
+
    cache = aiocache.cached(
        ttl=300,  # 5 minutes
        namespace="resumes"
    )
-   
+
    @cache
    async def get_user_resumes(user_id):
        # This will be cached for 5 minutes
@@ -294,11 +311,12 @@ Too many requests to the API result in 429 Too Many Requests responses.
    ```
 
 4. **Check Rate Limit Headers**
+
    ```python
    response = await client.get(endpoint)
    remaining = response.headers.get('X-RateLimit-Remaining')
    reset = response.headers.get('X-RateLimit-Reset')
-   
+
    if int(remaining) < 10:
        logger.warning(f"Rate limit approaching: {remaining} requests left")
    ```
@@ -306,13 +324,14 @@ Too many requests to the API result in 429 Too Many Requests responses.
 #### Long-term Solutions
 
 1. **Implement Tiered Rate Limiting**
+
    ```python
    RATE_LIMITS = {
        "free": "10/minute",
        "pro": "100/minute",
        "enterprise": "1000/minute"
    }
-   
+
    @app.get("/api/resumes")
    async def get_resumes(current_user: User):
        tier = current_user.subscription_tier
@@ -321,9 +340,10 @@ Too many requests to the API result in 429 Too Many Requests responses.
    ```
 
 2. **Create Rate Limit Queue**
+
    ```python
    from aioredis import Redis
-   
+
    async def check_rate_limit(user_id, endpoint):
        key = f"ratelimit:{user_id}:{endpoint}"
        count = await redis.incr(key)
@@ -333,12 +353,13 @@ Too many requests to the API result in 429 Too Many Requests responses.
    ```
 
 3. **Optimize High-Traffic Endpoints**
+
    ```python
    # Bad: Fetches all resumes
    @app.get("/api/resumes")
    async def get_resumes(user_id: int):
        return db.query(Resume).filter_by(user_id=user_id).all()
-   
+
    # Good: Paginated with indices
    @app.get("/api/resumes")
    async def get_resumes(user_id: int, page: int = 1, limit: int = 20):
@@ -347,15 +368,16 @@ Too many requests to the API result in 429 Too Many Requests responses.
    ```
 
 4. **Monitor and Alert**
+
    ```python
    from prometheus_client import Counter
-   
+
    rate_limit_errors = Counter(
        'api_rate_limit_errors_total',
        'Total rate limit errors',
        ['endpoint', 'user_tier']
    )
-   
+
    rate_limit_errors.labels(
        endpoint="/api/resumes",
        user_tier="free"
@@ -377,6 +399,7 @@ Too many requests to the API result in 429 Too Many Requests responses.
 ## Storage Quota Exceeded
 
 ### Overview
+
 User has exceeded their allowed storage limit for resumes and associated files.
 
 ### Root Causes
@@ -394,21 +417,23 @@ User has exceeded their allowed storage limit for resumes and associated files.
 #### Immediate Fixes
 
 1. **Check Storage Usage**
+
    ```python
    from sqlalchemy import func
-   
+
    def get_user_storage_usage(user_id):
        total_size = db.query(func.sum(Resume.file_size)).filter_by(
            user_id=user_id
        ).scalar() or 0
        return total_size
-   
+
    def get_user_quota(user_id):
        user = db.query(User).get(user_id)
        return user.storage_quota
    ```
 
 2. **List Large Files**
+
    ```python
    def get_user_large_files(user_id, min_size_mb=5):
        large_files = db.query(Resume).filter(
@@ -419,9 +444,10 @@ User has exceeded their allowed storage limit for resumes and associated files.
    ```
 
 3. **Delete Old Drafts**
+
    ```python
    from datetime import datetime, timedelta
-   
+
    def cleanup_old_drafts(user_id, days_old=30):
        cutoff_date = datetime.utcnow() - timedelta(days=days_old)
        old_drafts = db.query(Resume).filter(
@@ -429,16 +455,17 @@ User has exceeded their allowed storage limit for resumes and associated files.
            Resume.status == 'draft',
            Resume.created_at < cutoff_date
        ).all()
-       
+
        for draft in old_drafts:
            db.delete(draft)
        db.commit()
    ```
 
 4. **Compress Existing Files**
+
    ```python
    import zlib
-   
+
    def compress_resume(resume_id):
        resume = db.query(Resume).get(resume_id)
        if resume.content:
@@ -453,10 +480,11 @@ User has exceeded their allowed storage limit for resumes and associated files.
 #### Long-term Solutions
 
 1. **Implement Automatic Cleanup**
+
    ```python
    from celery import shared_task
    from datetime import datetime, timedelta
-   
+
    @shared_task
    def cleanup_expired_drafts():
        cutoff_date = datetime.utcnow() - timedelta(days=30)
@@ -465,31 +493,33 @@ User has exceeded their allowed storage limit for resumes and associated files.
            Resume.created_at < cutoff_date
        ).delete()
        logger.info(f"Cleaned up {expired} expired drafts")
-   
+
    # Schedule in Celery Beat
    # celery beat: cleanup_expired_drafts every day at 2 AM
    ```
 
 2. **Tiered Storage Quotas**
+
    ```python
    STORAGE_QUOTAS = {
        "free": 50 * 1024 * 1024,          # 50 MB
        "pro": 500 * 1024 * 1024,          # 500 MB
        "enterprise": 5 * 1024 * 1024 * 1024  # 5 GB
    }
-   
+
    def get_user_quota(user_id):
        user = db.query(User).get(user_id)
        return STORAGE_QUOTAS.get(user.tier, STORAGE_QUOTAS["free"])
    ```
 
 3. **Implement Storage Warnings**
+
    ```python
    def check_storage_quota(user_id):
        usage = get_user_storage_usage(user_id)
        quota = get_user_quota(user_id)
        usage_percent = (usage / quota) * 100
-       
+
        if usage_percent >= 90:
            send_storage_warning_email(user_id, usage_percent)
            return "warning"
@@ -499,24 +529,25 @@ User has exceeded their allowed storage limit for resumes and associated files.
    ```
 
 4. **Version Management**
+
    ```python
    class Resume(Base):
        __tablename__ = "resumes"
-       
+
        id = Column(Integer, primary_key=True)
        user_id = Column(Integer, ForeignKey("users.id"))
        content = Column(Text)
        version = Column(Integer, default=1)
        created_at = Column(DateTime, default=datetime.utcnow)
        is_latest = Column(Boolean, default=True)
-   
+
    def cleanup_old_versions(user_id, resume_id, keep_versions=5):
        old_versions = db.query(Resume).filter(
            Resume.user_id == user_id,
            Resume.resume_id == resume_id,
            Resume.is_latest == False
        ).order_by(Resume.created_at.desc()).offset(keep_versions).all()
-       
+
        for version in old_versions:
            db.delete(version)
        db.commit()
@@ -538,6 +569,7 @@ User has exceeded their allowed storage limit for resumes and associated files.
 ## AI Provider Down
 
 ### Overview
+
 AI provider (OpenAI, Anthropic, etc.) is unavailable, preventing AI-powered features.
 
 ### Root Causes
@@ -555,15 +587,16 @@ AI provider (OpenAI, Anthropic, etc.) is unavailable, preventing AI-powered feat
 #### Immediate Fixes
 
 1. **Check Provider Status**
+
    ```python
    import httpx
-   
+
    async def check_provider_health(provider: str):
        status_endpoints = {
            "openai": "https://status.openai.com/api/v2/status.json",
            "anthropic": "https://status.anthropic.com/api/v2/status.json"
        }
-       
+
        if provider in status_endpoints:
            async with httpx.AsyncClient() as client:
                response = await client.get(status_endpoints[provider])
@@ -571,9 +604,10 @@ AI provider (OpenAI, Anthropic, etc.) is unavailable, preventing AI-powered feat
    ```
 
 2. **Verify API Credentials**
+
    ```python
    import os
-   
+
    def verify_api_credentials(provider: str):
        if provider == "openai":
            api_key = os.getenv("OPENAI_API_KEY")
@@ -585,10 +619,11 @@ AI provider (OpenAI, Anthropic, etc.) is unavailable, preventing AI-powered feat
    ```
 
 3. **Implement Fallback Provider**
+
    ```python
    async def generate_resume_content(user_id, resume_data):
        providers = ["openai", "anthropic", "cohere"]  # Priority order
-       
+
        for provider in providers:
            try:
                result = await call_ai_provider(provider, resume_data)
@@ -596,21 +631,22 @@ AI provider (OpenAI, Anthropic, etc.) is unavailable, preventing AI-powered feat
            except ProviderError as e:
                logger.warning(f"{provider} failed: {e}")
                continue
-       
+
        # All providers failed
        return generate_default_content(resume_data)
    ```
 
 4. **Test Connectivity**
+
    ```python
    import httpx
-   
+
    async def test_provider_connection(provider: str):
        endpoints = {
            "openai": "https://api.openai.com/v1/models",
            "anthropic": "https://api.anthropic.com/status"
        }
-       
+
        async with httpx.AsyncClient() as client:
            try:
                response = await client.get(
@@ -627,22 +663,23 @@ AI provider (OpenAI, Anthropic, etc.) is unavailable, preventing AI-powered feat
 #### Long-term Solutions
 
 1. **Multi-Provider Strategy**
+
    ```python
    class AIProvider(ABC):
        @abstractmethod
        async def generate(self, prompt: str) -> str:
            pass
-   
+
    class OpenAIProvider(AIProvider):
        async def generate(self, prompt: str) -> str:
            # Implementation
            pass
-   
+
    class AnthropicProvider(AIProvider):
        async def generate(self, prompt: str) -> str:
            # Implementation
            pass
-   
+
    @app.get("/api/generate")
    async def generate_resume(data: ResumeData):
        providers = [
@@ -657,15 +694,16 @@ AI provider (OpenAI, Anthropic, etc.) is unavailable, preventing AI-powered feat
    ```
 
 2. **Circuit Breaker Pattern**
+
    ```python
    from pybreaker import CircuitBreaker
-   
+
    openai_breaker = CircuitBreaker(
        fail_max=5,
        reset_timeout=60,
        listeners=[on_circuit_opened, on_circuit_closed]
    )
-   
+
    @openai_breaker
    async def call_openai(prompt: str):
        # Will automatically open circuit after 5 failures
@@ -678,37 +716,39 @@ AI provider (OpenAI, Anthropic, etc.) is unavailable, preventing AI-powered feat
    ```
 
 3. **Cache AI Responses**
+
    ```python
    from functools import lru_cache
    import hashlib
-   
+
    def get_cache_key(prompt: str, model: str) -> str:
        return hashlib.md5(f"{model}:{prompt}".encode()).hexdigest()
-   
+
    async def generate_with_cache(prompt: str, model: str = "gpt-4"):
        cache_key = get_cache_key(prompt, model)
        cached = redis.get(cache_key)
-       
+
        if cached:
            logger.info(f"Cache hit for {cache_key}")
            return cached.decode()
-       
+
        result = await call_ai_provider(prompt, model)
        redis.setex(cache_key, 86400, result)  # Cache for 24 hours
        return result
    ```
 
 4. **Local/Degraded Mode**
+
    ```python
    def generate_default_content(resume_data):
        """Generate basic content when AI provider is unavailable"""
        template = """
        **Professional Summary**
        Experienced professional with expertise in {skills}.
-       
+
        **Experience**
        {experience_text}
-       
+
        **Education**
        {education_text}
        """
@@ -716,21 +756,22 @@ AI provider (OpenAI, Anthropic, etc.) is unavailable, preventing AI-powered feat
    ```
 
 5. **Monitoring and Alerts**
+
    ```python
    from prometheus_client import Counter, Gauge
-   
+
    ai_provider_errors = Counter(
        'ai_provider_errors_total',
        'Total AI provider errors',
        ['provider', 'error_type']
    )
-   
+
    ai_provider_latency = Gauge(
        'ai_provider_latency_ms',
        'AI provider response latency',
        ['provider']
    )
-   
+
    # Usage
    try:
        start = time.time()
@@ -865,6 +906,7 @@ If none of these solutions resolve your issue:
 **Maintainer**: Engineering Team
 
 **Related Documentation**:
+
 - [ERROR_HANDLING_QUICK_REFERENCE.md](../ERROR_HANDLING_QUICK_REFERENCE.md)
 - [DEPLOYMENT_GUIDE.md](../DEPLOYMENT_GUIDE.md)
 - [API_DOCUMENTATION.md](../API_DOCUMENTATION.md)

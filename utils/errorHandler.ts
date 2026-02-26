@@ -1,4 +1,3 @@
-
 /**
  * Global Error Handler for ResumeAI Frontend
  * Provides centralized error handling, user-friendly messages, and error tracking
@@ -41,7 +40,7 @@ class GlobalErrorHandlerService {
    */
   static initialize(): GlobalErrorHandlerService {
     const instance = new GlobalErrorHandlerService();
-    
+
     // Setup global error listeners
     window.addEventListener('error', (event) => {
       instance.handleError(event.error || new Error(event.message));
@@ -59,7 +58,7 @@ class GlobalErrorHandlerService {
    */
   subscribe(handler: ErrorHandler): () => void {
     this.errorHandlers.add(handler);
-    
+
     // Return unsubscribe function
     return () => {
       this.errorHandlers.delete(handler);
@@ -71,12 +70,12 @@ class GlobalErrorHandlerService {
    */
   handleError(error: any, context?: Record<string, any>): ErrorContext {
     const errorContext = this.parseError(error, context);
-    
+
     // Add to history
     this.addToHistory(errorContext);
-    
+
     // Notify all handlers
-    this.errorHandlers.forEach(handler => {
+    this.errorHandlers.forEach((handler) => {
       try {
         handler(errorContext);
       } catch (err) {
@@ -111,7 +110,7 @@ class GlobalErrorHandlerService {
     // Handle API errors (with response)
     if (error.response) {
       const status = error.response.status;
-      
+
       switch (status) {
         case 400:
         case 422:
@@ -125,7 +124,7 @@ class GlobalErrorHandlerService {
             timestamp,
             id,
           };
-        
+
         case 401:
           return {
             type: ErrorType.AUTH,
@@ -137,7 +136,7 @@ class GlobalErrorHandlerService {
             timestamp,
             id,
           };
-        
+
         case 403:
           return {
             type: ErrorType.PERMISSION,
@@ -149,19 +148,19 @@ class GlobalErrorHandlerService {
             timestamp,
             id,
           };
-        
+
         case 404:
-           return {
-             type: ErrorType.NOT_FOUND,
-             message: error.message,
-             userMessage: 'The requested item could not be found.',
-             statusCode: status,
-             originalError: error,
-             context: additionalContext,
-             timestamp,
-             id,
-           };
-        
+          return {
+            type: ErrorType.NOT_FOUND,
+            message: error.message,
+            userMessage: 'The requested item could not be found.',
+            statusCode: status,
+            originalError: error,
+            context: additionalContext,
+            timestamp,
+            id,
+          };
+
         case 408:
         case 504:
           return {
@@ -174,7 +173,7 @@ class GlobalErrorHandlerService {
             timestamp,
             id,
           };
-        
+
         case 500:
         case 502:
         case 503:
@@ -188,7 +187,7 @@ class GlobalErrorHandlerService {
             timestamp,
             id,
           };
-        
+
         default:
           return {
             type: ErrorType.API,
@@ -204,7 +203,11 @@ class GlobalErrorHandlerService {
     }
 
     // Handle timeout errors (including AbortError from AbortController)
-    if (error.name === 'TimeoutError' || error.name === 'AbortError' || error.message.includes('timeout')) {
+    if (
+      error.name === 'TimeoutError' ||
+      error.name === 'AbortError' ||
+      error.message.includes('timeout')
+    ) {
       return {
         type: ErrorType.TIMEOUT,
         message: error.message,
@@ -246,7 +249,7 @@ class GlobalErrorHandlerService {
    */
   private addToHistory(error: ErrorContext): void {
     this.errorHistory.unshift(error);
-    
+
     if (this.errorHistory.length > this.maxHistorySize) {
       this.errorHistory.pop();
     }
@@ -270,7 +273,7 @@ class GlobalErrorHandlerService {
    * Get errors by type
    */
   getErrorsByType(type: ErrorType): ErrorContext[] {
-    return this.errorHistory.filter(e => e.type === type);
+    return this.errorHistory.filter((e) => e.type === type);
   }
 
   /**
@@ -287,7 +290,7 @@ class GlobalErrorHandlerService {
     try {
       const userAgent = navigator.userAgent;
       const url = window.location.href;
-      
+
       const payload = {
         errorId: errorContext.id,
         type: errorContext.type,
@@ -315,7 +318,7 @@ export const errorHandler = GlobalErrorHandlerService.initialize();
  */
 export async function withErrorHandling<T>(
   operation: () => Promise<T>,
-  context?: Record<string, any>
+  context?: Record<string, any>,
 ): Promise<T | null> {
   try {
     return await operation();
@@ -328,10 +331,7 @@ export async function withErrorHandling<T>(
 /**
  * Helper function to create validation error
  */
-export function createValidationError(
-  message: string,
-  errors?: Record<string, string[]>
-): Error {
+export function createValidationError(message: string, errors?: Record<string, string[]>): Error {
   const error = new Error(message);
   (error as any).name = 'ValidationError';
   (error as any).errors = errors;

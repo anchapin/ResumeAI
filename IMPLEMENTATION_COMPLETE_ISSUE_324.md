@@ -16,12 +16,14 @@ Successfully implemented complete LinkedIn OAuth 2.0 integration to replace the 
 #### LinkedIn OAuth Routes (`resume-api/routes/linkedin.py`)
 
 **New Endpoints:**
+
 - `GET /api/linkedin/oauth/start` - Initiate OAuth flow, return LinkedIn auth URL
 - `POST /api/linkedin/oauth/callback` - Handle OAuth callback, exchange code for token
 - `GET /api/linkedin/profile` - Retrieve authenticated user profile
 - `POST /api/linkedin/disconnect` - Revoke access and clear tokens
 
 **OAuth Flow:**
+
 ```
 1. User clicks "Connect with LinkedIn"
    ↓
@@ -41,6 +43,7 @@ Successfully implemented complete LinkedIn OAuth 2.0 integration to replace the 
 ```
 
 **Helper Functions:**
+
 - `fetch_linkedin_profile()` - Async call to LinkedIn API
 - `parse_linkedin_experience()` - Parse work experience
 - `parse_linkedin_education()` - Parse education data
@@ -49,6 +52,7 @@ Successfully implemented complete LinkedIn OAuth 2.0 integration to replace the 
 #### Configuration (`resume-api/config/__init__.py`)
 
 Added three new settings:
+
 ```python
 linkedin_client_id: Optional[str] = None
 linkedin_client_secret: Optional[str] = None
@@ -56,6 +60,7 @@ linkedin_redirect_uri: Optional[str] = None
 ```
 
 Loaded from environment:
+
 - `LINKEDIN_CLIENT_ID` - OAuth app client ID
 - `LINKEDIN_CLIENT_SECRET` - OAuth app secret
 - `LINKEDIN_REDIRECT_URI` - Callback URL (e.g., http://localhost:5173/auth/linkedin/callback)
@@ -84,6 +89,7 @@ export async function connectLinkedIn(): Promise<string> {
 ```
 
 **New Token Management:**
+
 ```typescript
 // Store token after successful auth
 localStorage.setItem('LINKEDIN_ACCESS_TOKEN', data.access_token);
@@ -93,6 +99,7 @@ localStorage.removeItem('LINKEDIN_ACCESS_TOKEN');
 ```
 
 **Updated Functions:**
+
 - `connectLinkedIn()` - Returns real LinkedIn authorization URL
 - `handleLinkedInCallback(code, state)` - Exchanges code for profile, stores token
 - `importLinkedInProfile()` - Uses stored token to fetch profile
@@ -102,6 +109,7 @@ localStorage.removeItem('LINKEDIN_ACCESS_TOKEN');
 #### LinkedInImportDialog Component (`components/LinkedInImportDialog.tsx`)
 
 **Enhanced OAuth Handling:**
+
 - Receives profile data directly from callback
 - Populates form fields with real data
 - Handles both field name variants (`profile.experience` and `profile.positions`)
@@ -119,6 +127,7 @@ const profile = await handleLinkedInCallback(code, state);
 ### 3. Configuration Files
 
 #### Frontend `.env.example`
+
 ```env
 # LinkedIn OAuth Configuration (Optional)
 # Create OAuth App at https://www.linkedin.com/developers/apps
@@ -128,6 +137,7 @@ const profile = await handleLinkedInCallback(code, state);
 ```
 
 #### Backend `resume-api/.env.example`
+
 ```env
 # LinkedIn OAuth Configuration (Optional)
 # Register an OAuth App at https://www.linkedin.com/developers/apps
@@ -174,6 +184,7 @@ LINKEDIN_REDIRECT_URI=http://localhost:5173/auth/linkedin/callback
 ### Data Mapping
 
 **Profile Information**
+
 ```
 LinkedIn Field → ResumeAI Field
 firstName      → name (first)
@@ -186,6 +197,7 @@ location       → location
 ```
 
 **Experience**
+
 ```
 LinkedIn Field → ResumeAI Field
 companyName    → company
@@ -196,6 +208,7 @@ description    → description/summary
 ```
 
 **Education**
+
 ```
 LinkedIn Field → ResumeAI Field
 schoolName     → institution
@@ -236,19 +249,20 @@ endDate        → endDate (year)
 
 ### Threat Mitigation
 
-| Threat | Mitigation |
-|--------|-----------|
-| CSRF Attacks | State parameter validation |
-| Token Theft | HTTPS only, localStorage storage |
-| Replay Attacks | State expiration (10 min) |
-| Token Leakage | Not stored on server |
-| Code Interception | HTTPS, secure redirect |
+| Threat            | Mitigation                       |
+| ----------------- | -------------------------------- |
+| CSRF Attacks      | State parameter validation       |
+| Token Theft       | HTTPS only, localStorage storage |
+| Replay Attacks    | State expiration (10 min)        |
+| Token Leakage     | Not stored on server             |
+| Code Interception | HTTPS, secure redirect           |
 
 ---
 
 ## Testing
 
 ### Build Verification ✓
+
 ```bash
 # Frontend build passes
 $ npm run build
@@ -312,12 +326,14 @@ curl -X POST http://localhost:8000/api/linkedin/oauth/callback \
 ### For Developers
 
 1. **Clone and Create Branch**
+
    ```bash
    git fetch origin
    git checkout feature/issue-324-linkedin-import
    ```
 
 2. **Install Dependencies**
+
    ```bash
    npm install           # Frontend
    cd resume-api
@@ -325,10 +341,11 @@ curl -X POST http://localhost:8000/api/linkedin/oauth/callback \
    ```
 
 3. **Configure Environment**
+
    ```bash
    # Frontend: Create .env.local
    VITE_API_URL=http://127.0.0.1:8000
-   
+
    # Backend: Update .env
    LINKEDIN_CLIENT_ID=your_client_id
    LINKEDIN_CLIENT_SECRET=your_client_secret
@@ -342,11 +359,12 @@ curl -X POST http://localhost:8000/api/linkedin/oauth/callback \
    - Add redirect URL: http://localhost:5173/auth/linkedin/callback
 
 5. **Run Application**
+
    ```bash
    # Terminal 1: Backend
    cd resume-api
    python3 main.py
-   
+
    # Terminal 2: Frontend
    npm run dev
    ```
@@ -366,6 +384,7 @@ curl -X POST http://localhost:8000/api/linkedin/oauth/callback \
    - Add production redirect URL
 
 2. **Configure Environment Variables**
+
    ```bash
    LINKEDIN_CLIENT_ID=prod_client_id
    LINKEDIN_CLIENT_SECRET=prod_client_secret
@@ -386,18 +405,22 @@ curl -X POST http://localhost:8000/api/linkedin/oauth/callback \
 ## Files Changed
 
 ### Backend
+
 - ✅ `resume-api/routes/linkedin.py` - Added 200+ lines of OAuth endpoints
 - ✅ `resume-api/config/__init__.py` - Added LinkedIn settings
 
 ### Frontend
+
 - ✅ `utils/api-client.ts` - Replaced 30 lines of mock with real implementation
 - ✅ `components/LinkedInImportDialog.tsx` - Enhanced OAuth handling
 
 ### Configuration
+
 - ✅ `.env.example` - Added LinkedIn OAuth documentation
 - ✅ `resume-api/.env.example` - Added LinkedIn OAuth settings
 
 ### Documentation
+
 - ✅ `LINKEDIN_OAUTH_IMPLEMENTATION.md` - Complete implementation guide
 
 ---
@@ -405,12 +428,14 @@ curl -X POST http://localhost:8000/api/linkedin/oauth/callback \
 ## Performance Impact
 
 ### No Performance Degradation
+
 - ✅ Uses existing httpx library (already in requirements)
 - ✅ No new database queries (stateless)
 - ✅ Async/await for non-blocking I/O
 - ✅ State cleanup on expiration (memory efficient)
 
 ### API Response Times
+
 - OAuth start: ~50ms (builds URL, generates state)
 - OAuth callback: ~500-1000ms (token exchange + LinkedIn API call)
 - Profile fetch: ~500ms (LinkedIn API)
@@ -422,6 +447,7 @@ curl -X POST http://localhost:8000/api/linkedin/oauth/callback \
 ### No New Dependencies Added ✓
 
 All required packages already in project:
+
 - ✅ `httpx==0.27.2` - Async HTTP client
 - ✅ `fastapi` - Web framework
 - ✅ `pydantic` - Data validation
@@ -431,6 +457,7 @@ All required packages already in project:
 ## Known Limitations & Future Work
 
 ### Current Limitations
+
 1. **Stateless OAuth** - Profile not persisted to database
    - Solution: Add database table for LinkedInProfile
 2. **No Token Refresh** - LinkedIn tokens expire after ~365 days
@@ -441,6 +468,7 @@ All required packages already in project:
    - Solution: Use Redis or database for state storage
 
 ### Roadmap
+
 - [ ] Store profile data in database with user account
 - [ ] Implement LinkedIn token refresh flow
 - [ ] Add skills and certifications import
@@ -455,20 +483,25 @@ All required packages already in project:
 ### Common Issues
 
 **Issue: "LinkedIn OAuth credentials not configured"**
+
 - Solution: Set LINKEDIN_CLIENT_ID and LINKEDIN_CLIENT_SECRET in backend .env
 
 **Issue: "Redirect URI mismatch"**
+
 - Solution: Ensure LINKEDIN_REDIRECT_URI matches registered URI in LinkedIn app
 
 **Issue: "OAuth popup blocked"**
+
 - Solution: Browser popup blockers prevent window.open()
 - User must allow popups for the domain
 
 **Issue: "State parameter expired"**
+
 - Solution: User took >10 minutes to complete OAuth
 - User should start OAuth flow again
 
 **Issue: "Invalid authorization code"**
+
 - Solution: Authorization code already used or expired
 - Start OAuth flow again
 
@@ -481,11 +514,13 @@ All required packages already in project:
 **Commits**: 1 commit with complete implementation
 
 ### Changes Summary
+
 - **+826 lines** - New OAuth endpoints and implementation
 - **-65 lines** - Removed mock implementations
 - **7 files** changed
 
 ### Testing Status
+
 - ✅ Frontend builds successfully
 - ✅ Python syntax validated
 - ✅ All dependencies present
@@ -496,6 +531,7 @@ All required packages already in project:
 ## Questions or Support
 
 For issues, questions, or feature requests:
+
 1. Check [LINKEDIN_OAUTH_IMPLEMENTATION.md](./LINKEDIN_OAUTH_IMPLEMENTATION.md) for detailed docs
 2. Review [PR #350](https://github.com/anchapin/ResumeAI/pull/350) for implementation details
 3. File an issue if problems arise

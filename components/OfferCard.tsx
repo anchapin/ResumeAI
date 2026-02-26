@@ -114,7 +114,9 @@ export const OfferCard: React.FC<OfferCardProps> = ({
         {offer.bonus || offer.equity ? (
           <div className="flex items-center justify-between p-3 bg-primary-50 rounded-lg border border-primary-200">
             <div className="flex items-center gap-2">
-              <span className="material-symbols-outlined text-primary-600">account_balance_wallet</span>
+              <span className="material-symbols-outlined text-primary-600">
+                account_balance_wallet
+              </span>
               <span className="text-sm text-primary-900 font-medium">Total Compensation</span>
             </div>
             <span className="font-bold text-primary-900 text-lg">
@@ -130,10 +132,7 @@ export const OfferCard: React.FC<OfferCardProps> = ({
           <p className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Benefits</p>
           <div className="flex flex-wrap gap-1">
             {offer.benefits.slice(0, 5).map((benefit, idx) => (
-              <span
-                key={idx}
-                className="px-2 py-1 bg-slate-100 text-slate-700 rounded-md text-xs"
-              >
+              <span key={idx} className="px-2 py-1 bg-slate-100 text-slate-700 rounded-md text-xs">
                 {benefit}
               </span>
             ))}
@@ -150,7 +149,9 @@ export const OfferCard: React.FC<OfferCardProps> = ({
       <div className="grid grid-cols-2 gap-2 mb-4">
         {offer.growthPotential !== undefined && (
           <div className="flex items-center gap-2">
-            <span className="material-symbols-outlined text-slate-400 text-[18px]">trending_up</span>
+            <span className="material-symbols-outlined text-slate-400 text-[18px]">
+              trending_up
+            </span>
             <div className="flex-1">
               <p className="text-xs text-slate-500">Growth</p>
               <p className="text-sm font-bold text-slate-900">{offer.growthPotential}/10</p>
@@ -178,7 +179,9 @@ export const OfferCard: React.FC<OfferCardProps> = ({
       </div>
 
       {/* Status Badge */}
-      <div className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium mb-4 ${statusColors.bg} ${statusColors.text}`}>
+      <div
+        className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium mb-4 ${statusColors.bg} ${statusColors.text}`}
+      >
         <span className="material-symbols-outlined text-[14px]">circle</span>
         {offer.status.charAt(0).toUpperCase() + offer.status.slice(1)}
       </div>

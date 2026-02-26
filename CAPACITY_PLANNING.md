@@ -9,6 +9,7 @@ Based on load testing results from 100 concurrent users, ResumeAI can sustainabl
 ### Load Test Results (100 Concurrent Users)
 
 **Test Configuration:**
+
 - Duration: 5 minutes
 - Ramp-up: 10 users/second
 - Total Requests: 24,891
@@ -58,18 +59,21 @@ Based on load testing results from 100 concurrent users, ResumeAI can sustainabl
 #### Scenario A: Conservative Growth (100 → 200 users)
 
 **Infrastructure:**
+
 - Single server: t3.medium EC2 instance
 - 4 GB RAM
 - 2 vCPU
 - SSD storage
 
 **Configuration:**
+
 - App processes: 2 (gunicorn workers)
 - Database: Single PostgreSQL instance
 - Cache: No Redis needed
 - CDN: CloudFlare basic
 
 **Expected Performance:**
+
 - RPS: 100-150
 - p95 Response Time: 2-3s
 - Success Rate: 99%+
@@ -78,6 +82,7 @@ Based on load testing results from 100 concurrent users, ResumeAI can sustainabl
 #### Scenario B: Moderate Growth (200 → 500 users)
 
 **Infrastructure:**
+
 - Load balancer: AWS ALB
 - App servers: 2x t3.small
 - Database: RDS t3.small with 1 read replica
@@ -85,18 +90,21 @@ Based on load testing results from 100 concurrent users, ResumeAI can sustainabl
 - CDN: CloudFlare Pro
 
 **Configuration:**
+
 - App processes: 4 total (2 per server)
 - Connection pooling: 20-30 per app
 - Cache TTL: 5 minutes (resume variants)
 - Database indexes: Added for common queries
 
 **Expected Performance:**
+
 - RPS: 250-400
 - p95 Response Time: 1-2s
 - Success Rate: 99.5%+
 - Monthly Cost: ~$200-300
 
 **Required Changes:**
+
 - [ ] Implement session affinity in load balancer
 - [ ] Add Redis for cache
 - [ ] Optimize database queries
@@ -107,6 +115,7 @@ Based on load testing results from 100 concurrent users, ResumeAI can sustainabl
 #### Scenario C: Aggressive Growth (500 → 1000+ users)
 
 **Infrastructure:**
+
 - Load balancer: AWS NLB (higher throughput)
 - App servers: 4-6x t3.small
 - Database: RDS t3.large with 2 read replicas
@@ -116,6 +125,7 @@ Based on load testing results from 100 concurrent users, ResumeAI can sustainabl
 - Static Hosting: S3 + CloudFront
 
 **Configuration:**
+
 - App processes: 8-12 total
 - Connection pooling: 50+ per app
 - Async jobs: PDF rendering, AI tailoring
@@ -123,12 +133,14 @@ Based on load testing results from 100 concurrent users, ResumeAI can sustainabl
 - Cache: Multi-layer (app + distributed)
 
 **Expected Performance:**
+
 - RPS: 800-1200
 - p95 Response Time: <1s
 - Success Rate: 99.9%+
 - Monthly Cost: ~$1000-1500
 
 **Required Changes:**
+
 - [ ] Implement message queue (SQS/RabbitMQ)
 - [ ] Move PDF rendering to async workers
 - [ ] Move AI API calls to async workers
@@ -215,19 +227,19 @@ Based on load testing results from 100 concurrent users, ResumeAI can sustainabl
 ### Monthly Infrastructure Costs
 
 | User Count | Current | Phase 1 | Phase 2 | Phase 3 |
-|------------|---------|---------|---------|---------|
-| 100-200 | $30 | $50 | $150 | $500 |
-| 200-500 | N/A | N/A | $200 | $800 |
-| 500-1000 | N/A | N/A | N/A | $1200 |
+| ---------- | ------- | ------- | ------- | ------- |
+| 100-200    | $30     | $50     | $150    | $500    |
+| 200-500    | N/A     | N/A     | $200    | $800    |
+| 500-1000   | N/A     | N/A     | N/A     | $1200   |
 
 ### Cost per User (Monthly)
 
 | User Count | Cost/User |
-|------------|-----------|
-| 100 | $0.30 |
-| 200 | $0.25 |
-| 500 | $0.40 |
-| 1000 | $1.20 |
+| ---------- | --------- |
+| 100        | $0.30     |
+| 200        | $0.25     |
+| 500        | $0.40     |
+| 1000       | $1.20     |
 
 ## Recommendations
 

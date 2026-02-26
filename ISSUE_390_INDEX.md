@@ -13,6 +13,7 @@ Use this index to navigate all coverage-related documentation.
 ### Quick Start (START HERE)
 
 **[COVERAGE_QUICK_REFERENCE.md](COVERAGE_QUICK_REFERENCE.md)** - 2 min read
+
 - TL;DR of coverage enforcement
 - Essential commands
 - Common troubleshooting
@@ -23,6 +24,7 @@ Use this index to navigate all coverage-related documentation.
 ### Comprehensive Guides
 
 **[COVERAGE_GUIDE.md](COVERAGE_GUIDE.md)** - Complete reference (200+ lines)
+
 - Frontend coverage setup and commands
 - Backend coverage setup and commands
 - Interpreting coverage reports
@@ -32,6 +34,7 @@ Use this index to navigate all coverage-related documentation.
 - **Best for:** Developers who need deep understanding
 
 **[README.md](README.md)** - Updated with coverage info
+
 - Testing section with quick commands
 - Coverage badge
 - Development commands updated
@@ -42,6 +45,7 @@ Use this index to navigate all coverage-related documentation.
 ### Implementation Details
 
 **[ISSUE_390_IMPLEMENTATION.md](ISSUE_390_IMPLEMENTATION.md)** - Implementation summary
+
 - Overview of changes
 - Frontend configuration details
 - Backend configuration details
@@ -52,6 +56,7 @@ Use this index to navigate all coverage-related documentation.
 - **Best for:** Code reviewers, tech leads
 
 **[COVERAGE_IMPLEMENTATION_CHECKLIST.md](COVERAGE_IMPLEMENTATION_CHECKLIST.md)** - Verification checklist
+
 - Complete implementation checklist (all ✅)
 - Configuration examples
 - Execution commands
@@ -61,6 +66,7 @@ Use this index to navigate all coverage-related documentation.
 - **Best for:** QA, verification, sign-off
 
 **[ISSUE_390_CHANGES_SUMMARY.md](ISSUE_390_CHANGES_SUMMARY.md)** - Detailed changes
+
 - File-by-file changes with diffs
 - All modified files listed
 - All created files described
@@ -117,18 +123,19 @@ Use this index to navigate all coverage-related documentation.
 
 ## 🎯 Key Metrics
 
-| Metric | Threshold | Format |
-|--------|-----------|--------|
-| Lines | 60% | All |
-| Functions | 60% | All |
-| Branches | 60% | All |
-| Statements | 60% | All |
+| Metric     | Threshold | Format |
+| ---------- | --------- | ------ |
+| Lines      | 60%       | All    |
+| Functions  | 60%       | All    |
+| Branches   | 60%       | All    |
+| Statements | 60%       | All    |
 
 ---
 
 ## 🚀 Usage Commands
 
 ### Frontend
+
 ```bash
 npm run test:coverage              # Generate coverage report
 npm run test:coverage -- --watch   # Watch mode
@@ -136,12 +143,14 @@ npm run test:coverage -- --run     # One-time run (for CI)
 ```
 
 ### Backend
+
 ```bash
 cd resume-api
 python -m pytest --cov=resume-api --cov-report=html
 ```
 
 ### View Reports
+
 ```bash
 open coverage/index.html           # Frontend
 open coverage_html/index.html      # Backend
@@ -152,12 +161,14 @@ open coverage_html/index.html      # Backend
 ## 📊 Reports Generated
 
 ### Frontend (vitest + Istanbul)
+
 - **Terminal:** Summary with metrics
 - **HTML:** Interactive visualization at `coverage/index.html`
 - **JSON:** Machine-readable at `coverage/coverage-final.json`
 - **LCOV:** Integration format at `coverage/lcov.info`
 
 ### Backend (pytest + coverage.py)
+
 - **Terminal:** Summary with metrics
 - **HTML:** Interactive visualization at `coverage_html/index.html`
 - **Database:** `.coverage` file for detailed analysis
@@ -180,12 +191,14 @@ open coverage_html/index.html      # Backend
 ## 🔍 CI/CD Behavior
 
 ### On Pull Request
+
 1. ✅ Frontend tests run with coverage
 2. ✅ Backend tests run with coverage
 3. ✅ **FAILS if coverage < 60%**
 4. ✅ Coverage artifacts uploaded
 
 ### On Push to main/develop
+
 1. ✅ Same checks as PR
 2. ✅ Additional linting
 3. ✅ Artifacts retained for 30 days
@@ -195,16 +208,19 @@ open coverage_html/index.html      # Backend
 ## 📚 Documentation Reading Order
 
 ### For Developers
+
 1. [README.md](README.md) - Overview
 2. [COVERAGE_QUICK_REFERENCE.md](COVERAGE_QUICK_REFERENCE.md) - Quick start
 3. [COVERAGE_GUIDE.md](COVERAGE_GUIDE.md) - Details as needed
 
 ### For Code Reviewers
+
 1. [ISSUE_390_CHANGES_SUMMARY.md](ISSUE_390_CHANGES_SUMMARY.md) - Changes
 2. [ISSUE_390_IMPLEMENTATION.md](ISSUE_390_IMPLEMENTATION.md) - Details
 3. [COVERAGE_IMPLEMENTATION_CHECKLIST.md](COVERAGE_IMPLEMENTATION_CHECKLIST.md) - Verification
 
 ### For Project Leads
+
 1. [ISSUE_390_IMPLEMENTATION.md](ISSUE_390_IMPLEMENTATION.md) - Overview
 2. [COVERAGE_IMPLEMENTATION_CHECKLIST.md](COVERAGE_IMPLEMENTATION_CHECKLIST.md) - Checklist
 3. [COVERAGE_GUIDE.md](COVERAGE_GUIDE.md) - Reference
@@ -214,12 +230,15 @@ open coverage_html/index.html      # Backend
 ## 🐛 Troubleshooting
 
 ### Issue: "Coverage < 60%"
+
 **Solution:** See [COVERAGE_GUIDE.md](COVERAGE_GUIDE.md) → Troubleshooting section
 
 ### Issue: "Module not found" (backend)
+
 **Solution:** `cd resume-api && pip install coverage pytest-cov`
 
 ### Issue: "Can't find coverage report"
+
 **Solution:** Check `coverage/` (frontend) or `coverage_html/` (backend) directories
 
 **More help:** [COVERAGE_QUICK_REFERENCE.md](COVERAGE_QUICK_REFERENCE.md) → Troubleshooting
@@ -229,12 +248,14 @@ open coverage_html/index.html      # Backend
 ## 📋 Implementation Checklist
 
 ### Configuration ✅
+
 - [x] Frontend thresholds configured
 - [x] Backend configuration added
 - [x] CI/CD workflows updated
 - [x] Scripts added to package.json
 
 ### Documentation ✅
+
 - [x] Quick reference created
 - [x] Comprehensive guide created
 - [x] Implementation details documented
@@ -242,6 +263,7 @@ open coverage_html/index.html      # Backend
 - [x] README updated
 
 ### Repository ✅
+
 - [x] .gitignore updated
 - [x] All changes tested
 - [x] Ready for merge
@@ -251,18 +273,21 @@ open coverage_html/index.html      # Backend
 ## 🎓 Key Concepts
 
 ### Coverage Metrics
+
 - **Line Coverage:** % of executable lines executed
 - **Function Coverage:** % of functions that were called
 - **Branch Coverage:** % of conditional branches taken
 - **Statement Coverage:** % of statements executed
 
 ### Why 60%?
+
 - MVP baseline (better than nothing)
 - Room for improvement without being restrictive
 - Focus on critical paths first
 - Future targets: 75% (beta), 85%+ (production)
 
 ### When Tests Fail
+
 - Coverage < 60% → PR cannot merge
 - Tests must pass AND coverage must be sufficient
 - Encourages writing comprehensive tests
@@ -281,6 +306,7 @@ open coverage_html/index.html      # Backend
 ## 📞 Support
 
 For questions or issues:
+
 1. Check [COVERAGE_GUIDE.md](COVERAGE_GUIDE.md) → Troubleshooting
 2. Review [COVERAGE_QUICK_REFERENCE.md](COVERAGE_QUICK_REFERENCE.md)
 3. See implementation details in [ISSUE_390_IMPLEMENTATION.md](ISSUE_390_IMPLEMENTATION.md)

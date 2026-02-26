@@ -131,7 +131,9 @@ export const SalaryResearch: React.FC = () => {
     setIsSavingOffer(true);
 
     try {
-      const newOffer = await createOffer(offerForm as Omit<JobOffer, 'id' | 'createdAt' | 'updatedAt'>);
+      const newOffer = await createOffer(
+        offerForm as Omit<JobOffer, 'id' | 'createdAt' | 'updatedAt'>,
+      );
       setOffers([...offers, newOffer]);
       setShowOfferForm(false);
       setOfferForm({
@@ -164,7 +166,7 @@ export const SalaryResearch: React.FC = () => {
 
     try {
       const updatedOffer = await updateOffer(editingOffer.id, offerForm);
-      setOffers(offers.map(o => o.id === editingOffer.id ? updatedOffer : o));
+      setOffers(offers.map((o) => (o.id === editingOffer.id ? updatedOffer : o)));
       setShowOfferForm(false);
       setEditingOffer(null);
       setOfferForm({
@@ -192,8 +194,8 @@ export const SalaryResearch: React.FC = () => {
   const handleDeleteOffer = async (offerId: number) => {
     try {
       await deleteOffer(offerId);
-      setOffers(offers.filter(o => o.id !== offerId));
-      setSelectedOfferIds(selectedOfferIds.filter(id => id !== offerId));
+      setOffers(offers.filter((o) => o.id !== offerId));
+      setSelectedOfferIds(selectedOfferIds.filter((id) => id !== offerId));
       toast.success('Offer deleted');
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Failed to delete offer');
@@ -203,7 +205,7 @@ export const SalaryResearch: React.FC = () => {
   const handleUpdateStatus = async (offerId: number, status: JobOffer['status']) => {
     try {
       const updatedOffer = await updateOffer(offerId, { status });
-      setOffers(offers.map(o => o.id === offerId ? updatedOffer : o));
+      setOffers(offers.map((o) => (o.id === offerId ? updatedOffer : o)));
       toast.success('Status updated');
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Failed to update status');
@@ -299,7 +301,9 @@ export const SalaryResearch: React.FC = () => {
                   <input
                     type="text"
                     value={researchRequest.jobTitle}
-                    onChange={(e) => setResearchRequest({ ...researchRequest, jobTitle: e.target.value })}
+                    onChange={(e) =>
+                      setResearchRequest({ ...researchRequest, jobTitle: e.target.value })
+                    }
                     placeholder="e.g., Senior Software Engineer"
                     required
                     className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none"
@@ -311,7 +315,9 @@ export const SalaryResearch: React.FC = () => {
                   <input
                     type="text"
                     value={researchRequest.location}
-                    onChange={(e) => setResearchRequest({ ...researchRequest, location: e.target.value })}
+                    onChange={(e) =>
+                      setResearchRequest({ ...researchRequest, location: e.target.value })
+                    }
                     placeholder="e.g., San Francisco, CA"
                     required
                     className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none"
@@ -323,7 +329,9 @@ export const SalaryResearch: React.FC = () => {
                   <input
                     type="text"
                     value={researchRequest.company}
-                    onChange={(e) => setResearchRequest({ ...researchRequest, company: e.target.value })}
+                    onChange={(e) =>
+                      setResearchRequest({ ...researchRequest, company: e.target.value })
+                    }
                     placeholder="e.g., Google"
                     className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none"
                   />
@@ -333,7 +341,12 @@ export const SalaryResearch: React.FC = () => {
                   <label className="text-sm font-bold text-slate-700">Experience Level</label>
                   <select
                     value={researchRequest.experienceLevel}
-                    onChange={(e) => setResearchRequest({ ...researchRequest, experienceLevel: e.target.value as any })}
+                    onChange={(e) =>
+                      setResearchRequest({
+                        ...researchRequest,
+                        experienceLevel: e.target.value as any,
+                      })
+                    }
                     className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none bg-white"
                   >
                     <option value="entry">Entry Level</option>
@@ -350,7 +363,9 @@ export const SalaryResearch: React.FC = () => {
                     className="w-full px-4 py-3 rounded-lg bg-primary-600 text-white font-bold hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   >
                     {isResearching && (
-                      <span className="material-symbols-outlined animate-spin">progress_activity</span>
+                      <span className="material-symbols-outlined animate-spin">
+                        progress_activity
+                      </span>
                     )}
                     {isResearching ? 'Researching...' : 'Research Salary'}
                   </button>
@@ -373,7 +388,10 @@ export const SalaryResearch: React.FC = () => {
                     <div className="text-right">
                       <p className="text-white/80 text-sm">Median Salary</p>
                       <p className="text-3xl font-bold">
-                        {formatCurrency(researchResult.salaryRange.median, researchResult.salaryRange.currency)}
+                        {formatCurrency(
+                          researchResult.salaryRange.median,
+                          researchResult.salaryRange.currency,
+                        )}
                       </p>
                     </div>
                   </div>
@@ -381,8 +399,15 @@ export const SalaryResearch: React.FC = () => {
                     <div>
                       <p className="text-white/80">Range:</p>
                       <p className="font-bold">
-                        {formatCurrency(researchResult.salaryRange.min, researchResult.salaryRange.currency)} -{' '}
-                        {formatCurrency(researchResult.salaryRange.max, researchResult.salaryRange.currency)}
+                        {formatCurrency(
+                          researchResult.salaryRange.min,
+                          researchResult.salaryRange.currency,
+                        )}{' '}
+                        -{' '}
+                        {formatCurrency(
+                          researchResult.salaryRange.max,
+                          researchResult.salaryRange.currency,
+                        )}
                       </p>
                     </div>
                     <div className="bg-white/10 px-3 py-1 rounded-full text-xs">
@@ -406,7 +431,9 @@ export const SalaryResearch: React.FC = () => {
                     <p className="text-sm text-slate-900">{researchResult.factors.industry}</p>
                   </div>
                   <div className="bg-slate-50 rounded-lg p-4">
-                    <p className="text-xs font-bold text-slate-500 uppercase mb-1">Location Impact</p>
+                    <p className="text-xs font-bold text-slate-500 uppercase mb-1">
+                      Location Impact
+                    </p>
                     <p className="text-sm text-slate-900">{researchResult.factors.location}</p>
                   </div>
                 </div>
@@ -443,7 +470,9 @@ export const SalaryResearch: React.FC = () => {
                     <ul className="space-y-1">
                       {researchResult.recommendations.map((rec, idx) => (
                         <li key={idx} className="text-sm text-green-800 flex items-start gap-2">
-                          <span className="material-symbols-outlined text-[16px] mt-0.5">check</span>
+                          <span className="material-symbols-outlined text-[16px] mt-0.5">
+                            check
+                          </span>
                           {rec}
                         </li>
                       ))}
@@ -488,7 +517,9 @@ export const SalaryResearch: React.FC = () => {
                   className="px-4 py-2 rounded-lg bg-primary-600 text-white font-bold text-sm hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                 >
                   {isComparing && (
-                    <span className="material-symbols-outlined animate-spin text-[18px]">progress_activity</span>
+                    <span className="material-symbols-outlined animate-spin text-[18px]">
+                      progress_activity
+                    </span>
                   )}
                   Compare
                 </button>
@@ -498,13 +529,19 @@ export const SalaryResearch: React.FC = () => {
             {/* Offers Grid */}
             {isLoadingOffers ? (
               <div className="flex items-center justify-center py-12">
-                <span className="material-symbols-outlined animate-spin text-primary-600 text-4xl">progress_activity</span>
+                <span className="material-symbols-outlined animate-spin text-primary-600 text-4xl">
+                  progress_activity
+                </span>
               </div>
             ) : offers.length === 0 ? (
               <div className="text-center py-12 bg-white rounded-2xl border border-slate-200">
-                <span className="material-symbols-outlined text-slate-300 text-6xl mb-4">work_off</span>
+                <span className="material-symbols-outlined text-slate-300 text-6xl mb-4">
+                  work_off
+                </span>
                 <p className="text-slate-500 font-medium mb-2">No offers yet</p>
-                <p className="text-sm text-slate-400 mb-4">Add your first job offer to start tracking</p>
+                <p className="text-sm text-slate-400 mb-4">
+                  Add your first job offer to start tracking
+                </p>
                 <button
                   onClick={() => setShowOfferForm(true)}
                   className="px-4 py-2 rounded-lg bg-primary-600 text-white font-bold text-sm hover:bg-primary-700 transition-colors"
@@ -514,21 +551,19 @@ export const SalaryResearch: React.FC = () => {
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {offers.map(offer => (
+                {offers.map((offer) => (
                   <OfferCard
                     key={offer.id}
                     offer={offer}
                     isSelected={selectedOfferIds.includes(offer.id)}
                     onSelect={(id) => {
-                      setSelectedOfferIds(prev =>
-                        prev.includes(id)
-                          ? prev.filter(i => i !== id)
-                          : [...prev, id]
+                      setSelectedOfferIds((prev) =>
+                        prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id],
                       );
                     }}
                     onEdit={(id) => {
-                      setEditingOffer(offers.find(o => o.id === id)!);
-                      setOfferForm(offers.find(o => o.id === id)!);
+                      setEditingOffer(offers.find((o) => o.id === id)!);
+                      setOfferForm(offers.find((o) => o.id === id)!);
                       setShowOfferForm(true);
                     }}
                     onDelete={handleDeleteOffer}
@@ -562,7 +597,9 @@ export const SalaryResearch: React.FC = () => {
                       className="px-4 py-2 rounded-lg bg-primary-600 text-white font-bold text-sm hover:bg-primary-700 transition-colors disabled:opacity-50 flex items-center gap-2"
                     >
                       {isComparing && (
-                        <span className="material-symbols-outlined animate-spin text-[18px]">progress_activity</span>
+                        <span className="material-symbols-outlined animate-spin text-[18px]">
+                          progress_activity
+                        </span>
                       )}
                       Re-compare
                     </button>
@@ -571,9 +608,13 @@ export const SalaryResearch: React.FC = () => {
               </>
             ) : (
               <div className="text-center py-12 bg-white rounded-2xl border border-slate-200">
-                <span className="material-symbols-outlined text-slate-300 text-6xl mb-4">compare_arrows</span>
+                <span className="material-symbols-outlined text-slate-300 text-6xl mb-4">
+                  compare_arrows
+                </span>
                 <p className="text-slate-500 font-medium mb-2">No comparison yet</p>
-                <p className="text-sm text-slate-400 mb-4">Select at least 2 offers to compare them</p>
+                <p className="text-sm text-slate-400 mb-4">
+                  Select at least 2 offers to compare them
+                </p>
                 <button
                   onClick={() => setActiveTab('offers')}
                   className="px-4 py-2 rounded-lg bg-primary-600 text-white font-bold text-sm hover:bg-primary-700 transition-colors"
@@ -605,7 +646,10 @@ export const SalaryResearch: React.FC = () => {
               </button>
             </div>
 
-            <form onSubmit={editingOffer ? handleUpdateOffer : handleCreateOffer} className="p-6 space-y-4">
+            <form
+              onSubmit={editingOffer ? handleUpdateOffer : handleCreateOffer}
+              className="p-6 space-y-4"
+            >
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <label className="text-sm font-bold text-slate-700">Company *</label>
@@ -660,7 +704,9 @@ export const SalaryResearch: React.FC = () => {
                   <input
                     type="number"
                     value={offerForm.baseSalary || 0}
-                    onChange={(e) => setOfferForm({ ...offerForm, baseSalary: Number(e.target.value) })}
+                    onChange={(e) =>
+                      setOfferForm({ ...offerForm, baseSalary: Number(e.target.value) })
+                    }
                     required
                     min="0"
                     className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none"
@@ -685,7 +731,9 @@ export const SalaryResearch: React.FC = () => {
                   <input
                     type="number"
                     value={offerForm.growthPotential || 5}
-                    onChange={(e) => setOfferForm({ ...offerForm, growthPotential: Number(e.target.value) })}
+                    onChange={(e) =>
+                      setOfferForm({ ...offerForm, growthPotential: Number(e.target.value) })
+                    }
                     min="1"
                     max="10"
                     className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none"
@@ -697,7 +745,9 @@ export const SalaryResearch: React.FC = () => {
                   <input
                     type="number"
                     value={offerForm.workLifeBalance || 5}
-                    onChange={(e) => setOfferForm({ ...offerForm, workLifeBalance: Number(e.target.value) })}
+                    onChange={(e) =>
+                      setOfferForm({ ...offerForm, workLifeBalance: Number(e.target.value) })
+                    }
                     min="1"
                     max="10"
                     className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none"
@@ -709,7 +759,9 @@ export const SalaryResearch: React.FC = () => {
                   <input
                     type="number"
                     value={offerForm.cultureScore || 5}
-                    onChange={(e) => setOfferForm({ ...offerForm, cultureScore: Number(e.target.value) })}
+                    onChange={(e) =>
+                      setOfferForm({ ...offerForm, cultureScore: Number(e.target.value) })
+                    }
                     min="1"
                     max="10"
                     className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none"
@@ -718,11 +770,21 @@ export const SalaryResearch: React.FC = () => {
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-bold text-slate-700">Benefits (comma-separated)</label>
+                <label className="text-sm font-bold text-slate-700">
+                  Benefits (comma-separated)
+                </label>
                 <input
                   type="text"
                   value={offerForm.benefits?.join(', ') || ''}
-                  onChange={(e) => setOfferForm({ ...offerForm, benefits: e.target.value.split(',').map(b => b.trim()).filter(Boolean) })}
+                  onChange={(e) =>
+                    setOfferForm({
+                      ...offerForm,
+                      benefits: e.target.value
+                        .split(',')
+                        .map((b) => b.trim())
+                        .filter(Boolean),
+                    })
+                  }
                   placeholder="e.g., Health insurance, 401k, Remote work"
                   className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none"
                 />
@@ -732,7 +794,9 @@ export const SalaryResearch: React.FC = () => {
                 <label className="text-sm font-bold text-slate-700">Status</label>
                 <select
                   value={offerForm.status || 'pending'}
-                  onChange={(e) => setOfferForm({ ...offerForm, status: e.target.value as JobOffer['status'] })}
+                  onChange={(e) =>
+                    setOfferForm({ ...offerForm, status: e.target.value as JobOffer['status'] })
+                  }
                   className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none bg-white"
                 >
                   <option value="pending">Pending</option>
@@ -769,7 +833,9 @@ export const SalaryResearch: React.FC = () => {
                   className="flex-1 px-4 py-2 rounded-lg bg-primary-600 text-white font-bold hover:bg-primary-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
                 >
                   {isSavingOffer && (
-                    <span className="material-symbols-outlined animate-spin text-[18px]">progress_activity</span>
+                    <span className="material-symbols-outlined animate-spin text-[18px]">
+                      progress_activity
+                    </span>
                   )}
                   {editingOffer ? 'Update Offer' : 'Add Offer'}
                 </button>

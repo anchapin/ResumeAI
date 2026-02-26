@@ -49,6 +49,7 @@ nano resume-api/.env
 ### 2. Getting Secrets for Development
 
 **For team members:**
+
 1. Request secrets from tech lead via secure channel
 2. Secrets are provided individually, never in bulk
 3. Store in local `.env` files (in .gitignore)
@@ -72,6 +73,7 @@ python resume-api/main.py
    - GitHub → Settings → Secrets and variables → Actions
 
 2. **Add production secrets:**
+
    ```
    MASTER_API_KEY=rai_xxxxx...
    SECRET_KEY=xxxxx...
@@ -90,6 +92,7 @@ python resume-api/main.py
 ### CI/CD Pipeline
 
 **Frontend (.github/workflows/deploy-frontend.yml):**
+
 ```yaml
 - name: Build
   env:
@@ -99,6 +102,7 @@ python resume-api/main.py
 ```
 
 **Backend (.github/workflows/deploy-backend.yml):**
+
 ```yaml
 - name: Deploy to Docker
   env:
@@ -147,6 +151,7 @@ No rotation required for development. Secrets are local and not sensitive.
 **Rotation schedule:** Every 90 days
 
 **Procedure:**
+
 1. Generate new secret with command above
 2. Update in GitHub Secrets
 3. Deploy new version with updated secret
@@ -154,6 +159,7 @@ No rotation required for development. Secrets are local and not sensitive.
 5. Document rotation in security log
 
 **For API keys specifically:**
+
 ```bash
 # 1. Generate new key
 NEW_KEY=$(python -c "import secrets; print('rai_' + secrets.token_hex(32))")
@@ -189,6 +195,7 @@ logger.info(f"Config: {sanitized}")
 ### CI/CD Logging
 
 **GitHub Actions - Automatically masks secrets:**
+
 ```yaml
 # Secrets are automatically redacted in logs
 - name: Deploy
@@ -199,6 +206,7 @@ logger.info(f"Config: {sanitized}")
 ```
 
 **Docker Logs - Don't pass secrets as ENV:**
+
 ```dockerfile
 # BAD
 ENV API_KEY=$MASTER_API_KEY
@@ -212,6 +220,7 @@ docker run -e MASTER_API_KEY=$MASTER_API_KEY image:tag
 ### For Team Members
 
 **Never:**
+
 - ❌ Email secrets
 - ❌ Slack/Discord messages
 - ❌ Git commits
@@ -219,6 +228,7 @@ docker run -e MASTER_API_KEY=$MASTER_API_KEY image:tag
 - ❌ Paste in issues/PRs
 
 **Always:**
+
 - ✅ Use password manager (1Password, LastPass, Vault)
 - ✅ Share via secure link (1Password sharing)
 - ✅ Verbal handoff if in-person
@@ -238,6 +248,7 @@ docker run -e MASTER_API_KEY=$MASTER_API_KEY image:tag
 ### Docker Build Secrets
 
 **Avoid secrets in Dockerfile:**
+
 ```dockerfile
 # BAD - Secrets in image
 RUN export API_KEY=secret && ...
@@ -249,6 +260,7 @@ docker run -e API_KEY=$SECRET_VALUE image:tag
 ### Docker Compose Secrets
 
 **Development (.env file):**
+
 ```yaml
 # .env (in .gitignore)
 MASTER_API_KEY=rai_dev_key_here
@@ -261,6 +273,7 @@ environment:
 ```
 
 **Production (GitHub Secrets):**
+
 ```yaml
 # docker-compose.prod.yml with secrets in compose file
 environment:
@@ -288,6 +301,7 @@ def get_api_key():
 ### Audit Trail
 
 Keep records of:
+
 - When secrets were rotated
 - Who accessed production secrets
 - Which deployments used which secrets

@@ -89,7 +89,10 @@ describe('ExperienceItem', () => {
     expect(screen.getByLabelText('Job Title')).toHaveAttribute('id', 'role-1');
     expect(screen.getByLabelText('Start Date')).toHaveAttribute('id', 'startDate-1');
     expect(screen.getByLabelText('End Date')).toHaveAttribute('id', 'endDate-1');
-    expect(screen.getByLabelText('Achievements & Responsibilities')).toHaveAttribute('id', 'description-1');
+    expect(screen.getByLabelText('Achievements & Responsibilities')).toHaveAttribute(
+      'id',
+      'description-1',
+    );
 
     // Check tag remove buttons
     expect(screen.getByLabelText('Remove tag Tag1')).toBeInTheDocument();

@@ -11,7 +11,7 @@ export enum StorageErrorType {
   PARSE_ERROR = 'PARSE_ERROR',
   ACCESS_DENIED = 'ACCESS_DENIED',
   NOT_AVAILABLE = 'NOT_AVAILABLE',
-  UNKNOWN = 'UNKNOWN'
+  UNKNOWN = 'UNKNOWN',
 }
 
 /**
@@ -21,7 +21,7 @@ export class StorageError extends Error {
   constructor(
     message: string,
     public readonly type: StorageErrorType,
-    public readonly originalError?: unknown
+    public readonly originalError?: unknown,
   ) {
     super(message);
     this.name = 'StorageError';
@@ -68,13 +68,13 @@ export function saveResumeData(data: SimpleResumeData): void {
   if (!isStorageAvailable()) {
     throw new StorageError(
       'localStorage is not available in this environment',
-      StorageErrorType.NOT_AVAILABLE
+      StorageErrorType.NOT_AVAILABLE,
     );
   }
 
   try {
     const serialized = JSON.stringify(data);
-    
+
     // Try to use StorageManager for better quota handling
     try {
       // Use StorageManager synchronously with pre-calculated check
@@ -83,7 +83,7 @@ export function saveResumeData(data: SimpleResumeData): void {
         // Only check quota on first save or periodically
         StorageManager.setItem('master_profile', data, {
           compress: true,
-          checkQuota: false // We'll handle quota manually
+          checkQuota: false, // We'll handle quota manually
         });
       } else {
         localStorage.setItem(STORAGE_KEY, serialized);
@@ -97,7 +97,7 @@ export function saveResumeData(data: SimpleResumeData): void {
       throw new StorageError(
         'Storage quota exceeded. Please clear some data or reduce the size of your resume.',
         StorageErrorType.QUOTA_EXCEEDED,
-        error
+        error,
       );
     }
 
@@ -105,15 +105,11 @@ export function saveResumeData(data: SimpleResumeData): void {
       throw new StorageError(
         'Access to localStorage is denied. Please check your browser settings.',
         StorageErrorType.ACCESS_DENIED,
-        error
+        error,
       );
     }
 
-    throw new StorageError(
-      'Failed to save resume data',
-      StorageErrorType.UNKNOWN,
-      error
-    );
+    throw new StorageError('Failed to save resume data', StorageErrorType.UNKNOWN, error);
   }
 }
 
@@ -126,7 +122,7 @@ export function loadResumeData(): SimpleResumeData | null {
   if (!isStorageAvailable()) {
     throw new StorageError(
       'localStorage is not available in this environment',
-      StorageErrorType.NOT_AVAILABLE
+      StorageErrorType.NOT_AVAILABLE,
     );
   }
 
@@ -141,10 +137,7 @@ export function loadResumeData(): SimpleResumeData | null {
 
     // Basic validation to ensure the loaded data has expected structure
     if (!data || typeof data !== 'object') {
-      throw new StorageError(
-        'Invalid resume data structure',
-        StorageErrorType.PARSE_ERROR
-      );
+      throw new StorageError('Invalid resume data structure', StorageErrorType.PARSE_ERROR);
     }
 
     return data;
@@ -153,11 +146,7 @@ export function loadResumeData(): SimpleResumeData | null {
       throw error;
     }
 
-    throw new StorageError(
-      'Failed to load resume data',
-      StorageErrorType.PARSE_ERROR,
-      error
-    );
+    throw new StorageError('Failed to load resume data', StorageErrorType.PARSE_ERROR, error);
   }
 }
 
@@ -169,18 +158,14 @@ export function clearResumeData(): void {
   if (!isStorageAvailable()) {
     throw new StorageError(
       'localStorage is not available in this environment',
-      StorageErrorType.NOT_AVAILABLE
+      StorageErrorType.NOT_AVAILABLE,
     );
   }
 
   try {
     localStorage.removeItem(STORAGE_KEY);
   } catch (error) {
-    throw new StorageError(
-      'Failed to clear resume data',
-      StorageErrorType.UNKNOWN,
-      error
-    );
+    throw new StorageError('Failed to clear resume data', StorageErrorType.UNKNOWN, error);
   }
 }
 

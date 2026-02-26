@@ -1,4 +1,5 @@
 <<<<<<< HEAD
+
 # Test Results Documentation - Issue #382
 
 ## Summary
@@ -26,6 +27,7 @@ All frontend tests have been successfully executed and documented. This document
 ### Core Component Tests (89 tests)
 
 All core components passing:
+
 - Dashboard.test.tsx (8 tests)
 - Editor.test.tsx (12 tests)
 - Workspace.test.tsx (10 tests)
@@ -40,6 +42,7 @@ All core components passing:
 ### Hook Tests (67 tests)
 
 All custom hooks passing:
+
 - useResume.test.ts (12 tests)
 - useAuthentication.test.ts (10 tests)
 - usePDF.test.ts (8 tests)
@@ -52,6 +55,7 @@ All custom hooks passing:
 ### Utility Function Tests (98 tests)
 
 All utility functions passing:
+
 - formatResumeData.test.ts (12 tests)
 - validateResume.test.ts (15 tests)
 - parseResume.test.ts (11 tests)
@@ -65,6 +69,7 @@ All utility functions passing:
 ### Integration Tests (52 tests)
 
 All integration tests passing:
+
 - Complete user workflows (15 tests)
 - API interaction scenarios (12 tests)
 - State management flows (10 tests)
@@ -76,22 +81,26 @@ All integration tests passing:
 Tests have been intentionally skipped due to the following reasons:
 
 ### Pending Implementation (12 tests)
+
 - OAuth GitHub integration (4 tests)
 - OAuth LinkedIn integration (4 tests)
 - Advanced analytics (2 tests)
 - Premium features (2 tests)
 
 ### Flaky/Environment-Dependent (5 tests)
+
 - Real browser integration tests (3 tests)
 - Network timeout scenarios (2 tests)
 
 ### Blocked by Backend (3 tests)
+
 - Database persistence (2 tests)
 - Server-side validation (1 test)
 
 ## Coverage Report
 
 ### Overall Coverage
+
 - **Statements:** 87.3%
 - **Branches:** 81.2%
 - **Functions:** 84.9%
@@ -100,6 +109,7 @@ Tests have been intentionally skipped due to the following reasons:
 ### Coverage by Module
 
 #### Components
+
 - **Coverage:** 89.4%
 - **Key metrics:**
   - 45 of 47 components fully covered
@@ -107,6 +117,7 @@ Tests have been intentionally skipped due to the following reasons:
   - Critical path components: 100%
 
 #### Hooks
+
 - **Coverage:** 91.2%
 - **Key metrics:**
   - All custom hooks fully tested
@@ -114,6 +125,7 @@ Tests have been intentionally skipped due to the following reasons:
   - Error scenarios: 95% coverage
 
 #### Utilities
+
 - **Coverage:** 85.1%
 - **Key metrics:**
   - Data transformation functions: 92%
@@ -121,6 +133,7 @@ Tests have been intentionally skipped due to the following reasons:
   - Helper utilities: 79%
 
 #### Pages
+
 - **Coverage:** 78.3%
 - **Key metrics:**
   - Main workflows: 92%
@@ -137,12 +150,14 @@ Tests have been intentionally skipped due to the following reasons:
 - **Fastest Test:** 0.01 seconds (utility function)
 
 ### Coverage Generation Time
+
 - **Time:** 8.4 seconds
 - **Report Generation:** 1.2 seconds
 
 ## Known Issues & Recommendations
 
 ### High Priority
+
 1. **OAuth Implementations** - 8 tests blocked
    - Recommendation: Implement and enable GitHub OAuth tests
    - Timeline: Next sprint
@@ -154,6 +169,7 @@ Tests have been intentionally skipped due to the following reasons:
    - Impact: Improves coverage by 0.4%
 
 ### Medium Priority
+
 1. **E2E Test Suite** - 3 tests skipped (real browser)
    - Recommendation: Implement Cypress/Playwright tests
    - Timeline: Next quarter
@@ -165,6 +181,7 @@ Tests have been intentionally skipped due to the following reasons:
    - Impact: Improves a11y compliance
 
 ### Low Priority
+
 1. **Performance Testing** - No benchmarks yet
    - Recommendation: Add Vitest bench tests
    - Timeline: Q2
@@ -231,9 +248,11 @@ npm run test:watch
 **Test Run ID:** tr_382_2026-02-26_1430utc
 **Environment:** Node 18.17.1, Vitest 1.0.4, jsdom 22.1.0
 =======
+
 # Test Results - Issue #382
 
 ## Frontend Tests
+
 - Status: ✅ Passing
 - Count: 306 passed, 20 skipped
 - Command: `npm test`
@@ -242,9 +261,12 @@ npm run test:watch
   - Configured forks pool in vite.config.ts
 
 ## Backend Tests
+
 - Status: ✅ Ready (Docker environment)
 - Ready to run: `cd resume-api && pytest`
 
 ## Documentation
+
 All test failures have been identified and documented.
->>>>>>> feature/issue-382-run-tests
+
+> > > > > > > feature/issue-382-run-tests

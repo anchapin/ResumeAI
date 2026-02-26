@@ -11,6 +11,7 @@ This PR implements a complete asynchronous PDF rendering system using a job queu
 ## What's New
 
 ### 1. Job Queue System
+
 - **File:** `resume-api/lib/queue/job_queue.py` (432 lines)
 - Abstract JobQueue interface for multiple implementations
 - LocalQueue in-memory implementation with priority ordering
@@ -20,6 +21,7 @@ This PR implements a complete asynchronous PDF rendering system using a job queu
 - Automatic cleanup of old completed jobs
 
 ### 2. PDF Worker System
+
 - **File:** `resume-api/lib/queue/pdf_worker.py` (285 lines)
 - Single PDFWorker for async job processing
 - PDFWorkerPool for managing multiple workers
@@ -30,17 +32,19 @@ This PR implements a complete asynchronous PDF rendering system using a job queu
 - Pluggable render handler pattern
 
 ### 3. API Endpoints (5 new)
+
 - **File:** `resume-api/api/async_pdf_routes.py` (502 lines)
 
-| Endpoint | Method | Status | Purpose |
-|----------|--------|--------|---------|
-| `/v1/render/pdf-async` | POST | 202 | Submit async PDF job |
-| `/v1/jobs/{job_id}` | GET | 200 | Get job status |
-| `/v1/jobs/{job_id}/download` | GET | 200 | Download completed PDF |
-| `/v1/jobs/{job_id}` | DELETE | 204 | Cancel job |
-| `/v1/queue/stats` | GET | 200 | Get queue statistics |
+| Endpoint                     | Method | Status | Purpose                |
+| ---------------------------- | ------ | ------ | ---------------------- |
+| `/v1/render/pdf-async`       | POST   | 202    | Submit async PDF job   |
+| `/v1/jobs/{job_id}`          | GET    | 200    | Get job status         |
+| `/v1/jobs/{job_id}/download` | GET    | 200    | Download completed PDF |
+| `/v1/jobs/{job_id}`          | DELETE | 204    | Cancel job             |
+| `/v1/queue/stats`            | GET    | 200    | Get queue statistics   |
 
 **Features:**
+
 - API key authentication (X-API-KEY header)
 - Rate limiting (10 req/min per API key)
 - Proper HTTP status codes
@@ -48,6 +52,7 @@ This PR implements a complete asynchronous PDF rendering system using a job queu
 - Input validation with Pydantic
 
 ### 4. Pydantic Models (6 new)
+
 - **File:** `resume-api/api/models.py` (additions)
 
 ```python
@@ -60,6 +65,7 @@ QueueStatsResponse           # Queue statistics
 ```
 
 ### 5. Comprehensive Tests
+
 - **File:** `resume-api/tests/test_pdf_queue.py` (580 lines)
 - 26 tests across 4 test classes
 - Full async support with pytest fixtures
@@ -71,6 +77,7 @@ QueueStatsResponse           # Queue statistics
   - Job serialization/deserialization
 
 ### 6. Documentation
+
 - **File:** `ASYNC_PDF_RENDERING_GUIDE.md` (647 lines)
   - Architecture overview with diagrams
   - API usage examples with cURL
@@ -92,6 +99,7 @@ QueueStatsResponse           # Queue statistics
 ## API Examples
 
 ### Submit Async PDF Job
+
 ```bash
 curl -X POST http://localhost:8000/v1/render/pdf-async \
   -H "X-API-KEY: rai_your_key" \
@@ -111,6 +119,7 @@ curl -X POST http://localhost:8000/v1/render/pdf-async \
 ```
 
 ### Check Job Status
+
 ```bash
 curl -X GET http://localhost:8000/v1/jobs/550e8400-e29b-41d4-a716-446655440000 \
   -H "X-API-KEY: rai_your_key"
@@ -131,6 +140,7 @@ curl -X GET http://localhost:8000/v1/jobs/550e8400-e29b-41d4-a716-446655440000 \
 ```
 
 ### Download PDF
+
 ```bash
 curl -X GET http://localhost:8000/v1/jobs/{job_id}/download \
   -H "X-API-KEY: rai_your_key" \
@@ -140,6 +150,7 @@ curl -X GET http://localhost:8000/v1/jobs/{job_id}/download \
 ## Technical Details
 
 ### Job Flow
+
 ```
 1. Client submits PDF render job → HTTP 202 (immediate response)
 2. Job enqueued in PENDING state
@@ -151,17 +162,21 @@ curl -X GET http://localhost:8000/v1/jobs/{job_id}/download \
 ```
 
 ### Priority Queue
+
 Jobs are ordered by:
+
 1. **Priority** (highest first): CRITICAL (20) → NORMAL (5) → LOW (1)
 2. **Creation Time** (FIFO within same priority)
 
 ### Retry Logic
+
 - Default max retries: 3
 - Exponential backoff: delay = base^retry_count (base=2.0)
 - Max backoff: 1 hour
 - Jitter: ±20% to prevent thundering herd
 
 ### Timeout Protection
+
 - Default: 60 seconds per job
 - Configurable via environment or code
 - Prevents runaway PDF generation
@@ -170,6 +185,7 @@ Jobs are ordered by:
 ## Files Changed
 
 **New Files (8):**
+
 - `resume-api/lib/queue/__init__.py` - Package exports
 - `resume-api/lib/queue/job_queue.py` - Job queue implementation
 - `resume-api/lib/queue/pdf_worker.py` - PDF worker implementation
@@ -180,25 +196,27 @@ Jobs are ordered by:
 - `ISSUE_417_PR_SUMMARY.md` - This PR summary
 
 **Modified Files (1):**
+
 - `resume-api/api/models.py` - Added 6 Pydantic models
 
 ## Code Metrics
 
-| Category | Value |
-|----------|-------|
-| Total Lines | 2,919 |
+| Category            | Value |
+| ------------------- | ----- |
+| Total Lines         | 2,919 |
 | Core Implementation | 1,217 |
-| Tests | 580 |
-| Documentation | 1,200 |
-| Files Changed | 9 |
-| Test Classes | 4 |
-| Test Methods | 26 |
-| API Endpoints | 5 |
-| Pydantic Models | 6 |
+| Tests               | 580   |
+| Documentation       | 1,200 |
+| Files Changed       | 9     |
+| Test Classes        | 4     |
+| Test Methods        | 26    |
+| API Endpoints       | 5     |
+| Pydantic Models     | 6     |
 
 ## Breaking Changes
 
 ✅ **None** - Fully backward compatible
+
 - Existing `/v1/render/pdf` endpoint unchanged
 - New endpoints under `/v1/render/pdf-async` and `/v1/jobs/*`
 - No changes to existing models or routes
@@ -206,6 +224,7 @@ Jobs are ordered by:
 ## Security
 
 ✅ Security features implemented:
+
 - API key authentication required for all endpoints
 - Rate limiting (10 req/min per API key)
 - Input validation with Pydantic
@@ -216,6 +235,7 @@ Jobs are ordered by:
 ## Testing
 
 **Test Coverage:**
+
 - 26 tests in test_pdf_queue.py
 - 4 test classes (JobQueue, PDFWorker, PDFWorkerPool, JobModel)
 - All async tests with proper fixtures
@@ -226,6 +246,7 @@ Jobs are ordered by:
   - Serialization/deserialization
 
 **Test Execution:**
+
 ```bash
 pytest resume-api/tests/test_pdf_queue.py -v
 # All 26 tests pass ✅
@@ -234,12 +255,14 @@ pytest resume-api/tests/test_pdf_queue.py -v
 ## Deployment
 
 ### Development (Single Process)
+
 ```bash
 cd resume-api
 python main.py  # Runs both API and worker in same process
 ```
 
 ### Production (Multiple Workers)
+
 ```bash
 # Terminal 1: Start API
 cd resume-api && python main.py
@@ -255,17 +278,20 @@ asyncio.run(pool.start())
 ```
 
 ### Docker
+
 See ASYNC_PDF_RENDERING_GUIDE.md for Docker Compose and Kubernetes examples
 
 ## Performance
 
 **Baseline (Single Worker):**
+
 - Avg render time: 5-8 seconds
 - Peak throughput: 10-12 jobs/minute
 - Memory per job: ~5-10 MB
 - Max queue capacity: ~1000 jobs
 
 **Scalability:**
+
 - Increase worker count for higher throughput
 - Migrate to Redis queue for distributed systems
 - Use SQS for serverless deployments
@@ -274,6 +300,7 @@ See ASYNC_PDF_RENDERING_GUIDE.md for Docker Compose and Kubernetes examples
 ## Configuration
 
 ### Environment Variables (Optional)
+
 ```bash
 JOB_QUEUE_TYPE=local              # Queue implementation (default: local)
 JOB_QUEUE_DIR=/tmp/resume-pdfs    # PDF storage directory
@@ -288,6 +315,7 @@ PDF_WORKER_COUNT=1                # Number of workers
 ## Future Enhancements
 
 Documented in ASYNC_PDF_RENDERING_GUIDE.md:
+
 1. Redis queue for distributed systems
 2. SQS integration for serverless
 3. Database persistence for job history

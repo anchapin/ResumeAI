@@ -47,7 +47,7 @@ from config.feature_flags import is_feature_enabled
 async def my_endpoint(request: MyRequest):
     if not is_feature_enabled("new_endpoint"):
         return {"error": "Feature not available"}
-    
+
     # Proceed with new feature logic
     return process_request(request)
 ```
@@ -122,11 +122,13 @@ curl http://localhost:8000/v1/health/detailed
 ### Health Check Procedure During Deployment
 
 1. **Pre-deployment check** (before upgrade):
+
    ```bash
    python scripts/validate_deployment.py --check-health
    ```
 
 2. **Post-deployment check** (after startup):
+
    ```bash
    for i in {1..30}; do
      STATUS=$(curl -s http://localhost:8000/health | jq -r '.status')
@@ -361,6 +363,7 @@ python scripts/validate_deployment.py --smoke-test
 ### Rollback Triggers
 
 Automatically trigger rollback if:
+
 - Health checks fail for > 5 minutes
 - Error rate exceeds 1%
 - Response time increases > 50%

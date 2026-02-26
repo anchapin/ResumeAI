@@ -4,7 +4,7 @@ import {
   sanitizeString,
   isValidString,
   validateResumeData,
-  validateJobApplicationData
+  validateJobApplicationData,
 } from './validation';
 
 describe('validation utilities', () => {
@@ -19,7 +19,9 @@ describe('validation utilities', () => {
       });
 
       it('should throw error for undefined input', () => {
-        expect(() => validateInput(undefined, 'string')).toThrow('Input cannot be null or undefined');
+        expect(() => validateInput(undefined, 'string')).toThrow(
+          'Input cannot be null or undefined',
+        );
       });
 
       it('should throw error for non-string input', () => {
@@ -27,16 +29,22 @@ describe('validation utilities', () => {
       });
 
       it('should enforce maxLength', () => {
-        expect(() => validateInput('hello world', 'string', { maxLength: 5 })).toThrow('Input exceeds maximum length of 5');
+        expect(() => validateInput('hello world', 'string', { maxLength: 5 })).toThrow(
+          'Input exceeds maximum length of 5',
+        );
       });
 
       it('should enforce minLength', () => {
-        expect(() => validateInput('hi', 'string', { minLength: 5 })).toThrow('Input is shorter than minimum length of 5');
+        expect(() => validateInput('hi', 'string', { minLength: 5 })).toThrow(
+          'Input is shorter than minimum length of 5',
+        );
       });
 
       it('should validate against pattern', () => {
         expect(validateInput('abc123', 'string', { pattern: /^[a-z0-9]+$/ })).toBe('abc123');
-        expect(() => validateInput('ABC!', 'string', { pattern: /^[a-z0-9]+$/ })).toThrow('Input contains invalid characters or patterns');
+        expect(() => validateInput('ABC!', 'string', { pattern: /^[a-z0-9]+$/ })).toThrow(
+          'Input contains invalid characters or patterns',
+        );
       });
     });
 
@@ -66,15 +74,21 @@ describe('validation utilities', () => {
       });
 
       it('should throw error for invalid number', () => {
-        expect(() => validateInput('not-a-number', 'number')).toThrow('Input must be a valid number');
+        expect(() => validateInput('not-a-number', 'number')).toThrow(
+          'Input must be a valid number',
+        );
       });
 
       it('should enforce min constraint', () => {
-        expect(() => validateInput(5, 'number', { min: 10 })).toThrow('Number must be greater than or equal to 10');
+        expect(() => validateInput(5, 'number', { min: 10 })).toThrow(
+          'Number must be greater than or equal to 10',
+        );
       });
 
       it('should enforce max constraint', () => {
-        expect(() => validateInput(100, 'number', { max: 50 })).toThrow('Number must be less than or equal to 50');
+        expect(() => validateInput(100, 'number', { max: 50 })).toThrow(
+          'Number must be less than or equal to 50',
+        );
       });
     });
 
@@ -88,11 +102,15 @@ describe('validation utilities', () => {
       });
 
       it('should enforce maxItems', () => {
-        expect(() => validateInput([1, 2, 3, 4, 5], 'array', { maxItems: 3 })).toThrow('Array exceeds maximum items of 3');
+        expect(() => validateInput([1, 2, 3, 4, 5], 'array', { maxItems: 3 })).toThrow(
+          'Array exceeds maximum items of 3',
+        );
       });
 
       it('should enforce minItems', () => {
-        expect(() => validateInput([1], 'array', { minItems: 3 })).toThrow('Array has fewer items than minimum of 3');
+        expect(() => validateInput([1], 'array', { minItems: 3 })).toThrow(
+          'Array has fewer items than minimum of 3',
+        );
       });
     });
 
@@ -163,35 +181,41 @@ describe('validation utilities', () => {
         role: 'Developer',
         summary: 'A brief summary',
         skills: ['JavaScript', 'TypeScript'],
-        experience: [{
-          id: '1',
-          company: 'Tech Corp',
-          role: 'Developer',
-          startDate: '2020',
-          endDate: 'Present',
-          current: true,
-          description: 'Worked on stuff',
-          tags: ['React']
-        }],
-        education: [{
-          id: '1',
-          institution: 'University',
-          area: 'CS',
-          studyType: 'Bachelor',
-          startDate: '2016',
-          endDate: '2020',
-          courses: ['Data Structures']
-        }],
-        projects: [{
-          id: '1',
-          name: 'Project',
-          description: 'A project',
-          url: 'https://example.com',
-          roles: ['Developer'],
-          startDate: '2020',
-          endDate: '2021',
-          highlights: ['Built it']
-        }]
+        experience: [
+          {
+            id: '1',
+            company: 'Tech Corp',
+            role: 'Developer',
+            startDate: '2020',
+            endDate: 'Present',
+            current: true,
+            description: 'Worked on stuff',
+            tags: ['React'],
+          },
+        ],
+        education: [
+          {
+            id: '1',
+            institution: 'University',
+            area: 'CS',
+            studyType: 'Bachelor',
+            startDate: '2016',
+            endDate: '2020',
+            courses: ['Data Structures'],
+          },
+        ],
+        projects: [
+          {
+            id: '1',
+            name: 'Project',
+            description: 'A project',
+            url: 'https://example.com',
+            roles: ['Developer'],
+            startDate: '2020',
+            endDate: '2021',
+            highlights: ['Built it'],
+          },
+        ],
       };
       expect(validateResumeData(validResume)).toBe(true);
     });
@@ -215,7 +239,7 @@ describe('validation utilities', () => {
       const validJob = {
         jobTitle: 'Developer',
         companyName: 'Tech Corp',
-        jobDescription: 'Build things'
+        jobDescription: 'Build things',
       };
       expect(validateJobApplicationData(validJob)).toBe(true);
     });

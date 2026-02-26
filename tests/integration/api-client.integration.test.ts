@@ -17,7 +17,7 @@ describe.skip('API Client Integration Tests', () => {
     it('should create a new resume via API', async () => {
       const mockResume = createMockResume('Create Test');
       const response = await context.apiClient.createResume(mockResume);
-      
+
       expect(response.id).toBeDefined();
       expect(response.status).toBe(201);
       expect(response.data.title).toBe('Create Test');
@@ -27,7 +27,7 @@ describe.skip('API Client Integration Tests', () => {
       const mockResume = createMockResume('Read Test');
       const created = await context.apiClient.createResume(mockResume);
       const response = await context.apiClient.getResume(created.data.id);
-      
+
       expect(response.status).toBe(200);
       expect(response.data.id).toBe(created.data.id);
       expect(response.data.title).toBe('Read Test');
@@ -36,12 +36,12 @@ describe.skip('API Client Integration Tests', () => {
     it('should update existing resume', async () => {
       const mockResume = createMockResume('Update Test');
       const created = await context.apiClient.createResume(mockResume);
-      
+
       const updated = await context.apiClient.updateResume(created.data.id, {
         ...created.data,
-        title: 'Updated Title'
+        title: 'Updated Title',
       });
-      
+
       expect(updated.status).toBe(200);
       expect(updated.data.title).toBe('Updated Title');
     });
@@ -49,7 +49,7 @@ describe.skip('API Client Integration Tests', () => {
     it('should delete resume', async () => {
       const mockResume = createMockResume('Delete Test');
       const created = await context.apiClient.createResume(mockResume);
-      
+
       const response = await context.apiClient.deleteResume(created.data.id);
       expect(response.status).toBe(204);
     });
@@ -57,7 +57,7 @@ describe.skip('API Client Integration Tests', () => {
     it('should list all resumes', async () => {
       const mockResume = createMockResume('List Test');
       await context.apiClient.createResume(mockResume);
-      
+
       const response = await context.apiClient.listResumes();
       expect(response.status).toBe(200);
       expect(Array.isArray(response.data)).toBe(true);
@@ -69,9 +69,9 @@ describe.skip('API Client Integration Tests', () => {
     it('should clone an existing resume', async () => {
       const original = createMockResume('Clone Source');
       const created = await context.apiClient.createResume(original);
-      
+
       const cloned = await context.apiClient.cloneResume(created.data.id, 'Cloned Resume');
-      
+
       expect(cloned.status).toBe(201);
       expect(cloned.data.title).toBe('Cloned Resume');
       expect(cloned.data.id).not.toBe(created.data.id);
@@ -88,7 +88,7 @@ describe.skip('API Client Integration Tests', () => {
     it('should handle validation errors', async () => {
       const invalidResume = { title: '' }; // Missing required fields
       const response = await context.apiClient.createResume(invalidResume);
-      
+
       expect(response.status).toBe(400);
       expect(response.error).toBeDefined();
     });
@@ -97,10 +97,10 @@ describe.skip('API Client Integration Tests', () => {
       vi.useFakeTimers();
       const slowPromise = context.apiClient.getResume('any-id', { timeout: 100 });
       vi.advanceTimersByTime(200);
-      
+
       const response = await slowPromise;
       expect(response.status).toBe(408);
-      
+
       vi.useRealTimers();
     });
   });

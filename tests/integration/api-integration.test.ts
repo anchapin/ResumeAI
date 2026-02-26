@@ -1,10 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import {
-  setupApiMocks,
-  mockPdfResponse,
-  mockOAuthResponse,
-  mockResumeData,
-} from './test-utils';
+import { setupApiMocks, mockPdfResponse, mockOAuthResponse, mockResumeData } from './test-utils';
 
 /**
  * Basic API Integration Tests

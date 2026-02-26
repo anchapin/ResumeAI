@@ -1,15 +1,18 @@
 # Retry Logic with Exponential Backoff - Implementation
 
 ## Overview
+
 This document describes the implementation of retry logic with exponential backoff for API calls in ResumeAI.
 
 ## Problem Solved
+
 - **Before**: API calls failed immediately on network issues or transient server errors
 - **After**: Automatic retries with exponential backoff prevent failures from temporary network issues
 
 ## Configuration
 
 ### Default Settings
+
 - **Max Retries**: 3 attempts
 - **Initial Delay**: 100ms
 - **Max Delay**: 10 seconds
@@ -17,7 +20,9 @@ This document describes the implementation of retry logic with exponential backo
 - **Jitter**: 10% random variance (prevents thundering herd)
 
 ### Retryable Status Codes
+
 The following HTTP status codes trigger automatic retries:
+
 - `408` - Request Timeout
 - `429` - Too Many Requests (rate limiting)
 - `500` - Internal Server Error
@@ -40,14 +45,19 @@ import { fetchWithRetry, RetryConfig } from './retryLogic';
 const response = await fetchWithRetry('/api/endpoint');
 
 // Or customize config
-const response = await fetchWithRetry('/api/endpoint', {}, {
-  maxRetries: 5,
-  initialDelay: 200,
-  maxDelay: 20000,
-});
+const response = await fetchWithRetry(
+  '/api/endpoint',
+  {},
+  {
+    maxRetries: 5,
+    initialDelay: 200,
+    maxDelay: 20000,
+  },
+);
 ```
 
 **Backoff Calculation**:
+
 ```
 delay = initialDelay * (2 ^ attemptNumber) + jitter
 delay = min(delay, maxDelay)
@@ -55,6 +65,7 @@ jitter = random(0, delay * 0.1)
 ```
 
 **Retry Sequence Example** (with 3 max retries):
+
 1. Request attempt → 500 error
 2. Wait 100-110ms → Attempt 2 → 500 error
 3. Wait 200-220ms → Attempt 3 → 500 error
@@ -86,16 +97,14 @@ The API client (`utils/api-client.ts`) automatically uses retry logic for all re
 
 ```typescript
 // These functions now have built-in retry logic:
-- generatePDF()
-- getVariants()
-- tailorResume()
-- checkATSScore()
+-generatePDF() - getVariants() - tailorResume() - checkATSScore();
 // ... and more
 ```
 
 ## Error Handling
 
 ### RetryError (Frontend)
+
 When all retries are exhausted, a `RetryError` is thrown:
 
 ```typescript
@@ -111,6 +120,7 @@ try {
 ```
 
 ### RetryError (Backend)
+
 Similar error structure for backend:
 
 ```python
@@ -125,13 +135,17 @@ except RetryError as e:
 ## Logging
 
 ### Frontend
+
 Retry attempts are logged to console.warn():
+
 ```
 Retryable status 503 for POST /api/endpoint. Attempt 1/3, retrying in 105ms
 ```
 
 ### Backend
+
 Retry attempts are logged via Python logging:
+
 ```
 Retryable error in fetch_data: Connection refused. Attempt 1/3, retrying in 0.15s
 ```
@@ -139,12 +153,15 @@ Retryable error in fetch_data: Connection refused. Attempt 1/3, retrying in 0.15
 ## Testing
 
 ### Frontend Tests
+
 Run tests with:
+
 ```bash
 npm test -- utils/retryLogic.test.ts
 ```
 
 Tests cover:
+
 - ✅ Exponential backoff calculation
 - ✅ Jitter application
 - ✅ Retryable status codes (5xx, 408, 429)
@@ -154,12 +171,15 @@ Tests cover:
 - ✅ Error messages and attempt counts
 
 ### Backend Tests
+
 Run tests with:
+
 ```bash
 cd resume-api && python -m pytest tests/test_retry.py -v
 ```
 
 Tests cover:
+
 - ✅ Exponential backoff calculation
 - ✅ Jitter application
 - ✅ Async function retries
@@ -171,11 +191,14 @@ Tests cover:
 ## Performance Impact
 
 ### Network Efficiency
+
 - **With retries**: Failed requests that succeed on retry save round-trip cost
 - **Without retries**: Failed requests are lost, user must retry manually
 
 ### Timing
+
 The worst-case delay for 3 retries with defaults:
+
 ```
 Attempt 1: 0ms
 Attempt 2: wait 100-110ms → 100-110ms total
@@ -188,14 +211,10 @@ Maximum total time: ~1 second for 3 retries + network latency.
 ## Example Usage
 
 ### Frontend - Tailoring Resume
+
 ```typescript
 try {
-  const tailored = await tailorResume(
-    resumeData,
-    jobDescription,
-    companyName,
-    jobTitle
-  );
+  const tailored = await tailorResume(resumeData, jobDescription, companyName, jobTitle);
   // Automatically retries on 5xx, 408, 429 status codes
   console.log('Resume tailored successfully');
 } catch (error) {
@@ -206,6 +225,7 @@ try {
 ```
 
 ### Backend - External API Call
+
 ```python
 from lib.utils.retry import retry_with_backoff, RetryConfig
 
@@ -227,6 +247,7 @@ profile = await get_user_profile("user123")
 ## Monitoring
 
 ### Metrics to Track
+
 1. **Retry rate**: Percentage of requests that require retries
 2. **Retry success rate**: Percentage of retries that succeed
 3. **Exhausted retries**: Count of requests failing after max retries
@@ -245,15 +266,18 @@ These can be added to monitoring middleware for detailed insights.
 ## Files Changed
 
 ### Created Files
+
 - `utils/retryLogic.ts` - Frontend retry logic
 - `utils/retryLogic.test.ts` - Frontend retry tests (21 tests)
 - `resume-api/lib/utils/retry.py` - Backend retry logic
 - `resume-api/tests/test_retry.py` - Backend retry tests
 
 ### Modified Files
+
 - `utils/api-client.ts` - Integrated retry logic into API calls
 
 ## Verification Checklist
+
 - ✅ Frontend tests pass (21/21)
 - ✅ Exponential backoff calculation correct
 - ✅ Jitter applied consistently

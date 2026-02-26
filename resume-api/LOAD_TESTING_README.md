@@ -5,16 +5,19 @@ Comprehensive guide for running and analyzing load tests.
 ## Quick Start
 
 ### 1. Install Locust
+
 ```bash
 pip install locust>=2.25.0
 ```
 
 ### 2. Start API Server
+
 ```bash
 python main.py
 ```
 
 ### 3. Run Test
+
 ```bash
 # Interactive mode with web UI
 locust -f locustfile.py --host=http://localhost:8000
@@ -85,29 +88,37 @@ locust -f locustfile.py \
 ## Test Scenarios
 
 ### Scenario 1: Baseline Testing
+
 ```bash
 ./run_load_test.sh --headless -u 100 -r 10 -t 5m
 ```
+
 Expected: All metrics within baseline targets.
 
 ### Scenario 2: Spike Testing
+
 ```bash
 ./run_load_test.sh --headless -u 200 -r 50 -t 10m
 ```
+
 Test response to sudden traffic increase.
 
 ### Scenario 3: Endurance Testing
+
 ```bash
 ./run_load_test.sh --headless -u 100 -r 10 -t 1h
 ```
+
 Verify stability under sustained load.
 
 ### Scenario 4: Breaking Point
+
 ```bash
 for users in 100 200 500 1000; do
   ./run_load_test.sh --headless -u $users -r 10 -t 5m
 done
 ```
+
 Find system limits.
 
 ---
@@ -124,6 +135,7 @@ load-test-results/
 ```
 
 ### View HTML Report
+
 ```bash
 # macOS
 open load-test-results/results_*.html
@@ -136,6 +148,7 @@ start load-test-results/results_*.html
 ```
 
 ### Key Metrics
+
 - **p50/p95/p99**: Response time percentiles
 - **Requests**: Total requests sent
 - **Failures**: Number of failed requests
@@ -148,6 +161,7 @@ Compare against [LOAD_TEST_BASELINE_METRICS.md](./LOAD_TEST_BASELINE_METRICS.md)
 ## Troubleshooting
 
 ### Cannot connect to host
+
 ```bash
 # Verify API is running
 curl http://localhost:8000/health
@@ -160,6 +174,7 @@ cd resume-api && python main.py
 ```
 
 ### High error rate
+
 ```bash
 # Check API logs
 tail -100 /path/to/api.log
@@ -172,6 +187,7 @@ free -h && top -b -n 1 | head -10
 ```
 
 ### Timeout errors
+
 ```bash
 # Increase timeout in locustfile.py
 # Or reduce concurrent users
@@ -179,6 +195,7 @@ free -h && top -b -n 1 | head -10
 ```
 
 ### Permission denied
+
 ```bash
 chmod +x run_load_test.sh
 ./run_load_test.sh
@@ -189,18 +206,22 @@ chmod +x run_load_test.sh
 ## Performance Targets
 
 ### Health Check
+
 - P95: < 100ms
 - P99: < 150ms
 
 ### PDF Rendering
+
 - P95: < 2.5s
 - P99: < 3.5s
 
 ### Resume Tailoring
+
 - P95: < 8s
 - P99: < 12s
 
 ### Variant Generation
+
 - P95: < 4s
 - P99: < 6s
 
@@ -219,6 +240,7 @@ chmod +x run_load_test.sh
 ## Capacity Planning
 
 See [CAPACITY_PLANNING_GUIDE.md](./CAPACITY_PLANNING_GUIDE.md) for:
+
 - Infrastructure sizing
 - Cost estimates
 - Scaling strategies

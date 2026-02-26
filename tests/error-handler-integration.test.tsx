@@ -46,15 +46,21 @@ describe.skip('Error Handler Integration Tests', () => {
       const error = new Error('Test error');
       errorHandler.handleError(error);
 
-      expect(handler1).toHaveBeenCalledWith(expect.objectContaining({
-        message: error.message,
-      }));
-      expect(handler2).toHaveBeenCalledWith(expect.objectContaining({
-        message: error.message,
-      }));
-      expect(handler3).toHaveBeenCalledWith(expect.objectContaining({
-        message: error.message,
-      }));
+      expect(handler1).toHaveBeenCalledWith(
+        expect.objectContaining({
+          message: error.message,
+        }),
+      );
+      expect(handler2).toHaveBeenCalledWith(
+        expect.objectContaining({
+          message: error.message,
+        }),
+      );
+      expect(handler3).toHaveBeenCalledWith(
+        expect.objectContaining({
+          message: error.message,
+        }),
+      );
 
       // Cleanup
       unsub1();
@@ -106,7 +112,7 @@ describe.skip('Error Handler Integration Tests', () => {
         } catch (error: any) {
           errorHandler.handleError({
             response: { status: 400 },
-            message: 'Bad request'
+            message: 'Bad request',
           });
         }
       };
@@ -121,7 +127,7 @@ describe.skip('Error Handler Integration Tests', () => {
     it('should handle auth error flow', () => {
       const apiError = {
         response: { status: 401 },
-        message: 'Unauthorized'
+        message: 'Unauthorized',
       };
 
       errorHandler.handleError(apiError);
@@ -150,7 +156,7 @@ describe.skip('Error Handler Integration Tests', () => {
             });
 
             if (attempts < maxRetries) {
-              await new Promise(resolve => setTimeout(resolve, 10));
+              await new Promise((resolve) => setTimeout(resolve, 10));
             }
           }
         }
@@ -204,7 +210,7 @@ describe.skip('Error Handler Integration Tests', () => {
       expect(handler).toHaveBeenCalledWith(
         expect.objectContaining({
           type: ErrorType.NETWORK,
-        })
+        }),
       );
     });
 
@@ -221,7 +227,7 @@ describe.skip('Error Handler Integration Tests', () => {
       expect(handler).toHaveBeenCalledWith(
         expect.objectContaining({
           type: ErrorType.TIMEOUT,
-        })
+        }),
       );
     });
   });
@@ -250,7 +256,7 @@ describe.skip('Error Handler Integration Tests', () => {
       errorHandler.handleError(new Error('Error 3'));
 
       const history = errorHandler.getErrorHistory();
-      const ids = history.map(e => e.id);
+      const ids = history.map((e) => e.id);
 
       expect(new Set(ids).size).toBe(3); // All unique
     });
@@ -283,14 +289,14 @@ describe.skip('Error Handler Integration Tests', () => {
       for (let i = 0; i < 2; i++) {
         errorHandler.handleError({
           response: { status: 400 },
-          message: 'Validation error'
+          message: 'Validation error',
         });
       }
 
       const history = errorHandler.getErrorHistory();
       const typeStats = {
-        network: history.filter(e => e.type === ErrorType.NETWORK).length,
-        validation: history.filter(e => e.type === ErrorType.VALIDATION).length,
+        network: history.filter((e) => e.type === ErrorType.NETWORK).length,
+        validation: history.filter((e) => e.type === ErrorType.VALIDATION).length,
       };
 
       expect(typeStats.network).toBe(3);
@@ -391,11 +397,13 @@ describe.skip('Error Handler Integration Tests', () => {
     });
 
     it('should unsubscribe handlers efficiently', () => {
-      const handlers = Array(50).fill(null).map(() => vi.fn());
-      const unsubscribers = handlers.map(h => errorHandler.subscribe(h));
+      const handlers = Array(50)
+        .fill(null)
+        .map(() => vi.fn());
+      const unsubscribers = handlers.map((h) => errorHandler.subscribe(h));
 
       const startTime = performance.now();
-      unsubscribers.forEach(unsub => unsub());
+      unsubscribers.forEach((unsub) => unsub());
       const endTime = performance.now();
 
       expect(endTime - startTime).toBeLessThan(50);

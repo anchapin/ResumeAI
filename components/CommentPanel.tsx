@@ -1,11 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Comment } from '../types';
-import {
-  listComments,
-  createComment,
-  resolveComment,
-  deleteComment,
-} from '../utils/api-client';
+import { listComments, createComment, resolveComment, deleteComment } from '../utils/api-client';
 import { showSuccessToast, showErrorToast } from '../utils/toast';
 
 interface CommentPanelProps {
@@ -27,12 +22,13 @@ const CommentPanel: React.FC<CommentPanelProps> = ({ resumeId, onCommentCountCha
 
   useEffect(() => {
     loadComments();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [resumeId]);
 
   // Notify parent of unresolved comment count whenever comments change
   useEffect(() => {
     if (onCommentCountChange) {
-      const unresolvedCount = comments.filter(c => !c.is_resolved).length;
+      const unresolvedCount = comments.filter((c) => !c.is_resolved).length;
       onCommentCountChange(unresolvedCount);
     }
   }, [comments, onCommentCountChange]);
@@ -102,15 +98,13 @@ const CommentPanel: React.FC<CommentPanelProps> = ({ resumeId, onCommentCountCha
   };
 
   const filteredComments = comments.filter((comment) =>
-    filter === 'unresolved' ? !comment.is_resolved : true
+    filter === 'unresolved' ? !comment.is_resolved : true,
   );
 
   return (
     <div className="bg-white rounded-xl border border-slate-200 shadow-sm">
       <div className="p-4 border-b border-slate-200 flex items-center justify-between">
-        <h3 className="font-bold text-slate-900">
-          Comments ({filteredComments.length})
-        </h3>
+        <h3 className="font-bold text-slate-900">Comments ({filteredComments.length})</h3>
         <div className="flex items-center gap-2">
           <div className="flex items-center bg-slate-100 rounded-lg p-1">
             <button
@@ -222,14 +216,8 @@ const CommentPanel: React.FC<CommentPanelProps> = ({ resumeId, onCommentCountCha
           </div>
         ) : filteredComments.length === 0 ? (
           <div className="text-center py-8 text-slate-500">
-            <span className="material-symbols-outlined text-4xl mb-2">
-              chat_bubble_outline
-            </span>
-            <p>
-              {filter === 'unresolved'
-                ? 'No unresolved comments'
-                : 'No comments yet'}
-            </p>
+            <span className="material-symbols-outlined text-4xl mb-2">chat_bubble_outline</span>
+            <p>{filter === 'unresolved' ? 'No unresolved comments' : 'No comments yet'}</p>
           </div>
         ) : (
           <div className="space-y-4">
@@ -280,9 +268,7 @@ const CommentPanel: React.FC<CommentPanelProps> = ({ resumeId, onCommentCountCha
                     onClick={() => handleResolveComment(comment.id)}
                     className="text-sm font-bold text-green-600 hover:text-green-700 transition-colors flex items-center gap-1"
                   >
-                    <span className="material-symbols-outlined text-[18px]">
-                      check_circle
-                    </span>
+                    <span className="material-symbols-outlined text-[18px]">check_circle</span>
                     Mark as Resolved
                   </button>
                 )}

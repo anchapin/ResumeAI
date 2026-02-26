@@ -17,9 +17,7 @@ const StorageWarning: React.FC = () => {
   const usageMB = (stats.usedBytes / 1024 / 1024).toFixed(1);
   const totalMB = (stats.totalBytes / 1024 / 1024).toFixed(1);
 
-  const bgColor = isCritical
-    ? 'bg-red-50 border-red-200'
-    : 'bg-yellow-50 border-yellow-200';
+  const bgColor = isCritical ? 'bg-red-50 border-red-200' : 'bg-yellow-50 border-yellow-200';
   const textColor = isCritical ? 'text-red-800' : 'text-yellow-800';
   const iconColor = isCritical ? 'text-red-500' : 'text-yellow-500';
   const progressBg = isCritical ? 'bg-red-200' : 'bg-yellow-200';
@@ -79,9 +77,7 @@ const StorageWarning: React.FC = () => {
             <button
               onClick={handleRefresh}
               className={`text-xs px-3 py-1.5 rounded font-medium transition-colors ${
-                isCritical
-                  ? 'hover:bg-red-100 text-red-700'
-                  : 'hover:bg-yellow-100 text-yellow-700'
+                isCritical ? 'hover:bg-red-100 text-red-700' : 'hover:bg-yellow-100 text-yellow-700'
               }`}
             >
               Refresh

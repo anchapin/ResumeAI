@@ -36,13 +36,16 @@ const KeyboardShortcutsHelp: React.FC<KeyboardShortcutsHelpProps> = ({ onClose }
   }, [onClose]);
 
   // Group shortcuts by category
-  const groupedShortcuts = DEFAULT_SHORTCUTS.reduce((acc, shortcut) => {
-    if (!acc[shortcut.category]) {
-      acc[shortcut.category] = [];
-    }
-    acc[shortcut.category].push(shortcut);
-    return acc;
-  }, {} as Record<string, typeof DEFAULT_SHORTCUTS>);
+  const groupedShortcuts = DEFAULT_SHORTCUTS.reduce(
+    (acc, shortcut) => {
+      if (!acc[shortcut.category]) {
+        acc[shortcut.category] = [];
+      }
+      acc[shortcut.category].push(shortcut);
+      return acc;
+    },
+    {} as Record<string, typeof DEFAULT_SHORTCUTS>,
+  );
 
   return (
     <div
@@ -101,7 +104,11 @@ const KeyboardShortcutsHelp: React.FC<KeyboardShortcutsHelpProps> = ({ onClose }
 
         <div className="p-4 border-t border-slate-200 bg-slate-50 flex justify-center">
           <p className="text-xs text-slate-500 flex items-center gap-2">
-            Press <kbd className="px-1.5 py-0.5 bg-white border border-slate-300 rounded text-xs font-mono shadow-sm">Esc</kbd> to close
+            Press{' '}
+            <kbd className="px-1.5 py-0.5 bg-white border border-slate-300 rounded text-xs font-mono shadow-sm">
+              Esc
+            </kbd>{' '}
+            to close
           </p>
         </div>
       </div>

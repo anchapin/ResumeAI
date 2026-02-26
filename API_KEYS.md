@@ -9,12 +9,14 @@ ResumeAI implements **bcrypt-based API key hashing** to securely store API keys 
 ### For Development
 
 1. **Generate a hashed key:**
+
    ```bash
    cd resume-api
    python3 scripts/migrate_api_keys.py --keys "rai_your_test_key_here"
    ```
 
 2. **Update `.env` file:**
+
    ```env
    MASTER_API_KEY=$2b$12$<hash_from_script_output>
    ```
@@ -28,6 +30,7 @@ ResumeAI implements **bcrypt-based API key hashing** to securely store API keys 
 ### For Production
 
 1. **Hash all API keys:**
+
    ```bash
    python3 scripts/migrate_api_keys.py --env-file .env.production
    ```
@@ -66,6 +69,7 @@ resume-api/
 ### Key Functions
 
 #### `hash_api_key(key: str) -> str`
+
 Hashes a plaintext API key using bcrypt with cost factor 12.
 
 ```python
@@ -77,6 +81,7 @@ hashed = hash_api_key(plaintext)
 ```
 
 #### `verify_api_key(plaintext_key: str, key_hash: str) -> bool`
+
 Verifies a plaintext key against a bcrypt hash.
 
 ```python
@@ -87,6 +92,7 @@ result = verify_api_key("rai_my_secret_key", hashed)
 ```
 
 #### `is_hashed_key(value: str) -> bool`
+
 Detects if a string is a bcrypt hash.
 
 ```python
@@ -97,6 +103,7 @@ is_hashed_key("rai_key")      # False
 ```
 
 #### `migrate_plaintext_keys(plaintext_keys: list[str]) -> dict`
+
 Batch migrate plaintext keys to hashed versions.
 
 ```python
@@ -166,6 +173,7 @@ python3 scripts/migrate_api_keys.py --keys "rai_key1,rai_key2,rai_key3"
 ```
 
 Output:
+
 ```
 MASTER_API_KEY=$2b$12$<hash1>
 API_KEYS=$2b$12$<hash2>,$2b$12$<hash3>
@@ -248,12 +256,14 @@ python3 -c "from lib.security import hash_api_key; print(hash_api_key('test'))"
 ## Detailed Documentation
 
 For comprehensive security documentation, see:
+
 - [resume-api/API_KEY_SECURITY.md](resume-api/API_KEY_SECURITY.md) - Full technical guide
 - [ISSUE_391_IMPLEMENTATION.md](ISSUE_391_IMPLEMENTATION.md) - Implementation details
 
 ## Architecture Decision
 
 **Why bcrypt?**
+
 - ✅ Built-in salt (random per hash)
 - ✅ Configurable cost factor (for future-proofing)
 - ✅ Constant-time comparison (timing attack resistant)

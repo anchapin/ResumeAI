@@ -9,25 +9,30 @@ This issue implements the **Circuit Breaker Pattern** to handle AI provider fail
 ### Key Components
 
 #### 1. Circuit Breaker State Machine
+
 - **File**: `resume-api/lib/utils/circuit_breaker.py`
 - **Lines**: 218 (fully implemented and tested)
 
 **States**:
+
 - `CLOSED`: Normal operation, requests pass through
 - `OPEN`: Service unavailable, requests fail fast
 - `HALF_OPEN`: Testing recovery, limited requests allowed
 
 **Transitions**:
+
 - `CLOSED → OPEN`: After 5 consecutive failures (configurable)
 - `OPEN → HALF_OPEN`: After 60 seconds timeout (configurable)
 - `HALF_OPEN → CLOSED`: After 2 consecutive successes (configurable)
 - `HALF_OPEN → OPEN`: On any failure
 
 #### 2. AI Provider Integration
+
 - **File**: `resume-api/lib/utils/ai.py`
 - **Integration**: Circuit breaker wraps OpenAI, Anthropic (Claude), and Gemini provider calls
 
 **Providers**:
+
 ```python
 from lib.utils.circuit_breaker import openai_breaker, claude_breaker, gemini_breaker
 ```
@@ -37,7 +42,9 @@ from lib.utils.circuit_breaker import openai_breaker, claude_breaker, gemini_bre
 - `gemini_breaker`: Protects Google Gemini API calls
 
 #### 3. API Endpoint Integration
+
 The circuit breaker is integrated into:
+
 - Resume generation endpoints
 - Resume tailoring endpoints
 - Resume variant generation endpoints
@@ -46,6 +53,7 @@ The circuit breaker is integrated into:
 ### Configuration
 
 Default thresholds (all configurable per use case):
+
 ```python
 CircuitBreaker(
     name="openai",
@@ -134,11 +142,11 @@ def generate_resume_with_fallback(prompt: str) -> str:
 
 ### Files Modified
 
-| File | Changes | Status |
-|------|---------|--------|
-| `resume-api/lib/utils/circuit_breaker.py` | Created (218 lines) | ✅ |
-| `resume-api/lib/utils/ai.py` | Integration (+imports) | ✅ |
-| `resume-api/tests/test_circuit_breaker.py` | Created (401 lines) | ✅ |
+| File                                       | Changes                | Status |
+| ------------------------------------------ | ---------------------- | ------ |
+| `resume-api/lib/utils/circuit_breaker.py`  | Created (218 lines)    | ✅     |
+| `resume-api/lib/utils/ai.py`               | Integration (+imports) | ✅     |
+| `resume-api/tests/test_circuit_breaker.py` | Created (401 lines)    | ✅     |
 
 ### Deployment Notes
 

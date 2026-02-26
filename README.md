@@ -25,10 +25,10 @@ ResumeAI is a full-stack SaaS application that helps users create professional r
 
 ResumeAI consists of two main components:
 
-| Component | Technology | Description |
-|-----------|------------|-------------|
-| Frontend | React 19 + TypeScript + Vite | Single Page Application |
-| Backend | FastAPI + Python | REST API with resume generation |
+| Component | Technology                   | Description                     |
+| --------- | ---------------------------- | ------------------------------- |
+| Frontend  | React 19 + TypeScript + Vite | Single Page Application         |
+| Backend   | FastAPI + Python             | REST API with resume generation |
 
 For detailed architecture documentation, see [CLAUDE.md](CLAUDE.md).
 
@@ -220,14 +220,14 @@ For detailed coverage information and how to improve test coverage, see [COVERAG
 
 ### Frontend
 
-| Command | Description |
-|---------|-------------|
-| `npm run dev` | Start development server |
-| `npm run build` | Build for production |
-| `npm run preview` | Preview production build |
-| `npm test` | Run tests |
-| `npm run test:coverage` | Run tests with coverage report |
-| `npm run docs` | Generate TypeScript documentation |
+| Command                 | Description                       |
+| ----------------------- | --------------------------------- |
+| `npm run dev`           | Start development server          |
+| `npm run build`         | Build for production              |
+| `npm run preview`       | Preview production build          |
+| `npm test`              | Run tests                         |
+| `npm run test:coverage` | Run tests with coverage report    |
+| `npm run docs`          | Generate TypeScript documentation |
 
 ### Backend
 
@@ -251,6 +251,7 @@ python -m pytest tests/test_validation.py
 The frontend is deployed to Vercel. See [VERCEL_DEPLOYMENT.md](VERCEL_DEPLOYMENT.md) for detailed instructions.
 
 Quick deploy:
+
 ```bash
 npm install -g vercel
 vercel --prod
@@ -318,6 +319,7 @@ If you see errors connecting to GitHub:
 ### PDF Generation Fails
 
 Ensure LaTeX is installed:
+
 ```bash
 # macOS
 brew install texlive
@@ -349,6 +351,7 @@ npm run build
 ⚠️ **DEPRECATED**: The GitHub CLI authentication mode has been deprecated and will be removed in a future version. Please use OAuth instead.
 
 If you see warnings about CLI mode:
+
 1. Update to the latest version
 2. Use OAuth for authentication
 3. See the GitHub Integration section above for setup instructions

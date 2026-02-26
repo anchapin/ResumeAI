@@ -128,24 +128,26 @@ export const PrioritySliders: React.FC<PrioritySlidersProps> = ({
       </div>
 
       {/* Total Weight Indicator */}
-      <div className={`p-4 rounded-lg border ${
-        totalWeight === 100
-          ? 'bg-green-50 border-green-200'
-          : totalWeight > 100
-            ? 'bg-amber-50 border-amber-200'
-            : 'bg-amber-50 border-amber-200'
-      }`}>
+      <div
+        className={`p-4 rounded-lg border ${
+          totalWeight === 100
+            ? 'bg-green-50 border-green-200'
+            : totalWeight > 100
+              ? 'bg-amber-50 border-amber-200'
+              : 'bg-amber-50 border-amber-200'
+        }`}
+      >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="material-symbols-outlined text-xl">
               {totalWeight === 100 ? 'check_circle' : 'warning'}
             </span>
             <div>
-              <p className={`font-bold text-sm ${
-                totalWeight === 100
-                  ? 'text-green-900'
-                  : 'text-amber-900'
-              }`}>
+              <p
+                className={`font-bold text-sm ${
+                  totalWeight === 100 ? 'text-green-900' : 'text-amber-900'
+                }`}
+              >
                 Total Weight: {totalWeight}%
               </p>
               <p className="text-xs text-slate-600">
@@ -153,8 +155,7 @@ export const PrioritySliders: React.FC<PrioritySlidersProps> = ({
                   ? 'Weights are perfectly balanced'
                   : totalWeight > 100
                     ? 'Total exceeds 100%. Please adjust the sliders.'
-                    : 'Total is below 100%. Consider increasing some priorities.'
-                }
+                    : 'Total is below 100%. Consider increasing some priorities.'}
               </p>
             </div>
           </div>
@@ -166,31 +167,41 @@ export const PrioritySliders: React.FC<PrioritySlidersProps> = ({
 
       {/* Quick Presets */}
       <div>
-        <p className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Quick Presets</p>
+        <p className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">
+          Quick Presets
+        </p>
         <div className="flex flex-wrap gap-2">
           <button
-            onClick={() => onChange({ salary: 40, growth: 25, workLifeBalance: 15, benefits: 10, culture: 10 })}
+            onClick={() =>
+              onChange({ salary: 40, growth: 25, workLifeBalance: 15, benefits: 10, culture: 10 })
+            }
             disabled={disabled}
             className="px-3 py-1.5 rounded-lg bg-slate-100 border border-slate-200 text-slate-700 text-xs font-medium hover:bg-slate-200 transition-colors disabled:opacity-50"
           >
             Compensation Focused
           </button>
           <button
-            onClick={() => onChange({ salary: 25, growth: 35, workLifeBalance: 20, benefits: 10, culture: 10 })}
+            onClick={() =>
+              onChange({ salary: 25, growth: 35, workLifeBalance: 20, benefits: 10, culture: 10 })
+            }
             disabled={disabled}
             className="px-3 py-1.5 rounded-lg bg-slate-100 border border-slate-200 text-slate-700 text-xs font-medium hover:bg-slate-200 transition-colors disabled:opacity-50"
           >
             Growth Focused
           </button>
           <button
-            onClick={() => onChange({ salary: 25, growth: 20, workLifeBalance: 30, benefits: 15, culture: 10 })}
+            onClick={() =>
+              onChange({ salary: 25, growth: 20, workLifeBalance: 30, benefits: 15, culture: 10 })
+            }
             disabled={disabled}
             className="px-3 py-1.5 rounded-lg bg-slate-100 border border-slate-200 text-slate-700 text-xs font-medium hover:bg-slate-200 transition-colors disabled:opacity-50"
           >
             Work-Life Balance
           </button>
           <button
-            onClick={() => onChange({ salary: 20, growth: 20, workLifeBalance: 20, benefits: 20, culture: 20 })}
+            onClick={() =>
+              onChange({ salary: 20, growth: 20, workLifeBalance: 20, benefits: 20, culture: 20 })
+            }
             disabled={disabled}
             className="px-3 py-1.5 rounded-lg bg-slate-100 border border-slate-200 text-slate-700 text-xs font-medium hover:bg-slate-200 transition-colors disabled:opacity-50"
           >

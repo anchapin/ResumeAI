@@ -54,9 +54,7 @@
         "orientation": "auto",
         "reduceOptions": {
           "values": false,
-          "calcs": [
-            "lastNotNull"
-          ],
+          "calcs": ["lastNotNull"],
           "fields": ""
         },
         "text": {},
@@ -114,9 +112,7 @@
         "orientation": "auto",
         "reduceOptions": {
           "values": false,
-          "calcs": [
-            "lastNotNull"
-          ],
+          "calcs": ["lastNotNull"],
           "fields": ""
         },
         "text": {},
@@ -174,9 +170,7 @@
         "orientation": "auto",
         "reduceOptions": {
           "values": false,
-          "calcs": [
-            "lastNotNull"
-          ],
+          "calcs": ["lastNotNull"],
           "fields": ""
         },
         "text": {},
@@ -234,9 +228,7 @@
         "orientation": "auto",
         "reduceOptions": {
           "values": false,
-          "calcs": [
-            "lastNotNull"
-          ],
+          "calcs": ["lastNotNull"],
           "fields": ""
         },
         "text": {},
@@ -418,10 +410,7 @@
   "refresh": "30s",
   "schemaVersion": 30,
   "style": "dark",
-  "tags": [
-    "system",
-    "health"
-  ],
+  "tags": ["system", "health"],
   "templating": {
     "list": []
   },

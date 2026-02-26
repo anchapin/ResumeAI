@@ -61,7 +61,11 @@ const WebhookList: React.FC<WebhookListProps> = ({ onEdit, onViewDeliveries, onR
 
   // Handle delete webhook
   const handleDeleteWebhook = async (id: number, description: string) => {
-    if (!confirm(`Are you sure you want to delete webhook "${description || 'Untitled'}"? This action cannot be undone.`)) {
+    if (
+      !confirm(
+        `Are you sure you want to delete webhook "${description || 'Untitled'}"? This action cannot be undone.`,
+      )
+    ) {
       return;
     }
 
@@ -100,7 +104,9 @@ const WebhookList: React.FC<WebhookListProps> = ({ onEdit, onViewDeliveries, onR
       {/* Loading State */}
       {isLoading && (
         <div className="flex items-center justify-center py-8">
-          <span className="material-symbols-outlined animate-spin text-primary-600 text-3xl">progress_activity</span>
+          <span className="material-symbols-outlined animate-spin text-primary-600 text-3xl">
+            progress_activity
+          </span>
         </div>
       )}
 

@@ -114,17 +114,24 @@ function InterviewPractice() {
       setShowFeedback(true);
 
       // Update session progress
-      setCurrentSession(prev => prev ? {
-        ...prev,
-        answers: [...prev.answers, {
-          id: data.answer_id,
-          questionId: question.id,
-          answer: currentAnswer,
-          timestamp: new Date().toISOString(),
-        }],
-        completionPercentage: data.progress,
-        averageScore: data.average_score,
-      } : null);
+      setCurrentSession((prev) =>
+        prev
+          ? {
+              ...prev,
+              answers: [
+                ...prev.answers,
+                {
+                  id: data.answer_id,
+                  questionId: question.id,
+                  answer: currentAnswer,
+                  timestamp: new Date().toISOString(),
+                },
+              ],
+              completionPercentage: data.progress,
+              averageScore: data.average_score,
+            }
+          : null,
+      );
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to submit answer');
     } finally {
@@ -163,7 +170,7 @@ function InterviewPractice() {
       });
 
       // Update session status
-      setCurrentSession(prev => prev ? { ...prev, status: 'completed' } : null);
+      setCurrentSession((prev) => (prev ? { ...prev, status: 'completed' } : null));
       setActiveTab('history');
       loadSessionHistory();
     } catch (err) {
@@ -206,7 +213,9 @@ function InterviewPractice() {
           {/* Header */}
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-slate-900 mb-2">Interview Practice</h1>
-            <p className="text-slate-600">Prepare for your interviews with AI-generated questions and feedback</p>
+            <p className="text-slate-600">
+              Prepare for your interviews with AI-generated questions and feedback
+            </p>
           </div>
 
           {/* Tabs */}
@@ -253,8 +262,10 @@ function InterviewPractice() {
           {/* Setup Tab */}
           {activeTab === 'setup' && (
             <div className="bg-white rounded-lg shadow-sm p-6">
-              <h2 className="text-xl font-semibold text-slate-900 mb-4">Generate Interview Questions</h2>
-              
+              <h2 className="text-xl font-semibold text-slate-900 mb-4">
+                Generate Interview Questions
+              </h2>
+
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
@@ -354,9 +365,12 @@ function InterviewPractice() {
               <div className="bg-white rounded-lg shadow-sm p-6">
                 <div className="mb-4">
                   <span className="inline-block px-3 py-1 bg-primary-100 text-primary-700 text-xs font-semibold rounded-full mb-3">
-                    {currentQuestion.category.toUpperCase()} - {currentQuestion.difficulty.toUpperCase()}
+                    {currentQuestion.category.toUpperCase()} -{' '}
+                    {currentQuestion.difficulty.toUpperCase()}
                   </span>
-                  <h2 className="text-2xl font-semibold text-slate-900">{currentQuestion.question}</h2>
+                  <h2 className="text-2xl font-semibold text-slate-900">
+                    {currentQuestion.question}
+                  </h2>
                 </div>
 
                 {currentQuestion.tips && currentQuestion.tips.length > 0 && (
@@ -364,7 +378,9 @@ function InterviewPractice() {
                     <p className="text-sm font-semibold text-blue-900 mb-2">Tips:</p>
                     <ul className="list-disc list-inside space-y-1">
                       {currentQuestion.tips.map((tip, i) => (
-                        <li key={i} className="text-sm text-blue-800">{tip}</li>
+                        <li key={i} className="text-sm text-blue-800">
+                          {tip}
+                        </li>
                       ))}
                     </ul>
                   </div>
@@ -374,7 +390,9 @@ function InterviewPractice() {
               {/* Answer Input or Feedback */}
               {!showFeedback ? (
                 <div className="bg-white rounded-lg shadow-sm p-6">
-                  <label className="block text-sm font-medium text-slate-700 mb-2">Your Answer</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Your Answer
+                  </label>
                   <textarea
                     value={currentAnswer}
                     onChange={(e) => setCurrentAnswer(e.target.value)}
@@ -415,7 +433,9 @@ function InterviewPractice() {
                       <p className="text-sm font-semibold text-green-700 mb-2">✓ Strengths</p>
                       <ul className="list-disc list-inside space-y-1">
                         {feedback.strengths.map((strength: string, i: number) => (
-                          <li key={i} className="text-sm text-slate-600">{strength}</li>
+                          <li key={i} className="text-sm text-slate-600">
+                            {strength}
+                          </li>
                         ))}
                       </ul>
                     </div>
@@ -423,10 +443,14 @@ function InterviewPractice() {
 
                   {feedback.improvements && feedback.improvements.length > 0 && (
                     <div>
-                      <p className="text-sm font-semibold text-orange-700 mb-2">→ Areas for Improvement</p>
+                      <p className="text-sm font-semibold text-orange-700 mb-2">
+                        → Areas for Improvement
+                      </p>
                       <ul className="list-disc list-inside space-y-1">
                         {feedback.improvements.map((improvement: string, i: number) => (
-                          <li key={i} className="text-sm text-slate-600">{improvement}</li>
+                          <li key={i} className="text-sm text-slate-600">
+                            {improvement}
+                          </li>
                         ))}
                       </ul>
                     </div>
@@ -476,7 +500,9 @@ function InterviewPractice() {
             <div className="space-y-4">
               {pastSessions.length === 0 ? (
                 <div className="bg-white rounded-lg shadow-sm p-12 text-center">
-                  <p className="text-slate-600 mb-4">No interview sessions yet. Generate questions to get started!</p>
+                  <p className="text-slate-600 mb-4">
+                    No interview sessions yet. Generate questions to get started!
+                  </p>
                   <button
                     onClick={() => setActiveTab('setup')}
                     className="px-4 py-2 bg-primary-600 text-white font-medium rounded-lg hover:bg-primary-700 transition-colors"
@@ -490,10 +516,13 @@ function InterviewPractice() {
                     <div className="flex justify-between items-start mb-3">
                       <div>
                         <h3 className="text-lg font-semibold text-slate-900">
-                          {session.jobTitle ? `${session.jobTitle} at ${session.company || 'Unknown'}` : 'Interview Practice'}
+                          {session.jobTitle
+                            ? `${session.jobTitle} at ${session.company || 'Unknown'}`
+                            : 'Interview Practice'}
                         </h3>
                         <p className="text-sm text-slate-500 mt-1">
-                          {new Date(session.createdAt).toLocaleDateString()} • {session.questions.length} questions
+                          {new Date(session.createdAt).toLocaleDateString()} •{' '}
+                          {session.questions.length} questions
                         </p>
                       </div>
                       <div className="text-right">
@@ -505,13 +534,21 @@ function InterviewPractice() {
                     <div className="flex justify-between items-center">
                       <div className="flex gap-6">
                         <div>
-                          <p className="text-xs text-slate-500 uppercase font-semibold">Completed</p>
-                          <p className="text-lg font-bold text-slate-900">{session.answers.length}/{session.questions.length}</p>
+                          <p className="text-xs text-slate-500 uppercase font-semibold">
+                            Completed
+                          </p>
+                          <p className="text-lg font-bold text-slate-900">
+                            {session.answers.length}/{session.questions.length}
+                          </p>
                         </div>
                         {session.averageScore && (
                           <div>
-                            <p className="text-xs text-slate-500 uppercase font-semibold">Average Score</p>
-                            <p className="text-lg font-bold text-primary-600">{session.averageScore}/10</p>
+                            <p className="text-xs text-slate-500 uppercase font-semibold">
+                              Average Score
+                            </p>
+                            <p className="text-lg font-bold text-primary-600">
+                              {session.averageScore}/10
+                            </p>
                           </div>
                         )}
                       </div>

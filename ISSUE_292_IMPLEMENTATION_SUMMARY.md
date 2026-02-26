@@ -12,6 +12,7 @@ Successfully removed all GitHub CLI authentication mode support and related depe
 ## What Was Removed
 
 ### 1. **GitHub CLI Module** (`resume-api/lib/github_cli.py`)
+
 - **Size:** 167 lines of code
 - **Functions Removed:**
   - `check_gh_cli_status()` - Check if GitHub CLI is authenticated
@@ -21,6 +22,7 @@ Successfully removed all GitHub CLI authentication mode support and related depe
 - **Purpose:** This module provided integration with the GitHub CLI (`gh` command-line tool) for local development authentication
 
 ### 2. **GitHub CLI Tests** (`resume-api/tests/test_github_cli.py`)
+
 - **Size:** 184 lines of test code
 - **Tests Removed:**
   - `test_check_gh_cli_status_authenticated()`
@@ -35,16 +37,19 @@ Successfully removed all GitHub CLI authentication mode support and related depe
   - `test_is_gh_cli_installed_false()`
 
 ### 3. **Configuration Changes** (`resume-api/config/__init__.py`)
+
 - **Removed Setting:** `github_auth_mode: str = "oauth"` (supporting "oauth" or "cli")
 - **Removed Validator:** `validate_github_auth_mode()` method
 - **Result:** GitHub authentication now exclusively uses OAuth
 
 ### 4. **Main Application Changes** (`resume-api/main.py`)
+
 - **Removed Function:** `check_github_auth_mode()` (11 lines)
 - **Removed Call:** `check_github_auth_mode()` from `lifespan()` startup
 - **Reason:** This function logged deprecation warnings when CLI mode was configured
 
 ### 5. **GitHub Routes Simplification** (`resume-api/routes/github.py`)
+
 - **Removed:** `_get_cli_status()` helper function (35 lines)
 - **Removed:** CLI mode branch logic from `/status` endpoint
 - **Removed:** Import of `check_gh_cli_status` from `lib.github_cli`
@@ -52,6 +57,7 @@ Successfully removed all GitHub CLI authentication mode support and related depe
 - **Lines Removed:** 107 lines
 
 ### 6. **Environment Documentation** (`resume-api/.env.example`)
+
 - **Removed Comments:**
   - `GITHUB_AUTH_MODE=oauth` configuration example
   - "GitHub authentication mode: oauth or cli" explanation
@@ -59,15 +65,15 @@ Successfully removed all GitHub CLI authentication mode support and related depe
 
 ## Statistics
 
-| Metric | Value |
-|--------|-------|
-| **Total Lines Removed** | 489 |
-| | Code: 367 lines |
-| | Tests: 184 lines |
-| | Comments: 38 lines |
-| **Files Deleted** | 2 |
-| **Files Modified** | 4 |
-| **Net Code Reduction** | -447 lines |
+| Metric                  | Value              |
+| ----------------------- | ------------------ |
+| **Total Lines Removed** | 489                |
+|                         | Code: 367 lines    |
+|                         | Tests: 184 lines   |
+|                         | Comments: 38 lines |
+| **Files Deleted**       | 2                  |
+| **Files Modified**      | 4                  |
+| **Net Code Reduction**  | -447 lines         |
 
 ## Code Changes Summary
 
@@ -85,7 +91,9 @@ Successfully removed all GitHub CLI authentication mode support and related depe
 ## What Was Preserved
 
 ### ✅ Resume Generation CLI Remains Intact
+
 The `resume-api/lib/cli/` directory containing core resume generation functionality is **NOT removed**:
+
 - `ResumeGenerator` - Core PDF generation engine
 - `ResumeTailorer` - Resume customization for job descriptions
 - `VariantManager` - Resume template variants
@@ -94,7 +102,9 @@ The `resume-api/lib/cli/` directory containing core resume generation functional
 **Reason:** These provide essential resume generation features, not GitHub authentication. They will continue to be used by the `/v1/render/pdf` and related endpoints.
 
 ### ✅ GitHub OAuth Client Functionality
+
 All GitHub OAuth client code remains fully functional:
+
 - `GitHubAPIClient` - OAuth token-based API client
 - `/github/connect` - OAuth initiation endpoint
 - `/github/callback` - OAuth callback handler
@@ -104,6 +114,7 @@ All GitHub OAuth client code remains fully functional:
 ## Validation Results
 
 ✅ **Syntax Validation**
+
 ```
 ✓ resume-api/api/routes.py - OK
 ✓ resume-api/config/__init__.py - OK
@@ -112,11 +123,13 @@ All GitHub OAuth client code remains fully functional:
 ```
 
 ✅ **Import Validation**
+
 - No remaining imports of `lib.github_cli` module
 - No references to `check_gh_cli_status`, `get_gh_cli_token`, `get_gh_cli_user_info`
 - All remaining `github_client_*` references are for OAuth credentials (ID/Secret)
 
 ✅ **Functionality Preserved**
+
 - Resume PDF generation works (uses lib/cli module)
 - GitHub OAuth login flow intact
 - Database GitHub connection storage preserved
@@ -147,10 +160,11 @@ All GitHub OAuth client code remains fully functional:
    - Get Client ID and Secret
 
 2. **Configure Environment**
+
    ```bash
    # Remove deprecated setting
    unset GITHUB_AUTH_MODE
-   
+
    # Add required OAuth settings
    export GITHUB_CLIENT_ID=your_client_id
    export GITHUB_CLIENT_SECRET=your_client_secret
@@ -158,10 +172,11 @@ All GitHub OAuth client code remains fully functional:
    ```
 
 3. **Test Connection**
+
    ```bash
    # Start API server
    cd resume-api && python main.py
-   
+
    # OAuth endpoints should work:
    # GET /github/connect - Returns OAuth authorization URL
    # GET /github/callback - Handles OAuth callback
@@ -212,10 +227,12 @@ issue #288 implementation.
 ## Files Modified
 
 ### Deleted
+
 - `resume-api/lib/github_cli.py` (167 lines)
 - `resume-api/tests/test_github_cli.py` (184 lines)
 
 ### Modified
+
 - `resume-api/.env.example` (6 lines changed)
 - `resume-api/config/__init__.py` (13 lines removed)
 - `resume-api/main.py` (12 lines removed)

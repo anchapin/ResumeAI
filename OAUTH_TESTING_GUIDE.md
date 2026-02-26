@@ -3,6 +3,7 @@
 Comprehensive guide for testing and validating the GitHub OAuth implementation in ResumeAI.
 
 ## Table of Contents
+
 1. [Setup](#setup)
 2. [Unit Tests](#unit-tests)
 3. [Integration Tests](#integration-tests)
@@ -15,6 +16,7 @@ Comprehensive guide for testing and validating the GitHub OAuth implementation i
 ## Setup
 
 ### Prerequisites
+
 - Python 3.11+
 - Node.js 18+
 - GitHub OAuth App credentials
@@ -63,28 +65,30 @@ pytest tests/test_github_oauth.py -vv --tb=long
 
 The test suite covers:
 
-| Component | Tests | Coverage |
-|-----------|-------|----------|
-| State Generation | 3 | 100% |
-| Authorization URL Building | 5 | 100% |
-| Token Exchange | 3 | 100% |
-| User Fetching | 2 | 100% |
-| Database Models | 4 | 100% |
-| Security Validations | 3 | 100% |
-| Error Handling | 3 | 100% |
-| Rate Limiting | 1 | 100% |
-| Integration | 2 | 100% |
-| Performance | 2 | 100% |
+| Component                  | Tests | Coverage |
+| -------------------------- | ----- | -------- |
+| State Generation           | 3     | 100%     |
+| Authorization URL Building | 5     | 100%     |
+| Token Exchange             | 3     | 100%     |
+| User Fetching              | 2     | 100%     |
+| Database Models            | 4     | 100%     |
+| Security Validations       | 3     | 100%     |
+| Error Handling             | 3     | 100%     |
+| Rate Limiting              | 1     | 100%     |
+| Integration                | 2     | 100%     |
+| Performance                | 2     | 100%     |
 
 ### Key Unit Tests
 
 #### OAuth State Generation
+
 - ✅ State is generated as a secure random string
 - ✅ State has sufficient entropy (43+ characters)
 - ✅ Multiple state generations produce unique values
 - ✅ State format is URL-safe
 
 #### GitHub Authorization URL
+
 - ✅ Contains client ID
 - ✅ Contains redirect URI
 - ✅ Contains state parameter
@@ -92,12 +96,14 @@ The test suite covers:
 - ✅ Points to correct GitHub OAuth endpoint
 
 #### Token Exchange
+
 - ✅ Successfully exchanges valid authorization code
 - ✅ Handles invalid codes with proper error
 - ✅ Handles network errors gracefully
 - ✅ Validates response format
 
 #### GitHub User Fetch
+
 - ✅ Successfully fetches user profile with valid token
 - ✅ Handles invalid token with 401 error
 - ✅ Extracts user ID and username correctly
@@ -114,6 +120,7 @@ pytest tests/test_github_oauth.py::TestOAuthIntegration -v
 ### Test Scenarios
 
 1. **Happy Path**: User successfully connects GitHub account
+
    ```
    1. User clicks "Connect GitHub"
    2. Backend generates OAuth state
@@ -126,6 +133,7 @@ pytest tests/test_github_oauth.py::TestOAuthIntegration -v
    ```
 
 2. **State Validation**: Invalid/expired states are rejected
+
    ```
    1. Invalid state in callback → 400 Bad Request
    2. Expired state in callback → 400 Bad Request
@@ -144,6 +152,7 @@ pytest tests/test_github_oauth.py::TestOAuthIntegration -v
 ### Manual E2E Testing
 
 #### Prerequisites
+
 - Backend running at http://localhost:8000
 - Frontend running at http://localhost:5173
 - GitHub OAuth App configured
@@ -151,6 +160,7 @@ pytest tests/test_github_oauth.py::TestOAuthIntegration -v
 #### Test Steps
 
 1. **Basic Connection**
+
    ```
    1. Open http://localhost:5173/settings
    2. Click "Connect with GitHub"
@@ -161,6 +171,7 @@ pytest tests/test_github_oauth.py::TestOAuthIntegration -v
    ```
 
 2. **Repository Syncing**
+
    ```
    1. Open Settings or Sync dialog
    2. Verify "Connected as @username" appears
@@ -201,6 +212,7 @@ console.log(localStorage.getItem('resumeai_access_token'));
 ### OAuth Security Validations
 
 #### CSRF Protection (State Parameter)
+
 ```bash
 # Test 1: State parameter is generated
 - OAuth state should be 43+ characters of random data
@@ -215,6 +227,7 @@ console.log(localStorage.getItem('resumeai_access_token'));
 ```
 
 #### Authorization Code Validation
+
 ```bash
 # Test 1: Invalid code is rejected
 POST /github/callback?code=invalid_code&state=valid_state
@@ -228,6 +241,7 @@ Code expires after 10 minutes of generation
 ```
 
 #### Token Security
+
 ```bash
 # Test 1: Token is encrypted in database
 SELECT access_token FROM github_connections;
@@ -242,6 +256,7 @@ GET /github/status
 ```
 
 #### Redirect URI Validation
+
 ```bash
 # Test 1: Only whitelisted redirect URIs allowed
 - http://localhost:8000/github/callback (development)
@@ -295,19 +310,20 @@ done
 
 ### Performance Metrics
 
-| Metric | Target | Actual |
-|--------|--------|--------|
-| OAuth state generation | < 10ms | TBD |
-| Authorization URL building | < 5ms | TBD |
-| Token exchange | < 500ms | TBD |
-| Database query | < 50ms | TBD |
-| Complete flow | < 2s | TBD |
+| Metric                     | Target  | Actual |
+| -------------------------- | ------- | ------ |
+| OAuth state generation     | < 10ms  | TBD    |
+| Authorization URL building | < 5ms   | TBD    |
+| Token exchange             | < 500ms | TBD    |
+| Database query             | < 50ms  | TBD    |
+| Complete flow              | < 2s    | TBD    |
 
 ## Error Scenario Testing
 
 ### Test Error Cases
 
 #### Missing GitHub Credentials
+
 ```bash
 # Test with missing GITHUB_CLIENT_ID
 GITHUB_CLIENT_ID= python main.py
@@ -317,6 +333,7 @@ GET /github/connect
 ```
 
 #### Network Errors
+
 ```bash
 # Test with GitHub API unavailable
 # Mock network timeout or 503 Service Unavailable
@@ -325,12 +342,14 @@ GET /github/callback?code=test&state=test
 ```
 
 #### Database Errors
+
 ```bash
 # Test with database connection down
 # Should gracefully handle and return 500 error
 ```
 
 #### Token Expiration
+
 ```bash
 # Simulate expired access token
 DELETE /github/disconnect
@@ -338,6 +357,7 @@ DELETE /github/disconnect
 ```
 
 #### Concurrent Requests
+
 ```bash
 # Multiple concurrent /github/connect requests from same user
 # Each should get unique state
@@ -347,6 +367,7 @@ DELETE /github/disconnect
 ### Error Response Validation
 
 All errors should return:
+
 ```json
 {
   "detail": "Human-readable error message",
@@ -359,6 +380,7 @@ All errors should return:
 ### User Scenarios
 
 #### Scenario 1: New User Setting Up GitHub
+
 1. User creates ResumeAI account
 2. Navigates to Settings
 3. Sees "Connect your GitHub account" button
@@ -371,6 +393,7 @@ All errors should return:
 **Expected Outcome**: ✅ PASS
 
 #### Scenario 2: Reconnecting After Disconnection
+
 1. User disconnects GitHub account
 2. Sees "Connect with GitHub" button again
 3. Clicks to reconnect
@@ -380,6 +403,7 @@ All errors should return:
 **Expected Outcome**: ✅ PASS
 
 #### Scenario 3: Handling Authorization Denial
+
 1. User clicks "Connect GitHub"
 2. On GitHub, clicks "Cancel"
 3. Returns to app
@@ -389,6 +413,7 @@ All errors should return:
 **Expected Outcome**: ✅ PASS
 
 #### Scenario 4: Long-Running Authorization
+
 1. User starts OAuth flow
 2. Closes browser tab
 3. Days later, clicks link in email
@@ -402,6 +427,7 @@ All errors should return:
 Before releasing, verify:
 
 ### Code Quality
+
 - [ ] All tests pass (100% pass rate)
 - [ ] Code coverage > 85%
 - [ ] No security warnings from OWASP
@@ -409,6 +435,7 @@ Before releasing, verify:
 - [ ] No Python lint errors in backend
 
 ### Functionality
+
 - [ ] OAuth flow works end-to-end
 - [ ] State validation working
 - [ ] Token encryption working
@@ -416,6 +443,7 @@ Before releasing, verify:
 - [ ] Disconnection working
 
 ### Security
+
 - [ ] Token encryption verified
 - [ ] CSRF protection working
 - [ ] Rate limiting working
@@ -423,12 +451,14 @@ Before releasing, verify:
 - [ ] HTTPS enforced
 
 ### Performance
+
 - [ ] Load testing passed
 - [ ] < 2s complete OAuth flow
 - [ ] Database queries optimized
 - [ ] No memory leaks
 
 ### Documentation
+
 - [ ] README updated
 - [ ] OAuth flow documented
 - [ ] API endpoints documented
@@ -436,6 +466,7 @@ Before releasing, verify:
 - [ ] Developer setup guide complete
 
 ### Monitoring
+
 - [ ] Metrics collection working
 - [ ] Error tracking configured
 - [ ] Logs capturing OAuth events
@@ -462,6 +493,7 @@ npm test
 ## Continuous Integration
 
 OAuth testing is automatically run on:
+
 - Every commit via GitHub Actions
 - Pre-merge via branch protection rules
 - Daily nightly builds
@@ -471,19 +503,20 @@ OAuth testing is automatically run on:
 
 ### Test Execution Report
 
-| Test Suite | Status | Coverage | Time |
-|-----------|--------|----------|------|
-| Unit Tests | ⏳ PENDING | TBD | TBD |
-| Integration Tests | ⏳ PENDING | TBD | TBD |
-| E2E Tests | ⏳ PENDING | TBD | TBD |
-| Security Tests | ⏳ PENDING | TBD | TBD |
-| Performance Tests | ⏳ PENDING | TBD | TBD |
+| Test Suite        | Status     | Coverage | Time |
+| ----------------- | ---------- | -------- | ---- |
+| Unit Tests        | ⏳ PENDING | TBD      | TBD  |
+| Integration Tests | ⏳ PENDING | TBD      | TBD  |
+| E2E Tests         | ⏳ PENDING | TBD      | TBD  |
+| Security Tests    | ⏳ PENDING | TBD      | TBD  |
+| Performance Tests | ⏳ PENDING | TBD      | TBD  |
 
 ## Issues and Resolutions
 
 Document any issues found during testing:
 
 ### Issue Template
+
 ```
 **Title**: [Issue Title]
 **Severity**: Critical | High | Medium | Low
@@ -491,9 +524,9 @@ Document any issues found during testing:
 1. Step 1
 2. Step 2
 
-**Expected Result**: 
-**Actual Result**: 
-**Resolution**: 
+**Expected Result**:
+**Actual Result**:
+**Resolution**:
 ```
 
 ## Signoff
@@ -504,6 +537,6 @@ Document any issues found during testing:
 - [ ] Documentation reviewed
 - [ ] Ready for production
 
-**Tested By**: ___________  
-**Date**: ___________  
+**Tested By**: \***\*\_\_\_\*\***  
+**Date**: \***\*\_\_\_\*\***  
 **Version**: 1.0.0

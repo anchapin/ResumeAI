@@ -44,15 +44,12 @@ resume-api/
 1. **Dual Backend Support**: Redis for production, in-memory for development
    - Eliminates Redis dependency for local development
    - Automatic fallback ensures graceful degradation
-   
 2. **Tag-Based Invalidation**: More flexible than simple TTL
    - Group related entries (user:123, resume:456)
    - Bulk invalidation on data changes
-   
 3. **LRU Eviction**: In-memory cache uses OrderedDict for efficient eviction
    - Prevents unbounded memory growth
    - Configurable max size per instance
-   
 4. **Async-First Design**: All operations are async-safe
    - Proper locking for thread-safety
    - Compatible with FastAPI async handlers
@@ -66,6 +63,7 @@ resume-api/
 Entries expire after a configured time-to-live.
 
 **Best for**: Data that becomes stale over time
+
 - Variants: 5 minutes (often regenerated)
 - Profiles: 15 minutes (user updates less frequently)
 - Templates: 1 hour (static reference data)
@@ -80,6 +78,7 @@ await cache_manager.set("key", value, ttl_seconds=600)
 Invalidate related entries when source data changes.
 
 **Best for**: Coordinated cache updates
+
 - User updates: invalidate `user:123`, `profile:123`, `settings:123`
 - Resume changes: invalidate `resume:456`, `variants:456`, `tailored:456`
 
@@ -101,6 +100,7 @@ await cache_manager.delete_by_tags({"resume:456"})
 Least Recently Used entries are evicted when cache is full.
 
 **Best for**: Bounded memory usage
+
 - Max size: configurable (default 10,000 entries)
 - Automatic eviction of oldest unused entries
 
@@ -185,7 +185,7 @@ services:
   api:
     build: ./resume-api
     ports:
-      - "8000:8000"
+      - '8000:8000'
     environment:
       REDIS_HOST: redis
       REDIS_PORT: 6379
@@ -195,11 +195,11 @@ services:
   redis:
     image: redis:7-alpine
     ports:
-      - "6379:6379"
+      - '6379:6379'
     volumes:
       - redis_data:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ['CMD', 'redis-cli', 'ping']
       interval: 5s
       timeout: 3s
       retries: 5
@@ -308,10 +308,10 @@ async def get_variants(resume_id: int):
 async def regenerate_resume(resume_id: int):
     """Regenerate resume and invalidate cache"""
     updated = await regenerate_resume_logic(resume_id)
-    
+
     # Invalidate variant cache
     await CacheInvalidationHook.on_resume_update(resume_id)
-    
+
     return {"status": "regenerated", "resume": updated}
 ```
 
@@ -328,7 +328,7 @@ class UserService:
     async def get_profile(self, user_id: int):
         """Get user profile with user-scoped cache key"""
         return await db.query_user_profile(user_id)
-    
+
     @cache_async(
         ttl_seconds=3600,
         key_builder=lambda user_id: CacheKeyStrategy.by_user_id("settings", user_id),
@@ -337,7 +337,7 @@ class UserService:
     async def get_settings(self, user_id: int):
         """Get user settings with tag-based invalidation"""
         return await db.query_user_settings(user_id)
-    
+
     async def update_user(self, user_id: int, data: dict):
         """Update user and invalidate related cache"""
         await db.update_user(user_id, data)
@@ -509,14 +509,14 @@ async def invalidate_cache(tags: list[str]):
 async def check_cache_health() -> dict:
     """Check cache backend health"""
     cache = get_cache_manager()
-    
+
     try:
         test_key = "health_check"
         await cache.set(test_key, "ok", 1)
         await asyncio.sleep(0.1)
         value = await cache.get(test_key)
         await cache.delete(test_key)
-        
+
         if value == "ok":
             return {"status": "healthy", "backend": cache.backend_type.value}
         else:
@@ -583,16 +583,18 @@ for func, stats in metrics["functions"].items():
 **Target: >85% hit rate**
 
 1. **Increase TTL for stable data**
+
    ```python
    # Change from 5 min to 15 min for profiles
    RESUME_PROFILE = 900
    ```
 
 2. **Use appropriate key prefixes**
+
    ```python
    # ✓ Good: Includes relevant context
    key = f"user:{user_id}:profile"
-   
+
    # ✗ Bad: Too generic
    key = "profile"
    ```
@@ -607,20 +609,20 @@ for func, stats in metrics["functions"].items():
 
 Reference performance metrics (in-memory cache, i7 CPU):
 
-| Operation | Time |
-|-----------|------|
-| Cache Hit | 0.5-1 ms |
-| Cache Miss + Set | 5-10 ms |
-| TTL Expiration Check | 0.1 ms |
-| Tag Invalidation (10 entries) | 0.3 ms |
+| Operation                     | Time     |
+| ----------------------------- | -------- |
+| Cache Hit                     | 0.5-1 ms |
+| Cache Miss + Set              | 5-10 ms  |
+| TTL Expiration Check          | 0.1 ms   |
+| Tag Invalidation (10 entries) | 0.3 ms   |
 
 Redis performance (same hardware, localhost):
 
-| Operation | Time |
-|-----------|------|
-| Redis Hit | 1-2 ms |
-| Redis Miss + Set | 2-4 ms |
-| Network Latency | ~0.5 ms |
+| Operation        | Time    |
+| ---------------- | ------- |
+| Redis Hit        | 1-2 ms  |
+| Redis Miss + Set | 2-4 ms  |
+| Network Latency  | ~0.5 ms |
 
 ### Optimization Checklist
 
@@ -671,12 +673,12 @@ CACHE_MAX_SIZE=10000        # In-memory cache max entries
 
 ### Default TTLs
 
-| Data Type | TTL |
-|-----------|-----|
-| Resume Variants | 5 min |
-| User Profile | 30 min |
-| Salary Data | 24 hours |
-| AI Responses | 10 min |
+| Data Type       | TTL      |
+| --------------- | -------- |
+| Resume Variants | 5 min    |
+| User Profile    | 30 min   |
+| Salary Data     | 24 hours |
+| AI Responses    | 10 min   |
 
 ---
 

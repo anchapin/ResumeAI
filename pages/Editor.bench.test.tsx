@@ -14,33 +14,27 @@ const generateLargeResumeData = (count: number): SimpleResumeData => {
     endDate: '2021',
     current: false,
     description: `Description for ${i}`,
-    tags: ['Tag1', 'Tag2']
+    tags: ['Tag1', 'Tag2'],
   }));
 
   return {
-    name: "Test User",
-    email: "test@example.com",
-    phone: "123",
-    location: "Test Loc",
-    role: "Test Role",
-    summary: "Test summary",
-    skills: ["Test skill"],
+    name: 'Test User',
+    email: 'test@example.com',
+    phone: '123',
+    location: 'Test Loc',
+    role: 'Test Role',
+    summary: 'Test summary',
+    skills: ['Test skill'],
     experience: experiences,
     education: [],
-    projects: []
+    projects: [],
   };
-}
+};
 
 const TestWrapper = ({ count }: { count: number }) => {
   const [resumeData, setResumeData] = useState(generateLargeResumeData(count));
 
-  return (
-    <Editor
-      resumeData={resumeData}
-      onUpdate={setResumeData}
-      onBack={() => {}}
-    />
-  );
+  return <Editor resumeData={resumeData} onUpdate={setResumeData} onBack={() => {}} />;
 };
 
 describe('Editor Performance', () => {
@@ -58,7 +52,7 @@ describe('Editor Performance', () => {
     // Simulate typing a single character
     // Using fireEvent.change triggers the onChange handler
     await act(async () => {
-        fireEvent.change(input, { target: { value: 'Company 0 Updated' } });
+      fireEvent.change(input, { target: { value: 'Company 0 Updated' } });
     });
 
     const endTime = performance.now();

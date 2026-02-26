@@ -9,6 +9,7 @@ This guide explains how to deploy the Resume API service to Google Cloud Run.
 2. **Google Cloud Project** - Create a project at [https://console.cloud.google.com](https://console.cloud.google.com)
 
 3. **Enable APIs** - Run the following commands:
+
    ```bash
    gcloud services enable cloudbuild.googleapis.com
    gcloud services enable run.googleapis.com
@@ -111,16 +112,16 @@ The Cloud Run service is configured with:
 
 Set these via `--set-env-vars` in the deployment command or in the Cloud Console:
 
-| Variable | Description | Required | Default |
-|----------|-------------|-----------|---------|
-| `DEBUG` | Enable debug mode | No | `false` |
-| `AI_PROVIDER` | AI provider (openai, claude, gemini) | Yes | `openai` |
-| `OPENAI_API_KEY` | OpenAI API key | If AI_PROVIDER=openai | - |
-| `ANTHROPIC_API_KEY` | Anthropic API key | If AI_PROVIDER=claude | - |
-| `GEMINI_API_KEY` | Google AI API key | If AI_PROVIDER=gemini | - |
-| `MASTER_API_KEY` | Master API key for frontend | Yes | - |
-| `API_KEYS` | Comma-separated additional API keys | No | - |
-| `REQUIRE_API_KEY` | Require API key authentication | No | `true` |
+| Variable            | Description                          | Required              | Default  |
+| ------------------- | ------------------------------------ | --------------------- | -------- |
+| `DEBUG`             | Enable debug mode                    | No                    | `false`  |
+| `AI_PROVIDER`       | AI provider (openai, claude, gemini) | Yes                   | `openai` |
+| `OPENAI_API_KEY`    | OpenAI API key                       | If AI_PROVIDER=openai | -        |
+| `ANTHROPIC_API_KEY` | Anthropic API key                    | If AI_PROVIDER=claude | -        |
+| `GEMINI_API_KEY`    | Google AI API key                    | If AI_PROVIDER=gemini | -        |
+| `MASTER_API_KEY`    | Master API key for frontend          | Yes                   | -        |
+| `API_KEYS`          | Comma-separated additional API keys  | No                    | -        |
+| `REQUIRE_API_KEY`   | Require API key authentication       | No                    | `true`   |
 
 ## Testing Deployment
 
@@ -156,6 +157,7 @@ To update the service with new code:
 ```
 
 Or manually:
+
 ```bash
 docker build -t ${REPOSITORY}/resume-api:latest .
 docker push ${REPOSITORY}/resume-api:latest
@@ -165,11 +167,13 @@ gcloud run deploy resume-api --image=${REPOSITORY}/resume-api:latest --region=us
 ## Monitoring and Logs
 
 View logs:
+
 ```bash
 gcloud logs tail resume-api --region=us-central1
 ```
 
 View metrics in Cloud Console:
+
 - Go to [Cloud Run](https://console.cloud.google.com/run)
 - Select `resume-api` service
 
@@ -178,6 +182,7 @@ View metrics in Cloud Console:
 ### Out of Memory Errors
 
 If you see "out of memory" errors during PDF generation:
+
 1. Increase memory allocation:
    ```bash
    gcloud run deploy resume-api --memory=4Gi --region=us-central1
@@ -186,6 +191,7 @@ If you see "out of memory" errors during PDF generation:
 ### Timeout Errors
 
 For complex resumes that take longer to compile:
+
 1. Increase timeout:
    ```bash
    gcloud run deploy resume-api --timeout=1200s --region=us-central1
@@ -194,6 +200,7 @@ For complex resumes that take longer to compile:
 ### Cold Start Times
 
 The service scales to zero when idle, causing cold starts (~10-20s). To eliminate cold starts:
+
 1. Set minimum instances to 1:
    ```bash
    gcloud run deploy resume-api --min-instances=1 --region=us-central1
@@ -203,6 +210,7 @@ The service scales to zero when idle, causing cold starts (~10-20s). To eliminat
 ### API Key Issues
 
 If requests fail with 401/403:
+
 1. Verify MASTER_API_KEY is set
 2. Check logs: `gcloud logs tail resume-api --region=us-central1`
 3. Test with curl:
@@ -219,12 +227,14 @@ Based on the default configuration (min-instances=0):
 - **Networking**: ~$0.12 per GB egress
 
 **Estimated monthly cost** (1000 PDF generations):
-- Compute: 1000 * 30s * 2Gi = ~$0.0024
-- Requests: 1000 * $0.40 / 1M = ~$0.0004
-- Networking: 1000 * 1MB * $0.12 / 1GB = ~$0.12
+
+- Compute: 1000 _ 30s _ 2Gi = ~$0.0024
+- Requests: 1000 \* $0.40 / 1M = ~$0.0004
+- Networking: 1000 _ 1MB _ $0.12 / 1GB = ~$0.12
 - **Total**: ~$0.13/month
 
 With min-instances=1:
+
 - Always-on: ~$30-50/month (2Gi, 2 CPU)
 
 ## Security Best Practices

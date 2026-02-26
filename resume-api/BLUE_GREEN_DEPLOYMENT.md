@@ -116,11 +116,11 @@ services:
     container_name: resume-api-blue
     env_file: .env.blue
     ports:
-      - "8001:8000"
+      - '8001:8000'
     networks:
       - resumeai
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      test: ['CMD', 'curl', '-f', 'http://localhost:8000/health']
       interval: 10s
       timeout: 5s
       retries: 3
@@ -133,11 +133,11 @@ services:
     container_name: resume-api-green
     env_file: .env.green
     ports:
-      - "8002:8000"
+      - '8002:8000'
     networks:
       - resumeai
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      test: ['CMD', 'curl', '-f', 'http://localhost:8000/health']
       interval: 10s
       timeout: 5s
       retries: 3
@@ -149,7 +149,7 @@ services:
     image: nginx:latest
     container_name: nginx-proxy
     ports:
-      - "8000:80"
+      - '8000:80'
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf
     depends_on:
@@ -190,7 +190,7 @@ server {
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
-        
+
         # Connection settings
         proxy_connect_timeout 60s;
         proxy_send_timeout 60s;
@@ -433,11 +433,11 @@ while time.time() - start_time < 300:  # Monitor for 5 minutes
     except:
         errors += 1
         requests += 1
-    
+
     error_rate = (errors / requests * 100) if requests > 0 else 0
     if error_rate > 1:
         print(f"WARNING: High error rate {error_rate}% ({errors}/{requests})")
-    
+
     time.sleep(2)
 
 print(f"Traffic switch complete. Final error rate: {error_rate}%")
@@ -493,19 +493,19 @@ For extra safety, shift traffic gradually:
 # Using weighted target groups (AWS ELB)
 for WEIGHT in 10 25 50 75 100; do
     echo "Shifting $WEIGHT% traffic to GREEN..."
-    
+
     # Update weight distribution
     aws elbv2 modify-target-group-attributes \
       --target-group-arn $BLUE_TG \
       --attributes Key=stickiness.lb_cookie.duration_seconds,Value=$((100-WEIGHT))
-    
+
     aws elbv2 modify-target-group-attributes \
       --target-group-arn $GREEN_TG \
       --attributes Key=stickiness.lb_cookie.duration_seconds,Value=$WEIGHT
-    
+
     # Wait and monitor
     sleep 300  # 5 minutes at each step
-    
+
     # Check error rate
     ERROR_RATE=$(curl -s http://localhost:8000/v1/metrics | jq '.error_rate')
     if (( $(echo "$ERROR_RATE > 1" | bc -l) )); then
@@ -684,10 +684,10 @@ If using read replicas:
 ```yaml
 Shared Database:
   Primary: writes from both BLUE and GREEN
-  Read Replicas: 
+  Read Replicas:
     - BLUE reads from replica 1
     - GREEN reads from replica 2
-  
+
 Replication Lag: < 100ms (acceptable for most use cases)
 ```
 
@@ -711,12 +711,12 @@ Ensure both environments log all requests:
 
 ```yaml
 logging:
-  format: "$timestamp $environment $service_id $request_path $status $response_time_ms"
+  format: '$timestamp $environment $service_id $request_path $status $response_time_ms'
   level: info
   outputs:
     - file: /var/log/resume-api.log
-    - file: /var/log/resume-api-${ENV}.log  # Separate per environment
-    - stdout: true  # For container logging
+    - file: /var/log/resume-api-${ENV}.log # Separate per environment
+    - stdout: true # For container logging
 ```
 
 ## Cost Optimization

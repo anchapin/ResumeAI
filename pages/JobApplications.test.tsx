@@ -26,7 +26,7 @@ const mockApplications = [
     created_at: '2023-10-24T00:00:00Z',
     updated_at: '2023-10-24T00:00:00Z',
     tags: [],
-    salary_currency: 'USD'
+    salary_currency: 'USD',
   },
   {
     id: 2,
@@ -36,7 +36,7 @@ const mockApplications = [
     created_at: '2023-10-22T00:00:00Z',
     updated_at: '2023-10-22T00:00:00Z',
     tags: [],
-    salary_currency: 'USD'
+    salary_currency: 'USD',
   },
   {
     id: 3,
@@ -46,7 +46,7 @@ const mockApplications = [
     created_at: '2023-10-15T00:00:00Z',
     updated_at: '2023-10-15T00:00:00Z',
     tags: [],
-    salary_currency: 'USD'
+    salary_currency: 'USD',
   },
   {
     id: 4,
@@ -56,7 +56,7 @@ const mockApplications = [
     created_at: '2023-09-28T00:00:00Z',
     updated_at: '2023-09-28T00:00:00Z',
     tags: [],
-    salary_currency: 'USD'
+    salary_currency: 'USD',
   },
   {
     id: 5,
@@ -66,7 +66,7 @@ const mockApplications = [
     created_at: '2023-11-01T00:00:00Z',
     updated_at: '2023-11-01T00:00:00Z',
     tags: [],
-    salary_currency: 'USD'
+    salary_currency: 'USD',
   },
   {
     id: 6,
@@ -76,7 +76,7 @@ const mockApplications = [
     created_at: '2023-10-05T00:00:00Z',
     updated_at: '2023-10-05T00:00:00Z',
     tags: [],
-    salary_currency: 'USD'
+    salary_currency: 'USD',
   },
   {
     id: 7,
@@ -86,8 +86,8 @@ const mockApplications = [
     created_at: '2023-11-03T00:00:00Z',
     updated_at: '2023-11-03T00:00:00Z',
     tags: [],
-    salary_currency: 'USD'
-  }
+    salary_currency: 'USD',
+  },
 ];
 
 describe('JobApplications Component', () => {
@@ -116,7 +116,9 @@ describe('JobApplications Component', () => {
       await waitFor(() => expect(screen.getByText('Google')).toBeInTheDocument());
       const icons = screen.getAllByText(/notifications/i);
       expect(icons.length).toBeGreaterThan(0);
-      const notificationIcon = icons.find(icon => icon.classList.contains('material-symbols-outlined'));
+      const notificationIcon = icons.find((icon) =>
+        icon.classList.contains('material-symbols-outlined'),
+      );
       expect(notificationIcon).toBeInTheDocument();
     });
 
@@ -153,14 +155,16 @@ describe('JobApplications Component', () => {
         'text-white',
         'px-4',
         'py-2',
-        'rounded-lg'
+        'rounded-lg',
       );
     });
 
     it('Add Application button contains add icon', async () => {
       render(<JobApplications />);
       await waitFor(() => expect(screen.getByText('Google')).toBeInTheDocument());
-      const addIcon = screen.getAllByText(/add/i).find(el => el.classList.contains('material-symbols-outlined'));
+      const addIcon = screen
+        .getAllByText(/add/i)
+        .find((el) => el.classList.contains('material-symbols-outlined'));
       expect(addIcon).toBeInTheDocument();
     });
   });
@@ -200,10 +204,10 @@ describe('JobApplications Component', () => {
     it('renders table with headers', async () => {
       render(<JobApplications />);
       await waitFor(() => expect(screen.getByText('Google')).toBeInTheDocument());
-      
+
       const tableHeaders = screen.getAllByRole('columnheader');
       expect(tableHeaders.length).toBe(5);
-      
+
       expect(screen.getByText('Company')).toBeInTheDocument();
       expect(screen.getByText('Role')).toBeInTheDocument();
       expect(screen.getByText('Status')).toBeInTheDocument();
@@ -214,7 +218,7 @@ describe('JobApplications Component', () => {
     it('renders mock application data', async () => {
       render(<JobApplications />);
       await waitFor(() => expect(screen.getByText('Google')).toBeInTheDocument());
-      
+
       // Check for company names
       expect(screen.getByText('Google')).toBeInTheDocument();
       expect(screen.getByText('Stripe')).toBeInTheDocument();
@@ -228,7 +232,7 @@ describe('JobApplications Component', () => {
     it('renders job roles', async () => {
       render(<JobApplications />);
       await waitFor(() => expect(screen.getByText('Google')).toBeInTheDocument());
-      
+
       expect(screen.getByText('Software Engineer')).toBeInTheDocument();
       expect(screen.getByText('Product Designer')).toBeInTheDocument();
       expect(screen.getByText('Frontend Developer')).toBeInTheDocument();
@@ -241,17 +245,17 @@ describe('JobApplications Component', () => {
     it('renders status badges for all applications', async () => {
       render(<JobApplications />);
       await waitFor(() => expect(screen.getByText('Google')).toBeInTheDocument());
-      
+
       // Check for status badges
       const appliedBadges = screen.getAllByText('Applied');
       expect(appliedBadges.length).toBe(3); // Google, Airbnb, Amazon
-      
+
       const interviewBadges = screen.getAllByText('Interview');
       expect(interviewBadges.length).toBe(2); // Stripe, Microsoft
-      
+
       const offerBadges = screen.getByText('Offer');
       expect(offerBadges).toBeInTheDocument(); // Vercel
-      
+
       const rejectedBadges = screen.getByText('Rejected');
       expect(rejectedBadges).toBeInTheDocument(); // Netflix
     });
@@ -259,7 +263,7 @@ describe('JobApplications Component', () => {
     it.skip('renders date applied for applications', async () => {
       render(<JobApplications />);
       await waitFor(() => expect(screen.getByText('Google')).toBeInTheDocument());
-      
+
       expect(screen.getByText('Oct 24, 2023')).toBeInTheDocument();
       expect(screen.getByText('Oct 22, 2023')).toBeInTheDocument();
       expect(screen.getByText('Oct 15, 2023')).toBeInTheDocument();
@@ -299,7 +303,7 @@ describe('JobApplications Component', () => {
       await waitFor(() => expect(screen.getByText('Google')).toBeInTheDocument());
       const tbody = document.querySelector('tbody');
       expect(tbody).toBeInTheDocument();
-      
+
       const rows = tbody?.querySelectorAll('tr');
       expect(rows?.length).toBe(7); // 7 mock applications
     });
@@ -372,7 +376,12 @@ describe('JobApplications Component', () => {
       await waitFor(() => expect(screen.getByText('Google')).toBeInTheDocument());
       const tableContainer = document.querySelector('.bg-white.rounded-2xl');
       expect(tableContainer).toBeInTheDocument();
-      expect(tableContainer).toHaveClass('border', 'border-slate-200', 'shadow-sm', 'overflow-hidden');
+      expect(tableContainer).toHaveClass(
+        'border',
+        'border-slate-200',
+        'shadow-sm',
+        'overflow-hidden',
+      );
     });
   });
 
@@ -387,7 +396,7 @@ describe('JobApplications Component', () => {
     it('buttons are identifiable by their text content', async () => {
       render(<JobApplications />);
       await waitFor(() => expect(screen.getByText('Google')).toBeInTheDocument());
-      
+
       expect(screen.getByRole('button', { name: /add application/i })).toBeInTheDocument();
       expect(screen.getByRole('button', { name: /filter/i })).toBeInTheDocument();
       expect(screen.getByRole('button', { name: /sort/i })).toBeInTheDocument();
@@ -419,7 +428,7 @@ describe('JobApplications Component', () => {
     it('applications have varied statuses', async () => {
       render(<JobApplications />);
       await waitFor(() => expect(screen.getByText('Google')).toBeInTheDocument());
-      
+
       const statuses = [
         'Applied',
         'Interview',
@@ -427,13 +436,13 @@ describe('JobApplications Component', () => {
         'Rejected',
         'Applied',
         'Interview',
-        'Applied'
+        'Applied',
       ];
-      
-      statuses.forEach(status => {
+
+      statuses.forEach((status) => {
         const elements = screen.getAllByText(status);
         expect(elements.length).toBeGreaterThan(0);
-        elements.forEach(el => expect(el).toBeInTheDocument());
+        elements.forEach((el) => expect(el).toBeInTheDocument());
       });
     });
 

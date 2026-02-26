@@ -1,5 +1,10 @@
 import React from 'react';
-import { errorHandler, ErrorType, createValidationError, createTimeoutError } from '../utils/errorHandler';
+import {
+  errorHandler,
+  ErrorType,
+  createValidationError,
+  createTimeoutError,
+} from '../utils/errorHandler';
 
 /**
  * Test panel for demonstrating and testing error handling
@@ -7,10 +12,9 @@ import { errorHandler, ErrorType, createValidationError, createTimeoutError } fr
  */
 export const ErrorTestPanel: React.FC = () => {
   const triggerNetworkError = () => {
-    errorHandler.handleError(
-      new TypeError('Failed to fetch from server'),
-      { action: 'testNetworkError' }
-    );
+    errorHandler.handleError(new TypeError('Failed to fetch from server'), {
+      action: 'testNetworkError',
+    });
   };
 
   const triggerValidationError = () => {
@@ -19,7 +23,7 @@ export const ErrorTestPanel: React.FC = () => {
         response: { status: 400 },
         message: 'Validation failed',
       },
-      { action: 'testValidationError' }
+      { action: 'testValidationError' },
     );
   };
 
@@ -29,7 +33,7 @@ export const ErrorTestPanel: React.FC = () => {
         response: { status: 401 },
         message: 'Unauthorized access',
       },
-      { action: 'testAuthError' }
+      { action: 'testAuthError' },
     );
   };
 
@@ -39,7 +43,7 @@ export const ErrorTestPanel: React.FC = () => {
         response: { status: 403 },
         message: 'Forbidden resource',
       },
-      { action: 'testPermissionError' }
+      { action: 'testPermissionError' },
     );
   };
 
@@ -49,7 +53,7 @@ export const ErrorTestPanel: React.FC = () => {
         response: { status: 404 },
         message: 'Resource not found',
       },
-      { action: 'testNotFoundError' }
+      { action: 'testNotFoundError' },
     );
   };
 
@@ -59,7 +63,7 @@ export const ErrorTestPanel: React.FC = () => {
         response: { status: 408 },
         message: 'Request timeout',
       },
-      { action: 'testTimeoutError' }
+      { action: 'testTimeoutError' },
     );
   };
 
@@ -69,15 +73,14 @@ export const ErrorTestPanel: React.FC = () => {
         response: { status: 500 },
         message: 'Internal server error',
       },
-      { action: 'testServerError' }
+      { action: 'testServerError' },
     );
   };
 
   const triggerUnknownError = () => {
-    errorHandler.handleError(
-      new Error('An unexpected error occurred'),
-      { action: 'testUnknownError' }
-    );
+    errorHandler.handleError(new Error('An unexpected error occurred'), {
+      action: 'testUnknownError',
+    });
   };
 
   const triggerValidationErrorWithDetails = () => {
@@ -101,12 +104,12 @@ export const ErrorTestPanel: React.FC = () => {
   const showHistory = () => {
     const history = errorHandler.getErrorHistory();
     console.table(
-      history.map(e => ({
+      history.map((e) => ({
         id: e.id,
         type: e.type,
         message: e.message.substring(0, 50),
         timestamp: new Date(e.timestamp).toLocaleTimeString(),
-      }))
+      })),
     );
   };
 

@@ -31,6 +31,7 @@ LOG_FILE=/var/log/resume-api/app.log
 Tracks authentication attempts, token operations, and session management.
 
 **Common Events**:
+
 - `auth_attempt`: Authentication attempt initiated
 - `auth_success`: Successful authentication
 - `auth_failure`: Failed authentication
@@ -43,6 +44,7 @@ Tracks authentication attempts, token operations, and session management.
 Tracks GitHub OAuth flow and GitHub API interactions.
 
 **Common Events**:
+
 - `github_oauth_started`: OAuth flow initiated
 - `github_oauth_success`: OAuth flow completed
 - `github_oauth_failed`: OAuth flow failed
@@ -57,6 +59,7 @@ Tracks GitHub OAuth flow and GitHub API interactions.
 Tracks LinkedIn OAuth flow and LinkedIn API interactions.
 
 **Common Events**:
+
 - `linkedin_oauth_started`: OAuth flow initiated
 - `linkedin_oauth_success`: OAuth flow completed
 - `linkedin_oauth_failed`: OAuth flow failed
@@ -70,6 +73,7 @@ Tracks LinkedIn OAuth flow and LinkedIn API interactions.
 Tracks API endpoint calls and request processing.
 
 **Common Events**:
+
 - `endpoint_called`: Endpoint was called
 - `request_validated`: Request passed validation
 - `response_generated`: Response successfully generated
@@ -80,6 +84,7 @@ Tracks API endpoint calls and request processing.
 Tracks database connections, queries, and transactions.
 
 **Common Events**:
+
 - `connection_pool_created`: Connection pool initialized
 - `connection_established`: New database connection opened
 - `connection_closed`: Database connection closed
@@ -94,6 +99,7 @@ Tracks database connections, queries, and transactions.
 Tracks database replica health and selection.
 
 **Common Events**:
+
 - `replica_initialized`: Replica pool initialized
 - `replica_health_check`: Health check performed
 - `replica_marked_unhealthy`: Replica marked unavailable
@@ -105,6 +111,7 @@ Tracks database replica health and selection.
 Tracks cache hits, misses, and evictions.
 
 **Common Events**:
+
 - `cache_hit`: Data found in cache
 - `cache_miss`: Data not in cache
 - `cache_evicted`: Cache entry removed (LRU)
@@ -117,6 +124,7 @@ Tracks cache hits, misses, and evictions.
 Tracks errors and exceptions in request processing.
 
 **Common Events**:
+
 - `request_error`: Request resulted in error (4xx)
 - `request_failed`: Request failed (5xx)
 - `unhandled_exception`: Unhandled exception occurred
@@ -128,6 +136,7 @@ Tracks errors and exceptions in request processing.
 Tracks all requests for monitoring and metrics.
 
 **Common Events**:
+
 - `request_started`: Request processing started
 - `request_completed`: Request completed successfully
 - `request_failed`: Request failed
@@ -138,6 +147,7 @@ Tracks all requests for monitoring and metrics.
 Tracks health check results and service status.
 
 **Common Events**:
+
 - `health_check_passed`: Health check passed
 - `health_check_failed`: Health check failed (ERROR level)
 - `health_check_degraded`: Partial health issue (WARNING level)
@@ -148,6 +158,7 @@ Tracks health check results and service status.
 Tracks feature flag status changes.
 
 **Common Events**:
+
 - `feature_flag_enabled`: Feature flag enabled
 - `feature_flag_disabled`: Feature flag disabled
 - `feature_flag_maintenance`: Feature under maintenance
@@ -158,6 +169,7 @@ Tracks feature flag status changes.
 Tracks retry attempts and exhaustion.
 
 **Common Events**:
+
 - `retry_attempt`: Attempting retry (WARNING level)
 - `retry_exhausted`: Retries exhausted (ERROR level)
 - `retry_success`: Request succeeded after retry
@@ -167,6 +179,7 @@ Tracks retry attempts and exhaustion.
 Tracks AI provider usage and fallback.
 
 **Common Events**:
+
 - `attempting_provider`: Attempting to use provider
 - `provider_success`: Provider succeeded
 - `provider_failed`: Provider failed (WARNING level)
@@ -181,7 +194,7 @@ All log entries follow this standard structure:
 {
   "timestamp": "ISO 8601 UTC timestamp",
   "event": "event_name",
-  "log_level": "DEBUG|INFO|WARNING|ERROR|CRITICAL",
+  "log_level": "DEBUG|INFO|WARNING|ERROR|CRITICAL"
   // ... additional context fields
 }
 ```

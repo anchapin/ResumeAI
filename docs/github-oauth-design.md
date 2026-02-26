@@ -3,6 +3,7 @@
 ## Problem Statement
 
 The current implementation uses the `gh` CLI tool which:
+
 - Only works in local development
 - Runs on the server, not the client
 - Requires server-side GitHub authentication
@@ -49,6 +50,7 @@ public_repo      - Read public repositories
 ### 1. GitHub OAuth App Registration
 
 Create OAuth App at https://github.com/settings/developers:
+
 - **Application name**: ResumeAI
 - **Homepage URL**: https://resumeai.example.com
 - **Authorization callback URL**: https://api.resumeai.example.com/github/callback
@@ -88,6 +90,7 @@ CREATE INDEX idx_github_connections_github_user ON user_github_connections(githu
 ### 4. API Endpoints
 
 #### GET /github/connect
+
 Initiates OAuth flow, returns authorization URL.
 
 ```python
@@ -99,19 +102,20 @@ async def github_connect(
     """Generate GitHub OAuth authorization URL."""
     state = secrets.token_urlsafe(32)
     # Store state in Redis/cache for validation
-    
+
     params = {
         "client_id": settings.github_client_id,
         "redirect_uri": redirect_uri or settings.github_callback_url,
         "scope": "read:user public_repo",
         "state": state,
     }
-    
+
     auth_url = f"https://github.com/login/oauth/authorize?{urlencode(params)}"
     return {"authorization_url": auth_url, "state": state}
 ```
 
 #### GET /github/callback
+
 Handles OAuth callback from GitHub.
 
 ```python
@@ -123,21 +127,22 @@ async def github_callback(
 ):
     """Exchange OAuth code for access token."""
     # Validate state parameter
-    
+
     # Exchange code for token
     token_response = await exchange_code_for_token(code)
-    
+
     # Get GitHub user info
     github_user = await get_github_user(token_response["access_token"])
-    
+
     # Store connection in database
     # Encrypt access_token before storing!
-    
+
     # Redirect to frontend with success
     return RedirectResponse(url=f"{frontend_url}/settings/github?connected=true")
 ```
 
 #### DELETE /github/disconnect
+
 Removes GitHub connection.
 
 ```python
@@ -152,6 +157,7 @@ async def github_disconnect(
 ```
 
 #### GET /github/status (Updated)
+
 Returns connection status for current user.
 
 ```python
@@ -162,13 +168,13 @@ async def get_github_status(
 ):
     """Get GitHub connection status for current user."""
     connection = await get_user_github_connection(auth.user_id, db)
-    
+
     if not connection:
         return {
             "connected": False,
             "username": None
         }
-    
+
     return {
         "connected": True,
         "username": connection.github_username,
@@ -177,6 +183,7 @@ async def get_github_status(
 ```
 
 #### GET /github/projects (Updated)
+
 Fetches projects using stored OAuth token.
 
 ```python
@@ -191,19 +198,19 @@ async def get_github_projects(
     """Fetch GitHub projects using user's OAuth token."""
     # Get user's GitHub connection
     connection = await get_user_github_connection(auth.user_id, db)
-    
+
     if not connection:
         raise HTTPException(
             status_code=401,
             detail="GitHub not connected. Please connect your GitHub account first."
         )
-    
+
     # Decrypt access token
     access_token = decrypt_token(connection.access_token)
-    
+
     # Use GitHub API directly (not gh CLI)
     repos = await fetch_repos_via_api(access_token, months)
-    
+
     # ... rest of the logic
 ```
 
@@ -216,7 +223,7 @@ import httpx
 
 class GitHubAPIClient:
     """GitHub API client using OAuth tokens."""
-    
+
     def __init__(self, access_token: str):
         self.access_token = access_token
         self.base_url = "https://api.github.com"
@@ -224,7 +231,7 @@ class GitHubAPIClient:
             "Authorization": f"Bearer {access_token}",
             "Accept": "application/vnd.github.v3+json",
         }
-    
+
     async def get_user(self) -> dict:
         """Get authenticated user info."""
         async with httpx.AsyncClient() as client:
@@ -233,7 +240,7 @@ class GitHubAPIClient:
                 headers=self.headers
             )
             return response.json()
-    
+
     async def list_repos(
         self,
         per_page: int = 100,
@@ -253,7 +260,7 @@ class GitHubAPIClient:
                 }
             )
             return response.json()
-    
+
     async def get_repo_topics(self, owner: str, repo: str) -> list[str]:
         """Get repository topics."""
         async with httpx.AsyncClient() as client:
@@ -267,23 +274,25 @@ class GitHubAPIClient:
 ### 6. Token Security
 
 **Encryption at Rest:**
+
 ```python
 from cryptography.fernet import Fernet
 
 class TokenEncryption:
     """Encrypt/decrypt OAuth tokens for storage."""
-    
+
     def __init__(self, key: bytes):
         self.fernet = Fernet(key)
-    
+
     def encrypt(self, token: str) -> str:
         return self.fernet.encrypt(token.encode()).decode()
-    
+
     def decrypt(self, encrypted_token: str) -> str:
         return self.fernet.decrypt(encrypted_token.encode()).decode()
 ```
 
 **Environment Variable:**
+
 ```env
 TOKEN_ENCRYPTION_KEY=<generate with: python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())">
 ```
@@ -295,53 +304,49 @@ TOKEN_ENCRYPTION_KEY=<generate with: python -c "from cryptography.fernet import 
 ```tsx
 // components/GitHubSettings.tsx
 const GitHubSettings: React.FC = () => {
-    const [status, setStatus] = useState<GitHubStatus | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
-    
-    useEffect(() => {
-        fetchGitHubStatus();
-    }, []);
-    
-    const handleConnect = async () => {
-        const { authorization_url } = await api.get('/github/connect');
-        window.location.href = authorization_url;
-    };
-    
-    const handleDisconnect = async () => {
-        await api.delete('/github/disconnect');
-        setStatus({ connected: false, username: null });
-    };
-    
-    return (
-        <div className="bg-white rounded-xl border p-6">
-            <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                    <GitHubIcon className="w-10 h-10" />
-                    <div>
-                        <h3 className="font-bold">GitHub Connection</h3>
-                        {status?.connected ? (
-                            <p className="text-sm text-green-600">
-                                Connected as {status.username}
-                            </p>
-                        ) : (
-                            <p className="text-sm text-slate-500">
-                                Connect to import your repositories
-                            </p>
-                        )}
-                    </div>
-                </div>
-                {status?.connected ? (
-                    <button onClick={handleDisconnect} className="btn-secondary">
-                        Disconnect
-                    </button>
-                ) : (
-                    <button onClick={handleConnect} className="btn-primary">
-                        Connect GitHub
-                    </button>
-                )}
-            </div>
+  const [status, setStatus] = useState<GitHubStatus | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    fetchGitHubStatus();
+  }, []);
+
+  const handleConnect = async () => {
+    const { authorization_url } = await api.get('/github/connect');
+    window.location.href = authorization_url;
+  };
+
+  const handleDisconnect = async () => {
+    await api.delete('/github/disconnect');
+    setStatus({ connected: false, username: null });
+  };
+
+  return (
+    <div className="bg-white rounded-xl border p-6">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <GitHubIcon className="w-10 h-10" />
+          <div>
+            <h3 className="font-bold">GitHub Connection</h3>
+            {status?.connected ? (
+              <p className="text-sm text-green-600">Connected as {status.username}</p>
+            ) : (
+              <p className="text-sm text-slate-500">Connect to import your repositories</p>
+            )}
+          </div>
         </div>
-    );
+        {status?.connected ? (
+          <button onClick={handleDisconnect} className="btn-secondary">
+            Disconnect
+          </button>
+        ) : (
+          <button onClick={handleConnect} className="btn-primary">
+            Connect GitHub
+          </button>
+        )}
+      </div>
+    </div>
+  );
 };
 ```
 
@@ -350,50 +355,53 @@ const GitHubSettings: React.FC = () => {
 ```tsx
 // components/GitHubSyncDialog.tsx
 const GitHubSyncDialog: React.FC<Props> = ({ isOpen, onClose, onImport }) => {
-    const [connectionStatus, setConnectionStatus] = useState<GitHubStatus | null>(null);
-    
-    useEffect(() => {
-        if (isOpen) {
-            // Check if user has connected GitHub
-            fetchGitHubStatus().then(setConnectionStatus);
-        }
-    }, [isOpen]);
-    
-    if (!connectionStatus?.connected) {
-        return (
-            <Dialog open={isOpen} onClose={onClose}>
-                <div className="text-center py-8">
-                    <GitHubIcon className="w-16 h-16 mx-auto mb-4" />
-                    <h2 className="text-xl font-bold mb-2">Connect Your GitHub</h2>
-                    <p className="text-slate-600 mb-6">
-                        Connect your GitHub account to import your repositories as projects.
-                    </p>
-                    <button onClick={handleConnect} className="btn-primary">
-                        Connect GitHub Account
-                    </button>
-                </div>
-            </Dialog>
-        );
+  const [connectionStatus, setConnectionStatus] = useState<GitHubStatus | null>(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      // Check if user has connected GitHub
+      fetchGitHubStatus().then(setConnectionStatus);
     }
-    
-    // ... rest of the dialog for fetching and selecting repos
+  }, [isOpen]);
+
+  if (!connectionStatus?.connected) {
+    return (
+      <Dialog open={isOpen} onClose={onClose}>
+        <div className="text-center py-8">
+          <GitHubIcon className="w-16 h-16 mx-auto mb-4" />
+          <h2 className="text-xl font-bold mb-2">Connect Your GitHub</h2>
+          <p className="text-slate-600 mb-6">
+            Connect your GitHub account to import your repositories as projects.
+          </p>
+          <button onClick={handleConnect} className="btn-primary">
+            Connect GitHub Account
+          </button>
+        </div>
+      </Dialog>
+    );
+  }
+
+  // ... rest of the dialog for fetching and selecting repos
 };
 ```
 
 ## Migration Path
 
 ### Phase 1: Add OAuth Support (Backward Compatible)
+
 1. Add OAuth endpoints alongside existing `gh` CLI code
 2. Add database table for storing connections
 3. Update frontend to show connection status
 4. Keep `gh` CLI as fallback for local development
 
 ### Phase 2: Deprecate CLI Approach
+
 1. Remove `gh` CLI code from production
 2. Keep for local development with feature flag
 3. Update documentation
 
 ### Phase 3: Production Only OAuth
+
 1. Remove all `gh` CLI code
 2. OAuth-only approach
 
@@ -402,17 +410,20 @@ const GitHubSyncDialog: React.FC<Props> = ({ isOpen, onClose, onImport }) => {
 For more granular permissions, consider GitHub App instead:
 
 **Pros:**
+
 - Fine-grained repository permissions
 - Can be installed on organizations
 - Better for team/enterprise use
 - Webhook support for real-time updates
 
 **Cons:**
+
 - More complex setup
 - Requires GitHub App manifest
 - User must "install" the app
 
 **When to use:**
+
 - Enterprise customers
 - Need organization-level access
 - Want webhook notifications
@@ -430,6 +441,7 @@ For more granular permissions, consider GitHub App instead:
 ## Cost Considerations
 
 GitHub API Rate Limits:
+
 - **Authenticated requests**: 5,000 requests/hour per user
 - **Unauthenticated**: 60 requests/hour per IP
 
@@ -444,11 +456,11 @@ With OAuth, each user has their own rate limit, making this scalable.
 
 ## Summary
 
-| Aspect | Current (gh CLI) | Proposed (OAuth) |
-|--------|------------------|------------------|
-| Multi-user | ❌ No | ✅ Yes |
-| Production | ❌ No | ✅ Yes |
-| Per-user rate limits | ❌ No | ✅ Yes |
-| Token security | ❌ Shared | ✅ Per-user encrypted |
-| User experience | ❌ Requires CLI | ✅ Browser-based |
-| Scalability | ❌ Limited | ✅ Scales with users |
+| Aspect               | Current (gh CLI) | Proposed (OAuth)      |
+| -------------------- | ---------------- | --------------------- |
+| Multi-user           | ❌ No            | ✅ Yes                |
+| Production           | ❌ No            | ✅ Yes                |
+| Per-user rate limits | ❌ No            | ✅ Yes                |
+| Token security       | ❌ Shared        | ✅ Per-user encrypted |
+| User experience      | ❌ Requires CLI  | ✅ Browser-based      |
+| Scalability          | ❌ Limited       | ✅ Scales with users  |

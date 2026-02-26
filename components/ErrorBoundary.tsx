@@ -34,12 +34,12 @@ class ErrorBoundary extends Component<Props, State> {
   componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
     // Log error to console in development
     console.error('ErrorBoundary caught an error:', error, errorInfo);
-    
+
     // Call optional onError callback
     if (this.props.onError) {
       this.props.onError(error, errorInfo);
     }
-    
+
     // In production, you could send to error reporting service here
     // e.g., Sentry, Bugsnag, etc.
   }
@@ -96,7 +96,11 @@ interface ErrorFallbackProps {
 /**
  * A reusable fallback UI component for use with ErrorBoundary
  */
-export function ErrorFallback({ error, resetError, message }: ErrorFallbackProps): React.ReactElement {
+export function ErrorFallback({
+  error,
+  resetError,
+  message,
+}: ErrorFallbackProps): React.ReactElement {
   return (
     <div className="min-h-[200px] flex flex-col items-center justify-center p-8 bg-red-50 border border-red-200 rounded-xl m-4">
       <div className="flex items-center gap-3 mb-4">

@@ -39,7 +39,7 @@ const MemberList: React.FC<MemberListProps> = ({
 
   const handleRoleChange = async (member: TeamMember, newRole: MemberRole) => {
     if (!canManageMember(member)) {
-      showErrorToast('You do not have permission to change this member\'s role');
+      showErrorToast("You do not have permission to change this member's role");
       return;
     }
 
@@ -119,7 +119,7 @@ const MemberList: React.FC<MemberListProps> = ({
     if (name) {
       return name
         .split(' ')
-        .map(part => part.charAt(0))
+        .map((part) => part.charAt(0))
         .join('')
         .toUpperCase()
         .slice(0, 2);
@@ -192,7 +192,9 @@ const MemberList: React.FC<MemberListProps> = ({
                   title="Remove member"
                 >
                   {loadingUserId === member.user_id ? (
-                    <span className="material-symbols-outlined animate-spin text-[18px]">progress_activity</span>
+                    <span className="material-symbols-outlined animate-spin text-[18px]">
+                      progress_activity
+                    </span>
                   ) : (
                     <span className="material-symbols-outlined text-[18px]">person_remove</span>
                   )}
@@ -207,9 +209,7 @@ const MemberList: React.FC<MemberListProps> = ({
         <div className="text-center py-8">
           <span className="material-symbols-outlined text-slate-300 text-6xl mb-4">group_off</span>
           <p className="text-slate-500 font-medium mb-2">No members yet</p>
-          <p className="text-slate-400 text-sm">
-            Invite team members to start collaborating
-          </p>
+          <p className="text-slate-400 text-sm">Invite team members to start collaborating</p>
         </div>
       )}
     </div>

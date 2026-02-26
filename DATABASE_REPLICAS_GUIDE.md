@@ -100,7 +100,7 @@ services:
       POSTGRES_PASSWORD: password
       POSTGRES_DB: resumeai
     ports:
-      - "5432:5432"
+      - '5432:5432'
     volumes:
       - primary-data:/var/lib/postgresql/data
 
@@ -111,7 +111,7 @@ services:
       POSTGRES_PASSWORD: password
       POSTGRES_DB: resumeai
     ports:
-      - "5433:5432"
+      - '5433:5432'
     volumes:
       - replica1-data:/var/lib/postgresql/data
     depends_on:
@@ -124,7 +124,7 @@ services:
       POSTGRES_PASSWORD: password
       POSTGRES_DB: resumeai
     ports:
-      - "5434:5432"
+      - '5434:5432'
     volumes:
       - replica2-data:/var/lib/postgresql/data
     depends_on:
@@ -136,7 +136,7 @@ services:
       DATABASE_URL: postgresql+asyncpg://resumeai:password@postgres-primary:5432/resumeai
       DATABASE_REPLICA_URLS: postgresql+asyncpg://resumeai:password@postgres-replica1:5432/resumeai,postgresql+asyncpg://resumeai:password@postgres-replica2:5432/resumeai
     ports:
-      - "8000:8000"
+      - '8000:8000'
     depends_on:
       - postgres-primary
       - postgres-replica1
@@ -153,6 +153,7 @@ volumes:
 ### AWS RDS
 
 1. **Create Primary RDS Instance**
+
    ```
    - Engine: PostgreSQL 15+
    - Multi-AZ: Yes (for high availability)
@@ -160,6 +161,7 @@ volumes:
    ```
 
 2. **Create Read Replicas**
+
    ```
    - Same PostgreSQL version as primary
    - Different AZ for high availability
@@ -175,12 +177,14 @@ volumes:
 ### Google Cloud SQL
 
 1. **Create Cloud SQL Instance (PostgreSQL)**
+
    ```
    - High availability: Enabled
    - Automatic backups: Enabled
    ```
 
 2. **Create Read Replicas**
+
    ```
    - Cloud SQL > Replication > Create read replica
    - Choose region for load distribution
@@ -195,12 +199,14 @@ volumes:
 ### Azure Database for PostgreSQL
 
 1. **Create Primary Server**
+
    ```
    - PostgreSQL 15+
    - High availability: Enabled
    ```
 
 2. **Create Read Replicas**
+
    ```
    - Replication > Create replica
    - Choose region (can be different from primary)
@@ -240,7 +246,7 @@ async def update_user(user_id: int, data: dict):
         user = await session.get(User, user_id)
         # ... update user
         await session.commit()
-        
+
         # Ensure read-after-write consistency
         await manager.verify_write_after_read(session)
         return user
@@ -288,24 +294,24 @@ async def migrate_users_table():
     async def migration():
         async with primary_engine.begin() as conn:
             await conn.execute(text("""
-                ALTER TABLE users 
+                ALTER TABLE users
                 ADD COLUMN profile_url VARCHAR(255)
             """))
-    
+
     async def rollback():
         async with primary_engine.begin() as conn:
             await conn.execute(text("""
-                ALTER TABLE users 
+                ALTER TABLE users
                 DROP COLUMN profile_url
             """))
-    
+
     success = await manager.apply_migration(
         migration,
         description="Add profile_url to users table",
         verify_replicas=True,
         rollback_func=rollback
     )
-    
+
     if success:
         print("Migration completed successfully")
     else:
@@ -335,6 +341,7 @@ for url, info in status.items():
 ### Replication Lag
 
 **What is replication lag?**
+
 - Time between write to primary and visibility on replica
 - Measured in seconds
 - Higher lag = less fresh reads on replicas
@@ -358,22 +365,26 @@ for url, info in status.items():
 ### Common Issues
 
 **Issue: All queries timing out**
+
 - Check network connectivity between API and primary
 - Verify primary database is running
 - Check if primary is overloaded
 
 **Issue: High replication lag**
+
 - Monitor primary write rate
 - Check replica resource usage (CPU, disk I/O, memory)
 - Consider adding more replicas or upgrading hardware
 
 **Issue: Reads failing but writes working**
+
 - Replica likely down
 - Reads automatically fallback to primary
 - Check replica health in logs
 - Fix replica and restart replication
 
 **Issue: Data inconsistency**
+
 - Replica significantly lagging behind primary
 - Can be normal temporarily
 - If persistent, check replication logs
@@ -408,12 +419,12 @@ ReplicaConfig(
 
 ### Scaling Guidelines
 
-| Requirement | Replicas | Configuration |
-|------------|----------|---------------|
-| < 100 RPS | 0-1 | Primary only or 1 replica |
-| 100-500 RPS | 2-3 | 2-3 replicas in different regions |
-| 500-2000 RPS | 4-6 | 4-6 replicas, load-balanced |
-| 2000+ RPS | 6+ | Advanced architecture with read cache layer |
+| Requirement  | Replicas | Configuration                               |
+| ------------ | -------- | ------------------------------------------- |
+| < 100 RPS    | 0-1      | Primary only or 1 replica                   |
+| 100-500 RPS  | 2-3      | 2-3 replicas in different regions           |
+| 500-2000 RPS | 4-6      | 4-6 replicas, load-balanced                 |
+| 2000+ RPS    | 6+       | Advanced architecture with read cache layer |
 
 ## Failover Procedures
 
@@ -544,13 +555,13 @@ rate(replica_queries_total[5m]) by (replica)
 
 ## Troubleshooting Reference
 
-| Problem | Cause | Solution |
-|---------|-------|----------|
-| High replication lag | High write load | Add more capacity or reduce write load |
-| Replica down | Network/hardware issue | Check connectivity, restart replica |
-| Data inconsistency | Replica out of sync | Rebuild replica from backup |
-| Slow reads | Replica overloaded | Add more replicas or upgrade hardware |
-| Queries failing | All replicas down | Automatic fallback to primary |
+| Problem              | Cause                  | Solution                               |
+| -------------------- | ---------------------- | -------------------------------------- |
+| High replication lag | High write load        | Add more capacity or reduce write load |
+| Replica down         | Network/hardware issue | Check connectivity, restart replica    |
+| Data inconsistency   | Replica out of sync    | Rebuild replica from backup            |
+| Slow reads           | Replica overloaded     | Add more replicas or upgrade hardware  |
+| Queries failing      | All replicas down      | Automatic fallback to primary          |
 
 ## References
 
@@ -562,6 +573,7 @@ rate(replica_queries_total[5m]) by (replica)
 ## Support
 
 For questions or issues:
+
 1. Check logs for error messages
 2. Review monitoring dashboards
 3. Check replication status with `SHOW SLAVE STATUS`

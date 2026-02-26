@@ -14,7 +14,7 @@ describe('ExperienceItem', () => {
     endDate: 'Present',
     current: true,
     description: 'Led development of web platform',
-    tags: ['React', 'TypeScript']
+    tags: ['React', 'TypeScript'],
   };
 
   const defaultProps = {
@@ -24,7 +24,7 @@ describe('ExperienceItem', () => {
     onDelete: vi.fn(),
     onUpdate: vi.fn(),
     onAddTag: vi.fn(),
-    onRemoveTag: vi.fn()
+    onRemoveTag: vi.fn(),
   };
 
   beforeEach(() => {
@@ -66,7 +66,7 @@ describe('ExperienceItem', () => {
       const expWithoutTags: WorkExperience = {
         ...mockExp,
         description: '',
-        tags: []
+        tags: [],
       };
 
       render(<ExperienceItem {...defaultProps} exp={expWithoutTags} isExpanded={true} />);
@@ -143,7 +143,11 @@ describe('ExperienceItem', () => {
       const companyInputs = screen.getAllByDisplayValue('Acme Corp');
       await user.type(companyInputs[0], ' Ltd');
 
-      expect(onUpdate).toHaveBeenCalledWith('exp-1', 'company', expect.stringContaining('Acme Corp'));
+      expect(onUpdate).toHaveBeenCalledWith(
+        'exp-1',
+        'company',
+        expect.stringContaining('Acme Corp'),
+      );
     });
 
     it('updates job title when input changes', async () => {
@@ -154,7 +158,11 @@ describe('ExperienceItem', () => {
       const roleInputs = screen.getAllByDisplayValue('Senior Developer');
       await user.type(roleInputs[0], ' Manager');
 
-      expect(onUpdate).toHaveBeenCalledWith('exp-1', 'role', expect.stringContaining('Senior Developer'));
+      expect(onUpdate).toHaveBeenCalledWith(
+        'exp-1',
+        'role',
+        expect.stringContaining('Senior Developer'),
+      );
     });
 
     it('updates dates when changed', async () => {
@@ -165,7 +173,11 @@ describe('ExperienceItem', () => {
       const startInputs = screen.getAllByDisplayValue('2020-01');
       await user.type(startInputs[0], '-15');
 
-      expect(onUpdate).toHaveBeenCalledWith('exp-1', 'startDate', expect.stringContaining('2020-01'));
+      expect(onUpdate).toHaveBeenCalledWith(
+        'exp-1',
+        'startDate',
+        expect.stringContaining('2020-01'),
+      );
     });
 
     it('updates description textarea', async () => {
@@ -176,7 +188,11 @@ describe('ExperienceItem', () => {
       const textarea = screen.getByPlaceholderText('Describe your achievements...');
       await user.type(textarea, ' and more');
 
-      expect(onUpdate).toHaveBeenCalledWith('exp-1', 'description', expect.stringContaining('Led development'));
+      expect(onUpdate).toHaveBeenCalledWith(
+        'exp-1',
+        'description',
+        expect.stringContaining('Led development'),
+      );
     });
   });
 
@@ -235,7 +251,7 @@ describe('ExperienceItem', () => {
       const longCompanyName = 'A'.repeat(100);
       const expWithLongName = {
         ...mockExp,
-        company: longCompanyName
+        company: longCompanyName,
       };
 
       render(<ExperienceItem {...defaultProps} exp={expWithLongName} isExpanded={true} />);
@@ -247,7 +263,7 @@ describe('ExperienceItem', () => {
     it('handles special characters in company name', () => {
       const expWithSpecialChars = {
         ...mockExp,
-        company: "O'Reilly & Associates, Inc."
+        company: "O'Reilly & Associates, Inc.",
       };
 
       render(<ExperienceItem {...defaultProps} exp={expWithSpecialChars} isExpanded={true} />);
@@ -260,7 +276,7 @@ describe('ExperienceItem', () => {
       const expWithUnicode = {
         ...mockExp,
         company: '日本 Corporation',
-        role: 'シニア エンジニア'
+        role: 'シニア エンジニア',
       };
 
       render(<ExperienceItem {...defaultProps} exp={expWithUnicode} isExpanded={true} />);
@@ -273,7 +289,7 @@ describe('ExperienceItem', () => {
       const multilineDesc = 'Line 1\nLine 2\nLine 3';
       const expWithMultiline = {
         ...mockExp,
-        description: multilineDesc
+        description: multilineDesc,
       };
 
       render(<ExperienceItem {...defaultProps} exp={expWithMultiline} isExpanded={true} />);
@@ -286,7 +302,7 @@ describe('ExperienceItem', () => {
       const veryLongDesc = 'A'.repeat(5000);
       const expWithLongDesc = {
         ...mockExp,
-        description: veryLongDesc
+        description: veryLongDesc,
       };
 
       render(<ExperienceItem {...defaultProps} exp={expWithLongDesc} isExpanded={true} />);
@@ -337,7 +353,7 @@ describe('ExperienceItem', () => {
     it('handles empty tags array', () => {
       const expWithNoTags = {
         ...mockExp,
-        tags: []
+        tags: [],
       };
 
       render(<ExperienceItem {...defaultProps} exp={expWithNoTags} isExpanded={true} />);
@@ -348,7 +364,7 @@ describe('ExperienceItem', () => {
     it('handles undefined description', () => {
       const expWithoutDesc = {
         ...mockExp,
-        description: ''
+        description: '',
       };
 
       render(<ExperienceItem {...defaultProps} exp={expWithoutDesc} isExpanded={true} />);
@@ -358,9 +374,7 @@ describe('ExperienceItem', () => {
     });
 
     it('maintains state on re-render with same data', () => {
-      const { rerender } = render(
-        <ExperienceItem {...defaultProps} isExpanded={true} />
-      );
+      const { rerender } = render(<ExperienceItem {...defaultProps} isExpanded={true} />);
 
       const inputs = screen.getAllByDisplayValue('Acme Corp');
       const initialCount = inputs.length;
@@ -374,9 +388,7 @@ describe('ExperienceItem', () => {
       const expOne = { ...mockExp, id: 'exp-1' };
       const expTwo = { ...mockExp, id: 'exp-2' };
 
-      const { rerender } = render(
-        <ExperienceItem {...defaultProps} exp={expOne} />
-      );
+      const { rerender } = render(<ExperienceItem {...defaultProps} exp={expOne} />);
 
       expect(screen.getByText('Acme Corp | 2020-01 - Present')).toBeInTheDocument();
 

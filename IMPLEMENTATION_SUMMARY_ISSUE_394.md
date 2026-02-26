@@ -7,6 +7,7 @@
 Comprehensive retry logic with exponential backoff has been successfully implemented for both the ResumeAI frontend and backend. The implementation provides automatic recovery from transient failures with intelligent backoff strategy and jitter to prevent thundering herd problems.
 
 **Key Achievements:**
+
 - ✅ 21/21 frontend tests passing
 - ✅ Complete backend retry module with decorator pattern
 - ✅ Integrated into 9+ critical API endpoints
@@ -21,15 +22,17 @@ Comprehensive retry logic with exponential backoff has been successfully impleme
 ### 1. Frontend Retry Logic (`utils/retryLogic.ts`)
 
 **Core Function: `retryWithBackoff()`**
+
 ```typescript
 export async function retryWithBackoff(
   url: string,
   options: RequestInit = {},
-  config: RetryConfig = {}
-): Promise<Response>
+  config: RetryConfig = {},
+): Promise<Response>;
 ```
 
 **Features:**
+
 - Exponential backoff: `delay = initialDelay * (2 ^ attemptNumber)`
 - Jitter: 0-10% random variance prevents thundering herd
 - Intelligent retry decision: Only retries on 5xx, 408, 429 status codes
@@ -38,19 +41,21 @@ export async function retryWithBackoff(
 - Logging for debugging and monitoring
 
 **Configuration:**
+
 ```typescript
 interface RetryConfig {
-  maxRetries?: number;          // default: 3
-  initialDelay?: number;        // default: 100ms
-  maxDelay?: number;            // default: 10000ms
-  backoffMultiplier?: number;   // default: 2
-  jitterFraction?: number;      // default: 0.1 (10%)
+  maxRetries?: number; // default: 3
+  initialDelay?: number; // default: 100ms
+  maxDelay?: number; // default: 10000ms
+  backoffMultiplier?: number; // default: 2
+  jitterFraction?: number; // default: 0.1 (10%)
 }
 ```
 
 ### 2. Backend Retry Logic (`resume-api/lib/utils/retry.py`)
 
 **Core Features:**
+
 - `retry_with_backoff()` decorator for async and sync functions
 - `retry_async_call()` for manual async function invocation
 - `retry_sync_call()` for manual sync function invocation
@@ -58,6 +63,7 @@ interface RetryConfig {
 - `RetryError` exception with detailed context
 
 **Retryable Exceptions:**
+
 - `ConnectionError`
 - `TimeoutError`
 - `ConnectionResetError`
@@ -87,6 +93,7 @@ result = await retry_async_call(
 ### 3. API Client Integration (`utils/api-client.ts`)
 
 **Updated Endpoints (9+):**
+
 - `generatePDF()`
 - `getVariants()`
 - `tailorResume()`
@@ -99,10 +106,11 @@ result = await retry_async_call(
 - (and more - can be incrementally updated)
 
 **Example Integration:**
+
 ```typescript
 export async function generatePDF(
   resumeData: ResumeDataForAPI,
-  variant: string = 'modern'
+  variant: string = 'modern',
 ): Promise<Blob> {
   const response = await fetchWithRetry(
     `${API_URL}/v1/render/pdf`,
@@ -111,7 +119,7 @@ export async function generatePDF(
       headers: { ...getHeaders(), 'Content-Type': 'application/json' },
       body: JSON.stringify({ resume_data: resumeData, variant }),
     },
-    DEFAULT_RETRY_CONFIG  // Uses defaults: 3 retries, 100ms initial delay
+    DEFAULT_RETRY_CONFIG, // Uses defaults: 3 retries, 100ms initial delay
   );
   if (!response.ok) {
     const error = await response.json().catch(() => ({ detail: 'PDF generation failed' }));
@@ -154,6 +162,7 @@ export async function generatePDF(
 ```
 
 **Run tests:**
+
 ```bash
 npm test -- utils/retryLogic.test.ts
 ```
@@ -163,6 +172,7 @@ npm test -- utils/retryLogic.test.ts
 **Test File:** `resume-api/tests/test_retry.py`
 
 Comprehensive test coverage for:
+
 - Exponential backoff calculation
 - Jitter application
 - Status code detection
@@ -172,6 +182,7 @@ Comprehensive test coverage for:
 - Manual function invocation
 
 **Run tests:**
+
 ```bash
 cd resume-api && python -m pytest tests/test_retry.py -v
 ```
@@ -181,6 +192,7 @@ cd resume-api && python -m pytest tests/test_retry.py -v
 ## Behavior Examples
 
 ### Example 1: Successful Retry (503 → 200)
+
 ```
 Request 1: POST /api/generate-pdf
   ↓ HTTP 503 Service Unavailable
@@ -196,6 +208,7 @@ Request 3: POST /api/generate-pdf
 ```
 
 ### Example 2: Non-Retryable Error (404)
+
 ```
 Request 1: GET /api/nonexistent-endpoint
   ↓ HTTP 404 Not Found
@@ -203,6 +216,7 @@ Request 1: GET /api/nonexistent-endpoint
 ```
 
 ### Example 3: Max Retries Exhausted (5xx × 4)
+
 ```
 Request 1: POST /api/tailor-resume → HTTP 500
 Wait 100-110ms
@@ -215,6 +229,7 @@ Throw RetryError: "Failed after 4 attempts: HTTP 500"
 ```
 
 ### Example 4: Network Error Recovery
+
 ```
 Request 1: GET /api/variants
   ↓ Network Error: Connection refused
@@ -235,13 +250,13 @@ Request 3: GET /api/variants
 
 With default configuration (maxRetries: 3, initialDelay: 100ms):
 
-| Attempt | Wait Time | Total Time | Status |
-|---------|-----------|-----------|--------|
-| 1 | 0ms | 0ms | Initial request |
-| 2 | 100-110ms | 100-110ms | After 500 error |
-| 3 | 200-220ms | 300-330ms | After 500 error |
-| 4 | 400-440ms | 700-770ms | Final retry |
-| - | - | **Max 770ms** | Fail if all 500 |
+| Attempt | Wait Time | Total Time    | Status          |
+| ------- | --------- | ------------- | --------------- |
+| 1       | 0ms       | 0ms           | Initial request |
+| 2       | 100-110ms | 100-110ms     | After 500 error |
+| 3       | 200-220ms | 300-330ms     | After 500 error |
+| 4       | 400-440ms | 700-770ms     | Final retry     |
+| -       | -         | **Max 770ms** | Fail if all 500 |
 
 **Key Point:** Network latency on top of backoff delays. Total time for 3 retries ≈ 1-2 seconds (depending on network).
 
@@ -250,23 +265,28 @@ With default configuration (maxRetries: 3, initialDelay: 100ms):
 ## Performance Impact
 
 ### Benefits
+
 1. **Reduces failures:** Transient network issues automatically recover
 2. **Better UX:** Users don't need to manually retry
 3. **Prevents cascades:** Exponential backoff prevents overwhelming downed servers
 4. **Load distribution:** Jitter spreads retry attempts across time
 
 ### Overhead
+
 - **Time:** 1-2 seconds additional delay worst case (for 3 retries)
 - **CPU:** Minimal (just timing logic and HTTP calls)
 - **Memory:** Negligible (small state per request)
 
 ### When to Use
+
 ✅ **DO USE:**
+
 - API calls to external services (GitHub, LinkedIn, etc.)
 - Critical operations (PDF generation, tailoring)
 - Operations that might have transient failures
 
 ❌ **DON'T USE:**
+
 - Validation failures (400 errors) - will never succeed
 - Auth failures (401 errors) - token is invalid
 - Permission errors (403 errors) - permissions won't change
@@ -277,26 +297,29 @@ With default configuration (maxRetries: 3, initialDelay: 100ms):
 ## Configuration Examples
 
 ### Frontend - Default Config
+
 ```typescript
 // Uses default: 3 retries, 100ms initial delay, 2x backoff
 const response = await fetchWithRetry('/api/endpoint');
 ```
 
 ### Frontend - Custom Config
+
 ```typescript
 const response = await fetchWithRetry(
   '/api/slow-endpoint',
   { method: 'POST' },
   {
-    maxRetries: 5,        // More retries for slow endpoint
-    initialDelay: 500,    // Longer initial delay
-    maxDelay: 30000,      // 30 second max
-    jitterFraction: 0.2,  // 20% jitter
-  }
+    maxRetries: 5, // More retries for slow endpoint
+    initialDelay: 500, // Longer initial delay
+    maxDelay: 30000, // 30 second max
+    jitterFraction: 0.2, // 20% jitter
+  },
 );
 ```
 
 ### Backend - Decorator Pattern
+
 ```python
 @retry_with_backoff(
     RetryConfig(
@@ -318,6 +341,7 @@ async def fetch_user_github_repos(username: str):
 ```
 
 ### Backend - Manual Invocation
+
 ```python
 result = await retry_async_call(
     fetch_user_github_repos,
@@ -331,11 +355,12 @@ result = await retry_async_call(
 ## Error Handling
 
 ### Frontend Error Structure
+
 ```typescript
 interface RetryError extends Error {
-  statusCode?: number;           // HTTP status code if applicable
-  attemptCount: number;          // Total attempts made
-  lastAttemptError?: Error;      // Last underlying error
+  statusCode?: number; // HTTP status code if applicable
+  attemptCount: number; // Total attempts made
+  lastAttemptError?: Error; // Last underlying error
 }
 
 try {
@@ -354,6 +379,7 @@ try {
 ```
 
 ### Backend Error Structure
+
 ```python
 from lib.utils.retry import RetryError
 
@@ -368,7 +394,9 @@ except RetryError as e:
 ## Logging
 
 ### Frontend Logging
+
 Logged to `console.warn()`:
+
 ```
 Retryable status 503 for POST /api/generate-pdf. Attempt 1/3, retrying in 105ms
 Retryable status 503 for POST /api/generate-pdf. Attempt 2/3, retrying in 210ms
@@ -376,7 +404,9 @@ Network error for GET /api/variants: TypeError: Failed to fetch. Attempt 1/3, re
 ```
 
 ### Backend Logging
+
 Logged via Python logging module:
+
 ```
 Retryable error in fetch_user_data: ConnectionError: Connection refused. Attempt 1/3, retrying in 0.10s
 Retryable error in fetch_user_data: TimeoutError: Request timed out. Attempt 2/3, retrying in 0.25s
@@ -387,6 +417,7 @@ Retryable error in fetch_user_data: TimeoutError: Request timed out. Attempt 2/3
 ## Files Created/Modified
 
 ### Created Files
+
 1. **Frontend Retry Logic**
    - `utils/retryLogic.ts` (144 lines)
    - Clean, well-documented TypeScript implementation
@@ -409,6 +440,7 @@ Retryable error in fetch_user_data: TimeoutError: Request timed out. Attempt 2/3
    - `IMPLEMENTATION_SUMMARY_ISSUE_394.md` (This file)
 
 ### Modified Files
+
 1. **API Client**
    - `utils/api-client.ts`
    - Added `fetchWithRetry` import
@@ -426,6 +458,7 @@ Retryable error in fetch_user_data: TimeoutError: Request timed out. Attempt 2/3
 ## Quality Assurance
 
 ### Code Quality
+
 - ✅ Full TypeScript type safety
 - ✅ Python type hints throughout
 - ✅ Comprehensive JSDoc/docstrings
@@ -433,12 +466,14 @@ Retryable error in fetch_user_data: TimeoutError: Request timed out. Attempt 2/3
 - ✅ No console errors
 
 ### Test Coverage
+
 - ✅ 21 frontend tests (100% passing)
 - ✅ 30+ backend tests (ready to run)
 - ✅ Edge cases covered (max retries, jitter, status codes)
 - ✅ Error scenarios tested
 
 ### Build Verification
+
 - ✅ `npm run build` passes
 - ✅ `npm test` passes (for retry tests)
 - ✅ No TypeScript errors
@@ -449,6 +484,7 @@ Retryable error in fetch_user_data: TimeoutError: Request timed out. Attempt 2/3
 ## Deployment Checklist
 
 ### Before Deploying
+
 - [x] All tests passing
 - [x] Build verified
 - [x] Documentation complete
@@ -456,6 +492,7 @@ Retryable error in fetch_user_data: TimeoutError: Request timed out. Attempt 2/3
 - [x] No breaking changes
 
 ### Deployment Steps
+
 1. Merge feature branch to main
 2. Deploy frontend (Vercel automatic)
 3. Deploy backend (Docker/Cloud Run)
@@ -463,7 +500,9 @@ Retryable error in fetch_user_data: TimeoutError: Request timed out. Attempt 2/3
 5. Monitor error rates
 
 ### Rollback Plan
+
 If issues occur:
+
 1. Revert to previous version
 2. Investigate error logs
 3. Check retry configuration
@@ -474,6 +513,7 @@ If issues occur:
 ## Future Enhancements
 
 ### Recommended (High Priority)
+
 1. **Metrics Collection**
    - Track retry rate per endpoint
    - Monitor success rate of retries
@@ -488,6 +528,7 @@ If issues occur:
    - Fail-fast behavior for downed services
 
 ### Optional (Medium Priority)
+
 1. **Adaptive Backoff**
    - Respect `Retry-After` headers from server
    - Adjust backoff based on error patterns
@@ -529,6 +570,7 @@ A: Retried requests use same parameters. Ensure backend operations are idempoten
 **Status:** ✅ COMPLETE AND PRODUCTION-READY
 
 The retry logic implementation provides:
+
 1. ✅ Robust automatic retry with exponential backoff
 2. ✅ Intelligent decision-making (only retry when appropriate)
 3. ✅ Jitter to prevent thundering herd
@@ -539,12 +581,14 @@ The retry logic implementation provides:
 8. ✅ Zero breaking changes
 
 **Impact:**
+
 - Reduces failures from transient network issues
 - Improves user experience (automatic recovery)
 - Prevents cascade failures in distributed systems
 - Provides visibility through logging and monitoring hooks
 
 **Next Steps:**
+
 1. Deploy to production
 2. Monitor retry rates and success metrics
 3. Consider circuit breaker pattern for future releases
@@ -555,6 +599,7 @@ The retry logic implementation provides:
 ## Contact & Questions
 
 For issues or questions about the retry implementation:
+
 1. Check `RETRY_LOGIC_IMPLEMENTATION.md` for detailed guide
 2. Review test cases in `retryLogic.test.ts` for examples
 3. Check error logs for retry patterns in production

@@ -5,6 +5,7 @@ This document describes the GitHub OAuth integration endpoints implemented in th
 ## Overview
 
 The GitHub OAuth integration allows users to:
+
 - Connect their GitHub account securely using OAuth 2.0
 - Sync their GitHub repositories to their resume
 - Manage GitHub connection settings
@@ -27,6 +28,7 @@ Authorization: Bearer <jwt_access_token>
 **Authentication:** Required (JWT Bearer token)
 
 **Request:**
+
 ```bash
 GET /github/status
 Authorization: Bearer <jwt_access_token>
@@ -34,6 +36,7 @@ Content-Type: application/json
 ```
 
 **Response (200 OK):**
+
 ```json
 {
   "authenticated": true,
@@ -46,6 +49,7 @@ Content-Type: application/json
 ```
 
 **Response Fields:**
+
 - `authenticated` (boolean): Whether user has an active GitHub connection
 - `mode` (string): Authentication mode - currently "oauth"
 - `username` (string): GitHub username (null if not connected)
@@ -54,6 +58,7 @@ Content-Type: application/json
 - `error` (string): Error message if status check failed (null on success)
 
 **Error Responses:**
+
 - `401 Unauthorized`: Authentication required
 - `500 Internal Server Error`: Failed to check OAuth status
 
@@ -62,6 +67,7 @@ Content-Type: application/json
 ### 2. GET `/github/callback` - Handle GitHub OAuth Callback
 
 **Description:** Handles the OAuth callback from GitHub after user authorization. This endpoint:
+
 1. Validates the OAuth state parameter for CSRF protection
 2. Exchanges the authorization code for an access token
 3. Fetches the user's GitHub profile
@@ -71,11 +77,13 @@ Content-Type: application/json
 **Authentication:** Not required (called by GitHub OAuth provider)
 
 **Request:**
+
 ```bash
 GET /github/callback?code=<authorization_code>&state=<oauth_state>
 ```
 
 **Query Parameters:**
+
 - `code` (string, required): Authorization code from GitHub
 - `state` (string, required): OAuth state parameter for CSRF protection
 
@@ -83,16 +91,19 @@ GET /github/callback?code=<authorization_code>&state=<oauth_state>
 The endpoint redirects to the frontend with a status query parameter:
 
 **Success:**
+
 ```
 Location: https://app.resumeai.com/?status=success
 ```
 
 **Failure:**
+
 ```
 Location: https://app.resumeai.com/?status=error&error=<error_code>
 ```
 
 **Possible Error Codes:**
+
 - `invalid_state`: OAuth state parameter was not found or invalid
 - `expired_state`: OAuth state parameter has expired (valid for 10 minutes)
 - `invalid_code`: Authorization code could not be exchanged for a token
@@ -100,6 +111,7 @@ Location: https://app.resumeai.com/?status=error&error=<error_code>
 - `database_error`: Failed to store connection in database
 
 **Security Features:**
+
 - CSRF protection using state parameter
 - State parameters expire after 10 minutes
 - Access tokens are encrypted before storage
@@ -114,6 +126,7 @@ Location: https://app.resumeai.com/?status=error&error=<error_code>
 **Authentication:** Required (JWT Bearer token)
 
 **Request:**
+
 ```bash
 GET /github/connect
 Authorization: Bearer <jwt_access_token>
@@ -121,9 +134,11 @@ Content-Type: application/json
 ```
 
 **Optional Query Parameters:**
+
 - `redirect_uri` (string, optional): Custom redirect URI for OAuth callback (must be whitelisted)
 
 **Response (200 OK):**
+
 ```json
 {
   "success": true,
@@ -134,16 +149,19 @@ Content-Type: application/json
 ```
 
 **Response Fields:**
+
 - `success` (boolean): Request succeeded
 - `authorization_url` (string): URL to redirect user to for GitHub authorization
 - `state` (string): CSRF state parameter (store for verification)
 - `expires_in` (number): Seconds until state expires (600 = 10 minutes)
 
 **Error Responses:**
+
 - `401 Unauthorized`: Authentication required
 - `500 Internal Server Error`: GitHub OAuth not configured
 
 **Scopes Requested:**
+
 - `user:email`: Access to user email information
 - `public_repo`: Access to public repositories (current scope: `user:email`)
 
@@ -156,6 +174,7 @@ Content-Type: application/json
 **Authentication:** Required (JWT Bearer token)
 
 **Request:**
+
 ```bash
 DELETE /github/disconnect
 Authorization: Bearer <jwt_access_token>
@@ -165,10 +184,12 @@ Authorization: Bearer <jwt_access_token>
 No response body. Success indicated by 204 status code.
 
 **Error Responses:**
+
 - `401 Unauthorized`: Authentication required
 - `404 Not Found`: No GitHub connection found (idempotent - still returns success)
 
 **Security Features:**
+
 - Attempts to revoke token with GitHub API (best-effort)
 - Deletes encrypted token from database
 - Removes all GitHub connection data
@@ -250,14 +271,17 @@ FRONTEND_URL=http://localhost:3000
 All endpoints follow standard HTTP status codes and include detailed error information in the response body:
 
 **4xx Client Errors:**
+
 - `400 Bad Request`: Invalid parameters or malformed request
 - `401 Unauthorized`: Missing or invalid authentication token
 - `404 Not Found`: Resource not found
 
 **5xx Server Errors:**
+
 - `500 Internal Server Error`: Unexpected server error
 
 Error Response Format:
+
 ```json
 {
   "detail": "Human-readable error message"
@@ -276,12 +300,14 @@ Error Response Format:
 ## Rate Limiting
 
 Currently no rate limiting is enforced. In production, consider:
+
 - Rate limiting on `/github/connect` (e.g., 5 requests per minute per user)
 - Rate limiting on `/github/status` (e.g., 10 requests per minute per user)
 
 ## Testing
 
 ### Test Connection Status
+
 ```bash
 curl -X GET http://localhost:8000/github/status \
   -H "Authorization: Bearer $JWT_TOKEN" \
@@ -289,6 +315,7 @@ curl -X GET http://localhost:8000/github/status \
 ```
 
 ### Test OAuth Connect
+
 ```bash
 curl -X GET http://localhost:8000/github/connect \
   -H "Authorization: Bearer $JWT_TOKEN" \
@@ -296,6 +323,7 @@ curl -X GET http://localhost:8000/github/connect \
 ```
 
 ### Test Disconnect
+
 ```bash
 curl -X DELETE http://localhost:8000/github/disconnect \
   -H "Authorization: Bearer $JWT_TOKEN"

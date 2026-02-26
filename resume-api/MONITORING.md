@@ -49,9 +49,11 @@ ANALYTICS_RETENTION_DAYS=90       # Analytics data retention period
 ### Health Checks
 
 #### GET /health
+
 Basic health check endpoint. Returns minimal health status.
 
 **Response:**
+
 ```json
 {
   "healthy": true,
@@ -61,9 +63,11 @@ Basic health check endpoint. Returns minimal health status.
 ```
 
 #### GET /health/detailed
+
 Detailed health check with all component status.
 
 **Response:**
+
 ```json
 {
   "healthy": true,
@@ -99,9 +103,11 @@ Detailed health check with all component status.
 ```
 
 #### GET /health/ready
+
 Readiness probe for orchestration systems (Kubernetes, Cloud Run, etc.).
 
 **Response:**
+
 ```json
 {
   "ready": true,
@@ -112,11 +118,13 @@ Readiness probe for orchestration systems (Kubernetes, Cloud Run, etc.).
 ### Metrics
 
 #### GET /metrics
+
 Prometheus metrics endpoint for scraping metrics.
 
 **Response:** Prometheus text format metrics (not human-readable)
 
 **Example Metrics:**
+
 ```
 # HELP http_requests_total Total HTTP requests
 # TYPE http_requests_total counter
@@ -152,12 +160,15 @@ db_connections_active 10
 ### Analytics
 
 #### GET /analytics/summary
+
 Get usage analytics summary for a specified time period.
 
 **Query Parameters:**
+
 - `hours` (optional, default: 24) - Time period in hours
 
 **Response:**
+
 ```json
 {
   "total_requests": 1234,
@@ -171,13 +182,16 @@ Get usage analytics summary for a specified time period.
 ```
 
 #### GET /analytics/endpoints
+
 Get most popular endpoints for a specified time period.
 
 **Query Parameters:**
+
 - `hours` (optional, default: 24) - Time period in hours
 - `limit` (optional, default: 10) - Maximum number of results
 
 **Response:**
+
 ```json
 [
   {
@@ -225,6 +239,7 @@ In development (LOG_FORMAT=console), logs are human-readable with colors:
 ### Request Context
 
 All logs include request context:
+
 - `request_id`: Unique identifier for each request
 - `method`: HTTP method
 - `path`: Request path
@@ -234,6 +249,7 @@ All logs include request context:
 ### Request IDs
 
 Each request gets a unique ID assigned by the monitoring middleware. The request ID is:
+
 - Included in all logs for that request
 - Added to the response headers as `X-Request-ID`
 
@@ -381,18 +397,21 @@ ENABLE_ANALYTICS=false     # Disable analytics in development
 Key metrics to monitor:
 
 ### System Health
+
 - Request rate (per endpoint)
 - Error rate (per endpoint)
 - Response time (p50, p95, p99)
 - Active connections
 
 ### Business Metrics
+
 - PDFs generated (total, per variant)
 - Resumes tailored (total, per AI provider)
 - Unique users
 - Requests per user
 
 ### Infrastructure
+
 - Disk space available
 - Memory usage
 - Database connections

@@ -28,47 +28,52 @@ All API error responses follow a unified JSON structure:
 
 ### Response Fields
 
-| Field | Type | Description | Required |
-|-------|------|-------------|----------|
-| `error_code` | string | Machine-readable error code | Yes |
-| `message` | string | Human-readable error message | Yes |
-| `request_id` | string | Unique request identifier for tracking | Yes |
-| `timestamp` | string | ISO 8601 timestamp when error occurred | Yes |
-| `status` | integer | HTTP status code | Yes |
-| `path` | string | Request path | No |
-| `method` | string | HTTP method (GET, POST, etc.) | No |
-| `field_errors` | array | Field-specific validation errors | No |
-| `details` | object | Additional error context/details | No |
+| Field          | Type    | Description                            | Required |
+| -------------- | ------- | -------------------------------------- | -------- |
+| `error_code`   | string  | Machine-readable error code            | Yes      |
+| `message`      | string  | Human-readable error message           | Yes      |
+| `request_id`   | string  | Unique request identifier for tracking | Yes      |
+| `timestamp`    | string  | ISO 8601 timestamp when error occurred | Yes      |
+| `status`       | integer | HTTP status code                       | Yes      |
+| `path`         | string  | Request path                           | No       |
+| `method`       | string  | HTTP method (GET, POST, etc.)          | No       |
+| `field_errors` | array   | Field-specific validation errors       | No       |
+| `details`      | object  | Additional error context/details       | No       |
 
 ## Error Code Categories
 
 ### Client Errors (4xx)
 
 #### INVALID_REQUEST
+
 - **HTTP Status:** 400
 - **Description:** The request format is invalid
 - **Example:** Malformed JSON body
 - **Recovery:** Check request format and try again
 
 #### VALIDATION_ERROR
+
 - **HTTP Status:** 400 / 422
 - **Description:** Request validation failed
 - **Example:** Missing required fields, invalid data types
 - **Recovery:** Check field_errors for specific issues and correct the request
 
 #### MISSING_FIELD
+
 - **HTTP Status:** 400
 - **Description:** A required field is missing
 - **Example:** `resume_data` field missing in PDF generation request
 - **Recovery:** Include the required field in the request
 
 #### INVALID_FORMAT
+
 - **HTTP Status:** 400
 - **Description:** A field has an invalid format
 - **Example:** Email address format invalid
 - **Recovery:** Use the correct format and retry
 
 #### UNAUTHORIZED
+
 - **HTTP Status:** 401
 - **Description:** Authentication is required or invalid
 - **Causes:**
@@ -78,12 +83,14 @@ All API error responses follow a unified JSON structure:
 - **Recovery:** Include valid API key or token in X-API-KEY header
 
 #### FORBIDDEN
+
 - **HTTP Status:** 403
 - **Description:** Authenticated but not authorized for this resource
 - **Example:** User doesn't have access to resume owned by another user
 - **Recovery:** Use correct credentials or contact support
 
 #### NOT_FOUND
+
 - **HTTP Status:** 404
 - **Description:** The requested resource doesn't exist
 - **Examples:**
@@ -92,12 +99,14 @@ All API error responses follow a unified JSON structure:
 - **Recovery:** Verify the resource ID and try again
 
 #### CONFLICT
+
 - **HTTP Status:** 409
 - **Description:** The request conflicts with the current state
 - **Example:** Trying to update a resource that's being edited elsewhere
 - **Recovery:** Wait and retry, or refresh the resource state
 
 #### RATE_LIMITED
+
 - **HTTP Status:** 429
 - **Description:** Too many requests have been made in a short time
 - **Recovery:** Wait for the time specified in Retry-After header before retrying
@@ -105,11 +114,13 @@ All API error responses follow a unified JSON structure:
 ### Resume-Specific Errors (4xx)
 
 #### RESUME_NOT_FOUND
+
 - **HTTP Status:** 404
 - **Description:** The specified resume doesn't exist
 - **Recovery:** Verify the resume ID and check if it was deleted
 
 #### RESUME_INVALID
+
 - **HTTP Status:** 400
 - **Description:** The resume data is invalid or corrupted
 - **Examples:**
@@ -118,6 +129,7 @@ All API error responses follow a unified JSON structure:
 - **Recovery:** Check the resume data and correct any issues
 
 #### RESUME_LOCKED
+
 - **HTTP Status:** 409
 - **Description:** The resume is locked and cannot be modified
 - **Causes:**
@@ -126,6 +138,7 @@ All API error responses follow a unified JSON structure:
 - **Recovery:** Wait for the lock to be released and try again
 
 #### RESUME_ARCHIVED
+
 - **HTTP Status:** 410 (Gone)
 - **Description:** The resume is archived and cannot be modified
 - **Recovery:** Unarchive the resume if you have permission
@@ -133,6 +146,7 @@ All API error responses follow a unified JSON structure:
 ### PDF-Specific Errors (4xx/5xx)
 
 #### PDF_GENERATION_FAILED
+
 - **HTTP Status:** 500
 - **Description:** PDF generation failed
 - **Causes:**
@@ -142,16 +156,19 @@ All API error responses follow a unified JSON structure:
 - **Recovery:** Check resume data is complete and valid, retry
 
 #### PDF_NOT_FOUND
+
 - **HTTP Status:** 404
 - **Description:** The requested PDF file is not available
 - **Recovery:** Regenerate the PDF by making a new render request
 
 #### PDF_INVALID_TEMPLATE
+
 - **HTTP Status:** 400
 - **Description:** The specified PDF template is invalid or doesn't exist
 - **Recovery:** Use a valid template name (e.g., "modern", "classic")
 
 #### PDF_RENDERING_ERROR
+
 - **HTTP Status:** 500
 - **Description:** An error occurred while rendering the PDF
 - **Causes:**
@@ -162,26 +179,31 @@ All API error responses follow a unified JSON structure:
 ### OAuth-Specific Errors (4xx/5xx)
 
 #### OAUTH_INVALID_CODE
+
 - **HTTP Status:** 400
 - **Description:** OAuth authorization code is invalid or expired
 - **Recovery:** Restart the OAuth flow to get a new code
 
 #### OAUTH_INVALID_STATE
+
 - **HTTP Status:** 400
 - **Description:** OAuth state parameter mismatch (CSRF protection)
 - **Recovery:** Restart the OAuth flow
 
 #### OAUTH_SCOPE_DENIED
+
 - **HTTP Status:** 403
 - **Description:** User denied required OAuth scopes
 - **Recovery:** Grant the required permissions and retry OAuth flow
 
 #### OAUTH_PROVIDER_ERROR
+
 - **HTTP Status:** 502
 - **Description:** OAuth provider returned an error
 - **Recovery:** Check provider status and retry
 
 #### OAUTH_TOKEN_EXPIRED
+
 - **HTTP Status:** 401
 - **Description:** OAuth token has expired
 - **Recovery:** Refresh the token or restart the OAuth flow
@@ -189,11 +211,13 @@ All API error responses follow a unified JSON structure:
 ### Server Errors (5xx)
 
 #### INTERNAL_SERVER_ERROR
+
 - **HTTP Status:** 500
 - **Description:** An unexpected server error occurred
 - **Recovery:** Retry the request. If persistent, contact support with the request_id
 
 #### SERVICE_UNAVAILABLE
+
 - **HTTP Status:** 503
 - **Description:** The service is temporarily unavailable
 - **Causes:**
@@ -202,11 +226,13 @@ All API error responses follow a unified JSON structure:
 - **Recovery:** Retry after a short delay
 
 #### DATABASE_ERROR
+
 - **HTTP Status:** 500
 - **Description:** A database operation failed
 - **Recovery:** Retry the request. If persistent, contact support
 
 #### EXTERNAL_SERVICE_ERROR
+
 - **HTTP Status:** 502
 - **Description:** An external service (AI API, etc.) returned an error
 - **Recovery:** Retry the request. If persistent, check external service status
@@ -246,6 +272,7 @@ When a VALIDATION_ERROR occurs, the response may include a `field_errors` array 
 ## Common Error Scenarios
 
 ### Missing API Key
+
 ```
 Request: curl https://api.example.com/v1/render/pdf
 Response: 401 UNAUTHORIZED
@@ -260,6 +287,7 @@ Response: 401 UNAUTHORIZED
 **Solution:** Include API key: `curl -H "X-API-KEY: your-key" https://api.example.com/v1/render/pdf`
 
 ### Invalid Resume Data
+
 ```
 Request: POST /v1/render/pdf with incomplete resume data
 Response: 422 UNPROCESSABLE_ENTITY
@@ -279,6 +307,7 @@ Response: 422 UNPROCESSABLE_ENTITY
 **Solution:** Include all required fields in resume_data
 
 ### Rate Limit Exceeded
+
 ```
 Request: 11th request within rate limit window
 Response: 429 TOO_MANY_REQUESTS
@@ -296,6 +325,7 @@ Response: 429 TOO_MANY_REQUESTS
 **Solution:** Wait 60 seconds before making the next request. Check `Retry-After` response header.
 
 ### Resource Not Found
+
 ```
 Request: GET /v1/resumes/nonexistent-id
 Response: 404 NOT_FOUND

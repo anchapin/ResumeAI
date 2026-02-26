@@ -5,6 +5,7 @@ This document provides concrete examples of all error response types from the st
 ## Validation Error with Field-Level Details
 
 **Request:**
+
 ```bash
 curl -X POST https://api.resumeai.com/v1/render/pdf \
   -H "X-API-KEY: rai_test123" \
@@ -18,6 +19,7 @@ curl -X POST https://api.resumeai.com/v1/render/pdf \
 ```
 
 **Response: 422 Unprocessable Entity**
+
 ```json
 {
   "error_code": "VALIDATION_ERROR",
@@ -50,6 +52,7 @@ curl -X POST https://api.resumeai.com/v1/render/pdf \
 ## Missing API Key
 
 **Request:**
+
 ```bash
 curl -X POST https://api.resumeai.com/v1/render/pdf \
   -H "Content-Type: application/json" \
@@ -57,6 +60,7 @@ curl -X POST https://api.resumeai.com/v1/render/pdf \
 ```
 
 **Response: 401 Unauthorized**
+
 ```json
 {
   "error_code": "UNAUTHORIZED",
@@ -72,6 +76,7 @@ curl -X POST https://api.resumeai.com/v1/render/pdf \
 ## Invalid API Key
 
 **Request:**
+
 ```bash
 curl -X POST https://api.resumeai.com/v1/render/pdf \
   -H "X-API-KEY: invalid_key_xyz" \
@@ -80,6 +85,7 @@ curl -X POST https://api.resumeai.com/v1/render/pdf \
 ```
 
 **Response: 401 Unauthorized**
+
 ```json
 {
   "error_code": "UNAUTHORIZED",
@@ -95,12 +101,14 @@ curl -X POST https://api.resumeai.com/v1/render/pdf \
 ## Resource Not Found
 
 **Request:**
+
 ```bash
 curl -X GET https://api.resumeai.com/v1/resumes/nonexistent-id \
   -H "X-API-KEY: rai_test123"
 ```
 
 **Response: 404 Not Found**
+
 ```json
 {
   "error_code": "RESUME_NOT_FOUND",
@@ -118,6 +126,7 @@ curl -X GET https://api.resumeai.com/v1/resumes/nonexistent-id \
 **Scenario:** User makes 11 requests when limit is 10/minute
 
 **Request:**
+
 ```bash
 # 11th request within rate limit window
 curl -X POST https://api.resumeai.com/v1/render/pdf \
@@ -127,6 +136,7 @@ curl -X POST https://api.resumeai.com/v1/render/pdf \
 ```
 
 **Response: 429 Too Many Requests**
+
 ```json
 {
   "error_code": "RATE_LIMITED",
@@ -143,6 +153,7 @@ curl -X POST https://api.resumeai.com/v1/render/pdf \
 ```
 
 **Response Headers:**
+
 ```
 HTTP/1.1 429 Too Many Requests
 Retry-After: 60
@@ -154,6 +165,7 @@ X-Request-ID: req_ratelimit2024feb26
 **Scenario:** LaTeX compilation error during PDF rendering
 
 **Response: 500 Internal Server Error**
+
 ```json
 {
   "error_code": "PDF_GENERATION_FAILED",
@@ -174,6 +186,7 @@ X-Request-ID: req_ratelimit2024feb26
 ## Invalid PDF Template
 
 **Request:**
+
 ```bash
 curl -X POST https://api.resumeai.com/v1/render/pdf \
   -H "X-API-KEY: rai_test123" \
@@ -185,6 +198,7 @@ curl -X POST https://api.resumeai.com/v1/render/pdf \
 ```
 
 **Response: 400 Bad Request**
+
 ```json
 {
   "error_code": "PDF_INVALID_TEMPLATE",
@@ -206,6 +220,7 @@ curl -X POST https://api.resumeai.com/v1/render/pdf \
 **Scenario:** Another user is currently editing the resume
 
 **Request:**
+
 ```bash
 curl -X PUT https://api.resumeai.com/v1/resumes/123 \
   -H "X-API-KEY: rai_test123" \
@@ -214,6 +229,7 @@ curl -X PUT https://api.resumeai.com/v1/resumes/123 \
 ```
 
 **Response: 409 Conflict**
+
 ```json
 {
   "error_code": "RESUME_LOCKED",
@@ -236,12 +252,14 @@ curl -X PUT https://api.resumeai.com/v1/resumes/123 \
 **Scenario:** User tries to access resume owned by another user
 
 **Request:**
+
 ```bash
 curl -X GET https://api.resumeai.com/v1/resumes/other-user-resume \
   -H "X-API-KEY: rai_test123"
 ```
 
 **Response: 403 Forbidden**
+
 ```json
 {
   "error_code": "FORBIDDEN",
@@ -263,6 +281,7 @@ curl -X GET https://api.resumeai.com/v1/resumes/other-user-resume \
 **Scenario:** OAuth authorization code expired or invalid
 
 **Request:**
+
 ```bash
 curl -X POST https://api.resumeai.com/v1/oauth/callback \
   -H "Content-Type: application/json" \
@@ -273,6 +292,7 @@ curl -X POST https://api.resumeai.com/v1/oauth/callback \
 ```
 
 **Response: 400 Bad Request**
+
 ```json
 {
   "error_code": "OAUTH_INVALID_CODE",
@@ -294,6 +314,7 @@ curl -X POST https://api.resumeai.com/v1/oauth/callback \
 **Scenario:** OAuth state parameter doesn't match (CSRF attack detection)
 
 **Response: 400 Bad Request**
+
 ```json
 {
   "error_code": "OAUTH_INVALID_STATE",
@@ -315,6 +336,7 @@ curl -X POST https://api.resumeai.com/v1/oauth/callback \
 **Scenario:** User denied required OAuth scopes
 
 **Response: 403 Forbidden**
+
 ```json
 {
   "error_code": "OAUTH_SCOPE_DENIED",
@@ -337,6 +359,7 @@ curl -X POST https://api.resumeai.com/v1/oauth/callback \
 **Scenario:** Database connection failure or query error
 
 **Response: 500 Internal Server Error**
+
 ```json
 {
   "error_code": "DATABASE_ERROR",
@@ -358,6 +381,7 @@ curl -X POST https://api.resumeai.com/v1/oauth/callback \
 **Scenario:** AI API (OpenAI, Claude, Gemini) returned an error
 
 **Response: 502 Bad Gateway**
+
 ```json
 {
   "error_code": "EXTERNAL_SERVICE_ERROR",
@@ -380,6 +404,7 @@ curl -X POST https://api.resumeai.com/v1/oauth/callback \
 **Scenario:** Server is under maintenance or temporarily unavailable
 
 **Response: 503 Service Unavailable**
+
 ```json
 {
   "error_code": "SERVICE_UNAVAILABLE",
@@ -401,6 +426,7 @@ curl -X POST https://api.resumeai.com/v1/oauth/callback \
 **Scenario:** Unhandled exception in application
 
 **Response: 500 Internal Server Error**
+
 ```json
 {
   "error_code": "INTERNAL_SERVER_ERROR",
@@ -421,6 +447,7 @@ curl -X POST https://api.resumeai.com/v1/oauth/callback \
 ## Using Request IDs
 
 ### For Debugging
+
 Include the `request_id` in all support requests:
 
 ```
@@ -431,6 +458,7 @@ Support: "Let me look up that request in our logs..."
 ```
 
 ### For Monitoring
+
 Extract request_ids from error responses for correlation:
 
 ```bash
@@ -439,6 +467,7 @@ grep -r "req_a1b2c3d4e5f6g7h8" /var/log/api/
 ```
 
 ### For Metrics
+
 Track errors by error_code for analytics:
 
 ```python
@@ -449,6 +478,7 @@ metrics.increment(f"api_errors_{error_code}")
 ## Common Patterns
 
 ### 1. Always Check field_errors
+
 ```python
 if response.status_code == 422:
     data = response.json()
@@ -458,6 +488,7 @@ if response.status_code == 422:
 ```
 
 ### 2. Implement Retry Logic
+
 ```python
 if response.status_code == 429:
     data = response.json()
@@ -467,6 +498,7 @@ if response.status_code == 429:
 ```
 
 ### 3. Log Request IDs
+
 ```python
 if response.status_code >= 400:
     data = response.json()
@@ -481,6 +513,7 @@ if response.status_code >= 400:
 ## Testing Error Responses
 
 ### Test Validation Error
+
 ```bash
 curl -X POST https://localhost:8000/v1/render/pdf \
   -H "X-API-KEY: test_key" \
@@ -489,6 +522,7 @@ curl -X POST https://localhost:8000/v1/render/pdf \
 ```
 
 ### Test Missing API Key
+
 ```bash
 curl -X POST https://localhost:8000/v1/render/pdf \
   -H "Content-Type: application/json" \
@@ -496,6 +530,7 @@ curl -X POST https://localhost:8000/v1/render/pdf \
 ```
 
 ### Test Rate Limit
+
 ```bash
 # Make 11 requests rapidly (if limit is 10/minute)
 for i in {1..11}; do
@@ -509,6 +544,7 @@ done
 ## Summary
 
 All error responses follow this consistent structure:
+
 - ✅ `error_code` - Machine-readable error type
 - ✅ `message` - Human-readable error description
 - ✅ `request_id` - Unique identifier for tracking

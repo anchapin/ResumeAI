@@ -25,24 +25,26 @@ This section outlines the process for identifying, responding to, and resolving 
 
 ### Incident Severity Levels
 
-| Severity | Duration Impact | User Impact | Response Time | Escalation |
-|----------|-----------------|------------|---|----------|
-| **Critical (P1)** | Service completely down | All users affected | 15 minutes | On-call + Lead engineer + VP Engineering |
-| **High (P2)** | Intermittent/degraded | Subset of users | 30 minutes | On-call + Lead engineer |
-| **Medium (P3)** | Degraded performance | Feature unavailable | 2 hours | Engineering team |
-| **Low (P4)** | Minimal impact | Minor feature issue | 24 hours | Standard review |
+| Severity          | Duration Impact         | User Impact         | Response Time | Escalation                               |
+| ----------------- | ----------------------- | ------------------- | ------------- | ---------------------------------------- |
+| **Critical (P1)** | Service completely down | All users affected  | 15 minutes    | On-call + Lead engineer + VP Engineering |
+| **High (P2)**     | Intermittent/degraded   | Subset of users     | 30 minutes    | On-call + Lead engineer                  |
+| **Medium (P3)**   | Degraded performance    | Feature unavailable | 2 hours       | Engineering team                         |
+| **Low (P4)**      | Minimal impact          | Minor feature issue | 24 hours      | Standard review                          |
 
 ### Incident Response Steps
 
 #### 1. Detection & Alerting
 
 **Automated Monitoring:**
+
 - Prometheus metrics scraped every 15 seconds
 - AlertManager evaluates rules and routes notifications
 - Grafana dashboards provide real-time visibility
 - See [Common Alert Runbooks](#common-alert-runbooks) for specific alert handling
 
 **Manual Detection:**
+
 - Customer reports via Slack/email
 - Team member notices anomalies
 - Dashboard review during on-call rotation
@@ -53,7 +55,7 @@ This section outlines the process for identifying, responding to, and resolving 
 1. Acknowledge the alert in Slack #incidents channel
 2. Open incident in incident tracking system with timestamp
 3. Link to relevant Grafana dashboard
-4. Check application logs: 
+4. Check application logs:
    docker logs -f resume-api
 5. Verify API health: GET /health
 ```
@@ -95,13 +97,13 @@ docker logs resume-api | grep -i error | tail -20
 
 **Immediate Actions (if applicable):**
 
-| Issue | Action | Escalate? |
-|-------|--------|-----------|
-| High error rate | Restart service | If persists >2 min |
-| Database overload | Check slow queries | Yes, immediately |
-| Memory leak | Restart service | After restart |
-| External API failure | Enable fallback/cache | No (automatic) |
-| OAuth flow broken | Check OAuth provider status | Yes, to Lead Eng |
+| Issue                | Action                      | Escalate?          |
+| -------------------- | --------------------------- | ------------------ |
+| High error rate      | Restart service             | If persists >2 min |
+| Database overload    | Check slow queries          | Yes, immediately   |
+| Memory leak          | Restart service             | After restart      |
+| External API failure | Enable fallback/cache       | No (automatic)     |
+| OAuth flow broken    | Check OAuth provider status | Yes, to Lead Eng   |
 
 #### 5. Investigation Phase
 
@@ -178,6 +180,7 @@ See [MONITORING_PROMETHEUS_GRAFANA.md](./MONITORING_PROMETHEUS_GRAFANA.md) for c
 **Investigation Steps:**
 
 1. Check error types in logs:
+
    ```bash
    docker logs resume-api | grep ERROR | tail -50 | sort | uniq -c
    ```
@@ -188,6 +191,7 @@ See [MONITORING_PROMETHEUS_GRAFANA.md](./MONITORING_PROMETHEUS_GRAFANA.md) for c
    - Authentication vs application errors?
 
 3. Check recent deployments:
+
    ```bash
    git log --oneline -5
    # If recent changes, consider rollback
@@ -199,6 +203,7 @@ See [MONITORING_PROMETHEUS_GRAFANA.md](./MONITORING_PROMETHEUS_GRAFANA.md) for c
    ```
 
 **Resolution:**
+
 - If deployment-related: [Rollback Procedures](#rollback-procedures)
 - If code bug: Create fix PR, follow [Deployment Procedures](#deployment-procedures)
 - If database: Optimize query or add index
@@ -213,23 +218,26 @@ See [MONITORING_PROMETHEUS_GRAFANA.md](./MONITORING_PROMETHEUS_GRAFANA.md) for c
 **Investigation Steps:**
 
 1. Identify slow endpoints:
+
    ```bash
    # Check Grafana: Request Latency dashboard
    # Filter by high p99/p95 percentiles
    ```
 
 2. Check resource usage:
+
    ```bash
    docker stats resume-api
    # Look for: CPU >80%, Memory >85%
    ```
 
 3. Database performance:
+
    ```bash
    psql $DATABASE_URL << EOF
-   SELECT query, calls, mean_exec_time 
-   FROM pg_stat_statements 
-   ORDER BY mean_exec_time DESC 
+   SELECT query, calls, mean_exec_time
+   FROM pg_stat_statements
+   ORDER BY mean_exec_time DESC
    LIMIT 5;
    EOF
    ```
@@ -240,6 +248,7 @@ See [MONITORING_PROMETHEUS_GRAFANA.md](./MONITORING_PROMETHEUS_GRAFANA.md) for c
    - View in Prometheus: `http_request_duration_seconds{endpoint="/api/oauth/callback"}`
 
 **Resolution:**
+
 - High CPU: Restart service, investigate code changes
 - High Memory: Check for memory leaks in recent code
 - Slow DB queries: Add index or optimize query
@@ -255,32 +264,35 @@ See [MONITORING_PROMETHEUS_GRAFANA.md](./MONITORING_PROMETHEUS_GRAFANA.md) for c
 **Investigation Steps:**
 
 1. Check connection pool status:
+
    ```bash
    psql $DATABASE_URL -c "
-   SELECT datname, usename, state, count(*) 
-   FROM pg_stat_activity 
+   SELECT datname, usename, state, count(*)
+   FROM pg_stat_activity
    GROUP BY datname, usename, state;"
    ```
 
 2. Check for long-running queries:
+
    ```bash
    psql $DATABASE_URL -c "
    SELECT pid, usename, application_name, state, query_start, query
-   FROM pg_stat_activity 
-   WHERE state != 'idle' 
+   FROM pg_stat_activity
+   WHERE state != 'idle'
    AND query_start < now() - interval '1 minute';"
    ```
 
 3. Kill idle connections if needed:
    ```bash
    psql $DATABASE_URL -c "
-   SELECT pg_terminate_backend(pid) 
-   FROM pg_stat_activity 
-   WHERE state = 'idle' 
+   SELECT pg_terminate_backend(pid)
+   FROM pg_stat_activity
+   WHERE state = 'idle'
    AND query_start < now() - interval '10 minutes';"
    ```
 
 **Resolution:**
+
 - If pool exhausted: Restart application service
 - If database down: Check database service logs
 - If network issue: Check connectivity, firewall rules
@@ -296,6 +308,7 @@ See [MONITORING_PROMETHEUS_GRAFANA.md](./MONITORING_PROMETHEUS_GRAFANA.md) for c
 **Investigation Steps:**
 
 1. Check disk usage:
+
    ```bash
    df -h
    du -sh /var/lib/postgresql/*
@@ -303,6 +316,7 @@ See [MONITORING_PROMETHEUS_GRAFANA.md](./MONITORING_PROMETHEUS_GRAFANA.md) for c
    ```
 
 2. Identify largest files:
+
    ```bash
    find / -type f -size +1G 2>/dev/null
    ```
@@ -316,6 +330,7 @@ See [MONITORING_PROMETHEUS_GRAFANA.md](./MONITORING_PROMETHEUS_GRAFANA.md) for c
    ```
 
 **Resolution:**
+
 - Clean up old logs: `docker logs --since 30d resume-api > /dev/null`
 - Archive old data: Archive logs, run database maintenance
 - Vacuum database: `psql $DATABASE_URL -c "VACUUM ANALYZE;"`
@@ -331,12 +346,14 @@ See [MONITORING_PROMETHEUS_GRAFANA.md](./MONITORING_PROMETHEUS_GRAFANA.md) for c
 **Investigation Steps:**
 
 1. Check current memory usage:
+
    ```bash
    free -h
    docker stats resume-api
    ```
 
 2. Check for memory leaks:
+
    ```bash
    # Review app logs for leak patterns
    docker logs resume-api | grep -i "memory\|leak"
@@ -349,6 +366,7 @@ See [MONITORING_PROMETHEUS_GRAFANA.md](./MONITORING_PROMETHEUS_GRAFANA.md) for c
    ```
 
 **Resolution:**
+
 - Immediate: Restart service
 - Investigate: Code review of recent changes
 - Monitor: Watch memory usage for 1 hour after restart
@@ -404,6 +422,7 @@ git push origin main
 ```
 
 CI/CD Pipeline triggers automatically:
+
 - Runs full test suite
 - Builds Docker image
 - Pushes to staging environment
@@ -428,6 +447,7 @@ pytest tests/api_integration_tests/ -v
 #### 6. Production Deployment
 
 **Timing Considerations:**
+
 - Deploy during business hours (9 AM - 5 PM UTC)
 - Not during known high-traffic periods
 - At least 2 team members available
@@ -472,16 +492,16 @@ curl -s http://api.resumeai.com/api/v1/templates | jq '.count'
 
 ### Deployment Checklist (During Deployment)
 
-| Step | Owner | Time | Notes |
-|------|-------|------|-------|
-| Pre-deployment verification | Eng | 5 min | Health checks, test results |
-| Notify team | Lead | 1 min | Slack #deployments |
-| Deploy to production | Eng | 2 min | kubectl/ArgoCD |
-| Verify rollout | Eng | 2 min | Pod status, logs |
-| Run smoke tests | Eng | 5 min | API endpoints, core flows |
-| Monitor metrics | Eng | 15 min | Error rate, latency, success rate |
-| Post-deployment notification | Lead | 1 min | Slack announcement |
-| **Total** | | **30 min** | |
+| Step                         | Owner | Time       | Notes                             |
+| ---------------------------- | ----- | ---------- | --------------------------------- |
+| Pre-deployment verification  | Eng   | 5 min      | Health checks, test results       |
+| Notify team                  | Lead  | 1 min      | Slack #deployments                |
+| Deploy to production         | Eng   | 2 min      | kubectl/ArgoCD                    |
+| Verify rollout               | Eng   | 2 min      | Pod status, logs                  |
+| Run smoke tests              | Eng   | 5 min      | API endpoints, core flows         |
+| Monitor metrics              | Eng   | 15 min     | Error rate, latency, success rate |
+| Post-deployment notification | Lead  | 1 min      | Slack announcement                |
+| **Total**                    |       | **30 min** |                                   |
 
 ---
 
@@ -490,6 +510,7 @@ curl -s http://api.resumeai.com/api/v1/templates | jq '.count'
 ### When to Rollback
 
 **Immediate Rollback Required:**
+
 - Error rate >10%
 - Service unavailable (500s on main endpoints)
 - Data corruption detected
@@ -497,6 +518,7 @@ curl -s http://api.resumeai.com/api/v1/templates | jq '.count'
 - Critical feature broken
 
 **Safe to Monitor/Fix Forward:**
+
 - Error rate 2-5%
 - Minor UI bugs
 - Single endpoint performance degradation
@@ -555,9 +577,10 @@ kubectl set image deployment/resume-api \
 ### Post-Rollback Process
 
 1. **Acknowledge Rollback**
+
    ```
    :warning: PRODUCTION ROLLBACK
-   
+
    Version: v1.2.3 → v1.2.2
    Reason: Error rate spike (5% → 15%)
    Time: 2026-02-26 14:35 UTC
@@ -604,7 +627,7 @@ VACUUM FULL;
 REINDEX DATABASE resumeai;
 
 -- Check for issues
-SELECT schemaname, tablename, last_vacuum, last_autovacuum 
+SELECT schemaname, tablename, last_vacuum, last_autovacuum
 FROM pg_stat_user_tables;
 
 EOF
@@ -638,6 +661,7 @@ redis-cli PING
 ```
 
 **Procedure:**
+
 1. Notify users of cache refresh
 2. Stop application services
 3. Flush caches
@@ -695,6 +719,7 @@ User Communication:
 **For Critical Issues:** No notice required
 
 **Procedure:**
+
 1. Declare emergency maintenance
 2. Notify all stakeholders immediately
 3. Put service in maintenance mode
@@ -747,6 +772,7 @@ User Communication:
 **Handoff:** Monday 9 AM UTC
 
 **On-Call Responsibilities:**
+
 - Primary responder for all P1/P2 incidents
 - 15-minute response time target
 - Update status in Slack #incidents channel
@@ -754,6 +780,7 @@ User Communication:
 - Document incidents
 
 **On-Call Resources:**
+
 - Runbook (this document)
 - Grafana dashboards
 - Slack commands for quick diagnostics
@@ -784,13 +811,13 @@ Alert Triggered
 
 ### Contact Information
 
-| Role | Name | Phone | Email | Slack |
-|------|------|-------|-------|-------|
-| VP Engineering | [Name] | +1 XXX-XXX-XXXX | [email] | @vp-eng |
-| Lead Engineer | [Name] | +1 XXX-XXX-XXXX | [email] | @lead-eng |
-| On-Call Engineer | Rotating | See Schedule | [See Slack] | @on-call |
-| Customer Success | Team | +1 XXX-XXX-XXXX | support@resumeai.com | #customer-support |
-| DevOps Team | Team | +1 XXX-XXX-XXXX | devops@resumeai.com | #devops |
+| Role             | Name     | Phone           | Email                | Slack             |
+| ---------------- | -------- | --------------- | -------------------- | ----------------- |
+| VP Engineering   | [Name]   | +1 XXX-XXX-XXXX | [email]              | @vp-eng           |
+| Lead Engineer    | [Name]   | +1 XXX-XXX-XXXX | [email]              | @lead-eng         |
+| On-Call Engineer | Rotating | See Schedule    | [See Slack]          | @on-call          |
+| Customer Success | Team     | +1 XXX-XXX-XXXX | support@resumeai.com | #customer-support |
+| DevOps Team      | Team     | +1 XXX-XXX-XXXX | devops@resumeai.com  | #devops           |
 
 ### Escalation Communication Template
 
@@ -853,38 +880,43 @@ curl -s http://api.resumeai.com/health | jq .
 
 ### Critical Dashboards
 
-| Dashboard | URL | Purpose |
-|-----------|-----|---------|
-| Service Health | https://monitoring.resumeai.com/d/resume-api-health | Overall health metrics |
-| Request Metrics | https://monitoring.resumeai.com/d/resume-api-metrics | Latency, throughput |
-| Error Tracking | https://monitoring.resumeai.com/d/resume-api-errors | Error rates by endpoint |
-| Resources | https://monitoring.resumeai.com/d/resume-api-resources | CPU, memory, disk |
-| Database | https://monitoring.resumeai.com/d/postgres-metrics | DB performance |
-| OAuth Monitoring | https://monitoring.resumeai.com/d/oauth-flow | Auth metrics |
+| Dashboard        | URL                                                    | Purpose                 |
+| ---------------- | ------------------------------------------------------ | ----------------------- |
+| Service Health   | https://monitoring.resumeai.com/d/resume-api-health    | Overall health metrics  |
+| Request Metrics  | https://monitoring.resumeai.com/d/resume-api-metrics   | Latency, throughput     |
+| Error Tracking   | https://monitoring.resumeai.com/d/resume-api-errors    | Error rates by endpoint |
+| Resources        | https://monitoring.resumeai.com/d/resume-api-resources | CPU, memory, disk       |
+| Database         | https://monitoring.resumeai.com/d/postgres-metrics     | DB performance          |
+| OAuth Monitoring | https://monitoring.resumeai.com/d/oauth-flow           | Auth metrics            |
 
 ### Common Commands
 
 **View logs:**
+
 ```bash
 docker logs -f resume-api --tail=100
 ```
 
 **Restart service:**
+
 ```bash
 kubectl rollout restart deployment/resume-api -n production
 ```
 
 **Check metrics:**
+
 ```bash
 curl -s http://localhost:8000/metrics | grep http_requests_total
 ```
 
 **SSH to pod:**
+
 ```bash
 kubectl exec -it deployment/resume-api -n production -- /bin/bash
 ```
 
 **Scale replicas:**
+
 ```bash
 kubectl scale deployment/resume-api --replicas=5 -n production
 ```
@@ -893,8 +925,8 @@ kubectl scale deployment/resume-api --replicas=5 -n production
 
 ## Document History
 
-| Date | Author | Changes |
-|------|--------|---------|
+| Date       | Author      | Changes                      |
+| ---------- | ----------- | ---------------------------- |
 | 2026-02-26 | DevOps Team | Initial version - Issue #403 |
 
 ## Related Documentation

@@ -47,14 +47,7 @@
     "v1.4.0-devops",
     "v1.5.0-leadership"
   ],
-  "resumeai_templates": [
-    "base",
-    "modern",
-    "technical",
-    "creative",
-    "executive",
-    "academic"
-  ],
+  "resumeai_templates": ["base", "modern", "technical", "creative", "executive", "academic"],
   "notes": [
     "ResumeAI uses template names: base, modern, technical, creative, executive, academic",
     "resume-cli uses versioned variant names: v1.x.x-variant",

@@ -25,7 +25,7 @@ export interface UseStorageQuotaReturn {
 export function useStorageQuota(
   warningThreshold: number = 80,
   criticalThreshold: number = 95,
-  pollInterval: number = 30000
+  pollInterval: number = 30000,
 ): UseStorageQuotaReturn {
   const [stats, setStats] = useState<StorageStats | null>(null);
 

@@ -84,7 +84,7 @@ describe('Settings Page', () => {
 
       // List Keys Request
       if (url.endsWith('/api-keys') && (!options || options.method === 'GET')) {
-         return {
+        return {
           ok: true,
           json: async () => ({ keys: [], total: 0 }),
         };

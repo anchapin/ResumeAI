@@ -14,7 +14,7 @@ describe('Accessibility Utilities', () => {
   describe('runAccessibilityScan', () => {
     it('should return accessibility results object', async () => {
       const results = await runAccessibilityScan();
-      
+
       expect(results).toHaveProperty('violations');
       expect(results).toHaveProperty('passes');
       expect(results).toHaveProperty('totalTests');
@@ -24,7 +24,7 @@ describe('Accessibility Utilities', () => {
 
     it('should return empty violations in test environment', async () => {
       const results = await runAccessibilityScan();
-      
+
       expect(Array.isArray(results.violations)).toBe(true);
       expect(results.passes).toBeGreaterThanOrEqual(0);
     });
@@ -33,7 +33,7 @@ describe('Accessibility Utilities', () => {
       const results = await runAccessibilityScan({
         runOnly: { type: 'tag', values: ['wcag2aa'] },
       });
-      
+
       expect(results).toBeDefined();
       expect(Array.isArray(results.violations)).toBe(true);
     });
@@ -42,7 +42,7 @@ describe('Accessibility Utilities', () => {
       const invalidOptions = {
         runOnly: { type: 'invalid', values: [] },
       };
-      
+
       try {
         await runAccessibilityScan(invalidOptions);
       } catch (error) {

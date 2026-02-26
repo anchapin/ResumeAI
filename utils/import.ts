@@ -139,7 +139,7 @@ export async function importFromLinkedInFile(files: File | File[] | FileList): P
       formData.append('files', files);
     } else {
       // Handle FileList or array of Files
-      Array.from(files as Iterable<File>).forEach(file => {
+      Array.from(files as Iterable<File>).forEach((file) => {
         formData.append('files', file);
       });
     }
@@ -153,7 +153,9 @@ export async function importFromLinkedInFile(files: File | File[] | FileList): P
     });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ detail: 'Failed to import LinkedIn file' }));
+      const errorData = await response
+        .json()
+        .catch(() => ({ detail: 'Failed to import LinkedIn file' }));
       throw new Error(errorData.detail || 'Failed to import LinkedIn file');
     }
 
@@ -161,7 +163,9 @@ export async function importFromLinkedInFile(files: File | File[] | FileList): P
     return data as ResumeData;
   } catch (error) {
     console.error('Error importing LinkedIn file:', error);
-    throw new Error('Failed to import LinkedIn file. Please ensure the backend is running and the file is valid.');
+    throw new Error(
+      'Failed to import LinkedIn file. Please ensure the backend is running and the file is valid.',
+    );
   }
 }
 

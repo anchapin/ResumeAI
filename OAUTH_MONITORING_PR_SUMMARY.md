@@ -1,6 +1,7 @@
 # PR Summary: OAuth Monitoring & Alerting Implementation (#294)
 
 ## Branch Information
+
 - **Branch Name**: `feature/issue-294-oauth-monitoring`
 - **Base Branch**: `main`
 - **Status**: Ready for PR creation (files created, needs git push with elevated permissions)
@@ -8,6 +9,7 @@
 ## Files Created
 
 ### Core Implementation
+
 1. **resume-api/monitoring/oauth_monitor.py** (450+ lines)
    - `OAuthEvent` dataclass for event tracking
    - `OAuthMonitor` class for comprehensive monitoring
@@ -37,6 +39,7 @@
    - Anomaly detection testing
 
 ### Integration & Documentation
+
 4. **resume-api/OAUTH_MONITORING_INTEGRATION.md** (300+ lines)
    - Step-by-step integration guide
    - Helper functions for existing routes
@@ -63,11 +66,13 @@
 ## Key Features Implemented
 
 ### 1. Real-Time OAuth Event Tracking
+
 - Event types: connect, disconnect, callback, token_exchange, user_fetch, token_refresh, status_check
 - Event statuses: success, failure, rate_limited, token_expired
 - Tracked metadata: user_id, error_code, error_message, response_time, IP_address
 
 ### 2. Metrics Aggregation
+
 - Multiple time windows (5, 15, 60 minutes)
 - Event counts by status
 - Success/failure rates with percentage
@@ -76,12 +81,14 @@
 - Top errors ranking
 
 ### 3. Anomaly Detection
+
 - **High Failure Rate**: >15% failures (HIGH severity)
 - **Rate Limiting**: 5+ rate limit hits (MEDIUM severity)
 - **Token Expiration Spike**: 3+ expiration events (MEDIUM severity)
 - **Suspicious Activity**: 5+ failed attempts from same IP (HIGH severity)
 
 ### 4. REST API Endpoints
+
 ```
 GET  /metrics/oauth/health                    - Overall health
 GET  /metrics/oauth/metrics                   - Time-windowed metrics
@@ -95,7 +102,9 @@ POST /metrics/oauth/cleanup                   - Manual event cleanup
 ```
 
 ### 5. Integration Points
+
 Existing GitHub OAuth routes need minor updates:
+
 - `exchange_code_for_token()` - Token exchange tracking
 - `fetch_github_user()` - User fetch tracking
 - `github_oauth_callback()` - Callback processing tracking
@@ -104,6 +113,7 @@ Existing GitHub OAuth routes need minor updates:
 - `github_status()` - Status check tracking
 
 ### 6. Alert Rules (Enhanced in existing alerting.py)
+
 - OAuth Authentication Failure (>10% failure rate)
 - OAuth Rate Limit (5+ hits)
 - OAuth Token Expiration (5+ events)
@@ -112,6 +122,7 @@ Existing GitHub OAuth routes need minor updates:
 ## Integration Checklist
 
 ### Automatic (Already Done)
+
 - [x] Create monitoring module
 - [x] Create metrics endpoints
 - [x] Create test suite
@@ -120,6 +131,7 @@ Existing GitHub OAuth routes need minor updates:
 - [x] Create documentation
 
 ### Manual Integration Needed
+
 - [ ] Add metrics router import to `main.py`
 - [ ] Register metrics router in `main.py`
 - [ ] Add monitoring imports to `routes/github.py`
@@ -131,6 +143,7 @@ Existing GitHub OAuth routes need minor updates:
 ## Code Examples
 
 ### Registering Metrics Routes (main.py)
+
 ```python
 # Add import at top
 from api.metrics_routes import router as metrics_router
@@ -140,6 +153,7 @@ app.include_router(metrics_router)
 ```
 
 ### Adding Monitoring to GitHub Routes
+
 ```python
 # Add imports
 import time
@@ -208,18 +222,21 @@ except Exception as e:
 ## Testing & Validation
 
 ### Run Tests
+
 ```bash
 cd resume-api
 python -m pytest test_oauth_monitoring.py -v
 ```
 
 ### Validate Installation
+
 ```bash
 cd resume-api
 python3 validate_oauth_monitoring.py
 ```
 
 ### Test Endpoints
+
 ```bash
 # Check OAuth health
 curl http://localhost:8000/metrics/oauth/health | jq .
@@ -240,6 +257,7 @@ curl http://localhost:8000/metrics/prometheus
 ## Configuration
 
 ### Environment Variables (Optional)
+
 ```bash
 # Alert checking interval (default: 30 seconds)
 ALERT_CHECK_INTERVAL=30
@@ -252,7 +270,9 @@ ALERTING_WEBHOOK_URL=https://hooks.slack.com/services/YOUR/WEBHOOK/URL
 ```
 
 ### Configurable Thresholds
+
 Located in `monitoring/oauth_monitor.py`:
+
 ```python
 oauth_monitor.failure_rate_threshold = 0.15         # 15% failure rate
 oauth_monitor.rate_limit_hit_threshold = 5          # 5 rate limit hits
@@ -265,17 +285,20 @@ oauth_monitor.suspicious_ip_window = 5              # 5 minute window
 ## Performance Impact
 
 ### Memory Usage
+
 - ~1KB per event
 - Auto-cleanup of events >24 hours old
 - ~1000 events/hour = ~24MB/day maximum
 
 ### Response Time
+
 - Event recording: O(1)
 - Metrics snapshot: O(n) where n = events in window
 - Anomaly detection: O(n) per rule
 - Cleanup: O(n)
 
 ### Thread Safety
+
 - RLock for concurrent access
 - Safe for production multi-threaded environments
 
@@ -289,6 +312,7 @@ oauth_monitor.suspicious_ip_window = 5              # 5 minute window
 ## Monitoring Integration Example
 
 ### Prometheus Configuration
+
 ```yaml
 global:
   scrape_interval: 15s
@@ -301,6 +325,7 @@ scrape_configs:
 ```
 
 ### Grafana Dashboard Example
+
 ```json
 {
   "dashboard": {
@@ -384,6 +409,7 @@ scrape_configs:
 ## Support & Questions
 
 For implementation questions:
+
 1. See `OAUTH_MONITORING_INTEGRATION.md` for step-by-step guide
 2. Review `test_oauth_monitoring.py` for usage examples
 3. Run `validate_oauth_monitoring.py` for system validation

@@ -12,18 +12,18 @@ const THEME_STORAGE_KEY = 'resumeai_theme';
 export function useTheme() {
   const [theme, setThemeState] = useState<Theme>(() => {
     if (typeof window === 'undefined') return 'light';
-    
+
     // Check localStorage first
     const stored = localStorage.getItem(THEME_STORAGE_KEY) as Theme | null;
     if (stored && (stored === 'light' || stored === 'dark')) {
       return stored;
     }
-    
+
     // Check system preference
     if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
       return 'dark';
     }
-    
+
     return 'light';
   });
 
@@ -42,7 +42,7 @@ export function useTheme() {
   // Listen for system preference changes
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    
+
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
     const handler = (e: MediaQueryListEvent) => {
       // Only auto-switch if user hasn't set a preference
@@ -51,7 +51,7 @@ export function useTheme() {
         setThemeState(e.matches ? 'dark' : 'light');
       }
     };
-    
+
     mediaQuery.addEventListener('change', handler);
     return () => mediaQuery.removeEventListener('change', handler);
   }, []);
@@ -60,7 +60,7 @@ export function useTheme() {
    * Toggle between light and dark themes
    */
   const toggleTheme = useCallback(() => {
-    setThemeState(prev => prev === 'light' ? 'dark' : 'light');
+    setThemeState((prev) => (prev === 'light' ? 'dark' : 'light'));
   }, []);
 
   /**

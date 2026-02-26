@@ -15,6 +15,7 @@ Configured and enforced 60% minimum test coverage thresholds across both fronten
 ### Files Modified
 
 #### 1. **vite.config.ts**
+
 - Configured Istanbul coverage provider with 60% thresholds
 - Coverage metrics: lines, functions, branches, statements
 - Reporters: text, json, html, lcov
@@ -22,23 +23,27 @@ Configured and enforced 60% minimum test coverage thresholds across both fronten
 - Fixed duplicate threshold configuration (removed 4 duplicate lines)
 
 #### 2. **.github/workflows/frontend-ci.yml**
+
 - Fixed merge conflict (HEAD vs eb06d43)
 - Added `npm run test:coverage` step to enforce 60% thresholds
 - Made coverage failures break the build (`continue-on-error: false`)
 - Added artifact upload for coverage reports (30-day retention)
 
 #### 3. **.github/workflows/backend-ci.yml**
+
 - Updated coverage command to use `pytest --cov=. --cov-fail-under=60`
 - Added lcov report generation for CI integration
 - Expanded coverage to all tests (not just test_rate_limiting.py)
 - Artifact upload for HTML coverage reports
 
 #### 4. **.github/workflows/pr-check.yml**
+
 - Added frontend coverage check (`npm run test:coverage -- --run`)
 - Added backend coverage check with pytest and 60% threshold
 - Both checks use `continue-on-error: true` for PR visibility
 
 #### 5. **pytest.ini**
+
 - Verified existing `fail_under = 60` configuration
 - Configured coverage source as `resume-api/`
 - Set up report types: html, term
@@ -46,6 +51,7 @@ Configured and enforced 60% minimum test coverage thresholds across both fronten
 ## Coverage Enforcement Strategy
 
 ### Frontend (Vitest + Istanbul)
+
 ```typescript
 // vite.config.ts
 coverage: {
@@ -64,6 +70,7 @@ coverage: {
 **Execution**: `npm run test:coverage -- --run`
 
 ### Backend (Pytest)
+
 ```bash
 # pytest.ini
 [coverage:report]
@@ -76,6 +83,7 @@ pytest --cov=. --cov-report=html --cov-report=term --cov-fail-under=60
 ## Coverage Report Results
 
 ### Frontend Current Coverage
+
 ```
 Test Results: 604 passed | 54 skipped (658 total)
 Coverage Status: ❌ BELOW THRESHOLD
@@ -95,6 +103,7 @@ eview.tsx: 4% coverage
 ```
 
 ### Well-Covered Areas
+
 ```
 ✅ App.tsx: 74.41% (exceeds 60% threshold)
 ✅ types.ts: 100%
@@ -107,15 +116,18 @@ eview.tsx: 4% coverage
 ## CI/CD Integration Points
 
 ### 1. Push to Feature Branch
+
 - Frontend: Runs tests + coverage check → fails if <60%
 - Backend: Runs pytest coverage → fails if <60%
 
 ### 2. Pull Request Checks
+
 - Both frontend and backend coverage checks run (non-blocking)
 - Coverage reports uploaded as artifacts
 - Reviewers can download coverage reports for analysis
 
 ### 3. Merge to Main
+
 - All CI checks must pass
 - Coverage thresholds enforced
 
@@ -124,6 +136,7 @@ eview.tsx: 4% coverage
 To meet the 60% coverage targets, the team should:
 
 ### Frontend Priority Areas (by impact)
+
 1. **components/**: 23.17% → needs ~37% improvement
    - Focus: Form validation, error handling, UI interactions
 2. **pages/**: 27.28% → needs ~33% improvement
@@ -132,6 +145,7 @@ To meet the 60% coverage targets, the team should:
    - Focus: Custom hook logic paths
 
 ### Backend Coverage
+
 - Add integration tests for API endpoints
 - Test error scenarios and edge cases
 - Achieve parity with frontend coverage targets
@@ -139,12 +153,14 @@ To meet the 60% coverage targets, the team should:
 ## Testing Infrastructure
 
 ### Frontend Stack
+
 - Test Runner: Vitest 4.0.18
 - Testing Library: React Testing Library 16.3.2
 - DOM: happy-dom 20.7.0
 - Coverage: Istanbul via @vitest/coverage-istanbul
 
 ### Backend Stack
+
 - Test Framework: Pytest
 - Coverage Tool: pytest-cov
 - Reports: HTML, LCOV, Terminal
@@ -154,12 +170,14 @@ To meet the 60% coverage targets, the team should:
 All test runs produce coverage artifacts:
 
 ### Frontend
+
 - **Location**: `./coverage/`
 - **Formats**: JSON, HTML, LCOV
 - **CI Upload**: 30-day retention
 - **Access**: Download from Actions artifacts
 
-### Backend  
+### Backend
+
 - **Location**: `./coverage_html/`
 - **Formats**: HTML, LCOV
 - **CI Upload**: 30-day retention

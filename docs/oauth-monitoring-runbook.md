@@ -27,11 +27,13 @@ The following metrics are tracked for OAuth health:
 ### 1. High OAuth Authentication Failure Rate
 
 **Symptoms:**
+
 - Alert triggered: "High OAuth authentication failure rate"
 - Users unable to connect GitHub accounts
 - `oauth_connection_failure_total` metric increasing rapidly
 
 **Possible Causes:**
+
 - Invalid `GITHUB_CLIENT_ID` or `GITHUB_CLIENT_SECRET`
 - Incorrect `GITHUB_CALLBACK_URL` configuration
 - GitHub OAuth App suspended or revoked
@@ -41,6 +43,7 @@ The following metrics are tracked for OAuth health:
 **Troubleshooting Steps:**
 
 1. **Check OAuth Configuration**
+
    ```bash
    # Verify environment variables are set
    curl http://your-api/health/oauth | jq '.details.oauth.github_configured'
@@ -56,6 +59,7 @@ The following metrics are tracked for OAuth health:
      ```
 
 3. **Check Application Logs**
+
    ```bash
    # Look for GitHub OAuth errors
    kubectl logs -f deployment/resume-api | grep "github_oauth"
@@ -67,6 +71,7 @@ The following metrics are tracked for OAuth health:
    - Check for errors in the callback
 
 **Resolution:**
+
 - Update GitHub OAuth App configuration if callback URL is wrong
 - Regenerate client secret if compromised
 - Verify network connectivity to GitHub API (api.github.com)
@@ -76,11 +81,13 @@ The following metrics are tracked for OAuth health:
 ### 2. GitHub API Rate Limit Approaching
 
 **Symptoms:**
+
 - Alert triggered: "OAuth API rate limit approaching"
 - `oauth_rate_limit_hits_total` metric increasing
 - API calls to GitHub failing with 403 status
 
 **Possible Causes:**
+
 - High volume of GitHub API requests
 - Multiple users sharing same OAuth token (not expected with OAuth)
 - GitHub API quota exceeded (5000 requests/hour for authenticated tokens)
@@ -88,6 +95,7 @@ The following metrics are tracked for OAuth health:
 **Troubleshooting Steps:**
 
 1. **Check Rate Limit Metrics**
+
    ```bash
    # View rate limit hits
    curl http://your-api/metrics | grep oauth_rate_limit_hits_total
@@ -107,6 +115,7 @@ The following metrics are tracked for OAuth health:
    ```
 
 **Resolution:**
+
 - Implement request caching to reduce API calls
 - Add proper pagination handling to fetch data in batches
 - Consider adding user-level rate limiting
@@ -117,11 +126,13 @@ The following metrics are tracked for OAuth health:
 ### 3. OAuth Token Expiration Events
 
 **Symptoms:**
+
 - Alert triggered: "OAuth token expiration events detected"
 - Users suddenly unable to access GitHub data
 - `oauth_token_expiration_events` metric incrementing
 
 **Possible Causes:**
+
 - OAuth tokens expire (GitHub tokens typically don't expire unless revoked)
 - User revokes access in GitHub settings
 - OAuth App access revoked
@@ -130,11 +141,13 @@ The following metrics are tracked for OAuth health:
 **Troubleshooting Steps:**
 
 1. **Check Token Expiration Metrics**
+
    ```bash
    curl http://your-api/metrics | grep oauth_token_expiration_events
    ```
 
 2. **Review Database for Token Issues**
+
    ```sql
    SELECT user_id, github_username, created_at, updated_at
    FROM user_github_connections
@@ -147,6 +160,7 @@ The following metrics are tracked for OAuth health:
    ```
 
 **Resolution:**
+
 - User needs to reconnect their GitHub account via OAuth flow
 - Provide clear UI message prompting reconnection
 - Consider implementing automatic token refresh if needed
@@ -157,11 +171,13 @@ The following metrics are tracked for OAuth health:
 ### 4. OAuth Token Storage Errors
 
 **Symptoms:**
+
 - Alert triggered: "OAuth token storage errors detected"
 - OAuth flow appears successful but token not persisted
 - `oauth_storage_errors_total` metric increasing
 
 **Possible Causes:**
+
 - Database connection issues
 - Encryption key rotation problems
 - Disk space exhausted
@@ -170,17 +186,20 @@ The following metrics are tracked for OAuth health:
 **Troubleshooting Steps:**
 
 1. **Check Database Health**
+
    ```bash
    curl http://your-api/health | jq '.checks.database'
    # Should be true
    ```
 
 2. **Check Storage Error Metrics**
+
    ```bash
    curl http://your-api/metrics | grep oauth_storage_errors_total
    ```
 
 3. **Review Database Logs**
+
    ```bash
    kubectl logs -f deployment/resume-api | grep -i "database\|sql\|storage"
    ```
@@ -192,6 +211,7 @@ The following metrics are tracked for OAuth health:
    ```
 
 **Resolution:**
+
 - Restart database if connection issues
 - Check disk space on database server
 - Verify encryption key is valid and not rotated improperly
@@ -202,6 +222,7 @@ The following metrics are tracked for OAuth health:
 ### 5. Users Cannot Connect GitHub Account
 
 **Symptoms:**
+
 - Users report "Connection failed" errors
 - OAuth flow returns error
 - No specific alert triggered
@@ -209,6 +230,7 @@ The following metrics are tracked for OAuth health:
 **Troubleshooting Steps:**
 
 1. **Verify OAuth Configuration**
+
    ```bash
    curl http://your-api/health/oauth | jq '.details.oauth'
    ```
@@ -228,6 +250,7 @@ The following metrics are tracked for OAuth health:
    - Verify required scopes: `user:email`, `public_repo`
 
 **Resolution:**
+
 - Update OAuth callback URL in GitHub App
 - Add frontend domain to CORS origins
 - Restart application after configuration changes
@@ -267,6 +290,7 @@ Monitor logs for:
 ## Escalation Procedures
 
 ### Severity 1 (Critical) - OAuth Completely Broken
+
 - **Impact**: All users unable to connect GitHub
 - **Response Time**: < 15 minutes
 - **Actions**:
@@ -276,6 +300,7 @@ Monitor logs for:
   4. Engage infrastructure team if database issues
 
 ### Severity 2 (High) - High Failure Rate
+
 - **Impact**: Many users affected (> 10%)
 - **Response Time**: < 1 hour
 - **Actions**:
@@ -285,6 +310,7 @@ Monitor logs for:
   4. Implement workaround if needed
 
 ### Severity 3 (Medium) - Intermittent Issues
+
 - **Impact**: Some users affected (< 10%)
 - **Response Time**: < 4 hours
 - **Actions**:
@@ -296,15 +322,18 @@ Monitor logs for:
 ## Maintenance Tasks
 
 ### Daily
+
 - Review OAuth health metrics
 - Check for new alerts
 
 ### Weekly
+
 - Review OAuth connection trends
 - Check database table sizes
 - Verify backup integrity
 
 ### Monthly
+
 - Review OAuth App security settings
 - Audit user connections for anomalies
 - Update runbook based on incidents

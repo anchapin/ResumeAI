@@ -58,6 +58,7 @@ ls coverage/coverage-final.json
 ```
 
 The HTML report provides:
+
 - Line-by-line coverage visualization
 - Branch coverage details
 - Functions and statements coverage
@@ -85,7 +86,7 @@ Located in `pytest.ini`:
 ```ini
 [coverage:run]
 source = resume-api
-omit = 
+omit =
     */site-packages/*
     */tests/*
     */__pycache__/*
@@ -117,6 +118,7 @@ cd resume-api && python -m coverage report --include=resume-api --format=term-mi
 ```
 
 The HTML report shows:
+
 - Overall coverage percentage
 - Per-module coverage statistics
 - Missing lines and branches
@@ -171,11 +173,13 @@ TOTAL                            98     15    85%
 Files or directories below 60% coverage:
 
 **Frontend:**
+
 - Need to add tests for conditional branches
 - Focus on error handling paths
 - Add tests for edge cases
 
 **Backend:**
+
 - Increase test coverage for API endpoints
 - Test error responses and validations
 - Add integration tests for CLI integration
@@ -213,10 +217,12 @@ function getData() {
 
 // ✅ Test both paths
 test('getData returns data on success', async () => {
-  global.fetch = jest.fn(() => Promise.resolve({
-    ok: true,
-    json: () => ({ data: 'value' })
-  }));
+  global.fetch = jest.fn(() =>
+    Promise.resolve({
+      ok: true,
+      json: () => ({ data: 'value' }),
+    }),
+  );
   expect(await getData()).toEqual({ data: 'value' });
 });
 
@@ -240,11 +246,11 @@ def get_resume(id: str):
 def get_resume(id: str):
     if not id:
         raise HTTPException(status_code=400, detail="ID required")
-    
+
     resume = db.get(id)
     if not resume:
         raise HTTPException(status_code=404, detail="Not found")
-    
+
     return resume
 
 # ✅ Test all cases

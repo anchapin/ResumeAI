@@ -9,11 +9,13 @@ Implemented OAuth 2.0 PKCE (Proof Key for Public Clients) security for secure OA
 ## Security Vulnerability Fixed
 
 **Before:** OAuth implementation was vulnerable to authorization code interception attacks:
+
 - Authorization code transmitted in redirect URI could be intercepted
 - No way to verify the code was legitimately obtained
 - Public clients (SPAs) had no protection mechanism
 
 **After:** PKCE-protected OAuth flow:
+
 - Code verifier stored client-side (ephemeral in sessionStorage)
 - Code challenge transmitted to auth provider
 - Backend verifies: SHA256(code_verifier) == code_challenge
@@ -49,18 +51,21 @@ buildPKCEAuthUrl(baseUrl: string, params: Record<string, string>, codeChallenge:
 validatePKCEState(provider: string = 'oauth'): boolean
 ```
 
-**Storage:** 
+**Storage:**
+
 - Verifier stored in `sessionStorage` with key `pkce_verifier_{provider}`
 - Ephemeral (cleared on tab/browser close)
 - Same-origin only (secure by default)
 - Auto-cleared after retrieval (one-time use)
 
 **Code Verifier:**
+
 - Length: 128 characters (RFC 7636 requires 43-128)
 - Characters: Only unreserved chars `[A-Za-z0-9-._~]`
 - Generation: `crypto.getRandomValues()` for cryptographic strength
 
 **Code Challenge:**
+
 - Method: S256 (SHA-256)
 - Encoding: Base64url without padding
 - Used in authorization URL: `code_challenge` and `code_challenge_method=S256`
@@ -83,6 +88,7 @@ verify_pkce_challenge(verifier: str, challenge: str) -> bool
 **Database Schema Update (`resume-api/database.py`):**
 
 Extended `GitHubOAuthState` model with PKCE fields:
+
 ```python
 code_challenge: str        # SHA256(verifier) base64url-encoded
 code_challenge_method: str # "S256" for SHA256
@@ -106,6 +112,7 @@ code_verifier: str         # Stored for backend verification
    - If invalid, reject with error
 
 **Backward Compatibility:**
+
 - PKCE fields are nullable
 - Non-PKCE flows still work (for legacy support)
 - New flows always use PKCE
@@ -113,6 +120,7 @@ code_verifier: str         # Stored for backend verification
 ### API Responses
 
 **Authorization Initiation Response:**
+
 ```json
 {
   "success": true,
@@ -128,17 +136,20 @@ code_verifier: str         # Stored for backend verification
 ### Attack Prevention
 
 **Authorization Code Interception:**
+
 - Attacker intercepts authorization code in redirect
 - Attacker cannot use code without original verifier
 - Backend verifies code_verifier matches code_challenge
 - Attack prevented ✓
 
 **Code Injection:**
+
 - Attacker provides malicious code
 - Backend rejects if verifier doesn't match challenge
 - Attack prevented ✓
 
 **Session Fixation:**
+
 - State parameter already protects (CSRF)
 - PKCE provides additional code interception protection
 - Combined defense ✓
@@ -153,10 +164,12 @@ code_verifier: str         # Stored for backend verification
 ## Files Modified/Created
 
 ### Frontend
+
 - ✅ `src/lib/oauth.ts` - PKCE implementation (191 lines)
 - ✅ `tests/oauth-pkce.test.ts` - Comprehensive tests (415 lines, 31 tests)
 
 ### Backend
+
 - ✅ `resume-api/database.py` - GitHubOAuthState model update (+5 fields)
 - ✅ `resume-api/routes/github.py` - PKCE implementation (+95 lines)
   - `generate_pkce_code_verifier()`
@@ -171,6 +184,7 @@ code_verifier: str         # Stored for backend verification
 ## Test Coverage
 
 ### Frontend Tests (`npm test -- oauth-pkce.test.ts`)
+
 - ✅ Code verifier generation (length, charset, randomness)
 - ✅ Code challenge generation (SHA256, base64url, determinism)
 - ✅ Storage and retrieval (sessionStorage)
@@ -183,6 +197,7 @@ code_verifier: str         # Stored for backend verification
 **Result:** 31/31 tests passing
 
 ### Backend Tests (`test_pkce_standalone.py`)
+
 - ✅ Code verifier generation
 - ✅ Code challenge generation
 - ✅ Verification logic
@@ -197,17 +212,22 @@ code_verifier: str         # Stored for backend verification
 ### For Frontend Developers
 
 **Initialize OAuth with PKCE:**
+
 ```typescript
 import { setupPKCE, buildPKCEAuthUrl, retrieveVerifier } from '@/lib/oauth';
 
 // 1. Setup PKCE and get authorization URL
 const codeChallenge = await setupPKCE('github');
-const authUrl = buildPKCEAuthUrl('https://github.com/login/oauth/authorize', {
-  client_id: process.env.GITHUB_CLIENT_ID,
-  redirect_uri: window.location.origin + '/auth/callback',
-  scope: 'user:email',
-  state: stateValue,
-}, codeChallenge);
+const authUrl = buildPKCEAuthUrl(
+  'https://github.com/login/oauth/authorize',
+  {
+    client_id: process.env.GITHUB_CLIENT_ID,
+    redirect_uri: window.location.origin + '/auth/callback',
+    scope: 'user:email',
+    state: stateValue,
+  },
+  codeChallenge,
+);
 
 // 2. Redirect user to authorization URL
 window.location.href = authUrl;
@@ -220,6 +240,7 @@ const verifier = retrieveVerifier('github');
 ### For Backend Developers
 
 **Verify PKCE in token exchange:**
+
 ```python
 # In callback handler
 token_data = await exchange_code_for_token(
@@ -246,6 +267,7 @@ See: https://tools.ietf.org/html/rfc7636
 ## Testing Instructions
 
 ### Run Frontend Tests
+
 ```bash
 npm test -- oauth-pkce.test.ts
 ```
@@ -253,6 +275,7 @@ npm test -- oauth-pkce.test.ts
 Expected: All 31 tests passing
 
 ### Run Backend Tests
+
 ```bash
 cd resume-api
 python3 test_pkce_standalone.py
@@ -263,6 +286,7 @@ Expected: All 9 tests passing
 ### Manual Testing
 
 1. **Start development servers**
+
 ```bash
 npm run dev
 cd resume-api && python main.py
@@ -284,16 +308,19 @@ cd resume-api && python main.py
 ## Security Best Practices
 
 ### What PKCE Protects
+
 - ✅ Authorization code interception attacks
 - ✅ Code injection attacks
 - ✅ Public client (SPA) protection
 
 ### What PKCE Doesn't Protect
+
 - ❌ HTTPS must-have for secure transmission
 - ❌ CSRF (use state parameter instead)
 - ❌ Token theft (use httpOnly cookies, proper storage)
 
 ### Additional Recommendations
+
 1. Always use HTTPS in production
 2. Keep state parameter for CSRF protection
 3. Store access tokens securely (httpOnly cookies preferred)
@@ -340,6 +367,7 @@ cd resume-api && python main.py
 ✅ **Status:** COMPLETE
 
 **Requirements Met:**
+
 1. ✅ `src/lib/oauth.ts` with verifier/challenge generation
 2. ✅ Updated OAuth flow with PKCE integration
 3. ✅ Backend OAuth handler with PKCE verification
@@ -348,6 +376,7 @@ cd resume-api && python main.py
 6. ✅ All tests passing
 
 **Verification:**
+
 - Frontend: `npm test` (31/31 passing)
 - Backend: `python3 test_pkce_standalone.py` (9/9 passing)
 - Full OAuth flow tested and working

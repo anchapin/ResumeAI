@@ -13,6 +13,7 @@ Implemented secure API key storage and verification using bcrypt hashing. API ke
 Created a new security package with the following components:
 
 #### `lib/security/key_management.py`
+
 Main module providing API key security functions:
 
 - **`hash_api_key(key: str) -> str`**
@@ -41,6 +42,7 @@ Main module providing API key security functions:
   - Useful for one-time migration of existing keys
 
 #### `lib/security/__init__.py`
+
 Package exports all security functions for easy importing.
 
 ### 2. Updated Authentication: `config/dependencies.py`
@@ -75,6 +77,7 @@ python scripts/migrate_api_keys.py --env-file .env.production
 ```
 
 Features:
+
 - Reads `MASTER_API_KEY` and `API_KEYS` from environment files
 - Generates bcrypt hashes for each key
 - Outputs migration results in `.env` format
@@ -101,6 +104,7 @@ MASTER_API_KEY=rai_1234567890abcdef1234567890abcdef
 ### 5. Test Files
 
 #### `tests/test_key_management.py`
+
 Comprehensive pytest tests covering:
 
 - **Hash Tests:**
@@ -132,6 +136,7 @@ Comprehensive pytest tests covering:
   - Timing attack resistance
 
 #### `tests/test_api_key_verification.py`
+
 Integration tests for authentication system:
 
 - Hashed key verification in API requests
@@ -144,7 +149,9 @@ Integration tests for authentication system:
 - Migration scenarios
 
 #### `test_key_management_standalone.py`
+
 Standalone test runner (no pytest required):
+
 - Can be run with: `python3 test_key_management_standalone.py`
 - Tests all key management functions
 - Useful for validating deployment
@@ -234,6 +241,7 @@ Authentication (config/dependencies.py)
 ## Testing
 
 ### Unit Tests
+
 ```bash
 cd resume-api
 pytest tests/test_key_management.py -v
@@ -241,12 +249,14 @@ pytest tests/test_api_key_verification.py -v
 ```
 
 ### Standalone Test
+
 ```bash
 cd resume-api
 python3 test_key_management_standalone.py
 ```
 
 ### Manual Testing
+
 ```bash
 # Test with plaintext key against hashed configuration
 curl -X GET "http://localhost:8000/v1/variants" \
@@ -259,6 +269,7 @@ curl -X GET "http://localhost:8000/v1/variants" \
 ### For Development Environment
 
 1. **Hash your keys:**
+
    ```bash
    cd resume-api
    python scripts/migrate_api_keys.py --env-file .env
@@ -268,6 +279,7 @@ curl -X GET "http://localhost:8000/v1/variants" \
    Replace plaintext keys with hashed versions from script output
 
 3. **Restart API:**
+
    ```bash
    python main.py
    ```
@@ -278,6 +290,7 @@ curl -X GET "http://localhost:8000/v1/variants" \
 ### For Production Environment
 
 1. **Generate hashed keys:**
+
    ```bash
    python scripts/migrate_api_keys.py --env-file .env.production
    ```
@@ -288,6 +301,7 @@ curl -X GET "http://localhost:8000/v1/variants" \
    - K8s: Update secrets
 
 3. **Deploy with new configuration:**
+
    ```bash
    # Verify old plaintext keys still work (backward compat)
    # Then remove plaintext keys once all clients updated
@@ -322,6 +336,7 @@ resume-api/
 ## Requirements
 
 **New Dependencies:**
+
 - bcrypt (4.1.2) - Already in requirements.txt ✅
 
 **No external dependencies added** - bcrypt was already required by passlib.
@@ -385,6 +400,7 @@ resume-api/
 ## Summary
 
 Issue #391 is **complete**. The Resume API now has enterprise-grade API key security with:
+
 - ✅ Bcrypt hashing for all API keys
 - ✅ Backward compatibility with plaintext keys
 - ✅ Comprehensive test coverage

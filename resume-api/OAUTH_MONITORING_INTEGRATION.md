@@ -5,6 +5,7 @@ This document describes how to integrate OAuth monitoring into the existing GitH
 ## Overview
 
 The OAuth monitoring system tracks:
+
 - OAuth endpoint health and uptime
 - Success/failure rates and error patterns
 - Token lifecycle (expiration, refresh)
@@ -14,14 +15,18 @@ The OAuth monitoring system tracks:
 ## Components
 
 ### 1. OAuth Monitor (`monitoring/oauth_monitor.py`)
+
 Core monitoring system with:
+
 - Event tracking (`OAuthEvent`, `OAuthMonitor`)
 - Metrics aggregation (time windows: 5min, 15min, 60min)
 - Anomaly detection
 - Suspicious activity detection
 
 ### 2. Metrics Routes (`api/metrics_routes.py`)
+
 REST endpoints for monitoring data:
+
 - `GET /metrics/oauth/health` - Overall health status
 - `GET /metrics/oauth/metrics` - Time-windowed metrics
 - `GET /metrics/oauth/anomalies` - Detected anomalies
@@ -34,6 +39,7 @@ REST endpoints for monitoring data:
 To integrate monitoring into `routes/github.py`, add these calls:
 
 #### In `exchange_code_for_token()` function:
+
 ```python
 start_time = time.time()
 try:
@@ -61,6 +67,7 @@ except Exception as e:
 ```
 
 #### In `fetch_github_user()` function:
+
 ```python
 start_time = time.time()
 try:
@@ -90,11 +97,12 @@ except Exception as e:
 ```
 
 #### In `github_oauth_callback()` function:
+
 ```python
 start_time = time.time()
 try:
     # ... validation and token exchange ...
-    
+
     # Record success
     _record_oauth_event(
         event_type="callback",
@@ -103,7 +111,7 @@ try:
         duration_ms=(time.time() - start_time) * 1000,
         request=request,
     )
-    
+
 except Exception as e:
     # Record failure
     _record_oauth_event(
@@ -118,6 +126,7 @@ except Exception as e:
 ```
 
 #### In `github_connect()` function:
+
 ```python
 _record_oauth_event(
     event_type="connect",
@@ -128,6 +137,7 @@ _record_oauth_event(
 ```
 
 #### In `disconnect_github()` function:
+
 ```python
 # Record before disconnect
 _record_oauth_event(
@@ -139,6 +149,7 @@ _record_oauth_event(
 ```
 
 #### In `github_status()` function:
+
 ```python
 if connection:
     _record_oauth_event(
@@ -175,7 +186,7 @@ def _record_oauth_event(
 ) -> None:
     """Helper to record OAuth events to monitor."""
     from monitoring.oauth_monitor import oauth_monitor, OAuthEvent
-    
+
     event = OAuthEvent(
         timestamp=datetime.now(timezone.utc),
         provider=provider,
@@ -206,6 +217,7 @@ app.include_router(metrics_router)
 No new environment variables required. Monitoring is enabled by default.
 
 Optional configuration (in `.env`):
+
 ```bash
 # Alert checking interval (seconds)
 ALERT_CHECK_INTERVAL=30
@@ -271,11 +283,13 @@ GET /metrics/health/dashboard
 ## Example Usage
 
 ### Check OAuth Health
+
 ```bash
 curl http://localhost:8000/metrics/oauth/health | jq .
 ```
 
 Response:
+
 ```json
 {
   "status": "success",
@@ -296,11 +310,13 @@ Response:
 ```
 
 ### Detect Anomalies
+
 ```bash
 curl "http://localhost:8000/metrics/oauth/anomalies?provider=github" | jq .
 ```
 
 ### Check Suspicious Activity
+
 ```bash
 curl "http://localhost:8000/metrics/oauth/suspicious-activity?window_minutes=5" | jq .
 ```
@@ -324,17 +340,17 @@ def test_oauth_event_recording():
         user_id="123",
         duration_ms=150.5,
     )
-    
+
     oauth_monitor.record_event(event)
     metrics = oauth_monitor.get_metrics_snapshot("github", 5)
-    
+
     assert metrics.total_events >= 1
     assert metrics.success_events >= 1
 
 def test_metrics_aggregation():
     """Test metrics aggregation."""
     metrics = oauth_monitor.get_metrics_snapshot("github", 5)
-    
+
     assert hasattr(metrics, 'success_rate')
     assert hasattr(metrics, 'avg_response_time_ms')
     assert hasattr(metrics, 'error_counts')
@@ -342,7 +358,7 @@ def test_metrics_aggregation():
 def test_anomaly_detection():
     """Test anomaly detection."""
     anomalies = oauth_monitor.detect_anomalies("github")
-    
+
     assert isinstance(anomalies, list)
     for anomaly in anomalies:
         assert 'type' in anomaly
@@ -351,11 +367,12 @@ def test_anomaly_detection():
 def test_suspicious_activity_detection():
     """Test suspicious activity detection."""
     suspicious = oauth_monitor.get_suspicious_ips(5)
-    
+
     assert isinstance(suspicious, list)
 ```
 
 Run tests:
+
 ```bash
 cd resume-api && python -m pytest test_oauth_monitoring.py -v
 ```

@@ -29,6 +29,7 @@ This document defines the security incident response procedures for ResumeAI. An
 ### Scope
 
 This plan covers:
+
 - Data breaches (user profiles, resumes, employment data)
 - Unauthorized access to systems or data
 - API key or token compromise
@@ -49,6 +50,7 @@ This plan covers:
 ## Severity Levels
 
 ### Critical (SEV-1)
+
 **Response Time: 30 minutes | Resolution Time: 4 hours**
 
 - Active data breach with confirmed user data exposure
@@ -58,11 +60,13 @@ This plan covers:
 - Mass account takeovers detected
 
 **Examples:**
+
 - Attacker exfiltrates user resume database
 - API keys publicly exposed in Git repositories
 - OAuth tokens compromised and being actively used
 
 ### High (SEV-2)
+
 **Response Time: 2 hours | Resolution Time: 8 hours**
 
 - Potential data exposure not yet confirmed
@@ -71,11 +75,13 @@ This plan covers:
 - Security vulnerability in active use discovered
 
 **Examples:**
+
 - Unencrypted database backup found in cloud storage
 - Suspicious login activity from multiple IP addresses
 - Authentication bypass vulnerability confirmed
 
 ### Medium (SEV-3)
+
 **Response Time: 8 hours | Resolution Time: 24 hours**
 
 - Security vulnerability discovered (not yet exploited)
@@ -84,11 +90,13 @@ This plan covers:
 - Third-party vulnerability affecting our dependencies
 
 **Examples:**
+
 - localStorage quota error allowing unauthorized data access
 - Rate limiting bypass in API endpoints
 - Certificate expiration issue discovered early
 
 ### Low (SEV-4)
+
 **Response Time: 24 hours | Resolution Time: 5 business days**
 
 - Security best practice not followed
@@ -96,6 +104,7 @@ This plan covers:
 - Information disclosure of non-sensitive data
 
 **Examples:**
+
 - Missing security headers in some responses
 - Weak password policy for internal accounts
 - Outdated dependency with minor security patch available
@@ -106,13 +115,13 @@ This plan covers:
 
 ### Incident Response Team
 
-| Role | Name | Email | Phone | Availability |
-|------|------|-------|-------|--------------|
-| CISO / Security Lead | [Security Lead Name] | security@resumeai.com | [Phone] | 24/7 |
-| Engineering Lead | [Engineering Lead Name] | engineering@resumeai.com | [Phone] | 24/7 (SEV-1/2) |
-| DevOps Lead | [DevOps Lead Name] | devops@resumeai.com | [Phone] | 24/7 (SEV-1/2) |
-| Legal / Compliance | [Legal Contact] | legal@resumeai.com | [Phone] | 24/7 (SEV-1) |
-| Communications | [Communications Lead] | comms@resumeai.com | [Phone] | Business hours |
+| Role                 | Name                    | Email                    | Phone   | Availability   |
+| -------------------- | ----------------------- | ------------------------ | ------- | -------------- |
+| CISO / Security Lead | [Security Lead Name]    | security@resumeai.com    | [Phone] | 24/7           |
+| Engineering Lead     | [Engineering Lead Name] | engineering@resumeai.com | [Phone] | 24/7 (SEV-1/2) |
+| DevOps Lead          | [DevOps Lead Name]      | devops@resumeai.com      | [Phone] | 24/7 (SEV-1/2) |
+| Legal / Compliance   | [Legal Contact]         | legal@resumeai.com       | [Phone] | 24/7 (SEV-1)   |
+| Communications       | [Communications Lead]   | comms@resumeai.com       | [Phone] | Business hours |
 
 ### Escalation Contacts
 
@@ -134,6 +143,7 @@ This plan covers:
 ### 1. Detection Methods
 
 #### Automated Monitoring
+
 - **Intrusion Detection**: AWS GuardDuty alerts for suspicious API calls
 - **Log Monitoring**: CloudWatch alarms for unauthorized access patterns
 - **Performance Anomalies**: Spikes in unusual database queries or API calls
@@ -143,6 +153,7 @@ This plan covers:
 - **OAuth Logs**: Failed login attempts, token refresh anomalies
 
 #### Manual Detection
+
 - User reports of account compromise
 - Unusual activity in user resumes or profile changes
 - Unexpected billing charges or service requests
@@ -165,6 +176,7 @@ When an incident is reported:
 ### 3. ResumeAI-Specific Data at Risk
 
 #### User Personal Data
+
 - Full names, emails, phone numbers
 - LinkedIn profiles and references
 - Employment history and tenure details
@@ -172,18 +184,21 @@ When an incident is reported:
 - Education background
 
 #### Sensitive Documents
+
 - Resume files (PDF, DOCX, etc.)
 - Cover letters
 - Job applications
 - Custom variants and tailored versions
 
 #### System Data
+
 - API keys for integrations
 - OAuth tokens (GitHub, LinkedIn, Google)
 - Authentication tokens and sessions
 - Session storage containing user preferences
 
 #### Financial Data
+
 - Subscription information
 - Payment methods (partially masked)
 - Usage metrics and billing history
@@ -191,6 +206,7 @@ When an incident is reported:
 ### 4. Investigation Process
 
 **Within 30 minutes (SEV-1/2):**
+
 1. Isolate affected systems if possible (without disrupting service)
 2. Collect and preserve evidence:
    - Server logs (AWS CloudTrail, application logs)
@@ -200,17 +216,9 @@ When an incident is reported:
 3. Determine entry point and attack vector
 4. Identify scope of access and data exposure
 
-**Within 2 hours:**
-5. Search for evidence of lateral movement
-6. Check for data exfiltration patterns (large downloads, unusual API calls)
-7. Review authentication logs for unauthorized access
-8. Audit all API keys and tokens for revocation/rotation
-9. Document findings in incident tracker
+**Within 2 hours:** 5. Search for evidence of lateral movement 6. Check for data exfiltration patterns (large downloads, unusual API calls) 7. Review authentication logs for unauthorized access 8. Audit all API keys and tokens for revocation/rotation 9. Document findings in incident tracker
 
-**Ongoing:**
-10. Monitor for persistence mechanisms or backdoors
-11. Track all remediation actions and timestamps
-12. Maintain detailed incident log
+**Ongoing:** 10. Monitor for persistence mechanisms or backdoors 11. Track all remediation actions and timestamps 12. Maintain detailed incident log
 
 ### 5. Detection Tools and Dashboards
 
@@ -230,10 +238,12 @@ When an incident is reported:
 #### Immediate (Within 15 minutes of confirmation)
 
 **Slack Channels:**
+
 - Post in `#security-incident` channel with initial report
 - Include: Incident type, affected systems, initial severity
 
 **Notification Template:**
+
 ```
 🚨 SECURITY INCIDENT - [SEVERITY]
 
@@ -248,6 +258,7 @@ Updates every [30 mins for SEV-1/2, hourly for SEV-3, daily for SEV-4]
 ```
 
 #### Every 30 minutes (SEV-1/2) / Hourly (SEV-3) / Daily (SEV-4)
+
 - Update war room with progress
 - Provide status update to leadership
 - Share in #security-incident Slack channel
@@ -258,6 +269,7 @@ Updates every [30 mins for SEV-1/2, hourly for SEV-3, daily for SEV-4]
 #### User Notification (For Data Breaches Involving User Data)
 
 **Timeline:**
+
 - **Within 72 hours**: Send notification if any personal data exposed (regulatory requirement)
 - **Format**: Email + in-app notification
 
@@ -268,7 +280,7 @@ Subject: Important Security Notice - Immediate Action Required [if needed]
 
 Dear ResumeAI User,
 
-We are writing to inform you of a security incident that has affected our systems 
+We are writing to inform you of a security incident that has affected our systems
 on [DATE].
 
 WHAT HAPPENED:
@@ -341,11 +353,13 @@ RESOURCES:
 #### Regulatory/Legal Notification (If Required)
 
 **For breaches involving:**
+
 - Personal data (GDPR, CCPA, state privacy laws)
 - Payment card data (PCI-DSS)
 - Healthcare data (HIPAA)
 
 **Actions:**
+
 - Notify relevant data protection authorities within required timeframe
 - Engage legal counsel for regulatory requirements
 - Coordinate with insurance provider
@@ -353,17 +367,17 @@ RESOURCES:
 
 ### Stakeholder Communication Matrix
 
-| Stakeholder | Timeline | Channel | Message Owner |
-|-------------|----------|---------|----------------|
-| Incident Response Team | 15 min | Phone/Slack | CISO |
-| Engineering/DevOps Team | 15 min | War room | Engineering Lead |
-| Executive Leadership | 30 min | Email/Call | CISO |
-| Customer Support Team | 1 hour | Slack channel | Communications |
-| Affected Users | 24-72 hours | Email/In-app | Communications + Legal |
-| Data Protection Authority | 72 hours | Official notice | Legal Counsel |
-| Customers/Partners | 24-48 hours | Email/Blog | Communications |
-| Insurance Provider | 24 hours | Email | CISO/Legal |
-| Law Enforcement | As needed | Phone/Email | Legal Counsel |
+| Stakeholder               | Timeline    | Channel         | Message Owner          |
+| ------------------------- | ----------- | --------------- | ---------------------- |
+| Incident Response Team    | 15 min      | Phone/Slack     | CISO                   |
+| Engineering/DevOps Team   | 15 min      | War room        | Engineering Lead       |
+| Executive Leadership      | 30 min      | Email/Call      | CISO                   |
+| Customer Support Team     | 1 hour      | Slack channel   | Communications         |
+| Affected Users            | 24-72 hours | Email/In-app    | Communications + Legal |
+| Data Protection Authority | 72 hours    | Official notice | Legal Counsel          |
+| Customers/Partners        | 24-48 hours | Email/Blog      | Communications         |
+| Insurance Provider        | 24 hours    | Email           | CISO/Legal             |
+| Law Enforcement           | As needed   | Phone/Email     | Legal Counsel          |
 
 ---
 
@@ -376,6 +390,7 @@ RESOURCES:
 **Immediate Actions (First 30 minutes - SEV-1/2):**
 
 1. **Assess Ongoing Threat**
+
    ```bash
    # Check for suspicious processes, open connections, and recent logins
    ps aux | grep -E 'curl|wget|python|node'
@@ -397,6 +412,7 @@ RESOURCES:
    - Revoke SSH keys and temporary access tokens
 
 4. **Check for Unauthorized Access Methods**
+
    ```python
    # Check for new users, elevated privileges, suspicious auth logs
    SELECT * FROM users WHERE created_at > NOW() - INTERVAL 24 HOUR;
@@ -432,6 +448,7 @@ RESOURCES:
 **Objective**: Remove the attacker's access and close all vulnerabilities
 
 1. **Identify and Close Entry Point**
+
    ```
    - Analyze access logs for entry vector
    - Check for:
@@ -445,6 +462,7 @@ RESOURCES:
    ```
 
 2. **Search for Backdoors/Persistence**
+
    ```bash
    # Look for suspicious cron jobs, SSH keys, etc.
    crontab -l
@@ -461,6 +479,7 @@ RESOURCES:
    - Update all security controls
 
 4. **Revoke All Active Sessions**
+
    ```sql
    -- Invalidate all active sessions except incident response team
    DELETE FROM sessions WHERE expires_at > NOW();
@@ -505,6 +524,7 @@ RESOURCES:
    - Provide password reset/account recovery tools
 
 3. **Verify Data Integrity**
+
    ```sql
    -- Check for data corruption or unauthorized modifications
    SELECT COUNT(*) FROM resumes WHERE modified_at > '2024-02-26 00:00:00';
@@ -536,6 +556,7 @@ RESOURCES:
 ### ResumeAI-Specific Remediations
 
 #### If OAuth Tokens Compromised
+
 ```python
 # In resume-api/config/
 # 1. Invalidate all existing refresh tokens
@@ -553,6 +574,7 @@ UPDATE oauth_clients SET secret = generate_random_string();
 ```
 
 #### If API Keys Exposed
+
 ```bash
 # 1. Rotate all API keys immediately
 # Update MASTER_API_KEY and API_KEYS in .env
@@ -565,6 +587,7 @@ UPDATE oauth_clients SET secret = generate_random_string();
 ```
 
 #### If Resume Database Compromised
+
 ```python
 # 1. Check what data was accessed
 # Review database audit logs for SELECT queries
@@ -593,6 +616,7 @@ UPDATE oauth_clients SET secret = generate_random_string();
 ### 2. Review Process
 
 **Participants:**
+
 - Incident commander
 - All engineers involved in response
 - Security lead
@@ -600,6 +624,7 @@ UPDATE oauth_clients SET secret = generate_random_string();
 - Customer support representative
 
 **Meeting Structure** (60-90 minutes):
+
 - 10 min: Incident recap and timeline
 - 20 min: What happened (root cause analysis)
 - 20 min: What we did well (positive aspects)
@@ -627,30 +652,37 @@ Example for API key exposure:
 ## Root Cause Analysis: [Incident Name]
 
 ### Timeline
+
 - HH:MM - [Event]
 - HH:MM - [Detection]
 - HH:MM - [Response]
 
 ### What Happened
+
 [Technical details of incident]
 
 ### Root Cause
+
 [The underlying reason incident occurred - not the symptom]
 
 ### Contributing Factors
+
 - [Factor 1]
 - [Factor 2]
 
 ### Why Root Cause Wasn't Caught
+
 [Gaps in detection/prevention systems]
 
 ### Similar Issues
+
 [Other past incidents with similar root cause]
 ```
 
 ### 4. Action Items
 
 **For Each Action Item:**
+
 - Clear description of what needs to be done
 - Owner (specific person, not team)
 - Priority (Critical, High, Medium, Low)
@@ -659,12 +691,12 @@ Example for API key exposure:
 
 **Example Action Items:**
 
-| Action | Owner | Priority | Deadline | Success Criteria |
-|--------|-------|----------|----------|------------------|
-| Implement secrets scanning in CI/CD | DevOps Lead | Critical | 7 days | All commits scanned, 0 secrets in repo |
-| Create API key management runbook | Security Lead | High | 7 days | Documented and shared with team |
-| Improve auth log alerting | DevOps Lead | High | 14 days | Alert on >5 failed logins/min |
-| Security training for developers | CISO | Medium | 14 days | 100% team completion |
+| Action                              | Owner         | Priority | Deadline | Success Criteria                       |
+| ----------------------------------- | ------------- | -------- | -------- | -------------------------------------- |
+| Implement secrets scanning in CI/CD | DevOps Lead   | Critical | 7 days   | All commits scanned, 0 secrets in repo |
+| Create API key management runbook   | Security Lead | High     | 7 days   | Documented and shared with team        |
+| Improve auth log alerting           | DevOps Lead   | High     | 14 days  | Alert on >5 failed logins/min          |
+| Security training for developers    | CISO          | Medium   | 14 days  | 100% team completion                   |
 
 ### 5. Lessons Learned
 
@@ -697,18 +729,21 @@ Example for API key exposure:
 ### 6. Improvements to Implement
 
 **Preventive Controls:**
+
 - Automated secrets scanning
 - Improved access logging
 - Network segmentation
 - API key rotation policies
 
 **Detective Controls:**
+
 - Enhanced monitoring dashboards
 - Automated alerting rules
 - Regular security audits
 - Dependency scanning
 
 **Responsive Controls:**
+
 - Updated playbooks
 - Faster incident response procedures
 - Improved documentation
@@ -717,12 +752,14 @@ Example for API key exposure:
 ### 7. Communication After Review
 
 **Internal Communication:**
+
 - Share findings with engineering team
 - Present at team meeting or all-hands
 - Update incident tracking system with lessons learned
 - Update security documentation
 
 **External Communication** (if applicable):
+
 - Share public blog post about incident response
 - Highlight security improvements being made
 - Demonstrate commitment to customer security
@@ -797,18 +834,21 @@ Example for API key exposure:
 ### Regular Security Activities
 
 **Monthly:**
+
 - Review access logs for anomalies
 - Check for failed authentication attempts
 - Verify backup integrity
 - Review dependency updates
 
 **Quarterly:**
+
 - Conduct access control audit
 - Security training for team
 - Review security monitoring effectiveness
 - Update threat assessment
 
 **Annually:**
+
 - Full security audit
 - Penetration testing (if budget allows)
 - Update incident response plan
@@ -882,12 +922,14 @@ Triage (Is this a security issue?)
 ### C. Contact Quick Reference
 
 **Emergency Contacts:**
+
 - CISO: [Emergency number] (24/7)
 - On-call Engineer: [PagerDuty link]
 - Legal Counsel: [Emergency number]
 - Executive Escalation: [CEO phone]
 
 **External Escalation:**
+
 - AWS Security: https://aws.amazon.com/security/security-incident-response/
 - Law Enforcement: FBI Cyber Division (for major breaches)
 - Data Protection Authority: [State/EU DPA contact]
@@ -896,9 +938,9 @@ Triage (Is this a security issue?)
 
 ## Document History
 
-| Version | Date | Author | Changes |
-|---------|------|--------|---------|
-| 1.0 | Feb 26, 2026 | Security Team | Initial version |
+| Version | Date         | Author        | Changes         |
+| ------- | ------------ | ------------- | --------------- |
+| 1.0     | Feb 26, 2026 | Security Team | Initial version |
 
 ---
 

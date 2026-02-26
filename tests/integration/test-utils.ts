@@ -44,7 +44,7 @@ export async function setupTestAPI(): Promise<TestContext> {
   return {
     apiClient: createMockAPIClient(),
     baseURL: 'http://localhost:8000',
-    apiKey: 'test-api-key-' + Date.now()
+    apiKey: 'test-api-key-' + Date.now(),
   };
 }
 
@@ -53,9 +53,9 @@ export async function setupTestAPI(): Promise<TestContext> {
  */
 export async function cleanupTestAPI(context: TestContext): Promise<void> {
   // Clear any test data
-  await context.apiClient.listResumes().then(res => {
+  await context.apiClient.listResumes().then((res) => {
     if (res.data?.length) {
-      res.data.forEach(resume => {
+      res.data.forEach((resume) => {
         context.apiClient.deleteResume(resume.id);
       });
     }
@@ -69,30 +69,30 @@ function createMockAPIClient(): MockAPIClient {
   const storage: Map<string, any> = new Map();
   const pdfCache: Map<string, any> = new Map();
   let restorationCount = 0;
-  
+
   return {
     async createResume(resume: Partial<any>) {
       if (!resume.basics?.name) {
         return { status: 400, error: 'Resume name (basics.name) is required' };
       }
-      
+
       const id = 'resume-' + Date.now() + '-' + Math.random();
       const created = { ...resume, id, createdAt: new Date().toISOString() };
       storage.set(id, created);
-      
+
       return { status: 201, data: created };
     },
 
     async getResume(id: string, options?: any) {
       if (options?.timeout) {
-        await new Promise(resolve => setTimeout(resolve, options.timeout + 100));
+        await new Promise((resolve) => setTimeout(resolve, options.timeout + 100));
       }
-      
+
       const resume = storage.get(id);
       if (!resume) {
         return { status: 404, error: 'Resume not found' };
       }
-      
+
       return { status: 200, data: resume };
     },
 
@@ -100,11 +100,11 @@ function createMockAPIClient(): MockAPIClient {
       if (!storage.has(id)) {
         return { status: 404, error: 'Resume not found' };
       }
-      
+
       const updated = { ...storage.get(id), ...resume, updatedAt: new Date().toISOString() };
       storage.set(id, updated);
       pdfCache.delete(id); // Invalidate PDF cache
-      
+
       return { status: 200, data: updated };
     },
 
@@ -123,14 +123,14 @@ function createMockAPIClient(): MockAPIClient {
       if (!original) {
         return { status: 404, error: 'Resume not found' };
       }
-      
+
       const cloned = {
         ...original,
         id: 'resume-' + Date.now() + '-' + Math.random(),
         title: newTitle,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
       };
-      
+
       storage.set(cloned.id, cloned);
       return { status: 201, data: cloned };
     },
@@ -139,20 +139,20 @@ function createMockAPIClient(): MockAPIClient {
       if (!resume.basics?.name) {
         return { status: 400, error: 'Invalid resume data' };
       }
-      
+
       const cacheKey = JSON.stringify({ resume, options });
       if (pdfCache.has(cacheKey)) {
         const cached = pdfCache.get(cacheKey);
         return { status: 200, data: cached, cached: true };
       }
-      
+
       const pdf = {
         id: 'pdf-' + Date.now(),
         format: options?.format || 'pdf',
         theme: options?.theme || 'standard',
-        size: Math.floor(Math.random() * 100000) + 50000
+        size: Math.floor(Math.random() * 100000) + 50000,
       };
-      
+
       pdfCache.set(cacheKey, pdf);
       return { status: 200, data: pdf };
     },
@@ -161,14 +161,14 @@ function createMockAPIClient(): MockAPIClient {
       if (!resume.basics?.name) {
         return { status: 400, error: 'Invalid resume data' };
       }
-      
+
       return {
         status: 200,
         data: {
           thumbnail: 'data:image/png;base64,iVBORw0KGgo...',
           width: 612,
-          height: 792
-        }
+          height: 792,
+        },
       };
     },
 
@@ -177,9 +177,9 @@ function createMockAPIClient(): MockAPIClient {
         status: 200,
         headers: {
           'content-type': 'application/pdf',
-          'content-disposition': 'attachment; filename=resume.pdf'
+          'content-disposition': 'attachment; filename=resume.pdf',
         },
-        data: new ArrayBuffer(1000)
+        data: new ArrayBuffer(1000),
       };
     },
 
@@ -187,14 +187,14 @@ function createMockAPIClient(): MockAPIClient {
       if (!['github', 'google', 'linkedin'].includes(provider)) {
         return { status: 400, error: 'Invalid provider' };
       }
-      
+
       return {
         status: 200,
         data: {
           authUrl: `https://${provider}.com/oauth/authorize?state=test-state`,
           state: 'test-state',
-          requestedScopes: options?.scopes || ['user:email']
-        }
+          requestedScopes: options?.scopes || ['user:email'],
+        },
       };
     },
 
@@ -202,15 +202,15 @@ function createMockAPIClient(): MockAPIClient {
       if (params.error) {
         return { status: 403, error: 'User denied permission' };
       }
-      
+
       if (params.state !== 'valid-state' && params.state?.includes('invalid')) {
         return { status: 400, error: 'Invalid state parameter' };
       }
-      
+
       if (params.code === 'invalid-code') {
         return { status: 401, error: 'Invalid authorization code' };
       }
-      
+
       return {
         status: 200,
         data: {
@@ -218,9 +218,9 @@ function createMockAPIClient(): MockAPIClient {
           user: {
             id: 'user-' + Date.now(),
             email: 'user@example.com',
-            name: 'Test User'
-          }
-        }
+            name: 'Test User',
+          },
+        },
       };
     },
 
@@ -235,8 +235,8 @@ function createMockAPIClient(): MockAPIClient {
         data: {
           accessToken: 'refreshed-token-' + Date.now(),
           refreshToken: 'refresh-' + Date.now(),
-          expiresAt: Date.now() + 3600000
-        }
+          expiresAt: Date.now() + 3600000,
+        },
       };
     },
 
@@ -252,8 +252,8 @@ function createMockAPIClient(): MockAPIClient {
           id: 'oauth-user-' + provider,
           email: `user+${provider}@example.com`,
           name: `${provider} User`,
-          avatar: `https://example.com/avatar/${provider}.jpg`
-        }
+          avatar: `https://example.com/avatar/${provider}.jpg`,
+        },
       };
     },
 
@@ -262,8 +262,8 @@ function createMockAPIClient(): MockAPIClient {
         status: 200,
         data: {
           synced: true,
-          lastSync: new Date().toISOString()
-        }
+          lastSync: new Date().toISOString(),
+        },
       };
     },
 
@@ -271,8 +271,8 @@ function createMockAPIClient(): MockAPIClient {
       return {
         status: 200,
         data: {
-          accounts: providers.map(p => ({ provider: p, linked: true }))
-        }
+          accounts: providers.map((p) => ({ provider: p, linked: true })),
+        },
       };
     },
 
@@ -290,8 +290,8 @@ function createMockAPIClient(): MockAPIClient {
             pdf_url: 'https://storage.example.com/resume-' + Date.now() + '.pdf',
             size: pdfBuffer.length,
             generated_at: new Date().toISOString(),
-            variant: variant || 'standard'
-          }
+            variant: variant || 'standard',
+          },
         };
       } catch (error) {
         return { status: 500, error: 'PDF generation failed' };
@@ -309,17 +309,17 @@ function createMockAPIClient(): MockAPIClient {
           data: {
             tailored_resume: {
               ...resumeData,
-              work: (resumeData.work || []).map(item => ({
+              work: (resumeData.work || []).map((item) => ({
                 ...item,
-                summary: item.summary ? item.summary + ' (tailored)' : 'tailored'
-              }))
+                summary: item.summary ? item.summary + ' (tailored)' : 'tailored',
+              })),
             },
             match_score: Math.random() * 100,
             tailoring_suggestions: [
               'Added relevant skills to experience',
-              'Reordered sections for better ATS compatibility'
-            ]
-          }
+              'Reordered sections for better ATS compatibility',
+            ],
+          },
         };
       } catch (error) {
         return { status: 500, error: 'Tailoring failed' };
@@ -339,26 +339,26 @@ function createMockAPIClient(): MockAPIClient {
               {
                 name: 'standard',
                 url: 'https://storage.example.com/resume-standard.pdf',
-                generated_at: new Date().toISOString()
+                generated_at: new Date().toISOString(),
               },
               {
                 name: 'ats-optimized',
                 url: 'https://storage.example.com/resume-ats.pdf',
-                generated_at: new Date().toISOString()
+                generated_at: new Date().toISOString(),
               },
               {
                 name: 'creative',
                 url: 'https://storage.example.com/resume-creative.pdf',
-                generated_at: new Date().toISOString()
-              }
+                generated_at: new Date().toISOString(),
+              },
             ],
-            count: 3
-          }
+            count: 3,
+          },
         };
       } catch (error) {
         return { status: 500, error: 'Variant generation failed' };
       }
-    }
+    },
   };
 }
 
@@ -373,7 +373,7 @@ export function createMockResume(title: string, overrides?: any): Partial<Resume
       phone: '+1-555-0000',
       url: 'https://example.com',
       label: 'Software Engineer',
-      summary: 'Test resume summary'
+      summary: 'Test resume summary',
     },
     work: [
       {
@@ -381,8 +381,8 @@ export function createMockResume(title: string, overrides?: any): Partial<Resume
         position: 'Software Engineer',
         startDate: '2020-01-01',
         endDate: '2023-12-31',
-        summary: 'Sample work experience'
-      }
+        summary: 'Sample work experience',
+      },
     ],
     education: [
       {
@@ -390,16 +390,16 @@ export function createMockResume(title: string, overrides?: any): Partial<Resume
         studyType: 'Bachelor of Science',
         area: 'Computer Science',
         startDate: '2016',
-        endDate: '2020'
-      }
+        endDate: '2020',
+      },
     ],
     skills: [
       {
         name: 'JavaScript',
-        keywords: ['TypeScript', 'Node.js', 'React']
-      }
+        keywords: ['TypeScript', 'Node.js', 'React'],
+      },
     ],
-    ...overrides
+    ...overrides,
   };
 }
 
@@ -413,23 +413,23 @@ export class TestDataFactory {
       basics: {
         name: 'Test User',
         email: 'test@example.com',
-        phone: '+1-555-0000'
+        phone: '+1-555-0000',
       },
       work: [],
       education: [],
       skills: [],
-      ...overrides
+      ...overrides,
     };
   }
 
   static generateMultipleResumes(count: number): any[] {
     return Array.from({ length: count }, (_, i) =>
-      this.generateResume({ 
-        basics: { 
+      this.generateResume({
+        basics: {
           ...this.generateResume().basics,
-          name: `Test User ${i + 1}` 
-        }
-      })
+          name: `Test User ${i + 1}`,
+        },
+      }),
     );
   }
 }
@@ -438,7 +438,7 @@ export class TestDataFactory {
  * Wait helper for async operations
  */
 export function wait(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 /**
@@ -447,7 +447,7 @@ export function wait(ms: number): Promise<void> {
 export async function waitFor(
   condition: () => boolean,
   timeout: number = 5000,
-  interval: number = 100
+  interval: number = 100,
 ): Promise<void> {
   const startTime = Date.now();
   while (!condition()) {
@@ -460,24 +460,25 @@ export async function waitFor(
 
 // Integration test utilities
 export const mockPdfResponse = {
-  pdf_url: "https://storage.example.com/resume.pdf",
-  generated_at: new Date().toISOString()
+  pdf_url: 'https://storage.example.com/resume.pdf',
+  generated_at: new Date().toISOString(),
 };
 
 export const mockOAuthResponse = {
-  access_token: "test_token_123",
-  user: { id: "gh_123", name: "Test User" }
+  access_token: 'test_token_123',
+  user: { id: 'gh_123', name: 'Test User' },
 };
 
 export const mockResumeData = {
-  id: "resume_123",
-  title: "Test Resume",
-  content: { personalInfo: { name: "John Doe" } }
+  id: 'resume_123',
+  title: 'Test Resume',
+  content: { personalInfo: { name: 'John Doe' } },
 };
 
 export function setupApiMocks() {
-  global.fetch = () => Promise.resolve({
-    ok: true,
-    json: () => Promise.resolve(mockPdfResponse)
-  }) as any;
+  global.fetch = () =>
+    Promise.resolve({
+      ok: true,
+      json: () => Promise.resolve(mockPdfResponse),
+    }) as any;
 }

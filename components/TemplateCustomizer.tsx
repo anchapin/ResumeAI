@@ -30,31 +30,27 @@ export const TemplateCustomizer: React.FC<TemplateCustomizerProps> = ({
   availableSchemes = [],
   availableFonts = [],
   onCustomizationChange,
-  onApply
+  onApply,
 }) => {
   const rgbToHex = (rgb: number[]): string => {
-    return `#${rgb.map(x => x.toString(16).padStart(2, '0')).join('')}`;
+    return `#${rgb.map((x) => x.toString(16).padStart(2, '0')).join('')}`;
   };
 
   const paperSizes = [
     { value: 'letter', label: 'Letter (8.5" x 11")' },
-    { value: 'a4', label: 'A4 (210mm x 297mm)' }
+    { value: 'a4', label: 'A4 (210mm x 297mm)' },
   ];
 
   return (
     <div className="space-y-6">
       <div>
         <h3 className="text-lg font-bold text-slate-900 mb-1">Customize Template</h3>
-        <p className="text-sm text-slate-500">
-          Personalize your {templateName} template
-        </p>
+        <p className="text-sm text-slate-500">Personalize your {templateName} template</p>
       </div>
 
       {/* Color Scheme */}
       <div>
-        <label className="block text-sm font-bold text-slate-700 mb-2">
-          Color Scheme
-        </label>
+        <label className="block text-sm font-bold text-slate-700 mb-2">Color Scheme</label>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {availableSchemes.map((scheme) => (
             <button
@@ -83,9 +79,7 @@ export const TemplateCustomizer: React.FC<TemplateCustomizerProps> = ({
                   title="Secondary Color"
                 />
               </div>
-              <span className="text-sm font-medium text-slate-700 capitalize">
-                {scheme.name}
-              </span>
+              <span className="text-sm font-medium text-slate-700 capitalize">{scheme.name}</span>
               {customization.color_scheme === scheme.name && (
                 <span className="material-symbols-outlined text-primary-600 text-[20px] ml-auto">
                   check_circle
@@ -99,9 +93,7 @@ export const TemplateCustomizer: React.FC<TemplateCustomizerProps> = ({
       {/* Font Selection */}
       {availableFonts.length > 0 && (
         <div>
-          <label className="block text-sm font-bold text-slate-700 mb-2">
-            Font
-          </label>
+          <label className="block text-sm font-bold text-slate-700 mb-2">Font</label>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {availableFonts.map((font) => (
               <button
@@ -113,9 +105,7 @@ export const TemplateCustomizer: React.FC<TemplateCustomizerProps> = ({
                     : 'border-slate-200 hover:border-slate-300'
                 }`}
               >
-                <span className="text-sm font-medium text-slate-700 capitalize">
-                  {font}
-                </span>
+                <span className="text-sm font-medium text-slate-700 capitalize">{font}</span>
                 {customization.font === font && (
                   <span className="material-symbols-outlined text-primary-600 text-[20px]">
                     check_circle
@@ -129,9 +119,7 @@ export const TemplateCustomizer: React.FC<TemplateCustomizerProps> = ({
 
       {/* Paper Size */}
       <div>
-        <label className="block text-sm font-bold text-slate-700 mb-2">
-          Paper Size
-        </label>
+        <label className="block text-sm font-bold text-slate-700 mb-2">Paper Size</label>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {paperSizes.map((size) => (
             <button
@@ -143,9 +131,7 @@ export const TemplateCustomizer: React.FC<TemplateCustomizerProps> = ({
                   : 'border-slate-200 hover:border-slate-300'
               }`}
             >
-              <span className="text-sm font-medium text-slate-700">
-                {size.label}
-              </span>
+              <span className="text-sm font-medium text-slate-700">{size.label}</span>
               {customization.paper_size === size.value && (
                 <span className="material-symbols-outlined text-primary-600 text-[20px]">
                   check_circle
@@ -158,9 +144,7 @@ export const TemplateCustomizer: React.FC<TemplateCustomizerProps> = ({
 
       {/* Margins */}
       <div>
-        <label className="block text-sm font-bold text-slate-700 mb-2">
-          Margins (inches)
-        </label>
+        <label className="block text-sm font-bold text-slate-700 mb-2">Margins (inches)</label>
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-xs text-slate-600 mb-1">Left</label>
@@ -223,9 +207,7 @@ export const TemplateCustomizer: React.FC<TemplateCustomizerProps> = ({
             onClick={onApply}
             className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors font-medium"
           >
-            <span className="material-symbols-outlined text-[20px]">
-              done
-            </span>
+            <span className="material-symbols-outlined text-[20px]">done</span>
             Apply Customization
           </button>
         </div>

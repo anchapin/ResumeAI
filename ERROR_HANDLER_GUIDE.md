@@ -1,4 +1,5 @@
 <<<<<<< HEAD
+
 # Frontend Global Error Handler Guide - Issue #384
 
 ## Overview
@@ -8,6 +9,7 @@ The Global Error Handler provides a centralized system for managing errors in th
 ## Features
 
 ### ✅ 9 Error Types Supported
+
 - **NETWORK_ERROR** - Network connectivity issues
 - **API_ERROR** - Generic API errors
 - **VALIDATION_ERROR** - Form/data validation errors
@@ -19,6 +21,7 @@ The Global Error Handler provides a centralized system for managing errors in th
 - **UNKNOWN_ERROR** - Unclassified errors
 
 ### ✅ Key Capabilities
+
 - **Automatic Error Detection** - Catches global errors and unhandled rejections
 - **User-Friendly Messages** - Technical errors converted to readable messages
 - **Error History** - Track last 50 errors with full context
@@ -50,9 +53,9 @@ try {
 } catch (error) {
   const errorContext = errorHandler.handleError(error, {
     operation: 'resumeCreation',
-    userId: '123'
+    userId: '123',
   });
-  
+
   console.log(errorContext.userMessage); // Show to user
 }
 ```
@@ -65,7 +68,7 @@ import { errorHandler } from '@/utils/errorHandler';
 const unsubscribe = errorHandler.subscribe((error) => {
   // Update UI, show toast, etc.
   showNotification(error.userMessage);
-  
+
   // Report to analytics
   trackError(error);
 });
@@ -100,19 +103,21 @@ if (!resume) {
 #### Methods
 
 **`handleError(error, context?): ErrorContext`**
+
 - Parse and process an error
 - Trigger all registered handlers
 - Add to error history
 - Returns error context
 
 ```typescript
-const errorContext = errorHandler.handleError(
-  new Error('Something failed'),
-  { userId: '123', action: 'create' }
-);
+const errorContext = errorHandler.handleError(new Error('Something failed'), {
+  userId: '123',
+  action: 'create',
+});
 ```
 
 **`subscribe(handler): unsubscribe function`**
+
 - Register callback for error events
 - Returns unsubscribe function
 - Called for all errors
@@ -124,6 +129,7 @@ const unsubscribe = errorHandler.subscribe((error) => {
 ```
 
 **`getErrorHistory(): ErrorContext[]`**
+
 - Get all errors in reverse chronological order
 - Limited to last 50 errors
 - Useful for debugging
@@ -134,6 +140,7 @@ console.log(`Total errors: ${allErrors.length}`);
 ```
 
 **`getErrorsByType(type): ErrorContext[]`**
+
 - Filter errors by type
 - Useful for analytics
 
@@ -143,6 +150,7 @@ console.log(`Network errors: ${networkErrors.length}`);
 ```
 
 **`clearErrorHistory(): void`**
+
 - Clear all error history
 - Useful for testing
 
@@ -151,6 +159,7 @@ errorHandler.clearErrorHistory();
 ```
 
 **`reportError(errorContext): Promise<void>`**
+
 - Send error to backend/tracking service
 - Not implemented by default
 - Override for your use case
@@ -163,29 +172,27 @@ await errorHandler.reportError(errorContext);
 
 ```typescript
 interface ErrorContext {
-  type: ErrorType;              // Error classification
-  message: string;              // Technical error message
-  userMessage: string;          // User-friendly message
-  statusCode?: number;          // HTTP status code (if applicable)
-  originalError?: Error;        // Original error object
-  context?: Record<string, any>;// Additional context
-  timestamp: number;            // Unix timestamp
-  id: string;                   // Unique error ID
+  type: ErrorType; // Error classification
+  message: string; // Technical error message
+  userMessage: string; // User-friendly message
+  statusCode?: number; // HTTP status code (if applicable)
+  originalError?: Error; // Original error object
+  context?: Record<string, any>; // Additional context
+  timestamp: number; // Unix timestamp
+  id: string; // Unique error ID
 }
 ```
 
 ### Helper Functions
 
 **`withErrorHandling<T>(operation, context?): Promise<T | null>`**
+
 - Wrap async operations with automatic error handling
 - Returns null if error occurs
 - Passes context to error handler
 
 ```typescript
-const result = await withErrorHandling(
-  async () => await api.fetchData(),
-  { source: 'dashboard' }
-);
+const result = await withErrorHandling(async () => await api.fetchData(), { source: 'dashboard' });
 
 if (!result) {
   // Error already handled
@@ -193,21 +200,20 @@ if (!result) {
 ```
 
 **`createValidationError(message, errors?): Error`**
+
 - Create validation error with details
 - Automatically classified as VALIDATION_ERROR
 
 ```typescript
-const error = createValidationError(
-  'Form has errors',
-  {
-    email: ['Invalid format'],
-    password: ['Too short']
-  }
-);
+const error = createValidationError('Form has errors', {
+  email: ['Invalid format'],
+  password: ['Too short'],
+});
 errorHandler.handleError(error);
 ```
 
 **`createTimeoutError(ms): Error`**
+
 - Create timeout error
 - Automatically classified as TIMEOUT_ERROR
 
@@ -256,7 +262,7 @@ export function useErrorHandler() {
     const unsubscribe = errorHandler.subscribe((error: ErrorContext) => {
       // Show toast, update UI, etc.
     });
-    
+
     return unsubscribe;
   }, []);
 }
@@ -276,7 +282,7 @@ export function App() {
       // Auto-dismiss after 5 seconds
       setTimeout(() => setError(null), 5000);
     });
-    
+
     return unsubscribe;
   }, []);
 
@@ -319,19 +325,17 @@ errorHandler.handleError(new TypeError('Failed to fetch'));
 // Test API error
 errorHandler.handleError({
   response: { status: 400 },
-  message: 'Validation failed'
+  message: 'Validation failed',
 });
 
 // Test validation error
-errorHandler.handleError(
-  createValidationError('Form has errors'),
-  { form: 'resume' }
-);
+errorHandler.handleError(createValidationError('Form has errors'), { form: 'resume' });
 ```
 
 ## Error Classification Logic
 
 ### Network Errors
+
 ```typescript
 // Detected by:
 // - TypeError with "fetch" in message
@@ -340,6 +344,7 @@ errorHandler.handleError(
 ```
 
 ### Validation Errors (400, 422)
+
 ```typescript
 // Detected by:
 // - HTTP 400 or 422 status codes
@@ -348,6 +353,7 @@ errorHandler.handleError(
 ```
 
 ### Auth Errors (401)
+
 ```typescript
 // Detected by:
 // - HTTP 401 status code
@@ -355,6 +361,7 @@ errorHandler.handleError(
 ```
 
 ### Not Found Errors (404)
+
 ```typescript
 // Detected by:
 // - HTTP 404 status code
@@ -362,6 +369,7 @@ errorHandler.handleError(
 ```
 
 ### Permission Errors (403)
+
 ```typescript
 // Detected by:
 // - HTTP 403 status code
@@ -369,6 +377,7 @@ errorHandler.handleError(
 ```
 
 ### Timeout Errors
+
 ```typescript
 // Detected by:
 // - HTTP 408 or 504 status codes
@@ -378,6 +387,7 @@ errorHandler.handleError(
 ```
 
 ### Server Errors (500, 502, 503)
+
 ```typescript
 // Detected by:
 // - HTTP 5xx status codes
@@ -389,23 +399,23 @@ errorHandler.handleError(
 ### ✅ Do's
 
 1. **Use `withErrorHandling` for async operations**
+
    ```typescript
-   const data = await withErrorHandling(
-     () => api.fetchData(),
-     { source: 'dashboard' }
-   );
+   const data = await withErrorHandling(() => api.fetchData(), { source: 'dashboard' });
    ```
 
 2. **Include context for debugging**
+
    ```typescript
    errorHandler.handleError(error, {
      userId: user.id,
      action: 'resume-save',
-     timestamp: Date.now()
+     timestamp: Date.now(),
    });
    ```
 
 3. **Subscribe at component mount**
+
    ```typescript
    useEffect(() => {
      return errorHandler.subscribe((error) => {
@@ -417,17 +427,20 @@ errorHandler.handleError(
 4. **Use helper functions for specific errors**
    ```typescript
    throw createValidationError('Invalid email', {
-     email: ['Must be valid format']
+     email: ['Must be valid format'],
    });
    ```
 
 ### ❌ Don'ts
 
 1. **Don't ignore errors**
+
    ```typescript
    // Bad
-   try { await api.fetch(); } catch (e) { }
-   
+   try {
+     await api.fetch();
+   } catch (e) {}
+
    // Good
    try {
      await api.fetch();
@@ -437,19 +450,21 @@ errorHandler.handleError(
    ```
 
 2. **Don't expose technical details to users**
+
    ```typescript
    // Bad
    console.error(error.originalError.stack);
-   
+
    // Good
    showUserMessage(error.userMessage);
    ```
 
 3. **Don't forget to unsubscribe**
+
    ```typescript
    // Bad
    errorHandler.subscribe(handler);
-   
+
    // Good
    const unsubscribe = errorHandler.subscribe(handler);
    useEffect(() => unsubscribe, []);
@@ -467,9 +482,9 @@ describe('Error Handler', () => {
   it('should classify 404 as not found', () => {
     const error = {
       response: { status: 404 },
-      message: 'Not found'
+      message: 'Not found',
     };
-    
+
     const context = errorHandler.handleError(error);
     expect(context.type).toBe(ErrorType.NOT_FOUND);
   });
@@ -481,10 +496,10 @@ describe('Error Handler', () => {
 ```typescript
 it('should show user-friendly message for network errors', async () => {
   const { render, screen } = renderWithErrorHandler(<App />);
-  
+
   // Trigger network error
   errorHandler.handleError(new TypeError('Failed to fetch'));
-  
+
   // Wait for toast
   expect(
     await screen.findByText(/Unable to connect/i)
@@ -530,16 +545,19 @@ errorHandler.subscribe((error) => {
 ## Troubleshooting
 
 ### Errors not being caught
+
 - Ensure error handler is initialized (automatic on page load)
 - Check that subscription callbacks are registered
 - Verify error is thrown, not just logged
 
 ### User messages not showing
+
 - Check ErrorBoundary or notification component is rendering
 - Verify error subscriber is updating UI state
 - Check browser console for error handler subscription errors
 
 ### Error history not populating
+
 - Verify `handleError()` is being called
 - Check that errors are not being swallowed by try-catch
 - Ensure subscription is active
@@ -570,12 +588,15 @@ errorHandler.subscribe((error) => {
 **Last Updated:** February 26, 2026  
 **Status:** ✅ Production Ready
 =======
+
 # Frontend Global Error Handler - Issue #384
 
 ## Overview
+
 Centralized error handling for frontend with user-friendly messages.
 
 ## Features
+
 - ✅ Automatic error classification
 - ✅ User-friendly messages
 - ✅ Global unhandled rejection listener
@@ -585,6 +606,7 @@ Centralized error handling for frontend with user-friendly messages.
 ## Usage
 
 ### Setup in App.tsx
+
 ```tsx
 import { setupGlobalErrorHandlers } from './utils/errorHandler';
 
@@ -594,9 +616,11 @@ useEffect(() => {
 ```
 
 ### Display Errors
+
 Errors automatically trigger UI notifications with friendly messages.
 
 ## Error Types
+
 - **Network**: Connection errors
 - **API**: 4xx/5xx responses
 - **Validation**: Input validation failures
@@ -608,5 +632,7 @@ Errors automatically trigger UI notifications with friendly messages.
 - **Unknown**: Unexpected errors
 
 ## Testing
+
 See tests/error-handler-integration.test.tsx for test examples.
->>>>>>> feature/issue-384-frontend-error-handler
+
+> > > > > > > feature/issue-384-frontend-error-handler

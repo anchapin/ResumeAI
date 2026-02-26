@@ -65,7 +65,7 @@ describe('ProjectItem Component', () => {
     it('should render highlights when expanded', () => {
       render(<ProjectItem {...defaultProps} isExpanded={true} />);
 
-      mockProject.highlights.forEach(highlight => {
+      mockProject.highlights.forEach((highlight) => {
         expect(screen.getByText(highlight)).toBeInTheDocument();
       });
     });
@@ -121,7 +121,7 @@ describe('ProjectItem Component', () => {
 
       const deleteBtn = screen.getByRole('button', { name: /delete/i });
       await user.click(deleteBtn);
-      
+
       // Delete has confirmation pattern - need to click confirm button
       const confirmBtn = screen.getByRole('button', { name: /confirm/i });
       await user.click(confirmBtn);
@@ -191,7 +191,7 @@ describe('ProjectItem Component', () => {
     it('should render all highlights', () => {
       render(<ProjectItem {...defaultProps} isExpanded={true} />);
 
-      mockProject.highlights.forEach(highlight => {
+      mockProject.highlights.forEach((highlight) => {
         expect(screen.getByText(highlight)).toBeInTheDocument();
       });
     });
@@ -200,7 +200,9 @@ describe('ProjectItem Component', () => {
       // TODO: Fix - component doesn't expose onRemoveHighlight callback
       const onRemoveHighlight = vi.fn();
       const user = userEvent.setup();
-      render(<ProjectItem {...defaultProps} isExpanded={true} onRemoveHighlight={onRemoveHighlight} />);
+      render(
+        <ProjectItem {...defaultProps} isExpanded={true} onRemoveHighlight={onRemoveHighlight} />,
+      );
 
       const removeButtons = screen.getAllByRole('button', { name: /close/i });
       if (removeButtons.length > 0) {
@@ -245,7 +247,9 @@ describe('ProjectItem Component', () => {
         highlights: [],
       };
 
-      render(<ProjectItem {...defaultProps} project={projectWithoutHighlights} isExpanded={true} />);
+      render(
+        <ProjectItem {...defaultProps} project={projectWithoutHighlights} isExpanded={true} />,
+      );
 
       expect(screen.getByPlaceholderText('+ Add Highlight')).toBeInTheDocument();
     });
@@ -279,12 +283,12 @@ describe('ProjectItem Component', () => {
     it('should handle special characters in project name', () => {
       const projectWithSpecialChars = {
         ...mockProject,
-        name: "E-Commerce 2.0 (React & Node.js)",
+        name: 'E-Commerce 2.0 (React & Node.js)',
       };
 
       render(<ProjectItem {...defaultProps} project={projectWithSpecialChars} isExpanded={true} />);
 
-      const inputs = screen.getAllByDisplayValue("E-Commerce 2.0 (React & Node.js)");
+      const inputs = screen.getAllByDisplayValue('E-Commerce 2.0 (React & Node.js)');
       expect(inputs.length).toBeGreaterThan(0);
     });
 
@@ -330,9 +334,7 @@ describe('ProjectItem Component', () => {
 
   describe('State Persistence', () => {
     it('should maintain expanded state across re-renders', () => {
-      const { rerender } = render(
-        <ProjectItem {...defaultProps} isExpanded={true} />
-      );
+      const { rerender } = render(<ProjectItem {...defaultProps} isExpanded={true} />);
 
       expect(screen.getByDisplayValue('E-Commerce Platform')).toBeInTheDocument();
 
@@ -342,9 +344,7 @@ describe('ProjectItem Component', () => {
     });
 
     it.skip('should update when project data changes', () => {
-      const { rerender } = render(
-        <ProjectItem {...defaultProps} />
-      );
+      const { rerender } = render(<ProjectItem {...defaultProps} />);
 
       expect(screen.getByText('E-Commerce Platform | 2021-01 - 2021-12')).toBeInTheDocument();
 
@@ -364,9 +364,7 @@ describe('ProjectItem Component', () => {
       const projOne = { ...mockProject, id: 'proj-1' };
       const projTwo = { ...mockProject, id: 'proj-2' };
 
-      const { rerender } = render(
-        <ProjectItem {...defaultProps} project={projOne} />
-      );
+      const { rerender } = render(<ProjectItem {...defaultProps} project={projOne} />);
 
       expect(screen.getByText('E-Commerce Platform | 2021-01 - 2021-12')).toBeInTheDocument();
 
@@ -496,11 +494,11 @@ describe('ProjectItem Component', () => {
   describe('Visual States', () => {
     it('should show different styling when expanded vs collapsed', () => {
       const { container: collapsedContainer } = render(
-        <ProjectItem {...defaultProps} isExpanded={false} />
+        <ProjectItem {...defaultProps} isExpanded={false} />,
       );
 
       const { container: expandedContainer } = render(
-        <ProjectItem {...defaultProps} isExpanded={true} />
+        <ProjectItem {...defaultProps} isExpanded={true} />,
       );
 
       const collapsedCard = collapsedContainer.querySelector('[class*="border"]');
@@ -520,7 +518,7 @@ describe('ProjectItem Component', () => {
         <>
           <ProjectItem {...defaultProps} project={proj1} />
           <ProjectItem {...defaultProps} project={proj2} />
-        </>
+        </>,
       );
 
       expect(screen.getByText('E-Commerce Platform | 2021-01 - 2021-12')).toBeInTheDocument();
@@ -539,7 +537,7 @@ describe('ProjectItem Component', () => {
         <>
           <ProjectItem {...defaultProps} project={proj1} onDelete={onDelete1} />
           <ProjectItem {...defaultProps} project={proj2} onDelete={onDelete2} />
-        </>
+        </>,
       );
 
       const deleteButtons = screen.getAllByRole('button', { name: /delete/i });

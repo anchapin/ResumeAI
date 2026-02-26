@@ -1,6 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
-import { createWebhook, updateWebhook, type Webhook, type WebhookCreateParams, type WebhookUpdateParams } from '../utils/api-client';
+import {
+  createWebhook,
+  updateWebhook,
+  type Webhook,
+  type WebhookCreateParams,
+  type WebhookUpdateParams,
+} from '../utils/api-client';
 
 interface WebhookFormProps {
   webhook?: Webhook;
@@ -52,10 +58,8 @@ const WebhookForm: React.FC<WebhookFormProps> = ({ webhook, onSuccess, onCancel 
 
   // Toggle event selection
   const toggleEvent = (event: string) => {
-    setSelectedEvents(prev =>
-      prev.includes(event)
-        ? prev.filter(e => e !== event)
-        : [...prev, event]
+    setSelectedEvents((prev) =>
+      prev.includes(event) ? prev.filter((e) => e !== event) : [...prev, event],
     );
   };
 
@@ -160,13 +164,15 @@ const WebhookForm: React.FC<WebhookFormProps> = ({ webhook, onSuccess, onCancel 
             onChange={(e) => setUrl(e.target.value)}
             placeholder="https://your-server.com/webhook"
             className={`w-full px-4 py-2.5 rounded-lg border ${
-              errors.url ? 'border-red-300 focus:border-red-500 focus:ring-red-200' : 'border-slate-300 focus:border-primary-500 focus:ring-primary-200'
+              errors.url
+                ? 'border-red-300 focus:border-red-500 focus:ring-red-200'
+                : 'border-slate-300 focus:border-primary-500 focus:ring-primary-200'
             } focus:ring-2 outline-none transition-all text-slate-900 font-mono`}
           />
-          {errors.url && (
-            <p className="text-xs text-red-600">{errors.url}</p>
-          )}
-          <p className="text-xs text-slate-500">The URL where events will be sent via POST requests</p>
+          {errors.url && <p className="text-xs text-red-600">{errors.url}</p>}
+          <p className="text-xs text-slate-500">
+            The URL where events will be sent via POST requests
+          </p>
         </div>
 
         {/* Secret (Optional) */}
@@ -184,7 +190,8 @@ const WebhookForm: React.FC<WebhookFormProps> = ({ webhook, onSuccess, onCancel 
             />
           </div>
           <p className="text-xs text-slate-500">
-            Used to sign webhook payloads. Leave empty to generate a new secret, or leave unchanged to keep existing.
+            Used to sign webhook payloads. Leave empty to generate a new secret, or leave unchanged
+            to keep existing.
           </p>
         </div>
 
@@ -213,9 +220,7 @@ const WebhookForm: React.FC<WebhookFormProps> = ({ webhook, onSuccess, onCancel 
               </label>
             ))}
           </div>
-          {errors.events && (
-            <p className="text-xs text-red-600">{errors.events}</p>
-          )}
+          {errors.events && <p className="text-xs text-red-600">{errors.events}</p>}
           <p className="text-xs text-slate-500">Select which events should trigger this webhook</p>
         </div>
 
@@ -252,7 +257,9 @@ const WebhookForm: React.FC<WebhookFormProps> = ({ webhook, onSuccess, onCancel 
           >
             {isSubmitting ? (
               <>
-                <span className="material-symbols-outlined animate-spin text-[18px]">progress_activity</span>
+                <span className="material-symbols-outlined animate-spin text-[18px]">
+                  progress_activity
+                </span>
                 {webhook ? 'Updating...' : 'Creating...'}
               </>
             ) : (
@@ -267,13 +274,16 @@ const WebhookForm: React.FC<WebhookFormProps> = ({ webhook, onSuccess, onCancel 
         <span className="material-symbols-outlined text-[16px] mt-0.5">info</span>
         <div className="space-y-1">
           <p>
-            <strong>Payload Format:</strong> Webhooks receive JSON payloads with event type, timestamp, and event data.
+            <strong>Payload Format:</strong> Webhooks receive JSON payloads with event type,
+            timestamp, and event data.
           </p>
           <p>
-            <strong>Signature:</strong> If a secret is set, the X-Webhook-Signature header will contain an HMAC SHA256 signature.
+            <strong>Signature:</strong> If a secret is set, the X-Webhook-Signature header will
+            contain an HMAC SHA256 signature.
           </p>
           <p>
-            <strong>Retry Policy:</strong> Failed deliveries are automatically retried with exponential backoff for up to 3 days.
+            <strong>Retry Policy:</strong> Failed deliveries are automatically retried with
+            exponential backoff for up to 3 days.
           </p>
         </div>
       </div>

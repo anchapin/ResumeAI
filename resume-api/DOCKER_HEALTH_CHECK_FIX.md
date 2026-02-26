@@ -1,23 +1,33 @@
 # Docker Health Check Fix Summary
 
 ## Issue
+
 The Docker health check command in the ResumeAI project was malformed and wouldn't work properly.
 
 ## Changes Made
 
 ### 1. Fixed docker-compose.yml health check command
+
 **File:** `/home/alexc/Projects/ResumeAI/resume-api/docker-compose.yml`
 
 **Before:**
+
 ```yaml
 healthcheck:
-  test: ["CMD", "python", "-c", "import httpx; httpx.get('http://localhost:8000/health')"]
+  test: ['CMD', 'python', '-c', "import httpx; httpx.get('http://localhost:8000/health')"]
 ```
 
 **After:**
+
 ```yaml
 healthcheck:
-  test: ["CMD", "python", "-c", "import httpx; r = httpx.get('http://localhost:8000/health'); r.raise_for_status(); exit(0 if r.json().get('status') == 'healthy' else 1)"]
+  test:
+    [
+      'CMD',
+      'python',
+      '-c',
+      "import httpx; r = httpx.get('http://localhost:8000/health'); r.raise_for_status(); exit(0 if r.json().get('status') == 'healthy' else 1)",
+    ]
   interval: 30s
   timeout: 10s
   retries: 3
@@ -25,15 +35,18 @@ healthcheck:
 ```
 
 ### 2. Fixed Dockerfile health check command
+
 **File:** `/home/alexc/Projects/ResumeAI/resume-api/Dockerfile`
 
 **Before:**
+
 ```
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD python -c "import httpx; httpx.get('http://localhost:8000/health', timeout=10).raise_for_status() or exit(1)" || exit 1
 ```
 
 **After:**
+
 ```
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD python -c "import httpx; r = httpx.get('http://localhost:8000/health', timeout=10); r.raise_for_status(); exit(0 if r.json().get('status') == 'healthy' else 1)"
@@ -42,7 +55,7 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
 ## Improvements Made
 
 1. **Proper Response Handling**: The health check now properly inspects the JSON response and verifies that the status field equals 'healthy'
-2. **Correct Exit Codes**: 
+2. **Correct Exit Codes**:
    - Exit code 0 when health check passes
    - Exit code 1 when health check fails
 3. **Error Handling**: Proper exception handling with appropriate exit codes

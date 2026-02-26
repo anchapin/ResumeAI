@@ -11,7 +11,9 @@ This document describes the implementation of comprehensive input validation and
 A new module providing comprehensive validation and escaping functions:
 
 #### LaTeX Escaping
+
 Escapes LaTeX special characters that could be interpreted as commands:
+
 - `$` → `\$`
 - `%` → `\%`
 - `&` → `\&`
@@ -24,6 +26,7 @@ Escapes LaTeX special characters that could be interpreted as commands:
 - `~` → `\textasciitilde{}`
 
 **Usage:**
+
 ```python
 from lib.utils.validators import escape_latex
 
@@ -35,25 +38,30 @@ escaped = escape_latex(text)
 #### Input Validation Functions
 
 **Email Validation:**
+
 - Validates email format using regex pattern
 - Normalizes to lowercase
 - Limits length to 1000 characters
 - Rejects invalid formats
 
 **URL Validation:**
+
 - Validates URL format (http, https, ftp)
 - Checks for valid domain structure
 - Limits length to 1000 characters
 
 **Phone Validation:**
+
 - Validates phone format (7-20 chars with digits, spaces, dashes, plus, parentheses)
 - Ensures safe format
 
 **String Length Validation:**
+
 - Validates text doesn't exceed specified max length
 - Provides helpful error messages
 
 **HTML/XSS Sanitization:**
+
 - Removes `<script>` tags and content
 - Removes dangerous HTML tags (iframe, object, embed, form, input, button)
 - Removes event handlers (onclick, onerror, etc.)
@@ -62,12 +70,14 @@ escaped = escape_latex(text)
 #### Resume Field Validation
 
 **`validate_resume_field()`**
+
 - Single function for validating all resume fields
 - Optionally escapes LaTeX special characters
 - Optionally sanitizes HTML/XSS
 - Enforces max length constraints
 
 **`validate_resume_data()`**
+
 - Validates entire resume data structure
 - Processes all sections (basics, work, education, skills, projects, languages)
 - Escapes LaTeX and sanitizes HTML in all fields
@@ -79,6 +89,7 @@ escaped = escape_latex(text)
 #### Routes Updated with Validation
 
 **`api/routes.py` - `/v1/render/pdf`**
+
 ```python
 # Validate and escape resume data
 resume_dict = validate_resume_data(resume_dict)
@@ -89,6 +100,7 @@ if not body.variant or len(body.variant) > 100:
 ```
 
 **`api/routes.py` - `/v1/tailor`**
+
 ```python
 # Validate and escape resume data
 resume_dict = validate_resume_data(resume_dict)
@@ -106,6 +118,7 @@ tailored_dict = validate_resume_data(tailored_dict)
 ```
 
 **`api/advanced_routes.py` - `/resumes` (POST/PUT)**
+
 ```python
 # Validate and escape resume data before storage
 resume_dict = request.data.model_dump(exclude_none=True)
@@ -130,21 +143,25 @@ MAX_DESCRIPTION_LENGTH = 2000      # Description text
 ### 4. Security Features
 
 #### XSS Prevention
+
 - HTML sanitization removes malicious tags
 - Event handlers stripped
 - JavaScript URLs blocked
 
 #### LaTeX Injection Prevention
+
 - All LaTeX special characters escaped
 - Prevents PDF generation exploits
 - Safe for LaTeX templating engines
 
 #### Input Length Validation
+
 - Prevents DoS attacks from huge inputs
 - Ensures database efficiency
 - Protects against memory exhaustion
 
 #### Email/URL/Phone Validation
+
 - Format validation prevents injection
 - Proper encoding of special characters
 - Domain validation for URLs
@@ -156,34 +173,40 @@ MAX_DESCRIPTION_LENGTH = 2000      # Description text
 A comprehensive test suite in `test_validators_standalone.py` covers:
 
 **LaTeX Escaping (9 tests)**
+
 - Individual special characters
 - Multiple special characters
 - None/empty handling
 - Text preservation
 
 **Email Validation (5 tests)**
+
 - Valid emails with various formats
 - Case normalization
 - Invalid format rejection
 - Length limits
 
 **URL Validation (4 tests)**
+
 - HTTPS, HTTP, FTP protocols
 - Path handling
 - Invalid format rejection
 - Length limits
 
 **Phone Validation (3 tests)**
+
 - Various phone formats
 - Invalid format rejection
 - None handling
 
 **String Length (3 tests)**
+
 - Within limits
 - At limits
 - Exceeded limits
 
 **HTML Sanitization (5 tests)**
+
 - Script tag removal
 - Event handler removal
 - JavaScript URL removal
@@ -191,11 +214,13 @@ A comprehensive test suite in `test_validators_standalone.py` covers:
 - None handling
 
 **Resume Field Validation (3 tests)**
+
 - Simple field validation
 - LaTeX escaping
 - HTML sanitization
 
 **Resume Data Validation (5 tests)**
+
 - Basic info with escaping
 - Work experience with escaping
 - Education with escaping
@@ -204,6 +229,7 @@ A comprehensive test suite in `test_validators_standalone.py` covers:
 - Empty resume handling
 
 **Security Tests (3 tests)**
+
 - LaTeX command injection
 - SQL-like injection handling
 - Unicode character preservation
@@ -221,6 +247,7 @@ python3 test_validators_standalone.py
 ## API Response Examples
 
 ### Before Implementation
+
 ```json
 {
   "error": "LaTeX compilation error: Undefined control sequence"
@@ -228,7 +255,9 @@ python3 test_validators_standalone.py
 ```
 
 ### After Implementation
+
 Resume with LaTeX special characters:
+
 ```json
 {
   "basics": {
@@ -239,6 +268,7 @@ Resume with LaTeX special characters:
 ```
 
 Is safely processed and escaping is applied during PDF generation:
+
 ```json
 {
   "basics": {
@@ -268,6 +298,7 @@ Validation errors are returned as HTTP 400 Bad Request:
 ## Migration Path
 
 All endpoints using resume data have been updated:
+
 1. Pydantic models do basic validation
 2. Application layer validates/escapes before processing
 3. Database stores escaped/validated data
@@ -280,7 +311,7 @@ All endpoints using resume data have been updated:
    - Application-level validation
    - Database constraints
 
-2. **Whitelist Approach**: 
+2. **Whitelist Approach**:
    - Allow known-good characters
    - Reject everything else
 
@@ -332,6 +363,7 @@ All endpoints using resume data have been updated:
 ## Issue Resolution
 
 ✓ Issue #392: Input validation and LaTeX escaping for backend
+
 - ✓ Created `resume-api/lib/utils/validators.py` with comprehensive validation functions
 - ✓ Updated all resume endpoints to validate inputs before processing
 - ✓ Added LaTeX escaping for special characters

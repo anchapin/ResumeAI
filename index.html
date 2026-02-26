@@ -1,17 +1,20 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#4f46e5" />
-    <meta name="description" content="Create, tailor, and export professional resumes with AI-powered tools" />
+    <meta
+      name="description"
+      content="Create, tailor, and export professional resumes with AI-powered tools"
+    />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="ResumeAI" />
     <link rel="manifest" href="/manifest.json" />
     <link rel="apple-touch-icon" href="/icon-192.png" />
     <title>ResumeAI SaaS</title>
-    
+
     <script src="https://cdn.tailwindcss.com/3.4.15"></script>
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
@@ -23,28 +26,28 @@
     />
     <script>
       tailwind.config = {
-        darkMode: "class",
+        darkMode: 'class',
         theme: {
           extend: {
             fontFamily: {
-              sans: ["Inter", "sans-serif"],
+              sans: ['Inter', 'sans-serif'],
             },
             colors: {
               primary: {
-                50: "#eef2ff",
-                100: "#e0e7ff",
-                200: "#c7d2fe",
-                300: "#a5b4fc",
-                400: "#818cf8",
-                500: "#6366f1",
-                600: "#4f46e5", // Main brand color
-                700: "#4338ca",
-                800: "#3730a3",
-                900: "#312e81",
+                50: '#eef2ff',
+                100: '#e0e7ff',
+                200: '#c7d2fe',
+                300: '#a5b4fc',
+                400: '#818cf8',
+                500: '#6366f1',
+                600: '#4f46e5', // Main brand color
+                700: '#4338ca',
+                800: '#3730a3',
+                900: '#312e81',
               },
               slate: {
-                850: "#1e293b", // Custom dark
-              }
+                850: '#1e293b', // Custom dark
+              },
             },
           },
         },
@@ -55,7 +58,11 @@
         background-color: #f6f6f8;
       }
       .material-symbols-outlined {
-        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        font-variation-settings:
+          'FILL' 0,
+          'wght' 400,
+          'GRAD' 0,
+          'opsz' 24;
       }
       .material-symbols-outlined.filled {
         font-variation-settings: 'FILL' 1;
@@ -77,16 +84,57 @@
       }
 
       /* Markdown Resume Styles */
-      .markdown-content h1 { font-size: 2.25rem; font-weight: 800; margin-bottom: 0.5rem; color: #0f172a; line-height: 1.2; }
-      .markdown-content h2 { font-size: 1.25rem; font-weight: 700; margin-top: 1.5rem; margin-bottom: 0.75rem; color: #4f46e5; border-bottom: 2px solid #e2e8f0; padding-bottom: 0.25rem; text-transform: uppercase; letter-spacing: 0.05em; }
-      .markdown-content h3 { font-size: 1.125rem; font-weight: 700; margin-top: 1.25rem; margin-bottom: 0.25rem; color: #1e293b; }
-      .markdown-content p { margin-bottom: 0.75rem; line-height: 1.6; color: #334155; font-size: 0.95rem; }
-      .markdown-content ul { list-style-type: disc; padding-left: 1.5rem; margin-bottom: 1rem; color: #334155; }
-      .markdown-content li { margin-bottom: 0.25rem; font-size: 0.95rem; }
-      .markdown-content strong { font-weight: 600; color: #0f172a; }
-      .markdown-content em { color: #64748b; font-style: italic; }
+      .markdown-content h1 {
+        font-size: 2.25rem;
+        font-weight: 800;
+        margin-bottom: 0.5rem;
+        color: #0f172a;
+        line-height: 1.2;
+      }
+      .markdown-content h2 {
+        font-size: 1.25rem;
+        font-weight: 700;
+        margin-top: 1.5rem;
+        margin-bottom: 0.75rem;
+        color: #4f46e5;
+        border-bottom: 2px solid #e2e8f0;
+        padding-bottom: 0.25rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+      .markdown-content h3 {
+        font-size: 1.125rem;
+        font-weight: 700;
+        margin-top: 1.25rem;
+        margin-bottom: 0.25rem;
+        color: #1e293b;
+      }
+      .markdown-content p {
+        margin-bottom: 0.75rem;
+        line-height: 1.6;
+        color: #334155;
+        font-size: 0.95rem;
+      }
+      .markdown-content ul {
+        list-style-type: disc;
+        padding-left: 1.5rem;
+        margin-bottom: 1rem;
+        color: #334155;
+      }
+      .markdown-content li {
+        margin-bottom: 0.25rem;
+        font-size: 0.95rem;
+      }
+      .markdown-content strong {
+        font-weight: 600;
+        color: #0f172a;
+      }
+      .markdown-content em {
+        color: #64748b;
+        font-style: italic;
+      }
     </style>
-</head>
+  </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>

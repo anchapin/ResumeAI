@@ -9,6 +9,7 @@ GitHub CLI mode (`GITHUB_AUTH_MODE=cli`) is deprecated and will be removed in a 
 ## Why Migrate?
 
 ### OAuth Mode Benefits
+
 - **Per-user Authentication**: Each user authenticates with their own GitHub account
 - **Security**: No shared credentials on the server
 - **Rate Limits**: Per-user GitHub API rate limits (5,000 requests/hour per user)
@@ -17,6 +18,7 @@ GitHub CLI mode (`GITHUB_AUTH_MODE=cli`) is deprecated and will be removed in a 
 - **Revocable**: Users can revoke access at any time from GitHub settings
 
 ### CLI Mode Limitations (Deprecated)
+
 - **Single User**: Only one GitHub account can be connected
 - **Shared Credentials**: Server-side authentication credentials
 - **Limited Rate Limits**: Shared across all users
@@ -64,6 +66,7 @@ FRONTEND_URL=https://yourdomain.com
 ```
 
 **Important**:
+
 - Never commit `GITHUB_CLIENT_SECRET` to version control
 - Use secrets management (Kubernetes secrets, AWS Secrets Manager, etc.)
 - Update `GITHUB_CALLBACK_URL` for each environment (dev, staging, production)
@@ -71,11 +74,13 @@ FRONTEND_URL=https://yourdomain.com
 ### Step 3: Remove gh CLI Dependency (Production Only)
 
 **For Production Deployments**:
+
 - Remove `gh` CLI from Dockerfile (if present)
 - Remove CLI-related environment variables
 - Ensure Docker image does not include `gh` installation
 
 **For Local Development** (Optional):
+
 - You may keep `gh` CLI installed for other purposes
 - But set `GITHUB_AUTH_MODE=oauth` to use OAuth
 
@@ -97,12 +102,14 @@ GITHUB_CLIENT_SECRET=your_client_secret_here
 Before deploying to production, test the OAuth flow:
 
 1. **Start the Backend**
+
    ```bash
    cd resume-api
    python main.py
    ```
 
 2. **Start the Frontend**
+
    ```bash
    npm run dev
    ```
@@ -115,11 +122,13 @@ Before deploying to production, test the OAuth flow:
    - Verify connection appears successful
 
 4. **Check Health Endpoint**
+
    ```bash
    curl http://localhost:8000/health/oauth
    ```
 
    Expected response:
+
    ```json
    {
      "healthy": true,
@@ -134,6 +143,7 @@ Before deploying to production, test the OAuth flow:
 ### Step 6: Deploy to Staging
 
 1. **Update Staging Environment Variables**
+
    ```bash
    # In your deployment system (Kubernetes, Cloud Run, etc.)
    # Set the following for staging:
@@ -144,6 +154,7 @@ Before deploying to production, test the OAuth flow:
    ```
 
 2. **Deploy and Verify**
+
    ```bash
    # Deploy to staging
    ./deploy-cloudrun.sh
@@ -162,6 +173,7 @@ Before deploying to production, test the OAuth flow:
 Once staging is verified:
 
 1. **Update Production Environment Variables**
+
    ```bash
    GITHUB_AUTH_MODE=oauth
    GITHUB_CLIENT_ID=production_client_id
@@ -170,16 +182,19 @@ Once staging is verified:
    ```
 
 2. **Deploy**
+
    ```bash
    ./deploy-cloudrun.sh
    ```
 
 3. **Verify Production Health**
+
    ```bash
    curl https://api.yourdomain.com/health/oauth
    ```
 
 4. **Monitor Metrics**
+
    ```bash
    # Check OAuth metrics
    curl https://api.yourdomain.com/metrics | grep oauth_
@@ -192,6 +207,7 @@ Once staging is verified:
 ### 1. Remove CLI Code (Future Release)
 
 Once CLI mode is removed from the codebase:
+
 - Remove `GITHUB_AUTH_MODE` configuration
 - Remove CLI-related code paths
 - Update documentation
@@ -199,6 +215,7 @@ Once CLI mode is removed from the codebase:
 ### 2. Update User Documentation
 
 Update user-facing documentation:
+
 - Remove any mentions of "server-side GitHub authentication"
 - Document the OAuth connection flow
 - Update troubleshooting guides
@@ -206,6 +223,7 @@ Update user-facing documentation:
 ### 3. Monitor Performance
 
 Monitor OAuth performance metrics:
+
 - Connection success rate
 - Token refresh events
 - Rate limit utilization
@@ -214,6 +232,7 @@ Monitor OAuth performance metrics:
 ### 4. Set Up Alerts
 
 Configure alerts for:
+
 - High authentication failure rate
 - Rate limit approaching
 - Token storage errors
@@ -240,6 +259,7 @@ GITHUB_AUTH_MODE=cli
 **Error**: "Redirect URI mismatch"
 
 **Solution**:
+
 1. Verify `GITHUB_CALLBACK_URL` in environment variables
 2. Update GitHub OAuth App with correct callback URL
 3. URL must match exactly (including https:// and trailing slash if applicable)
@@ -249,6 +269,7 @@ GITHUB_AUTH_MODE=cli
 **Error**: CORS policy blocks request
 
 **Solution**:
+
 1. Add frontend domain to `CORS_ORIGINS` environment variable
 2. Restart application
 3. Verify frontend can reach backend
@@ -258,6 +279,7 @@ GITHUB_AUTH_MODE=cli
 **Error**: GitHub API rate limit (403)
 
 **Solution**:
+
 1. Verify each user has their own OAuth token (not shared)
 2. Implement request caching
 3. Reduce API call frequency
@@ -267,6 +289,7 @@ GITHUB_AUTH_MODE=cli
 **Error**: OAuth flow succeeds but connection not saved
 
 **Solution**:
+
 1. Check database connection: `curl /health | jq .checks.database`
 2. Verify encryption key is set
 3. Check storage error metrics: `curl /metrics | grep oauth_storage_errors_total`
@@ -276,6 +299,7 @@ GITHUB_AUTH_MODE=cli
 If you encounter issues during migration:
 
 1. **Check Logs**:
+
    ```bash
    kubectl logs -f deployment/resume-api | grep -i oauth
    ```
@@ -284,6 +308,7 @@ If you encounter issues during migration:
    - See `docs/oauth-monitoring-runbook.md` for detailed troubleshooting
 
 3. **Check Health**:
+
    ```bash
    curl https://api.yourdomain.com/health/detailed
    ```

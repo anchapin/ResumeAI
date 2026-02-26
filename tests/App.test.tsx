@@ -36,50 +36,50 @@ vi.mock('../components/Sidebar', () => ({
         Shortcuts
       </button>
     </div>
-  )
+  ),
 }));
 
 vi.mock('../pages/Dashboard', () => ({
-  default: () => <div data-testid="dashboard-page">Dashboard Page</div>
+  default: () => <div data-testid="dashboard-page">Dashboard Page</div>,
 }));
 
 vi.mock('../pages/Editor', () => ({
   default: ({ onBack }: any) => (
     <div data-testid="editor-page">
       Editor Page
-      <button onClick={onBack} data-testid="editor-back-btn">Back</button>
+      <button onClick={onBack} data-testid="editor-back-btn">
+        Back
+      </button>
     </div>
-  )
+  ),
 }));
 
 vi.mock('../pages/Workspace', () => ({
-  default: () => <div data-testid="workspace-page">Workspace Page</div>
+  default: () => <div data-testid="workspace-page">Workspace Page</div>,
 }));
 
 vi.mock('../pages/JobApplications', () => ({
-  default: () => <div data-testid="applications-page">Applications Page</div>
+  default: () => <div data-testid="applications-page">Applications Page</div>,
 }));
 
 vi.mock('../pages/Settings', () => ({
-  default: () => <div data-testid="settings-page">Settings Page</div>
+  default: () => <div data-testid="settings-page">Settings Page</div>,
 }));
 
 vi.mock('../pages/ResumeManagement', () => ({
-  default: () => <div data-testid="bulk-page">Bulk Resume Page</div>
+  default: () => <div data-testid="bulk-page">Bulk Resume Page</div>,
 }));
 
 vi.mock('../pages/SalaryResearch', () => ({
-  SalaryResearch: () => <div data-testid="salary-page">Salary Research Page</div>
+  SalaryResearch: () => <div data-testid="salary-page">Salary Research Page</div>,
 }));
 
 vi.mock('../pages/InterviewPractice', () => ({
-  default: () => <div data-testid="interview-page">Interview Practice Page</div>
+  default: () => <div data-testid="interview-page">Interview Practice Page</div>,
 }));
 
 vi.mock('../components/ErrorBoundary', () => ({
-  default: ({ children }: any) => (
-    <div data-testid="error-boundary">{children}</div>
-  )
+  default: ({ children }: any) => <div data-testid="error-boundary">{children}</div>,
 }));
 
 vi.mock('../components/KeyboardShortcutsHelp', () => ({
@@ -89,7 +89,7 @@ vi.mock('../components/KeyboardShortcutsHelp', () => ({
         Close
       </button>
     </div>
-  )
+  ),
 }));
 
 vi.mock('../hooks/useTheme', () => ({
@@ -97,12 +97,12 @@ vi.mock('../hooks/useTheme', () => ({
     theme: 'light',
     isDark: false,
     toggleTheme: vi.fn(),
-    setTheme: vi.fn()
-  })
+    setTheme: vi.fn(),
+  }),
 }));
 
 vi.mock('react-toastify', () => ({
-  ToastContainer: () => <div data-testid="toast-container" />
+  ToastContainer: () => <div data-testid="toast-container" />,
 }));
 
 // Setup localStorage mock
@@ -126,12 +126,12 @@ const localStorageMock = (() => {
     key: (index: number) => {
       const keys = Object.keys(store);
       return keys[index] || null;
-    }
+    },
   };
 })();
 
 Object.defineProperty(window, 'localStorage', {
-  value: localStorageMock
+  value: localStorageMock,
 });
 
 describe('App Component', () => {
@@ -171,7 +171,7 @@ describe('App Component', () => {
         skills: ['React', 'TypeScript'],
         experience: [],
         education: [],
-        projects: []
+        projects: [],
       };
 
       localStorage.setItem('resumeai_master_profile', JSON.stringify(mockData));
@@ -209,7 +209,7 @@ describe('App Component', () => {
         skills: null, // Invalid - should be array
         experience: undefined, // Invalid - should be array
         education: [],
-        projects: []
+        projects: [],
       };
 
       localStorage.setItem('resumeai_master_profile', JSON.stringify(invalidData));
@@ -249,21 +249,21 @@ describe('App Component', () => {
     });
 
     it('should navigate to Editor when clicking Editor button', async () => {
-     const user = userEvent.setup();
-     render(<App />);
+      const user = userEvent.setup();
+      render(<App />);
 
-     await waitFor(() => {
-       expect(screen.getByTestId('dashboard-page')).toBeInTheDocument();
-     });
+      await waitFor(() => {
+        expect(screen.getByTestId('dashboard-page')).toBeInTheDocument();
+      });
 
-     const editorButton = screen.getByTestId('nav-editor');
-     await user.click(editorButton);
+      const editorButton = screen.getByTestId('nav-editor');
+      await user.click(editorButton);
 
-     // Wait for lazy-loaded Editor component to load
-     await waitFor(() => {
-       expect(screen.getByTestId('editor-page')).toBeInTheDocument();
-     });
-     expect(screen.queryByTestId('dashboard-page')).not.toBeInTheDocument();
+      // Wait for lazy-loaded Editor component to load
+      await waitFor(() => {
+        expect(screen.getByTestId('editor-page')).toBeInTheDocument();
+      });
+      expect(screen.queryByTestId('dashboard-page')).not.toBeInTheDocument();
     });
 
     it('should navigate to Workspace', async () => {
@@ -383,7 +383,7 @@ describe('App Component', () => {
         skills: ['React'],
         experience: [],
         education: [],
-        projects: []
+        projects: [],
       };
 
       localStorage.setItem('resumeai_master_profile', JSON.stringify(mockData));
@@ -399,13 +399,15 @@ describe('App Component', () => {
         () => {
           expect(saveResumeDataSpy).toHaveBeenCalled();
         },
-        { timeout: 2000 }
+        { timeout: 2000 },
       );
     });
 
     it('should debounce saves to avoid rapid updates', async () => {
-      const saveResumeDataSpy = vi.spyOn(StorageModule, 'saveResumeData').mockImplementation(() => {});
-      
+      const saveResumeDataSpy = vi
+        .spyOn(StorageModule, 'saveResumeData')
+        .mockImplementation(() => {});
+
       render(<App />);
 
       await waitFor(() => {
@@ -413,17 +415,19 @@ describe('App Component', () => {
       });
 
       // Give time for initial debounce
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      await new Promise((resolve) => setTimeout(resolve, 1500));
 
       // Initial save should have been called
       expect(saveResumeDataSpy).toHaveBeenCalled();
     });
 
     it('should not save before initial load is complete', async () => {
-      const saveResumeDataSpy = vi.spyOn(StorageModule, 'saveResumeData').mockImplementation(() => {});
-      
+      const saveResumeDataSpy = vi
+        .spyOn(StorageModule, 'saveResumeData')
+        .mockImplementation(() => {});
+
       vi.spyOn(StorageModule, 'loadResumeData').mockImplementation(() => {
-        return new Promise(resolve => setTimeout(() => resolve(null), 100));
+        return new Promise((resolve) => setTimeout(() => resolve(null), 100));
       });
 
       const { rerender } = render(<App />);
@@ -443,14 +447,16 @@ describe('App Component', () => {
         skills: [],
         experience: [],
         education: [],
-        projects: []
+        projects: [],
       };
 
       localStorage.setItem('resumeai_master_profile', JSON.stringify(mockData));
 
-      const clearResumeDataSpy = vi.spyOn(StorageModule, 'clearResumeData').mockImplementation(() => {
-        localStorage.removeItem('resumeai_master_profile');
-      });
+      const clearResumeDataSpy = vi
+        .spyOn(StorageModule, 'clearResumeData')
+        .mockImplementation(() => {
+          localStorage.removeItem('resumeai_master_profile');
+        });
 
       render(<App />);
 
@@ -467,14 +473,16 @@ describe('App Component', () => {
       vi.spyOn(StorageModule, 'loadResumeData').mockImplementation(() => {
         throw new StorageModule.StorageError(
           'Storage full',
-          StorageModule.StorageErrorType.QUOTA_EXCEEDED
+          StorageModule.StorageErrorType.QUOTA_EXCEEDED,
         );
       });
 
       render(<App />);
 
       await waitFor(() => {
-        expect(screen.getByText('Storage full. Please clear some browser data.')).toBeInTheDocument();
+        expect(
+          screen.getByText('Storage full. Please clear some browser data.'),
+        ).toBeInTheDocument();
       });
     });
 
@@ -482,7 +490,7 @@ describe('App Component', () => {
       vi.spyOn(StorageModule, 'loadResumeData').mockImplementation(() => {
         throw new StorageModule.StorageError(
           'Parse error',
-          StorageModule.StorageErrorType.PARSE_ERROR
+          StorageModule.StorageErrorType.PARSE_ERROR,
         );
       });
 
@@ -497,14 +505,16 @@ describe('App Component', () => {
       vi.spyOn(StorageModule, 'loadResumeData').mockImplementation(() => {
         throw new StorageModule.StorageError(
           'Access denied',
-          StorageModule.StorageErrorType.ACCESS_DENIED
+          StorageModule.StorageErrorType.ACCESS_DENIED,
         );
       });
 
       render(<App />);
 
       await waitFor(() => {
-        expect(screen.getByText('Storage access denied. Changes won\'t be saved.')).toBeInTheDocument();
+        expect(
+          screen.getByText("Storage access denied. Changes won't be saved."),
+        ).toBeInTheDocument();
       });
     });
 
@@ -512,7 +522,7 @@ describe('App Component', () => {
       vi.spyOn(StorageModule, 'loadResumeData').mockImplementation(() => {
         throw new StorageModule.StorageError(
           'Test error',
-          StorageModule.StorageErrorType.QUOTA_EXCEEDED
+          StorageModule.StorageErrorType.QUOTA_EXCEEDED,
         );
       });
 
@@ -524,9 +534,11 @@ describe('App Component', () => {
       // Wait for auto-dismiss (5 seconds + buffer for slower systems)
       await waitFor(
         () => {
-          expect(screen.queryByText('Storage full. Please clear some browser data.')).not.toBeInTheDocument();
+          expect(
+            screen.queryByText('Storage full. Please clear some browser data.'),
+          ).not.toBeInTheDocument();
         },
-        { timeout: 7000 }
+        { timeout: 7000 },
       );
     }, 10000);
 
@@ -536,21 +548,25 @@ describe('App Component', () => {
       vi.spyOn(StorageModule, 'loadResumeData').mockImplementation(() => {
         throw new StorageModule.StorageError(
           'Test error',
-          StorageModule.StorageErrorType.QUOTA_EXCEEDED
+          StorageModule.StorageErrorType.QUOTA_EXCEEDED,
         );
       });
 
       render(<App />);
 
       await waitFor(() => {
-        expect(screen.getByText('Storage full. Please clear some browser data.')).toBeInTheDocument();
+        expect(
+          screen.getByText('Storage full. Please clear some browser data.'),
+        ).toBeInTheDocument();
       });
 
       const closeButton = screen.getByRole('button', { name: 'close' });
       await user.click(closeButton);
 
       await waitFor(() => {
-        expect(screen.queryByText('Storage full. Please clear some browser data.')).not.toBeInTheDocument();
+        expect(
+          screen.queryByText('Storage full. Please clear some browser data.'),
+        ).not.toBeInTheDocument();
       });
     });
 
@@ -738,7 +754,7 @@ describe('App Component', () => {
         skills: ['React', 'TypeScript'],
         experience: [],
         education: [],
-        projects: []
+        projects: [],
       };
 
       localStorage.setItem('resumeai_master_profile', JSON.stringify(mockData));
@@ -788,9 +804,12 @@ describe('App Component', () => {
 
       render(<App />);
 
-      await waitFor(() => {
-        expect(screen.getByTestId('dashboard-page')).toBeInTheDocument();
-      }, { timeout: 3000 });
+      await waitFor(
+        () => {
+          expect(screen.getByTestId('dashboard-page')).toBeInTheDocument();
+        },
+        { timeout: 3000 },
+      );
     });
 
     it('should have all required fields in initial data', async () => {
@@ -798,9 +817,12 @@ describe('App Component', () => {
 
       render(<App />);
 
-      await waitFor(() => {
-        expect(screen.getByTestId('dashboard-page')).toBeInTheDocument();
-      }, { timeout: 3000 });
+      await waitFor(
+        () => {
+          expect(screen.getByTestId('dashboard-page')).toBeInTheDocument();
+        },
+        { timeout: 3000 },
+      );
 
       // Verify app initializes without errors
       expect(screen.getByTestId('error-boundary')).toBeInTheDocument();
@@ -845,7 +867,7 @@ describe('App Component', () => {
         skills: ['React'],
         experience: [],
         education: [],
-        projects: []
+        projects: [],
       };
 
       localStorage.setItem('resumeai_master_profile', JSON.stringify(mockData));
@@ -883,7 +905,7 @@ describe('App Component', () => {
         skills: null,
         experience: undefined,
         education: null,
-        projects: null
+        projects: null,
       };
 
       localStorage.setItem('resumeai_master_profile', JSON.stringify(dataWithInvalidArrays));
@@ -982,7 +1004,7 @@ describe('App Component', () => {
         skills: ['Skill1', 'Skill2'],
         experience: [],
         education: [],
-        projects: []
+        projects: [],
       };
 
       localStorage.setItem('resumeai_master_profile', JSON.stringify(mockData));
@@ -1056,7 +1078,7 @@ describe('App Component', () => {
       vi.spyOn(StorageModule, 'loadResumeData').mockImplementation(() => {
         throw new StorageModule.StorageError(
           'Test error',
-          StorageModule.StorageErrorType.QUOTA_EXCEEDED
+          StorageModule.StorageErrorType.QUOTA_EXCEEDED,
         );
       });
 
@@ -1069,7 +1091,9 @@ describe('App Component', () => {
       await user.click(closeButton);
 
       await waitFor(() => {
-        expect(screen.queryByText('Storage full. Please clear some browser data.')).not.toBeInTheDocument();
+        expect(
+          screen.queryByText('Storage full. Please clear some browser data.'),
+        ).not.toBeInTheDocument();
       });
     });
 
@@ -1077,23 +1101,22 @@ describe('App Component', () => {
       vi.spyOn(StorageModule, 'loadResumeData').mockImplementation(() => {
         throw new StorageModule.StorageError(
           'Storage not available',
-          StorageModule.StorageErrorType.NOT_AVAILABLE
+          StorageModule.StorageErrorType.NOT_AVAILABLE,
         );
       });
 
       render(<App />);
 
       await waitFor(() => {
-        expect(screen.getByText('Storage not available. Changes won\'t be saved.')).toBeInTheDocument();
+        expect(
+          screen.getByText("Storage not available. Changes won't be saved."),
+        ).toBeInTheDocument();
       });
     });
 
     it('should display generic error for unknown error types', async () => {
       vi.spyOn(StorageModule, 'loadResumeData').mockImplementation(() => {
-        throw new StorageModule.StorageError(
-          'Unknown error',
-          'UNKNOWN' as any
-        );
+        throw new StorageModule.StorageError('Unknown error', 'UNKNOWN' as any);
       });
 
       render(<App />);
@@ -1122,4 +1145,4 @@ describe('App Component', () => {
       });
     });
   });
-  });
+});

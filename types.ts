@@ -517,7 +517,7 @@ export interface BulkOperationResult {
   success?: boolean;
   count?: number;
   successful?: number[];
-  failed?: Array<{ id: number; error: string; }>;
+  failed?: Array<{ id: number; error: string }>;
   errors?: string[];
 }
 

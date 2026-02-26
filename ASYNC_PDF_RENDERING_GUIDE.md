@@ -128,6 +128,7 @@ curl -X POST http://localhost:8000/v1/render/pdf-async \
 ```
 
 **Notes:**
+
 - Returns immediately with job ID (HTTP 202 Accepted)
 - Use job_id for subsequent status checks
 - Priority options: "low", "normal", "high", "critical"
@@ -160,6 +161,7 @@ curl -X GET http://localhost:8000/v1/jobs/550e8400-e29b-41d4-a716-446655440000 \
 ```
 
 **States:**
+
 - `pending` - Waiting in queue
 - `processing` - Currently being rendered
 - `completed` - Successfully rendered
@@ -177,11 +179,13 @@ curl -X GET http://localhost:8000/v1/jobs/550e8400-e29b-41d4-a716-446655440000/d
 ```
 
 **Requirements:**
+
 - Job must be in `completed` state
 - Returns `application/pdf` content type
 - Filename: `resume_{job_id_first_8_chars}.pdf`
 
 **Error Responses:**
+
 - `404` - Job not found
 - `422` - Job not completed, still processing, failed, or cancelled
 - `500` - PDF file missing from disk
@@ -198,6 +202,7 @@ curl -X DELETE http://localhost:8000/v1/jobs/550e8400-e29b-41d4-a716-44665544000
 **Response (HTTP 204):** No content
 
 **Restrictions:**
+
 - Can only cancel `pending` or `processing` jobs
 - Returns `422` if job already completed/failed
 - Returns `404` if job not found
@@ -295,6 +300,7 @@ async def startup():
 Uses LocalQueue with single PDFWorker:
 
 1. Enable in environment:
+
    ```bash
    PDF_WORKER_ENABLED=true
    PDF_WORKER_COUNT=1
@@ -309,6 +315,7 @@ Uses LocalQueue with single PDFWorker:
 For high-throughput production:
 
 1. Multiple worker processes (separate from API):
+
    ```bash
    # Terminal 1 - Start API
    cd resume-api && python main.py
@@ -330,6 +337,7 @@ For high-throughput production:
 ### Docker Deployment
 
 **API Container:**
+
 ```dockerfile
 # Dockerfile.api
 FROM python:3.11-slim
@@ -340,6 +348,7 @@ CMD ["python", "main.py"]
 ```
 
 **Worker Container:**
+
 ```dockerfile
 # Dockerfile.worker
 FROM python:3.11-slim
@@ -350,6 +359,7 @@ CMD ["python", "-c", "from lib.queue.pdf_worker import PDFWorkerPool; import asy
 ```
 
 **Docker Compose:**
+
 ```yaml
 version: '3.9'
 services:
@@ -358,10 +368,10 @@ services:
       context: .
       dockerfile: Dockerfile.api
     ports:
-      - "8000:8000"
+      - '8000:8000'
     environment:
-      PDF_WORKER_ENABLED: "true"
-      PDF_WORKER_COUNT: "1"
+      PDF_WORKER_ENABLED: 'true'
+      PDF_WORKER_COUNT: '1'
 
   # Optional: Additional workers for scale
   worker:
@@ -371,7 +381,7 @@ services:
     depends_on:
       - api
     environment:
-      JOB_QUEUE_TYPE: "local"
+      JOB_QUEUE_TYPE: 'local'
 ```
 
 ### Kubernetes Deployment
@@ -396,13 +406,13 @@ spec:
         app: resume-api
     spec:
       containers:
-      - name: api
-        image: resume-api:latest
-        ports:
-        - containerPort: 8000
-        env:
-        - name: PDF_WORKER_ENABLED
-          value: "false"  # Disable worker in API pod
+        - name: api
+          image: resume-api:latest
+          ports:
+            - containerPort: 8000
+          env:
+            - name: PDF_WORKER_ENABLED
+              value: 'false' # Disable worker in API pod
 
 ---
 # Worker Deployment
@@ -421,16 +431,16 @@ spec:
         app: resume-worker
     spec:
       containers:
-      - name: worker
-        image: resume-worker:latest
-        env:
-        - name: JOB_QUEUE_TYPE
-          value: "redis"
-        - name: REDIS_URL
-          valueFrom:
-            secretKeyRef:
-              name: redis-credentials
-              key: url
+        - name: worker
+          image: resume-worker:latest
+          env:
+            - name: JOB_QUEUE_TYPE
+              value: 'redis'
+            - name: REDIS_URL
+              valueFrom:
+                secretKeyRef:
+                  name: redis-credentials
+                  key: url
 ```
 
 ## Monitoring
@@ -463,6 +473,7 @@ async def monitor_queue():
 ### Logging
 
 Worker logs include:
+
 - Job submission with ID, priority, API key
 - Job dequeue and start
 - Job completion with PDF size
@@ -493,6 +504,7 @@ async def health_check():
 **Cause:** Worker not running
 
 **Solution:**
+
 ```bash
 # Check if worker process is running
 ps aux | grep pdf_worker
@@ -509,7 +521,9 @@ docker restart resume-worker
 **Cause:** Resume data invalid, or PDF rendering error
 
 **Solution:**
+
 1. Check job status for error message:
+
    ```bash
    curl http://localhost:8000/v1/jobs/{job_id} -H "X-API-KEY: rai_xxx"
    ```
@@ -523,6 +537,7 @@ docker restart resume-worker
 **Cause:** Job not completed yet
 
 **Solution:**
+
 ```bash
 # Check current job state
 curl http://localhost:8000/v1/jobs/{job_id} \
@@ -538,6 +553,7 @@ curl http://localhost:8000/v1/jobs/{job_id} \
 **Cause:** Completed jobs not being cleaned up
 
 **Solution:**
+
 ```python
 # Clear old completed jobs periodically
 import asyncio
@@ -565,25 +581,25 @@ Replace sync PDF endpoint:
 // Old sync approach
 const response = await fetch('/v1/render/pdf', {
   method: 'POST',
-  body: JSON.stringify(resumeData)
+  body: JSON.stringify(resumeData),
 });
 const pdf = await response.blob();
 
 // New async approach
 const jobResponse = await fetch('/v1/render/pdf-async', {
   method: 'POST',
-  body: JSON.stringify(resumeData)
+  body: JSON.stringify(resumeData),
 });
 const { job_id } = await jobResponse.json();
 
 // Poll for completion
 while (true) {
-  const status = await fetch(`/v1/jobs/${job_id}`).then(r => r.json());
+  const status = await fetch(`/v1/jobs/${job_id}`).then((r) => r.json());
   if (status.state === 'completed') {
-    const pdf = await fetch(`/v1/jobs/${job_id}/download`).then(r => r.blob());
+    const pdf = await fetch(`/v1/jobs/${job_id}/download`).then((r) => r.blob());
     break;
   }
-  await new Promise(r => setTimeout(r, 1000)); // Wait 1 second
+  await new Promise((r) => setTimeout(r, 1000)); // Wait 1 second
 }
 ```
 
@@ -613,15 +629,16 @@ async def render_pdf_sync(body: ResumeRequest):
 
 Baseline measurements (single worker, 60s timeout):
 
-| Metric | Value |
-|--------|-------|
-| Avg render time | 5-8 seconds |
-| Peak throughput | 10-12 jobs/minute |
-| Memory per job | ~5-10 MB |
-| Max concurrent jobs | 1 (single worker) |
-| Max queue capacity | ~1000 (depends on resume size) |
+| Metric              | Value                          |
+| ------------------- | ------------------------------ |
+| Avg render time     | 5-8 seconds                    |
+| Peak throughput     | 10-12 jobs/minute              |
+| Memory per job      | ~5-10 MB                       |
+| Max concurrent jobs | 1 (single worker)              |
+| Max queue capacity  | ~1000 (depends on resume size) |
 
 To improve throughput:
+
 - Increase worker count
 - Migrate to Redis/SQS for better scaling
 - Optimize PDF template rendering

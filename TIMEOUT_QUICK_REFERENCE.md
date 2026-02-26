@@ -6,16 +6,16 @@ Request timeouts prevent hanging requests on both frontend (React) and backend (
 
 ## 📊 Timeout Values
 
-| Layer | Endpoint | Timeout | Status Code |
-|-------|----------|---------|------------|
-| **Frontend** | PDF Generation | 15s | AbortError |
-| **Frontend** | AI Operations | 15s | AbortError |
-| **Frontend** | Standard API | 10s | AbortError |
-| **Frontend** | Quick Operations | 5s | AbortError |
-| **Backend** | Default | 30s | 504 |
-| **Backend** | PDF Rendering | 60s | 504 |
-| **Backend** | AI Tailoring | 45s | 504 |
-| **Backend** | ATS Check | 45s | 504 |
+| Layer        | Endpoint         | Timeout | Status Code |
+| ------------ | ---------------- | ------- | ----------- |
+| **Frontend** | PDF Generation   | 15s     | AbortError  |
+| **Frontend** | AI Operations    | 15s     | AbortError  |
+| **Frontend** | Standard API     | 10s     | AbortError  |
+| **Frontend** | Quick Operations | 5s      | AbortError  |
+| **Backend**  | Default          | 30s     | 504         |
+| **Backend**  | PDF Rendering    | 60s     | 504         |
+| **Backend**  | AI Tailoring     | 45s     | 504         |
+| **Backend**  | ATS Check        | 45s     | 504         |
 
 ## 🚀 Quick Usage
 
@@ -28,7 +28,7 @@ import { fetchWithTimeout, TIMEOUT_CONFIG } from './utils/fetch-timeout';
 const response = await fetchWithTimeout(
   '/api/data',
   { method: 'GET' },
-  TIMEOUT_CONFIG.STANDARD // 10 seconds
+  TIMEOUT_CONFIG.STANDARD, // 10 seconds
 );
 ```
 
@@ -63,9 +63,10 @@ try {
 ### Frontend - Custom Timeout
 
 Edit `utils/fetch-timeout.ts`:
+
 ```typescript
 export const TIMEOUT_CONFIG = Object.freeze({
-  QUICK: 5000,          // Adjust these values
+  QUICK: 5000, // Adjust these values
   STANDARD: 10000,
   PDF_GENERATION: 15000,
   AI_OPERATION: 15000,
@@ -76,6 +77,7 @@ export const TIMEOUT_CONFIG = Object.freeze({
 ### Backend - Custom Timeout
 
 Edit `resume-api/middleware/timeout.py`:
+
 ```python
 DEFAULT_REQUEST_TIMEOUT = 30  # Change default timeout
 
@@ -87,6 +89,7 @@ EXTENDED_TIMEOUT_ENDPOINTS = {
 ```
 
 Or in `main.py`:
+
 ```python
 app.add_middleware(TimeoutMiddleware, timeout_seconds=30)
 ```
@@ -94,6 +97,7 @@ app.add_middleware(TimeoutMiddleware, timeout_seconds=30)
 ## 📝 Files Added/Modified
 
 ### New Files
+
 - `utils/fetch-timeout.ts` - Frontend timeout utility
 - `utils/fetch-timeout.test.ts` - Tests (17 cases, all passing)
 - `resume-api/middleware/timeout.py` - Backend timeout middleware
@@ -103,6 +107,7 @@ app.add_middleware(TimeoutMiddleware, timeout_seconds=30)
 - `TIMEOUT_IMPLEMENTATION_SUMMARY.md` - Implementation summary
 
 ### Modified Files
+
 - `utils/api-client.ts` - Uses fetchWithTimeout in 4 functions
 - `utils/errorHandler.ts` - Recognizes AbortError as timeout
 - `resume-api/main.py` - Added TimeoutMiddleware
@@ -110,12 +115,14 @@ app.add_middleware(TimeoutMiddleware, timeout_seconds=30)
 ## ✅ Tests
 
 ### Run Frontend Tests
+
 ```bash
 npm test -- utils/fetch-timeout.test.ts
 npm test -- tests/api-client-timeout.test.ts
 ```
 
 ### Run Backend Tests
+
 ```bash
 cd resume-api
 python -m pytest tests/test_timeout_middleware.py -v
@@ -149,7 +156,7 @@ async function customFetch() {
   const controller = createTimeoutAbortController(5000); // 5 seconds
   try {
     const response = await fetch('/api/data', {
-      signal: controller.signal
+      signal: controller.signal,
     });
     return response.json();
   } finally {
@@ -168,7 +175,7 @@ GlobalErrorHandler.subscribe((error) => {
     showNotification({
       type: 'warning',
       message: error.userMessage,
-      duration: 5000
+      duration: 5000,
     });
   }
 });
@@ -176,13 +183,13 @@ GlobalErrorHandler.subscribe((error) => {
 
 ## 🐛 Troubleshooting
 
-| Issue | Solution |
-|-------|----------|
-| Request times out too quickly | Increase TIMEOUT_CONFIG value |
-| Backend times out before frontend | Adjust EXTENDED_TIMEOUT_ENDPOINTS |
-| AbortError not recognized | Check errorHandler.ts includes 'AbortError' check |
-| Tests failing | Run `npm install && npm test` |
-| Build fails | Run `npm run build` to check TypeScript |
+| Issue                             | Solution                                          |
+| --------------------------------- | ------------------------------------------------- |
+| Request times out too quickly     | Increase TIMEOUT_CONFIG value                     |
+| Backend times out before frontend | Adjust EXTENDED_TIMEOUT_ENDPOINTS                 |
+| AbortError not recognized         | Check errorHandler.ts includes 'AbortError' check |
+| Tests failing                     | Run `npm install && npm test`                     |
+| Build fails                       | Run `npm run build` to check TypeScript           |
 
 ## 📚 Documentation
 
@@ -229,4 +236,4 @@ Full documentation: [TIMEOUT_IMPLEMENTATION.md](./docs/TIMEOUT_IMPLEMENTATION.md
 **Issue**: #386  
 **Status**: ✅ Complete  
 **Test Coverage**: 26 tests passing  
-**Documentation**: Complete  
+**Documentation**: Complete

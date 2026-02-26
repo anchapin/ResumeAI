@@ -101,7 +101,7 @@ const TeamResumeLibrary: React.FC<TeamResumeLibraryProps> = ({
     if (!name) return '??';
     return name
       .split(' ')
-      .map(part => part.charAt(0))
+      .map((part) => part.charAt(0))
       .join('')
       .toUpperCase()
       .slice(0, 2);
@@ -111,9 +111,7 @@ const TeamResumeLibrary: React.FC<TeamResumeLibraryProps> = ({
     <>
       <div className="space-y-3">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="font-bold text-slate-900">
-            Shared Resumes ({sharedResumes.length})
-          </h3>
+          <h3 className="font-bold text-slate-900">Shared Resumes ({sharedResumes.length})</h3>
           <button
             onClick={handleOpenShareDialog}
             className="px-4 py-2 rounded-lg bg-primary-600 text-white font-bold text-sm hover:bg-primary-700 transition-colors shadow-lg shadow-primary-600/20 flex items-center gap-2"
@@ -125,7 +123,9 @@ const TeamResumeLibrary: React.FC<TeamResumeLibraryProps> = ({
 
         {sharedResumes.length === 0 ? (
           <div className="text-center py-8 bg-slate-50 rounded-xl">
-            <span className="material-symbols-outlined text-slate-300 text-6xl mb-4">folder_open</span>
+            <span className="material-symbols-outlined text-slate-300 text-6xl mb-4">
+              folder_open
+            </span>
             <p className="text-slate-500 font-medium mb-2">No shared resumes yet</p>
             <p className="text-slate-400 text-sm mb-4">
               Share your resumes with the team to start collaborating
@@ -145,15 +145,11 @@ const TeamResumeLibrary: React.FC<TeamResumeLibraryProps> = ({
                     </span>
                   </div>
                   <div>
-                    <h4 className="font-bold text-slate-900">
-                      {sharedResume.resume_title}
-                    </h4>
+                    <h4 className="font-bold text-slate-900">{sharedResume.resume_title}</h4>
                     <p className="text-sm text-slate-500">
                       Shared by {sharedResume.shared_by_user_name || 'Unknown'}
                     </p>
-                    <p className="text-xs text-slate-400">
-                      {formatDate(sharedResume.shared_at)}
-                    </p>
+                    <p className="text-xs text-slate-400">{formatDate(sharedResume.shared_at)}</p>
                   </div>
                 </div>
 
@@ -168,9 +164,7 @@ const TeamResumeLibrary: React.FC<TeamResumeLibraryProps> = ({
                       progress_activity
                     </span>
                   ) : (
-                    <span className="material-symbols-outlined text-[18px]">
-                      link_off
-                    </span>
+                    <span className="material-symbols-outlined text-[18px]">link_off</span>
                   )}
                 </button>
               </div>
@@ -221,9 +215,7 @@ const TeamResumeLibrary: React.FC<TeamResumeLibraryProps> = ({
               ) : (
                 <div className="space-y-2">
                   {userResumes.map((resume) => {
-                    const isShared = sharedResumes.some(
-                      sr => sr.resume_id === resume.id
-                    );
+                    const isShared = sharedResumes.some((sr) => sr.resume_id === resume.id);
 
                     return (
                       <div
@@ -245,7 +237,7 @@ const TeamResumeLibrary: React.FC<TeamResumeLibraryProps> = ({
                             <h4 className="font-bold text-slate-900">{resume.title}</h4>
                             {resume.tags && resume.tags.length > 0 && (
                               <div className="flex items-center gap-1 mt-1">
-                                {resume.tags.slice(0, 3).map(tag => (
+                                {resume.tags.slice(0, 3).map((tag) => (
                                   <span
                                     key={tag}
                                     className="px-2 py-0.5 bg-slate-100 text-slate-600 text-xs rounded-full"

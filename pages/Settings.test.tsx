@@ -52,7 +52,9 @@ describe('Settings Component', () => {
       render(<Settings />);
       const icons = screen.getAllByText(/notifications/i);
       expect(icons.length).toBeGreaterThan(0);
-      const notificationIcon = icons.find(icon => icon.classList.contains('material-symbols-outlined'));
+      const notificationIcon = icons.find((icon) =>
+        icon.classList.contains('material-symbols-outlined'),
+      );
       expect(notificationIcon).toBeInTheDocument();
     });
 
@@ -61,7 +63,7 @@ describe('Settings Component', () => {
       const avatars = document.querySelectorAll('.bg-cover.bg-center');
       expect(avatars.length).toBeGreaterThan(0);
       expect(avatars[0]).toHaveStyle({
-        backgroundImage: 'url("https://picsum.photos/100/100")'
+        backgroundImage: 'url("https://picsum.photos/100/100")',
       });
     });
 
@@ -97,7 +99,7 @@ describe('Settings Component', () => {
     it('renders First Name input with default value "Alex"', () => {
       render(<Settings />);
       const inputs = screen.getAllByRole('textbox') as HTMLInputElement[];
-      const firstNameInput = inputs.find(input => input.value === 'Alex');
+      const firstNameInput = inputs.find((input) => input.value === 'Alex');
 
       expect(firstNameInput).toBeInTheDocument();
       expect(firstNameInput).toHaveValue('Alex');
@@ -107,7 +109,7 @@ describe('Settings Component', () => {
     it('renders Last Name input with default value "Rivera"', () => {
       render(<Settings />);
       const inputs = screen.getAllByRole('textbox') as HTMLInputElement[];
-      const lastNameInput = inputs.find(input => input.value === 'Rivera');
+      const lastNameInput = inputs.find((input) => input.value === 'Rivera');
 
       expect(lastNameInput).toBeInTheDocument();
       expect(lastNameInput).toHaveValue('Rivera');
@@ -117,7 +119,7 @@ describe('Settings Component', () => {
     it('renders Email Address input with default value', () => {
       render(<Settings />);
       const inputs = screen.getAllByRole('textbox') as HTMLInputElement[];
-      const emailInput = inputs.find(input => input.value === 'alex.rivera@example.com');
+      const emailInput = inputs.find((input) => input.value === 'alex.rivera@example.com');
 
       expect(emailInput).toBeInTheDocument();
       expect(emailInput).toHaveValue('alex.rivera@example.com');
@@ -135,7 +137,7 @@ describe('Settings Component', () => {
         'bg-primary-600',
         'text-white',
         'font-bold',
-        'text-sm'
+        'text-sm',
       );
     });
 
@@ -144,14 +146,14 @@ describe('Settings Component', () => {
       const inputs = screen.getAllByRole('textbox') as HTMLInputElement[];
       expect(inputs.length).toBeGreaterThanOrEqual(3);
 
-      inputs.slice(0, 3).forEach(input => {
+      inputs.slice(0, 3).forEach((input) => {
         expect(input).toHaveClass(
           'w-full',
           'px-4',
           'py-2',
           'rounded-lg',
           'border',
-          'border-slate-300'
+          'border-slate-300',
         );
       });
     });
@@ -162,7 +164,7 @@ describe('Settings Component', () => {
       const user = userEvent.setup();
       render(<Settings />);
       const inputs = screen.getAllByRole('textbox') as HTMLInputElement[];
-      const firstNameInput = inputs.find(input => input.value === 'Alex');
+      const firstNameInput = inputs.find((input) => input.value === 'Alex');
 
       await user.clear(firstNameInput);
       await user.type(firstNameInput, 'John');
@@ -174,7 +176,7 @@ describe('Settings Component', () => {
       const user = userEvent.setup();
       render(<Settings />);
       const inputs = screen.getAllByRole('textbox') as HTMLInputElement[];
-      const lastNameInput = inputs.find(input => input.value === 'Rivera');
+      const lastNameInput = inputs.find((input) => input.value === 'Rivera');
 
       await user.clear(lastNameInput);
       await user.type(lastNameInput, 'Doe');
@@ -186,7 +188,7 @@ describe('Settings Component', () => {
       const user = userEvent.setup();
       render(<Settings />);
       const inputs = screen.getAllByRole('textbox') as HTMLInputElement[];
-      const emailInput = inputs.find(input => input.value === 'alex.rivera@example.com');
+      const emailInput = inputs.find((input) => input.value === 'alex.rivera@example.com');
 
       await user.clear(emailInput);
       await user.type(emailInput, 'john.doe@example.com');
@@ -332,7 +334,7 @@ describe('Settings Component', () => {
       render(<Settings />);
       const toggles = screen.getAllByRole('checkbox');
 
-      toggles.forEach(toggle => {
+      toggles.forEach((toggle) => {
         expect(toggle).toHaveClass('sr-only', 'peer');
       });
     });
@@ -375,7 +377,7 @@ describe('Settings Component', () => {
         'border-red-200',
         'text-red-600',
         'font-bold',
-        'text-sm'
+        'text-sm',
       );
     });
 
@@ -405,13 +407,13 @@ describe('Settings Component', () => {
       render(<Settings />);
       const sections = document.querySelectorAll('section');
 
-      sections.forEach(section => {
+      sections.forEach((section) => {
         expect(section).toHaveClass(
           'bg-white',
           'rounded-2xl',
           'border',
           'shadow-sm',
-          'overflow-hidden'
+          'overflow-hidden',
         );
       });
     });
@@ -443,9 +445,9 @@ describe('Settings Component', () => {
 
       // Verify inputs exist by finding them with their default values
       const inputs = screen.getAllByRole('textbox') as HTMLInputElement[];
-      const firstNameInput = inputs.find(input => input.value === 'Alex');
-      const lastNameInput = inputs.find(input => input.value === 'Rivera');
-      const emailInput = inputs.find(input => input.value === 'alex.rivera@example.com');
+      const firstNameInput = inputs.find((input) => input.value === 'Alex');
+      const lastNameInput = inputs.find((input) => input.value === 'Rivera');
+      const emailInput = inputs.find((input) => input.value === 'alex.rivera@example.com');
 
       expect(firstNameInput).toBeInTheDocument();
       expect(lastNameInput).toBeInTheDocument();
@@ -468,7 +470,9 @@ describe('Settings Component', () => {
     it('notifications icon has proper aria labeling through text content', () => {
       render(<Settings />);
       const icons = screen.getAllByText(/notifications/i);
-      const notificationIcon = icons.find(icon => icon.classList.contains('material-symbols-outlined'));
+      const notificationIcon = icons.find((icon) =>
+        icon.classList.contains('material-symbols-outlined'),
+      );
       expect(notificationIcon).toBeInTheDocument();
     });
   });
@@ -518,9 +522,9 @@ describe('Settings Component', () => {
       render(<Settings />);
 
       const inputs = screen.getAllByRole('textbox') as HTMLInputElement[];
-      const firstNameInput = inputs.find(input => input.value === 'Alex');
-      const lastNameInput = inputs.find(input => input.value === 'Rivera');
-      const emailInput = inputs.find(input => input.value === 'alex.rivera@example.com');
+      const firstNameInput = inputs.find((input) => input.value === 'Alex');
+      const lastNameInput = inputs.find((input) => input.value === 'Rivera');
+      const emailInput = inputs.find((input) => input.value === 'alex.rivera@example.com');
 
       expect(firstNameInput?.value).toBe('Alex');
       expect(lastNameInput?.value).toBe('Rivera');
@@ -558,7 +562,7 @@ describe('Settings Component', () => {
       render(<Settings />);
       const inputs = screen.getAllByRole('textbox') as HTMLInputElement[];
 
-      inputs.slice(0, 3).forEach(input => {
+      inputs.slice(0, 3).forEach((input) => {
         expect(input).toHaveClass('w-full');
       });
     });

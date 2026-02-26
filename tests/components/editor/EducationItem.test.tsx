@@ -281,9 +281,7 @@ describe('EducationItem Component', () => {
 
   describe('State Persistence', () => {
     it('should maintain expanded state across re-renders', () => {
-      const { rerender } = render(
-        <EducationItem {...defaultProps} isExpanded={true} />
-      );
+      const { rerender } = render(<EducationItem {...defaultProps} isExpanded={true} />);
 
       expect(screen.getByDisplayValue('Harvard University')).toBeInTheDocument();
 
@@ -293,9 +291,7 @@ describe('EducationItem Component', () => {
     });
 
     it('should update when education data changes', () => {
-      const { rerender } = render(
-        <EducationItem {...defaultProps} />
-      );
+      const { rerender } = render(<EducationItem {...defaultProps} />);
 
       expect(screen.getByText('Harvard University | 2018-09 - 2020-05')).toBeInTheDocument();
 
@@ -315,9 +311,7 @@ describe('EducationItem Component', () => {
       const eduOne = { ...mockEducation, id: 'edu-1' };
       const eduTwo = { ...mockEducation, id: 'edu-2' };
 
-      const { rerender } = render(
-        <EducationItem {...defaultProps} edu={eduOne} />
-      );
+      const { rerender } = render(<EducationItem {...defaultProps} edu={eduOne} />);
 
       expect(screen.getByText('Master of Science')).toBeInTheDocument();
 
@@ -470,11 +464,11 @@ describe('EducationItem Component', () => {
   describe('Visual States', () => {
     it('should show different styling when expanded vs collapsed', () => {
       const { container: collapsedContainer } = render(
-        <EducationItem {...defaultProps} isExpanded={false} />
+        <EducationItem {...defaultProps} isExpanded={false} />,
       );
 
       const { container: expandedContainer } = render(
-        <EducationItem {...defaultProps} isExpanded={true} />
+        <EducationItem {...defaultProps} isExpanded={true} />,
       );
 
       const collapsedCard = collapsedContainer.querySelector('[class*="border"]');
@@ -485,9 +479,7 @@ describe('EducationItem Component', () => {
     });
 
     it('should show expand icon in correct state', () => {
-      const { container } = render(
-        <EducationItem {...defaultProps} isExpanded={true} />
-      );
+      const { container } = render(<EducationItem {...defaultProps} isExpanded={true} />);
 
       const expandIcon = container.querySelector('[class*="rotate"]');
       expect(expandIcon).toBeInTheDocument();
@@ -503,7 +495,7 @@ describe('EducationItem Component', () => {
         <>
           <EducationItem {...defaultProps} edu={edu1} />
           <EducationItem {...defaultProps} edu={edu2} />
-        </>
+        </>,
       );
 
       expect(screen.getByText('Harvard University | 2018-09 - 2020-05')).toBeInTheDocument();
@@ -522,7 +514,7 @@ describe('EducationItem Component', () => {
         <>
           <EducationItem {...defaultProps} edu={edu1} onDelete={onDelete1} />
           <EducationItem {...defaultProps} edu={edu2} onDelete={onDelete2} />
-        </>
+        </>,
       );
 
       const deleteButtons = screen.getAllByRole('button', { name: /delete/i });

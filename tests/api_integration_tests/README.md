@@ -15,7 +15,9 @@ This directory contains integration tests for all major API endpoints with exten
 ## Test Files
 
 ### 1. `test_api_endpoints_integration.py`
+
 Main integration test suite covering:
+
 - Health check endpoints (`/health`, `/health/detailed`, `/health/ready`)
 - Analytics endpoints (`/analytics/summary`, `/analytics/endpoints`)
 - PDF rendering endpoint (`POST /v1/render/pdf`)
@@ -24,6 +26,7 @@ Main integration test suite covering:
 - Response structure and content types
 
 **Key Test Classes:**
+
 - `TestHealthEndpoints`: Health check functionality
 - `TestAnalyticsEndpoints`: Analytics data retrieval
 - `TestRenderPdfEndpoint`: PDF generation with various inputs
@@ -34,7 +37,9 @@ Main integration test suite covering:
 - `TestResponseStructure`: Response format consistency
 
 ### 2. `test_api_request_validation.py`
+
 Detailed request validation tests covering:
+
 - Basics section validation (name, email, phone, URL)
 - Work experience validation
 - Education section validation
@@ -44,6 +49,7 @@ Detailed request validation tests covering:
 - Missing/null field handling
 
 **Key Test Classes:**
+
 - `TestBasicsValidation`: Contact info validation
 - `TestWorkExperienceValidation`: Work history validation
 - `TestEducationValidation`: Education section validation
@@ -54,7 +60,9 @@ Detailed request validation tests covering:
 - `TestNullFields`: Null value handling
 
 ### 3. `test_api_error_handling.py`
+
 Comprehensive error handling tests covering:
+
 - HTTP status codes (200, 400, 404, 405, 422)
 - Validation error responses
 - Error message quality
@@ -65,6 +73,7 @@ Comprehensive error handling tests covering:
 - Boundary conditions
 
 **Key Test Classes:**
+
 - `TestHttpStatusCodes`: Status code correctness
 - `TestValidationErrors`: Validation error responses
 - `TestErrorMessages`: Error message quality
@@ -75,7 +84,9 @@ Comprehensive error handling tests covering:
 - `TestBoundaryConditions`: Boundary value testing
 
 ### 4. `test_api_advanced_scenarios.py`
+
 Advanced integration scenarios covering:
+
 - Large payload handling
 - Concurrent requests
 - Parameter validation edge cases
@@ -85,6 +96,7 @@ Advanced integration scenarios covering:
 - Endpoint workflow combinations
 
 **Key Test Classes:**
+
 - `TestPayloadHandling`: Large and nested payloads
 - `TestAuthAndSecurity`: Authentication aspects
 - `TestConcurrentRequests`: Concurrent request handling
@@ -96,13 +108,16 @@ Advanced integration scenarios covering:
 - `TestEndpointCombinations`: Multi-endpoint workflows
 
 ### 5. `conftest.py`
+
 Pytest configuration and fixtures:
+
 - Test client setup
 - Sample resume data fixtures (minimal, complete, invalid)
 - Environment variable configuration
 - Custom pytest markers registration
 
 **Available Fixtures:**
+
 - `client`: FastAPI test client
 - `sample_resume_data`: Complete valid resume
 - `minimal_resume_data`: Minimal valid resume
@@ -135,31 +150,37 @@ pytest -m "not rate_limit"
 ## Running the Tests
 
 ### Run all tests
+
 ```bash
 pytest tests/api_integration_tests/ -v
 ```
 
 ### Run specific test file
+
 ```bash
 pytest tests/api_integration_tests/test_api_endpoints_integration.py -v
 ```
 
 ### Run specific test class
+
 ```bash
 pytest tests/api_integration_tests/test_api_endpoints_integration.py::TestHealthEndpoints -v
 ```
 
 ### Run specific test
+
 ```bash
 pytest tests/api_integration_tests/test_api_endpoints_integration.py::TestHealthEndpoints::test_health_check_basic -v
 ```
 
 ### Run with coverage
+
 ```bash
 pytest tests/api_integration_tests/ --cov=resume-api --cov-report=html
 ```
 
 ### Run with specific markers
+
 ```bash
 pytest tests/api_integration_tests/ -m integration -v
 pytest tests/api_integration_tests/ -m "api and not rate_limit" -v
@@ -169,15 +190,15 @@ pytest tests/api_integration_tests/ -m "api and not rate_limit" -v
 
 The test suite provides comprehensive coverage of:
 
-| Endpoint | Tests | Coverage |
-|----------|-------|----------|
-| `/health` | 3 | ✓ Basic, Detailed, Readiness |
-| `/analytics/summary` | 3 | ✓ Default, Custom hours, Validation |
-| `/analytics/endpoints` | 2 | ✓ Default, Custom params |
-| `/v1/render/pdf` | 25+ | ✓ Success, Validation, Variants, Errors |
-| `/v1/variants` | 5 | ✓ List, Search, Filters, Error cases |
-| Error Handling | 30+ | ✓ Status codes, Messages, Recovery |
-| Request Validation | 40+ | ✓ Fields, Types, Constraints, Special chars |
+| Endpoint               | Tests | Coverage                                    |
+| ---------------------- | ----- | ------------------------------------------- |
+| `/health`              | 3     | ✓ Basic, Detailed, Readiness                |
+| `/analytics/summary`   | 3     | ✓ Default, Custom hours, Validation         |
+| `/analytics/endpoints` | 2     | ✓ Default, Custom params                    |
+| `/v1/render/pdf`       | 25+   | ✓ Success, Validation, Variants, Errors     |
+| `/v1/variants`         | 5     | ✓ List, Search, Filters, Error cases        |
+| Error Handling         | 30+   | ✓ Status codes, Messages, Recovery          |
+| Request Validation     | 40+   | ✓ Fields, Types, Constraints, Special chars |
 
 **Total Test Count:** 100+ test cases
 
@@ -200,6 +221,7 @@ test_api_advanced_scenarios.py::TestPayloadHandling::test_large_resume_payload P
 ## Key Testing Patterns
 
 ### 1. Valid Input Testing
+
 ```python
 def test_render_pdf_success(self, client, sample_resume_data):
     payload = {
@@ -211,6 +233,7 @@ def test_render_pdf_success(self, client, sample_resume_data):
 ```
 
 ### 2. Invalid Input Testing
+
 ```python
 def test_invalid_email(self, client):
     resume = {"basics": {"name": "Test", "email": "invalid-email"}}
@@ -220,6 +243,7 @@ def test_invalid_email(self, client):
 ```
 
 ### 3. Edge Case Testing
+
 ```python
 def test_special_characters(self, client):
     data = {"basics": {"name": "John & Mary <Doe> 100%"}}
@@ -229,6 +253,7 @@ def test_special_characters(self, client):
 ```
 
 ### 4. Error Recovery Testing
+
 ```python
 def test_recovery_after_error(self, client, valid_resume):
     # Error request
@@ -242,6 +267,7 @@ def test_recovery_after_error(self, client, valid_resume):
 ## Environment Configuration
 
 Tests automatically configure:
+
 - `TESTING=True`: Enable test mode
 - `REQUIRE_API_KEY=False`: Disable API key requirement
 - `ENABLE_RATE_LIMITING=False`: Disable rate limiting
@@ -268,14 +294,17 @@ These tests are designed to run in CI/CD pipelines:
 ## Troubleshooting
 
 ### Tests fail with import errors
+
 - Ensure `resume-api` directory is in Python path
 - Check `conftest.py` path configuration
 
 ### Tests fail with connection errors
+
 - Verify FastAPI app starts correctly
 - Check environment variables in `conftest.py`
 
 ### Tests timeout
+
 - Increase pytest timeout: `pytest --timeout=30`
 - Check for blocking operations in test code
 
@@ -299,6 +328,7 @@ These tests are designed to run in CI/CD pipelines:
 ## Contributing
 
 When adding new tests:
+
 1. Follow existing test structure and naming conventions
 2. Add appropriate markers (`@pytest.mark.api`, `@pytest.mark.integration`)
 3. Use fixtures from `conftest.py`

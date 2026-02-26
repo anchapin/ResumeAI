@@ -1,6 +1,6 @@
 /**
  * OAuth 2.0 PKCE Implementation Tests
- * 
+ *
  * Tests cover:
  * - Verifier generation (length, character set, randomness)
  * - Challenge generation (SHA256 encoding, base64url format)
@@ -129,10 +129,10 @@ describe('OAuth PKCE', () => {
     it('should clear verifier after retrieval', () => {
       const verifier = generateCodeVerifier();
       storeVerifier(verifier, PROVIDER);
-      
+
       retrieveVerifier(PROVIDER);
       const retrieved = retrieveVerifier(PROVIDER);
-      
+
       expect(retrieved).toBeNull();
     });
 
@@ -165,9 +165,9 @@ describe('OAuth PKCE', () => {
     it('should clear stored verifier', () => {
       const verifier = generateCodeVerifier();
       storeVerifier(verifier, PROVIDER);
-      
+
       clearVerifier(PROVIDER);
-      
+
       const retrieved = retrieveVerifier(PROVIDER);
       expect(retrieved).toBeNull();
     });
@@ -195,15 +195,15 @@ describe('OAuth PKCE', () => {
 
     it('should produce consistent challenge for same setup', async () => {
       const challenge1 = await setupPKCE('provider1');
-      
+
       // Get the verifier before it's cleared
       const verifier1 = sessionStorage.getItem('pkce_verifier_provider1');
-      
+
       // Manually set it back for second challenge generation
       if (verifier1) {
         sessionStorage.setItem('pkce_verifier_provider1', verifier1);
         const challenge2 = await generateCodeChallenge(verifier1);
-        
+
         expect(challenge1).toBe(challenge2);
       }
     });
@@ -256,7 +256,7 @@ describe('OAuth PKCE', () => {
   describe('validatePKCEState', () => {
     it('should return true when verifier is valid', async () => {
       await setupPKCE(PROVIDER);
-      
+
       const isValid = validatePKCEState(PROVIDER);
       expect(isValid).toBe(true);
     });
@@ -269,7 +269,7 @@ describe('OAuth PKCE', () => {
     it('should validate verifier format', () => {
       // Store an invalid verifier
       sessionStorage.setItem(`pkce_verifier_${PROVIDER}`, 'invalid@verifier!');
-      
+
       const isValid = validatePKCEState(PROVIDER);
       expect(isValid).toBe(false);
     });
@@ -277,7 +277,7 @@ describe('OAuth PKCE', () => {
     it('should validate verifier length', () => {
       // Store a verifier that is too short
       sessionStorage.setItem(`pkce_verifier_${PROVIDER}`, 'short');
-      
+
       const isValid = validatePKCEState(PROVIDER);
       expect(isValid).toBe(false);
     });
@@ -290,12 +290,16 @@ describe('OAuth PKCE', () => {
       expect(challenge).toMatch(/^[A-Za-z0-9\-_]+$/);
 
       // Step 2: Build auth URL
-      const authUrl = buildPKCEAuthUrl('https://example.com/authorize', {
-        client_id: 'test-client',
-        redirect_uri: 'http://localhost:3000/callback',
-        response_type: 'code',
-        state: 'test-state',
-      }, challenge);
+      const authUrl = buildPKCEAuthUrl(
+        'https://example.com/authorize',
+        {
+          client_id: 'test-client',
+          redirect_uri: 'http://localhost:3000/callback',
+          response_type: 'code',
+          state: 'test-state',
+        },
+        challenge,
+      );
       expect(authUrl).toContain('code_challenge=');
 
       // Step 3: Retrieve verifier for token exchange
@@ -324,12 +328,12 @@ describe('OAuth PKCE', () => {
 
     it('should reject invalid verifier', async () => {
       const challenge = await generateCodeChallenge('correct-verifier');
-      
+
       // Simulate attempting to verify with wrong verifier
       const wrongVerifier = 'wrong-verifier';
       const wrongHashBuffer = await crypto.subtle.digest(
         'SHA-256',
-        new TextEncoder().encode(wrongVerifier)
+        new TextEncoder().encode(wrongVerifier),
       );
       const wrongHashArray = Array.from(new Uint8Array(wrongHashBuffer));
       const wrongBinaryString = String.fromCharCode(...wrongHashArray);
@@ -365,7 +369,7 @@ describe('OAuth PKCE', () => {
         },
         clear: () => {
           if (!storageAvailable) throw new Error('Storage unavailable');
-          Object.keys(mockStorage).forEach(key => delete mockStorage[key]);
+          Object.keys(mockStorage).forEach((key) => delete mockStorage[key]);
         },
         key: (index: number) => null,
         length: 0,
@@ -373,13 +377,13 @@ describe('OAuth PKCE', () => {
 
       try {
         const verifier = generateCodeVerifier();
-        
+
         // Store should work initially
         expect(() => storeVerifier(verifier, PROVIDER)).not.toThrow();
-        
+
         // Simulate storage unavailable
         storageAvailable = false;
-        
+
         expect(() => storeVerifier(verifier, PROVIDER)).toThrow();
         expect(() => retrieveVerifier(PROVIDER)).not.toThrow();
       } finally {

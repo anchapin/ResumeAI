@@ -59,7 +59,7 @@ describe('export utilities', () => {
       const mockRemoveChild = vi.fn();
       const mockCreateObjectURL = vi.fn(() => 'blob:http://localhost');
       const mockRevokeObjectURL = vi.fn();
-      
+
       const mockAnchor = {
         href: '',
         download: '',
@@ -71,7 +71,7 @@ describe('export utilities', () => {
         if (tag === 'a') return mockAnchor as any;
         return document.createElement(tag);
       });
-      
+
       Object.defineProperty(window, 'URL', {
         value: {
           createObjectURL: mockCreateObjectURL,
@@ -80,8 +80,12 @@ describe('export utilities', () => {
         writable: true,
       });
 
-      const appendChildSpy = vi.spyOn(document.body, 'appendChild').mockImplementation(() => document.body);
-      const removeChildSpy = vi.spyOn(document.body, 'removeChild').mockImplementation(() => document.body);
+      const appendChildSpy = vi
+        .spyOn(document.body, 'appendChild')
+        .mockImplementation(() => document.body);
+      const removeChildSpy = vi
+        .spyOn(document.body, 'removeChild')
+        .mockImplementation(() => document.body);
 
       await exportToHTML(mockResumeData);
 
@@ -121,10 +125,7 @@ describe('export utilities', () => {
             endDate: '2012',
           },
         ],
-        skills: [
-          { name: 'Product Management' },
-          { name: 'Agile' },
-        ],
+        skills: [{ name: 'Product Management' }, { name: 'Agile' }],
       };
 
       const mockAnchor = {
@@ -138,7 +139,7 @@ describe('export utilities', () => {
         if (tag === 'a') return mockAnchor as any;
         return document.createElement(tag);
       });
-      
+
       Object.defineProperty(window, 'URL', {
         value: {
           createObjectURL: vi.fn(() => 'blob:http://localhost'),
@@ -177,7 +178,7 @@ describe('export utilities', () => {
         if (tag === 'a') return mockAnchor as any;
         return document.createElement(tag);
       });
-      
+
       Object.defineProperty(window, 'URL', {
         value: {
           createObjectURL: vi.fn(() => 'blob:http://localhost'),
@@ -219,7 +220,7 @@ describe('export utilities', () => {
         if (tag === 'a') return mockAnchor as any;
         return document.createElement(tag);
       });
-      
+
       Object.defineProperty(window, 'URL', {
         value: {
           createObjectURL: vi.fn(() => 'blob:http://localhost'),

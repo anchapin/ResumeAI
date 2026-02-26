@@ -17,9 +17,7 @@ describe('ErrorDisplay Component', () => {
     const error = createMockError();
     const onDismiss = vi.fn();
 
-    render(
-      <ErrorDisplay error={error} onDismiss={onDismiss} />
-    );
+    render(<ErrorDisplay error={error} onDismiss={onDismiss} />);
 
     expect(screen.getByText('This is a user-friendly error message')).toBeInTheDocument();
   });
@@ -27,9 +25,7 @@ describe('ErrorDisplay Component', () => {
   it('should not render when error is null', () => {
     const onDismiss = vi.fn();
 
-    const { container } = render(
-      <ErrorDisplay error={null} onDismiss={onDismiss} />
-    );
+    const { container } = render(<ErrorDisplay error={null} onDismiss={onDismiss} />);
 
     expect(container.firstChild).toBeNull();
   });
@@ -39,9 +35,7 @@ describe('ErrorDisplay Component', () => {
     const error = createMockError();
     const onDismiss = vi.fn();
 
-    render(
-      <ErrorDisplay error={error} onDismiss={onDismiss} />
-    );
+    render(<ErrorDisplay error={error} onDismiss={onDismiss} />);
 
     const closeButton = screen.getByRole('button');
     await user.click(closeButton);
@@ -53,9 +47,7 @@ describe('ErrorDisplay Component', () => {
     const error = createMockError();
     const onDismiss = vi.fn();
 
-    render(
-      <ErrorDisplay error={error} onDismiss={onDismiss} autoDismissTime={100} />
-    );
+    render(<ErrorDisplay error={error} onDismiss={onDismiss} autoDismissTime={100} />);
 
     expect(screen.getByText('This is a user-friendly error message')).toBeInTheDocument();
 
@@ -63,7 +55,7 @@ describe('ErrorDisplay Component', () => {
       () => {
         expect(onDismiss).toHaveBeenCalled();
       },
-      { timeout: 200 }
+      { timeout: 200 },
     );
   });
 
@@ -71,15 +63,13 @@ describe('ErrorDisplay Component', () => {
     const error = createMockError();
     const onDismiss = vi.fn();
 
-    render(
-      <ErrorDisplay error={error} onDismiss={onDismiss} autoDismissTime={0} />
-    );
+    render(<ErrorDisplay error={error} onDismiss={onDismiss} autoDismissTime={0} />);
 
     await waitFor(
       () => {
         expect(onDismiss).not.toHaveBeenCalled();
       },
-      { timeout: 200 }
+      { timeout: 200 },
     );
   });
 
@@ -90,9 +80,7 @@ describe('ErrorDisplay Component', () => {
     const error = createMockError();
     const onDismiss = vi.fn();
 
-    render(
-      <ErrorDisplay error={error} onDismiss={onDismiss} />
-    );
+    render(<ErrorDisplay error={error} onDismiss={onDismiss} />);
 
     expect(screen.getByText('Test error message')).toBeInTheDocument();
 
@@ -103,9 +91,7 @@ describe('ErrorDisplay Component', () => {
     const error = createMockError(ErrorType.NETWORK);
     const onDismiss = vi.fn();
 
-    const { container } = render(
-      <ErrorDisplay error={error} onDismiss={onDismiss} />
-    );
+    const { container } = render(<ErrorDisplay error={error} onDismiss={onDismiss} />);
 
     const icon = container.querySelector('[role="img"], .material-symbols-outlined');
     expect(icon).toBeInTheDocument();
@@ -115,16 +101,12 @@ describe('ErrorDisplay Component', () => {
     const onDismiss = vi.fn();
     let error = createMockError(ErrorType.NETWORK);
 
-    const { rerender } = render(
-      <ErrorDisplay error={error} onDismiss={onDismiss} />
-    );
+    const { rerender } = render(<ErrorDisplay error={error} onDismiss={onDismiss} />);
 
     expect(screen.getByText('This is a user-friendly error message')).toBeInTheDocument();
 
     error = createMockError(ErrorType.VALIDATION);
-    rerender(
-      <ErrorDisplay error={error} onDismiss={onDismiss} />
-    );
+    rerender(<ErrorDisplay error={error} onDismiss={onDismiss} />);
 
     expect(screen.getByText('This is a user-friendly error message')).toBeInTheDocument();
   });
@@ -134,7 +116,7 @@ describe('ErrorDisplay Component', () => {
 
     // Validation error (warning)
     const { container: validationContainer } = render(
-      <ErrorDisplay error={createMockError(ErrorType.VALIDATION)} onDismiss={onDismiss} />
+      <ErrorDisplay error={createMockError(ErrorType.VALIDATION)} onDismiss={onDismiss} />,
     );
 
     const validationAlert = validationContainer.querySelector('[role="alert"], .animate-in');
@@ -142,7 +124,7 @@ describe('ErrorDisplay Component', () => {
 
     // Auth error (critical)
     const { container: authContainer } = render(
-      <ErrorDisplay error={createMockError(ErrorType.AUTH)} onDismiss={onDismiss} />
+      <ErrorDisplay error={createMockError(ErrorType.AUTH)} onDismiss={onDismiss} />,
     );
 
     const authAlert = authContainer.querySelector('[role="alert"], .animate-in');

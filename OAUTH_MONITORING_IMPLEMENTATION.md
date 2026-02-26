@@ -9,6 +9,7 @@ Comprehensive monitoring and alerting system for OAuth-related issues has been i
 ### 1. Core Monitoring System (`resume-api/monitoring/oauth_monitor.py`)
 
 **Key Features:**
+
 - **OAuthEvent**: Data class for recording OAuth operations
   - Timestamp, provider, event type, status
   - User ID, error codes, error messages
@@ -22,12 +23,14 @@ Comprehensive monitoring and alerting system for OAuth-related issues has been i
   - Event cleanup and memory management
 
 **Metrics Tracked:**
+
 - Success/failure/rate-limit/token-expiration events
 - Average response times
 - Error code aggregation and breakdown
 - Provider-specific metrics
 
 **Anomaly Detection:**
+
 - High failure rates (>15% threshold)
 - Rate limiting hits (5+ threshold)
 - Token expiration spikes (3+ threshold)
@@ -106,10 +109,12 @@ Existing alert rules now include comprehensive OAuth monitoring:
 Comprehensive guide for integrating monitoring into existing GitHub OAuth routes:
 
 **Helper Functions Needed:**
+
 - `_get_client_ip()` - Extract IP from request
 - `_record_oauth_event()` - Record events to monitor
 
 **Integration Points:**
+
 1. `exchange_code_for_token()` - Track token exchange
 2. `fetch_github_user()` - Track user profile fetches
 3. `github_oauth_callback()` - Track callback processing
@@ -118,6 +123,7 @@ Comprehensive guide for integrating monitoring into existing GitHub OAuth routes
 6. `github_status()` - Track status checks
 
 **Implementation Pattern:**
+
 ```python
 start_time = time.time()
 try:
@@ -146,11 +152,13 @@ except Exception as e:
 Comprehensive test coverage including:
 
 **Test Classes:**
+
 - `TestOAuthEvent` - Event data structure tests
 - `TestOAuthMonitor` - Core monitoring functionality
 - `TestOAuthMonitorIntegration` - End-to-end scenarios
 
 **Test Cases:**
+
 - Event creation and recording
 - Metrics snapshot generation
 - Success rate calculation
@@ -162,6 +170,7 @@ Comprehensive test coverage including:
 - Monitor reset
 
 **Test Data Scenarios:**
+
 - Single event recording
 - Multiple events with mixed status
 - Error breakdown tracking
@@ -172,6 +181,7 @@ Comprehensive test coverage including:
 ### 6. Validation Script (`resume-api/validate_oauth_monitoring.py`)
 
 Standalone validation script for testing without pytest:
+
 - Tests all core functionality
 - Validates metrics calculation
 - Checks anomaly detection
@@ -181,6 +191,7 @@ Standalone validation script for testing without pytest:
 ## Key Metrics Exposed
 
 ### Time-Series Metrics
+
 - `http_requests_total` - Total HTTP requests
 - `http_request_duration_seconds` - Request latency histogram
 - `http_errors_total` - Error counts by status
@@ -193,6 +204,7 @@ Standalone validation script for testing without pytest:
 - `oauth_active_connections_gauge` - Active connections
 
 ### Aggregated Metrics
+
 - Success/failure rates with percentage
 - Average response times
 - Error code distributions
@@ -203,6 +215,7 @@ Standalone validation script for testing without pytest:
 ## Configuration
 
 ### Environment Variables (Optional)
+
 ```bash
 # Alert checking interval
 ALERT_CHECK_INTERVAL=30
@@ -215,6 +228,7 @@ ALERTING_WEBHOOK_URL=https://hooks.slack.com/services/...
 ```
 
 ### Thresholds (Configurable in Code)
+
 ```python
 oauth_monitor = OAuthMonitor()
 oauth_monitor.failure_rate_threshold = 0.15  # 15%
@@ -241,11 +255,13 @@ oauth_monitor.suspicious_ip_window = 5       # 5 minutes
 ### 1. Register Metrics Routes in `main.py`
 
 Add import:
+
 ```python
 from api.metrics_routes import router as metrics_router
 ```
 
 Add to router registration:
+
 ```python
 app.include_router(metrics_router)
 ```
@@ -253,6 +269,7 @@ app.include_router(metrics_router)
 ### 2. Integrate Monitoring into GitHub Routes
 
 Follow the integration guide in `OAUTH_MONITORING_INTEGRATION.md`:
+
 - Add monitoring imports
 - Add helper functions
 - Insert event recording calls at key points
@@ -309,21 +326,25 @@ curl http://localhost:8000/metrics/prometheus
 ## Architecture Decisions
 
 ### Event Storage
+
 - **In-Memory List**: Fast recording, no DB overhead
 - **Thread-Safe**: RLock for concurrent access
 - **Auto-Cleanup**: Events older than 24 hours removed
 
 ### Metrics Calculation
+
 - **Time Windows**: 5, 15, 60 minutes for different granularities
 - **Lazy Calculation**: Snapshots generated on-demand
 - **Caching Optional**: Can cache results for performance
 
 ### Anomaly Detection
+
 - **Threshold-Based**: Configurable thresholds per rule
 - **Multi-Window**: Checks multiple time windows
 - **Composite**: Combines multiple signal types
 
 ### Alert Management
+
 - **Cooldown Period**: 5-minute cooldown to prevent alert spam
 - **Severity Levels**: HIGH, MEDIUM for proper routing
 - **Extensible Handlers**: Supports logging, webhooks, etc.
@@ -372,6 +393,7 @@ curl http://localhost:8000/metrics/prometheus
 ## Support
 
 For questions or issues with the monitoring system:
+
 1. Check OAUTH_MONITORING_INTEGRATION.md for integration help
 2. Review test_oauth_monitoring.py for usage examples
 3. Check main.py for endpoint configuration

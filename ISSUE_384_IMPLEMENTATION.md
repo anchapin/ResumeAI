@@ -12,6 +12,7 @@ Implemented a comprehensive, centralized error handling system for the ResumeAI 
 ## What Was Implemented
 
 ### 1. **Core Error Handler Service** (`utils/errorHandler.ts`)
+
 - **Features:**
   - Singleton pattern for global error management
   - Automatic error type classification (Network, API, Validation, Auth, Permission, NotFound, Timeout, Server, Unknown)
@@ -29,6 +30,7 @@ Implemented a comprehensive, centralized error handling system for the ResumeAI 
   - `getErrorsByType(type)` - Filter errors by type
 
 ### 2. **Error Display Component** (`components/ErrorDisplay.tsx`)
+
 - **Features:**
   - User-friendly error UI with icons and colors
   - Severity-based styling (warning vs error vs critical)
@@ -48,6 +50,7 @@ Implemented a comprehensive, centralized error handling system for the ResumeAI 
   - Unknown → ❌ error
 
 ### 3. **useGlobalErrors Hook** (`hooks/useGlobalErrors.ts`)
+
 - **Features:**
   - Easy integration into React components
   - Automatic subscription/unsubscription
@@ -62,12 +65,14 @@ Implemented a comprehensive, centralized error handling system for the ResumeAI 
   ```
 
 ### 4. **Error Test Panel** (`components/ErrorTestPanel.tsx`)
+
 - Interactive component for testing all error types
 - Buttons to trigger each error scenario
 - Console utilities for viewing error history
 - Useful for development and QA testing
 
 ### 5. **Comprehensive Tests** (52 tests total)
+
 - **errorHandler.test.ts** (29 tests)
   - Error parsing for all types
   - Error history management
@@ -88,6 +93,7 @@ Implemented a comprehensive, centralized error handling system for the ResumeAI 
   - Development mode display
 
 ### 6. **Integration with App**
+
 - `ErrorDisplay` component rendered in App.tsx
 - `useGlobalErrors` hook integrated for state management
 - Global error listeners initialized on app startup
@@ -115,6 +121,7 @@ ResumeAI/
 ## Error Classification System
 
 ### Status Codes Handled
+
 ```
 Network Errors
 ├── 0: Connection refused, CORS, offline
@@ -148,34 +155,38 @@ Unknown Errors
 
 ## User-Friendly Messages
 
-| Error Type | User Message |
-|------------|--------------|
-| Network | "Unable to connect to the server. Please check your internet connection." |
-| Validation | "Please check your input and try again." |
-| Auth | "Your session has expired. Please log in again." |
-| Permission | "You do not have permission to perform this action." |
-| NotFound | "The requested item could not be found." |
-| Timeout | "The request took too long. Please try again." |
-| Server | "An error occurred on the server. Our team has been notified." |
-| Unknown | "An unexpected error occurred. Please try again or contact support." |
+| Error Type | User Message                                                              |
+| ---------- | ------------------------------------------------------------------------- |
+| Network    | "Unable to connect to the server. Please check your internet connection." |
+| Validation | "Please check your input and try again."                                  |
+| Auth       | "Your session has expired. Please log in again."                          |
+| Permission | "You do not have permission to perform this action."                      |
+| NotFound   | "The requested item could not be found."                                  |
+| Timeout    | "The request took too long. Please try again."                            |
+| Server     | "An error occurred on the server. Our team has been notified."            |
+| Unknown    | "An unexpected error occurred. Please try again or contact support."      |
 
 ## Key Acceptance Criteria Met
 
 ✅ **User sees friendly error message for all error types**
+
 - Error messages are mapped to human-readable text
 - No technical jargon or stack traces shown to users
 
 ✅ **No console errors with raw exceptions**
+
 - Global error listeners catch all uncaught errors
 - Error handler processes and sanitizes errors
 - Development logging with `[GlobalError]` prefix
 
 ✅ **Error boundary catches unhandled exceptions**
+
 - ErrorBoundary component wraps entire app
 - Catches React component render errors
 - Displays fallback UI with retry option
 
 ✅ **Error display UI included**
+
 - ErrorDisplay component with professional styling
 - Color-coded by severity
 - Icons for quick visual identification
@@ -206,6 +217,7 @@ Output: dist/index.html (3.70 kB)
 ## How to Test
 
 ### Manual Testing
+
 1. Open browser dev tools
 2. Click "Import" or trigger any API call
 3. Intentionally cause errors:
@@ -214,11 +226,13 @@ Output: dist/index.html (3.70 kB)
    - Server error: Return 500 from API
 
 ### Automated Testing
+
 ```bash
 npm test -- utils/errorHandler.test.ts hooks/useGlobalErrors.test.ts components/ErrorDisplay.test.tsx
 ```
 
 ### Interactive Testing
+
 1. Uncomment ErrorTestPanel in App.tsx
 2. Click buttons to trigger different error types
 3. Verify messages and styling
@@ -227,12 +241,13 @@ npm test -- utils/errorHandler.test.ts hooks/useGlobalErrors.test.ts components/
 ## Usage Examples
 
 ### In Components
+
 ```tsx
 import { useGlobalErrors } from '../hooks/useGlobalErrors';
 
 function MyComponent() {
   const { currentError, dismissError } = useGlobalErrors();
-  
+
   return (
     <div>
       {/* ErrorDisplay is global, handled by App */}
@@ -243,6 +258,7 @@ function MyComponent() {
 ```
 
 ### Direct Error Handling
+
 ```tsx
 import { errorHandler } from '../utils/errorHandler';
 
@@ -258,6 +274,7 @@ async function fetchData() {
 ```
 
 ### Validation Errors
+
 ```tsx
 import { createValidationError } from '../utils/errorHandler';
 
@@ -271,15 +288,17 @@ errorHandler.handleError(error);
 ## Error Reporting Infrastructure
 
 The system is ready for backend error reporting:
+
 ```tsx
 // Uncomment in errorHandler.ts reportError() method
-await fetch('/api/errors', { 
-  method: 'POST', 
-  body: JSON.stringify(payload) 
+await fetch('/api/errors', {
+  method: 'POST',
+  body: JSON.stringify(payload),
 });
 ```
 
 Available for integration with:
+
 - Sentry
 - LogRocket
 - Custom backend error tracking
@@ -355,6 +374,7 @@ npx tsc --noEmit
 ## Summary
 
 The centralized error handling system is **production-ready** and provides:
+
 - **User-friendly error messages** for all error scenarios
 - **Global error capture** without breaking the app
 - **Professional error UI** with severity-based styling

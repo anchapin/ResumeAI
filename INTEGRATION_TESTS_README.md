@@ -1,6 +1,7 @@
 # Integration Tests - Quick Reference
 
 ## Overview
+
 Comprehensive integration tests for frontend-backend API workflows covering critical user scenarios.
 
 **Location:** `tests/integration/`
@@ -10,21 +11,25 @@ Comprehensive integration tests for frontend-backend API workflows covering crit
 ## Quick Start
 
 ### Run All Integration Tests
+
 ```bash
 npm test -- --run tests/integration/
 ```
 
 ### Run Specific Test File
+
 ```bash
 npm test -- --run tests/integration/frontend-backend-integration.test.ts
 ```
 
 ### Run with Verbose Output
+
 ```bash
 npm test -- --run --reporter=verbose tests/integration/
 ```
 
 ### Watch Mode (Development)
+
 ```bash
 npm test tests/integration/
 ```
@@ -32,17 +37,20 @@ npm test tests/integration/
 ## What's Tested
 
 ### ✅ PDF Rendering
+
 - Generate PDF from resume data
 - Support multiple variants (standard, ATS-optimized, creative)
 - Cache PDF generation results
 - Handle invalid data gracefully
 
 ### ✅ Resume CRUD Operations
+
 - Create, Read, Update, Delete resumes
 - List all saved resumes
 - Handle concurrent operations
 
 ### ✅ OAuth GitHub Flow
+
 - Initiate OAuth flow
 - Handle authorization callback
 - Store and manage tokens
@@ -50,22 +58,26 @@ npm test tests/integration/
 - Fetch user profiles
 
 ### ✅ Resume Tailoring
+
 - Tailor resume to job descriptions
 - Generate match scores
 - Provide tailoring suggestions
 
 ### ✅ Resume Variants
+
 - Generate multiple resume variants
 - Different formats and layouts
 - Direct download URLs
 
 ### ✅ Error Handling
+
 - Invalid data validation
 - Network error recovery
 - Missing required fields
 - API key validation
 
 ### ✅ Complex Workflows
+
 - Complete end-to-end resume workflow
 - Parallel operations
 - Resume cloning and tailoring
@@ -85,15 +97,17 @@ tests/integration/
 ## Key Test Utilities
 
 ### Create Mock Resume
+
 ```typescript
 import { createMockResume } from './tests/integration/test-utils';
 
 const resume = createMockResume('My Resume', {
-  work: [{ company: 'Acme Corp', position: 'Engineer' }]
+  work: [{ company: 'Acme Corp', position: 'Engineer' }],
 });
 ```
 
 ### Setup Test Context
+
 ```typescript
 import { setupTestAPI, cleanupTestAPI } from './tests/integration/test-utils';
 
@@ -109,6 +123,7 @@ afterEach(async () => {
 ```
 
 ### Use API Client
+
 ```typescript
 // Render PDF
 const pdfRes = await context.apiClient.renderPDF(resumeData);
@@ -135,6 +150,7 @@ The integration tests automatically run in GitHub Actions:
 ```
 
 **Triggers:**
+
 - ✅ Push to `main` or `develop` branches
 - ✅ Pull requests to `main`
 - ✅ File changes to TypeScript, TSX, or test files
@@ -181,31 +197,31 @@ All tests use the **JSON Resume Standard** format:
 ```typescript
 interface ResumeData {
   basics?: {
-    name?: string
-    email?: string
-    phone?: string
-    url?: string
-    label?: string
-    summary?: string
-  }
+    name?: string;
+    email?: string;
+    phone?: string;
+    url?: string;
+    label?: string;
+    summary?: string;
+  };
   work?: Array<{
-    company?: string
-    position?: string
-    startDate?: string
-    endDate?: string
-    summary?: string
-  }>
+    company?: string;
+    position?: string;
+    startDate?: string;
+    endDate?: string;
+    summary?: string;
+  }>;
   education?: Array<{
-    institution?: string
-    area?: string
-    studyType?: string
-    startDate?: string
-    endDate?: string
-  }>
+    institution?: string;
+    area?: string;
+    studyType?: string;
+    startDate?: string;
+    endDate?: string;
+  }>;
   skills?: Array<{
-    name?: string
-    keywords?: string[]
-  }>
+    name?: string;
+    keywords?: string[];
+  }>;
   // ... other sections
 }
 ```
@@ -226,11 +242,11 @@ describe('Resume Save and Load', () => {
 
   it('should save and retrieve resume data', async () => {
     const resumeData = createMockResume('Test Resume');
-    
+
     // Create
     const createRes = await context.apiClient.createResume(resumeData);
     expect(createRes.status).toBe(201);
-    
+
     // Retrieve
     const getRes = await context.apiClient.getResume(createRes.data.id);
     expect(getRes.status).toBe(200);
@@ -242,21 +258,25 @@ describe('Resume Save and Load', () => {
 ## Debugging Tips
 
 ### Enable Detailed Output
+
 ```bash
 npm test -- --run --reporter=verbose tests/integration/
 ```
 
 ### Run Single Test
+
 ```bash
 npm test -- --run -t "should render PDF from resume data"
 ```
 
 ### Check Coverage
+
 ```bash
 npm test -- --run tests/integration/ --coverage
 ```
 
 ### Watch Mode for Development
+
 ```bash
 npm test tests/integration/ -- --watch
 ```
@@ -264,16 +284,19 @@ npm test tests/integration/ -- --watch
 ## Common Issues
 
 ### Tests Not Running
+
 - Ensure you're in the project root: `/home/alex/Projects/ResumeAI`
 - Check Node.js version: `node --version` (requires v22+)
 - Reinstall dependencies: `npm ci`
 
 ### Import Errors
+
 - Check imports use relative paths: `import { } from './test-utils'`
 - Verify TypeScript configuration in `tsconfig.json`
 - Run type check: `npx tsc --noEmit`
 
 ### Mock API Issues
+
 - Mock client is stateless (no persistence between test runs)
 - Each test gets fresh context via `setupTestAPI()`
 - Cleanup happens automatically in `afterEach()`
@@ -296,6 +319,7 @@ npm test tests/integration/ -- --watch
 ## Support
 
 For questions or issues:
+
 1. Check test output for specific error messages
 2. Review test file comments and examples
 3. Consult the mock API client implementation

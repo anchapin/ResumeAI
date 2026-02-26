@@ -14,6 +14,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Development Commands
 
 ### Frontend
+
 ```bash
 # Install dependencies
 npm install
@@ -32,6 +33,7 @@ npm run preview
 ```
 
 ### Backend
+
 ```bash
 # Start development server (in resume-api/)
 cd resume-api && python main.py
@@ -41,6 +43,7 @@ cd resume-api && PORT=8000 python main.py
 ```
 
 ### Docker
+
 ```bash
 # Build API service image
 cd resume-api && docker build -t resume-api:latest .
@@ -85,12 +88,14 @@ docker-compose --env-file .env up
 ## Key Architecture Decisions
 
 ### Frontend State Management
+
 - Uses `localStorage` for user profile persistence (MVP approach)
 - Client-side navigation via React state in `App.tsx` (not React Router)
 - API key stored in `localStorage` under `RESUMEAI_API_KEY` key
 - Future: Consider IndexedDB or user API for multi-device sync
 
 ### API Architecture
+
 - **Legacy Endpoints** (mock server in `server.py`): `/generate/preview`, `/generate/pdf`, `/generate/package`
 - **V1 API** (production): `/v1/render/pdf`, `/v1/tailor`, `/v1/variants`
 - **Authentication:** API Key middleware in `resume-api/config/dependencies.py`
@@ -99,6 +104,7 @@ docker-compose --env-file .env up
   - Development Mode: Set `REQUIRE_API_KEY=false` to disable
 
 ### Backend Modules
+
 - **FastAPI:** Web framework with automatic OpenAPI docs (`/docs`)
 - **Pydantic:** Request/response validation with `pydantic_settings.BaseSettings`
 - **Resume CLI Integration:** Vendor code in `resume-api/lib/cli/` wraps Python CLI library
@@ -108,6 +114,7 @@ docker-compose --env-file .env up
 ### Environment Configuration
 
 **Frontend (.env.local):**
+
 ```bash
 GEMINI_API_KEY=your_gemini_api_key_here
 VITE_API_URL=http://127.0.0.1:8000  # Local development
@@ -115,6 +122,7 @@ VITE_API_URL=http://127.0.0.1:8000  # Local development
 ```
 
 **Backend (resume-api/.env):**
+
 ```bash
 # AI Configuration
 AI_PROVIDER=openai              # openai, claude, gemini
@@ -190,12 +198,14 @@ See `MVP_ROADMAP.md` for detailed deployment strategy.
 ## Git Workflow
 
 All new commits should be made on **feature branches**, not directly to `main`. This enables:
+
 - Isolated development for each feature
 - Easier PR creation (feature branch vs main)
 - Parallel development without branch conflicts
 - Clear separation of concerns
 
 **Creating a Feature Branch:**
+
 ```bash
 # Create a new feature branch from main
 git checkout main
@@ -211,12 +221,14 @@ git push origin feature/issue-XX
 ```
 
 **Creating a Pull Request:**
+
 ```bash
 # Create PR from feature branch to main
 gh pr create --base main --head feature/issue-XX --title "..." --body "Closes #XX"
 ```
 
 **Completing a Feature:**
+
 ```bash
 # Once PR is merged, the branch can be deleted
 git checkout main
@@ -225,14 +237,17 @@ git branch -d feature/issue-XX
 ```
 
 **Never merge feature branches directly to main:**
+
 - ❌ Don't use `git merge feature/XX` - this bypasses PR review
 - ❌ Don't push directly to main without PR - loses commit history
 - ❌ Don't delete feature branches before PR merges
 
 **Main Branch Purpose:**
+
 - The `main` branch should only receive updates via merged PRs
 - This ensures every feature goes through code review
 - Maintains clean commit history
 
 **Exception:**
+
 - Hotfixes that need immediate deployment may be committed directly to main temporarily, but should still go through PR process for tracking.

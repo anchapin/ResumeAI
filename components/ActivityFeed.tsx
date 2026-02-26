@@ -22,8 +22,10 @@ const ActivityFeed: React.FC<ActivityFeedProps> = ({ activities, loading }) => {
     if (diffMinutes < 60) return `${diffMinutes} minute${diffMinutes !== 1 ? 's' : ''} ago`;
     if (diffHours < 24) return `${diffHours} hour${diffHours !== 1 ? 's' : ''} ago`;
     if (diffDays < 7) return `${diffDays} day${diffDays !== 1 ? 's' : ''} ago`;
-    if (diffDays < 30) return `${Math.floor(diffDays / 7)} week${Math.floor(diffDays / 7) !== 1 ? 's' : ''} ago`;
-    if (diffDays < 365) return `${Math.floor(diffDays / 30)} month${Math.floor(diffDays / 30) !== 1 ? 's' : ''} ago`;
+    if (diffDays < 30)
+      return `${Math.floor(diffDays / 7)} week${Math.floor(diffDays / 7) !== 1 ? 's' : ''} ago`;
+    if (diffDays < 365)
+      return `${Math.floor(diffDays / 30)} month${Math.floor(diffDays / 30) !== 1 ? 's' : ''} ago`;
     return `${Math.floor(diffDays / 365)} year${Math.floor(diffDays / 365) !== 1 ? 's' : ''} ago`;
   };
 
@@ -79,7 +81,7 @@ const ActivityFeed: React.FC<ActivityFeedProps> = ({ activities, loading }) => {
     if (!name) return '??';
     return name
       .split(' ')
-      .map(part => part.charAt(0))
+      .map((part) => part.charAt(0))
       .join('')
       .toUpperCase()
       .slice(0, 2);
@@ -98,13 +100,9 @@ const ActivityFeed: React.FC<ActivityFeedProps> = ({ activities, loading }) => {
   if (activities.length === 0) {
     return (
       <div className="text-center py-8 bg-slate-50 rounded-xl">
-        <span className="material-symbols-outlined text-slate-300 text-6xl mb-4">
-          history
-        </span>
+        <span className="material-symbols-outlined text-slate-300 text-6xl mb-4">history</span>
         <p className="text-slate-500 font-medium mb-2">No activity yet</p>
-        <p className="text-slate-400 text-sm">
-          Recent team actions will appear here
-        </p>
+        <p className="text-slate-400 text-sm">Recent team actions will appear here</p>
       </div>
     );
   }
@@ -122,15 +120,10 @@ const ActivityFeed: React.FC<ActivityFeedProps> = ({ activities, loading }) => {
           const isLast = index === activities.length - 1;
 
           return (
-            <div
-              key={activity.id}
-              className={`relative flex gap-4 ${isLast ? '' : 'mb-4'}`}
-            >
+            <div key={activity.id} className={`relative flex gap-4 ${isLast ? '' : 'mb-4'}`}>
               {/* Timeline dot */}
               <div className="w-10 h-10 rounded-full bg-white border-2 border-slate-200 flex items-center justify-center flex-shrink-0 z-10">
-                <span className={`material-symbols-outlined text-[20px] ${color}`}>
-                  {icon}
-                </span>
+                <span className={`material-symbols-outlined text-[20px] ${color}`}>{icon}</span>
               </div>
 
               {/* Activity content */}
@@ -147,9 +140,7 @@ const ActivityFeed: React.FC<ActivityFeedProps> = ({ activities, loading }) => {
                 </div>
 
                 {activity.description && (
-                  <p className="text-sm text-slate-600 ml-8">
-                    {activity.description}
-                  </p>
+                  <p className="text-sm text-slate-600 ml-8">{activity.description}</p>
                 )}
 
                 <p className="text-xs text-slate-400 ml-8 mt-1">

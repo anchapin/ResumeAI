@@ -21,12 +21,9 @@ const formatCurrency = (amount: number, currency: string = 'USD') => {
  *
  * Displays side-by-side comparison of job offers with scores and recommendations
  */
-export const OfferComparison: React.FC<OfferComparisonProps> = ({
-  comparison,
-  onExport,
-}) => {
+export const OfferComparison: React.FC<OfferComparisonProps> = ({ comparison, onExport }) => {
   const [activeTab, setActiveTab] = useState<'overview' | 'details' | 'analysis'>('overview');
-  const topOffer = comparison.offers.find(o => o.id === comparison.recommendation.topOfferId);
+  const topOffer = comparison.offers.find((o) => o.id === comparison.recommendation.topOfferId);
 
   const getScoreColor = (score: number, max: number = 100) => {
     const percentage = (score / max) * 100;
@@ -89,7 +86,11 @@ export const OfferComparison: React.FC<OfferComparisonProps> = ({
                     <p className="font-bold">{topOffer.companyName}</p>
                     <p className="text-white/80">{topOffer.jobTitle}</p>
                     <p className="text-white/90 mt-1 font-bold text-lg">
-                      {formatCurrency(topOffer.baseSalary + (topOffer.bonus || 0), topOffer.currency)}/year
+                      {formatCurrency(
+                        topOffer.baseSalary + (topOffer.bonus || 0),
+                        topOffer.currency,
+                      )}
+                      /year
                     </p>
                   </div>
                 )}
@@ -102,21 +103,25 @@ export const OfferComparison: React.FC<OfferComparisonProps> = ({
             <h4 className="font-bold text-slate-900 mb-4">Score Comparison</h4>
             <div className="space-y-4">
               {comparison.scores.map((score) => {
-                const offer = comparison.offers.find(o => o.id === score.offerId);
+                const offer = comparison.offers.find((o) => o.id === score.offerId);
                 if (!offer) return null;
 
                 return (
                   <div key={score.offerId} className="space-y-2">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <span className={`w-3 h-3 rounded-full ${
-                          score.offerId === comparison.recommendation.topOfferId
-                            ? 'bg-green-500'
-                            : 'bg-slate-300'
-                        }`} />
+                        <span
+                          className={`w-3 h-3 rounded-full ${
+                            score.offerId === comparison.recommendation.topOfferId
+                              ? 'bg-green-500'
+                              : 'bg-slate-300'
+                          }`}
+                        />
                         <span className="font-medium text-slate-900">{offer.companyName}</span>
                       </div>
-                      <div className={`px-3 py-1 rounded-full text-sm font-bold ${getScoreColor(score.totalScore)}`}>
+                      <div
+                        className={`px-3 py-1 rounded-full text-sm font-bold ${getScoreColor(score.totalScore)}`}
+                      >
                         {score.totalScore.toFixed(1)}
                       </div>
                     </div>
@@ -125,11 +130,17 @@ export const OfferComparison: React.FC<OfferComparisonProps> = ({
                     <div className="space-y-1">
                       {Object.entries(score.breakdown).map(([key, value]) => (
                         <div key={key} className="flex items-center gap-2">
-                          <span className="w-20 text-xs text-slate-600 capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}</span>
+                          <span className="w-20 text-xs text-slate-600 capitalize">
+                            {key.replace(/([A-Z])/g, ' $1').trim()}
+                          </span>
                           <div className="flex-1 h-4 bg-slate-100 rounded-full overflow-hidden">
                             <div
                               className={`h-full ${
-                                value > 20 ? 'bg-primary-500' : value > 10 ? 'bg-primary-400' : 'bg-primary-300'
+                                value > 20
+                                  ? 'bg-primary-500'
+                                  : value > 10
+                                    ? 'bg-primary-400'
+                                    : 'bg-primary-300'
                               }`}
                               style={{ width: `${(value / 30) * 100}%` }}
                             />
@@ -169,8 +180,10 @@ export const OfferComparison: React.FC<OfferComparisonProps> = ({
             <table className="w-full">
               <thead className="bg-slate-50 border-b border-slate-200">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wide">Feature</th>
-                  {comparison.offers.map(offer => (
+                  <th className="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wide">
+                    Feature
+                  </th>
+                  {comparison.offers.map((offer) => (
                     <th
                       key={offer.id}
                       className={`px-4 py-3 text-left text-xs font-bold uppercase tracking-wide ${
@@ -187,7 +200,7 @@ export const OfferComparison: React.FC<OfferComparisonProps> = ({
               <tbody className="divide-y divide-slate-100">
                 <tr>
                   <td className="px-4 py-3 text-sm text-slate-600 font-medium">Job Title</td>
-                  {comparison.offers.map(offer => (
+                  {comparison.offers.map((offer) => (
                     <td
                       key={offer.id}
                       className={`px-4 py-3 text-sm text-slate-900 ${
@@ -200,7 +213,7 @@ export const OfferComparison: React.FC<OfferComparisonProps> = ({
                 </tr>
                 <tr>
                   <td className="px-4 py-3 text-sm text-slate-600 font-medium">Location</td>
-                  {comparison.offers.map(offer => (
+                  {comparison.offers.map((offer) => (
                     <td
                       key={offer.id}
                       className={`px-4 py-3 text-sm text-slate-900 ${
@@ -213,7 +226,7 @@ export const OfferComparison: React.FC<OfferComparisonProps> = ({
                 </tr>
                 <tr>
                   <td className="px-4 py-3 text-sm text-slate-600 font-medium">Base Salary</td>
-                  {comparison.offers.map(offer => (
+                  {comparison.offers.map((offer) => (
                     <td
                       key={offer.id}
                       className={`px-4 py-3 text-sm font-bold text-slate-900 ${
@@ -226,7 +239,7 @@ export const OfferComparison: React.FC<OfferComparisonProps> = ({
                 </tr>
                 <tr>
                   <td className="px-4 py-3 text-sm text-slate-600 font-medium">Bonus</td>
-                  {comparison.offers.map(offer => (
+                  {comparison.offers.map((offer) => (
                     <td
                       key={offer.id}
                       className={`px-4 py-3 text-sm text-slate-900 ${
@@ -239,20 +252,24 @@ export const OfferComparison: React.FC<OfferComparisonProps> = ({
                 </tr>
                 <tr>
                   <td className="px-4 py-3 text-sm text-slate-600 font-medium">Equity</td>
-                  {comparison.offers.map(offer => (
+                  {comparison.offers.map((offer) => (
                     <td
                       key={offer.id}
                       className={`px-4 py-3 text-sm text-slate-900 ${
                         offer.id === comparison.recommendation.topOfferId ? 'bg-green-50/50' : ''
                       }`}
                     >
-                      {offer.equity ? `${offer.equity.type}: ${formatCurrency(offer.equity.value, offer.currency)}` : 'N/A'}
+                      {offer.equity
+                        ? `${offer.equity.type}: ${formatCurrency(offer.equity.value, offer.currency)}`
+                        : 'N/A'}
                     </td>
                   ))}
                 </tr>
                 <tr>
-                  <td className="px-4 py-3 text-sm text-slate-600 font-medium">Total Compensation</td>
-                  {comparison.offers.map(offer => (
+                  <td className="px-4 py-3 text-sm text-slate-600 font-medium">
+                    Total Compensation
+                  </td>
+                  {comparison.offers.map((offer) => (
                     <td
                       key={offer.id}
                       className={`px-4 py-3 text-sm font-bold text-primary-600 ${
@@ -265,7 +282,7 @@ export const OfferComparison: React.FC<OfferComparisonProps> = ({
                 </tr>
                 <tr>
                   <td className="px-4 py-3 text-sm text-slate-600 font-medium">Benefits</td>
-                  {comparison.offers.map(offer => (
+                  {comparison.offers.map((offer) => (
                     <td
                       key={offer.id}
                       className={`px-4 py-3 text-sm text-slate-900 ${
@@ -285,8 +302,8 @@ export const OfferComparison: React.FC<OfferComparisonProps> = ({
       {/* Analysis Tab */}
       {activeTab === 'analysis' && (
         <div className="space-y-6">
-          {comparison.scores.map(score => {
-            const offer = comparison.offers.find(o => o.id === score.offerId);
+          {comparison.scores.map((score) => {
+            const offer = comparison.offers.find((o) => o.id === score.offerId);
             if (!offer) return null;
 
             const isTop = score.offerId === comparison.recommendation.topOfferId;
@@ -333,7 +350,9 @@ export const OfferComparison: React.FC<OfferComparisonProps> = ({
                       <ul className="space-y-1">
                         {score.pros.map((pro, idx) => (
                           <li key={idx} className="text-sm text-green-800 flex items-start gap-1">
-                            <span className="material-symbols-outlined text-[14px] mt-0.5">check</span>
+                            <span className="material-symbols-outlined text-[14px] mt-0.5">
+                              check
+                            </span>
                             {pro}
                           </li>
                         ))}
@@ -350,7 +369,9 @@ export const OfferComparison: React.FC<OfferComparisonProps> = ({
                       <ul className="space-y-1">
                         {score.cons.map((con, idx) => (
                           <li key={idx} className="text-sm text-red-800 flex items-start gap-1">
-                            <span className="material-symbols-outlined text-[14px] mt-0.5">close</span>
+                            <span className="material-symbols-outlined text-[14px] mt-0.5">
+                              close
+                            </span>
                             {con}
                           </li>
                         ))}

@@ -17,12 +17,13 @@ CLOSED → (5 failures) → OPEN → (60 seconds timeout) → HALF_OPEN → (1 f
 ```
 
 - **CLOSED**: Normal operation. All calls pass through. Track failures.
-- **OPEN**: Service is failing. Immediately reject calls without attempting. 
+- **OPEN**: Service is failing. Immediately reject calls without attempting.
 - **HALF_OPEN**: Testing if service recovered. Allow limited calls to verify recovery.
 
 ### Configuration
 
 Default thresholds (per provider):
+
 ```python
 failure_threshold = 5      # Failures before opening circuit
 success_threshold = 2      # Successes in HALF_OPEN to close
@@ -32,18 +33,21 @@ timeout = 60               # Seconds before OPEN → HALF_OPEN
 ## Implementation Files
 
 ### Core Module
+
 - **`lib/utils/circuit_breaker.py`**: Circuit breaker implementation
   - `CircuitBreaker` class: Main circuit breaker logic
   - `CircuitBreakerOpen` exception: Raised when circuit is open
   - Global instances: `openai_breaker`, `claude_breaker`, `gemini_breaker`
 
 ### Integration
+
 - **`lib/utils/ai.py`**: AI providers integrated with circuit breakers
   - `OpenAIProvider.generate_response()`: Wrapped with circuit breaker
-  - `AnthropicProvider.generate_response()`: Wrapped with circuit breaker  
+  - `AnthropicProvider.generate_response()`: Wrapped with circuit breaker
   - `GeminiProvider.generate_response()`: Wrapped with circuit breaker
 
 ### Tests
+
 - **`tests/test_circuit_breaker.py`**: Comprehensive unit tests
   - State transitions
   - Threshold testing
@@ -121,22 +125,26 @@ claude_breaker.reset()
 ## State Transitions
 
 ### CLOSED → OPEN
+
 - Triggered when: `failure_count >= failure_threshold` (default: 5)
 - Behavior: Circuit opens, rejects subsequent calls immediately
 - Logging: WARNING level logged with failure count
 
 ### OPEN → HALF_OPEN
+
 - Triggered when: `timeout` seconds elapsed since opening (default: 60s)
 - Behavior: Circuit transitions on next call attempt, allowing test call
 - Logging: INFO level logged
 
 ### HALF_OPEN → CLOSED
+
 - Triggered when: `success_count >= success_threshold` consecutive successes (default: 2)
 - Behavior: Circuit closes, returns to normal operation
 - Logging: INFO level logged, service marked as recovered
 - Counters reset: `success_count = 0`, `failure_count = 0`
 
 ### HALF_OPEN → OPEN
+
 - Triggered when: Any failure occurs in HALF_OPEN state
 - Behavior: Circuit immediately reopens, resets timeout
 - Logging: WARNING level logged
@@ -209,6 +217,7 @@ python -m pytest tests/test_circuit_breaker.py -v
 ```
 
 Test categories:
+
 - **Basic functionality**: Initialization, successful calls
 - **Failure handling**: Accumulation, threshold triggering
 - **Open state**: Immediate rejection
@@ -221,6 +230,7 @@ Test categories:
 ## Configuration Guide
 
 ### For Production
+
 ```python
 # Conservative settings for critical services
 CircuitBreaker(
@@ -232,6 +242,7 @@ CircuitBreaker(
 ```
 
 ### For Development/Testing
+
 ```python
 # Aggressive settings for testing
 CircuitBreaker(
@@ -243,6 +254,7 @@ CircuitBreaker(
 ```
 
 ### For Graceful Degradation
+
 ```python
 # Balanced settings
 CircuitBreaker(
@@ -288,7 +300,7 @@ logger = logging.getLogger(__name__)
 class AIService:
     def __init__(self, api_key):
         self.provider = OpenAIProvider(api_key)
-        
+
     def generate_tailored_resume(self, resume, job_desc):
         """Generate resume with automatic fallback."""
         try:
@@ -302,7 +314,7 @@ class AIService:
         except Exception as e:
             logger.error(f"Generation failed: {e}")
             raise
-    
+
     def get_service_status(self):
         """Check service health."""
         state = openai_breaker.get_state()
@@ -317,16 +329,19 @@ class AIService:
 ## Troubleshooting
 
 ### Circuit Won't Close
+
 - Check that `success_threshold` is being reached in HALF_OPEN
 - Verify underlying service has actually recovered
 - Check timeout is appropriate for service recovery time
 
 ### Circuit Opens Too Quickly
+
 - Increase `failure_threshold` if service is unreliable
 - Reduce `failure_threshold` if you want faster failure detection
 - Consider transient errors vs. permanent failures
 
 ### Too Many Circuit Resets Needed
+
 - May indicate service is unstable
 - Consider increasing `timeout` for longer cooldown
 - Investigate underlying service issues

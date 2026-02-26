@@ -9,6 +9,7 @@ All resume-processing endpoints have been updated with input validation and LaTe
 ### 1. POST /v1/render/pdf
 
 **What Changed:**
+
 - Added validation of resume data before PDF generation
 - Added validation of variant name
 - Added LaTeX escaping for all resume fields
@@ -16,6 +17,7 @@ All resume-processing endpoints have been updated with input validation and LaTe
 **Code Location:** `api/routes.py`, lines 102-119
 
 **Changes:**
+
 ```python
 # BEFORE
 resume_dict = body.resume_data.model_dump(exclude_none=True)
@@ -31,12 +33,14 @@ if not body.variant or len(body.variant) > 100:
 ```
 
 **Error Handling:**
+
 - Returns 400 Bad Request if validation fails
 - Returns 500 Internal Server Error if PDF generation fails
 
 ### 2. POST /v1/tailor
 
 **What Changed:**
+
 - Added validation of resume data before tailoring
 - Added validation of job description (length limit: 50,000 chars)
 - Added validation of company_name (length limit: 500 chars)
@@ -46,6 +50,7 @@ if not body.variant or len(body.variant) > 100:
 **Code Location:** `api/routes.py`, lines 177-209
 
 **Changes:**
+
 ```python
 # BEFORE
 resume_dict = body.resume_data.model_dump(exclude_none=True)
@@ -70,18 +75,21 @@ tailored_dict = validate_resume_data(tailored_dict)
 ```
 
 **Error Handling:**
+
 - Returns 400 Bad Request for validation errors
 - Returns 500 Internal Server Error for tailoring failures
 
 ### 3. POST /resumes (Create Resume)
 
 **What Changed:**
+
 - Added validation of resume data before database storage
 - Data is validated and escaped before being stored
 
 **Code Location:** `api/advanced_routes.py`, lines 78-105
 
 **Changes:**
+
 ```python
 # BEFORE
 resume = Resume(
@@ -101,12 +109,14 @@ resume = Resume(
 ```
 
 **Error Handling:**
+
 - Returns 400 Bad Request for validation errors
 - Returns 500 Internal Server Error for database failures
 
 ### 4. PUT /resumes/{id} (Update Resume)
 
 **What Changed:**
+
 - Added validation of resume data before update
 - Data is validated and escaped before storage
 - New version is created with validated data
@@ -114,6 +124,7 @@ resume = Resume(
 **Code Location:** `api/advanced_routes.py`, lines 271-300
 
 **Changes:**
+
 ```python
 # BEFORE
 if request.data:
@@ -139,7 +150,7 @@ if request.data:
     # Validate and escape resume data
     resume_dict = request.data.model_dump(exclude_none=True)
     resume_dict = validate_resume_data(resume_dict)
-    
+
     new_version = ResumeVersion(
         resume_id=resume.id,
         data=resume_dict,
@@ -148,13 +159,16 @@ if request.data:
 ```
 
 **Error Handling:**
+
 - Returns 400 Bad Request for validation errors
 - Returns 500 Internal Server Error for update failures
 
 ## Validation Rules Applied
 
 ### LaTeX Escaping
+
 Special characters in all text fields are escaped:
+
 - `$` → `\$`
 - `%` → `\%`
 - `&` → `\&`
@@ -167,18 +181,22 @@ Special characters in all text fields are escaped:
 - `~` → `\textasciitilde{}`
 
 ### XSS Prevention
+
 HTML/JavaScript attempts are sanitized:
+
 - `<script>` tags removed
 - Dangerous tags removed: iframe, object, embed, form, input, button
 - Event handlers removed: onclick, onerror, etc.
 - JavaScript URLs removed: javascript:, data:
 
 ### Format Validation
+
 - Email: Valid format + case normalization
 - URL: Valid http/https/ftp protocol + domain
 - Phone: 7-20 characters with allowed symbols
 
 ### Length Limits
+
 - Basic fields (name, label, etc.): 1,000 characters
 - Summaries: 5,000 characters
 - Highlights: 500 characters
@@ -189,6 +207,7 @@ HTML/JavaScript attempts are sanitized:
 ## Example Request/Response
 
 ### Request
+
 ```json
 POST /v1/render/pdf
 {
@@ -215,6 +234,7 @@ POST /v1/render/pdf
 ```
 
 ### Processing
+
 1. Pydantic validates schema
 2. Resume data is validated via `validate_resume_data()`
 3. All LaTeX special characters are escaped
@@ -224,6 +244,7 @@ POST /v1/render/pdf
 7. Validated data is used for PDF generation
 
 ### Response
+
 ```
 200 OK
 Content-Type: application/pdf
@@ -234,6 +255,7 @@ Content-Type: application/pdf
 ## Backward Compatibility
 
 ✅ **Fully Backward Compatible**
+
 - Existing API contracts unchanged
 - Request/response schemas identical
 - Validation is transparent to clients
@@ -251,6 +273,7 @@ Content-Type: application/pdf
 ## Testing
 
 All changes tested with:
+
 - 39 unit tests (100% pass rate)
 - LaTeX escaping tests
 - XSS prevention tests
@@ -267,6 +290,7 @@ All changes tested with:
 ## Deployment
 
 Ready for zero-downtime deployment:
+
 1. Deploy new code with validators
 2. Monitor for any validation errors
 3. Existing data gradually re-validated on updates
@@ -276,6 +300,7 @@ Ready for zero-downtime deployment:
 ## Monitoring
 
 Monitor these error codes:
+
 - `400 Bad Request` - Validation failures
 - Check application logs for validation error details
 - Expected: Few or zero validation errors from real users
@@ -284,6 +309,7 @@ Monitor these error codes:
 ## Support
 
 For validation errors, users should:
+
 1. Check error message for specific field
 2. Ensure special characters are limited
 3. Check field length limits

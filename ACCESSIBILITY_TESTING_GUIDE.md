@@ -82,6 +82,7 @@ The accessibility test suite includes:
 ### Running in CI
 
 Tests automatically run on:
+
 - Push to `main`, `develop`, or `feature/**` branches
 - Pull requests to `main` or `develop`
 - Multiple Node.js versions (18.x, 20.x)
@@ -91,6 +92,7 @@ Tests automatically run on:
 ### Issue: Missing Form Labels
 
 **Problem**: Form inputs without associated labels
+
 ```tsx
 // ❌ Bad
 <input type="text" placeholder="Name" />
@@ -106,6 +108,7 @@ Tests automatically run on:
 ### Issue: Missing Button Labels
 
 **Problem**: Buttons with only icons
+
 ```tsx
 // ❌ Bad
 <button>🔍</button>
@@ -120,6 +123,7 @@ Tests automatically run on:
 ### Issue: Improper Heading Hierarchy
 
 **Problem**: Skipping heading levels
+
 ```tsx
 // ❌ Bad
 <h1>Main Title</h1>
@@ -134,6 +138,7 @@ Tests automatically run on:
 ### Issue: Poor Color Contrast
 
 **Problem**: Text that's hard to read
+
 ```tsx
 // ❌ Bad (light text on light background)
 <p style={{ color: '#ddd', background: '#fff' }}>Text</p>
@@ -145,6 +150,7 @@ Tests automatically run on:
 ### Issue: Interactive Elements Not Keyboard Accessible
 
 **Problem**: Only mouse-accessible controls
+
 ```tsx
 // ❌ Bad
 <div onClick={handleClick}>Click me</div>
@@ -161,6 +167,7 @@ Tests automatically run on:
 ## WCAG 2.1 Standards
 
 This implementation targets:
+
 - **WCAG 2.1 Level AA** - Standard accessibility level
 - **WCAG 2.1 Level AAA** - Enhanced accessibility level
 
@@ -181,6 +188,7 @@ This implementation targets:
 ## Reporting Issues
 
 To report accessibility issues:
+
 1. Run the accessibility test suite
 2. Check the generated reports
 3. File a GitHub issue with:

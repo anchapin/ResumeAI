@@ -6,7 +6,7 @@ import React from 'react';
  * @param {{ status: string }} props - Component properties
  * @param {string} props.status - The status to display (e.g., 'Applied', 'Interview', 'Offer', 'Rejected')
  * @returns {JSX.Element} The rendered status badge component
- * 
+ *
  * @example
  * ```tsx
  * <StatusBadge status="Applied" />
@@ -34,7 +34,9 @@ const StatusBadge = ({ status }: { status: string }) => {
   }
 
   return (
-    <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold ${colorClass}`}>
+    <span
+      className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold ${colorClass}`}
+    >
       {status}
     </span>
   );

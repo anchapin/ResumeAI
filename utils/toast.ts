@@ -43,7 +43,11 @@ export const showWarningToast = (message: string, options?: ToastOptions) => {
   });
 };
 
-export const showToast = (message: string, type: 'success' | 'error' | 'info' | 'warning' = 'info', options?: ToastOptions) => {
+export const showToast = (
+  message: string,
+  type: 'success' | 'error' | 'info' | 'warning' = 'info',
+  options?: ToastOptions,
+) => {
   switch (type) {
     case 'success':
       return showSuccessToast(message, options);

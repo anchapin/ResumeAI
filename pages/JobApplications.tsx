@@ -1,21 +1,31 @@
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { JobApplication, SimpleResumeData, ATSReport } from '../types';
 import StatusBadge from '../components/StatusBadge';
-import { convertToAPIData, tailorResume, checkATSScore, TailoredResumeResponse, 
-  listJobApplications, createJobApplication, updateJobApplication, deleteJobApplication,
-  getApplicationStats, ApplicationStats, ApplicationStatus } from '../utils/api-client';
+import {
+  convertToAPIData,
+  tailorResume,
+  checkATSScore,
+  TailoredResumeResponse,
+  listJobApplications,
+  createJobApplication,
+  updateJobApplication,
+  deleteJobApplication,
+  getApplicationStats,
+  ApplicationStats,
+  ApplicationStatus,
+} from '../utils/api-client';
 
 /** Map API status to display status */
 const mapApiStatusToDisplay = (status: ApplicationStatus): string => {
   const statusMap: Record<ApplicationStatus, string> = {
-    'draft': 'Draft',
-    'applied': 'Applied',
-    'screening': 'Screening',
-    'interviewing': 'Interview',
-    'offer': 'Offer',
-    'accepted': 'Accepted',
-    'rejected': 'Rejected',
-    'withdrawn': 'Withdrawn'
+    draft: 'Draft',
+    applied: 'Applied',
+    screening: 'Screening',
+    interviewing: 'Interview',
+    offer: 'Offer',
+    accepted: 'Accepted',
+    rejected: 'Rejected',
+    withdrawn: 'Withdrawn',
   };
   return statusMap[status] || status;
 };
@@ -23,14 +33,14 @@ const mapApiStatusToDisplay = (status: ApplicationStatus): string => {
 /** Map display status to API status */
 const mapDisplayToApiStatus = (status: string): ApplicationStatus => {
   const statusMap: Record<string, ApplicationStatus> = {
-    'Draft': 'draft',
-    'Applied': 'applied',
-    'Screening': 'screening',
-    'Interview': 'interviewing',
-    'Offer': 'offer',
-    'Accepted': 'accepted',
-    'Rejected': 'rejected',
-    'Withdrawn': 'withdrawn'
+    Draft: 'draft',
+    Applied: 'applied',
+    Screening: 'screening',
+    Interview: 'interviewing',
+    Offer: 'offer',
+    Accepted: 'accepted',
+    Rejected: 'rejected',
+    Withdrawn: 'withdrawn',
   };
   return statusMap[status] || 'draft';
 };
@@ -64,21 +74,21 @@ const calculateStats = (apps: TrackedJobApplication[], apiStats?: ApplicationSta
       interviews: apiStats.by_status['interviewing'] || 0,
       offers: apiStats.by_status['offer'] || 0,
       rejected: apiStats.by_status['rejected'] || 0,
-      interviewRate: Math.round(apiStats.interview_rate * 100)
+      interviewRate: Math.round(apiStats.interview_rate * 100),
     };
   }
-  
+
   // Fall back to calculating from apps array
   const total = apps.length;
   const sent = total;
-  const pending = apps.filter(a => a.status === 'applied').length;
-  const interviews = apps.filter(a => a.status === 'interviewing').length;
-  const offers = apps.filter(a => a.status === 'offer').length;
-  const rejected = apps.filter(a => a.status === 'rejected').length;
-  
+  const pending = apps.filter((a) => a.status === 'applied').length;
+  const interviews = apps.filter((a) => a.status === 'interviewing').length;
+  const offers = apps.filter((a) => a.status === 'offer').length;
+  const rejected = apps.filter((a) => a.status === 'rejected').length;
+
   const responded = interviews + offers + rejected;
   const interviewRate = responded > 0 ? Math.round((interviews / responded) * 100) : 0;
-  
+
   return { total, sent, pending, interviews, offers, rejected, interviewRate };
 };
 
@@ -92,7 +102,7 @@ const JobApplications: React.FC = () => {
   const [applications, setApplications] = useState<TrackedJobApplication[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  
+
   // Resume tailoring state
   const [showTailorModal, setShowTailorModal] = useState<boolean>(false);
   const [showATSModal, setShowATSModal] = useState<boolean>(false);
@@ -103,12 +113,12 @@ const JobApplications: React.FC = () => {
   const [isTailoring, setIsTailoring] = useState<boolean>(false);
   const [tailorError, setTailorError] = useState<string | null>(null);
   const [tailoredResult, setTailoredResult] = useState<TailoredResumeResponse | null>(null);
-  
+
   // ATS checking state
   const [isCheckingATS, setIsCheckingATS] = useState<boolean>(false);
   const [atsError, setAtsError] = useState<string | null>(null);
   const [atsReport, setAtsReport] = useState<ATSReport | null>(null);
-  
+
   // Fetch applications from API on mount
   useEffect(() => {
     const fetchApplications = async () => {
@@ -117,12 +127,12 @@ const JobApplications: React.FC = () => {
         setError(null);
         const apps = await listJobApplications();
         // Map API response to display format
-        const mappedApps: TrackedJobApplication[] = apps.map(app => ({
+        const mappedApps: TrackedJobApplication[] = apps.map((app) => ({
           ...app,
-          dateApplied: new Date(app.created_at).toLocaleDateString('en-US', { 
-            month: 'short', 
-            day: 'numeric', 
-            year: 'numeric' 
+          dateApplied: new Date(app.created_at).toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric',
           }),
           company: app.company_name,
           role: app.job_title,
@@ -135,44 +145,75 @@ const JobApplications: React.FC = () => {
         setIsLoading(false);
       }
     };
-    
+
     fetchApplications();
   }, []);
-  
+
   // Calculate stats from applications
   const stats = useMemo(() => calculateStats(applications), [applications]);
-  
+
   // Sample resume data for tailoring (would come from App context in real app)
   const sampleResumeData: SimpleResumeData = {
-    name: "Alex Rivera",
-    email: "alex.rivera@example.com",
-    phone: "+1 (555) 012-3456",
-    location: "San Francisco, CA",
-    role: "Senior Product Designer",
-    summary: "Passionate and detail-oriented Senior Product Designer with 8+ years of experience creating user-centered digital experiences.",
-    skills: ["Figma", "Sketch", "User Research", "Prototyping", "Design Systems", "React", "TypeScript"],
-    experience: [{ id: '1', company: 'TechCorp Solutions', role: 'Senior Software Engineer', startDate: 'Jan 2020', endDate: 'Present', current: true, description: 'Led the migration of legacy monolithic architecture to microservices using AWS and Node.js, improving system scalability by 40%.', tags: ['AWS', 'Microservices'] }],
-    education: [{ id: '1', institution: 'Stanford University', area: 'Computer Science', studyType: 'Bachelor of Science', startDate: '2013', endDate: '2017', courses: ['Data Structures', 'Algorithms'] }],
-    projects: []
+    name: 'Alex Rivera',
+    email: 'alex.rivera@example.com',
+    phone: '+1 (555) 012-3456',
+    location: 'San Francisco, CA',
+    role: 'Senior Product Designer',
+    summary:
+      'Passionate and detail-oriented Senior Product Designer with 8+ years of experience creating user-centered digital experiences.',
+    skills: [
+      'Figma',
+      'Sketch',
+      'User Research',
+      'Prototyping',
+      'Design Systems',
+      'React',
+      'TypeScript',
+    ],
+    experience: [
+      {
+        id: '1',
+        company: 'TechCorp Solutions',
+        role: 'Senior Software Engineer',
+        startDate: 'Jan 2020',
+        endDate: 'Present',
+        current: true,
+        description:
+          'Led the migration of legacy monolithic architecture to microservices using AWS and Node.js, improving system scalability by 40%.',
+        tags: ['AWS', 'Microservices'],
+      },
+    ],
+    education: [
+      {
+        id: '1',
+        institution: 'Stanford University',
+        area: 'Computer Science',
+        studyType: 'Bachelor of Science',
+        startDate: '2013',
+        endDate: '2017',
+        courses: ['Data Structures', 'Algorithms'],
+      },
+    ],
+    projects: [],
   };
-  
+
   // Handle resume tailoring
   const handleTailorResume = useCallback(async () => {
     if (!jobDescription.trim()) {
       setTailorError('Please enter a job description');
       return;
     }
-    
+
     setIsTailoring(true);
     setTailorError(null);
-    
+
     try {
       const apiData = convertToAPIData(sampleResumeData);
       const result = await tailorResume(
         apiData,
         jobDescription,
         companyName || undefined,
-        jobTitle || undefined
+        jobTitle || undefined,
       );
       setTailoredResult(result);
     } catch (err) {
@@ -182,7 +223,7 @@ const JobApplications: React.FC = () => {
       setIsTailoring(false);
     }
   }, [jobDescription, companyName, jobTitle]);
-  
+
   // Reset modal
   const handleCloseModal = () => {
     setShowTailorModal(false);
@@ -192,17 +233,17 @@ const JobApplications: React.FC = () => {
     setTailorError(null);
     setTailoredResult(null);
   };
-  
+
   // Handle ATS check
   const handleATSCheck = useCallback(async () => {
     if (!jobDescription.trim()) {
       setAtsError('Please enter a job description');
       return;
     }
-    
+
     setIsCheckingATS(true);
     setAtsError(null);
-    
+
     try {
       const apiData = convertToAPIData(sampleResumeData);
       const result = await checkATSScore(apiData, jobDescription);
@@ -214,7 +255,7 @@ const JobApplications: React.FC = () => {
       setIsCheckingATS(false);
     }
   }, [jobDescription]);
-  
+
   // Reset ATS modal
   const handleCloseATSModal = () => {
     setShowATSModal(false);
@@ -222,14 +263,14 @@ const JobApplications: React.FC = () => {
     setAtsError(null);
     setAtsReport(null);
   };
-  
+
   // Get score color based on percentage
   const getScoreColor = (percentage: number): string => {
     if (percentage >= 70) return 'text-green-600';
     if (percentage >= 50) return 'text-yellow-600';
     return 'text-red-600';
   };
-  
+
   // Get score label based on percentage
   const getScoreLabel = (percentage: number): string => {
     if (percentage >= 85) return 'Excellent';
@@ -237,31 +278,32 @@ const JobApplications: React.FC = () => {
     if (percentage >= 50) return 'Fair';
     return 'Needs Work';
   };
-  
+
   return (
     <div className="flex-1 min-h-screen bg-[#f6f6f8] pl-72">
       <header className="h-16 flex items-center justify-between px-8 bg-white/80 backdrop-blur-sm sticky top-0 z-10 border-b border-slate-200">
         <h2 className="text-slate-800 font-bold text-xl">Job Applications</h2>
         <div className="flex items-center gap-4">
-          <button 
+          <button
             onClick={() => setShowATSModal(true)}
             className="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg font-medium transition-colors shadow-sm shadow-emerald-500/20"
           >
             <span className="material-symbols-outlined text-[20px]">fact_check</span>
             <span>ATS Check</span>
           </button>
-          <button 
+          <button
             onClick={() => setShowTailorModal(true)}
             className="flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg font-medium transition-colors shadow-sm shadow-amber-500/20"
           >
             <span className="material-symbols-outlined text-[20px]">auto_fix_high</span>
             <span>Tailor Resume</span>
           </button>
-          <button 
+          <button
             onClick={() => setShowAddModal(true)}
             className="flex items-center gap-2 bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg font-medium transition-colors shadow-sm shadow-primary-600/20"
           >
-            <span className="material-symbols-outlined text-[20px]">add</span><span>Add Application</span>
+            <span className="material-symbols-outlined text-[20px]">add</span>
+            <span>Add Application</span>
           </button>
           <div className="w-px h-8 bg-slate-200 mx-2"></div>
           <button
@@ -270,34 +312,54 @@ const JobApplications: React.FC = () => {
             aria-label="Notifications"
             title="Notifications"
           >
-            <span className="material-symbols-outlined" aria-hidden="true">notifications</span>
+            <span className="material-symbols-outlined" aria-hidden="true">
+              notifications
+            </span>
             <div className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></div>
           </button>
-          <div className="w-9 h-9 rounded-full bg-slate-200 bg-cover bg-center border border-slate-200 shadow-sm" style={{ backgroundImage: 'url("https://picsum.photos/100/100")' }}></div>
+          <div
+            className="w-9 h-9 rounded-full bg-slate-200 bg-cover bg-center border border-slate-200 shadow-sm"
+            style={{ backgroundImage: 'url("https://picsum.photos/100/100")' }}
+          ></div>
         </div>
       </header>
 
       <div className="p-8 max-w-[1200px] mx-auto space-y-6">
         <div className="flex items-center gap-4 bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-            <div className="flex-1 relative">
-                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" aria-hidden="true">search</span>
-                <input
-                    type="text"
-                    placeholder="Search applications..."
-                    aria-label="Search applications"
-                    className="w-full pl-10 pr-4 py-2 bg-slate-50 border-none rounded-lg text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-primary-100"
-                />
-            </div>
-            <div className="flex items-center gap-2">
-                 <button type="button" className="flex items-center gap-2 px-3 py-2 text-slate-600 hover:bg-slate-50 rounded-lg font-medium transition-colors border border-slate-200 bg-white">
-                    <span className="material-symbols-outlined text-[20px]" aria-hidden="true">filter_list</span>
-                    <span>Filter</span>
-                 </button>
-                 <button type="button" className="flex items-center gap-2 px-3 py-2 text-slate-600 hover:bg-slate-50 rounded-lg font-medium transition-colors border border-slate-200 bg-white">
-                    <span className="material-symbols-outlined text-[20px]" aria-hidden="true">sort</span>
-                    <span>Sort</span>
-                 </button>
-            </div>
+          <div className="flex-1 relative">
+            <span
+              className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+              aria-hidden="true"
+            >
+              search
+            </span>
+            <input
+              type="text"
+              placeholder="Search applications..."
+              aria-label="Search applications"
+              className="w-full pl-10 pr-4 py-2 bg-slate-50 border-none rounded-lg text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-primary-100"
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              className="flex items-center gap-2 px-3 py-2 text-slate-600 hover:bg-slate-50 rounded-lg font-medium transition-colors border border-slate-200 bg-white"
+            >
+              <span className="material-symbols-outlined text-[20px]" aria-hidden="true">
+                filter_list
+              </span>
+              <span>Filter</span>
+            </button>
+            <button
+              type="button"
+              className="flex items-center gap-2 px-3 py-2 text-slate-600 hover:bg-slate-50 rounded-lg font-medium transition-colors border border-slate-200 bg-white"
+            >
+              <span className="material-symbols-outlined text-[20px]" aria-hidden="true">
+                sort
+              </span>
+              <span>Sort</span>
+            </button>
+          </div>
         </div>
 
         {/* Stats Dashboard */}
@@ -349,80 +411,115 @@ const JobApplications: React.FC = () => {
         </div>
 
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-slate-50/50 border-b border-slate-100">
-                  <th className="px-6 py-4 text-slate-500 text-xs font-bold uppercase tracking-wider">Company</th>
-                  <th className="px-6 py-4 text-slate-500 text-xs font-bold uppercase tracking-wider">Role</th>
-                  <th className="px-6 py-4 text-slate-500 text-xs font-bold uppercase tracking-wider text-center">Status</th>
-                  <th className="px-6 py-4 text-slate-500 text-xs font-bold uppercase tracking-wider text-right">Date Applied</th>
-                  <th className="px-6 py-4 text-slate-500 text-xs font-bold uppercase tracking-wider text-right">Actions</th>
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-slate-50/50 border-b border-slate-100">
+                <th className="px-6 py-4 text-slate-500 text-xs font-bold uppercase tracking-wider">
+                  Company
+                </th>
+                <th className="px-6 py-4 text-slate-500 text-xs font-bold uppercase tracking-wider">
+                  Role
+                </th>
+                <th className="px-6 py-4 text-slate-500 text-xs font-bold uppercase tracking-wider text-center">
+                  Status
+                </th>
+                <th className="px-6 py-4 text-slate-500 text-xs font-bold uppercase tracking-wider text-right">
+                  Date Applied
+                </th>
+                <th className="px-6 py-4 text-slate-500 text-xs font-bold uppercase tracking-wider text-right">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {isLoading ? (
+                <tr>
+                  <td colSpan={5} className="px-6 py-12 text-center">
+                    <div className="flex flex-col items-center justify-center">
+                      <span className="material-symbols-outlined animate-spin text-primary-600 text-4xl mb-4">
+                        progress_activity
+                      </span>
+                      <p className="text-slate-500 font-medium">Loading applications...</p>
+                    </div>
+                  </td>
                 </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {isLoading ? (
-                  <tr>
-                    <td colSpan={5} className="px-6 py-12 text-center">
-                      <div className="flex flex-col items-center justify-center">
-                        <span className="material-symbols-outlined animate-spin text-primary-600 text-4xl mb-4">progress_activity</span>
-                        <p className="text-slate-500 font-medium">Loading applications...</p>
-                      </div>
-                    </td>
-                  </tr>
-                ) : error ? (
-                  <tr>
-                    <td colSpan={5} className="px-6 py-12 text-center">
-                      <div className="flex flex-col items-center justify-center text-red-500">
-                        <span className="material-symbols-outlined text-4xl mb-4">error</span>
-                        <p className="font-medium">{error}</p>
-                        <button 
-                          onClick={() => window.location.reload()}
-                          className="mt-4 px-4 py-2 bg-primary-600 text-white rounded-lg font-medium hover:bg-primary-700"
-                        >
-                          Retry
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ) : applications.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} className="px-6 py-12 text-center">
-                      <div className="flex flex-col items-center justify-center text-slate-400">
-                        <span className="material-symbols-outlined text-6xl mb-4">work_off</span>
-                        <p className="font-medium text-slate-500">No job applications yet</p>
-                        <p className="text-sm">Click "Add Application" to track your first job application</p>
-                      </div>
-                    </td>
-                  </tr>
-                ) : (
-                  applications.map((app) => (
-                    <tr key={app.id} className="hover:bg-slate-50 transition-colors cursor-pointer group">
-                      <td className="px-6 py-5">
-                        <div className="flex items-center gap-4">
-                          <div className="bg-white rounded-lg size-10 flex items-center justify-center p-1 border border-slate-100 shadow-sm">
-                            <img src={app.logo} alt={app.company_name} className="max-w-full max-h-full object-contain" onError={(e) => { (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(app.company_name)}&background=random` }}/>
-                          </div>
-                          <span className="text-slate-900 font-bold text-sm group-hover:text-primary-600 transition-colors">{app.company_name}</span>
+              ) : error ? (
+                <tr>
+                  <td colSpan={5} className="px-6 py-12 text-center">
+                    <div className="flex flex-col items-center justify-center text-red-500">
+                      <span className="material-symbols-outlined text-4xl mb-4">error</span>
+                      <p className="font-medium">{error}</p>
+                      <button
+                        onClick={() => window.location.reload()}
+                        className="mt-4 px-4 py-2 bg-primary-600 text-white rounded-lg font-medium hover:bg-primary-700"
+                      >
+                        Retry
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ) : applications.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="px-6 py-12 text-center">
+                    <div className="flex flex-col items-center justify-center text-slate-400">
+                      <span className="material-symbols-outlined text-6xl mb-4">work_off</span>
+                      <p className="font-medium text-slate-500">No job applications yet</p>
+                      <p className="text-sm">
+                        Click "Add Application" to track your first job application
+                      </p>
+                    </div>
+                  </td>
+                </tr>
+              ) : (
+                applications.map((app) => (
+                  <tr
+                    key={app.id}
+                    className="hover:bg-slate-50 transition-colors cursor-pointer group"
+                  >
+                    <td className="px-6 py-5">
+                      <div className="flex items-center gap-4">
+                        <div className="bg-white rounded-lg size-10 flex items-center justify-center p-1 border border-slate-100 shadow-sm">
+                          <img
+                            src={app.logo}
+                            alt={app.company_name}
+                            className="max-w-full max-h-full object-contain"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src =
+                                `https://ui-avatars.com/api/?name=${encodeURIComponent(app.company_name)}&background=random`;
+                            }}
+                          />
                         </div>
-                      </td>
-                      <td className="px-6 py-5 text-slate-700 text-sm font-medium">{app.job_title}</td>
-                      <td className="px-6 py-5 text-center"><StatusBadge status={mapApiStatusToDisplay(app.status)} /></td>
-                      <td className="px-6 py-5 text-slate-500 text-sm text-right font-medium">{app.dateApplied}</td>
-                      <td className="px-6 py-5 text-right">
-                          <button
-                              type="button"
-                              className="text-slate-400 hover:text-primary-600 transition-colors"
-                              aria-label="More options"
-                              title="More options"
-                          >
-                              <span className="material-symbols-outlined" aria-hidden="true">more_vert</span>
-                          </button>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+                        <span className="text-slate-900 font-bold text-sm group-hover:text-primary-600 transition-colors">
+                          {app.company_name}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-5 text-slate-700 text-sm font-medium">
+                      {app.job_title}
+                    </td>
+                    <td className="px-6 py-5 text-center">
+                      <StatusBadge status={mapApiStatusToDisplay(app.status)} />
+                    </td>
+                    <td className="px-6 py-5 text-slate-500 text-sm text-right font-medium">
+                      {app.dateApplied}
+                    </td>
+                    <td className="px-6 py-5 text-right">
+                      <button
+                        type="button"
+                        className="text-slate-400 hover:text-primary-600 transition-colors"
+                        aria-label="More options"
+                        title="More options"
+                      >
+                        <span className="material-symbols-outlined" aria-hidden="true">
+                          more_vert
+                        </span>
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
 
@@ -434,25 +531,31 @@ const JobApplications: React.FC = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <h2 className="text-xl font-bold text-slate-900">Tailor Resume to Job</h2>
-                  <p className="text-sm text-slate-500 mt-1">Paste a job description to customize your resume</p>
+                  <p className="text-sm text-slate-500 mt-1">
+                    Paste a job description to customize your resume
+                  </p>
                 </div>
-                <button 
+                <button
                   type="button"
                   onClick={handleCloseModal}
                   className="p-2 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100"
                   aria-label="Close"
                   title="Close"
                 >
-                  <span className="material-symbols-outlined" aria-hidden="true">close</span>
+                  <span className="material-symbols-outlined" aria-hidden="true">
+                    close
+                  </span>
                 </button>
               </div>
             </div>
-            
+
             <div className="p-6 space-y-4">
               {/* Job Details */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="text-sm font-bold text-slate-700">Company Name (Optional)</label>
+                  <label className="text-sm font-bold text-slate-700">
+                    Company Name (Optional)
+                  </label>
                   <input
                     type="text"
                     value={companyName}
@@ -472,7 +575,7 @@ const JobApplications: React.FC = () => {
                   />
                 </div>
               </div>
-              
+
               {/* Job Description */}
               <div className="space-y-2">
                 <label className="text-sm font-bold text-slate-700">Job Description</label>
@@ -484,7 +587,7 @@ const JobApplications: React.FC = () => {
                   className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all text-slate-900 resize-none"
                 />
               </div>
-              
+
               {/* Error Message */}
               {tailorError && (
                 <div className="flex items-center gap-2 text-red-600 text-sm bg-red-50 p-3 rounded-lg">
@@ -492,7 +595,7 @@ const JobApplications: React.FC = () => {
                   {tailorError}
                 </div>
               )}
-              
+
               {/* Results */}
               {tailoredResult && (
                 <div className="space-y-4">
@@ -500,26 +603,31 @@ const JobApplications: React.FC = () => {
                     <span className="material-symbols-outlined text-[16px]">check_circle</span>
                     Resume tailored successfully!
                   </div>
-                  
+
                   {/* Keywords */}
                   <div className="bg-slate-50 rounded-lg p-4">
                     <h4 className="text-sm font-bold text-slate-700 mb-2">Keywords Found</h4>
                     <div className="flex flex-wrap gap-2">
                       {tailoredResult.keywords.map((keyword, idx) => (
-                        <span key={idx} className="px-2 py-1 bg-amber-100 text-amber-700 rounded text-xs font-medium">
+                        <span
+                          key={idx}
+                          className="px-2 py-1 bg-amber-100 text-amber-700 rounded text-xs font-medium"
+                        >
                           {keyword}
                         </span>
                       ))}
                     </div>
                   </div>
-                  
+
                   {/* Suggestions */}
                   <div className="bg-slate-50 rounded-lg p-4">
                     <h4 className="text-sm font-bold text-slate-700 mb-2">AI Suggestions</h4>
                     <ul className="space-y-2">
                       {tailoredResult.suggestions.map((suggestion, idx) => (
                         <li key={idx} className="flex items-start gap-2 text-sm text-slate-600">
-                          <span className="material-symbols-outlined text-[16px] text-primary-600">lightbulb</span>
+                          <span className="material-symbols-outlined text-[16px] text-primary-600">
+                            lightbulb
+                          </span>
                           {suggestion}
                         </li>
                       ))}
@@ -528,7 +636,7 @@ const JobApplications: React.FC = () => {
                 </div>
               )}
             </div>
-            
+
             <div className="p-6 border-t border-slate-200 flex justify-end gap-3">
               <button
                 onClick={handleCloseModal}
@@ -557,7 +665,7 @@ const JobApplications: React.FC = () => {
           </div>
         </div>
       )}
-      
+
       {/* ATS Compatibility Check Modal */}
       {showATSModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -566,20 +674,24 @@ const JobApplications: React.FC = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <h2 className="text-xl font-bold text-slate-900">ATS Compatibility Check</h2>
-                  <p className="text-sm text-slate-500 mt-1">Check how well your resume matches the job description</p>
+                  <p className="text-sm text-slate-500 mt-1">
+                    Check how well your resume matches the job description
+                  </p>
                 </div>
-                <button 
+                <button
                   type="button"
                   onClick={handleCloseATSModal}
                   className="p-2 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100"
                   aria-label="Close"
                   title="Close"
                 >
-                  <span className="material-symbols-outlined" aria-hidden="true">close</span>
+                  <span className="material-symbols-outlined" aria-hidden="true">
+                    close
+                  </span>
                 </button>
               </div>
             </div>
-            
+
             <div className="p-6 space-y-4">
               {/* Job Description */}
               <div className="space-y-2">
@@ -592,7 +704,7 @@ const JobApplications: React.FC = () => {
                   className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all text-slate-900 resize-none"
                 />
               </div>
-              
+
               {/* Error Message */}
               {atsError && (
                 <div className="flex items-center gap-2 text-red-600 text-sm bg-red-50 p-3 rounded-lg">
@@ -600,37 +712,48 @@ const JobApplications: React.FC = () => {
                   {atsError}
                 </div>
               )}
-              
+
               {/* Results */}
               {atsReport && (
                 <div className="space-y-4">
                   {/* Overall Score */}
                   <div className="bg-slate-50 rounded-xl p-6 text-center">
-                    <div className={`text-5xl font-bold ${getScoreColor(atsReport.overall_percentage)}`}>
+                    <div
+                      className={`text-5xl font-bold ${getScoreColor(atsReport.overall_percentage)}`}
+                    >
                       {atsReport.overall_percentage.toFixed(0)}%
                     </div>
                     <div className="text-lg font-semibold text-slate-700 mt-2">
-                      {getScoreLabel(atsReport.overall_percentage)} - {atsReport.total_score}/{atsReport.total_possible} points
+                      {getScoreLabel(atsReport.overall_percentage)} - {atsReport.total_score}/
+                      {atsReport.total_possible} points
                     </div>
                     <p className="text-sm text-slate-500 mt-2">{atsReport.summary}</p>
                   </div>
-                  
+
                   {/* Category Breakdown */}
                   <div className="space-y-3">
                     <h4 className="text-sm font-bold text-slate-700">Category Breakdown</h4>
                     {Object.entries(atsReport.categories).map(([key, category]) => (
                       <div key={key} className="bg-white border border-slate-200 rounded-lg p-4">
                         <div className="flex items-center justify-between mb-2">
-                          <span className="font-semibold text-slate-800">{category.name.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</span>
+                          <span className="font-semibold text-slate-800">
+                            {category.name
+                              .replace(/_/g, ' ')
+                              .replace(/\b\w/g, (l) => l.toUpperCase())}
+                          </span>
                           <span className={`font-bold ${getScoreColor(category.percentage)}`}>
-                            {category.points_earned}/{category.points_possible} ({category.percentage.toFixed(0)}%)
+                            {category.points_earned}/{category.points_possible} (
+                            {category.percentage.toFixed(0)}%)
                           </span>
                         </div>
                         <div className="w-full bg-slate-100 rounded-full h-2 mb-3">
-                          <div 
+                          <div
                             className={`h-2 rounded-full ${
-                              category.percentage >= 70 ? 'bg-green-500' : 
-                              category.percentage >= 50 ? 'bg-yellow-500' : 'bg-red-500'
+                              category.percentage >= 70
+                                ? 'bg-green-500'
+                                : category.percentage >= 50
+                                  ? 'bg-yellow-500'
+                                  : 'bg-red-500'
                             }`}
                             style={{ width: `${category.percentage}%` }}
                           ></div>
@@ -646,7 +769,9 @@ const JobApplications: React.FC = () => {
                         )}
                         {category.suggestions.length > 0 && (
                           <div className="mt-2 pt-2 border-t border-slate-100">
-                            <p className="text-xs font-semibold text-amber-600 mb-1">Suggestions:</p>
+                            <p className="text-xs font-semibold text-amber-600 mb-1">
+                              Suggestions:
+                            </p>
                             <ul className="text-xs text-slate-600 space-y-1">
                               {category.suggestions.slice(0, 2).map((suggestion, idx) => (
                                 <li key={idx} className="flex items-start gap-1">
@@ -659,7 +784,7 @@ const JobApplications: React.FC = () => {
                       </div>
                     ))}
                   </div>
-                  
+
                   {/* Top Recommendations */}
                   {atsReport.recommendations.length > 0 && (
                     <div className="bg-amber-50 rounded-lg p-4 border border-amber-200">
@@ -667,7 +792,9 @@ const JobApplications: React.FC = () => {
                       <ul className="space-y-2">
                         {atsReport.recommendations.map((rec, idx) => (
                           <li key={idx} className="flex items-start gap-2 text-sm text-amber-700">
-                            <span className="material-symbols-outlined text-[16px] text-amber-600 mt-0.5">lightbulb</span>
+                            <span className="material-symbols-outlined text-[16px] text-amber-600 mt-0.5">
+                              lightbulb
+                            </span>
                             {rec}
                           </li>
                         ))}
@@ -677,7 +804,7 @@ const JobApplications: React.FC = () => {
                 </div>
               )}
             </div>
-            
+
             <div className="p-6 border-t border-slate-200 flex justify-end gap-3">
               <button
                 onClick={handleCloseATSModal}

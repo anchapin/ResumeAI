@@ -11,6 +11,7 @@ Implemented comprehensive test coverage enforcement and tracking for ResumeAI wi
 ### 1. Frontend Coverage Configuration
 
 **File: `vite.config.ts`**
+
 - Added coverage thresholds: 60% for lines, functions, branches, and statements
 - Added LCOV reporter for integration with coverage services
 - Configuration:
@@ -28,21 +29,25 @@ Implemented comprehensive test coverage enforcement and tracking for ResumeAI wi
   ```
 
 **File: `package.json`**
+
 - Added `test:coverage` script for easy coverage reporting
 - Command: `npm run test:coverage`
 
 **File: `vite.config.ts` (Vitest Migration)**
+
 - Updated deprecated `poolOptions` syntax to `singleFork: true` (Vitest 4 compatibility)
 
 ### 2. Backend Coverage Configuration
 
 **File: `pytest.ini`**
+
 - Added coverage sections:
   - `[coverage:run]` - specifies source and omit patterns
   - `[coverage:report]` - sets fail_under=60, precision, missing line reporting
   - `[coverage:html]` - HTML report output directory
 
 **Requirements:** Backend needs `coverage` and `pytest-cov` packages installed via:
+
 ```bash
 pip install coverage pytest-cov
 ```
@@ -50,11 +55,13 @@ pip install coverage pytest-cov
 ### 3. CI/CD Integration
 
 **File: `.github/workflows/frontend-ci.yml`**
+
 - Added `npm run test:coverage -- --run` step
 - Uploads coverage artifacts for 30 days
 - Fails if coverage < 60%
 
 **File: `.github/workflows/backend-ci.yml`**
+
 - Added `pytest --cov=resume-api --cov-fail-under=60` step
 - Installs `coverage` and `pytest-cov`
 - Generates HTML reports
@@ -65,6 +72,7 @@ pip install coverage pytest-cov
 
 **File: `COVERAGE_GUIDE.md`** (NEW)
 Comprehensive guide covering:
+
 - Overview of coverage metrics
 - Frontend: Running tests with coverage, configuration, viewing reports
 - Backend: Running tests with coverage, configuration, viewing reports
@@ -76,6 +84,7 @@ Comprehensive guide covering:
 - Continuous improvement strategy
 
 **File: `README.md`**
+
 - Added coverage badge: [![Coverage Status](https://img.shields.io/badge/coverage-60%25%2B-green)](./COVERAGE_GUIDE.md)
 - Added "Testing" section with quick start commands
 - Updated development commands table with `npm run test:coverage`
@@ -112,7 +121,9 @@ python -m pytest --cov=resume-api --cov-fail-under=60
 ## Verification
 
 ### Frontend Coverage Check
+
 ✅ Coverage configuration works:
+
 ```bash
 $ npm run test:coverage -- --run utils/storage.test.ts
 % Coverage report from istanbul
@@ -123,11 +134,14 @@ All files   |   61.53 |    52.77 |    87.5 |   60.93 |
 ------------|---------|----------|---------|---------|--------------------------
 ERROR: Coverage for branches (52.77%) does not meet global threshold (60%)
 ```
+
 - ✅ Shows enforcement is working (fails when below 60%)
 - ✅ Reports file and metrics correctly
 
 ### Backend Configuration
+
 ✅ pytest.ini properly configured with:
+
 - Coverage run settings
 - 60% fail_under threshold
 - HTML report generation
@@ -171,12 +185,14 @@ ERROR: Coverage for branches (52.77%) does not meet global threshold (60%)
 ### On Pull Requests
 
 #### Frontend
+
 1. Tests run with standard test runner
 2. Tests run with coverage - **FAILS if < 60%**
 3. Coverage artifacts uploaded
 4. Type checking performed
 
 #### Backend
+
 1. Tests run with pytest
 2. Tests run with coverage - **FAILS if < 60%** (set to continue-on-error currently)
 3. Coverage artifacts uploaded
@@ -192,12 +208,14 @@ ERROR: Coverage for branches (52.77%) does not meet global threshold (60%)
 ## Thresholds
 
 All metrics set to **60% minimum**:
+
 - Statement coverage
 - Line coverage
 - Function coverage
 - Branch coverage
 
 **Future Targets:**
+
 - MVP Phase: 60% (current)
 - Beta Phase: 75% recommended
 - Production: 85%+ ideal
@@ -213,6 +231,7 @@ All metrics set to **60% minimum**:
 ### Deprecated Syntax Fix
 
 Updated vite.config.ts to use modern syntax:
+
 - ❌ Old: `pool: 'forks'` with `poolOptions: { forks: { singleFork: true } }`
 - ✅ New: `singleFork: true`
 
@@ -223,6 +242,7 @@ This fixes Vitest 4 compatibility warnings.
 ### Coverage Services
 
 The `lcov` reporter in frontend config allows integration with:
+
 - Codecov
 - Coveralls
 - Code Climate
@@ -233,6 +253,7 @@ Setup instructions in COVERAGE_GUIDE.md if these services are added later.
 ### GitHub Actions
 
 Coverage reports are available in GitHub Actions as downloadable artifacts for:
+
 - PR authors to review
 - Trend analysis over time
 - CI/CD debugging
@@ -240,6 +261,7 @@ Coverage reports are available in GitHub Actions as downloadable artifacts for:
 ## Next Steps
 
 1. **Install Backend Dependencies**
+
    ```bash
    cd resume-api
    pip install coverage pytest-cov

@@ -5,6 +5,7 @@ This guide explains the request timeout feature implemented to prevent hanging r
 ## Overview
 
 Timeouts prevent requests from hanging indefinitely, improving user experience by:
+
 - Returning 504 Gateway Timeout after 30 seconds on the backend
 - Aborting requests after 10-15 seconds on the frontend
 - Handling errors gracefully with user-friendly messages
@@ -12,6 +13,7 @@ Timeouts prevent requests from hanging indefinitely, improving user experience b
 ## Architecture
 
 ### Backend (FastAPI)
+
 - **Middleware**: `resume-api/middleware/timeout.py`
 - **Defaults**: 30 second timeout for standard requests
 - **Extended Timeouts**:
@@ -20,6 +22,7 @@ Timeouts prevent requests from hanging indefinitely, improving user experience b
 - **Response**: 504 Gateway Timeout with error details
 
 ### Frontend (React)
+
 - **Utility**: `utils/fetch-timeout.ts`
 - **Timeouts**:
   - PDF generation: 15 seconds
@@ -41,7 +44,7 @@ async function fetchData() {
     const response = await fetchWithTimeout(
       '/api/data',
       { method: 'GET' },
-      TIMEOUT_CONFIG.STANDARD // 10 seconds
+      TIMEOUT_CONFIG.STANDARD, // 10 seconds
     );
     return await response.json();
   } catch (error) {
@@ -62,7 +65,7 @@ async function generatePDF(resumeData) {
         method: 'POST',
         body: JSON.stringify(resumeData),
       },
-      15000 // 15 seconds for PDF
+      15000, // 15 seconds for PDF
     );
     return await response.blob();
   } catch (error) {
@@ -77,17 +80,14 @@ async function generatePDF(resumeData) {
 ### Frontend: Using AbortController directly
 
 ```typescript
-import { 
-  createTimeoutAbortController, 
-  clearTimeoutAbortController 
-} from './utils/fetch-timeout';
+import { createTimeoutAbortController, clearTimeoutAbortController } from './utils/fetch-timeout';
 
 async function fetchWithManualAbort() {
   const controller = createTimeoutAbortController(5000); // 5 second timeout
-  
+
   try {
     const response = await fetch('/api/data', {
-      signal: controller.signal
+      signal: controller.signal,
     });
     return await response.json();
   } catch (error) {
@@ -152,13 +152,13 @@ Status code: **504 Gateway Timeout**
 
 ### Frontend Timeout Values (TIMEOUT_CONFIG)
 
-| Timeout | Duration | Use Case |
-|---------|----------|----------|
-| `QUICK` | 5 seconds | Quick metadata fetches |
-| `STANDARD` | 10 seconds | Normal API calls |
-| `PDF_GENERATION` | 15 seconds | PDF generation |
-| `AI_OPERATION` | 15 seconds | AI tailoring, ATS checks |
-| `NONE` | 0 | No timeout |
+| Timeout          | Duration   | Use Case                 |
+| ---------------- | ---------- | ------------------------ |
+| `QUICK`          | 5 seconds  | Quick metadata fetches   |
+| `STANDARD`       | 10 seconds | Normal API calls         |
+| `PDF_GENERATION` | 15 seconds | PDF generation           |
+| `AI_OPERATION`   | 15 seconds | AI tailoring, ATS checks |
+| `NONE`           | 0          | No timeout               |
 
 ### Backend Timeout Configuration
 
@@ -235,6 +235,7 @@ npm test -- tests/api-client-timeout.test.ts
 ### Backend Tests
 
 Tests verify:
+
 - ✅ Fast requests complete successfully
 - ✅ Slow requests timeout with 504 status
 - ✅ Requests completing before timeout succeed
@@ -265,6 +266,7 @@ Tests verify:
 ## Monitoring
 
 Timeouts are tracked in monitoring:
+
 - **Metric**: `request_timeout` warning logs
 - **Analytics**: Timeout events recorded if analytics enabled
 - **Metrics**: HTTP 504 status code tracked in Prometheus (if enabled)

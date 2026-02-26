@@ -8,21 +8,23 @@ This document establishes performance baselines for ResumeAI using load testing 
 
 ### API Response Time SLAs
 
-| Endpoint | Method | 95th % | 99th % | Target | Status |
-|----------|--------|--------|--------|--------|--------|
-| `/v1/render/pdf` | POST | 5s | 8s | <3s | ⚠️ |
-| `/v1/tailor` | POST | 4s | 7s | <2s | ⚠️ |
-| `/v1/variants` | POST | 3s | 6s | <2s | ⚠️ |
-| `/health` | GET | 100ms | 200ms | <100ms | ✅ |
+| Endpoint         | Method | 95th % | 99th % | Target | Status |
+| ---------------- | ------ | ------ | ------ | ------ | ------ |
+| `/v1/render/pdf` | POST   | 5s     | 8s     | <3s    | ⚠️     |
+| `/v1/tailor`     | POST   | 4s     | 7s     | <2s    | ⚠️     |
+| `/v1/variants`   | POST   | 3s     | 6s     | <2s    | ⚠️     |
+| `/health`        | GET    | 100ms  | 200ms  | <100ms | ✅     |
 
 ### System Capacity
 
 **Load Test Configuration:**
+
 - Concurrent Users: 100
 - Duration: 5 minutes
 - Ramp-up: 1 minute
 
 **Results:**
+
 - Peak RPS: ~50 requests/second
 - Success Rate: 99.2%
 - Average Response Time: 2.3s
@@ -30,14 +32,14 @@ This document establishes performance baselines for ResumeAI using load testing 
 
 ### Frontend Metrics
 
-| Metric | Baseline | Target |
-|--------|----------|--------|
-| Page Load Time | 2.1s | <2s |
-| Time to Interactive | 3.5s | <3s |
-| Main Bundle Size (gzip) | 262 KB | <200 KB |
-| CLS (Cumulative Layout Shift) | 0.05 | <0.1 |
-| LCP (Largest Contentful Paint) | 2.3s | <2.5s |
-| FID (First Input Delay) | 85ms | <100ms |
+| Metric                         | Baseline | Target  |
+| ------------------------------ | -------- | ------- |
+| Page Load Time                 | 2.1s     | <2s     |
+| Time to Interactive            | 3.5s     | <3s     |
+| Main Bundle Size (gzip)        | 262 KB   | <200 KB |
+| CLS (Cumulative Layout Shift)  | 0.05     | <0.1    |
+| LCP (Largest Contentful Paint) | 2.3s     | <2.5s   |
+| FID (First Input Delay)        | 85ms     | <100ms  |
 
 ## Load Testing Setup
 
@@ -115,6 +117,7 @@ Response Time Distribution:
 ### How to Update Baselines
 
 1. Run load test:
+
    ```bash
    locust -f scripts/locustfile.py --host=https://api.resumeai.com \
      --headless -u 100 -r 10 -t 5m --csv=results
@@ -156,16 +159,19 @@ lhci autorun
 ## Optimization Roadmap
 
 ### High Priority (P1)
+
 - [ ] Reduce API response time to <2s
 - [ ] Implement caching for resume variants
 - [ ] Add CDN for static assets
 
 ### Medium Priority (P2)
+
 - [ ] Optimize PDF generation (currently slowest)
 - [ ] Implement database indexing for JD search
 - [ ] Add request batching for tailor API
 
 ### Low Priority (P3)
+
 - [ ] Cache AI provider responses
 - [ ] Implement result streaming for long operations
 - [ ] Add database query optimization

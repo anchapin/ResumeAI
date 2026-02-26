@@ -14,9 +14,11 @@ This document serves as the main entry point for understanding the secure API ke
 ## What Was Built
 
 ### 1. Secure Key Management Module
+
 **Location:** `resume-api/lib/security/`
 
 Core functions for secure API key handling:
+
 - `hash_api_key(key)` - Hash keys using bcrypt
 - `verify_api_key(plaintext, hash)` - Constant-time verification
 - `generate_api_key_prefix(key)` - Safe key identification
@@ -24,18 +26,22 @@ Core functions for secure API key handling:
 - `migrate_plaintext_keys(keys)` - Bulk migration
 
 ### 2. Updated Authentication
+
 **File:** `resume-api/config/dependencies.py`
 
 Modified the API key authentication to:
+
 - Detect if a key is hashed (bcrypt format)
 - Use bcrypt verification for hashed keys
 - Support backward compatibility with plaintext keys
 - Maintain constant-time comparison security
 
 ### 3. Migration Tool
+
 **File:** `resume-api/scripts/migrate_api_keys.py`
 
 Standalone utility to hash existing API keys:
+
 ```bash
 # Hash keys from command line
 python scripts/migrate_api_keys.py --keys "rai_key1,rai_key2"
@@ -45,7 +51,9 @@ python scripts/migrate_api_keys.py --env-file .env
 ```
 
 ### 4. Comprehensive Tests
+
 **Files:**
+
 - `resume-api/tests/test_key_management.py` - 40+ unit tests
 - `resume-api/tests/test_api_key_verification.py` - 20+ integration tests
 - `resume-api/test_key_management_standalone.py` - 10 test functions (no pytest required)
@@ -53,6 +61,7 @@ python scripts/migrate_api_keys.py --env-file .env
 Total: **50+ test cases** covering all scenarios
 
 ### 5. Complete Documentation
+
 - `API_KEY_SECURITY.md` - 2,000+ word security guide
 - `ISSUE_391_IMPLEMENTATION.md` - Technical implementation details
 - `ISSUE_391_VERIFICATION.md` - Full verification checklist
@@ -93,6 +102,7 @@ Total: **50+ test cases** covering all scenarios
 - Zero breaking changes
 
 **Migration phases:**
+
 1. **Phase 1:** Plaintext keys only (initial state)
 2. **Phase 2:** Add hashed keys alongside plaintext (gradual rollout)
 3. **Phase 3:** Remove plaintext keys (optional, when all clients updated)
@@ -100,12 +110,14 @@ Total: **50+ test cases** covering all scenarios
 ## Getting Started
 
 ### Step 1: Hash Your Existing Keys
+
 ```bash
 cd resume-api
 python scripts/migrate_api_keys.py --keys "rai_key1,rai_key2"
 ```
 
 ### Step 2: Update Configuration
+
 ```bash
 # Copy output from script to your .env file
 MASTER_API_KEY=$2b$12$slYQmyNdGzin7olVN3p5Be7DlH...
@@ -113,6 +125,7 @@ API_KEYS=$2b$12$hash1...,$2b$12$hash2...
 ```
 
 ### Step 3: Restart API Server
+
 ```bash
 python main.py
 # or
@@ -120,6 +133,7 @@ docker-compose up
 ```
 
 ### Step 4: Test Authentication
+
 ```bash
 # Test with plaintext key (should work)
 curl -X GET "http://localhost:8000/v1/variants" \
@@ -131,12 +145,14 @@ curl -X GET "http://localhost:8000/v1/variants" \
 ## Running Tests
 
 ### Standalone Test (No Dependencies)
+
 ```bash
 cd resume-api
 python3 test_key_management_standalone.py
 ```
 
 ### With Pytest (If Installed)
+
 ```bash
 cd resume-api
 pytest tests/test_key_management.py -v
@@ -146,6 +162,7 @@ pytest tests/test_api_key_verification.py -v
 ## Architecture
 
 ### Key Verification Flow
+
 ```
 Client Request: X-API-KEY: rai_plaintext_key
          ↓
@@ -165,6 +182,7 @@ Check User Keys (same logic)
 ```
 
 ### Storage Model
+
 ```
 Environment Config (.env / secrets)
 ├─ MASTER_API_KEY: $2b$12$hash... (hashed or plaintext)
@@ -181,6 +199,7 @@ Authentication (config/dependencies.py)
 ## Implementation Details
 
 ### Files Created (9)
+
 ```
 resume-api/
 ├── lib/security/
@@ -197,6 +216,7 @@ resume-api/
 ```
 
 ### Files Modified (2)
+
 ```
 resume-api/
 ├── config/dependencies.py - Updated get_api_key() function
@@ -204,6 +224,7 @@ resume-api/
 ```
 
 ### Code Statistics
+
 - **Total new code:** ~2,600 lines
 - **Test cases:** 50+
 - **Documentation:** 4,000+ words
@@ -213,6 +234,7 @@ resume-api/
 ## Security Best Practices
 
 ### ✅ DO
+
 - **Hash all new API keys** before storing them
 - **Use strong, random keys** (at least 32 characters)
 - **Rotate keys regularly** (quarterly or when compromised)
@@ -222,6 +244,7 @@ resume-api/
 - **Use HTTPS** for all API communication (critical!)
 
 ### ❌ DON'T
+
 - **Never commit plaintext keys** to version control
 - **Never expose hashes in logs** (they're still sensitive)
 - **Never share API keys** via email or chat
@@ -251,36 +274,41 @@ resume-api/
 ## Support & Documentation
 
 ### For Getting Started
+
 → Read [ISSUE_391_QUICK_REFERENCE.md](./ISSUE_391_QUICK_REFERENCE.md)
 
 ### For Technical Details
+
 → Read [ISSUE_391_IMPLEMENTATION.md](./ISSUE_391_IMPLEMENTATION.md)
 
 ### For Security Questions
+
 → Read [resume-api/API_KEY_SECURITY.md](./resume-api/API_KEY_SECURITY.md)
 
 ### For Troubleshooting
+
 → See troubleshooting section in API_KEY_SECURITY.md
 
 ### For Test Examples
+
 → Review files in `resume-api/tests/` and `resume-api/test_key_management_standalone.py`
 
 ## Success Criteria - All Met ✅
 
-| Criterion | Status | Evidence |
-|-----------|--------|----------|
-| Hash API keys with bcrypt | ✅ | `lib/security/key_management.py` |
-| Verify plaintext against hash | ✅ | `verify_api_key()` function |
-| Migration function for existing keys | ✅ | `migrate_plaintext_keys()` function |
-| Hash in authentication system | ✅ | `config/dependencies.py` updated |
-| Compare hashes (not plaintext) | ✅ | Using `bcrypt.checkpw()` |
-| Environment documentation | ✅ | `.env.example` and `API_KEY_SECURITY.md` |
-| Migration script | ✅ | `scripts/migrate_api_keys.py` |
-| Comprehensive tests | ✅ | 50+ test cases in 3 files |
-| Security documentation | ✅ | 4,000+ words across 4 documents |
-| API still works | ✅ | Backward compatible, no endpoint changes |
-| Plaintext rejected when hashed configured | ✅ | Hash detection and verification in place |
-| Python validation | ✅ | All files compile successfully |
+| Criterion                                 | Status | Evidence                                 |
+| ----------------------------------------- | ------ | ---------------------------------------- |
+| Hash API keys with bcrypt                 | ✅     | `lib/security/key_management.py`         |
+| Verify plaintext against hash             | ✅     | `verify_api_key()` function              |
+| Migration function for existing keys      | ✅     | `migrate_plaintext_keys()` function      |
+| Hash in authentication system             | ✅     | `config/dependencies.py` updated         |
+| Compare hashes (not plaintext)            | ✅     | Using `bcrypt.checkpw()`                 |
+| Environment documentation                 | ✅     | `.env.example` and `API_KEY_SECURITY.md` |
+| Migration script                          | ✅     | `scripts/migrate_api_keys.py`            |
+| Comprehensive tests                       | ✅     | 50+ test cases in 3 files                |
+| Security documentation                    | ✅     | 4,000+ words across 4 documents          |
+| API still works                           | ✅     | Backward compatible, no endpoint changes |
+| Plaintext rejected when hashed configured | ✅     | Hash detection and verification in place |
+| Python validation                         | ✅     | All files compile successfully           |
 
 ## Timeline
 
@@ -296,6 +324,7 @@ resume-api/
 ## Ready for Production ✅
 
 This implementation is production-ready with:
+
 - ✅ Enterprise-grade security
 - ✅ Comprehensive test coverage
 - ✅ Backward compatibility (zero breaking changes)

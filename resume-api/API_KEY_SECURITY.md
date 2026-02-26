@@ -7,16 +7,19 @@ The Resume API now uses **bcrypt** to securely hash API keys, protecting them fr
 ## Security Features
 
 ### 1. **Bcrypt Hashing**
+
 - API keys are hashed using bcrypt with a cost factor of 12
 - Bcrypt hashes include a random salt, so the same key produces different hashes
 - Bcrypt uses constant-time comparison to prevent timing attacks
 
 ### 2. **Backward Compatibility**
+
 - The system supports both plaintext and hashed keys during migration
 - Existing plaintext keys continue to work
 - New keys should be hashed for maximum security
 
 ### 3. **Key Verification**
+
 - When an API request is made with `X-API-KEY` header:
   1. The header value is checked against the master key
   2. If not the master key, it's checked against the list of user keys
@@ -180,6 +183,7 @@ Check User Keys (same verification logic)
 ## Security Best Practices
 
 ### ✅ DO:
+
 - **Hash all new API keys** before storing them
 - **Use strong, random keys** (at least 32 characters)
 - **Rotate keys regularly** (quarterly or when compromised)
@@ -188,6 +192,7 @@ Check User Keys (same verification logic)
 - **Monitor API key usage** through logs and metrics
 
 ### ❌ DON'T:
+
 - **Never commit plaintext keys** to version control
 - **Never expose hashes in logs** (they're still sensitive)
 - **Never share API keys** via email or chat
@@ -202,6 +207,7 @@ Check User Keys (same verification logic)
 **Problem**: Valid API key is being rejected.
 
 **Solutions**:
+
 1. Verify the key matches (check for typos, spaces)
 2. Check that `REQUIRE_API_KEY=true`
 3. Check that the key is in `MASTER_API_KEY` or `API_KEYS`
@@ -212,6 +218,7 @@ Check User Keys (same verification logic)
 **Problem**: Request missing the `X-API-KEY` header.
 
 **Solution**:
+
 1. Add `X-API-KEY: your_api_key` header to your requests
 2. Or set `REQUIRE_API_KEY=false` for development only
 
@@ -220,6 +227,7 @@ Check User Keys (same verification logic)
 **Problem**: Migration script fails or doesn't find keys.
 
 **Solutions**:
+
 1. Check that `.env` file exists in the right location
 2. Verify `API_KEYS` and `MASTER_API_KEY` are in the `.env` file
 3. Check that keys are not wrapped in quotes (script handles this)
@@ -273,6 +281,7 @@ print("✓ Verification works correctly")
 ## Support
 
 For issues with API key security:
+
 1. Check this documentation
 2. Review test files in `tests/test_key_management.py`
 3. Check API logs for authentication errors

@@ -313,10 +313,7 @@
   "refresh": "30s",
   "schemaVersion": 30,
   "style": "dark",
-  "tags": [
-    "api",
-    "performance"
-  ],
+  "tags": ["api", "performance"],
   "templating": {
     "list": []
   },

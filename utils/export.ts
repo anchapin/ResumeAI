@@ -28,7 +28,7 @@ export const DEFAULT_FORMAT_OPTIONS: FormatOptions = {
  */
 export async function exportToPDF(
   resumeData: ResumeData,
-  options: FormatOptions = DEFAULT_FORMAT_OPTIONS
+  options: FormatOptions = DEFAULT_FORMAT_OPTIONS,
 ): Promise<void> {
   const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
   const apiKey = localStorage.getItem('RESUMEAI_API_KEY');
@@ -73,7 +73,7 @@ export async function exportToPDF(
  */
 export async function exportToHTML(
   resumeData: ResumeData,
-  options: FormatOptions = DEFAULT_FORMAT_OPTIONS
+  options: FormatOptions = DEFAULT_FORMAT_OPTIONS,
 ): Promise<void> {
   const html = generateHTML(resumeData, options);
   const blob = new Blob([html], { type: 'text/html' });
@@ -94,7 +94,7 @@ export async function exportToHTML(
  */
 export async function exportToWord(
   resumeData: ResumeData,
-  options: FormatOptions = DEFAULT_FORMAT_OPTIONS
+  options: FormatOptions = DEFAULT_FORMAT_OPTIONS,
 ): Promise<void> {
   // For a full DOCX export, you would use a library like docx
   // This is a simplified version using HTML with Word-compatible format
@@ -161,10 +161,14 @@ function generateHTML(resumeData: ResumeData, options: FormatOptions): string {
         </div>
         ${work.position ? `<p class="subtitle">${work.position}</p>` : ''}
         ${work.summary ? `<p class="summary">${work.summary}</p>` : ''}
-        ${work.highlights && work.highlights.length > 0 ? `
+        ${
+          work.highlights && work.highlights.length > 0
+            ? `
         <ul>
-          ${work.highlights.map(h => `<li>${h}</li>`).join('')}
-        </ul>` : ''}
+          ${work.highlights.map((h) => `<li>${h}</li>`).join('')}
+        </ul>`
+            : ''
+        }
       </div>`;
     });
     html += `</section>`;
@@ -221,7 +225,7 @@ function generateWordHTML(resumeData: ResumeData, options: FormatOptions): strin
   // Add Word-specific XML namespaces
   return html.replace(
     '<html>',
-    `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word">`
+    `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word">`,
   );
 }
 

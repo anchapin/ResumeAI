@@ -23,7 +23,7 @@ function getGzipSize(filePath) {
 
 function analyzeBundles() {
   console.log('📦 Bundle Analysis Report\n');
-  
+
   if (!fs.existsSync(distDir)) {
     console.error('Error: dist directory not found. Run "npm run build" first.');
     process.exit(1);
@@ -38,19 +38,19 @@ function analyzeBundles() {
 
     for (const entry of entries) {
       const fullPath = path.join(dir, entry.name);
-      
+
       if (entry.isDirectory()) {
         walkDir(fullPath);
       } else if (entry.isFile() && (entry.name.endsWith('.js') || entry.name.endsWith('.css'))) {
         const size = getFileSize(fullPath);
         const gzipSize = getGzipSize(fullPath);
         const relPath = path.relative(distDir, fullPath);
-        
+
         files.push({
           path: relPath,
           size,
           gzipSize,
-          percentage: 0
+          percentage: 0,
         });
 
         totalSize += size;
@@ -62,7 +62,7 @@ function analyzeBundles() {
   walkDir(distDir);
 
   // Calculate percentages
-  files.forEach(file => {
+  files.forEach((file) => {
     file.percentage = ((file.size / totalSize) * 100).toFixed(2);
   });
 
@@ -74,7 +74,7 @@ function analyzeBundles() {
   console.log('File Name                            Size       Gzip       %');
   console.log('─'.repeat(75));
 
-  files.forEach(file => {
+  files.forEach((file) => {
     const name = file.path.padEnd(35);
     const size = formatBytes(file.size).padEnd(10);
     const gzip = formatBytes(file.gzipSize).padEnd(10);
@@ -82,11 +82,14 @@ function analyzeBundles() {
   });
 
   console.log('─'.repeat(75));
-  console.log(`Total:                               ${formatBytes(totalSize).padEnd(10)} ${formatBytes(totalGzipSize)}`);
+  console.log(
+    `Total:                               ${formatBytes(totalSize).padEnd(10)} ${formatBytes(totalGzipSize)}`,
+  );
   console.log('\n');
 
   // Warnings
-  if (totalGzipSize > 200000) { // 200KB threshold
+  if (totalGzipSize > 200000) {
+    // 200KB threshold
     console.log('⚠️  WARNING: Bundle size is larger than 200KB gzipped');
     console.log('   Current: ' + formatBytes(totalGzipSize) + '\n');
   } else {
@@ -95,13 +98,15 @@ function analyzeBundles() {
 
   // Identify large files
   console.log('Large Files (>50KB):\n');
-  const largeFiles = files.filter(f => f.size > 50000);
-  
+  const largeFiles = files.filter((f) => f.size > 50000);
+
   if (largeFiles.length === 0) {
     console.log('None\n');
   } else {
-    largeFiles.forEach(file => {
-      console.log(`- ${file.path} (${formatBytes(file.size)} / ${formatBytes(file.gzipSize)} gzip)`);
+    largeFiles.forEach((file) => {
+      console.log(
+        `- ${file.path} (${formatBytes(file.size)} / ${formatBytes(file.gzipSize)} gzip)`,
+      );
     });
     console.log();
   }
@@ -119,7 +124,7 @@ function formatBytes(bytes) {
   const k = 1024;
   const sizes = ['B', 'KB', 'MB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+  return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
 }
 
 analyzeBundles();

@@ -145,7 +145,7 @@ describe('Global Error Handler', () => {
       const networkError = { message: 'Network error' };
       networkError.message = 'Failed to fetch';
       errorHandler.handleError(new TypeError('Failed to fetch'));
-      
+
       errorHandler.handleError({
         response: { status: 400 },
         message: 'Validation error',
@@ -218,10 +218,7 @@ describe('Global Error Handler', () => {
 
     it('should include additional context', () => {
       const additionalContext = { userId: '123', action: 'create' };
-      const error = errorHandler.handleError(
-        new Error('Test error'),
-        additionalContext
-      );
+      const error = errorHandler.handleError(new Error('Test error'), additionalContext);
 
       expect(error.context).toEqual(additionalContext);
     });
@@ -251,12 +248,9 @@ describe('Global Error Handler', () => {
 
     it('should pass context to error handler', async () => {
       const context = { operation: 'test' };
-      await withErrorHandling(
-        async () => {
-          throw new Error('Failed');
-        },
-        context
-      );
+      await withErrorHandling(async () => {
+        throw new Error('Failed');
+      }, context);
 
       const error = errorHandler.getErrorHistory()[0];
       expect(error.context).toEqual(context);

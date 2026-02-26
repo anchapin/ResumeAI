@@ -51,7 +51,9 @@
 ## Known Issues
 
 ### ProjectItem Test Failures (9 tests)
+
 These tests appear to have integration issues between the test specs and component implementation:
+
 - `should call onDelete when delete button is clicked`
 - `should remove highlight when X is clicked`
 - `should add highlight when Enter is pressed`

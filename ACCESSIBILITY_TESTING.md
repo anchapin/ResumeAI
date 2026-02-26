@@ -37,6 +37,7 @@ npm run a11y:scan > a11y-reports/latest.html
 ### Test Coverage
 
 **Components tested:**
+
 - ✓ App.tsx
 - ✓ Dashboard.tsx
 - ✓ Editor components (ExperienceItem, EducationItem, etc.)
@@ -59,6 +60,7 @@ npm run a11y:scan > a11y-reports/latest.html
 ```
 
 **Requirements:**
+
 - [ ] Descriptive text or aria-label
 - [ ] Visible focus indicator
 - [ ] Keyboard accessible (Enter/Space)
@@ -76,6 +78,7 @@ npm run a11y:scan > a11y-reports/latest.html
 ```
 
 **Requirements:**
+
 - [ ] Descriptive link text
 - [ ] No "click here" or "read more" alone
 - [ ] Indicate if opens new window
@@ -100,6 +103,7 @@ npm run a11y:scan > a11y-reports/latest.html
 ```
 
 **Requirements:**
+
 - [ ] Associated label for every input
 - [ ] aria-required for required fields
 - [ ] aria-describedby for help text
@@ -131,6 +135,7 @@ npm run a11y:scan > a11y-reports/latest.html
 ```
 
 **Requirements:**
+
 - [ ] Meaningful alt text for informative images
 - [ ] Empty alt="" for decorative images
 - [ ] aria-hidden="true" for decorative images
@@ -151,6 +156,7 @@ npm run a11y:scan > a11y-reports/latest.html
 ```
 
 **Requirements:**
+
 - [ ] Proper hierarchy (h1 → h2 → h3...)
 - [ ] Only one h1 per page
 - [ ] No skipped levels
@@ -159,21 +165,23 @@ npm run a11y:scan > a11y-reports/latest.html
 ### Color Contrast
 
 **Minimum requirements (WCAG AA):**
+
 - Regular text: 4.5:1 ratio
 - Large text (18pt+): 3:1 ratio
 - UI components: 3:1 ratio
 
 ```css
 /* ✓ GOOD - 7.5:1 contrast */
-color: #333333;  /* Dark gray text */
-background-color: #ffffff;  /* White background */
+color: #333333; /* Dark gray text */
+background-color: #ffffff; /* White background */
 
 /* ✗ BAD - 2.5:1 contrast (fails WCAG AA) */
-color: #666666;  /* Medium gray text */
-background-color: #ffffff;  /* White background */
+color: #666666; /* Medium gray text */
+background-color: #ffffff; /* White background */
 ```
 
 **Tools:**
+
 - [WebAIM Contrast Checker](https://webaim.org/resources/contrastchecker/)
 - [Coolors Contrast Checker](https://coolors.co/contrast-checker)
 - Browser DevTools accessibility inspector
@@ -201,6 +209,7 @@ input:focus {
 ```
 
 **Requirements:**
+
 - [ ] Visible focus indicator on all interactive elements
 - [ ] Outline width >= 2px
 - [ ] Sufficient contrast
@@ -230,6 +239,7 @@ input:focus {
 ```
 
 **Requirements:**
+
 - [ ] All interactive elements keyboard accessible
 - [ ] Natural tab order (left-to-right, top-to-bottom)
 - [ ] No keyboard traps (can't Tab out)
@@ -255,6 +265,7 @@ input:focus {
 ```
 
 **Common uses:**
+
 - `aria-label` - Provide accessible name
 - `aria-hidden="true"` - Hide from assistive tech
 - `aria-expanded` - Indicate collapse/expand state
@@ -282,6 +293,7 @@ input:focus {
 ```
 
 **Requirements:**
+
 - [ ] Skip to main content link
 - [ ] Hidden visually but keyboard accessible
 - [ ] Appears on focus
@@ -308,6 +320,7 @@ input:focus {
 ### Screen Reader Testing
 
 **macOS (built-in):**
+
 ```bash
 # Start VoiceOver
 Cmd + F5
@@ -317,12 +330,14 @@ Cmd + F5
 ```
 
 **Windows (NVDA - free):**
+
 - [Download NVDA](https://www.nvaccess.org/)
 - Enable "Browse Mode" (with NVDA started)
 - Navigate with arrow keys
 - Activate with Enter
 
 **Testing tips:**
+
 - [ ] All images have alt text
 - [ ] Form labels announced
 - [ ] Links have descriptive text
@@ -343,13 +358,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      
+
       - name: Install dependencies
         run: npm install
-      
+
       - name: Run accessibility tests
         run: npm run test:a11y
-      
+
       - name: Upload report
         if: always()
         uses: actions/upload-artifact@v2
@@ -430,16 +445,19 @@ color: #333333;
 ## Resources
 
 ### Guidelines & Standards
+
 - [WCAG 2.1](https://www.w3.org/WAI/WCAG21/quickref/)
 - [ARIA Practices](https://www.w3.org/WAI/ARIA/apg/)
 - [WebAIM](https://webaim.org/)
 
 ### Tools
+
 - [axe DevTools](https://www.deque.com/axe/devtools/)
 - [WAVE](https://wave.webaim.org/)
 - [Lighthouse](https://developers.google.com/web/tools/lighthouse)
 
 ### Testing
+
 - [NVDA Screen Reader](https://www.nvaccess.org/)
 - [JAWS Screen Reader](https://www.freedomscientific.com/products/software/jaws/)
 - [VoiceOver (macOS/iOS)](https://www.apple.com/accessibility/voiceover/)
@@ -447,6 +465,7 @@ color: #333333;
 ## Team Training
 
 All developers should:
+
 - [ ] Complete [WebAIM training](https://webaim.org/articles/)
 - [ ] Test with screen reader (NVDA/VoiceOver)
 - [ ] Know WCAG 2.1 Level AA requirements

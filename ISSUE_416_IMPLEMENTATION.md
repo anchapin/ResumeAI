@@ -11,9 +11,11 @@ Implemented a comprehensive Redis caching layer for ResumeAI with support for bo
 ## Files Created
 
 ### 1. Core Cache Manager
+
 **File**: `resume-api/lib/utils/cache.py` (420 lines)
 
 **Key Components**:
+
 - `CacheBackend` enum: REDIS and MEMORY options
 - `InvalidationStrategy` enum: TTL, LRU, FIFO, MANUAL strategies
 - `CacheConfig` dataclass: Per-datatype configuration
@@ -24,6 +26,7 @@ Implemented a comprehensive Redis caching layer for ResumeAI with support for bo
 - `CacheManager`: Main manager supporting both backends
 
 **Features**:
+
 - ✅ Flexible backend switching (Redis/Memory)
 - ✅ LRU eviction for in-memory cache
 - ✅ TTL-based expiration
@@ -34,9 +37,11 @@ Implemented a comprehensive Redis caching layer for ResumeAI with support for bo
 - ✅ Global instance management
 
 ### 2. Cache Integration & Decorators
+
 **File**: `resume-api/lib/utils/cache_integration.py` (350 lines)
 
 **Key Components**:
+
 - `CacheMetrics` class: Track hits, misses, execution times
 - `@cached` decorator: For both sync and async functions
 - `@cache_async` decorator: Async-specific caching
@@ -45,6 +50,7 @@ Implemented a comprehensive Redis caching layer for ResumeAI with support for bo
 - `get_metrics_summary()`: Complete metrics aggregation
 
 **Features**:
+
 - ✅ Automatic result caching with decorators
 - ✅ Custom key builders
 - ✅ Performance metrics per function
@@ -53,9 +59,11 @@ Implemented a comprehensive Redis caching layer for ResumeAI with support for bo
 - ✅ Cache invalidation hooks for data changes
 
 ### 3. Cache Configuration
+
 **File**: `resume-api/config/cache_config.py` (280 lines)
 
 **Key Components**:
+
 - `RedisConnectionPool`: Connection pooling with health checks
 - `CacheTTLConfig`: TTL constants for all data types
 - `get_cache_configs()`: Registry of all cache configurations
@@ -63,6 +71,7 @@ Implemented a comprehensive Redis caching layer for ResumeAI with support for bo
 - Cache stats and invalidation utilities
 
 **Features**:
+
 - ✅ Redis connection pooling
 - ✅ Automatic health checks
 - ✅ Fallback to in-memory cache
@@ -71,6 +80,7 @@ Implemented a comprehensive Redis caching layer for ResumeAI with support for bo
 - ✅ Cache warmup capability
 
 **TTL Settings**:
+
 ```
 Resume Variants:  5 min
 Resume Profile:   15 min
@@ -82,38 +92,45 @@ Salary Data:      24 hours
 ```
 
 ### 4. Comprehensive Tests
+
 **File**: `resume-api/tests/test_caching.py` (650 lines)
 
 **Test Coverage**:
 
 **Basic Operations**:
+
 - Set/get operations
 - Key expiration
 - Cache clearing
 - Hit/miss tracking
 
 **Tag-Based Invalidation**:
+
 - Setting with tags
 - Deleting by tags
 - Multiple tag handling
 
 **Cache Manager**:
+
 - Key generation with args/kwargs
 - Config registration
 - Config-based TTL
 
 **Decorators & Integration**:
+
 - Async decorator functionality
 - Metrics collection
 - Key strategies (simple, user-scoped, request-scoped)
 - Custom key builders
 
 **Invalidation Hooks**:
+
 - User update hooks
 - Resume update hooks
 - Manual invalidation
 
 **Performance Tests**:
+
 - Concurrent operations
 - Performance benefit verification
 - Large dataset handling
@@ -122,9 +139,11 @@ Salary Data:      24 hours
 **Total**: 650 lines, 20+ test methods, comprehensive coverage
 
 ### 5. Documentation
+
 **File**: `REDIS_CACHING_GUIDE.md` (520 lines)
 
 **Sections**:
+
 1. Architecture & Design (component overview, design decisions)
 2. Cache Strategies (TTL, tags, LRU, manual)
 3. Installation & Configuration (setup, Docker, cloud)
@@ -136,6 +155,7 @@ Salary Data:      24 hours
 9. Quick Reference (common operations, env vars)
 
 **Includes**:
+
 - Architecture diagrams
 - Code examples
 - Configuration templates
@@ -189,6 +209,7 @@ Level 5: Configuration (TTLs, connection pooling, health checks)
 ## Key Features Implemented
 
 ### 1. Flexible Backend Support
+
 ```python
 # Automatically switches based on Redis availability
 cache = CacheManager(
@@ -199,6 +220,7 @@ cache = CacheManager(
 ```
 
 ### 2. Automatic Result Caching
+
 ```python
 @cache_async(ttl_seconds=300, key_prefix="variants")
 async def get_resume_variants(resume_id: int):
@@ -206,6 +228,7 @@ async def get_resume_variants(resume_id: int):
 ```
 
 ### 3. Tag-Based Invalidation
+
 ```python
 # Set with tags
 await cache.set(key, value, tags={"user:123", "resume"})
@@ -215,18 +238,21 @@ await cache.delete_by_tags({"user:123"})
 ```
 
 ### 4. Performance Metrics
+
 ```python
 summary = await get_metrics_summary()
 # Returns: hits, misses, hit_rate, execution times per function
 ```
 
 ### 5. Health Checks
+
 ```python
 # Automatic Redis health checks every 30 seconds
 # Falls back to in-memory if Redis unhealthy
 ```
 
 ### 6. LRU Eviction
+
 ```python
 # In-memory cache automatically evicts oldest entries
 # when max_size is reached
@@ -236,6 +262,7 @@ cache = InMemoryCache(max_size=10000)
 ## Integration Points
 
 ### 1. FastAPI Integration
+
 ```python
 @app.on_event("startup")
 async def startup():
@@ -247,6 +274,7 @@ async def get_stats():
 ```
 
 ### 2. Data Change Hooks
+
 ```python
 @router.post("/resume/{id}/update")
 async def update_resume(id: int, data: dict):
@@ -255,6 +283,7 @@ async def update_resume(id: int, data: dict):
 ```
 
 ### 3. Custom Key Strategies
+
 ```python
 @cache_async(key_builder=lambda uid: f"user:{uid}:profile")
 async def get_user_profile(user_id: int):
@@ -264,17 +293,20 @@ async def get_user_profile(user_id: int):
 ## Performance Characteristics
 
 ### In-Memory Cache
+
 - Cache Hit: 0.5-1 ms
 - Cache Miss: 5-10 ms (includes function execution)
 - Hit Rate Target: >85%
 
 ### Redis Cache
+
 - Cache Hit: 1-2 ms (includes network roundtrip)
 - Cache Miss: 2-4 ms (includes network + function execution)
 - Scalable to millions of entries
 - Persistent across restarts
 
 ### Performance Benefit Example
+
 ```
 Without cache:
   Request 1: 150ms (compute + network)
@@ -294,6 +326,7 @@ Performance improvement: ~3x faster
 ## Configuration Examples
 
 ### Development (In-Memory)
+
 ```bash
 # No Redis needed
 CACHE_BACKEND=memory
@@ -301,6 +334,7 @@ CACHE_MAX_SIZE=10000
 ```
 
 ### Production (Redis)
+
 ```bash
 REDIS_HOST=redis.prod.internal
 REDIS_PORT=6379
@@ -308,17 +342,19 @@ CACHE_BACKEND=redis
 ```
 
 ### Docker Compose
+
 ```yaml
 services:
   redis:
     image: redis:7-alpine
     ports:
-      - "6379:6379"
+      - '6379:6379'
 ```
 
 ## Testing Results
 
 ### Test Coverage
+
 - **20+ test methods** covering all functionality
 - **650 lines of test code** with comprehensive scenarios
 - **Unit tests**: Basic operations, expiration, eviction
@@ -327,6 +363,7 @@ services:
 - **Stress tests**: 1000+ entries, long TTLs
 
 ### Test Results
+
 ```
 ✓ Basic cache operations
 ✓ TTL expiration
@@ -347,6 +384,7 @@ None - all new files created without modifying existing code.
 ## Configuration Changes
 
 ### Environment Variables
+
 ```bash
 REDIS_HOST=localhost           # Redis server
 REDIS_PORT=6379              # Redis port
@@ -357,6 +395,7 @@ CACHE_MAX_SIZE=10000        # In-memory cache limit
 ### Dependencies
 
 **Optional** (for Redis support):
+
 ```
 aioredis==2.0.1
 ```
@@ -383,6 +422,7 @@ Already in requirements.txt or optional install.
 ## Usage Examples
 
 ### Example 1: Basic Caching
+
 ```python
 from lib.utils.cache_integration import cache_async
 
@@ -392,6 +432,7 @@ async def expensive_operation():
 ```
 
 ### Example 2: With Tags
+
 ```python
 @cache_async(
     ttl_seconds=900,
@@ -405,6 +446,7 @@ await CacheInvalidationHook.on_user_update(user_id)
 ```
 
 ### Example 3: Custom Keys
+
 ```python
 @cache_async(
     key_builder=lambda uid: CacheKeyStrategy.by_user_id("data", uid)
@@ -416,6 +458,7 @@ async def get_user_data(user_id: int):
 ## Next Steps for Integration
 
 1. **Add to FastAPI startup**:
+
    ```python
    @app.on_event("startup")
    async def startup():
@@ -436,6 +479,7 @@ async def get_user_data(user_id: int):
 ## Metrics & Monitoring
 
 ### Exposed Metrics
+
 ```python
 # Get all metrics
 stats = await get_metrics_summary()

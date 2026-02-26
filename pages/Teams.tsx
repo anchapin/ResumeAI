@@ -37,7 +37,9 @@ const Teams: React.FC = () => {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false);
 
-  const [editingTeam, setEditingTeam] = useState<{ name: string; description: string } | null>(null);
+  const [editingTeam, setEditingTeam] = useState<{ name: string; description: string } | null>(
+    null,
+  );
 
   // Mock current user ID - in a real app, this would come from authentication
   const currentUserId = 1;
@@ -163,7 +165,7 @@ const Teams: React.FC = () => {
   };
 
   const getCurrentUserRole = (): MemberRole | undefined => {
-    const currentMember = members.find(m => m.user_id === currentUserId);
+    const currentMember = members.find((m) => m.user_id === currentUserId);
     return currentMember?.role;
   };
 
@@ -373,9 +375,7 @@ const Teams: React.FC = () => {
                               {selectedTeam.name}
                             </h4>
                             {selectedTeam.description && (
-                              <p className="text-slate-600">
-                                {selectedTeam.description}
-                              </p>
+                              <p className="text-slate-600">{selectedTeam.description}</p>
                             )}
                           </div>
                         </div>
@@ -389,11 +389,10 @@ const Teams: React.FC = () => {
                             </span>
                           </div>
                           <div className="flex items-center gap-2">
-                            <span className="material-symbols-outlined text-blue-500">
-                              person
-                            </span>
+                            <span className="material-symbols-outlined text-blue-500">person</span>
                             <span className="text-sm text-slate-600">
-                              {selectedTeam.member_count || members.length} member{members.length !== 1 ? 's' : ''}
+                              {selectedTeam.member_count || members.length} member
+                              {members.length !== 1 ? 's' : ''}
                             </span>
                           </div>
                           {isTeamOwner && (
@@ -449,10 +448,7 @@ const Teams: React.FC = () => {
                         <h3 className="text-lg font-bold text-slate-900">Activity Feed</h3>
                       </div>
                       <div className="p-6">
-                        <ActivityFeed
-                          activities={activities}
-                          loading={isLoadingActivities}
-                        />
+                        <ActivityFeed activities={activities} loading={isLoadingActivities} />
                       </div>
                     </div>
                   </div>

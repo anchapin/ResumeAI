@@ -14,6 +14,7 @@ Comprehensive test suite created for the main `App.tsx` component with **41 pass
 ## Test Coverage Summary
 
 ### 1. Initialization (5 tests)
+
 Tests for app startup and data loading behavior.
 
 - ✓ Load and render app when data is available
@@ -25,6 +26,7 @@ Tests for app startup and data loading behavior.
 **Coverage:** App initialization, localStorage loading, token validation
 
 ### 2. Navigation (7 tests)
+
 Tests for routing between different pages.
 
 - ✓ Render Dashboard on initial load
@@ -39,6 +41,7 @@ Tests for routing between different pages.
 **Coverage:** All primary routes (Dashboard, Editor, Workspace, Settings, Applications, Bulk, Salary Research), back navigation
 
 ### 3. State Persistence (4 tests)
+
 Tests for localStorage persistence and data management.
 
 - ✓ Save resume data to localStorage when data changes
@@ -49,6 +52,7 @@ Tests for localStorage persistence and data management.
 **Coverage:** Auto-save functionality, debouncing, lifecycle management
 
 ### 4. Error Handling (6 tests)
+
 Tests for storage errors and error UI/UX.
 
 - ✓ Display storage error on QUOTA_EXCEEDED
@@ -61,6 +65,7 @@ Tests for storage errors and error UI/UX.
 **Coverage:** StorageError types (QUOTA_EXCEEDED, PARSE_ERROR, ACCESS_DENIED), error messages, error dismissal, error boundary integration
 
 ### 5. Keyboard Shortcuts (3 tests)
+
 Tests for keyboard shortcut functionality.
 
 - ✓ Show shortcuts modal when shortcut triggered
@@ -70,6 +75,7 @@ Tests for keyboard shortcut functionality.
 **Coverage:** Keyboard shortcut registration, modal display/hide
 
 ### 6. Theme Integration (1 test)
+
 Tests for theme (dark mode) support.
 
 - ✓ Initialize theme from useTheme hook
@@ -77,6 +83,7 @@ Tests for theme (dark mode) support.
 **Coverage:** Theme initialization and integration
 
 ### 7. Toast Container (1 test)
+
 Tests for toast notification system.
 
 - ✓ Render toast container
@@ -84,6 +91,7 @@ Tests for toast notification system.
 **Coverage:** Toast container rendering
 
 ### 8. Sidebar Integration (2 tests)
+
 Tests for Sidebar component integration.
 
 - ✓ Pass correct props to Sidebar
@@ -92,6 +100,7 @@ Tests for Sidebar component integration.
 **Coverage:** Sidebar prop passing, route updates
 
 ### 9. Editor Integration (2 tests)
+
 Tests for Editor component integration.
 
 - ✓ Pass resume data to Editor component
@@ -100,6 +109,7 @@ Tests for Editor component integration.
 **Coverage:** Data passing to Editor, update handling
 
 ### 10. Workspace Integration (1 test)
+
 Tests for Workspace component integration.
 
 - ✓ Pass correct props to Workspace component
@@ -107,6 +117,7 @@ Tests for Workspace component integration.
 **Coverage:** Workspace prop passing
 
 ### 11. Multiple Route Changes (2 tests)
+
 Tests for rapid navigation and state across route changes.
 
 - ✓ Handle rapid route changes
@@ -115,6 +126,7 @@ Tests for rapid navigation and state across route changes.
 **Coverage:** Rapid navigation, data consistency
 
 ### 12. Component Cleanup (2 tests)
+
 Tests for proper cleanup on unmount.
 
 - ✓ Cleanup shortcuts on unmount
@@ -123,6 +135,7 @@ Tests for proper cleanup on unmount.
 **Coverage:** Memory leak prevention, cleanup handlers
 
 ### 13. Initial Resume Data (2 tests)
+
 Tests for initial resume data structure.
 
 - ✓ Render with initial resume data structure
@@ -131,6 +144,7 @@ Tests for initial resume data structure.
 **Coverage:** Initial data validation, required fields
 
 ### 14. Sidebar with Routes (2 tests)
+
 Tests for sidebar rendering on different routes.
 
 - ✓ Render sidebar on Dashboard
@@ -145,6 +159,7 @@ Tests for sidebar rendering on different routes.
 All external dependencies are mocked for isolated unit testing:
 
 ### Component Mocks
+
 - `Sidebar` - Navigation and shortcut buttons
 - `Dashboard` - Dashboard page content
 - `Editor` - Editor page with back button
@@ -158,13 +173,17 @@ All external dependencies are mocked for isolated unit testing:
 - `KeyboardShortcutsHelp` - Shortcuts modal
 
 ### Hook Mocks
+
 - `useTheme` - Returns light theme by default
 
 ### Library Mocks
+
 - `react-toastify` - ToastContainer
 
 ### Storage Mock
+
 Complete localStorage implementation with:
+
 - `getItem()` - Get stored values
 - `setItem()` - Store values
 - `removeItem()` - Delete values
@@ -175,6 +194,7 @@ Complete localStorage implementation with:
 ## Test Coverage Metrics
 
 ### App.tsx Coverage (Primary Component Under Test)
+
 ```
 Statements: 72.94%
 Branches:   78.57%
@@ -185,6 +205,7 @@ Lines:      74.35%
 **Uncovered Lines:** 269-275, 284, 295-301 (Interview Practice route with no sidebar)
 
 ### Coverage Breakdown
+
 - **Well Tested:** Initialization, navigation, error handling, state persistence
 - **Fully Tested:** OAuth token validation, localStorage operations, error messages
 - **Partially Tested:** Interview Practice route (no Sidebar)
@@ -194,30 +215,35 @@ Lines:      74.35%
 ## Key Test Features
 
 ### 1. Realistic User Flows
+
 - User navigation between pages
 - Data persistence across sessions
 - Error scenarios with recovery
 - Rapid navigation handling
 
 ### 2. Storage Error Scenarios
+
 - Quota exceeded (storage full)
 - Parse errors (corrupted data)
 - Access denied (permissions)
 - Token expiration (security)
 
 ### 3. State Management
+
 - Auto-save with debouncing
 - Defensive array validation
 - Data consistency across routes
 - Cleanup on unmount
 
 ### 4. Error Recovery
+
 - Error message display
 - Auto-dismissal after 5 seconds
 - Manual dismissal button
 - Error boundary fallback
 
 ### 5. Component Integration
+
 - Sidebar receives correct props
 - Resume data passed to children
 - Navigation callbacks work
@@ -228,21 +254,25 @@ Lines:      74.35%
 ## Test Execution
 
 ### Run All Tests
+
 ```bash
 npm test -- tests/App.test.tsx
 ```
 
 ### Run with Coverage
+
 ```bash
 npm test -- tests/App.test.tsx --coverage
 ```
 
 ### Run Specific Test Suite
+
 ```bash
 npm test -- tests/App.test.tsx -t "Navigation"
 ```
 
 ### Watch Mode
+
 ```bash
 npm test -- tests/App.test.tsx --watch
 ```
@@ -252,30 +282,35 @@ npm test -- tests/App.test.tsx --watch
 ## Critical Paths Tested
 
 ### 1. Happy Path: Fresh Install
+
 1. App loads with no localStorage data
 2. Initial resume data is used
 3. Pages render correctly
 4. Navigation works
 
 ### 2. Happy Path: Resume with Saved Data
+
 1. App loads with localStorage data
 2. Data is validated and used
 3. Changes are auto-saved
 4. Token expiration is checked
 
 ### 3. Error Path: Storage Full
+
 1. Storage quota is exceeded
 2. Error message is displayed
 3. User can dismiss or wait for auto-dismiss
 4. App continues to function
 
 ### 4. Error Path: Token Expired
+
 1. Invalid or expired token is detected
 2. Token is removed from storage
 3. Warning is logged
 4. User can continue with fresh session
 
 ### 5. Navigation Path: Multi-page Flow
+
 1. User navigates between pages
 2. Sidebar updates with current route
 3. Resume data is preserved
@@ -286,23 +321,27 @@ npm test -- tests/App.test.tsx --watch
 ## Assertions and Validations
 
 ### Data Validation
+
 - ✓ Arrays are validated and converted to empty arrays if invalid
 - ✓ Required fields are present
 - ✓ Data structure matches SimpleResumeData type
 
 ### Error Messages
+
 - ✓ QUOTA_EXCEEDED: "Storage full. Please clear some browser data."
 - ✓ PARSE_ERROR: "Data corrupted. Using default resume."
 - ✓ ACCESS_DENIED: "Storage access denied. Changes won't be saved."
 - ✓ NOT_AVAILABLE: "Storage not available. Changes won't be saved."
 
 ### Component Presence
+
 - ✓ ErrorBoundary wraps entire app
 - ✓ ToastContainer is rendered
 - ✓ Sidebar renders on supported routes
 - ✓ Correct page renders for current route
 
 ### Timing
+
 - ✓ Initial load shows app after loading state
 - ✓ Error auto-dismiss after 5 seconds
 - ✓ Saves debounced to 1 second intervals

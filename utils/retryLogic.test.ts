@@ -114,9 +114,7 @@ describe('Retry Logic', () => {
     });
 
     it('returns response immediately on success', async () => {
-      fetchSpy.mockResolvedValueOnce(
-        new Response('success', { status: 200 })
-      );
+      fetchSpy.mockResolvedValueOnce(new Response('success', { status: 200 }));
 
       const response = await retryWithBackoff('http://test.com/api');
       expect(response.status).toBe(200);
@@ -124,9 +122,7 @@ describe('Retry Logic', () => {
     });
 
     it('returns response on non-retryable 4xx error', async () => {
-      fetchSpy.mockResolvedValueOnce(
-        new Response('not found', { status: 404 })
-      );
+      fetchSpy.mockResolvedValueOnce(new Response('not found', { status: 404 }));
 
       const response = await retryWithBackoff('http://test.com/api');
       expect(response.status).toBe(404);
@@ -182,9 +178,9 @@ describe('Retry Logic', () => {
         .mockResolvedValueOnce(new Response('error', { status: 500 }))
         .mockResolvedValueOnce(new Response('error', { status: 500 }));
 
-      await expect(
-        retryWithBackoff('http://test.com/api', {}, { maxRetries: 2 })
-      ).rejects.toThrow('Failed after 3 attempts');
+      await expect(retryWithBackoff('http://test.com/api', {}, { maxRetries: 2 })).rejects.toThrow(
+        'Failed after 3 attempts',
+      );
       expect(fetchSpy).toHaveBeenCalledTimes(3); // initial + 2 retries
     });
 
@@ -192,7 +188,7 @@ describe('Retry Logic', () => {
       fetchSpy.mockResolvedValue(new Response('error', { status: 500 }));
 
       await expect(
-        retryWithBackoff('http://test.com/api', {}, { maxRetries: 1 })
+        retryWithBackoff('http://test.com/api', {}, { maxRetries: 1 }),
       ).rejects.toThrow();
       expect(fetchSpy).toHaveBeenCalledTimes(2); // initial + 1 retry
     });

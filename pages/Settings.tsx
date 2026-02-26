@@ -52,16 +52,19 @@ interface APIKeyListResponse {
 /** Generate mock usage history */
 const generateMockUsageHistory = (): UsageData[] => {
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
-  return months.map((period, idx) => ({
-    period,
-    pdfGenerations: Math.floor(Math.random() * 50) + 10,
-    aiTailoring: Math.floor(Math.random() * 30) + 5,
-    variantsGenerated: Math.floor(Math.random() * 20) + 5,
-    totalRequests: 0,
-  })).map(item => ({
-    ...item,
-    totalRequests: item.pdfGenerations + item.aiTailoring + item.variantsGenerated,
-  })).reverse();
+  return months
+    .map((period, idx) => ({
+      period,
+      pdfGenerations: Math.floor(Math.random() * 50) + 10,
+      aiTailoring: Math.floor(Math.random() * 30) + 5,
+      variantsGenerated: Math.floor(Math.random() * 20) + 5,
+      totalRequests: 0,
+    }))
+    .map((item) => ({
+      ...item,
+      totalRequests: item.pdfGenerations + item.aiTailoring + item.variantsGenerated,
+    }))
+    .reverse();
 };
 
 /** Mock current usage stats */
@@ -94,7 +97,7 @@ async function fetchAPIKeys(): Promise<APIKeyInfo[]> {
 
   const response = await fetch(`${API_URL}/api-keys`, {
     headers: {
-      'Authorization': `Bearer ${token}`,
+      Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json',
     },
   });
@@ -128,7 +131,7 @@ async function createAPIKey(params: {
   const response = await fetch(`${API_URL}/api-keys`, {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${token}`,
+      Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify(params),
@@ -154,7 +157,7 @@ async function revokeAPIKey(keyId: number): Promise<void> {
   const response = await fetch(`${API_URL}/api-keys/${keyId}`, {
     method: 'DELETE',
     headers: {
-      'Authorization': `Bearer ${token}`,
+      Authorization: `Bearer ${token}`,
     },
   });
 
@@ -294,7 +297,7 @@ const Settings: React.FC = () => {
       setNewKeyDailyLimit(1000);
       setNewKeyExpiresInDays('');
       await loadUserApiKeys();
-      toast.success('API key created successfully. Copy it now - you won\'t see it again!');
+      toast.success("API key created successfully. Copy it now - you won't see it again!");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Failed to create API key');
     } finally {
@@ -304,7 +307,11 @@ const Settings: React.FC = () => {
 
   // Handle revoke API key
   const handleRevokeApiKey = async (keyId: number, keyPrefix: string) => {
-    if (!confirm(`Are you sure you want to revoke the API key "${keyPrefix}..."? This action cannot be undone.`)) {
+    if (
+      !confirm(
+        `Are you sure you want to revoke the API key "${keyPrefix}..."? This action cannot be undone.`,
+      )
+    ) {
       return;
     }
 
@@ -374,7 +381,9 @@ const Settings: React.FC = () => {
         <section className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
           <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50">
             <h3 className="text-lg font-bold text-slate-900">Master API Key</h3>
-            <p className="text-sm text-slate-500">Configure the master API key for backend authentication</p>
+            <p className="text-sm text-slate-500">
+              Configure the master API key for backend authentication
+            </p>
           </div>
           <div className="p-6 space-y-4">
             {/* API Key Status Indicator */}
@@ -414,7 +423,8 @@ const Settings: React.FC = () => {
                 </button>
               </div>
               <p className="text-xs text-slate-500">
-                Get your API key from the backend dashboard. Required for PDF generation and AI tailoring features.
+                Get your API key from the backend dashboard. Required for PDF generation and AI
+                tailoring features.
               </p>
             </div>
 
@@ -457,7 +467,9 @@ const Settings: React.FC = () => {
           <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
             <div>
               <h3 className="text-lg font-bold text-slate-900">Webhooks</h3>
-              <p className="text-sm text-slate-500">Configure webhooks to receive event notifications</p>
+              <p className="text-sm text-slate-500">
+                Configure webhooks to receive event notifications
+              </p>
             </div>
             <button
               onClick={() => {
@@ -480,7 +492,7 @@ const Settings: React.FC = () => {
                 setSelectedWebhookId(webhookId);
                 setShowDeliveryLogs(true);
               }}
-              onRefresh={() => setWebhookRefreshKey(k => k + 1)}
+              onRefresh={() => setWebhookRefreshKey((k) => k + 1)}
             />
           </div>
         </section>
@@ -490,7 +502,9 @@ const Settings: React.FC = () => {
           <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
             <div>
               <h3 className="text-lg font-bold text-slate-900">Your API Keys</h3>
-              <p className="text-sm text-slate-500">Generate and manage personal API keys for API access</p>
+              <p className="text-sm text-slate-500">
+                Generate and manage personal API keys for API access
+              </p>
             </div>
             <button
               onClick={() => setShowCreateKeyModal(true)}
@@ -504,7 +518,9 @@ const Settings: React.FC = () => {
             {/* Loading State */}
             {isLoadingKeys && (
               <div className="flex items-center justify-center py-8">
-                <span className="material-symbols-outlined animate-spin text-primary-600 text-3xl">progress_activity</span>
+                <span className="material-symbols-outlined animate-spin text-primary-600 text-3xl">
+                  progress_activity
+                </span>
               </div>
             )}
 
@@ -521,7 +537,9 @@ const Settings: React.FC = () => {
               <div className="text-center py-8">
                 <span className="material-symbols-outlined text-slate-300 text-6xl mb-4">key</span>
                 <p className="text-slate-500 font-medium mb-2">No API keys yet</p>
-                <p className="text-slate-400 text-sm mb-4">Create your first API key to access the API</p>
+                <p className="text-slate-400 text-sm mb-4">
+                  Create your first API key to access the API
+                </p>
                 <button
                   onClick={() => setShowCreateKeyModal(true)}
                   className="px-4 py-2 rounded-lg bg-primary-600 text-white font-bold text-sm hover:bg-primary-700 transition-colors"
@@ -614,13 +632,18 @@ const Settings: React.FC = () => {
         <section className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
           <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50">
             <h3 className="text-lg font-bold text-slate-900">Profile Information</h3>
-            <p className="text-sm text-slate-500">Update your personal details and public profile</p>
+            <p className="text-sm text-slate-500">
+              Update your personal details and public profile
+            </p>
           </div>
           <div className="p-6 space-y-6">
             <div className="flex items-start gap-6">
-              <div className="w-20 h-20 rounded-full bg-slate-200 bg-cover bg-center border border-slate-200 shadow-sm flex-shrink-0 relative group cursor-pointer" style={{ backgroundImage: 'url("https://picsum.photos/100/100")' }}>
+              <div
+                className="w-20 h-20 rounded-full bg-slate-200 bg-cover bg-center border border-slate-200 shadow-sm flex-shrink-0 relative group cursor-pointer"
+                style={{ backgroundImage: 'url("https://picsum.photos/100/100")' }}
+              >
                 <div className="absolute inset-0 bg-black/40 rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white">
-                    <span className="material-symbols-outlined">edit</span>
+                  <span className="material-symbols-outlined">edit</span>
                 </div>
               </div>
               <div className="flex-1 space-y-4">
@@ -651,9 +674,9 @@ const Settings: React.FC = () => {
                   />
                 </div>
                 <div className="pt-2">
-                    <button className="px-5 py-2 rounded-lg bg-primary-600 text-white font-bold text-sm hover:bg-primary-700 transition-colors shadow-lg shadow-primary-600/20">
-                        Save Changes
-                    </button>
+                  <button className="px-5 py-2 rounded-lg bg-primary-600 text-white font-bold text-sm hover:bg-primary-700 transition-colors shadow-lg shadow-primary-600/20">
+                    Save Changes
+                  </button>
                 </div>
               </div>
             </div>
@@ -664,43 +687,47 @@ const Settings: React.FC = () => {
         <section className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
           <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50">
             <h3 className="text-lg font-bold text-slate-900">App Preferences</h3>
-            <p className="text-sm text-slate-500">Manage your workspace and notification settings</p>
+            <p className="text-sm text-slate-500">
+              Manage your workspace and notification settings
+            </p>
           </div>
           <div className="p-6 divide-y divide-slate-100">
             <div className="flex items-center justify-between py-4 first:pt-0">
-                <div>
-                    <h4 className="text-sm font-bold text-slate-900">Email Notifications</h4>
-                    <p className="text-sm text-slate-500">Receive updates about your job applications</p>
-                </div>
-                <label className="relative inline-flex items-center cursor-pointer">
-                    <input type="checkbox" defaultChecked className="sr-only peer" />
-                    <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
-                </label>
+              <div>
+                <h4 className="text-sm font-bold text-slate-900">Email Notifications</h4>
+                <p className="text-sm text-slate-500">
+                  Receive updates about your job applications
+                </p>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" defaultChecked className="sr-only peer" />
+                <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
+              </label>
             </div>
             <div className="flex items-center justify-between py-4">
-                <div>
-                    <h4 className="text-sm font-bold text-slate-900">Dark Mode</h4>
-                    <p className="text-sm text-slate-500">Switch between light and dark themes</p>
-                </div>
-                <label className="relative inline-flex items-center cursor-pointer">
-                    <input
-                      type="checkbox"
-                      className="sr-only peer"
-                      checked={isDark}
-                      onChange={toggleTheme}
-                    />
-                    <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-slate-900"></div>
-                </label>
+              <div>
+                <h4 className="text-sm font-bold text-slate-900">Dark Mode</h4>
+                <p className="text-sm text-slate-500">Switch between light and dark themes</p>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  className="sr-only peer"
+                  checked={isDark}
+                  onChange={toggleTheme}
+                />
+                <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-slate-900"></div>
+              </label>
             </div>
-             <div className="flex items-center justify-between py-4 last:pb-0">
-                <div>
-                    <h4 className="text-sm font-bold text-slate-900">Auto-Save</h4>
-                    <p className="text-sm text-slate-500">Automatically save changes in the editor</p>
-                </div>
-                <label className="relative inline-flex items-center cursor-pointer">
-                    <input type="checkbox" defaultChecked className="sr-only peer" />
-                    <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
-                </label>
+            <div className="flex items-center justify-between py-4 last:pb-0">
+              <div>
+                <h4 className="text-sm font-bold text-slate-900">Auto-Save</h4>
+                <p className="text-sm text-slate-500">Automatically save changes in the editor</p>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" defaultChecked className="sr-only peer" />
+                <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
+              </label>
             </div>
           </div>
         </section>
@@ -715,19 +742,27 @@ const Settings: React.FC = () => {
             {/* Current Usage Overview */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="bg-slate-50 rounded-xl p-4 text-center">
-                <div className="text-3xl font-bold text-primary-600">{currentUsageStats.pdfGenerations}</div>
+                <div className="text-3xl font-bold text-primary-600">
+                  {currentUsageStats.pdfGenerations}
+                </div>
                 <div className="text-sm text-slate-500 mt-1">PDF Generations</div>
               </div>
               <div className="bg-slate-50 rounded-xl p-4 text-center">
-                <div className="text-3xl font-bold text-amber-600">{currentUsageStats.aiTailoring}</div>
+                <div className="text-3xl font-bold text-amber-600">
+                  {currentUsageStats.aiTailoring}
+                </div>
                 <div className="text-sm text-slate-500 mt-1">AI Tailoring</div>
               </div>
               <div className="bg-slate-50 rounded-xl p-4 text-center">
-                <div className="text-3xl font-bold text-purple-600">{currentUsageStats.variantsGenerated}</div>
+                <div className="text-3xl font-bold text-purple-600">
+                  {currentUsageStats.variantsGenerated}
+                </div>
                 <div className="text-sm text-slate-500 mt-1">Variants Generated</div>
               </div>
               <div className="bg-slate-50 rounded-xl p-4 text-center">
-                <div className="text-3xl font-bold text-slate-700">{currentUsageStats.totalRequests}</div>
+                <div className="text-3xl font-bold text-slate-700">
+                  {currentUsageStats.totalRequests}
+                </div>
                 <div className="text-sm text-slate-500 mt-1">Total Requests</div>
               </div>
             </div>
@@ -737,14 +772,18 @@ const Settings: React.FC = () => {
               <div className="flex items-center justify-between text-sm">
                 <span className="font-medium text-slate-700">Monthly Usage</span>
                 <span className="text-slate-500">
-                  {currentUsageStats.totalRequests} / {currentUsageStats.monthlyLimit} requests ({usagePercentage}%)
+                  {currentUsageStats.totalRequests} / {currentUsageStats.monthlyLimit} requests (
+                  {usagePercentage}%)
                 </span>
               </div>
               <div className="w-full bg-slate-100 rounded-full h-3 overflow-hidden">
                 <div
                   className={`h-full rounded-full transition-all duration-500 ${
-                    usagePercentage >= 90 ? 'bg-red-500' :
-                    usagePercentage >= 70 ? 'bg-amber-500' : 'bg-primary-500'
+                    usagePercentage >= 90
+                      ? 'bg-red-500'
+                      : usagePercentage >= 70
+                        ? 'bg-amber-500'
+                        : 'bg-primary-500'
                   }`}
                   style={{ width: `${usagePercentage}%` }}
                 ></div>
@@ -758,7 +797,9 @@ const Settings: React.FC = () => {
             <div className="flex items-center justify-between py-3 border-t border-slate-100">
               <div>
                 <h4 className="text-sm font-bold text-slate-900">Usage Alert Threshold</h4>
-                <p className="text-sm text-slate-500">Get notified when usage exceeds this percentage</p>
+                <p className="text-sm text-slate-500">
+                  Get notified when usage exceeds this percentage
+                </p>
               </div>
               <div className="flex items-center gap-2">
                 <input
@@ -769,21 +810,32 @@ const Settings: React.FC = () => {
                   onChange={(e) => setUsageAlertThreshold(Number(e.target.value))}
                   className="w-24 h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer"
                 />
-                <span className="text-sm font-bold text-slate-700 w-12 text-right">{usageAlertThreshold}%</span>
+                <span className="text-sm font-bold text-slate-700 w-12 text-right">
+                  {usageAlertThreshold}%
+                </span>
               </div>
             </div>
 
             {/* Usage History Chart */}
             <div className="pt-4 border-t border-slate-100">
-              <h4 className="text-sm font-bold text-slate-900 mb-4">Usage History (Last 6 Months)</h4>
+              <h4 className="text-sm font-bold text-slate-900 mb-4">
+                Usage History (Last 6 Months)
+              </h4>
               <div className="h-40 flex items-end gap-2">
                 {usageHistory.map((month, idx) => {
-                  const maxRequests = Math.max(...usageHistory.map(m => m.totalRequests));
-                  const heightPercent = maxRequests > 0 ? (month.totalRequests / maxRequests) * 100 : 0;
+                  const maxRequests = Math.max(...usageHistory.map((m) => m.totalRequests));
+                  const heightPercent =
+                    maxRequests > 0 ? (month.totalRequests / maxRequests) * 100 : 0;
                   return (
                     <div key={idx} className="flex-1 flex flex-col items-center gap-2">
-                      <div className="w-full bg-primary-100 rounded-t-lg relative group" style={{ height: `${heightPercent}%`, minHeight: '8px' }}>
-                        <div className="absolute bottom-0 left-0 right-0 bg-primary-500 rounded-t-lg" style={{ height: '100%' }}></div>
+                      <div
+                        className="w-full bg-primary-100 rounded-t-lg relative group"
+                        style={{ height: `${heightPercent}%`, minHeight: '8px' }}
+                      >
+                        <div
+                          className="absolute bottom-0 left-0 right-0 bg-primary-500 rounded-t-lg"
+                          style={{ height: '100%' }}
+                        ></div>
                         <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
                           {month.totalRequests} requests
                         </div>
@@ -818,14 +870,16 @@ const Settings: React.FC = () => {
             <p className="text-sm text-red-600/70">Irreversible actions for your account</p>
           </div>
           <div className="p-6">
-             <div className="flex items-center justify-between">
-                <div>
-                    <h4 className="text-sm font-bold text-slate-900">Delete Account</h4>
-                    <p className="text-sm text-slate-500">Permanently remove your data and all resumes</p>
-                </div>
-                <button className="px-5 py-2 rounded-lg border border-red-200 text-red-600 font-bold text-sm hover:bg-red-50 transition-colors">
-                    Delete Account
-                </button>
+            <div className="flex items-center justify-between">
+              <div>
+                <h4 className="text-sm font-bold text-slate-900">Delete Account</h4>
+                <p className="text-sm text-slate-500">
+                  Permanently remove your data and all resumes
+                </p>
+              </div>
+              <button className="px-5 py-2 rounded-lg border border-red-200 text-red-600 font-bold text-sm hover:bg-red-50 transition-colors">
+                Delete Account
+              </button>
             </div>
           </div>
         </section>
@@ -875,9 +929,7 @@ const Settings: React.FC = () => {
                       >
                         {isCopied ? (
                           <>
-                            <span className="material-symbols-outlined text-[14px]">
-                              check
-                            </span>
+                            <span className="material-symbols-outlined text-[14px]">check</span>
                             <span>Copied</span>
                           </>
                         ) : (
@@ -911,11 +963,15 @@ const Settings: React.FC = () => {
                       className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all text-slate-900"
                       maxLength={100}
                     />
-                    <p className="text-xs text-slate-500">A descriptive name to identify this key</p>
+                    <p className="text-xs text-slate-500">
+                      A descriptive name to identify this key
+                    </p>
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-sm font-bold text-slate-700">Description (optional)</label>
+                    <label className="text-sm font-bold text-slate-700">
+                      Description (optional)
+                    </label>
                     <textarea
                       value={newKeyDescription}
                       onChange={(e) => setNewKeyDescription(e.target.value)}
@@ -955,10 +1011,14 @@ const Settings: React.FC = () => {
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-sm font-bold text-slate-700">Expiration (optional)</label>
+                    <label className="text-sm font-bold text-slate-700">
+                      Expiration (optional)
+                    </label>
                     <select
                       value={newKeyExpiresInDays === '' ? '' : String(newKeyExpiresInDays)}
-                      onChange={(e) => setNewKeyExpiresInDays(e.target.value === '' ? '' : Number(e.target.value))}
+                      onChange={(e) =>
+                        setNewKeyExpiresInDays(e.target.value === '' ? '' : Number(e.target.value))
+                      }
                       className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all text-slate-900 bg-white"
                     >
                       <option value="">Never expires</option>
@@ -983,7 +1043,9 @@ const Settings: React.FC = () => {
                       className="flex-1 px-4 py-3 rounded-lg bg-primary-600 text-white font-bold hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                     >
                       {isCreatingKey && (
-                        <span className="material-symbols-outlined animate-spin text-[18px]">progress_activity</span>
+                        <span className="material-symbols-outlined animate-spin text-[18px]">
+                          progress_activity
+                        </span>
                       )}
                       {isCreatingKey ? 'Creating...' : 'Create API Key'}
                     </button>
@@ -1020,8 +1082,12 @@ const Settings: React.FC = () => {
                 onSuccess={() => {
                   setShowWebhookModal(false);
                   setEditingWebhook(undefined);
-                  setWebhookRefreshKey(k => k + 1);
-                  toast.success(editingWebhook ? 'Webhook updated successfully' : 'Webhook created successfully');
+                  setWebhookRefreshKey((k) => k + 1);
+                  toast.success(
+                    editingWebhook
+                      ? 'Webhook updated successfully'
+                      : 'Webhook created successfully',
+                  );
                 }}
                 onCancel={() => {
                   setShowWebhookModal(false);

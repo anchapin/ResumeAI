@@ -16,6 +16,7 @@ Implemented OAuth 2.0 PKCE (Proof Key for Public Clients) security enhancement t
 ### 1. Frontend PKCE Library (`src/lib/oauth.ts` - 198 lines)
 
 **Core Functions:**
+
 - ✅ `generateCodeVerifier()` - 128-character cryptographically random verifier
 - ✅ `generateCodeChallenge(verifier)` - SHA256 hash + base64url encoding
 - ✅ `storeVerifier(verifier, provider)` - Ephemeral sessionStorage storage
@@ -28,6 +29,7 @@ Implemented OAuth 2.0 PKCE (Proof Key for Public Clients) security enhancement t
 ### 2. Backend PKCE Implementation (`resume-api/routes/github.py`)
 
 **Core Functions:**
+
 - ✅ `generate_pkce_code_verifier()` - Server-side verifier generation
 - ✅ `generate_pkce_code_challenge(verifier)` - Challenge generation (SHA256)
 - ✅ `verify_pkce_challenge(verifier, challenge)` - Constant-time verification
@@ -37,6 +39,7 @@ Implemented OAuth 2.0 PKCE (Proof Key for Public Clients) security enhancement t
 ### 3. Test Coverage
 
 **Frontend:** 31 tests passing ✅
+
 - Code verifier generation and validation
 - Code challenge generation and encoding
 - Storage/retrieval with sessionStorage
@@ -44,6 +47,7 @@ Implemented OAuth 2.0 PKCE (Proof Key for Public Clients) security enhancement t
 - Error handling
 
 **Backend:** 9 tests passing ✅
+
 - Verifier and challenge generation
 - Verification logic
 - RFC 7636 compliance
@@ -58,16 +62,18 @@ Implemented OAuth 2.0 PKCE (Proof Key for Public Clients) security enhancement t
 ✅ Ephemeral storage (sessionStorage + 10-min expiration)  
 ✅ State parameter validation (CSRF protection)  
 ✅ Session fixation attack prevention  
-✅ Authorization code interception protection  
+✅ Authorization code interception protection
 
 ## Files Changed
 
 ### New Files
+
 - `src/lib/oauth.ts` (198 lines)
 - `tests/oauth-pkce.test.ts` (415 lines)
 - `resume-api/test_pkce_standalone.py` (180 lines)
 
 ### Modified Files
+
 - `resume-api/routes/github.py` - PKCE functions and validation
 - `resume-api/database.py` - GitHubOAuthState model updates
 - `components/GitHubSettings.tsx` - Uses PKCE in OAuth flow

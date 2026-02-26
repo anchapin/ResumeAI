@@ -31,7 +31,7 @@ A comprehensive storage management system with quota checking and compression su
   - Accounts for compression
 
 - **`getUsedSize()`** - Calculate total storage usage
-  - Only counts resumeai_ prefixed items
+  - Only counts resumeai\_ prefixed items
   - Useful for cleanup operations
 
 - **`getStats()`** - Get comprehensive storage statistics
@@ -40,31 +40,35 @@ A comprehensive storage management system with quota checking and compression su
 ### 2. **Storage Quota Functions** (`src/lib/storage.ts`)
 
 #### `getStorageQuota()`
+
 ```typescript
 {
-  estimatedQuota: number;      // Total available storage (bytes)
-  estimatedUsage: number;      // Currently used (bytes)
-  percentUsed: number;         // Percentage of quota used
+  estimatedQuota: number; // Total available storage (bytes)
+  estimatedUsage: number; // Currently used (bytes)
+  percentUsed: number; // Percentage of quota used
 }
 ```
 
 #### `getLocalStorageUsage()`
+
 Calculate total localStorage usage by summing all key-value sizes.
 
 #### `checkQuotaAvailable(sizeNeeded)`
+
 ```typescript
 {
-  available: boolean;          // Can data be stored?
-  quotaInfo: QuotaInfo;       // Current quota information
+  available: boolean; // Can data be stored?
+  quotaInfo: QuotaInfo; // Current quota information
 }
 ```
 
 #### `checkStorageWarning()`
+
 ```typescript
 {
-  shouldWarn: boolean;         // True if > 80% used
-  percentUsed: number;        // Current usage percentage
-  message: string;            // User-friendly message
+  shouldWarn: boolean; // True if > 80% used
+  percentUsed: number; // Current usage percentage
+  message: string; // User-friendly message
 }
 ```
 
@@ -75,7 +79,7 @@ A React component that displays storage warnings and cleanup options.
 #### Features:
 
 - **Automatic Detection**: Checks quota every 30 seconds
-- **Progressive Warnings**: 
+- **Progressive Warnings**:
   - Yellow warning at 80% usage
   - Red critical warning at 95% usage
 - **Visual Feedback**: Shows storage usage bar
@@ -96,13 +100,13 @@ A custom React hook for managing storage quota in components.
 
 ```typescript
 {
-  quotaInfo: StorageQuotaInfo | null;        // Current quota information
-  isLoading: boolean;                        // Loading state
-  error: string | null;                      // Error message
-  checkQuota: () => Promise<void>;           // Manual quota check
-  clearOldData: () => Promise<boolean>;      // Clean old data
-  clearAllStorage: () => Promise<boolean>;   // Clear everything
-  formatBytes: (bytes: number) => string;    // Format byte size
+  quotaInfo: StorageQuotaInfo | null; // Current quota information
+  isLoading: boolean; // Loading state
+  error: string | null; // Error message
+  checkQuota: () => Promise<void>; // Manual quota check
+  clearOldData: () => Promise<boolean>; // Clean old data
+  clearAllStorage: () => Promise<boolean>; // Clear everything
+  formatBytes: (bytes: number) => string; // Format byte size
 }
 ```
 
@@ -132,6 +136,7 @@ if (quotaInfo?.isCritical) {
 ## Data Compression
 
 Storage uses simple base64 encoding compression:
+
 - Data > 1KB is automatically compressed
 - Compressed data is prefixed with `_compressed_` suffix
 - Automatic detection and decompression on retrieval
@@ -163,6 +168,7 @@ Example: Resume with 50KB of data
 ### Error Handling:
 
 When quota is exceeded:
+
 1. StorageWarning component displays cleanup options
 2. Users can clean old data or clear all storage
 3. Quota is re-checked after cleanup
@@ -211,9 +217,9 @@ npm test -- src/components/StorageWarning.test.tsx
 import { StorageManager } from '@/lib/storage';
 
 // Store data (with compression for large data)
-await StorageManager.setItem('my-data', { 
+await StorageManager.setItem('my-data', {
   name: 'value',
-  largeContent: 'x'.repeat(5000)
+  largeContent: 'x'.repeat(5000),
 });
 
 // Retrieve data
@@ -248,10 +254,10 @@ if (available) {
 import { useStorageQuota } from '@/hooks/useStorageQuota';
 
 function MyComponent() {
-  const { 
-    quotaInfo, 
-    clearOldData, 
-    formatBytes 
+  const {
+    quotaInfo,
+    clearOldData,
+    formatBytes
   } = useStorageQuota();
 
   return (
@@ -263,7 +269,7 @@ function MyComponent() {
           {formatBytes(quotaInfo.estimatedQuota)})
         </p>
       )}
-      
+
       {quotaInfo?.shouldWarn && (
         <button onClick={clearOldData}>
           Clean Storage
@@ -297,6 +303,7 @@ The implementation is **backward compatible**. Existing code using `saveResumeDa
 ### To Use New Features:
 
 1. **For new features**, use StorageManager directly:
+
 ```typescript
 import { StorageManager } from '@/src/lib/storage';
 
@@ -306,6 +313,7 @@ await StorageManager.setItem(key, value);
 ```
 
 2. **For quota monitoring**, use the hook:
+
 ```typescript
 import { useStorageQuota } from '@/src/hooks/useStorageQuota';
 
@@ -339,7 +347,7 @@ const { quotaInfo } = useStorageQuota();
 1. **Base64 Encoding**: Simple compression (not gzip)
    - For true gzip, add `pako` library and update compress/decompress functions
 
-2. **Browser Storage Limits**: 
+2. **Browser Storage Limits**:
    - Different across browsers (5-50MB)
    - Cannot increase browser limit
 
@@ -364,7 +372,7 @@ const { quotaInfo } = useStorageQuota();
 import { StorageManager } from '@/src/lib/storage';
 
 try {
-  await StorageManager.setItem('test', {data: 'test'});
+  await StorageManager.setItem('test', { data: 'test' });
 } catch (error) {
   console.error('Storage unavailable:', error.message);
 }

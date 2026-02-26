@@ -33,9 +33,9 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
 
   useEffect(() => {
     if (isDeleting && !prevIsDeleting.current) {
-        confirmBtnRef.current?.focus();
+      confirmBtnRef.current?.focus();
     } else if (!isDeleting && prevIsDeleting.current) {
-        deleteBtnRef.current?.focus();
+      deleteBtnRef.current?.focus();
     }
     prevIsDeleting.current = isDeleting;
   }, [isDeleting]);
@@ -112,37 +112,47 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
             </button>
 
             {isDeleting ? (
-                <div className="flex items-center bg-slate-50 rounded-lg p-0.5 border border-slate-200 animate-in fade-in zoom-in duration-200">
-                     <button
-                        ref={confirmBtnRef}
-                        onClick={(e) => { e.stopPropagation(); onDelete(); setIsDeleting(false); }}
-                        className="p-1.5 text-red-600 hover:bg-red-50 rounded-md transition-colors"
-                        aria-label="Confirm delete"
-                        title="Confirm Delete"
-                     >
-                        <span className="material-symbols-outlined text-[18px] font-bold">check</span>
-                     </button>
-                     <div className="w-px h-4 bg-slate-200 mx-0.5"></div>
-                     <button
-                        onClick={(e) => { e.stopPropagation(); setIsDeleting(false); }}
-                        className="p-1.5 text-slate-400 hover:bg-slate-100 rounded-md transition-colors"
-                        aria-label="Cancel delete"
-                        title="Cancel Delete"
-                     >
-                        <span className="material-symbols-outlined text-[18px]">close</span>
-                     </button>
-                </div>
-             ) : (
-                 <button
-                    ref={deleteBtnRef}
-                    onClick={(e) => { e.stopPropagation(); setIsDeleting(true); }}
-                    className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                    title="Delete Resume"
-                    aria-label="Delete Resume"
-                 >
-                    <span className="material-symbols-outlined text-[20px]">delete</span>
-                 </button>
-             )}
+              <div className="flex items-center bg-slate-50 rounded-lg p-0.5 border border-slate-200 animate-in fade-in zoom-in duration-200">
+                <button
+                  ref={confirmBtnRef}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDelete();
+                    setIsDeleting(false);
+                  }}
+                  className="p-1.5 text-red-600 hover:bg-red-50 rounded-md transition-colors"
+                  aria-label="Confirm delete"
+                  title="Confirm Delete"
+                >
+                  <span className="material-symbols-outlined text-[18px] font-bold">check</span>
+                </button>
+                <div className="w-px h-4 bg-slate-200 mx-0.5"></div>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsDeleting(false);
+                  }}
+                  className="p-1.5 text-slate-400 hover:bg-slate-100 rounded-md transition-colors"
+                  aria-label="Cancel delete"
+                  title="Cancel Delete"
+                >
+                  <span className="material-symbols-outlined text-[18px]">close</span>
+                </button>
+              </div>
+            ) : (
+              <button
+                ref={deleteBtnRef}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsDeleting(true);
+                }}
+                className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                title="Delete Resume"
+                aria-label="Delete Resume"
+              >
+                <span className="material-symbols-outlined text-[20px]">delete</span>
+              </button>
+            )}
           </div>
         </div>
 
@@ -169,13 +179,15 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
         <div className="flex items-center justify-between pt-3 border-t border-slate-100">
           <div className="flex items-center gap-2 text-sm text-slate-500">
             <span className="material-symbols-outlined text-[16px]">history</span>
-            <span>{resume.version_count} version{resume.version_count !== 1 ? 's' : ''}</span>
+            <span>
+              {resume.version_count} version{resume.version_count !== 1 ? 's' : ''}
+            </span>
           </div>
-          <div className={`px-2 py-1 rounded-md text-xs font-medium ${
-            resume.is_public
-              ? 'bg-emerald-100 text-emerald-700'
-              : 'bg-slate-100 text-slate-600'
-          }`}>
+          <div
+            className={`px-2 py-1 rounded-md text-xs font-medium ${
+              resume.is_public ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600'
+            }`}
+          >
             {resume.is_public ? 'Public' : 'Private'}
           </div>
         </div>

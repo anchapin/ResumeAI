@@ -17,12 +17,12 @@ This document provides detailed step-by-step procedures for rolling back ResumeA
 
 ## Rollback Levels
 
-| Level | Scope | Time to Execute | Risk | Use When |
-|-------|-------|-----------------|------|----------|
-| 1 | Feature Flag | < 1 minute | Very Low | Specific feature has issues |
-| 2 | Container | 2-5 minutes | Low | Application code or config issue |
-| 3 | Database | 5-30 minutes | Medium | Data consistency issues |
-| 4 | Complete System | 10-60 minutes | High | Multiple component failures |
+| Level | Scope           | Time to Execute | Risk     | Use When                         |
+| ----- | --------------- | --------------- | -------- | -------------------------------- |
+| 1     | Feature Flag    | < 1 minute      | Very Low | Specific feature has issues      |
+| 2     | Container       | 2-5 minutes     | Low      | Application code or config issue |
+| 3     | Database        | 5-30 minutes    | Medium   | Data consistency issues          |
+| 4     | Complete System | 10-60 minutes   | High     | Multiple component failures      |
 
 ## Feature Flag Rollback
 

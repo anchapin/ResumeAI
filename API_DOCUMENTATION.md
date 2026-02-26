@@ -1,17 +1,21 @@
 # ResumeAI API Documentation
 
 ## Overview
+
 The ResumeAI API provides endpoints for generating and tailoring professional resumes using LaTeX templates and AI technology.
 
 ## Base URL
+
 ```
 https://api.resumeai.app
 ```
 
 ## Authentication
+
 All API requests require an API key sent in the `X-API-KEY` header.
 
 ## Rate Limits
+
 - PDF Generation: 10 requests per minute per API key
 - Resume Tailoring: 30 requests per minute per API key
 - List Variants: 60 requests per minute per API key
@@ -20,15 +24,18 @@ All API requests require an API key sent in the `X-API-KEY` header.
 ## Endpoints
 
 ### 1. Generate PDF Resume
+
 Generate a professional PDF resume from JSON data.
 
 **Endpoint:** `POST /v1/render/pdf`
 
 **Headers:**
+
 - `X-API-KEY`: Your API key
 - `Content-Type`: `application/json`
 
 **Request Body:**
+
 ```json
 {
   "resume_data": {
@@ -63,9 +70,7 @@ Generate a professional PDF resume from JSON data.
         "startDate": "2013-01-01",
         "endDate": "2014-01-01",
         "summary": "Description...",
-        "highlights": [
-          "Started the company"
-        ]
+        "highlights": ["Started the company"]
       }
     ],
     "volunteer": [],
@@ -84,20 +89,24 @@ Generate a professional PDF resume from JSON data.
 ```
 
 **Response:**
+
 - Status: `200 OK`
 - Content-Type: `application/pdf`
 - Body: PDF binary data
 
 ### 2. Tailor Resume
+
 Tailor a resume to match a specific job description using AI.
 
 **Endpoint:** `POST /v1/tailor`
 
 **Headers:**
+
 - `X-API-KEY`: Your API key
 - `Content-Type`: `application/json`
 
 **Request Body:**
+
 ```json
 {
   "resume_data": {
@@ -110,8 +119,10 @@ Tailor a resume to match a specific job description using AI.
 ```
 
 **Response:**
+
 - Status: `200 OK`
 - Content-Type: `application/json`
+
 ```json
 {
   "resume_data": {
@@ -125,16 +136,20 @@ Tailor a resume to match a specific job description using AI.
 ```
 
 ### 3. List Template Variants
+
 Get a list of available resume template variants.
 
 **Endpoint:** `GET /v1/variants`
 
 **Headers:**
+
 - `X-API-KEY`: Your API key (optional for this endpoint)
 
 **Response:**
+
 - Status: `200 OK`
 - Content-Type: `application/json`
+
 ```json
 {
   "variants": [
@@ -157,15 +172,18 @@ Get a list of available resume template variants.
 ```
 
 ### 4. Generate Cover Letter
+
 Generate a personalized cover letter based on resume and job description using AI.
 
 **Endpoint:** `POST /v1/cover-letter`
 
 **Headers:**
+
 - `X-API-KEY`: Your API key
 - `Content-Type`: `application/json`
 
 **Request Body:**
+
 ```json
 {
   "resume_data": {
@@ -183,9 +201,7 @@ Generate a personalized cover letter based on resume and job description using A
         "startDate": "2013-01-01",
         "endDate": "2014-01-01",
         "summary": "Description...",
-        "highlights": [
-          "Started the company"
-        ]
+        "highlights": ["Started the company"]
       }
     ],
     "education": [],
@@ -199,6 +215,7 @@ Generate a personalized cover letter based on resume and job description using A
 ```
 
 **Request Parameters:**
+
 - `resume_data`: Resume data in JSON Resume format
 - `job_description`: The job description text (10-50000 characters)
 - `company_name`: Name of the company (max 200 characters)
@@ -206,8 +223,10 @@ Generate a personalized cover letter based on resume and job description using A
 - `tone`: Optional tone of the cover letter. One of: `professional` (default), `casual`, `formal`
 
 **Response:**
+
 - Status: `200 OK`
 - Content-Type: `application/json`
+
 ```json
 {
   "header": "John Doe\njohn@gmail.com\n(912) 555-4321",
@@ -223,6 +242,7 @@ Generate a personalized cover letter based on resume and job description using A
 ```
 
 **Response Fields:**
+
 - `header`: Contact information formatted for the cover letter header
 - `introduction`: Opening paragraph introducing the candidate and position
 - `body`: Main body paragraphs connecting experience to job requirements
@@ -231,7 +251,9 @@ Generate a personalized cover letter based on resume and job description using A
 - `metadata`: Additional information including word count
 
 ## Error Handling
+
 All error responses follow this format:
+
 ```json
 {
   "error": "Error message",
@@ -240,6 +262,7 @@ All error responses follow this format:
 ```
 
 Common HTTP status codes:
+
 - `200`: Success
 - `400`: Bad Request - Invalid input data
 - `401`: Unauthorized - Missing or invalid API key
@@ -250,33 +273,37 @@ Common HTTP status codes:
 ## Examples
 
 ### JavaScript Example
+
 ```javascript
 const apiKey = 'YOUR_API_KEY';
-const resumeData = { /* your resume data */ };
+const resumeData = {
+  /* your resume data */
+};
 
 fetch('https://api.resumeai.app/v1/render/pdf', {
   method: 'POST',
   headers: {
     'X-API-KEY': apiKey,
-    'Content-Type': 'application/json'
+    'Content-Type': 'application/json',
   },
   body: JSON.stringify({
     resume_data: resumeData,
-    variant: 'professional'
-  })
+    variant: 'professional',
+  }),
 })
-.then(response => response.blob())
-.then(pdfBlob => {
-  // Handle the PDF blob
-  const url = window.URL.createObjectURL(pdfBlob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'resume.pdf';
-  a.click();
-});
+  .then((response) => response.blob())
+  .then((pdfBlob) => {
+    // Handle the PDF blob
+    const url = window.URL.createObjectURL(pdfBlob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'resume.pdf';
+    a.click();
+  });
 ```
 
 ### Python Example
+
 ```python
 import requests
 
@@ -302,6 +329,7 @@ else:
 ```
 
 ### Python Example - Cover Letter
+
 ```python
 import requests
 
@@ -347,4 +375,5 @@ else:
 ```
 
 ## Support
+
 For support, please contact us at support@resumeai.app or visit our [support portal](https://support.resumeai.app).

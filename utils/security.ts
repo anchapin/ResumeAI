@@ -6,19 +6,19 @@
 const SECURITY_CONFIG = {
   // JWT token storage key
   TOKEN_STORAGE_KEY: 'resume_ai_auth_token',
-  
+
   // Maximum allowed file size (10MB)
   MAX_FILE_SIZE: 10 * 1024 * 1024,
-  
+
   // Allowed file types for uploads
   ALLOWED_FILE_TYPES: [
     'application/pdf',
     'text/plain',
     'application/json',
     'image/jpeg',
-    'image/png'
+    'image/png',
   ],
-  
+
   // Input validation rules
   INPUT_VALIDATION: {
     NAME_MAX_LENGTH: 100,
@@ -39,9 +39,9 @@ const SECURITY_CONFIG = {
     PROJECT_URL_MAX_LENGTH: 500,
     COURSE_MAX_LENGTH: 100,
     TAG_MAX_LENGTH: 50,
-    HIGHLIGHT_MAX_LENGTH: 200
+    HIGHLIGHT_MAX_LENGTH: 200,
   },
-  
+
   // Maximum number of items allowed
   MAX_ITEM_COUNTS: {
     EXPERIENCE_ENTRIES: 20,
@@ -51,8 +51,8 @@ const SECURITY_CONFIG = {
     EXPERIENCE_TAGS: 20,
     EDUCATION_COURSES: 20,
     PROJECT_ROLES: 10,
-    PROJECT_HIGHLIGHTS: 10
-  }
+    PROJECT_HIGHLIGHTS: 10,
+  },
 };
 
 // Token management utilities
@@ -102,7 +102,7 @@ const TokenManager = {
 
       // Decode payload (second part)
       const payload = JSON.parse(atob(parts[1]));
-      
+
       // Check expiration
       const currentTime = Math.floor(Date.now() / 1000);
       return payload.exp && payload.exp < currentTime;
@@ -130,7 +130,7 @@ const TokenManager = {
       console.error('Error getting token expiration:', error);
       return null;
     }
-  }
+  },
 };
 
 // Security headers for API requests
@@ -140,7 +140,7 @@ const getSecurityHeaders = (): Record<string, string> => {
     'X-Requested-With': 'XMLHttpRequest',
     'Sec-Fetch-Dest': 'empty',
     'Sec-Fetch-Mode': 'cors',
-    'Sec-Fetch-Site': 'same-origin'
+    'Sec-Fetch-Site': 'same-origin',
   };
 
   // Add authorization header if token exists
@@ -153,17 +153,14 @@ const getSecurityHeaders = (): Record<string, string> => {
 };
 
 // API request wrapper with security measures
-const secureApiCall = async (
-  url: string,
-  options: RequestInit = {}
-): Promise<Response> => {
+const secureApiCall = async (url: string, options: RequestInit = {}): Promise<Response> => {
   // Merge security headers with provided options
   const secureOptions: RequestInit = {
     ...options,
     headers: {
       ...getSecurityHeaders(),
-      ...options.headers
-    }
+      ...options.headers,
+    },
   };
 
   // Add CSRF token if available (in a real app, you'd get this from a meta tag or cookie)
@@ -174,14 +171,14 @@ const secureApiCall = async (
 
   try {
     const response = await fetch(url, secureOptions);
-    
+
     // Check for authentication errors
     if (response.status === 401) {
       // Token might be expired, remove it
       TokenManager.removeToken();
       // In a real app, you might redirect to login
     }
-    
+
     return response;
   } catch (error) {
     console.error('API call failed:', error);
@@ -215,7 +212,7 @@ const validateFileUpload = (file: File): { isValid: boolean; error?: string } =>
   if (file.size > SECURITY_CONFIG.MAX_FILE_SIZE) {
     return {
       isValid: false,
-      error: `File size exceeds maximum allowed size of ${(SECURITY_CONFIG.MAX_FILE_SIZE / (1024 * 1024)).toFixed(1)}MB`
+      error: `File size exceeds maximum allowed size of ${(SECURITY_CONFIG.MAX_FILE_SIZE / (1024 * 1024)).toFixed(1)}MB`,
     };
   }
 
@@ -223,7 +220,7 @@ const validateFileUpload = (file: File): { isValid: boolean; error?: string } =>
   if (!SECURITY_CONFIG.ALLOWED_FILE_TYPES.includes(file.type)) {
     return {
       isValid: false,
-      error: `File type "${file.type}" is not allowed. Allowed types: ${SECURITY_CONFIG.ALLOWED_FILE_TYPES.join(', ')}`
+      error: `File type "${file.type}" is not allowed. Allowed types: ${SECURITY_CONFIG.ALLOWED_FILE_TYPES.join(', ')}`,
     };
   }
 
@@ -236,5 +233,5 @@ export {
   getSecurityHeaders,
   secureApiCall,
   sanitizeInput,
-  validateFileUpload
+  validateFileUpload,
 };

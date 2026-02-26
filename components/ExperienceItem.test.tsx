@@ -42,9 +42,12 @@ describe('ExperienceItem', () => {
     const confirmButton = await screen.findByRole('button', { name: /confirm delete/i });
     expect(confirmButton).toBeInTheDocument();
 
-    await waitFor(() => {
+    await waitFor(
+      () => {
         expect(confirmButton).toHaveFocus();
-    }, { timeout: 1000 });
+      },
+      { timeout: 1000 },
+    );
 
     // 4. Click cancel button
     const cancelButton = screen.getByRole('button', { name: /cancel delete/i });
@@ -54,8 +57,11 @@ describe('ExperienceItem', () => {
     const restoredDeleteButton = await screen.findByRole('button', { name: /delete experience/i });
     expect(restoredDeleteButton).toBeInTheDocument();
 
-    await waitFor(() => {
+    await waitFor(
+      () => {
         expect(restoredDeleteButton).toHaveFocus();
-    }, { timeout: 1000 });
+      },
+      { timeout: 1000 },
+    );
   });
 });

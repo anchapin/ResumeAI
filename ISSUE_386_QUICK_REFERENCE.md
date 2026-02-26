@@ -6,16 +6,17 @@ Complete API timeout protection with 30s backend timeout and 15s frontend AbortS
 
 ## Key Files
 
-| File | Purpose | Timeout |
-|------|---------|---------|
-| `resume-api/middleware/timeout.py` | Backend timeout enforcer | 30s default, 60s PDF, 45s AI |
-| `utils/fetch-timeout.ts` | Frontend timeout utilities | 15s PDF, 15s AI ops |
-| `utils/api-client.ts` | API calls using timeout | Uses fetch-timeout |
-| `tests/api-client-timeout.test.ts` | Comprehensive tests | 9/9 passing ✅ |
+| File                               | Purpose                    | Timeout                      |
+| ---------------------------------- | -------------------------- | ---------------------------- |
+| `resume-api/middleware/timeout.py` | Backend timeout enforcer   | 30s default, 60s PDF, 45s AI |
+| `utils/fetch-timeout.ts`           | Frontend timeout utilities | 15s PDF, 15s AI ops          |
+| `utils/api-client.ts`              | API calls using timeout    | Uses fetch-timeout           |
+| `tests/api-client-timeout.test.ts` | Comprehensive tests        | 9/9 passing ✅               |
 
 ## Timeout Configuration
 
 ### Backend (Python)
+
 ```python
 # resume-api/middleware/timeout.py
 DEFAULT_REQUEST_TIMEOUT = 30  # Default for all endpoints
@@ -27,20 +28,22 @@ EXTENDED_TIMEOUT_ENDPOINTS = {
 ```
 
 ### Frontend (TypeScript)
+
 ```typescript
 // utils/fetch-timeout.ts
 export const TIMEOUT_CONFIG = {
-    QUICK: 5000,              // 5s
-    STANDARD: 10000,          // 10s
-    PDF_GENERATION: 15000,    // 15s ← PDF calls use this
-    AI_OPERATION: 15000,      // 15s ← Tailor/ATS use this
-    NONE: 0,
-}
+  QUICK: 5000, // 5s
+  STANDARD: 10000, // 10s
+  PDF_GENERATION: 15000, // 15s ← PDF calls use this
+  AI_OPERATION: 15000, // 15s ← Tailor/ATS use this
+  NONE: 0,
+};
 ```
 
 ## How It Works
 
 ### PDF Generation Flow
+
 ```
 User clicks "Download PDF"
     ↓
@@ -57,6 +60,7 @@ If backend exceeds 60s → 504 returned
 ```
 
 ### Error Handling
+
 ```typescript
 try {
   const pdfBlob = await generatePDF(data, variant);
@@ -72,11 +76,13 @@ try {
 ## Testing
 
 Run the timeout tests:
+
 ```bash
 npm test -- tests/api-client-timeout.test.ts
 ```
 
 All tests passing:
+
 - ✅ generatePDF uses 15s timeout
 - ✅ tailorResume uses 15s timeout
 - ✅ getVariants uses 10s timeout
@@ -87,6 +93,7 @@ All tests passing:
 ## Deployment Notes
 
 No configuration needed. Just deploy:
+
 1. Backend changes are in main.py (merged)
 2. Frontend changes are in utils/ (existing)
 3. Tests are in tests/ (existing)
@@ -96,19 +103,25 @@ Monitor logs for `REQUEST_TIMEOUT` errors during initial rollout.
 ## Troubleshooting
 
 ### "PDF generation takes longer than 15s"
+
 Solution: User network is slow. This is working as designed.
+
 - Backend gives 60s to actually generate
 - Frontend shows timeout after 15s to avoid user frustration
 - Consider retrying or showing better UX
 
 ### "Backend returning 504"
+
 Solution: Request exceeded 30s (or extended timeout)
+
 - Check if operation is genuinely slow
 - Increase EXTENDED_TIMEOUT_ENDPOINTS if needed
 - Consider async operation pattern (queue + webhook)
 
 ### "Tests failing"
+
 Solution: Run build first
+
 ```bash
 npm run build
 npm test
@@ -117,12 +130,14 @@ npm test
 ## Monitoring
 
 Look for these in logs:
+
 - `request_timeout` - Backend timeout occurred
 - `timeout_middleware_error` - Error in timeout handling
 
 Example backend log:
+
 ```
-logger.warning("request_timeout", 
+logger.warning("request_timeout",
   path="/v1/render/pdf",
   method="POST",
   timeout_seconds=60

@@ -17,6 +17,11 @@ export const ErrorDisplay: React.FC<ErrorDisplayProps> = ({
 }) => {
   const [isVisible, setIsVisible] = useState(false);
 
+  const handleDismiss = () => {
+    setIsVisible(false);
+    onDismiss();
+  };
+
   useEffect(() => {
     if (error) {
       setIsVisible(true);
@@ -30,12 +35,7 @@ export const ErrorDisplay: React.FC<ErrorDisplayProps> = ({
         return () => clearTimeout(timer);
       }
     }
-  }, [error, autoDismissTime]);
-
-  const handleDismiss = () => {
-    setIsVisible(false);
-    onDismiss();
-  };
+  }, [error, autoDismissTime, handleDismiss]);
 
   if (!error || !isVisible) {
     return null;
@@ -81,11 +81,7 @@ export const ErrorDisplay: React.FC<ErrorDisplayProps> = ({
 
   const severity = getSeverity(error.type);
   const bgColor =
-    severity === 'critical'
-      ? 'bg-red-100'
-      : severity === 'error'
-        ? 'bg-red-50'
-        : 'bg-yellow-50';
+    severity === 'critical' ? 'bg-red-100' : severity === 'error' ? 'bg-red-50' : 'bg-yellow-50';
   const borderColor =
     severity === 'critical'
       ? 'border-red-400'

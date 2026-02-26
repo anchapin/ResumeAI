@@ -18,6 +18,7 @@ ResumeAI uses GitHub OAuth to allow users to connect their GitHub accounts and i
 3. Fill in the application details:
 
 ### Application Information
+
 - **Application name**: `ResumeAI`
 - **Homepage URL**:
   - Development: `http://localhost:5173` (or your dev frontend URL)
@@ -30,6 +31,7 @@ ResumeAI uses GitHub OAuth to allow users to connect their GitHub accounts and i
   - Production: `https://api.resumeai.example.com/github/callback`
 
 ### Important Notes
+
 - You can create separate OAuth Apps for development, staging, and production
 - The callback URL MUST be HTTPS in production
 - You can add multiple callback URLs for different environments
@@ -51,6 +53,7 @@ After creating the OAuth App, you'll receive:
 Add the following environment variables to your `.env` file:
 
 ### Development (.env.local)
+
 ```bash
 # GitHub OAuth Configuration
 GITHUB_CLIENT_ID=Iv1.1a2b3c4d5e6f7g8h9i0j1k2l3m4n5o6p7q8r9s0t1u2v3w4x5y6z7a8b9c0d1e2f3g4h
@@ -59,14 +62,17 @@ GITHUB_CALLBACK_URL=http://127.0.0.1:8000/github/callback
 ```
 
 ### Production / Staging
+
 For production deployments, configure these as secrets in your deployment platform:
 
 #### Vercel (Frontend)
+
 ```bash
 # Not needed for frontend - these are backend-only
 ```
 
 #### Docker / Cloud (Backend)
+
 ```bash
 GITHUB_CLIENT_ID=Iv1.production_client_id_here
 GITHUB_CLIENT_SECRET=production_secret_here
@@ -74,6 +80,7 @@ GITHUB_CALLBACK_URL=https://api.resumeai.example.com/github/callback
 ```
 
 ### Docker Compose
+
 ```yaml
 services:
   resume-api:
@@ -86,6 +93,7 @@ services:
 ## Step 4: Configure Deployment Secrets
 
 ### Vercel / Railway / Render
+
 1. Go to your project settings
 2. Navigate to **Environment Variables** or **Secrets**
 3. Add the following secrets:
@@ -94,9 +102,11 @@ services:
    - `GITHUB_CALLBACK_URL`
 
 ### AWS / GCP / Azure
+
 Use the platform's secret management service:
 
 **AWS Secrets Manager:**
+
 ```bash
 aws secretsmanager create-secret \
   --name resumeai/github-client-id \
@@ -104,12 +114,14 @@ aws secretsmanager create-secret \
 ```
 
 **Google Secret Manager:**
+
 ```bash
 gcloud secrets create github-client-id \
   --data-file=- <<< "Iv1.xxxxxx"
 ```
 
 ### Kubernetes
+
 ```yaml
 apiVersion: v1
 kind: Secret
@@ -117,9 +129,9 @@ metadata:
   name: github-oauth
 type: Opaque
 stringData:
-  client-id: "Iv1.xxxxxx"
-  client-secret: "xxxxxx"
-  callback-url: "https://api.resumeai.example.com/github/callback"
+  client-id: 'Iv1.xxxxxx'
+  client-secret: 'xxxxxx'
+  callback-url: 'https://api.resumeai.example.com/github/callback'
 ```
 
 ## Step 5: Verify Configuration
@@ -127,12 +139,14 @@ stringData:
 ### Test the OAuth Flow
 
 1. Start your development server:
+
 ```bash
 cd resume-api
 python main.py
 ```
 
 2. Check that environment variables are loaded:
+
 ```python
 from config import settings
 
@@ -141,6 +155,7 @@ print(f"GitHub Callback URL: {settings.github_callback_url}")
 ```
 
 3. Visit the health endpoint to verify API is running:
+
 ```bash
 curl http://127.0.0.1:8000/health
 ```
@@ -158,6 +173,7 @@ curl -H "X-API-KEY: your_api_key" http://127.0.0.1:8000/github/status
 ## Security Best Practices
 
 ### 1. Never Commit Secrets
+
 ```bash
 # Add to .gitignore
 echo ".env" >> .gitignore
@@ -166,22 +182,27 @@ echo ".env.*.local" >> .gitignore
 ```
 
 ### 2. Use Separate Apps for Environments
+
 - Development OAuth App for local testing
 - Staging OAuth App for pre-production
 - Production OAuth App for live traffic
 
 ### 3. Monitor OAuth Usage
+
 - Regularly review GitHub OAuth App usage
 - Revoke any unauthorized tokens
 - Monitor API rate limits
 
 ### 4. Rotate Secrets
+
 - Rotate `GITHUB_CLIENT_SECRET` every 90 days
 - Update deployment secrets after rotation
 - Test after rotation to ensure smooth transition
 
 ### 5. Limit OAuth Scopes
+
 ResumeAI only requests minimal scopes:
+
 - `read:user` - Read user profile data
 - `public_repo` - Read public repositories
 
@@ -190,15 +211,19 @@ ResumeAI only requests minimal scopes:
 ### Common Issues
 
 **Issue**: "redirect_uri_mismatch" error
+
 - **Solution**: Ensure the callback URL in your `.env` matches exactly what's configured in GitHub OAuth App
 
 **Issue**: "client_id_invalid" error
+
 - **Solution**: Verify `GITHUB_CLIENT_ID` is set correctly and starts with `Iv1.`
 
 **Issue**: "client_secret_invalid" error
+
 - **Solution**: Regenerate the client secret in GitHub and update your environment variables
 
 **Issue**: Environment variables not loading
+
 - **Solution**:
   - Check that `.env` file exists in the `resume-api/` directory
   - Ensure `pydantic-settings` is installed

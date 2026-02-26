@@ -13,6 +13,7 @@ Implemented a comprehensive, production-ready monitoring stack with Prometheus, 
 ### 1. Prometheus Configuration
 
 #### `resume-api/config/prometheus.yml`
+
 - Global scrape configuration (15s interval, 30-day retention)
 - Job definitions for Resume API, Node Exporter, Docker, Redis, PostgreSQL
 - AlertManager integration
@@ -20,18 +21,21 @@ Implemented a comprehensive, production-ready monitoring stack with Prometheus, 
 - Recording and alert rule files
 
 **Key Features:**
+
 - Automatic scrape interval configuration
 - Environment-based labeling
 - Support for Kubernetes service discovery (commented)
 - Health check configuration
 
 #### `resume-api/config/alert_rules.yml`
+
 - Comprehensive alert rules organized by category
 - 8 alert groups: API Performance, Business Metrics, Queue & Jobs, Resources, Database, Cache, OAuth, AI Providers
 - 25+ unique alerts with severity levels (critical/warning)
 - Clear annotations with summaries, descriptions, and runbook links
 
 **Alert Categories:**
+
 - **API Performance** (5 alerts): Error rate, response time, request rate, client errors
 - **Business Metrics** (2 alerts): PDF generation success, resume tailor success
 - **Queue & Jobs** (2 alerts): Queue backlog, job failure rate
@@ -44,12 +48,14 @@ Implemented a comprehensive, production-ready monitoring stack with Prometheus, 
 - **Rate Limiting** (1 alert): High rate limit violations
 
 #### `resume-api/config/recording_rules.yml`
+
 - Pre-computed metrics for dashboard optimization
 - 60+ recording rules across 8 categories
 - 1-minute evaluation interval for summary metrics
 - Efficient calculations for common dashboard queries
 
 **Recording Rule Groups:**
+
 - HTTP metrics: Request rates, latency percentiles, error rates
 - Business metrics: PDF/tailor rates, total API calls
 - AI provider metrics: Request rates, error rates, latency percentiles
@@ -62,9 +68,11 @@ Implemented a comprehensive, production-ready monitoring stack with Prometheus, 
 ### 2. Metrics Collection & Instrumentation
 
 #### `resume-api/lib/monitoring/prometheus_exporter.py` (550+ lines)
+
 Central Prometheus metrics exporter with comprehensive metric definitions:
 
 **Components:**
+
 - `MetricConfig`: Configuration class for exporter customization
 - `MetricScope`: Enum for metric categories
 - `PrometheusExporter`: Main exporter class with all metrics
@@ -133,6 +141,7 @@ Central Prometheus metrics exporter with comprehensive metric definitions:
    - `oauth_active_connections`: Connection gauge
 
 **Methods:**
+
 - `__init__()`: Initialize all metric categories
 - `record_http_request()`: Record HTTP request metrics
 - `record_pdf_generation()`: Record PDF operation metrics
@@ -145,9 +154,11 @@ Central Prometheus metrics exporter with comprehensive metric definitions:
 - `export_prometheus/openmetrics()`: Export metrics in standard formats
 
 #### `resume-api/middleware/metrics_middleware.py` (300+ lines)
+
 HTTP metrics middleware for auto-instrumentation:
 
 **Middleware Classes:**
+
 1. `MetricsMiddleware`: Main HTTP metrics collector
    - Records request/response latency
    - Tracks request/response sizes
@@ -184,6 +195,7 @@ HTTP metrics middleware for auto-instrumentation:
 ### 3. Docker Compose Stack
 
 #### `docker-compose-monitoring.yml` (150+ lines)
+
 Complete Docker Compose configuration for monitoring stack:
 
 **Services:**
@@ -217,6 +229,7 @@ Complete Docker Compose configuration for monitoring stack:
    - Read-only filesystem access
 
 **Features:**
+
 - Custom network: `resumeai-monitoring`
 - Named volumes for data persistence
 - Health check endpoints
@@ -226,12 +239,14 @@ Complete Docker Compose configuration for monitoring stack:
 ### 4. Grafana Configuration
 
 #### `resume-api/config/grafana/provisioning/datasources/prometheus.yml`
+
 - Prometheus datasource configuration
 - HTTP POST for query optimization
 - Default datasource setting
 - Proxy access configuration
 
 #### `resume-api/config/grafana/provisioning/dashboards/dashboards.yml`
+
 - Dashboard provisioning configuration
 - Auto-load from `/var/lib/grafana/dashboards`
 - UI updates enabled
@@ -240,14 +255,18 @@ Complete Docker Compose configuration for monitoring stack:
 ### 5. Grafana Dashboards
 
 #### `resume-api/dashboards/api-performance.json`
+
 **4 panels measuring HTTP API health:**
+
 1. Request Rate: Requests/sec by endpoint
 2. Request Latency: P95/P99 response times
 3. Error Rate: 5xx errors/sec by endpoint
 4. Requests by Status Code: Pie chart distribution
 
 #### `resume-api/dashboards/business-metrics.json`
+
 **6 panels measuring business KPIs:**
+
 1. PDFs Generated (24h): Total count stat
 2. Resumes Tailored (24h): Total count stat
 3. PDF Success Rate: Percentage stat with color coding
@@ -256,7 +275,9 @@ Complete Docker Compose configuration for monitoring stack:
 6. Resume Tailor Rate: Time series graph
 
 #### `resume-api/dashboards/system-health.json`
+
 **6 panels measuring system resources:**
+
 1. Service Status: Up/down health indicator
 2. Memory Usage: Percentage with color thresholds
 3. CPU Usage: Percentage with color thresholds
@@ -267,9 +288,11 @@ Complete Docker Compose configuration for monitoring stack:
 ### 6. AlertManager Configuration
 
 #### `resume-api/config/alertmanager.yml` (200+ lines)
+
 Complete AlertManager configuration:
 
 **Components:**
+
 - Global SMTP/Slack configuration
 - Alert routing tree by severity and component
 - 6 receiver definitions:
@@ -284,6 +307,7 @@ Complete AlertManager configuration:
 - Mute time intervals for maintenance
 
 **Features:**
+
 - Flexible routing based on labels
 - Multiple notification channels
 - Group wait/interval optimization
@@ -293,9 +317,11 @@ Complete AlertManager configuration:
 ### 7. Documentation
 
 #### `MONITORING_PROMETHEUS_GRAFANA.md` (600+ lines)
+
 Comprehensive monitoring documentation:
 
 **Sections:**
+
 1. Overview & Architecture
    - Component diagram
    - Metrics flow explanation
@@ -370,6 +396,7 @@ Comprehensive monitoring documentation:
 ### 8. Test Suite
 
 #### `resume-api/tests/test_monitoring.py` (450+ lines)
+
 Comprehensive test coverage:
 
 **Test Classes:**
@@ -413,6 +440,7 @@ Comprehensive test coverage:
    - JSON validation
 
 **Test Coverage:**
+
 - Configuration validation
 - Metrics collection
 - Middleware functionality
@@ -423,6 +451,7 @@ Comprehensive test coverage:
 ## Feature Highlights
 
 ### ✅ 90+ Custom Metrics
+
 - Detailed HTTP request tracking
 - Business KPI monitoring
 - AI provider cost/usage tracking
@@ -433,6 +462,7 @@ Comprehensive test coverage:
 - System resource monitoring
 
 ### ✅ 25+ Alert Rules
+
 - Critical service health alerts
 - Performance degradation alerts
 - Business metric alerts
@@ -441,17 +471,20 @@ Comprehensive test coverage:
 - Intelligent alert routing
 
 ### ✅ 60+ Recording Rules
+
 - Pre-computed percentiles
 - Aggregated rates
 - Efficiency calculations
 - Summary metrics for dashboard optimization
 
 ### ✅ 3 Professional Dashboards
+
 - API Performance (request rates, latency, errors)
 - Business Metrics (PDFs, tailors, costs)
 - System Health (memory, CPU, FDs, resource trends)
 
 ### ✅ Production-Ready Features
+
 - Docker Compose stack with all services
 - Data persistence with named volumes
 - Health checks for all services
@@ -460,6 +493,7 @@ Comprehensive test coverage:
 - Service dependencies configured
 
 ### ✅ Comprehensive Documentation
+
 - Architecture explanation
 - Configuration guides
 - Dashboard walkthroughs
@@ -471,6 +505,7 @@ Comprehensive test coverage:
 ## Integration Points
 
 ### With Resume API
+
 1. Prometheus endpoint at `/metrics`
 2. MetricsMiddleware auto-instruments all endpoints
 3. Custom metrics exporter for business events
@@ -478,6 +513,7 @@ Comprehensive test coverage:
 5. AI provider request tracking
 
 ### With Deployment
+
 1. Docker Compose orchestration
 2. Network isolation with monitoring network
 3. Volume persistence for data
@@ -485,6 +521,7 @@ Comprehensive test coverage:
 5. Auto-restart on failure
 
 ### With Alerting
+
 1. AlertManager service
 2. Slack webhook integration
 3. Email notifications
@@ -494,6 +531,7 @@ Comprehensive test coverage:
 ## Deployment Instructions
 
 ### Local Development
+
 ```bash
 # Start stack
 docker-compose -f docker-compose-monitoring.yml up -d
@@ -508,6 +546,7 @@ docker-compose -f docker-compose-monitoring.yml ps
 ```
 
 ### Production Deployment
+
 1. Update environment variables in `.env` file
 2. Configure AlertManager notification channels
 3. Deploy with: `docker-compose -f docker-compose-monitoring.yml up -d`
@@ -517,11 +556,13 @@ docker-compose -f docker-compose-monitoring.yml ps
 ## Testing
 
 Run all tests:
+
 ```bash
 pytest resume-api/tests/test_monitoring.py -v
 ```
 
 Test coverage:
+
 - Configuration validation (prometheus.yml, alert_rules.yml, recording_rules.yml)
 - Metrics export functionality
 - Middleware instrumentation
@@ -531,6 +572,7 @@ Test coverage:
 ## Metrics & Dashboards at a Glance
 
 ### Key Metrics Monitored
+
 - Request latency (P50, P95, P99)
 - Error rates (by endpoint, by status code)
 - Business operations (PDFs, tailors, variants)
@@ -541,6 +583,7 @@ Test coverage:
 - OAuth connections and token refresh
 
 ### Dashboard Capabilities
+
 - Real-time metric visualization
 - 30-second auto-refresh
 - 6-hour default time range
@@ -551,22 +594,22 @@ Test coverage:
 
 ## Files Summary
 
-| File | Purpose | Size |
-|------|---------|------|
-| prometheus.yml | Prometheus config | 100 lines |
-| alert_rules.yml | Alert definitions | 400 lines |
-| recording_rules.yml | Pre-computed metrics | 200 lines |
-| prometheus_exporter.py | Metrics collection | 550 lines |
-| metrics_middleware.py | HTTP instrumentation | 300 lines |
-| docker-compose-monitoring.yml | Docker setup | 150 lines |
-| datasources/prometheus.yml | Grafana config | 25 lines |
-| dashboards/dashboards.yml | Dashboard provisioning | 15 lines |
-| api-performance.json | API dashboard | 200 lines |
-| business-metrics.json | Business dashboard | 250 lines |
-| system-health.json | System dashboard | 250 lines |
-| alertmanager.yml | Alert routing | 200 lines |
-| MONITORING_PROMETHEUS_GRAFANA.md | Documentation | 600 lines |
-| test_monitoring.py | Test suite | 450 lines |
+| File                             | Purpose                | Size      |
+| -------------------------------- | ---------------------- | --------- |
+| prometheus.yml                   | Prometheus config      | 100 lines |
+| alert_rules.yml                  | Alert definitions      | 400 lines |
+| recording_rules.yml              | Pre-computed metrics   | 200 lines |
+| prometheus_exporter.py           | Metrics collection     | 550 lines |
+| metrics_middleware.py            | HTTP instrumentation   | 300 lines |
+| docker-compose-monitoring.yml    | Docker setup           | 150 lines |
+| datasources/prometheus.yml       | Grafana config         | 25 lines  |
+| dashboards/dashboards.yml        | Dashboard provisioning | 15 lines  |
+| api-performance.json             | API dashboard          | 200 lines |
+| business-metrics.json            | Business dashboard     | 250 lines |
+| system-health.json               | System dashboard       | 250 lines |
+| alertmanager.yml                 | Alert routing          | 200 lines |
+| MONITORING_PROMETHEUS_GRAFANA.md | Documentation          | 600 lines |
+| test_monitoring.py               | Test suite             | 450 lines |
 
 **Total: 14 files, ~3,500 lines of code/config**
 
@@ -583,6 +626,7 @@ Test coverage:
 ## Verification
 
 All files have been created and validated:
+
 - ✅ Prometheus configuration files
 - ✅ Alert and recording rules
 - ✅ Metrics exporter with 90+ metrics
@@ -599,6 +643,6 @@ All files have been created and validated:
 **Branch**: `feature/issue-418-prometheus-grafana`  
 **Status**: Ready for Pull Request  
 **Files**: 14 new files created  
-**Configuration**: Production-ready  
+**Configuration**: Production-ready
 
 All files are ready and the implementation is complete. The monitoring stack is ready to be integrated into the Resume API and deployed to production.

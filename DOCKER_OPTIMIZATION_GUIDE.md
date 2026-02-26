@@ -25,11 +25,11 @@ Stage 2: Runtime
 
 ### Build Time Benchmarks
 
-| Phase | Before | After | Improvement |
-|-------|--------|-------|------------|
-| Build from scratch | 15-20 min | 18-22 min | Stage 1 cached |
-| Rebuild (cached) | 1-2 min | 30-45 sec | **2-4x faster** |
-| Image size | ~4-5GB | ~1.5GB | **60% smaller** |
+| Phase              | Before    | After     | Improvement     |
+| ------------------ | --------- | --------- | --------------- |
+| Build from scratch | 15-20 min | 18-22 min | Stage 1 cached  |
+| Rebuild (cached)   | 1-2 min   | 30-45 sec | **2-4x faster** |
+| Image size         | ~4-5GB    | ~1.5GB    | **60% smaller** |
 
 ### How It Works
 
@@ -57,6 +57,7 @@ COPY . .
 ```
 
 **Our Strategy:**
+
 1. Copy `requirements.txt` first (rarely changes)
 2. Install Python dependencies
 3. Copy application code last (changes frequently)
@@ -85,6 +86,7 @@ docker build -f resume-api/Dockerfile .
 ### What Gets Excluded
 
 **In .dockerignore:**
+
 - `.git/` - Source control (100MB+)
 - `node_modules/` - Frontend deps (not needed)
 - `tests/` - Test files
@@ -147,6 +149,7 @@ docker-compose up
 ```
 
 **Features:**
+
 - Volume mounts for live reload
 - Relaxed security (for development)
 - Quick iteration
@@ -158,6 +161,7 @@ docker-compose -f docker-compose.prod.yml up -d
 ```
 
 **Features:**
+
 - Security hardening
 - Read-only root filesystem
 - tmpfs for temporary files

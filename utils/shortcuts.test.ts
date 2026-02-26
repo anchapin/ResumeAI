@@ -1,32 +1,32 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { 
-  DEFAULT_SHORTCUTS, 
-  matchesShortcut, 
-  getShortcutForAction, 
+import {
+  DEFAULT_SHORTCUTS,
+  matchesShortcut,
+  getShortcutForAction,
   formatShortcutForDisplay,
-  registerShortcuts 
+  registerShortcuts,
 } from './shortcuts';
 
 describe('shortcuts utilities', () => {
   describe('DEFAULT_SHORTCUTS', () => {
     it('contains File category shortcuts', () => {
-      const fileShortcuts = DEFAULT_SHORTCUTS.filter(s => s.category === 'File');
+      const fileShortcuts = DEFAULT_SHORTCUTS.filter((s) => s.category === 'File');
       expect(fileShortcuts.length).toBeGreaterThan(0);
-      expect(fileShortcuts.some(s => s.action === 'Save resume')).toBe(true);
+      expect(fileShortcuts.some((s) => s.action === 'Save resume')).toBe(true);
     });
 
     it('contains Edit category shortcuts', () => {
-      const editShortcuts = DEFAULT_SHORTCUTS.filter(s => s.category === 'Edit');
+      const editShortcuts = DEFAULT_SHORTCUTS.filter((s) => s.category === 'Edit');
       expect(editShortcuts.length).toBeGreaterThan(0);
     });
 
     it('contains Navigation category shortcuts', () => {
-      const navShortcuts = DEFAULT_SHORTCUTS.filter(s => s.category === 'Navigation');
+      const navShortcuts = DEFAULT_SHORTCUTS.filter((s) => s.category === 'Navigation');
       expect(navShortcuts.length).toBeGreaterThan(0);
     });
 
     it('has all required keyboard shortcut properties', () => {
-      DEFAULT_SHORTCUTS.forEach(shortcut => {
+      DEFAULT_SHORTCUTS.forEach((shortcut) => {
         expect(shortcut).toHaveProperty('key');
         expect(shortcut).toHaveProperty('action');
         expect(shortcut).toHaveProperty('category');
@@ -101,9 +101,9 @@ describe('shortcuts utilities', () => {
       // Mock Mac navigator
       const originalPlatform = Object.getOwnPropertyDescriptor(navigator, 'platform');
       Object.defineProperty(navigator, 'platform', { value: 'MacIntel', configurable: true });
-      
+
       expect(formatShortcutForDisplay('Ctrl+S')).toBe('⌘S');
-      
+
       // Restore
       if (originalPlatform) {
         Object.defineProperty(navigator, 'platform', originalPlatform);
@@ -114,9 +114,9 @@ describe('shortcuts utilities', () => {
       // Mock non-Mac navigator
       const originalPlatform = Object.getOwnPropertyDescriptor(navigator, 'platform');
       Object.defineProperty(navigator, 'platform', { value: 'Win32', configurable: true });
-      
+
       expect(formatShortcutForDisplay('Ctrl+S')).toBe('Ctrl+S');
-      
+
       // Restore
       if (originalPlatform) {
         Object.defineProperty(navigator, 'platform', originalPlatform);
@@ -126,9 +126,9 @@ describe('shortcuts utilities', () => {
     it('replaces multiple modifiers', () => {
       const originalPlatform = Object.getOwnPropertyDescriptor(navigator, 'platform');
       Object.defineProperty(navigator, 'platform', { value: 'MacIntel', configurable: true });
-      
+
       expect(formatShortcutForDisplay('Ctrl+Shift+Z')).toBe('⌘⇧Z');
-      
+
       if (originalPlatform) {
         Object.defineProperty(navigator, 'platform', originalPlatform);
       }
@@ -151,16 +151,16 @@ describe('shortcuts utilities', () => {
     it('registers keydown event listener', () => {
       const callback = vi.fn();
       registerShortcuts(DEFAULT_SHORTCUTS, callback);
-      
+
       expect(addEventListenerSpy).toHaveBeenCalledWith('keydown', expect.any(Function));
     });
 
     it('returns cleanup function', () => {
       const callback = vi.fn();
       const cleanup = registerShortcuts(DEFAULT_SHORTCUTS, callback);
-      
+
       expect(typeof cleanup).toBe('function');
-      
+
       cleanup();
       expect(removeEventListenerSpy).toHaveBeenCalled();
     });
@@ -168,67 +168,67 @@ describe('shortcuts utilities', () => {
     it('triggers callback when shortcut is matched', () => {
       const callback = vi.fn();
       const testShortcuts = [{ key: 'Ctrl+S', action: 'Save', category: 'Test' }];
-      
+
       registerShortcuts(testShortcuts, callback);
-      
+
       // Get the registered handler
       const handler = addEventListenerSpy.mock.calls[0][1] as (e: KeyboardEvent) => void;
-      
+
       // Simulate keydown
       const event = new KeyboardEvent('keydown', { key: 's', ctrlKey: true, bubbles: true });
       handler(event);
-      
+
       expect(callback).toHaveBeenCalledWith('Save', expect.any(KeyboardEvent));
     });
 
     it('does not trigger callback when typing in input', () => {
       const callback = vi.fn();
       const testShortcuts = [{ key: 'Ctrl+S', action: 'Save', category: 'Test' }];
-      
+
       registerShortcuts(testShortcuts, callback);
-      
+
       const handler = addEventListenerSpy.mock.calls[0][1] as (e: KeyboardEvent) => void;
-      
+
       // Create event from input element
       const input = document.createElement('input');
       const event = new KeyboardEvent('keydown', { key: 's', ctrlKey: true, bubbles: true });
       Object.defineProperty(event, 'target', { value: input });
-      
+
       handler(event);
-      
+
       expect(callback).not.toHaveBeenCalled();
     });
 
     it('does not trigger callback when typing in textarea', () => {
       const callback = vi.fn();
       const testShortcuts = [{ key: 'Ctrl+S', action: 'Save', category: 'Test' }];
-      
+
       registerShortcuts(testShortcuts, callback);
-      
+
       const handler = addEventListenerSpy.mock.calls[0][1] as (e: KeyboardEvent) => void;
-      
+
       const textarea = document.createElement('textarea');
       const event = new KeyboardEvent('keydown', { key: 's', ctrlKey: true, bubbles: true });
       Object.defineProperty(event, 'target', { value: textarea });
-      
+
       handler(event);
-      
+
       expect(callback).not.toHaveBeenCalled();
     });
 
     it('prevents default on matched shortcut', () => {
       const callback = vi.fn();
       const testShortcuts = [{ key: 'Ctrl+S', action: 'Save', category: 'Test' }];
-      
+
       registerShortcuts(testShortcuts, callback);
-      
+
       const handler = addEventListenerSpy.mock.calls[0][1] as (e: KeyboardEvent) => void;
-      
+
       const event = new KeyboardEvent('keydown', { key: 's', ctrlKey: true, bubbles: true });
       const preventDefaultSpy = vi.spyOn(event, 'preventDefault');
-      
+
       handler(event);
-      
+
       expect(preventDefaultSpy).toHaveBeenCalled();
     });
   });

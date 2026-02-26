@@ -46,14 +46,13 @@ export async function getStorageQuota(): Promise<{
   try {
     if ('storage' in navigator && 'estimate' in navigator.storage) {
       const estimate = await navigator.storage.estimate();
-      const percentUsed = estimate.usage && estimate.quota 
-        ? Math.round((estimate.usage / estimate.quota) * 100)
-        : 0;
+      const percentUsed =
+        estimate.usage && estimate.quota ? Math.round((estimate.usage / estimate.quota) * 100) : 0;
 
       return {
         estimatedQuota: estimate.quota || 0,
         estimatedUsage: estimate.usage || 0,
-        percentUsed
+        percentUsed,
       };
     }
   } catch (error) {
@@ -64,7 +63,7 @@ export async function getStorageQuota(): Promise<{
   return {
     estimatedQuota: 5 * 1024 * 1024, // 5MB default for localStorage
     estimatedUsage: getLocalStorageUsage(),
-    percentUsed: Math.round((getLocalStorageUsage() / (5 * 1024 * 1024)) * 100)
+    percentUsed: Math.round((getLocalStorageUsage() / (5 * 1024 * 1024)) * 100),
   };
 }
 
@@ -102,8 +101,8 @@ export async function checkQuotaAvailable(sizeNeeded: number): Promise<{
   const buffer = 1024; // 1KB buffer for metadata
 
   return {
-    available: spaceAvailable > (sizeNeeded + buffer),
-    quotaInfo
+    available: spaceAvailable > sizeNeeded + buffer,
+    quotaInfo,
   };
 }
 
@@ -140,7 +139,7 @@ export class StorageManager {
     options: {
       compress?: boolean;
       checkQuota?: boolean;
-    } = {}
+    } = {},
   ): Promise<void> {
     if (!isStorageAvailable()) {
       throw new Error('Storage not available');
@@ -155,7 +154,7 @@ export class StorageManager {
       const canStore = await checkQuotaAvailable(jsonValue.length);
       if (!canStore.available) {
         throw new Error(
-          `Storage quota exceeded. Used: ${Math.round(canStore.quotaInfo.percentUsed)}%`
+          `Storage quota exceeded. Used: ${Math.round(canStore.quotaInfo.percentUsed)}%`,
         );
       }
     }
@@ -293,7 +292,7 @@ export class StorageManager {
           keysToRemove.push(key);
         }
       }
-      keysToRemove.forEach(key => localStorage.removeItem(key));
+      keysToRemove.forEach((key) => localStorage.removeItem(key));
     } catch (error) {
       console.warn('Failed to clear storage:', error);
     }
@@ -317,7 +316,7 @@ export class StorageManager {
       available: quotaInfo.estimatedQuota - quotaInfo.estimatedUsage,
       quota: quotaInfo.estimatedQuota,
       percentUsed: quotaInfo.percentUsed,
-      items: itemCount
+      items: itemCount,
     };
   }
 
@@ -360,6 +359,6 @@ export async function checkStorageWarning(): Promise<{
     message:
       quotaInfo.percentUsed > 95
         ? `Critical: Storage is ${quotaInfo.percentUsed}% full. Please clear some data.`
-        : `Warning: Storage is ${quotaInfo.percentUsed}% full.`
+        : `Warning: Storage is ${quotaInfo.percentUsed}% full.`,
   };
 }

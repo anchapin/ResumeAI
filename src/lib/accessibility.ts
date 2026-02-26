@@ -8,6 +8,7 @@ let axeCore: any;
 // Lazy load axe-core in browser environment
 if (typeof window !== 'undefined') {
   try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     axeCore = require('axe-core');
   } catch {
     // axe-core not available
@@ -74,7 +75,9 @@ export async function runAccessibilityScan(options?: {
       url: typeof window !== 'undefined' ? window.location.href : '',
     };
   } catch (error) {
-    throw new Error(`Accessibility scan failed: ${error instanceof Error ? error.message : String(error)}`);
+    throw new Error(
+      `Accessibility scan failed: ${error instanceof Error ? error.message : String(error)}`,
+    );
   }
 }
 
@@ -85,7 +88,7 @@ export async function runAccessibilityScan(options?: {
  */
 export function getViolationsByImpact(
   violations: AccessibilityViolation[],
-  impact: 'critical' | 'serious' | 'moderate' | 'minor'
+  impact: 'critical' | 'serious' | 'moderate' | 'minor',
 ): AccessibilityViolation[] {
   return violations.filter((v) => v.impact === impact);
 }
@@ -122,7 +125,7 @@ ${results.violations
 [${v.impact.toUpperCase()}] ${v.id}: ${v.description}
 Help: ${v.helpUrl}
 Affected Elements: ${v.nodes.length}
-`
+`,
   )
   .join('\n')}
 `

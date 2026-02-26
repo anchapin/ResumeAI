@@ -13,6 +13,7 @@ This implementation replaces the mock LinkedIn import functionality with a real 
 Added complete OAuth 2.0 flow with three new endpoints:
 
 ##### **GET `/api/linkedin/oauth/start`**
+
 - Initiates the OAuth flow
 - Generates secure state parameter (10-minute expiration)
 - Returns LinkedIn authorization URL
@@ -25,6 +26,7 @@ Added complete OAuth 2.0 flow with three new endpoints:
   ```
 
 ##### **POST `/api/linkedin/oauth/callback`**
+
 - Handles OAuth callback after user grants permission
 - Exchanges authorization code for access token
 - Fetches user profile data from LinkedIn API
@@ -55,11 +57,13 @@ Added complete OAuth 2.0 flow with three new endpoints:
   ```
 
 ##### **GET `/api/linkedin/profile`**
+
 - Retrieves the currently authenticated user's LinkedIn profile
 - Requires valid LinkedIn access token
 - Returns full profile data
 
 ##### **POST `/api/linkedin/disconnect`**
+
 - Revokes LinkedIn access and clears session data
 - Clears stored tokens
 
@@ -73,6 +77,7 @@ Added complete OAuth 2.0 flow with three new endpoints:
 #### 3. **Configuration** (`resume-api/config/__init__.py`)
 
 Added three new settings:
+
 ```python
 linkedin_client_id: Optional[str] = None
 linkedin_client_secret: Optional[str] = None
@@ -80,6 +85,7 @@ linkedin_redirect_uri: Optional[str] = None
 ```
 
 These are loaded from environment variables:
+
 - `LINKEDIN_CLIENT_ID`
 - `LINKEDIN_CLIENT_SECRET`
 - `LINKEDIN_REDIRECT_URI`
@@ -91,32 +97,38 @@ These are loaded from environment variables:
 Replaced all mock functions with real API implementations:
 
 ##### `connectLinkedIn(): Promise<string>`
+
 - Calls backend `/api/linkedin/oauth/start`
 - Returns LinkedIn authorization URL
 - Opens OAuth authorization flow in popup window
 
 ##### `handleLinkedInCallback(code: string, state: string): Promise<LinkedInProfile>`
+
 - Calls backend `/api/linkedin/oauth/callback`
 - Exchanges authorization code for profile data
 - Stores access token in localStorage for future API calls
 - Returns complete profile object
 
 ##### `importLinkedInProfile(): Promise<LinkedInProfile>`
+
 - Retrieves stored LinkedIn access token
 - Fetches profile data if needed
 - Returns profile in our internal format
 
 ##### `fetchGitHubRepositories(): Promise<GitHubRepository[]>`
+
 - Calls backend GitHub repositories endpoint
 - Returns list of user's repositories
 
 ##### `disconnectLinkedIn(): Promise<void>`
+
 - Clears stored LinkedIn access token
 - Notifies backend to revoke access
 
 #### 2. **LinkedInImportDialog Component** (`components/LinkedInImportDialog.tsx`)
 
 Enhanced OAuth flow handling:
+
 - Receives profile data directly from OAuth callback
 - Populates form fields with real LinkedIn data
 - Supports both `profile.experience`/`profile.positions` field names
@@ -126,7 +138,9 @@ Enhanced OAuth flow handling:
 ### Configuration Files
 
 #### `.env.example` (Frontend)
+
 Added LinkedIn OAuth configuration instructions:
+
 ```env
 # LinkedIn OAuth Configuration (Optional)
 # Create OAuth App at https://www.linkedin.com/developers/apps
@@ -136,7 +150,9 @@ Added LinkedIn OAuth configuration instructions:
 ```
 
 #### `resume-api/.env.example` (Backend)
+
 Added LinkedIn OAuth settings:
+
 ```env
 # LinkedIn OAuth Configuration (Optional)
 # Register an OAuth App at https://www.linkedin.com/developers/apps
@@ -164,6 +180,7 @@ LINKEDIN_REDIRECT_URI=http://localhost:5173/auth/linkedin/callback
 ### 2. Environment Configuration
 
 **Backend (.env in resume-api/):**
+
 ```bash
 LINKEDIN_CLIENT_ID=your_client_id
 LINKEDIN_CLIENT_SECRET=your_client_secret
@@ -176,11 +193,13 @@ No separate configuration needed - frontend uses API_URL from VITE_API_URL
 ### 3. LinkedIn API Permissions
 
 The current implementation requests these OAuth scopes:
+
 - `openid` - OpenID Connect
 - `profile` - Basic profile information
 - `email` - Email address
 
 For enhanced data access (like skills, certifications):
+
 ```python
 # In resume-api/routes/linkedin.py, modify the scope:
 "scope": "openid profile email w_member_social"
@@ -189,6 +208,7 @@ For enhanced data access (like skills, certifications):
 ## Data Mapping
 
 ### Profile Data Mapping
+
 - `firstName` → User's first name
 - `lastName` → User's last name
 - `headline` → Current role/position
@@ -198,6 +218,7 @@ For enhanced data access (like skills, certifications):
 - `phone` → Phone number (if available)
 
 ### Experience Data
+
 - `companyName` → `company`
 - `title` → `title`
 - `startDate` → `startDate` (formatted as YYYY-MM)
@@ -205,6 +226,7 @@ For enhanced data access (like skills, certifications):
 - `description` → `description`
 
 ### Education Data
+
 - `schoolName` → `institution`
 - `degreeName` → `degree`
 - `fieldOfStudy` → `field`
@@ -235,12 +257,14 @@ For enhanced data access (like skills, certifications):
 ## Error Handling
 
 ### Frontend
+
 - OAuth popup blocked: User notified to allow popups
 - Network errors: Generic error toast with retry option
 - Invalid state: User directed to start over
 - Missing credentials: Clear error message
 
 ### Backend
+
 - Missing OAuth config: 500 error with clear message
 - Token exchange failure: Logged and reported to client
 - Profile fetch failure: Partial data returned or error
@@ -251,6 +275,7 @@ For enhanced data access (like skills, certifications):
 ### Manual Testing Flow
 
 1. **OAuth Flow Test**
+
    ```
    1. Open LinkedIn Import Dialog
    2. Click "Connect with LinkedIn"
@@ -260,6 +285,7 @@ For enhanced data access (like skills, certifications):
    ```
 
 2. **Data Import Test**
+
    ```
    1. Verify profile fields populated correctly
    2. Check experience entries imported
@@ -294,6 +320,7 @@ curl -X POST http://localhost:8000/api/linkedin/disconnect
 ## Limitations & Future Improvements
 
 ### Current Limitations
+
 1. **Profile Storage**: Profile data is not persisted (stateless)
    - User must re-authenticate on each session
    - Consider: Save profile to database with user account
@@ -311,6 +338,7 @@ curl -X POST http://localhost:8000/api/linkedin/disconnect
    - Consider: Add W3C member social scope
 
 ### Future Enhancements
+
 - [ ] Persist profile data to database
 - [ ] Implement token refresh flow
 - [ ] Add more LinkedIn data (skills, certifications, etc.)

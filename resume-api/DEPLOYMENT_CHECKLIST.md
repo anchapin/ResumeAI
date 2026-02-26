@@ -5,6 +5,7 @@ This checklist ensures all safeguards are in place before, during, and after eac
 ## Pre-deployment (T-60 minutes)
 
 ### Code Review & Testing
+
 - [ ] All code changes have been reviewed and approved
 - [ ] Unit tests pass: `pytest tests/ -v`
 - [ ] Integration tests pass: `pytest tests/integration/ -v`
@@ -17,6 +18,7 @@ This checklist ensures all safeguards are in place before, during, and after eac
 - [ ] No deprecated features in use
 
 ### Dependency Check
+
 - [ ] Python dependencies up to date: `pip check`
 - [ ] Node.js dependencies up to date: `npm audit`
 - [ ] No critical vulnerabilities in dependencies
@@ -24,6 +26,7 @@ This checklist ensures all safeguards are in place before, during, and after eac
 - [ ] Major version updates tested in staging
 
 ### Feature Flag Review
+
 - [ ] All feature flags for this deployment documented
 - [ ] Feature flag states documented in deployment notes
 - [ ] New features are disabled by default via feature flag
@@ -31,6 +34,7 @@ This checklist ensures all safeguards are in place before, during, and after eac
 - [ ] Feature flags allow graceful degradation
 
 ### Database Considerations
+
 - [ ] No pending database migrations
 - [ ] New migrations tested on staging with realistic data
 - [ ] Migration rollback scripts created
@@ -41,6 +45,7 @@ This checklist ensures all safeguards are in place before, during, and after eac
 - [ ] Backup verified and tested for restoration
 
 ### Environment Configuration
+
 - [ ] `.env` file reviewed and validated
 - [ ] All required environment variables documented
 - [ ] Sensitive values properly secured in secrets manager
@@ -48,6 +53,7 @@ This checklist ensures all safeguards are in place before, during, and after eac
 - [ ] Configuration files validated against schema
 
 ### API Documentation
+
 - [ ] API documentation updated if endpoints changed
 - [ ] OpenAPI/Swagger spec regenerated
 - [ ] New endpoints documented
@@ -55,6 +61,7 @@ This checklist ensures all safeguards are in place before, during, and after eac
 - [ ] Response schema changes documented
 
 ### Performance & Load
+
 - [ ] Performance baseline captured from current production
 - [ ] Stress test results reviewed
 - [ ] Query performance reviewed for new/modified queries
@@ -64,6 +71,7 @@ This checklist ensures all safeguards are in place before, during, and after eac
 ## Deployment Window Preparation (T-30 minutes)
 
 ### Infrastructure Readiness
+
 - [ ] Target environment connectivity verified
 - [ ] Load balancer health checks configured
 - [ ] Auto-scaling policies reviewed
@@ -71,6 +79,7 @@ This checklist ensures all safeguards are in place before, during, and after eac
 - [ ] Network rules allow required connectivity
 
 ### Monitoring Setup
+
 - [ ] Monitoring dashboards prepared
 - [ ] Alert thresholds configured appropriately
 - [ ] Logging verbosity appropriate for deployment
@@ -79,6 +88,7 @@ This checklist ensures all safeguards are in place before, during, and after eac
 - [ ] Log aggregation system operational
 
 ### Team Communication
+
 - [ ] Deployment scheduled and communicated
 - [ ] On-call engineer identified and available
 - [ ] Team members notified via Slack/email
@@ -87,6 +97,7 @@ This checklist ensures all safeguards are in place before, during, and after eac
 - [ ] Rollback decision criteria communicated
 
 ### Backup & Safety
+
 - [ ] Pre-deployment database backup created
 - [ ] Backup verified and tested
 - [ ] Previous version container image available
@@ -97,6 +108,7 @@ This checklist ensures all safeguards are in place before, during, and after eac
 ## Pre-deployment Validation (T-15 minutes)
 
 ### Automated Validation
+
 - [ ] Run pre-deployment validation script:
   ```bash
   python scripts/validate_deployment.py --pre-deployment
@@ -104,6 +116,7 @@ This checklist ensures all safeguards are in place before, during, and after eac
   Output should show all checks passing
 
 ### Health Checks
+
 - [ ] Current production health: `curl http://api.resumeai.com/health`
 - [ ] Database connectivity verified
 - [ ] AI provider connectivity verified
@@ -111,6 +124,7 @@ This checklist ensures all safeguards are in place before, during, and after eac
 - [ ] All upstream dependencies responding
 
 ### Resource Verification
+
 - [ ] Disk space sufficient (> 20% free)
 - [ ] Memory available (> 500MB free)
 - [ ] CPU not maxed out (< 80% utilization)
@@ -118,6 +132,7 @@ This checklist ensures all safeguards are in place before, during, and after eac
 - [ ] Database connection pool not maxed
 
 ### Sanity Checks
+
 - [ ] Correct version being deployed: `echo $DEPLOY_VERSION`
 - [ ] Correct environment target: `echo $TARGET_ENV`
 - [ ] Correct branch deployed: `git status`
@@ -127,12 +142,14 @@ This checklist ensures all safeguards are in place before, during, and after eac
 ## Deployment Execution (T-0 minutes)
 
 ### Initial Deployment Steps
+
 - [ ] Enable deployment mode (maintenance page if applicable)
 - [ ] Start deployment timer
 - [ ] Begin real-time monitoring
 - [ ] Notify team of deployment start
 
 ### Blue-Green Deployment (if applicable)
+
 - [ ] Pull new image: `docker pull resume-api:${NEW_VERSION}`
 - [ ] Start GREEN environment with new version
 - [ ] Wait for GREEN to be healthy (max 5 minutes)
@@ -142,6 +159,7 @@ This checklist ensures all safeguards are in place before, during, and after eac
 - [ ] Verify traffic routing successful
 
 ### Rolling Deployment (if applicable)
+
 - [ ] Deploy to first instance
 - [ ] Wait for health checks to pass
 - [ ] Route traffic to updated instance
@@ -149,6 +167,7 @@ This checklist ensures all safeguards are in place before, during, and after eac
 - [ ] Verify no errors during rolling update
 
 ### Database Migration (if needed)
+
 - [ ] Run pre-migration validation
 - [ ] Execute migration: `alembic upgrade head`
 - [ ] Verify migration completed successfully
@@ -156,6 +175,7 @@ This checklist ensures all safeguards are in place before, during, and after eac
 - [ ] Verify data integrity
 
 ### Post-deployment Startup Checks
+
 - [ ] Service started successfully
 - [ ] Application logs show no critical errors
 - [ ] Health check endpoint responding: `curl http://localhost:8000/health`
@@ -166,6 +186,7 @@ This checklist ensures all safeguards are in place before, during, and after eac
 ## Deployment Verification (T+15 minutes)
 
 ### Immediate Verification
+
 - [ ] Application health check passing
 - [ ] Error rate < 0.1%
 - [ ] Response times within baseline (±10%)
@@ -175,6 +196,7 @@ This checklist ensures all safeguards are in place before, during, and after eac
 - [ ] API endpoints responding correctly
 
 ### Extended Checks
+
 - [ ] Test critical user workflows:
   - [ ] Create new resume
   - [ ] Edit resume
@@ -188,6 +210,7 @@ This checklist ensures all safeguards are in place before, during, and after eac
 - [ ] Verify all feature flags working as expected
 
 ### Monitoring Verification
+
 - [ ] Metrics dashboard showing data
 - [ ] Error tracking service receiving errors correctly
 - [ ] Logs being aggregated properly
@@ -195,6 +218,7 @@ This checklist ensures all safeguards are in place before, during, and after eac
 - [ ] No cascading failures detected
 
 ### Performance Verification
+
 - [ ] CPU utilization normal (< 60%)
 - [ ] Memory utilization normal (< 70%)
 - [ ] Disk I/O reasonable
@@ -203,6 +227,7 @@ This checklist ensures all safeguards are in place before, during, and after eac
 - [ ] No timeout errors
 
 ### External Services
+
 - [ ] OAuth providers responding
 - [ ] Email service operational (if applicable)
 - [ ] File storage service working
@@ -212,6 +237,7 @@ This checklist ensures all safeguards are in place before, during, and after eac
 ## Post-deployment (T+60 minutes)
 
 ### Short-term Monitoring (1 hour)
+
 - [ ] Continuous monitoring of error rate
 - [ ] Spot check critical workflows every 10 minutes
 - [ ] Monitor resource utilization
@@ -219,6 +245,7 @@ This checklist ensures all safeguards are in place before, during, and after eac
 - [ ] Monitor database performance
 
 ### Extended Monitoring (24 hours)
+
 - [ ] Error rate remains < 0.1%
 - [ ] No unusual error patterns
 - [ ] Response times stable
@@ -228,12 +255,14 @@ This checklist ensures all safeguards are in place before, during, and after eac
 - [ ] Resource utilization stable
 
 ### Data Verification (24 hours)
+
 - [ ] Data integrity verified
 - [ ] No data loss detected
 - [ ] Database consistency verified
 - [ ] Backups completed successfully
 
 ### Documentation
+
 - [ ] Deployment completed successfully noted in logs
 - [ ] Version bump completed in code
 - [ ] Changelog updated
@@ -245,6 +274,7 @@ This checklist ensures all safeguards are in place before, during, and after eac
 Automatically trigger rollback if ANY of the following occur:
 
 ### Critical Failure Criteria
+
 - [ ] Health check failing for > 5 minutes
 - [ ] Error rate > 1% for > 10 minutes
 - [ ] Response time > 2x baseline for > 10 minutes
@@ -254,12 +284,14 @@ Automatically trigger rollback if ANY of the following occur:
 - [ ] Data corruption detected
 
 ### Feature-Specific Rollback Criteria
+
 - [ ] Critical feature disabled/non-functional
 - [ ] Payment processing failing (if applicable)
 - [ ] User authentication broken
 - [ ] Data not persisting correctly
 
 ### Rollback Execution
+
 - [ ] Execute rollback procedure: `./scripts/rollback.sh`
 - [ ] Verify previous version serving traffic
 - [ ] Confirm error rate returning to normal
@@ -279,6 +311,7 @@ Automatically trigger rollback if ANY of the following occur:
 ## Common Deployment Issues & Solutions
 
 ### Service won't start
+
 ```bash
 # Check logs
 docker logs resume-api
@@ -293,6 +326,7 @@ netstat -tlnp | grep 8000
 ```
 
 ### High error rate post-deployment
+
 ```bash
 # Check logs for errors
 tail -f /var/log/resume-api.log
@@ -307,6 +341,7 @@ curl http://localhost:8000/v1/health/features
 ```
 
 ### Performance degradation
+
 ```bash
 # Check slow queries
 curl http://localhost:8000/v1/metrics | jq '.slow_queries'
@@ -321,6 +356,7 @@ curl http://localhost:8000/v1/metrics | jq '.cache_hit_rate'
 ```
 
 ### Database migration stuck
+
 ```bash
 # Check running migrations
 mysql -e "SHOW ENGINE INNODB STATUS\G" | grep "pending"
@@ -346,11 +382,11 @@ mysql -e "KILL <process_id>;"
 
 ## Sign-off
 
-**Deployed By**: _________________________ **Date/Time**: _________________
+**Deployed By**: \***\*\*\*\*\*\*\***\_\***\*\*\*\*\*\*\*** **Date/Time**: **\*\*\*\***\_**\*\*\*\***
 
-**Verified By**: _________________________ **Date/Time**: _________________
+**Verified By**: \***\*\*\*\*\*\*\***\_\***\*\*\*\*\*\*\*** **Date/Time**: **\*\*\*\***\_**\*\*\*\***
 
-**Approved By**: _________________________ **Date/Time**: _________________
+**Approved By**: \***\*\*\*\*\*\*\***\_\***\*\*\*\*\*\*\*** **Date/Time**: **\*\*\*\***\_**\*\*\*\***
 
 ## References
 
@@ -371,4 +407,3 @@ mysql -e "KILL <process_id>;"
 Use this checklist for every deployment to production. Customize based on your specific deployment strategy (blue-green, rolling, canary, etc.). Keep a completed copy with each deployment for audit purposes.
 
 ---
-

@@ -1,9 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ResumeVersion } from '../types';
-import {
-  listResumeVersions,
-  restoreResumeVersion,
-} from '../utils/api-client';
+import { listResumeVersions, restoreResumeVersion } from '../utils/api-client';
 import { getVersionTimeAgo, formatVersionNumber } from '../utils/versioning';
 import { showSuccessToast, showErrorToast } from '../utils/toast';
 
@@ -15,10 +12,7 @@ interface VersionHistoryProps {
 /**
  * Version history component for resumes
  */
-const VersionHistory: React.FC<VersionHistoryProps> = ({
-  resumeId,
-  onRestore,
-}) => {
+const VersionHistory: React.FC<VersionHistoryProps> = ({ resumeId, onRestore }) => {
   const [versions, setVersions] = useState<ResumeVersion[]>([]);
   const [loading, setLoading] = useState(true);
   const [restoring, setRestoring] = useState<number | null>(null);
@@ -44,8 +38,8 @@ const VersionHistory: React.FC<VersionHistoryProps> = ({
     if (
       !confirm(
         `Are you sure you want to restore to ${formatVersionNumber(
-          version.version_number
-        )}? This will create a new version with the restored data.`
+          version.version_number,
+        )}? This will create a new version with the restored data.`,
       )
     ) {
       return;
@@ -54,9 +48,7 @@ const VersionHistory: React.FC<VersionHistoryProps> = ({
     try {
       setRestoring(version.id);
       await restoreResumeVersion(resumeId, version.id);
-      showSuccessToast(
-        `Successfully restored to ${formatVersionNumber(version.version_number)}`
-      );
+      showSuccessToast(`Successfully restored to ${formatVersionNumber(version.version_number)}`);
       await loadVersions(); // Reload versions
       onRestore?.(version);
     } catch (error) {
@@ -109,13 +101,9 @@ const VersionHistory: React.FC<VersionHistoryProps> = ({
                 )}
               </div>
               {version.change_description && (
-                <p className="text-sm text-slate-600 mb-1">
-                  {version.change_description}
-                </p>
+                <p className="text-sm text-slate-600 mb-1">{version.change_description}</p>
               )}
-              <p className="text-xs text-slate-400">
-                {getVersionTimeAgo(version.created_at)}
-              </p>
+              <p className="text-xs text-slate-400">{getVersionTimeAgo(version.created_at)}</p>
             </div>
             {index !== 0 && (
               <button
@@ -132,9 +120,7 @@ const VersionHistory: React.FC<VersionHistoryProps> = ({
                   </>
                 ) : (
                   <>
-                    <span className="material-symbols-outlined text-[18px]">
-                      restore
-                    </span>
+                    <span className="material-symbols-outlined text-[18px]">restore</span>
                     <span>Restore</span>
                   </>
                 )}

@@ -78,15 +78,17 @@ curl http://localhost:8000/health/ready
 ### Health Check Integration
 
 **Docker Compose:**
+
 ```yaml
 healthcheck:
-  test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+  test: ['CMD', 'curl', '-f', 'http://localhost:8000/health']
   interval: 30s
   timeout: 10s
   retries: 3
 ```
 
 **Kubernetes:**
+
 ```yaml
 livenessProbe:
   httpGet:
@@ -104,6 +106,7 @@ readinessProbe:
 ```
 
 **Monitoring (Prometheus):**
+
 ```yaml
 scrape_configs:
   - job_name: 'resumeai-api'
@@ -118,17 +121,20 @@ scrape_configs:
 ### Pre-Migration Checklist
 
 1. **Backup current database**
+
    ```bash
    pg_dump -U postgres resumeai > backup_$(date +%s).sql
    ```
 
 2. **Test migration on staging**
+
    ```bash
    # Run migration on staging first
    ENVIRONMENT=staging python -m alembic upgrade head
    ```
 
 3. **Verify data integrity**
+
    ```bash
    # Check row counts
    SELECT table_name, COUNT(*) FROM information_schema.tables GROUP BY table_name;
@@ -150,11 +156,11 @@ class Migration:
     def up(self):
         """Upgrade: Add new columns, tables, indexes"""
         pass
-    
+
     def down(self):
         """Downgrade: Safely revert changes"""
         pass
-    
+
     def validate(self):
         """Check data consistency after migration"""
         pass
@@ -163,6 +169,7 @@ class Migration:
 ### Zero-Downtime Migrations
 
 **Good migration pattern:**
+
 ```sql
 -- 1. Add new column with default
 ALTER TABLE users ADD COLUMN new_field VARCHAR(255) DEFAULT 'default_value';
@@ -178,6 +185,7 @@ ALTER TABLE users ADD CONSTRAINT check_field CHECK (new_field IS NOT NULL);
 ```
 
 **Bad migration pattern:**
+
 ```sql
 -- DON'T: This blocks table for all users
 ALTER TABLE users DROP COLUMN old_field;
@@ -198,23 +206,25 @@ ALTER TABLE users RENAME COLUMN new_field TO old_field;
 6. **Keep blue:** Retain for instant rollback
 
 **Advantages:**
+
 - ✅ Instant rollback (< 1 minute)
 - ✅ Full testing before switch
 - ✅ No downtime
 - ✅ Easy to debug issues
 
 **Implementation:**
+
 ```yaml
 # docker-compose.prod.yml
 services:
   api-blue:
     image: api:v1.0.0
     environment: ENVIRONMENT=production
-  
+
   api-green:
     image: api:v1.1.0
     environment: ENVIRONMENT=production
-  
+
   nginx:
     # Route 100% to blue initially
     # Switch to green after testing
@@ -238,11 +248,13 @@ services:
 8. **Remove old:** After successful soak
 
 **Advantages:**
+
 - ✅ Detects issues with real traffic
 - ✅ Graceful rollback possible
 - ✅ User impact minimized (only %)
 
 **Rollback at any stage:**
+
 ```bash
 # If issues detected at 5%:
 # 1. Set traffic back to 0% for new version
@@ -269,7 +281,7 @@ class FeatureFlags:
         Feature.SOCIAL_LOGIN: True,
         Feature.PDF_EXPORT: False,  # Disabled temporarily
     }
-    
+
     @staticmethod
     def is_enabled(feature: Feature) -> bool:
         return FeatureFlags._flags.get(feature, False)
@@ -287,18 +299,21 @@ def generate_variants(resume_id: str):
 ### Key Metrics to Monitor
 
 **Application Metrics:**
+
 - Request count (total, by endpoint)
 - Response time (p50, p95, p99)
 - Error rate (4xx, 5xx)
 - Latency distribution
 
 **Infrastructure Metrics:**
+
 - CPU usage
 - Memory usage
 - Disk usage
 - Network I/O
 
 **Business Metrics:**
+
 - Resumes generated (count)
 - PDF exports (count)
 - User errors reported
@@ -311,17 +326,17 @@ alerts:
     condition: error_rate > 1%
     severity: critical
     action: Page on-call engineer
-  
+
   - name: HighLatency
     condition: p99_latency > 5s
     severity: warning
     action: Investigate performance
-  
+
   - name: DiskFull
     condition: disk_usage > 90%
     severity: critical
     action: Scale storage or cleanup
-  
+
   - name: ApiDown
     condition: health_check_failed for 2 minutes
     severity: critical
@@ -333,6 +348,7 @@ alerts:
 ### Feature Flag Rollback (5 min)
 
 **For minor bugs in new features:**
+
 1. Open feature flag configuration
 2. Set problematic feature to disabled
 3. Verify old behavior restored
@@ -342,6 +358,7 @@ alerts:
 ### Blue-Green Rollback (1 min)
 
 **For critical issues:**
+
 1. Load balancer points to blue (old version)
 2. Verify traffic shifted
 3. Monitor error rates drop
@@ -351,6 +368,7 @@ alerts:
 ### Database Rollback (30 min)
 
 **For migration issues:**
+
 1. Stop application servers
 2. Restore from backup: `psql < backup.sql`
 3. Verify data integrity
@@ -361,6 +379,7 @@ alerts:
 ### Full Rollback (1-2 hours)
 
 **For catastrophic failures:**
+
 1. Switch to backup environment
 2. Restore last known good backup
 3. Verify all systems operational
@@ -372,6 +391,7 @@ alerts:
 ### On-Call Duties
 
 **Primary on-call responsibilities:**
+
 - Respond to alerts within 5 minutes
 - Triage severity (P1/P2/P3)
 - Execute rollback if needed
@@ -380,16 +400,19 @@ alerts:
 ### Incident Severity
 
 **P1 - Critical:** Users cannot use service
+
 - Action: Rollback immediately
 - Notify: Engineering team + leadership
 - Timeline: Respond < 5 min, Resolve < 30 min
 
 **P2 - High:** Degraded service/significant feature broken
+
 - Action: Investigate, rollback if needed
 - Notify: Engineering team
 - Timeline: Respond < 15 min, Resolve < 2 hours
 
 **P3 - Medium:** Minor issues, workaround available
+
 - Action: Investigate
 - Notify: Team (no page)
 - Timeline: Resolve < next business day

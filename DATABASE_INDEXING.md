@@ -38,6 +38,7 @@ The migration adds 26 strategic indexes across 8 tables:
 #### 1. **Resumes Table** (6 indexes)
 
 Primary queries affected:
+
 - Get user resumes
 - Get recent resumes
 - Get public resumes
@@ -53,6 +54,7 @@ CREATE INDEX idx_resume_is_public_created ON resumes (is_public, created_at);
 
 **Expected Impact**: 30-40% faster resume queries
 **Use Cases**:
+
 - List user's resumes by creation date
 - Find recently modified resumes
 - Display public resumes
@@ -60,6 +62,7 @@ CREATE INDEX idx_resume_is_public_created ON resumes (is_public, created_at);
 #### 2. **Resume Versions Table** (3 indexes)
 
 Primary queries affected:
+
 - Get version history
 - Fetch specific version
 
@@ -71,6 +74,7 @@ CREATE INDEX idx_resume_version_number ON resume_versions (resume_id, version_nu
 
 **Expected Impact**: 25-35% faster version lookups
 **Use Cases**:
+
 - Load resume version history
 - Restore previous version
 - Track changes over time
@@ -78,6 +82,7 @@ CREATE INDEX idx_resume_version_number ON resume_versions (resume_id, version_nu
 #### 3. **API Keys Table** (4 indexes)
 
 Primary queries affected:
+
 - Validate API key
 - Check key status
 - Check expiration
@@ -91,6 +96,7 @@ CREATE INDEX idx_api_key_expires ON api_keys (expires_at);
 
 **Expected Impact**: 40-50% faster API key validation
 **Use Cases**:
+
 - Fast API key hash lookup (O(1) becomes O(1) with index)
 - Get user's active keys
 - Find expired keys for cleanup
@@ -139,6 +145,7 @@ CREATE INDEX idx_github_oauth_state_used ON github_oauth_states (is_used, create
 ## Index Design Principles
 
 ### Composite Indexes
+
 We use composite indexes (multiple columns) when queries frequently filter on multiple columns:
 
 ```python
@@ -150,6 +157,7 @@ SELECT * FROM resumes WHERE owner_id = ? AND created_at > ?;
 ```
 
 ### Index Order Matters
+
 Column order in composite indexes follows the "leading columns" principle:
 
 1. **Equality Columns First**: Columns used with `=` operator
@@ -158,7 +166,9 @@ Column order in composite indexes follows the "leading columns" principle:
    - `created_at > ?` comes after equality columns
 
 ### Single Column Indexes
+
 Single-column indexes are used for:
+
 - Frequently used `WHERE` clauses
 - Foreign keys (if not already indexed)
 - Unique constraints
@@ -215,6 +225,7 @@ cat resume-api/migrations/001_add_performance_indexes.py
 ```
 
 **Key Points**:
+
 - Supports both SQLite and PostgreSQL
 - Idempotent: Safe to run multiple times
 - Includes rollback capability
@@ -229,6 +240,7 @@ python migrations/001_add_performance_indexes.py
 ```
 
 **Output**:
+
 ```
 ✓ Created index: idx_resume_user_created on resumes(owner_id, created_at)
 ✓ Created index: idx_resume_user_updated on resumes(owner_id, updated_at)
@@ -333,13 +345,13 @@ pytest tests/test_server_performance.tsx -k "database"
 
 Based on typical resume data:
 
-| Table | Rows | Primary Data | Indexes | Total | % Increase |
-|-------|------|--------------|---------|-------|-----------|
-| resumes | 10,000 | 50 MB | 8 MB | 58 MB | 16% |
-| resume_versions | 50,000 | 150 MB | 15 MB | 165 MB | 10% |
-| api_keys | 5,000 | 5 MB | 2 MB | 7 MB | 40% |
-| users | 1,000 | 2 MB | 1 MB | 3 MB | 50% |
-| **Total** | **66,000** | **207 MB** | **26 MB** | **233 MB** | **~13%** |
+| Table           | Rows       | Primary Data | Indexes   | Total      | % Increase |
+| --------------- | ---------- | ------------ | --------- | ---------- | ---------- |
+| resumes         | 10,000     | 50 MB        | 8 MB      | 58 MB      | 16%        |
+| resume_versions | 50,000     | 150 MB       | 15 MB     | 165 MB     | 10%        |
+| api_keys        | 5,000      | 5 MB         | 2 MB      | 7 MB       | 40%        |
+| users           | 1,000      | 2 MB         | 1 MB      | 3 MB       | 50%        |
+| **Total**       | **66,000** | **207 MB**   | **26 MB** | **233 MB** | **~13%**   |
 
 **Conclusion**: Storage overhead of ~13% is minimal compared to 30-40% query performance improvement.
 
@@ -348,6 +360,7 @@ Based on typical resume data:
 ### When to Add an Index
 
 ✅ **Add an index if**:
+
 1. Column is frequently used in `WHERE` clauses
 2. Column is used in `JOIN` conditions (foreign keys)
 3. Column is used in `ORDER BY` clauses
@@ -355,6 +368,7 @@ Based on typical resume data:
 5. The table has >10,000 rows
 
 ❌ **Don't add an index if**:
+
 1. Column is rarely used in queries
 2. Table has <1,000 rows (sequential scan is fine)
 3. Column has low cardinality (e.g., boolean, status)
@@ -409,15 +423,18 @@ python scripts/analyze_indexes.py
 ## Maintenance Schedule
 
 ### Weekly
+
 - Monitor query performance in application logs
 - Check for slow queries (>500ms)
 
 ### Monthly
+
 - Run `analyze_indexes.py` to review index usage
 - Check for bloated/fragmented indexes
 - Review new slow queries
 
 ### Quarterly
+
 - Full capacity planning review
 - Re-evaluate index strategy
 - Update documentation
@@ -431,6 +448,7 @@ Error: database is locked (SQLite)
 ```
 
 **Solution**:
+
 1. Close all database connections
 2. Ensure no transactions are open
 3. Check for stuck processes: `lsof | grep resumeai.db`
@@ -439,12 +457,14 @@ Error: database is locked (SQLite)
 ### Issue: No Performance Improvement
 
 **Possible Causes**:
+
 1. Query planner not using indexes (rerun `ANALYZE`)
 2. Statistics are outdated
 3. Index columns in wrong order
 4. Query not in expected format
 
 **Solution**:
+
 ```sql
 -- Rebuild statistics (PostgreSQL)
 ANALYZE;
@@ -461,6 +481,7 @@ EXPLAIN ANALYZE SELECT ...;
 **Cause**: Too many indexes on write-heavy table
 
 **Solution**:
+
 1. Review index necessity
 2. Consider removing rarely-used indexes
 3. Implement batch inserts to amortize cost
@@ -468,11 +489,13 @@ EXPLAIN ANALYZE SELECT ...;
 ## References
 
 ### Related Issues
+
 - **Issue #414**: Create Load Testing Suite
 - **Issue #399**: Establish Performance Baselines
 - **CAPACITY_PLANNING.md**: Original bottleneck analysis
 
 ### External Resources
+
 - [PostgreSQL Index Documentation](https://www.postgresql.org/docs/current/indexes.html)
 - [SQLite Index Documentation](https://www.sqlite.org/indexes.html)
 - [Index Design Guidelines](https://use-the-index-luke.com/)
@@ -530,6 +553,7 @@ GitHub OAuth States Table (2 indexes):
 ## Summary
 
 ✅ **Implementation Complete**
+
 - 26 strategic indexes added
 - Expected 30-40% query performance improvement
 - ~13% storage overhead
@@ -538,6 +562,7 @@ GitHub OAuth States Table (2 indexes):
 - Production-ready
 
 **Next Steps**:
+
 1. Run migration: `python resume-api/migrations/001_add_performance_indexes.py`
 2. Verify indexes: `python resume-api/scripts/analyze_indexes.py`
 3. Monitor performance improvements in production

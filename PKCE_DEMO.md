@@ -11,6 +11,7 @@ This document demonstrates the complete PKCE-protected OAuth flow with actual co
 **User Action:** Clicks "Connect GitHub" in Settings
 
 **Frontend Code Execution:**
+
 ```typescript
 // From GitHubSettings.tsx
 const handleConnectGitHub = async () => {
@@ -29,6 +30,7 @@ const handleConnectGitHub = async () => {
 **Request:** `GET /github/connect` (authenticated)
 
 **Backend Processing:**
+
 ```python
 # From routes/github.py - github_connect()
 
@@ -78,6 +80,7 @@ github_auth_url += f"&code_challenge={code_challenge}&code_challenge_method=S256
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -95,6 +98,7 @@ github_auth_url += f"&code_challenge={code_challenge}&code_challenge_method=S256
 **User:** Sees GitHub login/authorization page
 
 **What GitHub Sees:**
+
 ```
 Authorization Request:
 - client_id: resumeai-client-id
@@ -109,7 +113,8 @@ Authorization Request:
 
 **User Action:** Clicks "Authorize resumeai"
 
-**GitHub Action:** 
+**GitHub Action:**
+
 - Stores code_challenge and code_challenge_method
 - Generates authorization code (e.g., `code=abc123def456`)
 - Redirects back with code and state:
@@ -129,6 +134,7 @@ http://localhost:3000/auth/callback?code=abc123def456&state=csrf-token-123
 ### Step 6: Backend Validates and Exchanges Code
 
 **Backend Processing:**
+
 ```python
 # From routes/github.py - github_oauth_callback()
 
@@ -222,16 +228,19 @@ return Response(
 **Attacker's Goal:** Use intercepted authorization code to connect their GitHub account
 
 **Step 1: Attacker Intercepts Code**
+
 ```
 Attacker intercepts: code=abc123def456
 ```
 
 **Step 2: Attacker Tries to Use Code**
+
 ```
 POST /github/callback?code=abc123def456&state=<attacker-state>
 ```
 
 **Step 3: Backend PKCE Validation Fails**
+
 ```python
 # Backend retrieves oauth_state with original code_challenge
 code_challenge = oauth_state.code_challenge  # "E9Mrozoa2owUTzlHqy_ZV9zOYkL3RGJoufuScIE37j0"
@@ -255,6 +264,7 @@ raise HTTPException("PKCE verification failed")
 **Attack Result:** ❌ FAILED - Attacker cannot use intercepted code
 
 **Why?** Because PKCE ensures:
+
 1. Only the client with the original verifier can use the code
 2. Code without matching verifier is worthless
 3. Attacker cannot derive verifier from code_challenge (one-way SHA256)
@@ -262,32 +272,36 @@ raise HTTPException("PKCE verification failed")
 ## Test Verification
 
 ### Frontend PKCE Tests
+
 ```bash
 npm test -- oauth-pkce.test.ts
 ```
 
 **Key Test Cases:**
+
 ```typescript
 // Test: Valid verification
 const verifier = generateCodeVerifier();
 const challenge = await generateCodeChallenge(verifier);
-expect(SHA256(verifier).equals(challenge)).toBe(true);  // ✅
+expect(SHA256(verifier).equals(challenge)).toBe(true); // ✅
 
-// Test: Invalid verification  
-const wrongVerifier = verifier + "_modified";
-expect(SHA256(wrongVerifier).equals(challenge)).toBe(false);  // ✅
+// Test: Invalid verification
+const wrongVerifier = verifier + '_modified';
+expect(SHA256(wrongVerifier).equals(challenge)).toBe(false); // ✅
 
 // Test: Attack prevention
-const attackerVerifier = generateCodeVerifier();  // Different one
-expect(SHA256(attackerVerifier).equals(challenge)).toBe(false);  // ✅
+const attackerVerifier = generateCodeVerifier(); // Different one
+expect(SHA256(attackerVerifier).equals(challenge)).toBe(false); // ✅
 ```
 
 ### Backend PKCE Tests
+
 ```bash
 cd resume-api && python3 test_pkce_standalone.py
 ```
 
 **Key Test Cases:**
+
 ```python
 # Test: Verifier generation
 verifier = generate_pkce_code_verifier()
@@ -308,27 +322,32 @@ assert verify_pkce_challenge(wrong_verifier, challenge) == False  # ✅
 ## Security Properties Verified
 
 ✅ **Cryptographic Strength**
+
 - 128-character verifier ≈ 750+ bits entropy
 - SHA-256 hash = 256-bit security
 - Base64url encoding preserves security
 
 ✅ **Constant-Time Comparison**
+
 - Uses `secrets.compare_digest()` (Python)
 - Prevents timing attacks
 - Takes same time for match/mismatch
 
 ✅ **Ephemeral Storage**
+
 - Verifier stored in sessionStorage (frontend)
 - Cleared on tab close
 - Cleared on one-time use
 - Database storage auto-expires (10 min)
 
 ✅ **One-Time Use**
+
 - Verifier used once, then cleared
 - Cannot be reused
 - Cannot be intercepted for future use
 
 ✅ **Attack Prevention**
+
 - Authorization code interception ✅
 - Code injection ✅
 - Code reuse ✅
@@ -340,7 +359,7 @@ Measured on development machine:
 
 ```
 Verifier Generation:   < 1ms
-Challenge Generation:  1-2ms  
+Challenge Generation:  1-2ms
 Verification:          1-2ms
 Database Storage:      < 5ms
 Token Exchange:        200-500ms (network-bound)
@@ -353,6 +372,7 @@ Total OAuth Flow:      300-800ms (network-dependent)
 ## Conclusion
 
 The PKCE implementation:
+
 1. ✅ Protects against authorization code interception
 2. ✅ Follows RFC 7636 specification exactly
 3. ✅ Zero performance impact

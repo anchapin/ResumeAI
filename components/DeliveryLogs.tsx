@@ -1,6 +1,10 @@
 import React, { useState, useCallback } from 'react';
 import { toast } from 'react-toastify';
-import { getWebhookDeliveries, retryWebhookDelivery, type WebhookDelivery } from '../utils/api-client';
+import {
+  getWebhookDeliveries,
+  retryWebhookDelivery,
+  type WebhookDelivery,
+} from '../utils/api-client';
 
 interface DeliveryLogsProps {
   webhookId: number;
@@ -123,7 +127,9 @@ const DeliveryLogs: React.FC<DeliveryLogsProps> = ({ webhookId, onClose }) => {
         {/* Loading State */}
         {isLoading && (
           <div className="flex items-center justify-center py-12">
-            <span className="material-symbols-outlined animate-spin text-primary-600 text-3xl">progress_activity</span>
+            <span className="material-symbols-outlined animate-spin text-primary-600 text-3xl">
+              progress_activity
+            </span>
           </div>
         )}
 
@@ -176,11 +182,13 @@ const DeliveryLogs: React.FC<DeliveryLogsProps> = ({ webhookId, onClose }) => {
                         {formatDate(delivery.delivered_at)}
                       </span>
                       {delivery.response_status && (
-                        <span className={`font-mono ${
-                          delivery.response_status >= 200 && delivery.response_status < 300
-                            ? 'text-green-600'
-                            : 'text-red-600'
-                        }`}>
+                        <span
+                          className={`font-mono ${
+                            delivery.response_status >= 200 && delivery.response_status < 300
+                              ? 'text-green-600'
+                              : 'text-red-600'
+                          }`}
+                        >
                           {delivery.response_status}
                         </span>
                       )}
@@ -269,11 +277,14 @@ const DeliveryLogs: React.FC<DeliveryLogsProps> = ({ webhookId, onClose }) => {
               {selectedDelivery.response_status && (
                 <div className="space-y-2">
                   <h4 className="text-sm font-bold text-slate-700">Response Status</h4>
-                  <code className={`px-3 py-1.5 rounded-lg text-sm ${
-                    selectedDelivery.response_status >= 200 && selectedDelivery.response_status < 300
-                      ? 'bg-green-100 text-green-900'
-                      : 'bg-red-100 text-red-900'
-                  }`}>
+                  <code
+                    className={`px-3 py-1.5 rounded-lg text-sm ${
+                      selectedDelivery.response_status >= 200 &&
+                      selectedDelivery.response_status < 300
+                        ? 'bg-green-100 text-green-900'
+                        : 'bg-red-100 text-red-900'
+                    }`}
+                  >
                     {selectedDelivery.response_status}
                   </code>
                 </div>

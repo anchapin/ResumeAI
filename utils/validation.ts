@@ -29,7 +29,11 @@ interface JobApplicationData {
 }
 
 // Input validation functions
-const validateInput = (input: unknown, type: string = 'string', options: StringOptions | NumberOptions | ArrayOptions = {}) => {
+const validateInput = (
+  input: unknown,
+  type: string = 'string',
+  options: StringOptions | NumberOptions | ArrayOptions = {},
+) => {
   // For object type, we need to handle null differently (null is not a valid object)
   if (type === 'object') {
     if (input === null || input === undefined) {
@@ -58,7 +62,9 @@ const validateInput = (input: unknown, type: string = 'string', options: StringO
 
     // Only validate items if itemType is explicitly specified
     if (arrayOpts.itemType) {
-      return input.map((item: unknown) => validateInput(item, arrayOpts.itemType, arrayOpts.itemOptions));
+      return input.map((item: unknown) =>
+        validateInput(item, arrayOpts.itemType, arrayOpts.itemOptions),
+      );
     }
 
     return input;
@@ -147,7 +153,7 @@ const sanitizeString = (str: unknown): string | unknown => {
 
   // Remove potentially dangerous characters/patterns
   // Event handlers (onXXX=) should be removed but preserve the = and value
-  let result = str
+  const result = str
     .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '') // Remove script tags
     .replace(/javascript:/gi, '') // Remove javascript: protocol
     .replace(/on\w+/gi, '') // Remove event handler names (onclick, onmouseover, etc.)
@@ -304,5 +310,5 @@ export {
   sanitizeString,
   isValidString,
   validateResumeData,
-  validateJobApplicationData
+  validateJobApplicationData,
 };

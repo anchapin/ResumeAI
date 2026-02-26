@@ -38,36 +38,44 @@ locust -f scripts/locustfile.py \
 ## Load Testing Scenarios
 
 ### 1. Basic Health Check (5 minutes)
+
 ```bash
 ./scripts/run-load-test.sh http://localhost:8000 5m
 ```
+
 - **Users:** 100
 - **Purpose:** Baseline system health
 - **Expected:** ~50 RPS, <100ms p95 response time
 
 ### 2. Sustained Load (30 minutes)
+
 ```bash
 locust -f scripts/locustfile.py --host=http://localhost:8000 \
   --headless -u 200 -r 5 -t 30m
 ```
+
 - **Users:** 200
 - **Purpose:** Memory leaks, connection issues
 - **Expected:** 99%+ success rate
 
 ### 3. Spike Test (sudden traffic increase)
+
 ```bash
 locust -f scripts/locustfile.py --host=http://localhost:8000 \
   --headless -u 1000 -r 100 -t 5m
 ```
+
 - **Users:** 1000 (ramped up quickly)
 - **Purpose:** System recovery, queue handling
 - **Expected:** Graceful degradation, no crashes
 
 ### 4. Stress Test (find breaking point)
+
 ```bash
 locust -f scripts/locustfile.py --host=http://localhost:8000 \
   --headless -u 5000 -r 50 -t 10m
 ```
+
 - **Users:** 5000+
 - **Purpose:** Identify system limits
 - **Expected:** Document breaking point
@@ -75,6 +83,7 @@ locust -f scripts/locustfile.py --host=http://localhost:8000 \
 ## Test Profiles
 
 ### Development Profile
+
 ```bash
 # Quick smoke test for local development
 locust -f scripts/locustfile.py --host=http://localhost:8000 \
@@ -82,12 +91,14 @@ locust -f scripts/locustfile.py --host=http://localhost:8000 \
 ```
 
 ### Staging Profile
+
 ```bash
 # Comprehensive test before deployment
 ./scripts/run-load-test.sh https://staging-api.resumeai.com 10m
 ```
 
 ### Production Profile
+
 ```bash
 # Off-peak hours only, gradual ramp-up
 locust -f scripts/locustfile.py --host=https://api.resumeai.com \
@@ -98,13 +109,13 @@ locust -f scripts/locustfile.py --host=https://api.resumeai.com \
 
 ### Key Metrics
 
-| Metric | Good | Warning | Critical |
-|--------|------|---------|----------|
-| Response Time (p95) | <1s | 1-3s | >3s |
-| Response Time (p99) | <2s | 2-5s | >5s |
-| Success Rate | 99.9%+ | 99%-99.9% | <99% |
-| Error Rate | <0.1% | 0.1-1% | >1% |
-| RPS | Stable | Varies | Unstable/Falling |
+| Metric              | Good   | Warning   | Critical         |
+| ------------------- | ------ | --------- | ---------------- |
+| Response Time (p95) | <1s    | 1-3s      | >3s              |
+| Response Time (p99) | <2s    | 2-5s      | >5s              |
+| Success Rate        | 99.9%+ | 99%-99.9% | <99%             |
+| Error Rate          | <0.1%  | 0.1-1%    | >1%              |
+| RPS                 | Stable | Varies    | Unstable/Falling |
 
 ### Example Results
 
@@ -153,16 +164,18 @@ Failure Analysis:
 
 1. **Run baseline test** (document baseline metrics)
 2. **Monitor during test:**
+
    ```bash
    # Terminal 1: Load test
    ./scripts/run-load-test.sh http://localhost:8000 5m
-   
+
    # Terminal 2: Monitor API
    watch -n 1 'curl -s http://localhost:8000/health | jq'
-   
+
    # Terminal 3: System metrics
    top -b | head -20
    ```
+
 3. **Analyze logs** for errors and patterns
 4. **Identify** slowest endpoints
 5. **Implement** fixes
@@ -173,6 +186,7 @@ Failure Analysis:
 ### Current Baseline
 
 From 100 concurrent user test:
+
 - **Peak RPS:** ~50
 - **Max Users Supported:** 100 without degradation
 - **Memory Usage:** ~2GB
@@ -181,23 +195,25 @@ From 100 concurrent user test:
 
 ### Scaling Targets
 
-| Metric | 100 Users | 500 Users | 1000 Users |
-|--------|-----------|-----------|------------|
-| RPS | 50 | 250 | 500 |
-| Response Time p95 | 4.8s | ? | ? |
-| Success Rate | 99.2% | ? | ? |
-| Memory | 2GB | ? | ? |
-| CPU | 60% | ? | ? |
+| Metric            | 100 Users | 500 Users | 1000 Users |
+| ----------------- | --------- | --------- | ---------- |
+| RPS               | 50        | 250       | 500        |
+| Response Time p95 | 4.8s      | ?         | ?          |
+| Success Rate      | 99.2%     | ?         | ?          |
+| Memory            | 2GB       | ?         | ?          |
+| CPU               | 60%       | ?         | ?          |
 
 ### Infrastructure Recommendations
 
 **For 100-200 concurrent users:**
+
 - Single server (t3.medium or better)
 - 4GB RAM minimum
 - 2-4 CPU cores
 - SSD storage for caching
 
 **For 500+ concurrent users:**
+
 - Load balancer (ALB/NLB)
 - 3+ application servers
 - Redis for session/cache
@@ -214,7 +230,7 @@ name: Load Test
 
 on:
   schedule:
-    - cron: '0 2 * * *'  # Daily at 2am
+    - cron: '0 2 * * *' # Daily at 2am
 
 jobs:
   load-test:
@@ -263,6 +279,7 @@ jobs:
 ### High Failure Rate
 
 **Check:**
+
 1. API server is running
 2. Network connectivity
 3. Database is accessible
@@ -270,6 +287,7 @@ jobs:
 5. Firewall rules
 
 **Solution:**
+
 ```bash
 # Test connectivity
 curl -v http://localhost:8000/health
@@ -284,12 +302,14 @@ locust -f scripts/locustfile.py -u 10 -r 1
 ### Timeout Errors
 
 **Causes:**
+
 1. Server overloaded
 2. Slow AI provider responses
 3. Database queries too slow
 4. Network latency
 
 **Fix:**
+
 1. Increase request timeout: `-t 15` in locustfile
 2. Reduce concurrent users
 3. Check API provider status
@@ -299,6 +319,7 @@ locust -f scripts/locustfile.py -u 10 -r 1
 
 **Symptom:** Process killed, out of memory
 **Solution:**
+
 1. Reduce user count
 2. Reduce test duration
 3. Check for memory leaks in logs

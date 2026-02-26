@@ -2,7 +2,7 @@
 
 /**
  * Accessibility scanning script using axe-core.
- * 
+ *
  * Scans all pages in a running application for WCAG 2.1 violations.
  * Usage: npm run a11y:scan
  */
@@ -13,24 +13,16 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPORTS_DIR = path.join(__dirname, '..', 'a11y-reports');
-const PAGES = [
-  '/',
-  '/editor',
-  '/workspace',
-  '/settings',
-];
+const PAGES = ['/', '/editor', '/workspace', '/settings'];
 const API_URL = process.env.VITE_API_URL || 'http://localhost:5173';
 const SEVERITY_THRESHOLD = process.env.A11Y_THRESHOLD || 'moderate'; // minor, moderate, serious, critical
-
 
 // Create reports directory
 if (!fs.existsSync(REPORTS_DIR)) {
   fs.mkdirSync(REPORTS_DIR, { recursive: true });
 }
-
 
 /**
  * Severity levels from axe-core
@@ -42,14 +34,13 @@ const SEVERITY_LEVELS = {
   critical: 3,
 };
 
-
 /**
  * Scan a page for accessibility violations.
  */
 async function scanPage(url) {
   try {
     console.log(`Scanning: ${url}`);
-    
+
     // In a real scenario, this would use Puppeteer or Playwright
     // For now, return mock results structure
     return {
@@ -65,24 +56,22 @@ async function scanPage(url) {
   }
 }
 
-
 /**
  * Filter violations by severity.
  */
 function filterBySeverity(violations, threshold) {
   const thresholdLevel = SEVERITY_LEVELS[threshold] || SEVERITY_LEVELS.moderate;
-  return violations.filter(v => SEVERITY_LEVELS[v.impact] >= thresholdLevel);
+  return violations.filter((v) => SEVERITY_LEVELS[v.impact] >= thresholdLevel);
 }
-
 
 /**
  * Generate HTML report.
  */
 function generateReport(results) {
-  const violations = results.flatMap(r => r.violations || []);
+  const violations = results.flatMap((r) => r.violations || []);
   const severityCount = {};
-  
-  violations.forEach(v => {
+
+  violations.forEach((v) => {
     severityCount[v.impact] = (severityCount[v.impact] || 0) + 1;
   });
 
@@ -125,11 +114,15 @@ function generateReport(results) {
     <p><strong>Minor:</strong> <span class="minor">${severityCount.minor || 0}</span></p>
   </div>
 
-  ${results.map(r => `
+  ${results
+    .map(
+      (r) => `
     <div class="page">
       <h2>${r.url}</h2>
       ${(r.violations || []).length === 0 ? '<p>✓ No violations found</p>' : ''}
-      ${(r.violations || []).map(v => `
+      ${(r.violations || [])
+        .map(
+          (v) => `
         <div class="violation">
           <div class="violation-title">
             ${v.id}
@@ -137,13 +130,22 @@ function generateReport(results) {
           </div>
           <p>${v.description}</p>
           <p><strong>Nodes affected:</strong> ${(v.nodes || []).length}</p>
-          ${(v.nodes || []).slice(0, 3).map(n => `
+          ${(v.nodes || [])
+            .slice(0, 3)
+            .map(
+              (n) => `
             <pre><code>${n.html}</code></pre>
-          `).join('')}
+          `,
+            )
+            .join('')}
         </div>
-      `).join('')}
+      `,
+        )
+        .join('')}
     </div>
-  `).join('')}
+  `,
+    )
+    .join('')}
 
   <h2>WCAG 2.1 Compliance</h2>
   <p>This report checks compliance with <a href="https://www.w3.org/WAI/WCAG21/quickref/">WCAG 2.1 Level AA</a> standards.</p>
@@ -162,7 +164,6 @@ function generateReport(results) {
   return html;
 }
 
-
 /**
  * Main scan function.
  */
@@ -179,12 +180,12 @@ async function main() {
   for (const page of PAGES) {
     const url = `${API_URL}${page}`;
     const result = await scanPage(url);
-    
+
     if (result) {
       const filtered = filterBySeverity(result.violations, SEVERITY_THRESHOLD);
       totalViolations += filtered.length;
-      criticalViolations += filtered.filter(v => v.impact === 'critical').length;
-      
+      criticalViolations += filtered.filter((v) => v.impact === 'critical').length;
+
       console.log(`  Found ${filtered.length} violations`);
       results.push(result);
     }
@@ -193,7 +194,7 @@ async function main() {
   // Generate reports
   const htmlReport = generateReport(results);
   const reportPath = path.join(REPORTS_DIR, `report-${Date.now()}.html`);
-  
+
   fs.writeFileSync(reportPath, htmlReport);
   console.log(`\nReport saved to: ${reportPath}`);
 
@@ -214,8 +215,7 @@ async function main() {
   }
 }
 
-
-main().catch(error => {
+main().catch((error) => {
   console.error('Error:', error);
   process.exit(1);
 });

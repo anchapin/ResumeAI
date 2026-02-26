@@ -30,7 +30,11 @@ const TeamCard: React.FC<TeamCardProps> = ({ team, onSelect, onDelete, isOwner =
   const handleDelete = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (onDelete && isOwner) {
-      if (confirm(`Are you sure you want to delete the team "${team.name}"? This action cannot be undone.`)) {
+      if (
+        confirm(
+          `Are you sure you want to delete the team "${team.name}"? This action cannot be undone.`,
+        )
+      ) {
         onDelete(team);
       }
     } else {
@@ -42,9 +46,7 @@ const TeamCard: React.FC<TeamCardProps> = ({ team, onSelect, onDelete, isOwner =
     <div
       onClick={() => onSelect && onSelect(team)}
       className={`bg-white rounded-2xl border-2 shadow-sm hover:shadow-md transition-all cursor-pointer ${
-        onSelect
-          ? 'border-slate-200 hover:border-primary-300'
-          : 'border-slate-200'
+        onSelect ? 'border-slate-200 hover:border-primary-300' : 'border-slate-200'
       }`}
     >
       <div className="p-6">
@@ -70,9 +72,7 @@ const TeamCard: React.FC<TeamCardProps> = ({ team, onSelect, onDelete, isOwner =
         </div>
 
         {team.description && (
-          <p className="text-sm text-slate-600 mb-4 line-clamp-2">
-            {team.description}
-          </p>
+          <p className="text-sm text-slate-600 mb-4 line-clamp-2">{team.description}</p>
         )}
 
         <div className="flex items-center gap-6">
@@ -84,7 +84,9 @@ const TeamCard: React.FC<TeamCardProps> = ({ team, onSelect, onDelete, isOwner =
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <span className="material-symbols-outlined text-purple-500 text-[20px]">description</span>
+            <span className="material-symbols-outlined text-purple-500 text-[20px]">
+              description
+            </span>
             <div>
               <p className="text-xs text-slate-500">Shared Resumes</p>
               <p className="text-sm font-bold text-slate-900">{team.resume_count || 0}</p>

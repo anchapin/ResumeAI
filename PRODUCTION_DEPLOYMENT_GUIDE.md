@@ -22,14 +22,14 @@ This guide provides step-by-step instructions for deploying the GitHub OAuth mig
 
 ### Deployment Timeline
 
-| Phase | Duration | Dependencies |
-|--------|-----------|--------------|
-| Pre-Deployment Checklist | 1-2 hours | None |
-| Environment Configuration | 30 minutes | Pre-deployment checklist |
-| Testing & Validation | 2-4 hours | Environment config |
-| Production Deployment | 30 minutes | Testing validation |
-| Post-Deployment Monitoring | 24-48 hours | Production deployment |
-| **Total** | **1-2 days** | |
+| Phase                      | Duration     | Dependencies             |
+| -------------------------- | ------------ | ------------------------ |
+| Pre-Deployment Checklist   | 1-2 hours    | None                     |
+| Environment Configuration  | 30 minutes   | Pre-deployment checklist |
+| Testing & Validation       | 2-4 hours    | Environment config       |
+| Production Deployment      | 30 minutes   | Testing validation       |
+| Post-Deployment Monitoring | 24-48 hours  | Production deployment    |
+| **Total**                  | **1-2 days** |                          |
 
 ---
 
@@ -38,6 +38,7 @@ This guide provides step-by-step instructions for deploying the GitHub OAuth mig
 ### 1.1 Review OAuth Implementation
 
 **Required Actions:**
+
 - [ ] Review `resume-api/lib/token_encryption.py`
   - Verify Fernet encryption implementation
   - Check key derivation (PBKDF2)
@@ -66,6 +67,7 @@ This guide provides step-by-step instructions for deploying the GitHub OAuth mig
 ### 1.2 Verify Test Coverage
 
 **Run Test Suite:**
+
 ```bash
 cd /home/alexc/Projects/ResumeAI
 
@@ -83,15 +85,17 @@ pytest resume-api/tests/test_github_integration.py
 ```
 
 **Test Results Record:**
-- Token Encryption: ____ / 40 passing
-- GitHub Routes: ____ / 40 passing
-- GitHub Status: ____ / 12 passing
-- GitHub Integration: ____ / 4 passing
-- **Total:** ____ / 100 passing
+
+- Token Encryption: \_\_\_\_ / 40 passing
+- GitHub Routes: \_\_\_\_ / 40 passing
+- GitHub Status: \_\_\_\_ / 12 passing
+- GitHub Integration: \_\_\_\_ / 4 passing
+- **Total:** \_\_\_\_ / 100 passing
 
 ### 1.3 Security Review
 
 **Using `docs/VALIDATION_CHECKLIST.md`:**
+
 - [ ] Token encryption implemented correctly
 - [ ] OAuth state validation in place
 - [ ] CSRF protection via state parameters
@@ -106,6 +110,7 @@ pytest resume-api/tests/test_github_integration.py
 ### 1.4 Documentation Review
 
 **Required Documents:**
+
 - [ ] Read `docs/OAUTH_TESTING_GUIDE.md`
 - [ ] Read `docs/VALIDATION_CHECKLIST.md`
 - [ ] Read `docs/oauth-monitoring-runbook.md`
@@ -116,6 +121,7 @@ pytest resume-api/tests/test_github_integration.py
 ### 1.5 Infrastructure Readiness
 
 **Verify Infrastructure:**
+
 - [ ] PostgreSQL database available and accessible
 - [ ] Redis available (if used for state storage)
 - [ ] Application server resources sufficient
@@ -131,6 +137,7 @@ pytest resume-api/tests/test_github_integration.py
 ### 2.1 Generate Encryption Key
 
 **Create a secure 32-byte encryption key:**
+
 ```bash
 # Method 1: Using openssl (recommended)
 python3 -c "import secrets; print(secrets.token_urlsafe(32))"
@@ -144,6 +151,7 @@ python3 scripts/generate_token_encryption_key.py
 ```
 
 **Security Requirements:**
+
 - Must be exactly 32 bytes (256 bits)
 - Should be random and cryptographically secure
 - Store securely (environment variable, secrets manager, or key vault)
@@ -157,6 +165,7 @@ python3 scripts/generate_token_encryption_key.py
 1. Go to GitHub → Settings → Developer settings → OAuth Apps
 2. Click "New OAuth App"
 3. Configure the application:
+
    ```
    Application name: ResumeAI Production
    Homepage URL: https://your-domain.com
@@ -165,6 +174,7 @@ python3 scripts/generate_token_encryption_key.py
    ```
 
 4. Set OAuth scopes (exact match required by code):
+
    ```
    Required scopes:
    - repo (Full control of private repositories)
@@ -179,6 +189,7 @@ python3 scripts/generate_token_encryption_key.py
    - Save both values securely
 
 **Security Notes:**
+
 - Enable "Device flow" if needed
 - Set webhook URL for real-time updates
 - Use strong Client Secret and rotate regularly
@@ -187,6 +198,7 @@ python3 scripts/generate_token_encryption_key.py
 ### 2.3 Environment Variables Configuration
 
 **Production Environment Variables:**
+
 ```bash
 # Create or update production .env file
 cd /home/alexc/Projects/ResumeAI/resume-api
@@ -223,6 +235,7 @@ LOG_LEVEL=INFO                                      # Production log level
 ```
 
 **Environment Variable Checklist:**
+
 - [ ] GITHUB_CLIENT_ID set
 - [ ] GITHUB_CLIENT_SECRET set
 - [ ] TOKEN_ENCRYPTION_KEY set (32 bytes)
@@ -238,12 +251,14 @@ LOG_LEVEL=INFO                                      # Production log level
 **Best Practices for Secret Management:**
 
 **Option 1: Environment Variables (Simplest)**
+
 - Store secrets in `.env` file
 - Add `.env` to `.gitignore`
 - Never commit `.env` to repository
 - Rotate secrets regularly
 
 **Option 2: Secrets Manager (Recommended)**
+
 - AWS Secrets Manager
 - Azure Key Vault
 - Google Secret Manager
@@ -251,6 +266,7 @@ LOG_LEVEL=INFO                                      # Production log level
 - 1Password Secrets Automation
 
 **Option 3: Kubernetes Secrets (For K8s)**
+
 ```yaml
 apiVersion: v1
 kind: Secret
@@ -265,6 +281,7 @@ stringData:
 ```
 
 **Secret Rotation Checklist:**
+
 - [ ] Secrets documented in secure location
 - [ ] Rotation schedule established (90 days recommended)
 - [ ] Rotation procedure documented
@@ -277,6 +294,7 @@ stringData:
 ### 3.1 Local OAuth Flow Testing
 
 **Test Complete OAuth Flow:**
+
 ```bash
 # Start local server
 cd /home/alexc/Projects/ResumeAI/resume-api
@@ -293,6 +311,7 @@ uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ```
 
 **Test Checklist:**
+
 - [ ] OAuth redirect works correctly
 - [ ] GitHub authorization page loads
 - [ ] Callback URL receives code correctly
@@ -306,6 +325,7 @@ uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ### 3.2 Frontend Integration Testing
 
 **Test Frontend Components:**
+
 ```bash
 # Start frontend development server
 cd /home/alexc/Projects/ResumeAI
@@ -330,6 +350,7 @@ npm run dev
 ```
 
 **Frontend Test Checklist:**
+
 - [ ] GitHubSettings component renders correctly
 - [ ] Connection status displays accurately
 - [ ] Connect GitHub button redirects to OAuth
@@ -347,6 +368,7 @@ npm run dev
 **Test Error Scenarios:**
 
 1. **Failed OAuth Flow**
+
    ```bash
    # Simulate OAuth failure
    # Use invalid client_id or client_secret
@@ -355,6 +377,7 @@ npm run dev
    ```
 
 2. **Expired Token**
+
    ```bash
    # Simulate expired token
    # Manually set token expiration in database
@@ -363,6 +386,7 @@ npm run dev
    ```
 
 3. **Rate Limiting**
+
    ```bash
    # Make multiple rapid API calls
    # Verify rate limiting works
@@ -378,6 +402,7 @@ npm run dev
    ```
 
 **Error Testing Checklist:**
+
 - [ ] Failed OAuth handled gracefully
 - [ ] Expired token handled correctly
 - [ ] Rate limiting works as expected
@@ -388,6 +413,7 @@ npm run dev
 ### 3.4 Load Testing
 
 **Run Load Tests Using k6:**
+
 ```bash
 # Install k6 if not available
 # macOS: brew install k6
@@ -402,20 +428,23 @@ k6 run --out results.json tests/load_tests/api_load.js --vus 500 --duration 60s
 ```
 
 **Performance Targets:**
+
 - OAuth flow completion: <500ms
 - API response time: <200ms
 - Database query time: <100ms
 - Concurrent users: Support 100+ concurrent connections
 
 **Load Test Results:**
-- OAuth Flow: ____ms target: 500ms
-- API Response: ____ms target: 200ms
-- Database Query: ____ms target: 100ms
-- Concurrent Users Supported: ____ target: 100
+
+- OAuth Flow: \_\_\_\_ms target: 500ms
+- API Response: \_\_\_\_ms target: 200ms
+- Database Query: \_\_\_\_ms target: 100ms
+- Concurrent Users Supported: \_\_\_\_ target: 100
 
 ### 3.5 Security Validation
 
 **Security Checklist from `docs/VALIDATION_CHECKLIST.md`:**
+
 - [ ] Token encryption uses Fernet (AES-128-CBC)
 - [ ] OAuth state parameters are UUID (cryptographically secure)
 - [ ] Tokens stored encrypted in database
@@ -436,6 +465,7 @@ k6 run --out results.json tests/load_tests/api_load.js --vus 500 --duration 60s
 ### 4.1 Pre-Deployment Verification
 
 **Final Verification Checklist:**
+
 - [ ] All tests passing (98/100 or better)
 - [ ] Security validation complete
 - [ ] Environment variables configured
@@ -451,6 +481,7 @@ k6 run --out results.json tests/load_tests/api_load.js --vus 500 --duration 60s
 #### Method 1: Docker Deployment (Recommended)
 
 **Build and Deploy Docker Container:**
+
 ```bash
 # Build Docker image
 cd /home/alexc/Projects/ResumeAI
@@ -470,6 +501,7 @@ kubectl apply -f k8s/deployment.yaml
 ```
 
 **Docker Configuration (docker-compose.prod.yml):**
+
 ```yaml
 version: '3.8'
 services:
@@ -487,12 +519,12 @@ services:
       - LOG_LEVEL=INFO
       - PROMETHEUS_ENABLED=true
     ports:
-      - "8000:8000"
+      - '8000:8000'
     depends_on:
       - postgres
       - redis
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      test: ['CMD', 'curl', '-f', 'http://localhost:8000/health']
       interval: 30s
       timeout: 10s
       retries: 3
@@ -501,6 +533,7 @@ services:
 #### Method 2: Cloud Run Deployment
 
 **Deploy to Google Cloud Run:**
+
 ```bash
 # Build and deploy
 cd /home/alexc/Projects/ResumeAI/resume-api
@@ -517,6 +550,7 @@ gcloud run deploy resumeai-prod \
 ```
 
 **Deploy to AWS ECS:**
+
 ```bash
 # Build and push to ECR
 aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin
@@ -531,6 +565,7 @@ aws ecs update-task --cluster resumeai --task-definition resume-api-task --force
 #### Method 3: Traditional Server Deployment
 
 **Deploy to VPS/Traditional Server:**
+
 ```bash
 # SSH into production server
 ssh user@your-production-server.com
@@ -553,6 +588,7 @@ sudo supervisorctl restart resumeai
 ### 4.3 Database Migrations
 
 **Run Database Migrations:**
+
 ```bash
 cd /home/alexc/Projects/ResumeAI/resume-api
 
@@ -567,6 +603,7 @@ alembic current
 ```
 
 **Migration Checklist:**
+
 - [ ] Migration file created
 - [ ] Migration tested on staging database
 - [ ] Migration backed up production database
@@ -577,6 +614,7 @@ alembic current
 ### 4.4 Deployment Verification
 
 **Post-Deployment Verification:**
+
 ```bash
 # 1. Check application health
 curl https://api.your-domain.com/health
@@ -597,6 +635,7 @@ curl https://api.your-domain.com/metrics | grep oauth_
 ```
 
 **Verification Checklist:**
+
 - [ ] Health endpoint returns 200 OK
 - [ ] OAuth endpoints accessible
 - [ ] Application logs show no errors
@@ -616,6 +655,7 @@ curl https://api.your-domain.com/metrics | grep oauth_
 **Prometheus Metrics to Monitor:**
 
 Key OAuth metrics:
+
 - `oauth_connection_success_total` - Successful OAuth connections
 - `oauth_connection_failure_total` - Failed connections (with error_type labels)
 - `oauth_token_refresh_total` - Token refresh operations
@@ -625,6 +665,7 @@ Key OAuth metrics:
 - `oauth_active_connections` - Current active connections
 
 **Prometheus Query Examples:**
+
 ```promql
 # OAuth connection success rate
 rate(oauth_connection_success_total[5m])
@@ -647,6 +688,7 @@ oauth_active_connections
 ### 5.2 Alert Configuration
 
 **Critical Alerts:**
+
 ```yaml
 groups:
   - name: oauth_critical_alerts
@@ -662,7 +704,7 @@ groups:
           severity: critical
           service: oauth
         annotations:
-          summary: "OAuth failure rate exceeds 10%"
+          summary: 'OAuth failure rate exceeds 10%'
 
       # Storage errors > 5/hour
       - alert: OAuthStorageErrors
@@ -672,7 +714,7 @@ groups:
           severity: critical
           service: database
         annotations:
-          summary: "OAuth storage errors exceed 5 per hour"
+          summary: 'OAuth storage errors exceed 5 per hour'
 
       # Token expiration events > 10/hour
       - alert: OAuthTokenExpirations
@@ -682,7 +724,7 @@ groups:
           severity: warning
           service: oauth
         annotations:
-          summary: "Token expiration events exceed 10 per hour"
+          summary: 'Token expiration events exceed 10 per hour'
 ```
 
 ### 5.3 Log Monitoring
@@ -690,6 +732,7 @@ groups:
 **Key Log Messages to Monitor:**
 
 **Success Messages:**
+
 ```
 INFO: OAuth connection successful for user user@example.com
 INFO: GitHub token encrypted and stored
@@ -697,6 +740,7 @@ INFO: Connection status: connected
 ```
 
 **Warning Messages:**
+
 ```
 WARNING: GitHub API rate limit approaching
 WARNING: Token expiration in 24 hours
@@ -704,6 +748,7 @@ WARNING: Multiple concurrent OAuth attempts from same user
 ```
 
 **Error Messages:**
+
 ```
 ERROR: OAuth connection failed: invalid_client_id
 ERROR: Token decryption failed
@@ -713,6 +758,7 @@ ERROR: State parameter mismatch (potential CSRF)
 ```
 
 **Log Aggregation:**
+
 - Use ELK Stack (Elasticsearch, Logstash, Kibana)
 - Use CloudWatch Logs (AWS)
 - Use Cloud Logging (Google Cloud)
@@ -750,6 +796,7 @@ ERROR: State parameter mismatch (potential CSRF)
 ### 6.1 Rollback Scenarios
 
 **Scenario 1: OAuth Connection Failures (>20%)**
+
 ```bash
 # Immediate action
 kubectl set env deployment/resumeai-xxxx GITHUB_AUTH_MODE=cli
@@ -762,6 +809,7 @@ kubectl rollout restart deployment/resumeai-xxxx
 ```
 
 **Scenario 2: Performance Degradation**
+
 ```bash
 # Rollback to previous version
 kubectl rollout undo deployment/resumeai-xxxx
@@ -771,6 +819,7 @@ kubectl scale deployment/resumeai-xxxx --replicas=1
 ```
 
 **Scenario 3: Data Corruption**
+
 ```bash
 # Restore database backup
 psql -h localhost -U postgres -d resumeai < backup.sql
@@ -782,6 +831,7 @@ psql -h localhost -U postgres -d resumeai -c "CREATE INDEX IF NOT EXISTS idx_git
 ### 6.2 Rollback Procedure
 
 **Zero-Downtime Rollback:**
+
 ```bash
 # 1. Prepare rollback environment
 export ROLLBACK_VERSION=previous_version
@@ -800,6 +850,7 @@ kubectl rollout undo deployment/resumeai-xxxx
 ```
 
 **Full Rollback:**
+
 ```bash
 # 1. Scale to zero (stop all traffic)
 kubectl scale deployment/resumeai-xxxx --replicas=0
@@ -817,6 +868,7 @@ kubectl get pods -l app=resumeai
 ### 6.3 Rollback Triggers
 
 **Automatic Rollback Triggers:**
+
 - OAuth connection failure rate > 20%
 - Error rate > 10%
 - Response time > 5000ms
@@ -824,6 +876,7 @@ kubectl get pods -l app=resumeai
 - Token decryption errors > 10%
 
 **Manual Rollback Triggers:**
+
 - User complaints about OAuth not working
 - Security incident detected
 - Critical data corruption
@@ -837,12 +890,14 @@ kubectl get pods -l app=resumeai
 ### 7.1 Pre-Deployment Announcement
 
 **Communication Channels:**
+
 - Email notification to all users
 - In-app notification in application
 - Blog post or status page update
 - Release notes documentation
 
 **Announcement Template:**
+
 ```
 Subject: 🚀 ResumeAI Update: New GitHub Integration
 
@@ -876,6 +931,7 @@ The ResumeAI Team
 ### 7.2 Post-Deployment Verification
 
 **User Verification Tasks:**
+
 - [ ] Test OAuth flow with GitHub account
 - [ ] Verify repository sync works
 - [ ] Check settings page shows connection
@@ -885,6 +941,7 @@ The ResumeAI Team
 ### 7.3 Support Preparation
 
 **Support Readiness:**
+
 - [ ] Troubleshooting guide published
 - [ ] FAQ updated with OAuth questions
 - [ ] Support team trained on OAuth flow
@@ -918,6 +975,7 @@ The ResumeAI Team
 ### Appendix A: Environment Variables Reference
 
 **Complete Production .env Example:**
+
 ```bash
 # GitHub OAuth Configuration
 GITHUB_CLIENT_ID=ghp_xxxxxxxxxxxxxxxxxxx
@@ -972,6 +1030,7 @@ ENABLE_ATS_CHECKER=true
 ### Appendix B: Testing Commands Reference
 
 **Quick Test Commands:**
+
 ```bash
 # Unit tests
 pytest resume-api/tests/test_token_encryption.py -v
@@ -1004,20 +1063,21 @@ psql -h localhost -U postgres -d resumeai -c "SELECT COUNT(*) FROM user_github_c
 
 **Common Issues and Solutions:**
 
-| Issue | Symptom | Solution |
-|-------|----------|----------|
-| OAuth redirect fails | "Error: invalid_client_id" | Verify GITHUB_CLIENT_ID environment variable |
-| Token exchange fails | "Error: invalid_grant" | Verify GITHUB_CLIENT_SECRET, check GitHub App settings |
-| State mismatch | "Error: state mismatch" | Clear browser cookies, try again |
-| Token decryption fails | "Error: decryption failed" | Verify TOKEN_ENCRYPTION_KEY matches between deployments |
-| Database connection fails | "Error: database connection" | Verify DATABASE_URL, check database is running |
-| CORS error | "CORS policy blocked" | Verify CORS_ORIGINS includes your domain |
-| Rate limit hit | "429 Too Many Requests" | Implement exponential backoff, monitor rate limits |
-| Performance slow | OAuth flow takes >500ms | Check database query performance, verify network latency |
+| Issue                     | Symptom                      | Solution                                                 |
+| ------------------------- | ---------------------------- | -------------------------------------------------------- |
+| OAuth redirect fails      | "Error: invalid_client_id"   | Verify GITHUB_CLIENT_ID environment variable             |
+| Token exchange fails      | "Error: invalid_grant"       | Verify GITHUB_CLIENT_SECRET, check GitHub App settings   |
+| State mismatch            | "Error: state mismatch"      | Clear browser cookies, try again                         |
+| Token decryption fails    | "Error: decryption failed"   | Verify TOKEN_ENCRYPTION_KEY matches between deployments  |
+| Database connection fails | "Error: database connection" | Verify DATABASE_URL, check database is running           |
+| CORS error                | "CORS policy blocked"        | Verify CORS_ORIGINS includes your domain                 |
+| Rate limit hit            | "429 Too Many Requests"      | Implement exponential backoff, monitor rate limits       |
+| Performance slow          | OAuth flow takes >500ms      | Check database query performance, verify network latency |
 
 ### Appendix D: Rollback Checklist
 
 **Pre-Rollback:**
+
 - [ ] Database backup created
 - [ ] Previous Docker image tagged
 - [ ] Rollback procedure documented
@@ -1025,6 +1085,7 @@ psql -h localhost -U postgres -d resumeai -c "SELECT COUNT(*) FROM user_github_c
 - [ ] Monitoring dashboards ready
 
 **During Rollback:**
+
 - [ ] Previous version deployed
 - [ ] Application health verified
 - [ ] Logs monitored for errors
@@ -1032,6 +1093,7 @@ psql -h localhost -U postgres -d resumeai -c "SELECT COUNT(*) FROM user_github_c
 - [ ] User communication sent
 
 **Post-Rollback:**
+
 - [ ] Root cause identified
 - [ ] Fix implemented and tested
 - [ ] Forward deployment planned
@@ -1043,6 +1105,7 @@ psql -h localhost -U postgres -d resumeai -c "SELECT COUNT(*) FROM user_github_c
 ## Summary Checklist
 
 ### Pre-Deployment
+
 - [ ] Code review completed
 - [ ] All tests passing (98%+)
 - [ ] Security validation complete
@@ -1055,6 +1118,7 @@ psql -h localhost -U postgres -d resumeai -c "SELECT COUNT(*) FROM user_github_c
 - [ ] Maintenance window scheduled
 
 ### Deployment
+
 - [ ] Production backup completed
 - [ ] Application deployed successfully
 - [ ] Health checks passing
@@ -1063,6 +1127,7 @@ psql -h localhost -U postgres -d resumeai -c "SELECT COUNT(*) FROM user_github_c
 - [ ] No critical errors in logs
 
 ### Post-Deployment
+
 - [ ] OAuth flow tested successfully
 - [ ] Frontend components working
 - [ ] Performance targets met (<500ms)
@@ -1079,6 +1144,7 @@ psql -h localhost -U postgres -d resumeai -c "SELECT COUNT(*) FROM user_github_c
 This guide provides a complete roadmap for deploying the GitHub OAuth migration to production. Follow each phase sequentially, complete all checklists, and you'll have a successful, production-ready deployment.
 
 **Key Success Metrics:**
+
 - ✅ OAuth flow working
 - ✅ All tests passing
 - ✅ Security validated
@@ -1087,6 +1153,7 @@ This guide provides a complete roadmap for deploying the GitHub OAuth migration 
 - ✅ Support prepared
 
 **Expected Outcome:**
+
 - Enhanced security with OAuth authentication
 - Improved user experience
 - Simplified operations (no gh CLI)

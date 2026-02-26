@@ -1,9 +1,9 @@
 /**
  * Version Comparison Module
- * 
+ *
  * Provides side-by-side comparison of resume versions
  * to track changes between versions.
- * 
+ *
  * Features:
  * - Diff visualization between versions
  * - Change tracking and highlighting
@@ -96,16 +96,16 @@ export interface ComparisonStats {
  */
 export function compareVersions(
   oldVersion: ResumeVersion,
-  newVersion: ResumeVersion
+  newVersion: ResumeVersion,
 ): DiffResult[] {
   const differences: DiffResult[] = [];
-  
+
   // Compare basics section
   if (oldVersion.data.basics || newVersion.data.basics) {
     const basicsDiff = compareObjects(
       oldVersion.data.basics || {},
       newVersion.data.basics || {},
-      'basics'
+      'basics',
     );
     differences.push(...basicsDiff);
   }
@@ -116,7 +116,7 @@ export function compareVersions(
       oldVersion.data.work || [],
       newVersion.data.work || [],
       'work',
-      (item: WorkExperience) => item.company + (item.position || '')
+      (item: WorkExperience) => item.company + (item.position || ''),
     );
     differences.push(...workDiff);
   }
@@ -127,7 +127,7 @@ export function compareVersions(
       oldVersion.data.education || [],
       newVersion.data.education || [],
       'education',
-      (item: Education) => item.institution + (item.area || '')
+      (item: Education) => item.institution + (item.area || ''),
     );
     differences.push(...eduDiff);
   }
@@ -138,7 +138,7 @@ export function compareVersions(
       oldVersion.data.skills || [],
       newVersion.data.skills || [],
       'skills',
-      (item: Skill) => item.name || ''
+      (item: Skill) => item.name || '',
     );
     differences.push(...skillsDiff);
   }
@@ -149,7 +149,7 @@ export function compareVersions(
       oldVersion.data.projects || [],
       newVersion.data.projects || [],
       'projects',
-      (item: Project) => item.name || ''
+      (item: Project) => item.name || '',
     );
     differences.push(...projectDiff);
   }
@@ -163,12 +163,12 @@ export function compareVersions(
 function compareObjects(
   oldObj: Record<string, any>,
   newObj: Record<string, any>,
-  prefix: string
+  prefix: string,
 ): DiffResult[] {
   const differences: DiffResult[] = [];
   const allKeys = new Set([...Object.keys(oldObj), ...Object.keys(newObj)]);
 
-  allKeys.forEach(key => {
+  allKeys.forEach((key) => {
     const oldValue = oldObj[key];
     const newValue = newObj[key];
 
@@ -177,21 +177,21 @@ function compareObjects(
         field: `${prefix}.${key}`,
         oldValue: null,
         newValue,
-        changeType: 'added'
+        changeType: 'added',
       });
     } else if (oldValue !== undefined && newValue === undefined) {
       differences.push({
         field: `${prefix}.${key}`,
         oldValue,
         newValue: null,
-        changeType: 'removed'
+        changeType: 'removed',
       });
     } else if (JSON.stringify(oldValue) !== JSON.stringify(newValue)) {
       differences.push({
         field: `${prefix}.${key}`,
         oldValue,
         newValue,
-        changeType: 'modified'
+        changeType: 'modified',
       });
     }
   });
@@ -206,12 +206,12 @@ function compareArrays<T>(
   oldArray: T[],
   newArray: T[],
   prefix: string,
-  keyExtractor: (item: T) => string
+  keyExtractor: (item: T) => string,
 ): DiffResult[] {
   const differences: DiffResult[] = [];
-  
-  const oldMap = new Map(oldArray.map(item => [keyExtractor(item), item]));
-  const newMap = new Map(newArray.map(item => [keyExtractor(item), item]));
+
+  const oldMap = new Map(oldArray.map((item) => [keyExtractor(item), item]));
+  const newMap = new Map(newArray.map((item) => [keyExtractor(item), item]));
 
   // Find removed and modified items
   oldMap.forEach((oldItem, key) => {
@@ -221,14 +221,14 @@ function compareArrays<T>(
         field: `${prefix}[${key}]`,
         oldValue: oldItem,
         newValue: null,
-        changeType: 'removed'
+        changeType: 'removed',
       });
     } else if (JSON.stringify(oldItem) !== JSON.stringify(newItem)) {
       differences.push({
         field: `${prefix}[${key}]`,
         oldValue: oldItem,
         newValue: newItem,
-        changeType: 'modified'
+        changeType: 'modified',
       });
     }
   });
@@ -240,7 +240,7 @@ function compareArrays<T>(
         field: `${prefix}[${key}]`,
         oldValue: null,
         newValue: newItem,
-        changeType: 'added'
+        changeType: 'added',
       });
     }
   });
@@ -257,10 +257,10 @@ export function getComparisonStats(differences: DiffResult[]): ComparisonStats {
     additions: 0,
     removals: 0,
     modifications: 0,
-    sectionsChanged: []
+    sectionsChanged: [],
   };
 
-  differences.forEach(diff => {
+  differences.forEach((diff) => {
     switch (diff.changeType) {
       case 'added':
         stats.additions++;
@@ -307,11 +307,11 @@ export function generateChangeSummary(stats: ComparisonStats): string {
  */
 export function getHighlightedChanges(
   differences: DiffResult[],
-  maxChanges: number = 10
+  maxChanges: number = 10,
 ): { field: string; display: string }[] {
-  return differences.slice(0, maxChanges).map(diff => {
+  return differences.slice(0, maxChanges).map((diff) => {
     let display = '';
-    
+
     switch (diff.changeType) {
       case 'added':
         display = `+ ${diff.field}: ${JSON.stringify(diff.newValue)}`;
@@ -326,7 +326,7 @@ export function getHighlightedChanges(
 
     return {
       field: diff.field,
-      display
+      display,
     };
   });
 }

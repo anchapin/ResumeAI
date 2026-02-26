@@ -22,10 +22,10 @@ describe('fetch-timeout utility', () => {
 
     it('should abort after timeout', async () => {
       const controller = createTimeoutAbortController(100);
-      
+
       // Wait for timeout
-      await new Promise(resolve => setTimeout(resolve, 150));
-      
+      await new Promise((resolve) => setTimeout(resolve, 150));
+
       expect(controller.signal.aborted).toBe(true);
     });
 
@@ -42,19 +42,19 @@ describe('fetch-timeout utility', () => {
     it('should clear the timeout', () => {
       const controller = createTimeoutAbortController(5000);
       const timeoutId = (controller as any).__timeoutId;
-      
+
       clearTimeoutAbortController(controller);
-      
+
       expect((controller as any).__timeoutId).toBeUndefined();
     });
 
     it('should prevent abort from happening', async () => {
       const controller = createTimeoutAbortController(100);
       clearTimeoutAbortController(controller);
-      
+
       // Wait past the original timeout
-      await new Promise(resolve => setTimeout(resolve, 150));
-      
+      await new Promise((resolve) => setTimeout(resolve, 150));
+
       // Should still not be aborted since we cleared it
       expect(controller.signal.aborted).toBe(false);
     });

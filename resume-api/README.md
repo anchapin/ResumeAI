@@ -5,6 +5,7 @@ A FastAPI service for generating and tailoring professional resumes using LaTeX 
 ## Overview
 
 This service provides RESTful endpoints for:
+
 - Generating PDF resumes from JSON/YAML data using LaTeX templates
 - AI-powered resume tailoring to match job descriptions
 - Managing multiple resume template variants
@@ -47,23 +48,27 @@ resume-api/
 ### Local Setup
 
 1. Create a virtual environment:
+
 ```bash
 python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 ```
 
 2. Install dependencies:
+
 ```bash
 pip install -r requirements.txt
 ```
 
 3. Set up environment variables:
+
 ```bash
 cp .env.example .env
 # Edit .env with your API keys
 ```
 
 4. Run the server:
+
 ```bash
 python main.py
 ```
@@ -84,12 +89,15 @@ docker run -p 8000:8000 \
 ## API Endpoints
 
 ### Health Check
+
 - `GET /health` - Check API health status
 
 ### PDF Generation
+
 - `POST /v1/render/pdf` - Generate PDF resume from JSON data
 
 Request body:
+
 ```json
 {
   "resume_data": {
@@ -105,9 +113,11 @@ Request body:
 ```
 
 ### Resume Tailoring
+
 - `POST /v1/tailor` - Tailor resume to job description
 
 Request body:
+
 ```json
 {
   "resume_data": {...},
@@ -118,6 +128,7 @@ Request body:
 ```
 
 ### List Variants
+
 - `GET /v1/variants` - List available resume templates
 
 ## AI Configuration
@@ -125,18 +136,21 @@ Request body:
 The service supports multiple AI providers:
 
 ### OpenAI (Default)
+
 ```bash
 AI_PROVIDER=openai
 OPENAI_API_KEY=sk-...
 ```
 
 ### Anthropic Claude
+
 ```bash
 AI_PROVIDER=claude
 ANTHROPIC_API_KEY=sk-ant-...
 ```
 
 ### Google Gemini
+
 ```bash
 AI_PROVIDER=gemini
 GEMINI_API_KEY=AIza...
@@ -145,16 +159,19 @@ GEMINI_API_KEY=AIza...
 ## Development
 
 ### Run with hot reload:
+
 ```bash
 uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ```
 
 ### Run tests:
+
 ```bash
 pytest
 ```
 
 ### Format code:
+
 ```bash
 black .
 flake8 .
@@ -164,6 +181,7 @@ mypy .
 ## Adding New Templates
 
 1. Create a new directory in `templates/`:
+
 ```bash
 mkdir templates/my-template
 ```
@@ -171,6 +189,7 @@ mkdir templates/my-template
 2. Add `main.tex` with LaTeX template code
 
 3. Add `metadata.yaml`:
+
 ```yaml
 name: my-template
 display_name: My Custom Template

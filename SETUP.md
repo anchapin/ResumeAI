@@ -44,6 +44,7 @@ make health
 ```
 
 Then open your browser:
+
 - **Frontend**: http://localhost:3000
 - **API Docs**: http://localhost:8000/docs
 
@@ -84,6 +85,7 @@ cp .env.example .env.local
 ```
 
 **Environment file** (`.env.local`):
+
 ```bash
 VITE_API_URL=http://127.0.0.1:8000
 GEMINI_API_KEY=your_gemini_api_key_here  # Optional: only if using Gemini
@@ -109,6 +111,7 @@ cp .env.example .env
 ```
 
 **Environment file** (`.env`):
+
 ```bash
 # Server configuration
 DEBUG=false
@@ -203,6 +206,7 @@ curl http://localhost:8000/docs         # API documentation
 ### Expected Output
 
 **Backend Health Check** (should return JSON):
+
 ```json
 {
   "status": "healthy",
@@ -211,12 +215,15 @@ curl http://localhost:8000/docs         # API documentation
 ```
 
 **Frontend** (should load HTML):
+
 ```html
 <!DOCTYPE html>
 <html lang="en">
   <head>
     <title>ResumeAI SaaS</title>
     ...
+  </head>
+</html>
 ```
 
 ## Development Workflow
@@ -261,12 +268,14 @@ Both frontend and backend support hot reload during development:
 To enable AI features (resume tailoring, cover letter generation):
 
 1. **OpenAI (GPT-4)**:
+
    ```bash
    # Get key from https://platform.openai.com/api-keys
    echo "OPENAI_API_KEY=sk_..." >> resume-api/.env
    ```
 
 2. **Anthropic (Claude)**:
+
    ```bash
    # Get key from https://console.anthropic.com/
    echo "ANTHROPIC_API_KEY=sk-..." >> resume-api/.env
@@ -281,6 +290,7 @@ To enable AI features (resume tailoring, cover letter generation):
    ```
 
 Then restart the backend:
+
 ```bash
 make restart
 ```
@@ -353,17 +363,20 @@ npm install
 ### Backend Won't Start
 
 1. **Check Python version**:
+
    ```bash
    python3 --version  # Need 3.11 or 3.12
    ```
 
 2. **Check dependencies**:
+
    ```bash
    cd resume-api && source venv/bin/activate
    pip install -r requirements.txt
    ```
 
 3. **Check logs**:
+
    ```bash
    tail -f logs/backend.log
    ```
@@ -378,11 +391,13 @@ npm install
 ### Frontend Won't Start
 
 1. **Check Node version**:
+
    ```bash
    node --version  # Need v18+
    ```
 
 2. **Clear cache and rebuild**:
+
    ```bash
    rm -rf node_modules dist
    npm install
@@ -413,11 +428,13 @@ pdflatex --version
 If the frontend can't reach the backend:
 
 1. **Verify backend is running**:
+
    ```bash
    curl http://localhost:8000/health
    ```
 
 2. **Check VITE_API_URL in .env.local**:
+
    ```bash
    cat .env.local | grep VITE_API_URL
    # Should be: VITE_API_URL=http://127.0.0.1:8000
@@ -436,6 +453,7 @@ If the frontend can't reach the backend:
 If you get 401 errors from the API:
 
 1. **Check REQUIRE_API_KEY setting**:
+
    ```bash
    grep REQUIRE_API_KEY resume-api/.env
    # Should be: REQUIRE_API_KEY=false (for development)
@@ -464,6 +482,7 @@ python -c "from database import create_db_and_tables; create_db_and_tables()"
 ## Architecture Overview
 
 ### Frontend (React + Vite)
+
 - **Framework**: React 19 with TypeScript
 - **Build Tool**: Vite 6.x (fast HMR)
 - **Styling**: Tailwind CSS
@@ -472,6 +491,7 @@ python -c "from database import create_db_and_tables; create_db_and_tables()"
 - **Hot Reload**: Enabled by default
 
 ### Backend (FastAPI)
+
 - **Framework**: FastAPI 0.115.0
 - **Server**: Uvicorn with auto-reload support
 - **Database**: SQLAlchemy async + SQLite
@@ -480,11 +500,13 @@ python -c "from database import create_db_and_tables; create_db_and_tables()"
 - **Logging**: Structured logging with colorama
 
 ### AI Integration
+
 - **OpenAI**: GPT-4o, GPT-4o-mini
 - **Anthropic**: Claude 3.5 Sonnet
 - **Google**: Gemini 1.5
 
 ### PDF Generation
+
 - **Method**: LaTeX-based (pdflatex)
 - **Fallback**: Pandoc (if pdflatex unavailable)
 - **Requirements**: texlive-latex-base or texlive-scheme-full

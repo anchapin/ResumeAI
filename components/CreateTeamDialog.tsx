@@ -6,6 +6,7 @@ import { showSuccessToast, showErrorToast } from '../utils/toast';
 interface CreateTeamDialogProps {
   isOpen: boolean;
   onClose: () => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onCreateSuccess?: (team: any) => void;
 }
 
@@ -101,9 +102,7 @@ const CreateTeamDialog: React.FC<CreateTeamDialogProps> = ({
           <h2 id="create-team-dialog-title" className="text-xl font-bold text-slate-900">
             Create New Team
           </h2>
-          <p className="text-sm text-slate-500 mt-1">
-            Set up a new team for collaboration
-          </p>
+          <p className="text-sm text-slate-500 mt-1">Set up a new team for collaboration</p>
         </div>
 
         <div className="p-6 space-y-4">
@@ -132,7 +131,9 @@ const CreateTeamDialog: React.FC<CreateTeamDialogProps> = ({
                   {nameError}
                 </div>
               )}
-              <div className={`text-xs ${nameError ? 'text-red-600 ml-auto' : 'text-slate-400 ml-auto'}`}>
+              <div
+                className={`text-xs ${nameError ? 'text-red-600 ml-auto' : 'text-slate-400 ml-auto'}`}
+              >
                 {name.length}/100
               </div>
             </div>
@@ -161,13 +162,9 @@ const CreateTeamDialog: React.FC<CreateTeamDialogProps> = ({
           {/* Team Info Box */}
           <div className="bg-primary-50 rounded-lg p-4">
             <div className="flex items-start gap-3">
-              <span className="material-symbols-outlined text-primary-600 text-[24px]">
-                info
-              </span>
+              <span className="material-symbols-outlined text-primary-600 text-[24px]">info</span>
               <div>
-                <p className="text-sm font-bold text-primary-900 mb-1">
-                  What happens next?
-                </p>
+                <p className="text-sm font-bold text-primary-900 mb-1">What happens next?</p>
                 <ul className="text-xs text-primary-700 space-y-1">
                   <li>You will be the owner of this team</li>
                   <li>You can invite members by email</li>

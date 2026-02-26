@@ -10,10 +10,7 @@ import { ResumeVersion } from '../types';
  * @param version2 - Second version
  * @returns Array of changed sections
  */
-export function detectVersionChanges(
-  version1: ResumeVersion,
-  version2: ResumeVersion
-): string[] {
+export function detectVersionChanges(version1: ResumeVersion, version2: ResumeVersion): string[] {
   const changes: string[] = [];
   const data1 = version1.data;
   const data2 = version2.data;

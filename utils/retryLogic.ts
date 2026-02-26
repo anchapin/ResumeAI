@@ -41,7 +41,10 @@ export interface RetryError extends Error {
  * @param config retry configuration
  * @returns delay in milliseconds
  */
-export function calculateBackoffDelay(attemptNumber: number, config: Required<RetryConfig>): number {
+export function calculateBackoffDelay(
+  attemptNumber: number,
+  config: Required<RetryConfig>,
+): number {
   // exponential: initialDelay * (backoffMultiplier ^ attemptNumber)
   const exponentialDelay = config.initialDelay * Math.pow(config.backoffMultiplier, attemptNumber);
   const cappedDelay = Math.min(exponentialDelay, config.maxDelay);
@@ -62,7 +65,7 @@ export function isRetryableStatus(statusCode: number): boolean {
  * Sleep for specified milliseconds
  */
 export function sleep(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 /**
@@ -76,7 +79,7 @@ export function sleep(ms: number): Promise<void> {
 export async function retryWithBackoff(
   url: string,
   options: RequestInit = {},
-  config: RetryConfig = {}
+  config: RetryConfig = {},
 ): Promise<Response> {
   const mergedConfig = { ...DEFAULT_CONFIG, ...config };
   let lastError: Error | null = null;
@@ -99,7 +102,7 @@ export async function retryWithBackoff(
         const delay = calculateBackoffDelay(attempt, mergedConfig);
         console.warn(
           `Retryable status ${response.status} for ${options.method || 'GET'} ${url}. ` +
-          `Attempt ${attempt + 1}/${mergedConfig.maxRetries}, retrying in ${delay}ms`
+            `Attempt ${attempt + 1}/${mergedConfig.maxRetries}, retrying in ${delay}ms`,
         );
         await sleep(delay);
         continue;
@@ -107,7 +110,7 @@ export async function retryWithBackoff(
 
       // Last attempt with retryable status, throw error
       const error = new Error(
-        `Failed after ${mergedConfig.maxRetries + 1} attempts: HTTP ${response.status}`
+        `Failed after ${mergedConfig.maxRetries + 1} attempts: HTTP ${response.status}`,
       ) as RetryError;
       error.attemptCount = mergedConfig.maxRetries + 1;
       error.statusCode = response.status;
@@ -120,7 +123,7 @@ export async function retryWithBackoff(
         const delay = calculateBackoffDelay(attempt, mergedConfig);
         console.warn(
           `Network error for ${options.method || 'GET'} ${url}: ${lastError.message}. ` +
-          `Attempt ${attempt + 1}/${mergedConfig.maxRetries}, retrying in ${delay}ms`
+            `Attempt ${attempt + 1}/${mergedConfig.maxRetries}, retrying in ${delay}ms`,
         );
         await sleep(delay);
         continue;
@@ -128,7 +131,7 @@ export async function retryWithBackoff(
 
       // Last attempt with error, throw
       const error2 = new Error(
-        `Failed after ${mergedConfig.maxRetries + 1} attempts: ${lastError.message}`
+        `Failed after ${mergedConfig.maxRetries + 1} attempts: ${lastError.message}`,
       ) as RetryError;
       error2.attemptCount = mergedConfig.maxRetries + 1;
       error2.lastAttemptError = lastError;
@@ -137,9 +140,7 @@ export async function retryWithBackoff(
   }
 
   // Should not reach here
-  const error = new Error(
-    `Failed after ${mergedConfig.maxRetries + 1} attempts`
-  ) as RetryError;
+  const error = new Error(`Failed after ${mergedConfig.maxRetries + 1} attempts`) as RetryError;
   error.attemptCount = mergedConfig.maxRetries + 1;
   error.lastAttemptError = lastError || undefined;
   throw error;
@@ -153,7 +154,7 @@ export async function retryWithBackoff(
 export async function fetchWithRetry(
   url: string,
   options?: RequestInit,
-  config?: RetryConfig
+  config?: RetryConfig,
 ): Promise<Response> {
   return retryWithBackoff(url, options, config);
 }

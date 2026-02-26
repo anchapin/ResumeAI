@@ -81,10 +81,7 @@ const ResumeManagement: React.FC = () => {
 
     setBulkLoading(true);
     try {
-      const result = await bulkOperation(
-        Array.from(selectedIds),
-        'duplicate'
-      );
+      const result = await bulkOperation(Array.from(selectedIds), 'duplicate');
 
       setOperationResult(result);
       setShowResultDialog(true);
@@ -114,7 +111,10 @@ const ResumeManagement: React.FC = () => {
   const handleConfirmTag = async () => {
     if (!tagInput.trim()) return;
 
-    const tags = tagInput.split(',').map((t) => t.trim()).filter(Boolean);
+    const tags = tagInput
+      .split(',')
+      .map((t) => t.trim())
+      .filter(Boolean);
     if (tags.length === 0) return;
 
     setBulkLoading(true);
@@ -238,11 +238,7 @@ const ResumeManagement: React.FC = () => {
 
   return (
     <div className="flex min-h-screen bg-[#f6f6f8]">
-      <Sidebar
-        currentRoute={Route.BULK}
-        onNavigate={() => {}}
-        onShowShortcuts={() => {}}
-      />
+      <Sidebar currentRoute={Route.BULK} onNavigate={() => {}} onShowShortcuts={() => {}} />
 
       <div className="flex-1 flex flex-col">
         {/* Header */}
@@ -265,7 +261,7 @@ const ResumeManagement: React.FC = () => {
               </span>
             </div>
             <button
-              onClick={() => window.location.hash = '#editor'}
+              onClick={() => (window.location.hash = '#editor')}
               className="flex items-center gap-2 bg-primary-600 text-white px-4 py-2 rounded-lg font-bold text-sm hover:bg-primary-700 transition-all shadow-md shadow-primary-600/20"
             >
               <span className="material-symbols-outlined text-[20px]">add</span>
@@ -359,7 +355,7 @@ const ResumeManagement: React.FC = () => {
                 Create your first resume to get started with building your professional profile.
               </p>
               <button
-                onClick={() => window.location.hash = '#editor'}
+                onClick={() => (window.location.hash = '#editor')}
                 className="flex items-center gap-2 bg-primary-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-primary-700 transition-colors"
               >
                 <span className="material-symbols-outlined text-[20px]">add</span>
@@ -387,10 +383,7 @@ const ResumeManagement: React.FC = () => {
 
       {/* Share Dialog */}
       {sharingResumeId !== null && (
-        <ShareDialog
-          resumeId={sharingResumeId}
-          onClose={() => setSharingResumeId(null)}
-        />
+        <ShareDialog resumeId={sharingResumeId} onClose={() => setSharingResumeId(null)} />
       )}
 
       {/* Delete Confirmation Dialog */}
@@ -408,14 +401,12 @@ const ResumeManagement: React.FC = () => {
               </div>
 
               <p className="text-slate-600 mb-4">
-                Are you sure you want to delete {selectedIds.size} resume(s)? This action
-                cannot be undone.
+                Are you sure you want to delete {selectedIds.size} resume(s)? This action cannot be
+                undone.
               </p>
 
               <div className="max-h-48 overflow-y-auto mb-4 p-3 bg-slate-50 rounded-lg">
-                <p className="text-sm font-medium text-slate-700 mb-2">
-                  Affected resumes:
-                </p>
+                <p className="text-sm font-medium text-slate-700 mb-2">Affected resumes:</p>
                 <ul className="space-y-1">
                   {selectedResumes.map((resume) => (
                     <li key={resume.id} className="text-sm text-slate-600 flex items-center gap-2">
@@ -473,8 +464,7 @@ const ResumeManagement: React.FC = () => {
               </div>
 
               <p className="text-slate-600 mb-4">
-                Add tags to {selectedIds.size} resume(s). Separate multiple tags with
-                commas.
+                Add tags to {selectedIds.size} resume(s). Separate multiple tags with commas.
               </p>
 
               <input
@@ -526,16 +516,12 @@ const ResumeManagement: React.FC = () => {
               <div className="flex items-center gap-3 mb-4">
                 <div
                   className={`p-2 rounded-full ${
-                    operationResult.failed.length === 0
-                      ? 'bg-emerald-100'
-                      : 'bg-amber-100'
+                    operationResult.failed.length === 0 ? 'bg-emerald-100' : 'bg-amber-100'
                   }`}
                 >
                   <span
                     className={`material-symbols-outlined text-[28px] ${
-                      operationResult.failed.length === 0
-                        ? 'text-emerald-600'
-                        : 'text-amber-600'
+                      operationResult.failed.length === 0 ? 'text-emerald-600' : 'text-amber-600'
                     }`}
                   >
                     {operationResult.failed.length === 0 ? 'check_circle' : 'info'}
@@ -565,9 +551,7 @@ const ResumeManagement: React.FC = () => {
 
               {operationResult.failed.length > 0 && (
                 <div className="max-h-48 overflow-y-auto mb-4 p-3 bg-slate-50 rounded-lg">
-                  <p className="text-sm font-medium text-slate-700 mb-2">
-                    Failed resumes:
-                  </p>
+                  <p className="text-sm font-medium text-slate-700 mb-2">Failed resumes:</p>
                   <ul className="space-y-1">
                     {operationResult.failed.map((item, index) => (
                       <li key={index} className="text-sm text-red-600">

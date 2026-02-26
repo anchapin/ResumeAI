@@ -12,8 +12,22 @@ interface Variant {
 /** Mock variants data - in production this would come from the API */
 const mockVariants: Variant[] = [
   { id: '1', name: 'v1.0.0-original', template: 'modern', createdAt: '2026-02-15', score: 75 },
-  { id: '2', name: 'v1.0.0-google', template: 'modern', createdAt: '2026-02-16', tailoredFor: 'Google - Software Engineer', score: 88 },
-  { id: '3', name: 'v1.0.0-stripe', template: 'minimal', createdAt: '2026-02-17', tailoredFor: 'Stripe - Product Designer', score: 92 },
+  {
+    id: '2',
+    name: 'v1.0.0-google',
+    template: 'modern',
+    createdAt: '2026-02-16',
+    tailoredFor: 'Google - Software Engineer',
+    score: 88,
+  },
+  {
+    id: '3',
+    name: 'v1.0.0-stripe',
+    template: 'minimal',
+    createdAt: '2026-02-17',
+    tailoredFor: 'Stripe - Product Designer',
+    score: 92,
+  },
 ];
 
 /**
@@ -28,9 +42,9 @@ const VariantComparison: React.FC = () => {
 
   // Toggle variant selection
   const toggleVariant = (id: string) => {
-    setSelectedVariants(prev => {
+    setSelectedVariants((prev) => {
       if (prev.includes(id)) {
-        return prev.filter(v => v !== id);
+        return prev.filter((v) => v !== id);
       }
       if (prev.length >= 2) {
         return [prev[1], id];
@@ -41,7 +55,9 @@ const VariantComparison: React.FC = () => {
 
   // Get selected variant objects
   const selectedVariantObjects = useMemo(() => {
-    return selectedVariants.map(id => variants.find(v => v.id === id)).filter(Boolean) as Variant[];
+    return selectedVariants
+      .map((id) => variants.find((v) => v.id === id))
+      .filter(Boolean) as Variant[];
   }, [selectedVariants, variants]);
 
   return (
@@ -50,14 +66,16 @@ const VariantComparison: React.FC = () => {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-slate-900">Resume Variants</h2>
-          <p className="text-sm text-slate-500">Compare different versions of your tailored resumes</p>
+          <p className="text-sm text-slate-500">
+            Compare different versions of your tailored resumes
+          </p>
         </div>
         <div className="flex items-center gap-2">
           <button
             onClick={() => setCompareMode('side-by-side')}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-              compareMode === 'side-by-side' 
-                ? 'bg-primary-600 text-white' 
+              compareMode === 'side-by-side'
+                ? 'bg-primary-600 text-white'
                 : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
             }`}
           >
@@ -66,8 +84,8 @@ const VariantComparison: React.FC = () => {
           <button
             onClick={() => setCompareMode('diff')}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-              compareMode === 'diff' 
-                ? 'bg-primary-600 text-white' 
+              compareMode === 'diff'
+                ? 'bg-primary-600 text-white'
                 : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
             }`}
           >
@@ -78,7 +96,9 @@ const VariantComparison: React.FC = () => {
 
       {/* Variant Selection */}
       <div className="bg-white rounded-xl border border-slate-200 p-6">
-        <h3 className="text-sm font-bold text-slate-700 mb-4">Select variants to compare (select 2)</h3>
+        <h3 className="text-sm font-bold text-slate-700 mb-4">
+          Select variants to compare (select 2)
+        </h3>
         <div className="flex flex-wrap gap-3">
           {variants.map((variant) => (
             <button
@@ -90,11 +110,13 @@ const VariantComparison: React.FC = () => {
                   : 'border-slate-200 hover:border-slate-300'
               }`}
             >
-              <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                selectedVariants.includes(variant.id)
-                  ? 'border-primary-500 bg-primary-500'
-                  : 'border-slate-300'
-              }`}>
+              <div
+                className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                  selectedVariants.includes(variant.id)
+                    ? 'border-primary-500 bg-primary-500'
+                    : 'border-slate-300'
+                }`}
+              >
                 {selectedVariants.includes(variant.id) && (
                   <span className="material-symbols-outlined text-white text-[14px]">check</span>
                 )}
@@ -115,12 +137,17 @@ const VariantComparison: React.FC = () => {
         compareMode === 'side-by-side' ? (
           <div className="grid grid-cols-2 gap-6">
             {selectedVariantObjects.map((variant, idx) => (
-              <div key={variant.id} className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+              <div
+                key={variant.id}
+                className="bg-white rounded-xl border border-slate-200 overflow-hidden"
+              >
                 <div className="px-6 py-4 bg-slate-50 border-b border-slate-200">
                   <div className="flex items-center justify-between">
                     <div>
                       <h3 className="font-bold text-slate-900">{variant.name}</h3>
-                      <p className="text-sm text-slate-500">{variant.tailoredFor || 'Original Resume'}</p>
+                      <p className="text-sm text-slate-500">
+                        {variant.tailoredFor || 'Original Resume'}
+                      </p>
                     </div>
                     <div className="text-right">
                       <div className="text-2xl font-bold text-primary-600">{variant.score}</div>
@@ -148,7 +175,9 @@ const VariantComparison: React.FC = () => {
               <div className="flex items-start gap-4 p-4 bg-green-50 rounded-lg border border-green-200">
                 <span className="material-symbols-outlined text-green-600">add</span>
                 <div>
-                  <h4 className="font-bold text-green-800">Added in {selectedVariantObjects[1].name}</h4>
+                  <h4 className="font-bold text-green-800">
+                    Added in {selectedVariantObjects[1].name}
+                  </h4>
                   <ul className="text-sm text-green-700 mt-1 space-y-1">
                     <li>• Keywords: AWS, Microservices, Kubernetes</li>
                     <li>• Achievement metrics: "improved scalability by 40%"</li>

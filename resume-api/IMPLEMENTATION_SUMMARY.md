@@ -66,12 +66,14 @@ Implemented three main endpoints as specified in MVP_ROADMAP.md:
 - **`GET /v1/variants`** - List available resume templates
 
 Additional endpoints:
+
 - **`GET /health`** - Health check
 - **`GET /`** - API information
 
 #### Pydantic Models (`api/models.py`)
 
 Complete request/response validation models:
+
 - JSON Resume standard data models
 - API request models (`ResumeRequest`, `TailorRequest`)
 - API response models (`VariantsResponse`, `TailoredResumeResponse`)
@@ -82,25 +84,30 @@ Complete request/response validation models:
 Includes all necessary Python packages:
 
 **Core Framework:**
+
 - FastAPI 0.115.0
 - Uvicorn 0.32.0
 - Pydantic 2.9.2
 
 **Data Handling:**
+
 - PyYAML 6.0.2
 - python-multipart 0.0.12
 
 **AI Support:**
+
 - openai 1.54.0
 - anthropic 0.39.0
 - google-generativeai 0.8.3
 
 **Development:**
+
 - pytest, black, flake8, mypy
 
 ### 5. Docker Configuration
 
 #### Dockerfile
+
 - Base: `python:3.11-slim`
 - Includes LaTeX (texlive-xetex, texlive-latex-extra)
 - Multi-stage setup for optimization
@@ -108,6 +115,7 @@ Includes all necessary Python packages:
 - Non-root user for security
 
 #### docker-compose.yml
+
 - Easy local development setup
 - Volume mount for templates
 - Environment variable configuration
@@ -116,6 +124,7 @@ Includes all necessary Python packages:
 ### 6. Templates
 
 Created base LaTeX template (`templates/base/`):
+
 - **`main.tex`**: Professional LaTeX resume template
 - **`metadata.yaml`**: Template configuration
 
@@ -140,6 +149,7 @@ All acceptance criteria from Issue #12 have been satisfied:
 - [x] FastAPI app runs without import errors
 
 Validation output:
+
 ```
 [SUCCESS] All acceptance criteria met!
 
@@ -155,11 +165,13 @@ Validation output:
 ### Why a Python-based resume-cli?
 
 The `jsonresume/resume-cli` is:
+
 - Node.js-based (not compatible with Python FastAPI)
 - Unmaintained (last updated in 2020)
 - Lacks AI-powered tailoring features
 
 Therefore, I created a custom Python resume CLI library that:
+
 - Integrates seamlessly with FastAPI
 - Supports AI-powered tailoring
 - Uses LaTeX for professional PDF generation
@@ -169,6 +181,7 @@ Therefore, I created a custom Python resume CLI library that:
 ### Template System
 
 Used LaTeX templates instead of HTML because:
+
 - Produces high-quality professional PDFs
 - Industry standard for resumes
 - Better typography and layout control
@@ -177,11 +190,13 @@ Used LaTeX templates instead of HTML because:
 ### AI Integration Architecture
 
 Designed to support multiple AI providers:
+
 - OpenAI (default, most mature)
 - Anthropic Claude (best for nuanced tasks)
 - Google Gemini (cost-effective alternative)
 
 This flexibility allows users to choose based on:
+
 - Cost considerations
 - Feature requirements
 - Regional availability
@@ -210,12 +225,14 @@ According to MVP_ROADMAP.md, the next phase is:
 Total: 22 files across 8 directories
 
 **Core Application (4 files):**
+
 - `main.py` - FastAPI entry point
 - `api/__init__.py`
 - `api/models.py` - Pydantic models
 - `api/routes.py` - API endpoints
 
 **Library Components (7 files):**
+
 - `lib/__init__.py`
 - `lib/cli/__init__.py`
 - `lib/cli/generator.py` - PDF generation
@@ -225,20 +242,24 @@ Total: 22 files across 8 directories
 - `lib/utils/ai.py` - AI utilities
 
 **Configuration (4 files):**
+
 - `config/__init__.py` - Settings
 - `.env.example` - Environment template
 - `.gitignore` - Git exclusions
 - `validate_setup.py` - Validation script
 
 **Templates (2 files):**
+
 - `templates/base/main.tex` - LaTeX template
 - `templates/base/metadata.yaml` - Template metadata
 
 **Docker (2 files):**
+
 - `Dockerfile` - Container configuration
 - `docker-compose.yml` - Development environment
 
 **Documentation (2 files):**
+
 - `README.md` - Setup guide
 - `requirements.txt` - Python dependencies
 

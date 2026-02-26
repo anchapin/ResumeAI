@@ -35,13 +35,13 @@ describe('Storage Optimization', () => {
       education: [],
       skills: [],
       projects: [],
-      summary: ''
+      summary: '',
     } as SimpleResumeData;
 
     // First call - should trigger availability check (1 setItem, 1 removeItem) + actual save (1 setItem)
     // Total: 2 setItems, 1 removeItem
     try {
-        saveResumeData(data);
+      saveResumeData(data);
     } catch (e) {}
 
     const initialSetItemCalls = setItemSpy.mock.calls.length;
@@ -55,7 +55,7 @@ describe('Storage Optimization', () => {
     // Expected: 0 setItems for check, 1 setItem for save
     // Total: 1 setItem, 0 removeItems
     try {
-        saveResumeData(data);
+      saveResumeData(data);
     } catch (e) {}
 
     const secondSetItemCalls = setItemSpy.mock.calls.length;

@@ -8,7 +8,13 @@ describe('Sidebar', () => {
   it('renders navigation items', () => {
     const onNavigate = vi.fn();
     const onShowShortcuts = vi.fn();
-    render(<Sidebar currentRoute={Route.DASHBOARD} onNavigate={onNavigate} onShowShortcuts={onShowShortcuts} />);
+    render(
+      <Sidebar
+        currentRoute={Route.DASHBOARD}
+        onNavigate={onNavigate}
+        onShowShortcuts={onShowShortcuts}
+      />,
+    );
 
     expect(screen.getByText('Dashboard')).toBeDefined();
     expect(screen.getByText('My Master Profile')).toBeDefined();
@@ -19,7 +25,13 @@ describe('Sidebar', () => {
   it('highlights current route', () => {
     const onNavigate = vi.fn();
     const onShowShortcuts = vi.fn();
-    render(<Sidebar currentRoute={Route.DASHBOARD} onNavigate={onNavigate} onShowShortcuts={onShowShortcuts} />);
+    render(
+      <Sidebar
+        currentRoute={Route.DASHBOARD}
+        onNavigate={onNavigate}
+        onShowShortcuts={onShowShortcuts}
+      />,
+    );
 
     const dashboardButton = screen.getByText('Dashboard').closest('button');
     expect(dashboardButton?.getAttribute('aria-current')).toBe('page');
@@ -31,7 +43,13 @@ describe('Sidebar', () => {
   it('calls onNavigate when clicked', () => {
     const onNavigate = vi.fn();
     const onShowShortcuts = vi.fn();
-    render(<Sidebar currentRoute={Route.DASHBOARD} onNavigate={onNavigate} onShowShortcuts={onShowShortcuts} />);
+    render(
+      <Sidebar
+        currentRoute={Route.DASHBOARD}
+        onNavigate={onNavigate}
+        onShowShortcuts={onShowShortcuts}
+      />,
+    );
 
     fireEvent.click(screen.getByText('Settings'));
     expect(onNavigate).toHaveBeenCalledWith(Route.SETTINGS);
@@ -40,7 +58,13 @@ describe('Sidebar', () => {
   it('calls onShowShortcuts when keyboard shortcuts button is clicked', () => {
     const onNavigate = vi.fn();
     const onShowShortcuts = vi.fn();
-    render(<Sidebar currentRoute={Route.DASHBOARD} onNavigate={onNavigate} onShowShortcuts={onShowShortcuts} />);
+    render(
+      <Sidebar
+        currentRoute={Route.DASHBOARD}
+        onNavigate={onNavigate}
+        onShowShortcuts={onShowShortcuts}
+      />,
+    );
 
     fireEvent.click(screen.getByText('Keyboard Shortcuts'));
     expect(onShowShortcuts).toHaveBeenCalled();

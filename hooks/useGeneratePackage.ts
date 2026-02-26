@@ -11,113 +11,113 @@ const DRAFT_STORAGE_KEY = 'resumeai_draft';
 
 // Convert SimpleResumeData to ResumeData (JSON Resume format)
 export function convertToResumeData(data: SimpleResumeData): ResumeData {
-    return {
-        basics: {
-            name: data.name || undefined,
-            email: data.email || undefined,
-            phone: data.phone || undefined,
-            summary: data.summary || undefined,
-            label: data.role || undefined
-        },
-        location: {
-            city: data.location || undefined
-        },
-        work: (data.experience || []).map((exp) => ({
-            company: exp.company || undefined,
-            position: exp.role || undefined,
-            startDate: exp.startDate || undefined,
-            endDate: exp.endDate || undefined,
-            current: exp.current,
-            summary: exp.description || undefined,
-            highlights: exp.tags || []
-        })),
-        education: (data.education || []).map((edu) => ({
-            institution: edu.institution || undefined,
-            area: edu.area || undefined,
-            studyType: edu.studyType || undefined,
-            startDate: edu.startDate || undefined,
-            endDate: edu.endDate || undefined,
-            courses: edu.courses || []
-        })),
-        skills: (data.skills || []).map((skill) => ({
-            name: skill || undefined
-        })),
-        projects: (data.projects || []).map((proj) => ({
-            name: proj.name || undefined,
-            description: proj.description || undefined,
-            url: proj.url || undefined,
-            startDate: proj.startDate || undefined,
-            endDate: proj.endDate || undefined,
-            highlights: proj.highlights || [],
-            roles: proj.roles || []
-        })),
-        profiles: [],
-        volunteer: [],
-        awards: [],
-        certificates: [],
-        publications: [],
-        languages: [],
-        interests: [],
-        references: []
-    };
+  return {
+    basics: {
+      name: data.name || undefined,
+      email: data.email || undefined,
+      phone: data.phone || undefined,
+      summary: data.summary || undefined,
+      label: data.role || undefined,
+    },
+    location: {
+      city: data.location || undefined,
+    },
+    work: (data.experience || []).map((exp) => ({
+      company: exp.company || undefined,
+      position: exp.role || undefined,
+      startDate: exp.startDate || undefined,
+      endDate: exp.endDate || undefined,
+      current: exp.current,
+      summary: exp.description || undefined,
+      highlights: exp.tags || [],
+    })),
+    education: (data.education || []).map((edu) => ({
+      institution: edu.institution || undefined,
+      area: edu.area || undefined,
+      studyType: edu.studyType || undefined,
+      startDate: edu.startDate || undefined,
+      endDate: edu.endDate || undefined,
+      courses: edu.courses || [],
+    })),
+    skills: (data.skills || []).map((skill) => ({
+      name: skill || undefined,
+    })),
+    projects: (data.projects || []).map((proj) => ({
+      name: proj.name || undefined,
+      description: proj.description || undefined,
+      url: proj.url || undefined,
+      startDate: proj.startDate || undefined,
+      endDate: proj.endDate || undefined,
+      highlights: proj.highlights || [],
+      roles: proj.roles || [],
+    })),
+    profiles: [],
+    volunteer: [],
+    awards: [],
+    certificates: [],
+    publications: [],
+    languages: [],
+    interests: [],
+    references: [],
+  };
 }
 
 export interface TailorRequest {
-    resume_data: ResumeData;
-    job_description: string;
-    company_name?: string;
-    job_title?: string;
+  resume_data: ResumeData;
+  job_description: string;
+  company_name?: string;
+  job_title?: string;
 }
 
 export interface TailoredResumeResponse {
-    resume_data: ResumeData;
-    keywords: string[];
-    suggestions?: string[];
-    markdown?: string;
+  resume_data: ResumeData;
+  keywords: string[];
+  suggestions?: string[];
+  markdown?: string;
 }
 
 export interface RenderPDFRequest {
-    resume_data: ResumeData;
-    variant: string;
+  resume_data: ResumeData;
+  variant: string;
 }
 
 // Storage helper functions
 const saveToLocalStorage = <T>(key: string, data: T): void => {
-    try {
-        localStorage.setItem(key, JSON.stringify(data));
-    } catch (error) {
-        console.error('Failed to save to localStorage:', error);
-    }
+  try {
+    localStorage.setItem(key, JSON.stringify(data));
+  } catch (error) {
+    console.error('Failed to save to localStorage:', error);
+  }
 };
 
 const loadFromLocalStorage = <T>(key: string): T | null => {
-    try {
-        const stored = localStorage.getItem(key);
-        return stored ? JSON.parse(stored) : null;
-    } catch (error) {
-        console.error('Failed to load from localStorage:', error);
-        return null;
-    }
+  try {
+    const stored = localStorage.getItem(key);
+    return stored ? JSON.parse(stored) : null;
+  } catch (error) {
+    console.error('Failed to load from localStorage:', error);
+    return null;
+  }
 };
 
 const removeFromLocalStorage = (key: string): void => {
-    try {
-        localStorage.removeItem(key);
-    } catch (error) {
-        console.error('Failed to remove from localStorage:', error);
-    }
+  try {
+    localStorage.removeItem(key);
+  } catch (error) {
+    console.error('Failed to remove from localStorage:', error);
+  }
 };
 
 export const useGeneratePackage = () => {
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-    const [data, setData] = useState<TailoredResumeResponse | null>(null);
-    const [isSaving, setIsSaving] = useState(false);
-    const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [data, setData] = useState<TailoredResumeResponse | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
 
-    // Load saved resume data on mount
-    // REMOVED: This was causing stale data to be displayed in the Workspace
-    /*
+  // Load saved resume data on mount
+  // REMOVED: This was causing stale data to be displayed in the Workspace
+  /*
     useEffect(() => {
         const savedResume = loadFromLocalStorage<ResumeData>(RESUME_STORAGE_KEY);
         if (savedResume) {
@@ -130,191 +130,191 @@ export const useGeneratePackage = () => {
     }, []);
     */
 
-    /**
-     * Save resume data to local storage
-     */
-    const saveResume = useCallback(async (resumeData: ResumeData): Promise<void> => {
-        setIsSaving(true);
-        try {
-            saveToLocalStorage(RESUME_STORAGE_KEY, resumeData);
-            setLastSaved(new Date());
-            removeFromLocalStorage(DRAFT_STORAGE_KEY);
-        } catch (err) {
-            setError('Failed to save resume');
-            throw err;
-        } finally {
-            setIsSaving(false);
-        }
-    }, []);
+  /**
+   * Save resume data to local storage
+   */
+  const saveResume = useCallback(async (resumeData: ResumeData): Promise<void> => {
+    setIsSaving(true);
+    try {
+      saveToLocalStorage(RESUME_STORAGE_KEY, resumeData);
+      setLastSaved(new Date());
+      removeFromLocalStorage(DRAFT_STORAGE_KEY);
+    } catch (err) {
+      setError('Failed to save resume');
+      throw err;
+    } finally {
+      setIsSaving(false);
+    }
+  }, []);
 
-    /**
-     * Save draft to local storage
-     */
-    const saveDraft = useCallback((resumeData: ResumeData): void => {
-        saveToLocalStorage(DRAFT_STORAGE_KEY, {
-            data: resumeData,
-            timestamp: new Date().toISOString()
-        });
-    }, []);
+  /**
+   * Save draft to local storage
+   */
+  const saveDraft = useCallback((resumeData: ResumeData): void => {
+    saveToLocalStorage(DRAFT_STORAGE_KEY, {
+      data: resumeData,
+      timestamp: new Date().toISOString(),
+    });
+  }, []);
 
-    /**
-     * Load draft from local storage
-     */
-    const loadDraft = useCallback((): ResumeData | null => {
-        const draft = loadFromLocalStorage<{ data: ResumeData; timestamp: string }>(DRAFT_STORAGE_KEY);
-        return draft?.data || null;
-    }, []);
+  /**
+   * Load draft from local storage
+   */
+  const loadDraft = useCallback((): ResumeData | null => {
+    const draft = loadFromLocalStorage<{ data: ResumeData; timestamp: string }>(DRAFT_STORAGE_KEY);
+    return draft?.data || null;
+  }, []);
 
-    /**
-     * Clear all saved data
-     */
-    const clearSavedData = useCallback((): void => {
-        removeFromLocalStorage(RESUME_STORAGE_KEY);
-        removeFromLocalStorage(DRAFT_STORAGE_KEY);
-        setData(null);
-        setLastSaved(null);
-    }, []);
+  /**
+   * Clear all saved data
+   */
+  const clearSavedData = useCallback((): void => {
+    removeFromLocalStorage(RESUME_STORAGE_KEY);
+    removeFromLocalStorage(DRAFT_STORAGE_KEY);
+    setData(null);
+    setLastSaved(null);
+  }, []);
 
-    /**
-     * Tailor a resume to a job description using the production API
-     */
-    const generatePackage = async (requestBody: TailorRequest) => {
-        console.log('GEMINI_CODE_ACTIVE', requestBody);
-        setLoading(true);
-        setError(null);
-        try {
-            const response = await fetch(`${API_URL}/v1/tailor`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    ...(API_KEY && { 'X-API-KEY': API_KEY }),
-                },
-                body: JSON.stringify(requestBody)
-            });
+  /**
+   * Tailor a resume to a job description using the production API
+   */
+  const generatePackage = async (requestBody: TailorRequest) => {
+    console.log('GEMINI_CODE_ACTIVE', requestBody);
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await fetch(`${API_URL}/v1/tailor`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(API_KEY && { 'X-API-KEY': API_KEY }),
+        },
+        body: JSON.stringify(requestBody),
+      });
 
-            if (!response.ok) {
-                const errData = await response.json().catch(() => ({}));
-                throw new Error(errData.detail || `Server error: ${response.status}`);
-            }
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.detail || `Server error: ${response.status}`);
+      }
 
-            const result: TailoredResumeResponse = await response.json();
-            setData(result);
-            
-            // Auto-save the tailored resume
-            await saveResume(result.resume_data);
-            
-            return result;
-        } catch (err: any) {
-            const message = err.message || "Failed to connect to backend";
-            setError(message);
-            throw err;
-        } finally {
-            setLoading(false);
-        }
-    };
+      const result: TailoredResumeResponse = await response.json();
+      setData(result);
 
-    /**
-     * Generate and download a PDF resume using the production API
-     */
-    const downloadPDF = async (requestBody: RenderPDFRequest) => {
-        try {
-            const response = await fetch(`${API_URL}/v1/render/pdf`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    ...(API_KEY && { 'X-API-KEY': API_KEY }),
-                },
-                body: JSON.stringify(requestBody)
-            });
+      // Auto-save the tailored resume
+      await saveResume(result.resume_data);
 
-            if (!response.ok) {
-                const errData = await response.json().catch(() => ({}));
-                throw new Error(errData.detail || `Server error: ${response.status}`);
-            }
+      return result;
+    } catch (err: any) {
+      const message = err.message || 'Failed to connect to backend';
+      setError(message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
 
-            const blob = await response.blob();
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `resume_${requestBody.variant}.pdf`;
-            document.body.appendChild(a);
-            a.click();
-            window.URL.revokeObjectURL(url);
-            document.body.removeChild(a);
-        } catch (err: any) {
-            const message = err.message || "Failed to download PDF";
-            setError(message);
-            throw err;
-        }
-    };
+  /**
+   * Generate and download a PDF resume using the production API
+   */
+  const downloadPDF = async (requestBody: RenderPDFRequest) => {
+    try {
+      const response = await fetch(`${API_URL}/v1/render/pdf`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(API_KEY && { 'X-API-KEY': API_KEY }),
+        },
+        body: JSON.stringify(requestBody),
+      });
 
-    /**
-     * Render a markdown preview of the resume using the production API
-     */
-    const renderMarkdown = async (requestBody: RenderPDFRequest): Promise<string> => {
-        try {
-            const response = await fetch(`${API_URL}/v1/render/markdown`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    ...(API_KEY && { 'X-API-KEY': API_KEY }),
-                },
-                body: JSON.stringify(requestBody)
-            });
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.detail || `Server error: ${response.status}`);
+      }
 
-            if (!response.ok) {
-                const errData = await response.json().catch(() => ({}));
-                throw new Error(errData.detail || `Server error: ${response.status}`);
-            }
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `resume_${requestBody.variant}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (err: any) {
+      const message = err.message || 'Failed to download PDF';
+      setError(message);
+      throw err;
+    }
+  };
 
-            const result = await response.json();
-            return result.markdown;
-        } catch (err: any) {
-            const message = err.message || "Failed to render markdown";
-            throw new Error(message);
-        }
-    };
+  /**
+   * Render a markdown preview of the resume using the production API
+   */
+  const renderMarkdown = async (requestBody: RenderPDFRequest): Promise<string> => {
+    try {
+      const response = await fetch(`${API_URL}/v1/render/markdown`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(API_KEY && { 'X-API-KEY': API_KEY }),
+        },
+        body: JSON.stringify(requestBody),
+      });
 
-    /**
-     * Test connection to backend API
-     */
-    const testConnection = useCallback(async (): Promise<boolean> => {
-        try {
-            const response = await fetch(`${API_URL}/health`, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                }
-            });
-            return response.ok;
-        } catch {
-            return false;
-        }
-    }, []);
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.detail || `Server error: ${response.status}`);
+      }
 
-    /**
-     * Clear error state
-     */
-    const clearError = useCallback(() => {
-        setError(null);
-    }, []);
+      const result = await response.json();
+      return result.markdown;
+    } catch (err: any) {
+      const message = err.message || 'Failed to render markdown';
+      throw new Error(message);
+    }
+  };
 
-    return {
-        generatePackage,
-        downloadPDF,
-        renderMarkdown,
-        saveResume,
-        saveDraft,
-        loadDraft,
-        clearSavedData,
-        testConnection,
-        clearError,
-        loading,
-        error,
-        data,
-        isSaving,
-        lastSaved
-    };
+  /**
+   * Test connection to backend API
+   */
+  const testConnection = useCallback(async (): Promise<boolean> => {
+    try {
+      const response = await fetch(`${API_URL}/health`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      return response.ok;
+    } catch {
+      return false;
+    }
+  }, []);
+
+  /**
+   * Clear error state
+   */
+  const clearError = useCallback(() => {
+    setError(null);
+  }, []);
+
+  return {
+    generatePackage,
+    downloadPDF,
+    renderMarkdown,
+    saveResume,
+    saveDraft,
+    loadDraft,
+    clearSavedData,
+    testConnection,
+    clearError,
+    loading,
+    error,
+    data,
+    isSaving,
+    lastSaved,
+  };
 };
 
 // Export storage utilities for direct access if needed

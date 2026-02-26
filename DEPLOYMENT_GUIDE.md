@@ -86,6 +86,7 @@ gcloud run deploy resume-api \
 ### 4. Get Your Backend URL
 
 After deployment, note your Cloud Run URL:
+
 ```
 https://resume-api-xxxxx-uc.a.run.app
 ```
@@ -106,10 +107,10 @@ https://resume-api-xxxxx-uc.a.run.app
 
 In Vercel dashboard, add these environment variables:
 
-| Variable | Value |
-|----------|-------|
-| `VITE_API_URL` | Your Cloud Run URL (e.g., `https://resume-api-xxxxx-uc.a.run.app`) |
-| `RESUMEAI_API_KEY` | The same `MASTER_API_KEY` you set in backend |
+| Variable           | Value                                                              |
+| ------------------ | ------------------------------------------------------------------ |
+| `VITE_API_URL`     | Your Cloud Run URL (e.g., `https://resume-api-xxxxx-uc.a.run.app`) |
+| `RESUMEAI_API_KEY` | The same `MASTER_API_KEY` you set in backend                       |
 
 ### 3. Deploy
 
@@ -120,6 +121,7 @@ Vercel will automatically deploy on push to main branch.
 ## Production Checklist
 
 ### Security
+
 - [ ] Change default `MASTER_API_KEY` to a secure random value
 - [ ] Enable `REQUIRE_API_KEY=true` in production
 - [ ] Configure `CORS_ORIGINS` to your Vercel domain
@@ -128,10 +130,12 @@ Vercel will automatically deploy on push to main branch.
 - [ ] Ensure `GITHUB_AUTH_MODE=oauth` (CLI mode is deprecated)
 
 ### Monitoring
+
 - [ ] Set up Sentry for error tracking (optional)
 - [ ] Configure Prometheus metrics (optional)
 
 ### Backup
+
 - [ ] If using SQLite, set up regular backups
 - [ ] Consider migrating to PostgreSQL for production
 
@@ -165,6 +169,7 @@ npm test
 ### Backend Issues
 
 **LaTeX not found**
+
 ```bash
 # Install LaTeX (for PDF generation)
 # Ubuntu/Debian
@@ -175,6 +180,7 @@ brew install mactex
 ```
 
 **Port already in use**
+
 ```bash
 # Find and kill process
 lsof -i :8000
@@ -184,9 +190,11 @@ kill -9 PID
 ### Frontend Issues
 
 **CORS errors**
+
 - Check that `CORS_ORIGINS` in backend includes your Vercel domain
 
 **API connection failed**
+
 - Verify `VITE_API_URL` points to your Cloud Run URL
 - Check that backend is running and healthy at `/health` endpoint
 
@@ -197,6 +205,7 @@ kill -9 PID
 For local development:
 
 1. Start backend:
+
 ```bash
 cd resume-api
 pip install -r requirements.txt
@@ -204,6 +213,7 @@ python -m uvicorn main:app --reload
 ```
 
 2. Start frontend:
+
 ```bash
 npm install
 npm run dev

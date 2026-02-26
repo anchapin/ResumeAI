@@ -8,32 +8,32 @@ Comprehensive monitoring and alerting strategy to track application health, perf
 
 ### API Performance
 
-| Metric | Type | Warning | Critical | Query |
-|--------|------|---------|----------|-------|
-| Response Time (p95) | Gauge | 2s | 5s | `histogram_quantile(0.95, api_response_duration)` |
-| Response Time (p99) | Gauge | 3s | 8s | `histogram_quantile(0.99, api_response_duration)` |
-| Requests/sec | Counter | - | - | `rate(http_requests_total[1m])` |
-| Error Rate | Gauge | 0.5% | 2% | `rate(http_requests_total{status=~"5.."}[1m])` |
-| Request Queue Depth | Gauge | 10 | 50 | `queue_depth` |
+| Metric              | Type    | Warning | Critical | Query                                             |
+| ------------------- | ------- | ------- | -------- | ------------------------------------------------- |
+| Response Time (p95) | Gauge   | 2s      | 5s       | `histogram_quantile(0.95, api_response_duration)` |
+| Response Time (p99) | Gauge   | 3s      | 8s       | `histogram_quantile(0.99, api_response_duration)` |
+| Requests/sec        | Counter | -       | -        | `rate(http_requests_total[1m])`                   |
+| Error Rate          | Gauge   | 0.5%    | 2%       | `rate(http_requests_total{status=~"5.."}[1m])`    |
+| Request Queue Depth | Gauge   | 10      | 50       | `queue_depth`                                     |
 
 ### Infrastructure
 
-| Metric | Type | Warning | Critical |
-|--------|------|---------|----------|
-| CPU Usage | Gauge | 70% | 85% |
-| Memory Usage | Gauge | 75% | 90% |
-| Disk Usage | Gauge | 80% | 95% |
-| Network I/O | Gauge | - | - |
-| Open Connections | Gauge | 100 | 200 |
+| Metric           | Type  | Warning | Critical |
+| ---------------- | ----- | ------- | -------- |
+| CPU Usage        | Gauge | 70%     | 85%      |
+| Memory Usage     | Gauge | 75%     | 90%      |
+| Disk Usage       | Gauge | 80%     | 95%      |
+| Network I/O      | Gauge | -       | -        |
+| Open Connections | Gauge | 100     | 200      |
 
 ### Business Metrics
 
-| Metric | Type | Target |
-|--------|------|--------|
-| API Uptime | % | 99.9% |
-| Error Budget (monthly) | minutes | 43 |
-| P95 Latency | seconds | <2s |
-| User Session Duration | seconds | >300s |
+| Metric                 | Type    | Target |
+| ---------------------- | ------- | ------ |
+| API Uptime             | %       | 99.9%  |
+| Error Budget (monthly) | minutes | 43     |
+| P95 Latency            | seconds | <2s    |
+| User Session Duration  | seconds | >300s  |
 
 ## Alert Rules
 
@@ -184,6 +184,7 @@ scrape_configs:
 ```
 
 **Grafana Dashboards:**
+
 - Pre-built dashboards available at grafana.com/dashboards
 - Import dashboard IDs: 12114 (Node.js), 6417 (PostgreSQL)
 
@@ -204,12 +205,14 @@ export DD_TRACE_ANALYTICS_ENABLED=true
 ```
 
 **Benefits:**
+
 - Automatic APM
 - Log aggregation
 - Better incident correlation
 - Better UI/UX
 
 **Drawbacks:**
+
 - Cost: ~$15-30 per host/month
 
 ### Option 3: New Relic (SaaS)
@@ -226,11 +229,13 @@ newrelic-admin run-program python main.py
 ```
 
 **Benefits:**
+
 - Excellent Python support
 - Built-in error tracking
 - Real user monitoring (RUM)
 
 **Drawbacks:**
+
 - Cost: ~$10-20 per host/month
 
 ## Incident Response
@@ -250,6 +255,7 @@ newrelic-admin run-program python main.py
 ### Runbooks
 
 **High Error Rate:**
+
 1. Check recent deployments
 2. Check API logs for errors
 3. Check AI provider status
@@ -257,6 +263,7 @@ newrelic-admin run-program python main.py
 5. Scale up if capacity issue
 
 **High Response Time:**
+
 1. Check CPU/memory usage
 2. Check database slow queries
 3. Check network latency
@@ -264,6 +271,7 @@ newrelic-admin run-program python main.py
 5. Scale up if needed
 
 **API Unreachable:**
+
 1. Check server status
 2. Check load balancer health
 3. Check DNS resolution
@@ -274,11 +282,11 @@ newrelic-admin run-program python main.py
 
 ### SLA Targets
 
-| Service | Availability | Monthly Downtime |
-|---------|--------------|-----------------|
-| API | 99.9% | 43 minutes |
-| Website | 99.5% | 3.6 hours |
-| Dashboard | 99.0% | 7.2 hours |
+| Service   | Availability | Monthly Downtime |
+| --------- | ------------ | ---------------- |
+| API       | 99.9%        | 43 minutes       |
+| Website   | 99.5%        | 3.6 hours        |
+| Dashboard | 99.0%        | 7.2 hours        |
 
 ### Error Budget
 
@@ -287,6 +295,7 @@ newrelic-admin run-program python main.py
 - Daily budget: ~2 minutes
 
 Deployment strategy:
+
 - Only deploy when error budget is healthy
 - Pause deployments if error budget exhausted
 - Post-incident reviews required
@@ -320,6 +329,7 @@ Deployment strategy:
 ## Tools & Services
 
 ### Self-Hosted
+
 - Prometheus (metrics)
 - Grafana (visualization)
 - AlertManager (alerting)
@@ -327,6 +337,7 @@ Deployment strategy:
 - Jaeger (tracing)
 
 ### SaaS
+
 - DataDog (APM + logging)
 - New Relic (APM + RUM)
 - PagerDuty (incident management)

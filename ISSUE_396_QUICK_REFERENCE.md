@@ -19,6 +19,7 @@ App.tsx (line 25, 359)                 ← Integration
 ## 🚀 Quick Start
 
 ### Check Storage Quota
+
 ```typescript
 import { getStorageQuota } from './src/lib/storage';
 
@@ -27,21 +28,28 @@ console.log(`${quota.percentUsed}% used`);
 ```
 
 ### Save Data (Auto-Compressed)
+
 ```typescript
 import { StorageManager } from './src/lib/storage';
 
-await StorageManager.setItem('my-data', {
-  name: 'John',
-  resume: '...'
-}, { compress: true });
+await StorageManager.setItem(
+  'my-data',
+  {
+    name: 'John',
+    resume: '...',
+  },
+  { compress: true },
+);
 ```
 
 ### Get Data (Auto-Decompressed)
+
 ```typescript
 const data = StorageManager.getItem('my-data');
 ```
 
 ### Check Warning
+
 ```typescript
 import { checkStorageWarning } from './src/lib/storage';
 
@@ -53,43 +61,46 @@ if (warning.shouldWarn) {
 
 ## 📊 Test Coverage
 
-| Test File | Tests | Status |
-|-----------|-------|--------|
-| storage-quota.test.ts | 28 | ✅ PASS |
-| StorageWarning.test.tsx | 5 | ✅ PASS |
-| src/lib/storage.test.ts | 26 | ✅ PASS |
-| utils/storage.test.ts | 9 | ✅ PASS |
-| **Total** | **59** | **✅ PASS** |
+| Test File               | Tests  | Status      |
+| ----------------------- | ------ | ----------- |
+| storage-quota.test.ts   | 28     | ✅ PASS     |
+| StorageWarning.test.tsx | 5      | ✅ PASS     |
+| src/lib/storage.test.ts | 26     | ✅ PASS     |
+| utils/storage.test.ts   | 9      | ✅ PASS     |
+| **Total**               | **59** | **✅ PASS** |
 
 ## ⚙️ Configuration
 
 ### Warning Thresholds (in StorageWarning.tsx)
+
 ```typescript
 80% = Yellow warning
 95% = Red critical alert
 ```
 
 ### Check Interval (in StorageWarning.tsx)
+
 ```typescript
 30000ms = Check quota every 30 seconds
 ```
 
 ### Compression Threshold (in storage.ts)
+
 ```typescript
 1024 bytes = Compress if > 1KB
 ```
 
 ## 🔍 Features at a Glance
 
-| Feature | Implementation |
-|---------|-----------------|
-| **Quota Detection** | `getStorageQuota()` |
-| **Compression** | Auto for items > 1KB |
-| **Decompression** | Automatic on retrieval |
-| **Warning UI** | `<StorageWarning />` |
-| **Clean Action** | Removes resumeai_* except main |
-| **Clear Action** | Deletes all data (with confirmation) |
-| **Monitoring** | Auto-check every 30s |
+| Feature             | Implementation                       |
+| ------------------- | ------------------------------------ |
+| **Quota Detection** | `getStorageQuota()`                  |
+| **Compression**     | Auto for items > 1KB                 |
+| **Decompression**   | Automatic on retrieval               |
+| **Warning UI**      | `<StorageWarning />`                 |
+| **Clean Action**    | Removes resumeai\_\* except main     |
+| **Clear Action**    | Deletes all data (with confirmation) |
+| **Monitoring**      | Auto-check every 30s                 |
 
 ## 🛡️ Error Handling
 
@@ -106,10 +117,10 @@ try {
 
 ## 📈 Performance
 
-| Operation | Time | Notes |
-|-----------|------|-------|
-| setItem | +1-5ms | Compression check |
-| getItem | +1-3ms | Decompression |
+| Operation   | Time    | Notes              |
+| ----------- | ------- | ------------------ |
+| setItem     | +1-5ms  | Compression check  |
+| getItem     | +1-3ms  | Decompression      |
 | Quota check | +2-10ms | Async, browser API |
 
 ## 🌐 Browser Support
@@ -143,12 +154,13 @@ npm run build
 ## 📝 Usage Examples
 
 ### Monitor Storage in Component
+
 ```typescript
 import { useStorageQuota } from './src/hooks/useStorageQuota';
 
 export function MyComponent() {
   const { quotaInfo, isLoading, checkQuota, clearAllStorage } = useStorageQuota();
-  
+
   return (
     <div>
       {quotaInfo && <p>{quotaInfo.percentUsed}% used</p>}
@@ -159,6 +171,7 @@ export function MyComponent() {
 ```
 
 ### Manual Quota Check
+
 ```typescript
 import { getStorageQuota, checkQuotaAvailable } from './src/lib/storage';
 
@@ -171,6 +184,7 @@ if (!available) {
 ```
 
 ### Get Storage Stats
+
 ```typescript
 import { StorageManager } from './src/lib/storage';
 
@@ -180,7 +194,7 @@ console.log({
   available: stats.available,
   quota: stats.quota,
   items: stats.items,
-  percentUsed: stats.percentUsed
+  percentUsed: stats.percentUsed,
 });
 ```
 
@@ -202,16 +216,19 @@ console.log({
 ## 🐛 Troubleshooting
 
 ### Warning not showing?
+
 - Check if quota > 80%
 - Component checks every 30s
 - Call `checkQuota()` manually to refresh
 
 ### Data not compressing?
+
 - Only items > 1KB compress
 - Compression adds metadata (ok for large data)
 - Use `getItemSize()` to check actual size
 
 ### Storage errors?
+
 - Check localStorage available (test mode)
 - Try clearing old data via warning UI
 - Check browser quota limits

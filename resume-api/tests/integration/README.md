@@ -32,37 +32,44 @@ integration/
 ## Running Tests
 
 ### Run all integration tests
+
 ```bash
 cd resume-api
 python -m pytest tests/integration/ -v
 ```
 
 ### Run specific test file
+
 ```bash
 python -m pytest tests/integration/test_pdf_generation_e2e.py -v
 ```
 
 ### Run specific test class
+
 ```bash
 python -m pytest tests/integration/test_pdf_generation_e2e.py::TestPDFGenerationBasic -v
 ```
 
 ### Run specific test
+
 ```bash
 python -m pytest tests/integration/test_pdf_generation_e2e.py::TestPDFGenerationBasic::test_generate_pdf_minimal_data -v
 ```
 
 ### Run with coverage
+
 ```bash
 python -m pytest tests/integration/ --cov=api --cov=routes --cov-report=html
 ```
 
 ### Run with detailed output
+
 ```bash
 python -m pytest tests/integration/ -vv --tb=long
 ```
 
 ### Run in parallel (faster)
+
 ```bash
 python -m pytest tests/integration/ -n auto
 ```
@@ -70,6 +77,7 @@ python -m pytest tests/integration/ -n auto
 ## Test Coverage
 
 ### PDF Generation (`test_pdf_generation_e2e.py`)
+
 - ✅ Basic PDF generation with minimal and comprehensive data
 - ✅ Different template variants (modern, classic, minimal)
 - ✅ Special characters and Unicode handling
@@ -82,6 +90,7 @@ python -m pytest tests/integration/ -n auto
 - ✅ Concurrent request handling
 
 **Test Classes:**
+
 - `TestPDFGenerationBasic` - Core functionality
 - `TestPDFGenerationEdgeCases` - Edge cases and special content
 - `TestPDFGenerationAuthentication` - Auth requirements
@@ -89,6 +98,7 @@ python -m pytest tests/integration/ -n auto
 - `TestPDFGenerationPerformance` - Performance validation
 
 ### Resume Tailoring (`test_tailoring_e2e.py`)
+
 - ✅ Basic tailoring with job descriptions
 - ✅ Keyword extraction from job postings
 - ✅ Improvement suggestions generation
@@ -101,6 +111,7 @@ python -m pytest tests/integration/ -n auto
 - ✅ Performance benchmarks
 
 **Test Classes:**
+
 - `TestResumeTailoringBasic` - Core functionality
 - `TestResumeTailoringSpecialContent` - Unicode and long text
 - `TestResumeTailoringEdgeCases` - Edge cases
@@ -109,6 +120,7 @@ python -m pytest tests/integration/ -n auto
 - `TestResumeTailoringPerformance` - Performance validation
 
 ### GitHub OAuth (`test_github_oauth_e2e.py`)
+
 - ✅ Authorization URL generation
 - ✅ OAuth callback handling
 - ✅ Token exchange flow
@@ -120,6 +132,7 @@ python -m pytest tests/integration/ -n auto
 - ✅ Complete OAuth flow integration
 
 **Test Classes:**
+
 - `TestGitHubOAuthInitiation` - Authorization flow start
 - `TestGitHubOAuthCallback` - Callback handling
 - `TestGitHubTokenExchange` - Token exchange process
@@ -130,6 +143,7 @@ python -m pytest tests/integration/ -n auto
 - `TestGitHubIntegrationFlow` - Complete flow
 
 ### API Key Management (`test_api_key_management_e2e.py`)
+
 - ✅ API key creation and listing
 - ✅ Key validation and authentication
 - ✅ Inactive key rejection
@@ -141,6 +155,7 @@ python -m pytest tests/integration/ -n auto
 - ✅ Permission scoping
 
 **Test Classes:**
+
 - `TestAPIKeyCreation` - Creation and listing
 - `TestAPIKeyValidation` - Validation logic
 - `TestAPIKeyRateLimiting` - Per-key rate limits
@@ -150,6 +165,7 @@ python -m pytest tests/integration/ -n auto
 - `TestAPIKeyPermissions` - Permission scoping
 
 ### Template Variants (`test_variants_e2e.py`)
+
 - ✅ Listing all available variants
 - ✅ Variant metadata completeness
 - ✅ Filtering by search term
@@ -162,6 +178,7 @@ python -m pytest tests/integration/ -n auto
 - ✅ Invalid variant handling
 
 **Test Classes:**
+
 - `TestVariantListing` - Listing and retrieval
 - `TestVariantFiltering` - Filter capabilities
 - `TestVariantInPDFGeneration` - Using variants
@@ -170,6 +187,7 @@ python -m pytest tests/integration/ -n auto
 - `TestVariantAvailability` - Public access
 
 ### Error Handling (`test_error_handling_e2e.py`)
+
 - ✅ Missing required fields
 - ✅ Invalid data formats (email, phone, URL)
 - ✅ Invalid data types
@@ -181,6 +199,7 @@ python -m pytest tests/integration/ -n auto
 - ✅ Error response format
 
 **Test Classes:**
+
 - `TestValidationErrors` - Validation failures
 - `TestMissingRequiredFields` - Required field validation
 - `TestInvalidDataTypes` - Type checking
@@ -190,6 +209,7 @@ python -m pytest tests/integration/ -n auto
 - `TestEdgeCaseErrors` - Edge case scenarios
 
 ### Rate Limiting (`test_rate_limiting_e2e.py`)
+
 - ✅ Rate limit enforcement on PDF endpoint
 - ✅ Rate limit enforcement on tailor endpoint
 - ✅ Rate limit enforcement on variants endpoint
@@ -202,6 +222,7 @@ python -m pytest tests/integration/ -n auto
 - ✅ Rapid request handling
 
 **Test Classes:**
+
 - `TestPDFGenerationRateLimit` - PDF endpoint limits
 - `TestTailoringRateLimit` - Tailor endpoint limits
 - `TestVariantsRateLimit` - Variants endpoint limits
@@ -214,6 +235,7 @@ python -m pytest tests/integration/ -n auto
 ## Fixtures
 
 ### Database and Client Fixtures
+
 - `test_db_engine` - In-memory SQLite database
 - `test_db_session` - Database session
 - `api_client` - HTTP client with test database
@@ -221,21 +243,25 @@ python -m pytest tests/integration/ -n auto
 - `unauthenticated_client` - Client without API key
 
 ### User and Auth Fixtures
+
 - `test_user` - Test user account
 - `test_api_key` - API key for test user
 - `github_connection` - Mock GitHub connection
 
 ### Resume Data Fixtures
+
 - `minimal_resume_data` - Minimal valid resume
 - `comprehensive_resume_data` - Complete resume with all sections
 - `resume_with_special_chars` - Unicode and special characters
 - `resume_with_long_text` - Very long text content
 
 ### Job Description Fixtures
+
 - `job_description_tech` - Backend engineer job posting
 - `job_description_ai` - ML engineer job posting
 
 ### Mock Fixtures
+
 - `mock_openai_response` - Mock OpenAI API response
 - `mock_anthropic_response` - Mock Anthropic API response
 - `mock_github_user` - Mock GitHub user profile
@@ -244,6 +270,7 @@ python -m pytest tests/integration/ -n auto
 ## Key Testing Scenarios
 
 ### 1. PDF Generation with Edge Cases
+
 - Minimal resume data
 - Comprehensive resume with all fields
 - Unicode and special characters (é, ñ, ü, 中文, etc.)
@@ -254,6 +281,7 @@ python -m pytest tests/integration/ -n auto
 - Many items in collections
 
 ### 2. Resume Tailoring with AI
+
 - Different job descriptions
 - Keyword extraction validation
 - Suggestion generation
@@ -261,6 +289,7 @@ python -m pytest tests/integration/ -n auto
 - Graceful handling of AI API failures
 
 ### 3. GitHub OAuth Integration
+
 - Complete OAuth flow from start to finish
 - Token exchange and encryption
 - User profile retrieval
@@ -269,6 +298,7 @@ python -m pytest tests/integration/ -n auto
 - Token refresh/rotation
 
 ### 4. Authentication & Authorization
+
 - API key validation
 - Inactive key rejection
 - Per-user data isolation
@@ -276,6 +306,7 @@ python -m pytest tests/integration/ -n auto
 - Proper HTTP status codes
 
 ### 5. Error Handling
+
 - Validation error messages
 - Missing field errors
 - Type validation
@@ -285,6 +316,7 @@ python -m pytest tests/integration/ -n auto
 ## Performance Expectations
 
 All integration tests should complete within:
+
 - **PDF Generation**: < 10 seconds
 - **Resume Tailoring**: < 15 seconds
 - **Variant Listing**: < 2 seconds
@@ -294,21 +326,25 @@ All integration tests should complete within:
 ## Debugging Failed Tests
 
 ### Check test output details
+
 ```bash
 pytest tests/integration/test_pdf_generation_e2e.py::TestPDFGenerationBasic::test_generate_pdf_minimal_data -vv
 ```
 
 ### Use pdb debugger
+
 ```bash
 pytest tests/integration/ --pdb
 ```
 
 ### Show print statements
+
 ```bash
 pytest tests/integration/ -s
 ```
 
 ### Check test dependencies
+
 ```bash
 pytest --collect-only tests/integration/
 ```
@@ -333,6 +369,7 @@ When adding new integration tests:
 7. **Check performance** - ensure tests complete in reasonable time
 
 Example test:
+
 ```python
 @pytest.mark.asyncio
 async def test_pdf_generation_with_unicode(
