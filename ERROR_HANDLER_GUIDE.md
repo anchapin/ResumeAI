@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Frontend Global Error Handler Guide - Issue #384
 
 ## Overview
@@ -568,3 +569,44 @@ errorHandler.subscribe((error) => {
 **Version:** 1.0.0  
 **Last Updated:** February 26, 2026  
 **Status:** ✅ Production Ready
+=======
+# Frontend Global Error Handler - Issue #384
+
+## Overview
+Centralized error handling for frontend with user-friendly messages.
+
+## Features
+- ✅ Automatic error classification
+- ✅ User-friendly messages
+- ✅ Global unhandled rejection listener
+- ✅ Error logging and history
+- ✅ React ErrorBoundary integration
+
+## Usage
+
+### Setup in App.tsx
+```tsx
+import { setupGlobalErrorHandlers } from './utils/errorHandler';
+
+useEffect(() => {
+  setupGlobalErrorHandlers();
+}, []);
+```
+
+### Display Errors
+Errors automatically trigger UI notifications with friendly messages.
+
+## Error Types
+- **Network**: Connection errors
+- **API**: 4xx/5xx responses
+- **Validation**: Input validation failures
+- **Storage**: localStorage quota exceeded
+- **Auth**: Authentication/authorization errors
+- **Timeout**: Request timeout
+- **Permission**: Permission denied
+- **NotFound**: 404 errors
+- **Unknown**: Unexpected errors
+
+## Testing
+See tests/error-handler-integration.test.tsx for test examples.
+>>>>>>> feature/issue-384-frontend-error-handler
