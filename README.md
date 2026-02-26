@@ -8,6 +8,7 @@
 [![Backend CI](https://github.com/anchapin/ResumeAI/actions/workflows/backend-ci.yml/badge.svg)](https://github.com/anchapin/ResumeAI/actions/workflows/backend-ci.yml)
 [![PR Check](https://github.com/anchapin/ResumeAI/actions/workflows/pr-check.yml/badge.svg)](https://github.com/anchapin/ResumeAI/actions/workflows/pr-check.yml)
 [![Docker Build](https://github.com/anchapin/ResumeAI/actions/workflows/docker.yml/badge.svg)](https://github.com/anchapin/ResumeAI/actions/workflows/docker.yml)
+[![Coverage Status](https://img.shields.io/badge/coverage-60%25%2B-green)](./COVERAGE_GUIDE.md)
 
 ResumeAI is a full-stack SaaS application that helps users create professional resumes with AI-powered enhancements. Build, customize, and export resumes in PDF format with job-specific tailoring.
 
@@ -196,6 +197,25 @@ Once the backend is running:
 
 For detailed API documentation, see [API_DOCUMENTATION.md](API_DOCUMENTATION.md).
 
+## Testing
+
+ResumeAI maintains **60% minimum code coverage** for both frontend and backend. Coverage is automatically checked on all PRs.
+
+### Running Tests
+
+```bash
+# Frontend tests
+npm test                    # Run tests in watch mode
+npm run test:coverage       # Run tests with coverage report
+
+# Backend tests (from project root)
+cd resume-api
+python -m pytest                                    # Run all tests
+python -m pytest --cov=resume-api --cov-report=html  # Run with coverage
+```
+
+For detailed coverage information and how to improve test coverage, see [COVERAGE_GUIDE.md](COVERAGE_GUIDE.md).
+
 ## Development Commands
 
 ### Frontend
@@ -206,6 +226,7 @@ For detailed API documentation, see [API_DOCUMENTATION.md](API_DOCUMENTATION.md)
 | `npm run build` | Build for production |
 | `npm run preview` | Preview production build |
 | `npm test` | Run tests |
+| `npm run test:coverage` | Run tests with coverage report |
 | `npm run docs` | Generate TypeScript documentation |
 
 ### Backend

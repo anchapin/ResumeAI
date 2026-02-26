@@ -1,3 +1,4 @@
+
 /**
  * Global Error Handler for ResumeAI Frontend
  * Provides centralized error handling, user-friendly messages, and error tracking
@@ -161,6 +162,18 @@ class GlobalErrorHandlerService {
             id,
           };
         
+        case 403:
+          return {
+            type: ErrorType.PERMISSION,
+            message: error.message,
+            userMessage: 'You do not have permission to perform this action.',
+            statusCode: status,
+            originalError: error,
+            context: additionalContext,
+            timestamp,
+            id,
+          };
+        
         case 408:
         case 504:
           return {
@@ -202,8 +215,8 @@ class GlobalErrorHandlerService {
       }
     }
 
-    // Handle timeout errors
-    if (error.name === 'TimeoutError' || error.message.includes('timeout')) {
+    // Handle timeout errors (including AbortError from AbortController)
+    if (error.name === 'TimeoutError' || error.name === 'AbortError' || error.message.includes('timeout')) {
       return {
         type: ErrorType.TIMEOUT,
         message: error.message,

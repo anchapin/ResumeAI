@@ -19,16 +19,9 @@ import {
   ComparisonPriority,
   OfferComparison,
 } from '../types';
-import { fetchWithRetry, RetryConfig } from './retryLogic';
+import { fetchWithTimeout, TIMEOUT_CONFIG } from './fetch-timeout';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
-
-// Default retry configuration for API calls
-const DEFAULT_RETRY_CONFIG: RetryConfig = {
-  maxRetries: 3,
-  initialDelay: 100,
-  maxDelay: 10000,
-};
 
 function getAPIKey(): string | null {
   return localStorage.getItem('RESUMEAI_API_KEY');
@@ -60,11 +53,11 @@ export function convertToAPIData(resumeData: SimpleResumeData): ResumeDataForAPI
 }
 
 export async function generatePDF(resumeData: ResumeDataForAPI, variant: string = 'modern'): Promise<Blob> {
-  const response = await fetchWithRetry(`${API_URL}/v1/render/pdf`, {
+  const response = await fetchWithTimeout(`${API_URL}/v1/render/pdf`, {
     method: 'POST',
     headers: { ...getHeaders(), 'Content-Type': 'application/json' },
     body: JSON.stringify({ resume_data: resumeData, variant }),
-  }, DEFAULT_RETRY_CONFIG);
+  }, TIMEOUT_CONFIG.PDF_GENERATION);
   if (!response.ok) { const error = await response.json().catch(() => ({ detail: 'PDF generation failed' })); throw new Error(error.detail || 'Failed to generate PDF'); }
   return response.blob();
 }
@@ -77,7 +70,7 @@ export async function getVariants(filters?: { search?: string; category?: string
   if (filters?.search) params.append('search', filters.search);
   if (filters?.category) params.append('category', filters.category);
   if (filters?.tags) params.append('tags', filters.tags.join(','));
-  const response = await fetchWithRetry(`${API_URL}/v1/variants?${params}`, { headers: getHeaders() }, DEFAULT_RETRY_CONFIG);
+  const response = await fetchWithTimeout(`${API_URL}/v1/variants?${params}`, { headers: getHeaders() }, TIMEOUT_CONFIG.STANDARD);
   if (!response.ok) throw new Error('Failed to fetch variants');
   const data: VariantsResponse = await response.json();
   return data.variants;
@@ -86,17 +79,17 @@ export async function getVariants(filters?: { search?: string; category?: string
 export interface TailoredResumeResponse { resume_data: ResumeDataForAPI; keywords: string[]; suggestions: string[]; }
 
 export async function tailorResume(resumeData: ResumeDataForAPI, jobDescription: string, companyName?: string, jobTitle?: string): Promise<TailoredResumeResponse> {
-  const response = await fetchWithRetry(`${API_URL}/v1/tailor`, {
+  const response = await fetchWithTimeout(`${API_URL}/v1/tailor`, {
     method: 'POST',
     headers: { ...getHeaders(), 'Content-Type': 'application/json' },
     body: JSON.stringify({ resume_data: resumeData, job_description: jobDescription, company_name: companyName, job_title: jobTitle }),
-  }, DEFAULT_RETRY_CONFIG);
+  }, TIMEOUT_CONFIG.AI_OPERATION);
   if (!response.ok) { const error = await response.json().catch(() => ({ detail: 'Resume tailoring failed' })); throw new Error(error.detail || 'Failed to tailor resume'); }
   return response.json();
 }
 
 export async function createResume(title: string, data: ResumeData, tags: string[] = []): Promise<any> {
-  const response = await fetchWithRetry(`${API_URL}/resumes`, { method: 'POST', headers: getHeaders(), body: JSON.stringify({ title, data, tags }) }, DEFAULT_RETRY_CONFIG);
+  const response = await fetch(`${API_URL}/resumes`, { method: 'POST', headers: getHeaders(), body: JSON.stringify({ title, data, tags }) });
   if (!response.ok) throw new Error('Failed to create resume');
   return response.json();
 }
@@ -107,25 +100,25 @@ export async function listResumes(filters?: { search?: string; tag?: string; ski
   if (filters?.tag) params.append('tag', filters.tag);
   if (filters?.skip !== undefined) params.append('skip', filters.skip.toString());
   if (filters?.limit !== undefined) params.append('limit', filters.limit.toString());
-  const response = await fetchWithRetry(`${API_URL}/resumes?${params}`, { headers: getHeaders() }, DEFAULT_RETRY_CONFIG);
+  const response = await fetch(`${API_URL}/resumes?${params}`, { headers: getHeaders() });
   if (!response.ok) throw new Error('Failed to list resumes');
   return response.json();
 }
 
 export async function getResume(resumeId: number): Promise<any> {
-  const response = await fetchWithRetry(`${API_URL}/resumes/${resumeId}`, { headers: getHeaders() }, DEFAULT_RETRY_CONFIG);
+  const response = await fetch(`${API_URL}/resumes/${resumeId}`, { headers: getHeaders() });
   if (!response.ok) throw new Error('Failed to get resume');
   return response.json();
 }
 
 export async function updateResume(resumeId: number, updates: { title?: string; data?: ResumeData; tags?: string[]; change_description?: string; }): Promise<any> {
-  const response = await fetchWithRetry(`${API_URL}/resumes/${resumeId}`, { method: 'PUT', headers: getHeaders(), body: JSON.stringify(updates) }, DEFAULT_RETRY_CONFIG);
+  const response = await fetch(`${API_URL}/resumes/${resumeId}`, { method: 'PUT', headers: getHeaders(), body: JSON.stringify(updates) });
   if (!response.ok) throw new Error('Failed to update resume');
   return response.json();
 }
 
 export async function deleteResume(resumeId: number): Promise<void> {
-  const response = await fetchWithRetry(`${API_URL}/resumes/${resumeId}`, { method: 'DELETE', headers: getHeaders() }, DEFAULT_RETRY_CONFIG);
+  const response = await fetch(`${API_URL}/resumes/${resumeId}`, { method: 'DELETE', headers: getHeaders() });
   if (!response.ok) throw new Error('Failed to delete resume');
 }
 
@@ -210,11 +203,11 @@ export interface ATSCheckRequest {
 }
 
 export async function checkATSScore(resumeData: ResumeDataForAPI, jobDescription: string): Promise<import('../types').ATSReport> {
-  const response = await fetchWithRetry(`${API_URL}/v1/ats/check`, {
+  const response = await fetchWithTimeout(`${API_URL}/v1/ats/check`, {
     method: 'POST',
     headers: { ...getHeaders(), 'Content-Type': 'application/json' },
     body: JSON.stringify({ resume_data: resumeData, job_description: jobDescription }),
-  }, DEFAULT_RETRY_CONFIG);
+  }, TIMEOUT_CONFIG.AI_OPERATION);
   if (!response.ok) { const error = await response.json().catch(() => ({ detail: 'ATS check failed' })); throw new Error(error.detail || 'Failed to check ATS score'); }
   return response.json();
 }
@@ -459,7 +452,7 @@ export async function listOffers(): Promise<JobOffer[]> {
 export async function compareOffers(offerIds: number[], priorities?: ComparisonPriority): Promise<OfferComparison> {
   return {
     offers: [],
-    scores: [] as OfferScore[],
+    scores: {},
     winnerId: 0,
     insights: []
   };
@@ -618,110 +611,4 @@ export async function getUpcomingEvents(days = 7): Promise<UpcomingEvent[]> {
   if (!response.ok) throw new Error('Failed to get upcoming events');
   const data = await response.json();
   return data.events || [];
-}
-
-// Team Management API Functions
-
-export interface CreateTeamPayload {
-  name: string;
-  description?: string;
-}
-
-export interface UpdateTeamPayload {
-  name?: string;
-  description?: string;
-}
-
-export interface InviteMemberPayload {
-  email: string;
-  role: 'owner' | 'admin' | 'editor' | 'viewer' | 'member';
-}
-
-export async function getTeams(): Promise<any[]> {
-  const response = await fetch(`${API_URL}/v1/teams`, { headers: getHeaders() });
-  if (!response.ok) throw new Error('Failed to get teams');
-  return response.json();
-}
-
-export async function getTeam(teamId: number): Promise<any> {
-  const response = await fetch(`${API_URL}/v1/teams/${teamId}`, { headers: getHeaders() });
-  if (!response.ok) throw new Error('Failed to get team');
-  return response.json();
-}
-
-export async function createTeam(payload: CreateTeamPayload): Promise<any> {
-  const response = await fetch(`${API_URL}/v1/teams`, {
-    method: 'POST',
-    headers: { ...getHeaders(), 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
-  });
-  if (!response.ok) throw new Error('Failed to create team');
-  return response.json();
-}
-
-export async function updateTeam(teamId: number, payload: UpdateTeamPayload): Promise<any> {
-  const response = await fetch(`${API_URL}/v1/teams/${teamId}`, {
-    method: 'PUT',
-    headers: { ...getHeaders(), 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
-  });
-  if (!response.ok) throw new Error('Failed to update team');
-  return response.json();
-}
-
-export async function deleteTeam(teamId: number): Promise<void> {
-  const response = await fetch(`${API_URL}/v1/teams/${teamId}`, { method: 'DELETE', headers: getHeaders() });
-  if (!response.ok) throw new Error('Failed to delete team');
-}
-
-export async function getTeamMembers(teamId: number): Promise<any[]> {
-  const response = await fetch(`${API_URL}/v1/teams/${teamId}/members`, { headers: getHeaders() });
-  if (!response.ok) throw new Error('Failed to get team members');
-  return response.json();
-}
-
-export async function inviteMember(teamId: number, payload: InviteMemberPayload): Promise<any> {
-  const response = await fetch(`${API_URL}/v1/teams/${teamId}/members/invite`, {
-    method: 'POST',
-    headers: { ...getHeaders(), 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
-  });
-  if (!response.ok) throw new Error('Failed to invite member');
-  return response.json();
-}
-
-export async function updateMemberRole(teamId: number, userId: string, role: 'owner' | 'admin' | 'editor' | 'viewer'): Promise<any> {
-  const response = await fetch(`${API_URL}/v1/teams/${teamId}/members/${userId}`, {
-    method: 'PUT',
-    headers: { ...getHeaders(), 'Content-Type': 'application/json' },
-    body: JSON.stringify({ role }),
-  });
-  if (!response.ok) throw new Error('Failed to update member role');
-  return response.json();
-}
-
-export async function removeMember(teamId: number, userId: string): Promise<void> {
-  const response = await fetch(`${API_URL}/v1/teams/${teamId}/members/${userId}`, { method: 'DELETE', headers: getHeaders() });
-  if (!response.ok) throw new Error('Failed to remove member');
-}
-
-export async function getTeamActivity(teamId: number): Promise<any[]> {
-  const response = await fetch(`${API_URL}/v1/teams/${teamId}/activity`, { headers: getHeaders() });
-  if (!response.ok) throw new Error('Failed to get team activity');
-  return response.json();
-}
-
-export async function shareResumeWithTeam(teamId: number, resumeId: string, permissions: 'view' | 'edit' | 'comment'): Promise<any> {
-  const response = await fetch(`${API_URL}/v1/teams/${teamId}/resumes`, {
-    method: 'POST',
-    headers: { ...getHeaders(), 'Content-Type': 'application/json' },
-    body: JSON.stringify({ resume_id: resumeId, permissions }),
-  });
-  if (!response.ok) throw new Error('Failed to share resume');
-  return response.json();
-}
-
-export async function unshareResumeFromTeam(teamId: number, resumeId: string): Promise<void> {
-  const response = await fetch(`${API_URL}/v1/teams/${teamId}/resumes/${resumeId}`, { method: 'DELETE', headers: getHeaders() });
-  if (!response.ok) throw new Error('Failed to unshare resume');
 }
