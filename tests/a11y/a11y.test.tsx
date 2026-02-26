@@ -205,9 +205,11 @@ describe('Accessibility (WCAG 2.1 AA)', () => {
           <button type="button" aria-controls="results-list">
             Load Results
           </button>
-          <ul id="results-list" role="region" aria-live="polite" aria-label="Search results">
-            <li>Item 1</li>
-          </ul>
+          <div id="results-list" role="region" aria-live="polite" aria-label="Search results">
+            <ul>
+              <li>Item 1</li>
+            </ul>
+          </div>
         </div>,
       );
 
