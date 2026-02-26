@@ -2,8 +2,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import React from 'react';
-import ExperienceItem from './ExperienceItem';
-import { WorkExperience } from '../../types';
+import ExperienceItem from '../../../components/editor/ExperienceItem';
+import { WorkExperience } from '../../../types';
 
 describe('ExperienceItem', () => {
   const mockExp: WorkExperience = {

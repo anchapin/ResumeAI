@@ -22,7 +22,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import './components/toast-styles.css';
 import KeyboardShortcutsHelp from './components/KeyboardShortcutsHelp';
 import { DEFAULT_SHORTCUTS, registerShortcuts } from './utils/shortcuts';
-import StorageWarning from './src/components/StorageWarning';
+import StorageWarning from './components/StorageWarning';
 
 /**
  * Loading fallback for code-split chunks
