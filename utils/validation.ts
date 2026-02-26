@@ -2,8 +2,6 @@
  * Client-side validation utilities for ResumeAI application
  */
 
-import type { ResumeData, SimpleResumeData } from '../types';
-
 // Type definitions for validation options
 interface StringOptions {
   maxLength?: number;
@@ -30,11 +28,8 @@ interface JobApplicationData {
   jobDescription?: string;
 }
 
-// Union type for validation options
-type ValidationOptions = StringOptions | NumberOptions | ArrayOptions;
-
 // Input validation functions
-const validateInput = (input: any, type: string = 'string', options: StringOptions | NumberOptions | ArrayOptions = {}) => {
+const validateInput = (input: unknown, type: string = 'string', options: StringOptions | NumberOptions | ArrayOptions = {}) => {
   // For object type, we need to handle null differently (null is not a valid object)
   if (type === 'object') {
     if (input === null || input === undefined) {
@@ -63,7 +58,7 @@ const validateInput = (input: any, type: string = 'string', options: StringOptio
 
     // Only validate items if itemType is explicitly specified
     if (arrayOpts.itemType) {
-      return input.map((item: any) => validateInput(item, arrayOpts.itemType, arrayOpts.itemOptions));
+      return input.map((item: unknown) => validateInput(item, arrayOpts.itemType, arrayOpts.itemOptions));
     }
 
     return input;
@@ -75,7 +70,7 @@ const validateInput = (input: any, type: string = 'string', options: StringOptio
   }
 
   switch (type) {
-    case 'string':
+    case 'string': {
       if (typeof input !== 'string') {
         throw new Error('Input must be a string');
       }
@@ -99,8 +94,9 @@ const validateInput = (input: any, type: string = 'string', options: StringOptio
       }
 
       return sanitized;
+    }
 
-    case 'email':
+    case 'email': {
       if (typeof input !== 'string') {
         throw new Error('Email must be a string');
       }
@@ -114,26 +110,29 @@ const validateInput = (input: any, type: string = 'string', options: StringOptio
 
       // Return sanitized but preserve trimmed value
       return sanitizeString(trimmedEmail);
+    }
 
-    case 'number':
-      if (typeof input === 'string') {
-        input = parseFloat(input);
+    case 'number': {
+      let numInput = input;
+      if (typeof numInput === 'string') {
+        numInput = parseFloat(numInput);
       }
 
-      if (isNaN(input)) {
+      if (isNaN(numInput as number)) {
         throw new Error('Input must be a valid number');
       }
 
       const numberOpts = options as NumberOptions;
-      if (numberOpts.min !== undefined && input < numberOpts.min) {
+      if (numberOpts.min !== undefined && (numInput as number) < numberOpts.min) {
         throw new Error(`Number must be greater than or equal to ${numberOpts.min}`);
       }
 
-      if (numberOpts.max !== undefined && input > numberOpts.max) {
+      if (numberOpts.max !== undefined && (numInput as number) > numberOpts.max) {
         throw new Error(`Number must be less than or equal to ${numberOpts.max}`);
       }
 
-      return input;
+      return numInput;
+    }
 
     default:
       return input;
@@ -145,7 +144,7 @@ const sanitizeString = (str: unknown): string | unknown => {
   if (typeof str !== 'string') {
     return str;
   }
-  
+
   // Remove potentially dangerous characters/patterns
   // Event handlers (onXXX=) should be removed but preserve the = and value
   let result = str
@@ -159,23 +158,23 @@ const sanitizeString = (str: unknown): string | unknown => {
     .replace(/&/g, '&')
     .replace(/"/g, '"')
     .replace(/&#x27;/g, "'");
-  
+
   return result;
 };
 
 // Validate string against a pattern
 const isValidString = (str: string, pattern?: string | RegExp): boolean => {
   if (!pattern) return true;
-  
+
   if (pattern instanceof RegExp) {
     return pattern.test(str);
   }
-  
+
   return new RegExp(pattern).test(str);
 };
 
 // Validate resume data structure
-const validateResumeData = (resumeData: Partial<SimpleResumeData>): boolean => {
+const validateResumeData = (resumeData: Record<string, unknown>): boolean => {
   if (!resumeData) {
     throw new Error('Resume data is required');
   }
@@ -208,8 +207,9 @@ const validateResumeData = (resumeData: Partial<SimpleResumeData>): boolean => {
   // Validate experience entries
   if (resumeData.experience) {
     validateInput(resumeData.experience, 'array', { maxItems: 20, itemType: 'object' });
-    
-    resumeData.experience.forEach((exp, index) => {
+
+    const experience = resumeData.experience as Array<Record<string, unknown>>;
+    experience.forEach((exp) => {
       if (exp.company) {
         validateInput(exp.company, 'string', { maxLength: 200 });
       }
@@ -228,8 +228,9 @@ const validateResumeData = (resumeData: Partial<SimpleResumeData>): boolean => {
   // Validate education entries
   if (resumeData.education) {
     validateInput(resumeData.education, 'array', { maxItems: 10, itemType: 'object' });
-    
-    resumeData.education.forEach((edu, index) => {
+
+    const education = resumeData.education as Array<Record<string, unknown>>;
+    education.forEach((edu) => {
       if (edu.institution) {
         validateInput(edu.institution, 'string', { maxLength: 200 });
       }
@@ -253,8 +254,9 @@ const validateResumeData = (resumeData: Partial<SimpleResumeData>): boolean => {
   // Validate projects
   if (resumeData.projects) {
     validateInput(resumeData.projects, 'array', { maxItems: 20, itemType: 'object' });
-    
-    resumeData.projects.forEach((proj, index) => {
+
+    const projects = resumeData.projects as Array<Record<string, unknown>>;
+    projects.forEach((proj) => {
       if (proj.name) {
         validateInput(proj.name, 'string', { maxLength: 200 });
       }
