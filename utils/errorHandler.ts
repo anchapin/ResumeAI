@@ -151,28 +151,16 @@ class GlobalErrorHandlerService {
           };
         
         case 404:
-          return {
-            type: ErrorType.NOT_FOUND,
-            message: error.message,
-            userMessage: 'The requested item could not be found.',
-            statusCode: status,
-            originalError: error,
-            context: additionalContext,
-            timestamp,
-            id,
-          };
-        
-        case 403:
-          return {
-            type: ErrorType.PERMISSION,
-            message: error.message,
-            userMessage: 'You do not have permission to perform this action.',
-            statusCode: status,
-            originalError: error,
-            context: additionalContext,
-            timestamp,
-            id,
-          };
+           return {
+             type: ErrorType.NOT_FOUND,
+             message: error.message,
+             userMessage: 'The requested item could not be found.',
+             statusCode: status,
+             originalError: error,
+             context: additionalContext,
+             timestamp,
+             id,
+           };
         
         case 408:
         case 504:
