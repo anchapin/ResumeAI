@@ -77,6 +77,81 @@ ignore_missing_imports = True
 - **Test Coverage:** Minimum 60% for backend code
 - **Pre-commit Hooks:** Code quality checks run automatically before each commit
 
+## Pre-Commit Hooks Setup
+
+This project uses **Husky** and **lint-staged** to automatically run code quality checks before each commit.
+
+### Installation
+
+Pre-commit hooks are configured automatically. After cloning, install dependencies:
+
+```bash
+npm install
+```
+
+Husky will automatically set up git hooks.
+
+### What Runs on Commit?
+
+The `.lintstagedrc` file defines what checks run on modified files:
+
+1. **TypeScript/React files** (`.ts`, `.tsx`):
+   - ESLint with `--fix` flag (auto-fixes many issues)
+   - Prettier formatting
+
+2. **Other files** (`.js`, `.json`, `.css`, `.md`):
+   - Prettier formatting
+
+**Note:** Python file testing runs separately in CI/CD pipelines, not in local pre-commit hooks.
+
+### How to Use
+
+Simply commit as normal:
+
+```bash
+git add .
+git commit -m "feat: your changes"
+```
+
+**If hooks fail:**
+
+- Review the error output
+- Fix the issues manually (or ESLint/Prettier may auto-fix)
+- Stage the fixes: `git add .`
+- Retry the commit
+
+**Bypass hooks (not recommended):**
+
+```bash
+git commit --no-verify
+```
+
+### Manual Hook Execution
+
+Run hooks manually without committing:
+
+```bash
+# Run all lint-staged checks
+npx lint-staged
+
+# Run specific checks
+npx eslint . --ext .ts,.tsx --fix
+npx prettier --write .
+
+# Run Python tests (from resume-api directory)
+cd resume-api
+pytest --no-cov -q
+cd ..
+```
+
+### Reinitialize Hooks
+
+If hooks aren't working after cloning:
+
+```bash
+npx husky install
+```
+
 ## Frontend Development
 
 ### Code Style
@@ -129,6 +204,104 @@ pytest --cov --cov-report=html
 # Minimum coverage: 60%
 ```
 
+## Secrets Management
+
+**IMPORTANT:** Never commit secrets, API keys, or sensitive credentials to git.
+
+### For Development
+
+1. **Copy environment template:**
+
+   ```bash
+   cp .env.example .env.local
+   cp resume-api/.env.example resume-api/.env
+   ```
+
+2. **Fill in development secrets:**
+   - Request from tech lead via secure channel
+   - Never share via Slack, email, or chat
+   - Store only in local `.env` files (in .gitignore)
+
+3. **Never commit:**
+   - ❌ API keys or tokens
+   - ❌ Database passwords
+   - ❌ OAuth client secrets
+   - ❌ Private encryption keys
+
+4. **Always use:**
+   - ✅ `.env.local` for development (gitignored)
+   - ✅ GitHub Secrets for CI/CD
+   - ✅ Password manager for team sharing (1Password, Vault)
+
+### Environment Variables
+
+**Frontend (.env.local):**
+
+```bash
+VITE_API_URL=http://127.0.0.1:8000
+RESUMEAI_API_KEY=rai_your_dev_key
+GITHUB_CLIENT_ID=...
+OPENAI_API_KEY=sk-...
+```
+
+**Backend (resume-api/.env):**
+
+```bash
+MASTER_API_KEY=rai_your_dev_key
+SECRET_KEY=your_jwt_secret
+OPENAI_API_KEY=sk-...
+DEBUG=true
+```
+
+See `.env.example` for all available variables and their descriptions.
+
+### Startup Validation
+
+The backend validates required secrets on startup:
+
+```bash
+cd resume-api
+python main.py
+# Output: "Configuration loaded: ..."
+# If missing: "FATAL: Missing required environment variables: ..."
+```
+
+**Required for development:**
+
+- `OPENAI_API_KEY` (or ANTHROPIC_API_KEY or GEMINI_API_KEY)
+- `MASTER_API_KEY` (for local testing)
+
+**Required for production:**
+
+- All of above, plus:
+- `SECRET_KEY`
+- Strong `MASTER_API_KEY`
+- `DEBUG=false`
+
+### Secret Rotation
+
+Production secrets must be rotated every 90 days.
+
+For detailed procedures, see [SECRETS_ROTATION.md](SECRETS_ROTATION.md):
+
+- API key rotation
+- JWT secret rotation
+- OAuth secret rotation
+- Database password rotation
+- Emergency rotation (compromised secrets)
+
+### Reporting Secret Compromises
+
+**If you suspect a secret has been exposed:**
+
+1. **Immediately notify** the security team
+2. **Do NOT** post in public channels or issues
+3. **Revoke** the secret immediately (GitHub Secrets)
+4. **Rotate** to a new secret
+5. **Verify** no unauthorized access in logs
+
+See [SECRETS_MANAGEMENT.md](SECRETS_MANAGEMENT.md#compromised-secret-response) for details.
+
 ## Pull Request Checklist
 
 - [ ] Code passes ESLint + Prettier (frontend)
@@ -138,3 +311,5 @@ pytest --cov --cov-report=html
 - [ ] Commit messages are clear and descriptive
 - [ ] No `console.log()` statements left in production code
 - [ ] No unused variables or imports
+- [ ] **No secrets, API keys, or sensitive data committed**
+- [ ] All environment variables in `.env.example`
