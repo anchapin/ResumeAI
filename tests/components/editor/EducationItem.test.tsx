@@ -31,8 +31,12 @@ describe('EducationItem Component', () => {
     it('should render collapsed state correctly', () => {
       render(<EducationItem {...defaultProps} />);
 
-      expect(screen.getByText('Master of Science')).toBeInTheDocument();
-      expect(screen.getByText('Harvard University | 2018-09 - 2020-05')).toBeInTheDocument();
+      expect(screen.getByTestId('education-institution-edu-1')).toHaveTextContent(
+        'Harvard University',
+      );
+      expect(screen.getByTestId('education-summary-edu-1')).toHaveTextContent(/Master of Science/);
+      expect(screen.getByTestId('education-summary-edu-1')).toHaveTextContent(/Computer Science/);
+      expect(screen.getByTestId('education-summary-edu-1')).toHaveTextContent(/2018-09 - 2020-05/);
       expect(screen.queryAllByDisplayValue('Harvard University')).toHaveLength(0);
     });
 
@@ -54,8 +58,8 @@ describe('EducationItem Component', () => {
     it('should render expand icon in collapsed state', () => {
       render(<EducationItem {...defaultProps} />);
 
-      const expandButton = screen.getByRole('button').closest('div')?.querySelector('button');
-      expect(expandButton).toBeInTheDocument();
+      const expandIcon = screen.getByTestId('education-expand-icon');
+      expect(expandIcon).toBeInTheDocument();
     });
 
     it('should render all input fields when expanded', () => {
@@ -80,7 +84,7 @@ describe('EducationItem Component', () => {
 
       render(<EducationItem {...defaultProps} edu={emptyEducation} isExpanded={true} />);
 
-      expect(screen.getByDisplayValue('')).toBeInTheDocument();
+      expect(screen.getAllByDisplayValue('').length).toBeGreaterThan(0);
     });
   });
 
@@ -90,10 +94,8 @@ describe('EducationItem Component', () => {
       const user = userEvent.setup();
       render(<EducationItem {...defaultProps} onToggleExpand={onToggleExpand} />);
 
-      const card = screen.getByText('Master of Science').closest('div');
-      if (card?.parentElement) {
-        await user.click(card.parentElement);
-      }
+      const expandBtn = screen.getByTestId('education-expand-btn');
+      await user.click(expandBtn);
 
       expect(onToggleExpand).toHaveBeenCalledWith('edu-1');
     });
@@ -120,13 +122,17 @@ describe('EducationItem Component', () => {
   });
 
   describe('Delete Operations', () => {
-    it('should call onDelete when delete button is clicked', async () => {
+    it('should call onDelete when delete button is clicked (with confirmation)', async () => {
       const onDelete = vi.fn();
       const user = userEvent.setup();
       render(<EducationItem {...defaultProps} onDelete={onDelete} />);
 
       const deleteBtn = screen.getByRole('button', { name: /delete/i });
       await user.click(deleteBtn);
+
+      // Click confirm button
+      const confirmBtn = screen.getByRole('button', { name: /confirm delete/i });
+      await user.click(confirmBtn);
 
       expect(onDelete).toHaveBeenCalledWith('edu-1');
     });
@@ -293,7 +299,10 @@ describe('EducationItem Component', () => {
     it('should update when education data changes', () => {
       const { rerender } = render(<EducationItem {...defaultProps} />);
 
-      expect(screen.getByText('Harvard University | 2018-09 - 2020-05')).toBeInTheDocument();
+      expect(screen.getByTestId('education-institution-edu-1')).toHaveTextContent(
+        'Harvard University',
+      );
+      expect(screen.getByTestId('education-summary-edu-1')).toHaveTextContent(/2018-09 - 2020-05/);
 
       const updatedEducation = {
         ...mockEducation,
@@ -304,7 +313,10 @@ describe('EducationItem Component', () => {
 
       rerender(<EducationItem {...defaultProps} edu={updatedEducation} />);
 
-      expect(screen.getByText('Stanford University | 2019-01 - 2021-05')).toBeInTheDocument();
+      expect(screen.getByTestId('education-institution-edu-1')).toHaveTextContent(
+        'Stanford University',
+      );
+      expect(screen.getByTestId('education-summary-edu-1')).toHaveTextContent(/2019-01 - 2021-05/);
     });
 
     it('should update ID when education ID changes', () => {
@@ -313,11 +325,11 @@ describe('EducationItem Component', () => {
 
       const { rerender } = render(<EducationItem {...defaultProps} edu={eduOne} />);
 
-      expect(screen.getByText('Master of Science')).toBeInTheDocument();
+      expect(screen.getByTestId('education-institution-edu-1')).toBeInTheDocument();
 
       rerender(<EducationItem {...defaultProps} edu={eduTwo} />);
 
-      expect(screen.getByText('Master of Science')).toBeInTheDocument();
+      expect(screen.getByTestId('education-institution-edu-2')).toBeInTheDocument();
     });
   });
 
@@ -436,11 +448,11 @@ describe('EducationItem Component', () => {
     it('should render correctly on updates', () => {
       const { rerender } = render(<EducationItem {...defaultProps} />);
 
-      expect(screen.getByText('Master of Science')).toBeInTheDocument();
+      expect(screen.getByTestId('education-summary-edu-1')).toHaveTextContent(/Master of Science/);
 
       rerender(<EducationItem {...defaultProps} />);
 
-      expect(screen.getByText('Master of Science')).toBeInTheDocument();
+      expect(screen.getByTestId('education-summary-edu-1')).toHaveTextContent(/Master of Science/);
     });
 
     it('should not re-render unnecessarily with same props', () => {
@@ -498,8 +510,8 @@ describe('EducationItem Component', () => {
         </>,
       );
 
-      expect(screen.getByText('Harvard University | 2018-09 - 2020-05')).toBeInTheDocument();
-      expect(screen.getByText('MIT | 2018-09 - 2020-05')).toBeInTheDocument();
+      expect(screen.getByText('Harvard University')).toBeInTheDocument();
+      expect(screen.getByText('MIT')).toBeInTheDocument();
     });
 
     it('should call correct callbacks for each instance', async () => {
@@ -519,6 +531,10 @@ describe('EducationItem Component', () => {
 
       const deleteButtons = screen.getAllByRole('button', { name: /delete/i });
       await user.click(deleteButtons[0]);
+
+      // Click confirm button
+      const confirmBtn = screen.getByRole('button', { name: /confirm delete/i });
+      await user.click(confirmBtn);
 
       expect(onDelete1).toHaveBeenCalledWith('edu-1');
       expect(onDelete2).not.toHaveBeenCalled();

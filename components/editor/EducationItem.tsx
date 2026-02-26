@@ -32,6 +32,7 @@ const EducationItem = React.memo(
 
     return (
       <div
+        data-testid={`education-item-${edu.id}`}
         className={`bg-white rounded-xl border transition-all duration-300 overflow-hidden ${
           isExpanded
             ? 'border-primary-200 shadow-md ring-1 ring-primary-100'
@@ -41,6 +42,7 @@ const EducationItem = React.memo(
         {/* Card Header */}
         <div className="flex items-start">
           <button
+            data-testid="education-expand-btn"
             className="flex-1 p-6 flex items-center gap-4 text-left hover:bg-slate-50 focus-visible:outline-none focus-visible:bg-slate-50 transition-colors group"
             onClick={() => onToggleExpand(edu.id)}
             aria-expanded={isExpanded}
@@ -48,19 +50,29 @@ const EducationItem = React.memo(
             aria-label={`Expand details for ${edu.institution}`}
           >
             <div
+              data-testid="education-expand-icon"
               className={`p-1 rounded-full transition-transform duration-200 ${isExpanded ? 'rotate-180 bg-slate-100 text-slate-900' : 'text-slate-400 group-hover:bg-slate-100 group-hover:text-slate-600'}`}
             >
               <span className="material-symbols-outlined">expand_more</span>
             </div>
             <div>
-              <h3 className="font-bold text-slate-900 text-lg">{edu.institution}</h3>
-              <p className="text-sm text-slate-500 font-medium">
+              <h3
+                data-testid={`education-institution-${edu.id}`}
+                className="font-bold text-slate-900 text-lg"
+              >
+                {edu.institution}
+              </h3>
+              <p
+                data-testid={`education-summary-${edu.id}`}
+                className="text-sm text-slate-500 font-medium"
+              >
                 {edu.studyType} in {edu.area} | {edu.startDate} - {edu.endDate}
               </p>
             </div>
           </button>
           <div className="p-6 pl-0 flex items-center gap-2">
             <button
+              data-testid="education-edit-btn"
               className="p-2 text-slate-400 hover:bg-slate-50 hover:text-slate-700 rounded-lg"
               aria-label="Edit education"
             >
@@ -71,6 +83,7 @@ const EducationItem = React.memo(
               <div className="flex items-center bg-slate-50 rounded-lg p-0.5 border border-slate-200 animate-in fade-in zoom-in duration-200">
                 <button
                   ref={confirmBtnRef}
+                  data-testid="education-confirm-delete-btn"
                   onClick={(e) => {
                     e.stopPropagation();
                     onDelete(edu.id);
@@ -83,6 +96,7 @@ const EducationItem = React.memo(
                 </button>
                 <div className="w-px h-4 bg-slate-200 mx-0.5"></div>
                 <button
+                  data-testid="education-cancel-delete-btn"
                   onClick={(e) => {
                     e.stopPropagation();
                     setIsDeleting(false);
@@ -96,6 +110,7 @@ const EducationItem = React.memo(
             ) : (
               <button
                 ref={deleteBtnRef}
+                data-testid="education-delete-btn"
                 onClick={(e) => {
                   e.stopPropagation();
                   setIsDeleting(true);
@@ -126,6 +141,7 @@ const EducationItem = React.memo(
                   Institution
                 </label>
                 <input
+                  data-testid="education-input-institution"
                   id={`edu-institution-${edu.id}`}
                   type="text"
                   value={edu.institution}
@@ -141,6 +157,7 @@ const EducationItem = React.memo(
                   Degree Type
                 </label>
                 <input
+                  data-testid="education-input-studyType"
                   id={`edu-studyType-${edu.id}`}
                   type="text"
                   value={edu.studyType}
@@ -153,6 +170,7 @@ const EducationItem = React.memo(
                   Field of Study
                 </label>
                 <input
+                  data-testid="education-input-area"
                   id={`edu-area-${edu.id}`}
                   type="text"
                   value={edu.area}
@@ -169,6 +187,7 @@ const EducationItem = React.memo(
                   Start Date
                 </label>
                 <input
+                  data-testid="education-input-startDate"
                   id={`edu-startDate-${edu.id}`}
                   type="text"
                   value={edu.startDate}
@@ -184,6 +203,7 @@ const EducationItem = React.memo(
                   End Date
                 </label>
                 <input
+                  data-testid="education-input-endDate"
                   id={`edu-endDate-${edu.id}`}
                   type="text"
                   value={edu.endDate}
