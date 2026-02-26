@@ -20,8 +20,18 @@ import {
   OfferComparison,
 } from '../types';
 import { fetchWithTimeout, TIMEOUT_CONFIG } from './fetch-timeout';
+import { fetchWithRetry, RetryConfig } from './retryLogic';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
+
+// Default retry configuration for all API calls
+const DEFAULT_RETRY_CONFIG: RetryConfig = {
+  maxRetries: 3,
+  initialDelay: 100,
+  maxDelay: 10000,
+  backoffMultiplier: 2,
+  jitterFraction: 0.1,
+};
 
 function getAPIKey(): string | null {
   return localStorage.getItem('RESUMEAI_API_KEY');
@@ -89,7 +99,7 @@ export async function tailorResume(resumeData: ResumeDataForAPI, jobDescription:
 }
 
 export async function createResume(title: string, data: ResumeData, tags: string[] = []): Promise<any> {
-  const response = await fetch(`${API_URL}/resumes`, { method: 'POST', headers: getHeaders(), body: JSON.stringify({ title, data, tags }) });
+  const response = await fetchWithRetry(`${API_URL}/resumes`, { method: 'POST', headers: getHeaders(), body: JSON.stringify({ title, data, tags }) }, DEFAULT_RETRY_CONFIG);
   if (!response.ok) throw new Error('Failed to create resume');
   return response.json();
 }
@@ -100,71 +110,71 @@ export async function listResumes(filters?: { search?: string; tag?: string; ski
   if (filters?.tag) params.append('tag', filters.tag);
   if (filters?.skip !== undefined) params.append('skip', filters.skip.toString());
   if (filters?.limit !== undefined) params.append('limit', filters.limit.toString());
-  const response = await fetch(`${API_URL}/resumes?${params}`, { headers: getHeaders() });
+  const response = await fetchWithRetry(`${API_URL}/resumes?${params}`, { headers: getHeaders() }, DEFAULT_RETRY_CONFIG);
   if (!response.ok) throw new Error('Failed to list resumes');
   return response.json();
 }
 
 export async function getResume(resumeId: number): Promise<any> {
-  const response = await fetch(`${API_URL}/resumes/${resumeId}`, { headers: getHeaders() });
+  const response = await fetchWithRetry(`${API_URL}/resumes/${resumeId}`, { headers: getHeaders() }, DEFAULT_RETRY_CONFIG);
   if (!response.ok) throw new Error('Failed to get resume');
   return response.json();
 }
 
 export async function updateResume(resumeId: number, updates: { title?: string; data?: ResumeData; tags?: string[]; change_description?: string; }): Promise<any> {
-  const response = await fetch(`${API_URL}/resumes/${resumeId}`, { method: 'PUT', headers: getHeaders(), body: JSON.stringify(updates) });
+  const response = await fetchWithRetry(`${API_URL}/resumes/${resumeId}`, { method: 'PUT', headers: getHeaders(), body: JSON.stringify(updates) }, DEFAULT_RETRY_CONFIG);
   if (!response.ok) throw new Error('Failed to update resume');
   return response.json();
 }
 
 export async function deleteResume(resumeId: number): Promise<void> {
-  const response = await fetch(`${API_URL}/resumes/${resumeId}`, { method: 'DELETE', headers: getHeaders() });
+  const response = await fetchWithRetry(`${API_URL}/resumes/${resumeId}`, { method: 'DELETE', headers: getHeaders() }, DEFAULT_RETRY_CONFIG);
   if (!response.ok) throw new Error('Failed to delete resume');
 }
 
 export async function listResumeVersions(resumeId: number): Promise<ResumeVersion[]> {
-  const response = await fetch(`${API_URL}/resumes/${resumeId}/versions`, { headers: getHeaders() });
+  const response = await fetchWithRetry(`${API_URL}/resumes/${resumeId}/versions`, { headers: getHeaders() }, DEFAULT_RETRY_CONFIG);
   if (!response.ok) throw new Error('Failed to list versions');
   return response.json();
 }
 
 export async function getResumeVersion(resumeId: number, versionId: number): Promise<ResumeVersion> {
-  const response = await fetch(`${API_URL}/resumes/${resumeId}/versions/${versionId}`, { headers: getHeaders() });
+  const response = await fetchWithRetry(`${API_URL}/resumes/${resumeId}/versions/${versionId}`, { headers: getHeaders() }, DEFAULT_RETRY_CONFIG);
   if (!response.ok) throw new Error('Failed to get version');
   return response.json();
 }
 
 export async function restoreResumeVersion(resumeId: number, versionId: number): Promise<any> {
-  const response = await fetch(`${API_URL}/resumes/${resumeId}/versions/${versionId}/restore`, { method: 'POST', headers: getHeaders() });
+  const response = await fetchWithRetry(`${API_URL}/resumes/${resumeId}/versions/${versionId}/restore`, { method: 'POST', headers: getHeaders() }, DEFAULT_RETRY_CONFIG);
   if (!response.ok) throw new Error('Failed to restore version');
   return response.json();
 }
 
 export async function listComments(resumeId: number): Promise<Comment[]> {
-  const response = await fetch(`${API_URL}/resumes/${resumeId}/comments`, { headers: getHeaders() });
+  const response = await fetchWithRetry(`${API_URL}/resumes/${resumeId}/comments`, { headers: getHeaders() }, DEFAULT_RETRY_CONFIG);
   if (!response.ok) throw new Error('Failed to list comments');
   return response.json();
 }
 
 export async function createComment(resumeId: number, comment: { author_name: string; author_email: string; content: string; section?: string; }): Promise<Comment> {
-  const response = await fetch(`${API_URL}/resumes/${resumeId}/comments`, { method: 'POST', headers: getHeaders(), body: JSON.stringify(comment) });
+  const response = await fetchWithRetry(`${API_URL}/resumes/${resumeId}/comments`, { method: 'POST', headers: getHeaders(), body: JSON.stringify(comment) }, DEFAULT_RETRY_CONFIG);
   if (!response.ok) throw new Error('Failed to create comment');
   return response.json();
 }
 
 export async function resolveComment(commentId: number): Promise<Comment> {
-  const response = await fetch(`${API_URL}/comments/${commentId}/resolve`, { method: 'PATCH', headers: getHeaders() });
+  const response = await fetchWithRetry(`${API_URL}/comments/${commentId}/resolve`, { method: 'PATCH', headers: getHeaders() }, DEFAULT_RETRY_CONFIG);
   if (!response.ok) throw new Error('Failed to resolve comment');
   return response.json();
 }
 
 export async function deleteComment(commentId: number): Promise<void> {
-  const response = await fetch(`${API_URL}/comments/${commentId}`, { method: 'DELETE', headers: getHeaders() });
+  const response = await fetchWithRetry(`${API_URL}/comments/${commentId}`, { method: 'DELETE', headers: getHeaders() }, DEFAULT_RETRY_CONFIG);
   if (!response.ok) throw new Error('Failed to delete comment');
 }
 
 export async function shareResume(resumeId: number, options: { permissions?: 'view' | 'comment' | 'edit'; expires_at?: string; max_views?: number; password?: string; }): Promise<ShareLink> {
-  const response = await fetch(`${API_URL}/resumes/${resumeId}/share`, { method: 'POST', headers: getHeaders(), body: JSON.stringify(options) });
+  const response = await fetchWithRetry(`${API_URL}/resumes/${resumeId}/share`, { method: 'POST', headers: getHeaders(), body: JSON.stringify(options) }, DEFAULT_RETRY_CONFIG);
   if (!response.ok) throw new Error('Failed to share resume');
   return response.json();
 }
@@ -172,25 +182,25 @@ export async function shareResume(resumeId: number, options: { permissions?: 'vi
 export async function accessSharedResume(shareToken: string, password?: string): Promise<any> {
   const params = new URLSearchParams();
   if (password) params.append('password', password);
-  const response = await fetch(`${API_URL}/share/${shareToken}?${params}`);
+  const response = await fetchWithRetry(`${API_URL}/share/${shareToken}?${params}`, DEFAULT_RETRY_CONFIG);
   if (!response.ok) throw new Error('Failed to access shared resume');
   return response.json();
 }
 
 export async function bulkOperation(resumeIds: number[], operation: 'delete' | 'export' | 'duplicate' | 'tag', options?: { tags?: string[]; export_format?: string; }): Promise<{ successful: number[]; failed: Array<{ id: number; error: string }> }> {
-  const response = await fetch(`${API_URL}/resumes/bulk`, { method: 'POST', headers: getHeaders(), body: JSON.stringify({ resume_ids: resumeIds, operation, tags: options?.tags, export_format: options?.export_format }) });
+  const response = await fetchWithRetry(`${API_URL}/resumes/bulk`, { method: 'POST', headers: getHeaders(), body: JSON.stringify({ resume_ids: resumeIds, operation, tags: options?.tags, export_format: options?.export_format }) }, DEFAULT_RETRY_CONFIG);
   if (!response.ok) throw new Error('Failed to perform bulk operation');
   return response.json();
 }
 
 export async function getUserSettings(userIdentifier: string): Promise<UserSettings> {
-  const response = await fetch(`${API_URL}/settings/${userIdentifier}`, { headers: getHeaders() });
+  const response = await fetchWithRetry(`${API_URL}/settings/${userIdentifier}`, { headers: getHeaders() }, DEFAULT_RETRY_CONFIG);
   if (!response.ok) throw new Error('Failed to get settings');
   return response.json();
 }
 
 export async function updateUserSettings(userIdentifier: string, settings: Partial<UserSettings>): Promise<UserSettings> {
-  const response = await fetch(`${API_URL}/settings/${userIdentifier}`, { method: 'PUT', headers: getHeaders(), body: JSON.stringify(settings) });
+  const response = await fetchWithRetry(`${API_URL}/settings/${userIdentifier}`, { method: 'PUT', headers: getHeaders(), body: JSON.stringify(settings) }, DEFAULT_RETRY_CONFIG);
   if (!response.ok) throw new Error('Failed to update settings');
   return response.json();
 }
@@ -265,77 +275,77 @@ export interface TestWebhookResponse {
 }
 
 export async function createWebhook(params: WebhookCreateParams): Promise<Webhook> {
-  const response = await fetch(`${API_URL}/v1/webhooks`, {
+  const response = await fetchWithRetry(`${API_URL}/v1/webhooks`, {
     method: 'POST',
     headers: { ...getHeaders(), 'Content-Type': 'application/json' },
     body: JSON.stringify(params),
-  });
+  }, DEFAULT_RETRY_CONFIG);
   if (!response.ok) { const error = await response.json().catch(() => ({ detail: 'Failed to create webhook' })); throw new Error(error.detail || 'Failed to create webhook'); }
   return response.json();
 }
 
 export async function listWebhooks(): Promise<Webhook[]> {
-  const response = await fetch(`${API_URL}/v1/webhooks`, { headers: getHeaders() });
+  const response = await fetchWithRetry(`${API_URL}/v1/webhooks`, { headers: getHeaders() }, DEFAULT_RETRY_CONFIG);
   if (!response.ok) throw new Error('Failed to list webhooks');
   const data = await response.json();
   return data.webhooks || data;
 }
 
 export async function getWebhook(id: number): Promise<Webhook> {
-  const response = await fetch(`${API_URL}/v1/webhooks/${id}`, { headers: getHeaders() });
+  const response = await fetchWithRetry(`${API_URL}/v1/webhooks/${id}`, { headers: getHeaders() }, DEFAULT_RETRY_CONFIG);
   if (!response.ok) throw new Error('Failed to get webhook');
   return response.json();
 }
 
 export async function updateWebhook(id: number, params: WebhookUpdateParams): Promise<Webhook> {
-  const response = await fetch(`${API_URL}/v1/webhooks/${id}`, {
+  const response = await fetchWithRetry(`${API_URL}/v1/webhooks/${id}`, {
     method: 'PUT',
     headers: { ...getHeaders(), 'Content-Type': 'application/json' },
     body: JSON.stringify(params),
-  });
+  }, DEFAULT_RETRY_CONFIG);
   if (!response.ok) { const error = await response.json().catch(() => ({ detail: 'Failed to update webhook' })); throw new Error(error.detail || 'Failed to update webhook'); }
   return response.json();
 }
 
 export async function deleteWebhook(id: number): Promise<void> {
-  const response = await fetch(`${API_URL}/v1/webhooks/${id}`, {
+  const response = await fetchWithRetry(`${API_URL}/v1/webhooks/${id}`, {
     method: 'DELETE',
     headers: getHeaders(),
-  });
+  }, DEFAULT_RETRY_CONFIG);
   if (!response.ok) throw new Error('Failed to delete webhook');
 }
 
 export async function testWebhook(id: number): Promise<TestWebhookResponse> {
-  const response = await fetch(`${API_URL}/v1/webhooks/${id}/test`, {
+  const response = await fetchWithRetry(`${API_URL}/v1/webhooks/${id}/test`, {
     method: 'POST',
     headers: getHeaders(),
-  });
+  }, DEFAULT_RETRY_CONFIG);
   if (!response.ok) { const error = await response.json().catch(() => ({ detail: 'Failed to test webhook' })); throw new Error(error.detail || 'Failed to test webhook'); }
   return response.json();
 }
 
 export async function getWebhookDeliveries(id: number): Promise<WebhookDelivery[]> {
-  const response = await fetch(`${API_URL}/v1/webhooks/${id}/deliveries`, { headers: getHeaders() });
+  const response = await fetchWithRetry(`${API_URL}/v1/webhooks/${id}/deliveries`, { headers: getHeaders() }, DEFAULT_RETRY_CONFIG);
   if (!response.ok) throw new Error('Failed to get webhook deliveries');
   const data = await response.json();
   return data.deliveries || data;
 }
 
 export async function retryWebhookDelivery(webhookId: number, deliveryId: number): Promise<WebhookDelivery> {
-  const response = await fetch(`${API_URL}/v1/webhooks/${webhookId}/deliveries/${deliveryId}/retry`, {
+  const response = await fetchWithRetry(`${API_URL}/v1/webhooks/${webhookId}/deliveries/${deliveryId}/retry`, {
     method: 'POST',
     headers: getHeaders(),
-  });
+  }, DEFAULT_RETRY_CONFIG);
   if (!response.ok) throw new Error('Failed to retry webhook delivery');
   return response.json();
 }
 
 // LinkedIn Functions (Real Implementation)
 export async function connectLinkedIn(): Promise<string> {
-  const response = await fetch(`${API_URL}/api/linkedin/oauth/start`, {
+  const response = await fetchWithRetry(`${API_URL}/api/linkedin/oauth/start`, {
     method: 'GET',
     headers: getHeaders(),
-  });
+  }, DEFAULT_RETRY_CONFIG);
 
   if (!response.ok) {
     throw new Error(`Failed to initiate LinkedIn OAuth: ${response.statusText}`);
@@ -346,11 +356,11 @@ export async function connectLinkedIn(): Promise<string> {
 }
 
 export async function handleLinkedInCallback(code: string, state: string): Promise<LinkedInProfile> {
-  const response = await fetch(`${API_URL}/api/linkedin/oauth/callback`, {
+  const response = await fetchWithRetry(`${API_URL}/api/linkedin/oauth/callback`, {
     method: 'POST',
     headers: getHeaders(),
     body: JSON.stringify({ code, state }),
-  });
+  }, DEFAULT_RETRY_CONFIG);
 
   if (!response.ok) {
     const errorData = await response.json();
@@ -374,13 +384,13 @@ export async function importLinkedInProfile(): Promise<LinkedInProfile> {
     throw new Error('No LinkedIn access token found. Please authenticate first.');
   }
 
-  const response = await fetch(`${API_URL}/api/linkedin/profile`, {
+  const response = await fetchWithRetry(`${API_URL}/api/linkedin/profile`, {
     method: 'GET',
     headers: {
       ...getHeaders(),
       'Authorization': `Bearer ${token}`,
     },
-  });
+  }, DEFAULT_RETRY_CONFIG);
 
   if (!response.ok) {
     throw new Error(`Failed to fetch LinkedIn profile: ${response.statusText}`);
@@ -390,10 +400,10 @@ export async function importLinkedInProfile(): Promise<LinkedInProfile> {
 }
 
 export async function fetchGitHubRepositories(): Promise<GitHubRepository[]> {
-  const response = await fetch(`${API_URL}/api/github/repositories`, {
+  const response = await fetchWithRetry(`${API_URL}/api/github/repositories`, {
     method: 'GET',
     headers: getHeaders(),
-  });
+  }, DEFAULT_RETRY_CONFIG);
 
   if (!response.ok) {
     console.warn(`Failed to fetch GitHub repositories: ${response.statusText}`);
@@ -410,10 +420,10 @@ export async function disconnectLinkedIn(): Promise<void> {
   
   // Optionally notify backend to revoke token
   try {
-    await fetch(`${API_URL}/api/linkedin/disconnect`, {
+    await fetchWithRetry(`${API_URL}/api/linkedin/disconnect`, {
       method: 'POST',
       headers: getHeaders(),
-    });
+    }, DEFAULT_RETRY_CONFIG);
   } catch (error) {
     console.warn('Failed to notify backend of disconnect:', error);
   }
@@ -544,11 +554,11 @@ export interface UpcomingEvent {
 // Job Application API Functions
 
 export async function createJobApplication(app: JobApplicationCreate): Promise<JobApplication> {
-  const response = await fetch(`${API_URL}/v1/applications`, {
+  const response = await fetchWithRetry(`${API_URL}/v1/applications`, {
     method: 'POST',
     headers: { ...getHeaders(), 'Content-Type': 'application/json' },
     body: JSON.stringify(app),
-  });
+  }, DEFAULT_RETRY_CONFIG);
   if (!response.ok) {
     const error = await response.json().catch(() => ({ detail: 'Failed to create application' }));
     throw new Error(error.detail || 'Failed to create application');
@@ -562,52 +572,52 @@ export async function listJobApplications(status?: ApplicationStatus, limit = 50
   params.append('limit', limit.toString());
   params.append('offset', offset.toString());
   
-  const response = await fetch(`${API_URL}/v1/applications?${params}`, { headers: getHeaders() });
+  const response = await fetchWithRetry(`${API_URL}/v1/applications?${params}`, { headers: getHeaders() }, DEFAULT_RETRY_CONFIG);
   if (!response.ok) throw new Error('Failed to list applications');
   return response.json();
 }
 
 export async function getJobApplication(id: number): Promise<JobApplication> {
-  const response = await fetch(`${API_URL}/v1/applications/${id}`, { headers: getHeaders() });
+  const response = await fetchWithRetry(`${API_URL}/v1/applications/${id}`, { headers: getHeaders() }, DEFAULT_RETRY_CONFIG);
   if (!response.ok) throw new Error('Failed to get application');
   return response.json();
 }
 
 export async function updateJobApplication(id: number, updates: JobApplicationUpdate): Promise<JobApplication> {
-  const response = await fetch(`${API_URL}/v1/applications/${id}`, {
+  const response = await fetchWithRetry(`${API_URL}/v1/applications/${id}`, {
     method: 'PUT',
     headers: { ...getHeaders(), 'Content-Type': 'application/json' },
     body: JSON.stringify(updates),
-  });
+  }, DEFAULT_RETRY_CONFIG);
   if (!response.ok) throw new Error('Failed to update application');
   return response.json();
 }
 
 export async function deleteJobApplication(id: number): Promise<void> {
-  const response = await fetch(`${API_URL}/v1/applications/${id}`, { method: 'DELETE', headers: getHeaders() });
+  const response = await fetchWithRetry(`${API_URL}/v1/applications/${id}`, { method: 'DELETE', headers: getHeaders() }, DEFAULT_RETRY_CONFIG);
   if (!response.ok) throw new Error('Failed to delete application');
 }
 
 export async function getApplicationStats(days = 30): Promise<ApplicationStats> {
-  const response = await fetch(`${API_URL}/v1/applications/analytics/stats?days=${days}`, { headers: getHeaders() });
+  const response = await fetchWithRetry(`${API_URL}/v1/applications/analytics/stats?days=${days}`, { headers: getHeaders() }, DEFAULT_RETRY_CONFIG);
   if (!response.ok) throw new Error('Failed to get application stats');
   return response.json();
 }
 
 export async function getApplicationFunnel(days = 30): Promise<ApplicationFunnel> {
-  const response = await fetch(`${API_URL}/v1/applications/analytics/funnel?days=${days}`, { headers: getHeaders() });
+  const response = await fetchWithRetry(`${API_URL}/v1/applications/analytics/funnel?days=${days}`, { headers: getHeaders() }, DEFAULT_RETRY_CONFIG);
   if (!response.ok) throw new Error('Failed to get application funnel');
   return response.json();
 }
 
 export async function getApplicationTimeline(days = 30): Promise<ApplicationTimeline> {
-  const response = await fetch(`${API_URL}/v1/applications/analytics/timeline?days=${days}`, { headers: getHeaders() });
+  const response = await fetchWithRetry(`${API_URL}/v1/applications/analytics/timeline?days=${days}`, { headers: getHeaders() }, DEFAULT_RETRY_CONFIG);
   if (!response.ok) throw new Error('Failed to get application timeline');
   return response.json();
 }
 
 export async function getUpcomingEvents(days = 7): Promise<UpcomingEvent[]> {
-  const response = await fetch(`${API_URL}/v1/applications/analytics/upcoming?days=${days}`, { headers: getHeaders() });
+  const response = await fetchWithRetry(`${API_URL}/v1/applications/analytics/upcoming?days=${days}`, { headers: getHeaders() }, DEFAULT_RETRY_CONFIG);
   if (!response.ok) throw new Error('Failed to get upcoming events');
   const data = await response.json();
   return data.events || [];
