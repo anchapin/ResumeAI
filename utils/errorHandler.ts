@@ -126,11 +126,22 @@ class GlobalErrorHandlerService {
           };
         
         case 401:
-        case 403:
           return {
             type: ErrorType.AUTH,
             message: error.message,
             userMessage: 'Your session has expired. Please log in again.',
+            statusCode: status,
+            originalError: error,
+            context: additionalContext,
+            timestamp,
+            id,
+          };
+        
+        case 403:
+          return {
+            type: ErrorType.PERMISSION,
+            message: error.message,
+            userMessage: 'You do not have permission to perform this action.',
             statusCode: status,
             originalError: error,
             context: additionalContext,
