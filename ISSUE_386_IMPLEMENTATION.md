@@ -78,7 +78,7 @@ The API client (`utils/api-client.ts`) uses timeout protection for all operation
 - Token management with timeout scenarios
 
 ### Backend Tests
-✅ **`resume-api/tests/test_timeout_middleware.py`** (+ integration tests)
+✅ **`resume-api/tests/test_timeout_middleware.py`**
 - Timeout enforcement
 - Extended timeouts for long endpoints
 - 504 response on timeout
