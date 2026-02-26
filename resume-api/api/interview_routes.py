@@ -258,7 +258,7 @@ Respond with only valid JSON, no markdown formatting.
 @router.post("/generate-questions", response_model=GenerateQuestionsResponse)
 async def generate_interview_questions(
     request: GenerateQuestionsRequest,
-    api_key: AuthorizedAPIKey = Depends(),
+    api_key: AuthorizedAPIKey,
 ) -> GenerateQuestionsResponse:
     """
     Generate interview questions based on job title, company, and difficulty.
@@ -318,7 +318,7 @@ async def generate_interview_questions(
 @router.post("/submit-answer")
 async def submit_interview_answer(
     request: SubmitAnswerRequest,
-    api_key: AuthorizedAPIKey = Depends(),
+    api_key: AuthorizedAPIKey,
 ) -> Dict[str, Any]:
     """
     Submit an answer to an interview question.
@@ -400,7 +400,7 @@ async def submit_interview_answer(
 @router.get("/session/{session_id}")
 async def get_session(
     session_id: str,
-    api_key: AuthorizedAPIKey = Depends(),
+    api_key: AuthorizedAPIKey,
 ) -> InterviewSession:
     """
     Get details of an interview session.
@@ -425,7 +425,7 @@ async def get_session(
 @router.post("/session/{session_id}/complete")
 async def complete_session(
     session_id: str,
-    api_key: AuthorizedAPIKey = Depends(),
+    api_key: AuthorizedAPIKey,
 ) -> Dict[str, Any]:
     """
     Mark an interview session as completed.
@@ -461,7 +461,7 @@ async def complete_session(
 
 @router.get("/history")
 async def get_session_history(
-    api_key: AuthorizedAPIKey = Depends(),
+    api_key: AuthorizedAPIKey,
 ) -> SessionHistoryResponse:
     """
     Get the user's interview session history.
@@ -494,7 +494,7 @@ async def get_session_history(
 @router.post("/feedback")
 async def get_answer_feedback(
     request: GetFeedbackRequest,
-    api_key: AuthorizedAPIKey = Depends(),
+    api_key: AuthorizedAPIKey,
 ) -> InterviewFeedback:
     """
     Get AI feedback on an interview answer.

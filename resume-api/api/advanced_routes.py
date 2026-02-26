@@ -67,7 +67,7 @@ router = APIRouter()
 async def create_resume(
     request: CreateResumeRequest,
     db: AsyncSession = Depends(get_db),
-    auth: AuthorizedAPIKey = Depends(),
+    auth: AuthorizedAPIKey,
 ):
     """
     Create a new resume with initial version.
@@ -140,7 +140,7 @@ async def list_resumes(
     search: Optional[str] = Query(None, description="Search by title"),
     tag: Optional[str] = Query(None, description="Filter by tag"),
     db: AsyncSession = Depends(get_db),
-    auth: AuthorizedAPIKey = Depends(),
+    auth: AuthorizedAPIKey,
 ):
     """
     List all resumes with optional filtering.
@@ -188,7 +188,7 @@ async def list_resumes(
 async def get_resume(
     resume_id: int,
     db: AsyncSession = Depends(get_db),
-    auth: AuthorizedAPIKey = Depends(),
+    auth: AuthorizedAPIKey,
 ):
     """
     Get a specific resume by ID.
@@ -237,7 +237,7 @@ async def update_resume(
     resume_id: int,
     request: UpdateResumeRequest,
     db: AsyncSession = Depends(get_db),
-    auth: AuthorizedAPIKey = Depends(),
+    auth: AuthorizedAPIKey,
 ):
     """
     Update a resume and create a new version.
@@ -324,7 +324,7 @@ async def update_resume(
 async def delete_resume(
     resume_id: int,
     db: AsyncSession = Depends(get_db),
-    auth: AuthorizedAPIKey = Depends(),
+    auth: AuthorizedAPIKey,
 ):
     """Delete a resume and all its versions."""
     try:
@@ -362,7 +362,7 @@ async def delete_resume(
 async def list_resume_versions(
     resume_id: int,
     db: AsyncSession = Depends(get_db),
-    auth: AuthorizedAPIKey = Depends(),
+    auth: AuthorizedAPIKey,
 ):
     """
     List all versions of a resume.
@@ -417,7 +417,7 @@ async def get_resume_version(
     resume_id: int,
     version_id: int,
     db: AsyncSession = Depends(get_db),
-    auth: AuthorizedAPIKey = Depends(),
+    auth: AuthorizedAPIKey,
 ):
     """
     Get a specific version of a resume.
@@ -467,7 +467,7 @@ async def restore_resume_version(
     resume_id: int,
     version_id: int,
     db: AsyncSession = Depends(get_db),
-    auth: AuthorizedAPIKey = Depends(),
+    auth: AuthorizedAPIKey,
 ):
     """
     Restore a resume to a previous version.
@@ -558,7 +558,7 @@ async def restore_resume_version(
 async def list_comments(
     resume_id: int,
     db: AsyncSession = Depends(get_db),
-    auth: AuthorizedAPIKey = Depends(),
+    auth: AuthorizedAPIKey,
 ):
     """List all comments for a resume."""
     try:
@@ -613,7 +613,7 @@ async def create_comment(
     resume_id: int,
     request: CommentRequest,
     db: AsyncSession = Depends(get_db),
-    auth: AuthorizedAPIKey = Depends(),
+    auth: AuthorizedAPIKey,
 ):
     """Add a comment to a resume."""
     try:
@@ -668,7 +668,7 @@ async def create_comment(
 async def resolve_comment(
     comment_id: int,
     db: AsyncSession = Depends(get_db),
-    auth: AuthorizedAPIKey = Depends(),
+    auth: AuthorizedAPIKey,
 ):
     """Mark a comment as resolved."""
     try:
@@ -718,7 +718,7 @@ async def share_resume(
     resume_id: int,
     request: ShareResumeRequest,
     db: AsyncSession = Depends(get_db),
-    auth: AuthorizedAPIKey = Depends(),
+    auth: AuthorizedAPIKey,
 ):
     """
     Create a shareable link for a resume.
@@ -908,7 +908,7 @@ async def access_shared_resume(
 async def bulk_operations(
     request: BulkOperationRequest,
     db: AsyncSession = Depends(get_db),
-    auth: AuthorizedAPIKey = Depends(),
+    auth: AuthorizedAPIKey,
 ):
     """
     Perform bulk operations on multiple resumes.
@@ -1007,7 +1007,7 @@ async def bulk_operations(
 async def get_user_settings(
     user_identifier: str,
     db: AsyncSession = Depends(get_db),
-    auth: AuthorizedAPIKey = Depends(),
+    auth: AuthorizedAPIKey,
 ):
     """Get user settings."""
     try:
@@ -1048,7 +1048,7 @@ async def update_user_settings(
     user_identifier: str,
     request: UserSettingsRequest,
     db: AsyncSession = Depends(get_db),
-    auth: AuthorizedAPIKey = Depends(),
+    auth: AuthorizedAPIKey,
 ):
     """Update user settings."""
     try:
