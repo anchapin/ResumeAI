@@ -1,4 +1,4 @@
-import type { Resume } from '@/types';
+import { ResumeData } from '@/types';
 
 export interface TestContext {
   apiClient: MockAPIClient;
@@ -7,14 +7,14 @@ export interface TestContext {
 }
 
 export interface MockAPIClient {
-  createResume: (resume: Partial<Resume>) => Promise<APIResponse>;
+  createResume: (resume: Partial<any>) => Promise<APIResponse>;
   getResume: (id: string, options?: any) => Promise<APIResponse>;
-  updateResume: (id: string, resume: Partial<Resume>) => Promise<APIResponse>;
+  updateResume: (id: string, resume: Partial<any>) => Promise<APIResponse>;
   deleteResume: (id: string) => Promise<APIResponse>;
   listResumes: () => Promise<APIResponse>;
   cloneResume: (id: string, newTitle: string) => Promise<APIResponse>;
-  generatePDF: (resume: Partial<Resume>, options?: any) => Promise<APIResponse>;
-  generatePreview: (resume: Partial<Resume>) => Promise<APIResponse>;
+  generatePDF: (resume: Partial<any>, options?: any) => Promise<APIResponse>;
+  generatePreview: (resume: Partial<any>) => Promise<APIResponse>;
   downloadPDF: (pdfId: string) => Promise<APIResponse>;
   initiateOAuth: (provider: string, options?: any) => Promise<APIResponse>;
   handleOAuthCallback: (provider: string, params: any) => Promise<APIResponse>;
@@ -24,6 +24,9 @@ export interface MockAPIClient {
   getOAuthUserProfile: (provider: string) => Promise<APIResponse>;
   syncOAuthProfile: (provider: string) => Promise<APIResponse>;
   linkOAuthAccounts: (providers: string[]) => Promise<APIResponse>;
+  renderPDF: (resumeData: ResumeData, variant?: string) => Promise<APIResponse>;
+  tailorResume: (resumeData: ResumeData, jobDescription: string) => Promise<APIResponse>;
+  generateVariants: (resumeData: ResumeData) => Promise<APIResponse>;
 }
 
 export interface APIResponse {
@@ -68,9 +71,9 @@ function createMockAPIClient(): MockAPIClient {
   let restorationCount = 0;
   
   return {
-    async createResume(resume: Partial<Resume>) {
-      if (!resume.title) {
-        return { status: 400, error: 'Title is required' };
+    async createResume(resume: Partial<any>) {
+      if (!resume.basics?.name) {
+        return { status: 400, error: 'Resume name (basics.name) is required' };
       }
       
       const id = 'resume-' + Date.now() + '-' + Math.random();
@@ -132,8 +135,8 @@ function createMockAPIClient(): MockAPIClient {
       return { status: 201, data: cloned };
     },
 
-    async generatePDF(resume: Partial<Resume>, options?: any) {
-      if (!resume.title) {
+    async generatePDF(resume: Partial<any>, options?: any) {
+      if (!resume.basics?.name) {
         return { status: 400, error: 'Invalid resume data' };
       }
       
@@ -154,8 +157,8 @@ function createMockAPIClient(): MockAPIClient {
       return { status: 200, data: pdf };
     },
 
-    async generatePreview(resume: Partial<Resume>) {
-      if (!resume.title) {
+    async generatePreview(resume: Partial<any>) {
+      if (!resume.basics?.name) {
         return { status: 400, error: 'Invalid resume data' };
       }
       
@@ -271,6 +274,90 @@ function createMockAPIClient(): MockAPIClient {
           accounts: providers.map(p => ({ provider: p, linked: true }))
         }
       };
+    },
+
+    async renderPDF(resumeData: ResumeData, variant?: string) {
+      if (!resumeData.basics?.name) {
+        return { status: 400, error: 'Invalid resume data' };
+      }
+
+      try {
+        // Simulate PDF generation
+        const pdfBuffer = Buffer.from('PDF_MOCK_DATA');
+        return {
+          status: 200,
+          data: {
+            pdf_url: 'https://storage.example.com/resume-' + Date.now() + '.pdf',
+            size: pdfBuffer.length,
+            generated_at: new Date().toISOString(),
+            variant: variant || 'standard'
+          }
+        };
+      } catch (error) {
+        return { status: 500, error: 'PDF generation failed' };
+      }
+    },
+
+    async tailorResume(resumeData: ResumeData, jobDescription: string) {
+      if (!resumeData.basics?.name || !jobDescription) {
+        return { status: 400, error: 'Missing required fields' };
+      }
+
+      try {
+        return {
+          status: 200,
+          data: {
+            tailored_resume: {
+              ...resumeData,
+              work: (resumeData.work || []).map(item => ({
+                ...item,
+                summary: item.summary ? item.summary + ' (tailored)' : 'tailored'
+              }))
+            },
+            match_score: Math.random() * 100,
+            tailoring_suggestions: [
+              'Added relevant skills to experience',
+              'Reordered sections for better ATS compatibility'
+            ]
+          }
+        };
+      } catch (error) {
+        return { status: 500, error: 'Tailoring failed' };
+      }
+    },
+
+    async generateVariants(resumeData: ResumeData) {
+      if (!resumeData.basics?.name) {
+        return { status: 400, error: 'Invalid resume data' };
+      }
+
+      try {
+        return {
+          status: 200,
+          data: {
+            variants: [
+              {
+                name: 'standard',
+                url: 'https://storage.example.com/resume-standard.pdf',
+                generated_at: new Date().toISOString()
+              },
+              {
+                name: 'ats-optimized',
+                url: 'https://storage.example.com/resume-ats.pdf',
+                generated_at: new Date().toISOString()
+              },
+              {
+                name: 'creative',
+                url: 'https://storage.example.com/resume-creative.pdf',
+                generated_at: new Date().toISOString()
+              }
+            ],
+            count: 3
+          }
+        };
+      } catch (error) {
+        return { status: 500, error: 'Variant generation failed' };
+      }
     }
   };
 }
@@ -278,22 +365,38 @@ function createMockAPIClient(): MockAPIClient {
 /**
  * Create a mock resume for testing
  */
-export function createMockResume(title: string, overrides?: any): Partial<Resume> {
+export function createMockResume(title: string, overrides?: any): Partial<ResumeData> {
   return {
-    id: 'mock-' + Date.now(),
-    title,
-    content: 'Mock resume content',
-    sections: [
+    basics: {
+      name: 'Test User',
+      email: 'test@example.com',
+      phone: '+1-555-0000',
+      url: 'https://example.com',
+      label: 'Software Engineer',
+      summary: 'Test resume summary'
+    },
+    work: [
       {
-        title: 'Experience',
-        items: [
-          {
-            title: 'Software Engineer',
-            company: 'Tech Co',
-            startDate: '2020-01-01',
-            endDate: '2023-12-31'
-          }
-        ]
+        company: 'Tech Co',
+        position: 'Software Engineer',
+        startDate: '2020-01-01',
+        endDate: '2023-12-31',
+        summary: 'Sample work experience'
+      }
+    ],
+    education: [
+      {
+        institution: 'University',
+        studyType: 'Bachelor of Science',
+        area: 'Computer Science',
+        startDate: '2016',
+        endDate: '2020'
+      }
+    ],
+    skills: [
+      {
+        name: 'JavaScript',
+        keywords: ['TypeScript', 'Node.js', 'React']
       }
     ],
     ...overrides
@@ -304,21 +407,29 @@ export function createMockResume(title: string, overrides?: any): Partial<Resume
  * Create a test factory for generating test data
  */
 export class TestDataFactory {
-  static generateResume(overrides?: Partial<Resume>): Resume {
+  static generateResume(overrides?: Partial<any>): any {
     return {
       id: 'test-' + Date.now(),
-      title: 'Test Resume',
-      content: 'Test content',
-      sections: [],
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      basics: {
+        name: 'Test User',
+        email: 'test@example.com',
+        phone: '+1-555-0000'
+      },
+      work: [],
+      education: [],
+      skills: [],
       ...overrides
-    } as Resume;
+    };
   }
 
-  static generateMultipleResumes(count: number): Resume[] {
+  static generateMultipleResumes(count: number): any[] {
     return Array.from({ length: count }, (_, i) =>
-      this.generateResume({ title: `Resume ${i + 1}` })
+      this.generateResume({ 
+        basics: { 
+          ...this.generateResume().basics,
+          name: `Test User ${i + 1}` 
+        }
+      })
     );
   }
 }

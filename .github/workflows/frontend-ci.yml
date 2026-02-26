@@ -42,8 +42,11 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run tests
+      - name: Run unit tests
         run: npm run test -- --run --reporter=verbose --exclude="utils/storage.test.ts" || true
+
+      - name: Run integration tests
+        run: npm run test -- --run --reporter=verbose tests/integration/ || true
 
       - name: Type check
         run: npx tsc --noEmit

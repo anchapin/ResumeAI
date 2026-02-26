@@ -439,25 +439,33 @@ export interface ExportFormat {
 
 // Team Collaboration Types
 export interface Team {
-  id: string;
+  id: number;
   name: string;
   description: string;
+  owner_id: string;
   ownerId: string;
+  created_at: string;
   createdAt: string;
+  updated_at: string;
   updatedAt: string;
-  members: TeamMember[];
+  member_count?: number;
+  resume_count?: number;
+  members?: TeamMember[];
 }
 
 export interface TeamMember {
   id: string;
+  user_id: string;
   userId: string;
   name: string;
   email: string;
   role: MemberRole;
+  is_owner?: boolean;
+  joined_at: string;
   joinedAt: string;
 }
 
-export type MemberRole = 'owner' | 'admin' | 'editor' | 'viewer';
+export type MemberRole = 'owner' | 'admin' | 'editor' | 'viewer' | 'member';
 
 export interface CreateTeamRequest {
   name: string;
@@ -471,31 +479,45 @@ export interface InviteMemberRequest {
 
 export interface TeamActivity {
   id: string;
+  team_id: string;
   teamId: string;
+  user_id: string;
   userId: string;
+  user_name: string;
   userName: string;
   action: string;
+  type?: string;
+  description?: string;
   details?: string;
+  metadata?: Record<string, unknown>;
+  created_at: string;
   createdAt: string;
 }
 
 export interface TeamResume {
   id: string;
+  resume_id: string;
   title: string;
+  resume_title: string;
+  owner_id: string;
   ownerId: string;
+  owner_name: string;
   ownerName: string;
+  shared_by_user_name: string;
+  updated_at: string;
   updatedAt: string;
+  shared_at: string;
   sharedAt: string;
   permissions: 'view' | 'edit' | 'comment';
 }
 
-export interface BulkOperationType {
-  type: 'delete' | 'export' | 'tag';
-}
+export type BulkOperationType = 'delete' | 'export' | 'tag';
 
 export interface BulkOperationResult {
-  success: boolean;
-  count: number;
+  success?: boolean;
+  count?: number;
+  successful?: number[];
+  failed?: Array<{ id: number; error: string; }>;
   errors?: string[];
 }
 
@@ -545,6 +567,7 @@ export interface InterviewSession {
 
 export interface GenerateQuestionsRequest {
   jobTitle?: string;
+  job_title?: string;
   company?: string;
   count?: number;
   difficulty?: 'easy' | 'medium' | 'hard';

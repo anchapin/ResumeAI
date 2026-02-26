@@ -8,7 +8,7 @@ import {
   type ErrorContext,
 } from './errorHandler';
 
-describe.skip('Global Error Handler', () => {
+describe('Global Error Handler', () => {
   beforeEach(() => {
     errorHandler.clearErrorHistory();
   });

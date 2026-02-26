@@ -451,7 +451,7 @@ export async function listOffers(): Promise<JobOffer[]> {
 export async function compareOffers(offerIds: number[], priorities?: ComparisonPriority): Promise<OfferComparison> {
   return {
     offers: [],
-    scores: {},
+    scores: [] as OfferScore[],
     winnerId: 0,
     insights: []
   };
@@ -610,4 +610,110 @@ export async function getUpcomingEvents(days = 7): Promise<UpcomingEvent[]> {
   if (!response.ok) throw new Error('Failed to get upcoming events');
   const data = await response.json();
   return data.events || [];
+}
+
+// Team Management API Functions
+
+export interface CreateTeamPayload {
+  name: string;
+  description?: string;
+}
+
+export interface UpdateTeamPayload {
+  name?: string;
+  description?: string;
+}
+
+export interface InviteMemberPayload {
+  email: string;
+  role: 'owner' | 'admin' | 'editor' | 'viewer' | 'member';
+}
+
+export async function getTeams(): Promise<any[]> {
+  const response = await fetch(`${API_URL}/v1/teams`, { headers: getHeaders() });
+  if (!response.ok) throw new Error('Failed to get teams');
+  return response.json();
+}
+
+export async function getTeam(teamId: number): Promise<any> {
+  const response = await fetch(`${API_URL}/v1/teams/${teamId}`, { headers: getHeaders() });
+  if (!response.ok) throw new Error('Failed to get team');
+  return response.json();
+}
+
+export async function createTeam(payload: CreateTeamPayload): Promise<any> {
+  const response = await fetch(`${API_URL}/v1/teams`, {
+    method: 'POST',
+    headers: { ...getHeaders(), 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  if (!response.ok) throw new Error('Failed to create team');
+  return response.json();
+}
+
+export async function updateTeam(teamId: number, payload: UpdateTeamPayload): Promise<any> {
+  const response = await fetch(`${API_URL}/v1/teams/${teamId}`, {
+    method: 'PUT',
+    headers: { ...getHeaders(), 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  if (!response.ok) throw new Error('Failed to update team');
+  return response.json();
+}
+
+export async function deleteTeam(teamId: number): Promise<void> {
+  const response = await fetch(`${API_URL}/v1/teams/${teamId}`, { method: 'DELETE', headers: getHeaders() });
+  if (!response.ok) throw new Error('Failed to delete team');
+}
+
+export async function getTeamMembers(teamId: number): Promise<any[]> {
+  const response = await fetch(`${API_URL}/v1/teams/${teamId}/members`, { headers: getHeaders() });
+  if (!response.ok) throw new Error('Failed to get team members');
+  return response.json();
+}
+
+export async function inviteMember(teamId: number, payload: InviteMemberPayload): Promise<any> {
+  const response = await fetch(`${API_URL}/v1/teams/${teamId}/members/invite`, {
+    method: 'POST',
+    headers: { ...getHeaders(), 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  if (!response.ok) throw new Error('Failed to invite member');
+  return response.json();
+}
+
+export async function updateMemberRole(teamId: number, userId: string, role: 'owner' | 'admin' | 'editor' | 'viewer'): Promise<any> {
+  const response = await fetch(`${API_URL}/v1/teams/${teamId}/members/${userId}`, {
+    method: 'PUT',
+    headers: { ...getHeaders(), 'Content-Type': 'application/json' },
+    body: JSON.stringify({ role }),
+  });
+  if (!response.ok) throw new Error('Failed to update member role');
+  return response.json();
+}
+
+export async function removeMember(teamId: number, userId: string): Promise<void> {
+  const response = await fetch(`${API_URL}/v1/teams/${teamId}/members/${userId}`, { method: 'DELETE', headers: getHeaders() });
+  if (!response.ok) throw new Error('Failed to remove member');
+}
+
+export async function getTeamActivity(teamId: number): Promise<any[]> {
+  const response = await fetch(`${API_URL}/v1/teams/${teamId}/activity`, { headers: getHeaders() });
+  if (!response.ok) throw new Error('Failed to get team activity');
+  return response.json();
+}
+
+export async function shareResumeWithTeam(teamId: number, resumeId: string, permissions: 'view' | 'edit' | 'comment'): Promise<any> {
+  const response = await fetch(`${API_URL}/v1/teams/${teamId}/resumes`, {
+    method: 'POST',
+    headers: { ...getHeaders(), 'Content-Type': 'application/json' },
+    body: JSON.stringify({ resume_id: resumeId, permissions }),
+  });
+  if (!response.ok) throw new Error('Failed to share resume');
+  return response.json();
+}
+
+export async function unshareResumeFromTeam(teamId: number, resumeId: string): Promise<void> {
+  const response = await fetch(`${API_URL}/v1/teams/${teamId}/resumes/${resumeId}`, { method: 'DELETE', headers: getHeaders() });
+  if (!response.ok) throw new Error('Failed to unshare resume');
 }
