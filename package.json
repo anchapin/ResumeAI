@@ -25,6 +25,15 @@
     "react-toastify": "^11.0.5",
     "recharts": "^3.7.0"
   },
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{js,jsx,json,css,md}": [
+      "prettier --write"
+    ]
+  },
   "devDependencies": {
     "@axe-core/react": "^4.10.2",
     "@eslint/js": "^10.0.1",
@@ -46,8 +55,10 @@
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^7.0.1",
     "happy-dom": "^20.7.0",
+    "husky": "^9.1.7",
     "jest-axe": "^8.0.0",
     "jsdom": "^28.0.0",
+    "lint-staged": "^16.2.7",
     "prettier": "^3.8.1",
     "typedoc": "^0.28.17",
     "typescript": "~5.8.2",
