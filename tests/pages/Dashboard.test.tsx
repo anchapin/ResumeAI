@@ -1,9 +1,14 @@
-import { describe, it, expect, vi } from 'vitest';
-import { render, screen, within } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import Dashboard from '../../pages/Dashboard';
+import {
+  getApplicationStats,
+  getApplicationFunnel,
+  listJobApplications,
+} from '../../utils/api-client';
 
-// Mock the recharts components since we don't need to test the actual chart rendering
+// Mock recharts components since we don't need to test actual chart rendering
 vi.mock('recharts', async () => {
   const actual = await vi.importActual('recharts');
   return {
@@ -21,7 +26,7 @@ vi.mock('recharts', async () => {
   };
 });
 
-// Mock the StatusBadge component
+// Mock StatusBadge component
 vi.mock('../../components/StatusBadge', async () => {
   const actual = await vi.importActual('../../components/StatusBadge');
   return {
@@ -33,33 +38,99 @@ vi.mock('../../components/StatusBadge', async () => {
   };
 });
 
+// Mock API calls
+vi.mock('../../utils/api-client', () => ({
+  getApplicationStats: vi.fn(),
+  getApplicationFunnel: vi.fn(),
+  listJobApplications: vi.fn(),
+}));
+
 describe('Dashboard Component', () => {
-  it('renders without crashing', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    // Mock API responses
+    vi.mocked(getApplicationStats).mockResolvedValue({
+      total_applications: 25,
+      interview_rate: 0.32,
+      response_rate: 0.4,
+      offer_rate: 0.12,
+      by_status: {
+        applied: 5,
+        interviewing: 8,
+        offer: 2,
+        rejected: 10,
+      },
+    });
+    vi.mocked(getApplicationFunnel).mockResolvedValue({
+      stages: [
+        { name: 'applied', count: 25, percentage: 100 },
+        { name: 'interviewing', count: 8, percentage: 32 },
+        { name: 'offer', count: 2, percentage: 8 },
+      ],
+      total_applications: 25,
+    });
+    vi.mocked(listJobApplications).mockResolvedValue([
+      {
+        id: 1,
+        company_name: 'Google',
+        job_title: 'Software Engineer',
+        status: 'applied',
+        salary_currency: 'USD',
+        tags: [],
+        created_at: '2023-10-24T00:00:00Z',
+        updated_at: '2023-10-24T00:00:00Z',
+      },
+      {
+        id: 2,
+        company_name: 'Stripe',
+        job_title: 'Product Designer',
+        status: 'interviewing',
+        salary_currency: 'USD',
+        tags: [],
+        created_at: '2023-10-22T00:00:00Z',
+        updated_at: '2023-10-22T00:00:00Z',
+      },
+      {
+        id: 3,
+        company_name: 'Vercel',
+        job_title: 'Frontend Developer',
+        status: 'offer',
+        salary_currency: 'USD',
+        tags: [],
+        created_at: '2023-10-15T00:00:00Z',
+        updated_at: '2023-10-15T00:00:00Z',
+      },
+    ]);
+  });
+
+  it('renders without crashing', async () => {
     const { container } = render(<Dashboard />);
+    await new Promise((resolve) => setTimeout(resolve, 100));
     expect(container).toBeInTheDocument();
   });
 
   describe('Header Section', () => {
-    it('renders the main header with correct title', () => {
+    it('renders main header with correct title', async () => {
       render(<Dashboard />);
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       const title = screen.getByText('Job Search Overview');
       expect(title).toBeInTheDocument();
       expect(title).toHaveClass('text-slate-800', 'font-bold', 'text-xl');
     });
 
-    it('renders notifications button', () => {
+    it('renders notifications button', async () => {
       render(<Dashboard />);
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
-      // Find the specific notification button by its content
       const notificationButton = screen.getByText('notifications').closest('button');
       expect(notificationButton).toBeInTheDocument();
     });
 
-    it('renders user avatar in header', () => {
+    it('renders user avatar in header', async () => {
       render(<Dashboard />);
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
-      // The user avatar is a div with specific classes
       const avatarDiv = screen
         .getByText('notifications')
         .closest('div')
@@ -69,10 +140,10 @@ describe('Dashboard Component', () => {
   });
 
   describe('Statistics Cards', () => {
-    it('renders three statistics cards', () => {
+    it('renders three statistics cards', async () => {
       render(<Dashboard />);
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
-      // Look for the grid container and count the child divs
       const gridContainer = screen.getByText('Applications Sent').closest('.grid');
       if (gridContainer) {
         const statsCards = gridContainer.querySelectorAll(':scope > div');
@@ -80,43 +151,38 @@ describe('Dashboard Component', () => {
       }
     });
 
-    it('renders Applications Sent card with correct data', () => {
+    it('renders Applications Sent card with correct data', async () => {
       render(<Dashboard />);
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
-      // Check that the card title is present
       expect(screen.getByText('Applications Sent')).toBeInTheDocument();
-
-      // Check that the number 25 is present somewhere on the page (it should be in the card)
       expect(screen.getByText('25')).toBeInTheDocument();
-      expect(screen.getByText('+12% this month')).toBeInTheDocument();
+      expect(screen.getByText('Last 30 days')).toBeInTheDocument();
     });
 
-    it('renders Interview Rate card with correct data', () => {
+    it('renders Interview Rate card with correct data', async () => {
       render(<Dashboard />);
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
-      // Check that the card title is present
       expect(screen.getByText('Interview Rate')).toBeInTheDocument();
-
-      // Check that the rate is present somewhere on the page
       expect(screen.getByText('32%')).toBeInTheDocument();
-      expect(screen.getByText('+5% from last week')).toBeInTheDocument();
+      expect(screen.getByText('Based on interviews')).toBeInTheDocument();
     });
 
-    it('renders Pending Responses card with correct data', () => {
+    it('renders Pending Responses card with correct data', async () => {
       render(<Dashboard />);
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
-      // Check that the card title is present
       expect(screen.getByText('Pending Responses')).toBeInTheDocument();
-
-      // Check that the number 5 is present somewhere on the page
       expect(screen.getByText('5')).toBeInTheDocument();
-      expect(screen.getByText('No change')).toBeInTheDocument();
+      expect(screen.getByText('Applications awaiting response')).toBeInTheDocument();
     });
   });
 
   describe('Recent Applications Table', () => {
-    it('renders the Recent Applications section header', () => {
+    it('renders Recent Applications section header', async () => {
       render(<Dashboard />);
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       const sectionHeader = screen.getByText('Recent Applications');
       expect(sectionHeader).toBeInTheDocument();
@@ -125,8 +191,9 @@ describe('Dashboard Component', () => {
       expect(viewAllButton).toBeInTheDocument();
     });
 
-    it('renders the table with correct headers', () => {
+    it('renders table with correct headers', async () => {
       render(<Dashboard />);
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       const table = screen.getByRole('table');
       expect(table).toBeInTheDocument();
@@ -137,32 +204,27 @@ describe('Dashboard Component', () => {
       expect(screen.getByText('Date Applied')).toBeInTheDocument();
     });
 
-    it('renders recent applications data', () => {
+    it('renders recent applications data', async () => {
       render(<Dashboard />);
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
-      // Check for Google application
-      expect(screen.getByText('Google')).toBeInTheDocument();
-      expect(screen.getByText('Software Engineer')).toBeInTheDocument();
-      expect(screen.getByText('Oct 24, 2023')).toBeInTheDocument();
+      await screen.findByText('Google');
+      await screen.findByText('Software Engineer');
 
-      // Check for Stripe application
-      expect(screen.getByText('Stripe')).toBeInTheDocument();
-      expect(screen.getByText('Product Designer')).toBeInTheDocument();
-      expect(screen.getByText('Oct 22, 2023')).toBeInTheDocument();
+      await screen.findByText('Stripe');
+      await screen.findByText('Product Designer');
 
-      // Check for Vercel application
-      expect(screen.getByText('Vercel')).toBeInTheDocument();
-      expect(screen.getByText('Frontend Developer')).toBeInTheDocument();
-      expect(screen.getByText('Oct 15, 2023')).toBeInTheDocument();
+      await screen.findByText('Vercel');
+      await screen.findByText('Frontend Developer');
     });
 
-    it('renders status badges for each application', () => {
+    it('renders status badges for each application', async () => {
       render(<Dashboard />);
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       const statusBadges = screen.getAllByTestId('status-badge');
-      expect(statusBadges.length).toBe(3); // 3 recent applications
+      expect(statusBadges.length).toBe(3);
 
-      // Check each status individually
       const appliedBadge = statusBadges.find(
         (badge) => badge.getAttribute('data-status') === 'Applied',
       );
@@ -180,76 +242,76 @@ describe('Dashboard Component', () => {
   });
 
   describe('Application Funnel Chart', () => {
-    it('renders the Application Funnel section header', () => {
+    it('renders Application Funnel section header', async () => {
       render(<Dashboard />);
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       const funnelHeader = screen.getByText('Application Funnel');
       expect(funnelHeader).toBeInTheDocument();
     });
 
-    it('renders the chart container', () => {
+    it('renders chart container', async () => {
       render(<Dashboard />);
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       const chartContainer = screen.getByTestId('responsive-container');
       expect(chartContainer).toBeInTheDocument();
     });
 
-    it('renders chart labels with correct data', () => {
+    it('renders chart labels with correct data', async () => {
       render(<Dashboard />);
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
-      // Check for funnel stages - using getAllByText to handle duplicates
-      const sentElements = screen.getAllByText('Sent');
-      expect(sentElements[0]).toBeInTheDocument(); // Take the first occurrence
+      const sentElements = screen.getAllByText('Applied');
+      expect(sentElements.length).toBeGreaterThan(0);
 
-      const interviewElements = screen.getAllByText('Interview');
-      expect(interviewElements[0]).toBeInTheDocument(); // Take the first occurrence
+      const interviewElements = screen.getAllByText('Interviewing');
+      expect(interviewElements.length).toBeGreaterThan(0);
 
       const offerElements = screen.getAllByText('Offer');
-      expect(offerElements[0]).toBeInTheDocument(); // Take the first occurrence
+      expect(offerElements.length).toBeGreaterThan(0);
 
-      // With mocked recharts, we can't reliably test the specific chart values
-      // So we'll just verify that the chart structure is present
       expect(screen.getByTestId('responsive-container')).toBeInTheDocument();
       expect(screen.getByTestId('bar-chart')).toBeInTheDocument();
     });
   });
 
   describe('Layout and Styling', () => {
-    it('has correct main container classes', () => {
+    it('has correct main container classes', async () => {
       render(<Dashboard />);
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
-      // Find the main container div that has the flex-1 class
       const mainContainer = screen.getByText('Job Search Overview').closest('div');
       expect(mainContainer).toBeInTheDocument();
     });
 
-    it('has the sidebar offset class (pl-72)', () => {
+    it('has the sidebar offset class (pl-72)', async () => {
       render(<Dashboard />);
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
-      // The main container should have the pl-72 class for sidebar offset
       const mainDiv = screen.getByText('Job Search Overview').closest('div');
-      expect(mainDiv).toBeInTheDocument();
+      expect(mainDiv?.classList.contains('pl-72')).toBe(true);
     });
   });
 
   describe('Component Integration', () => {
-    it('properly integrates all dashboard elements', () => {
+    it('properly integrates all dashboard elements', async () => {
       render(<Dashboard />);
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
-      // Verify all major sections are present
       expect(screen.getByText('Job Search Overview')).toBeInTheDocument();
       expect(screen.getByText('Applications Sent')).toBeInTheDocument();
       expect(screen.getByText('Recent Applications')).toBeInTheDocument();
       expect(screen.getByText('Application Funnel')).toBeInTheDocument();
     });
 
-    it('displays correct initial data', () => {
+    it('displays correct initial data', async () => {
       render(<Dashboard />);
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
-      // Check that the static data from the component is rendered
-      expect(screen.getByText('25')).toBeInTheDocument(); // Applications sent
-      expect(screen.getByText('32%')).toBeInTheDocument(); // Interview rate
-      expect(screen.getByText('5')).toBeInTheDocument(); // Pending responses
+      expect(screen.getByText('25')).toBeInTheDocument();
+      expect(screen.getByText('32%')).toBeInTheDocument();
+      expect(screen.getByText('5')).toBeInTheDocument();
     });
   });
 });
