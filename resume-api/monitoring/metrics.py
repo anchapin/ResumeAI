@@ -16,7 +16,7 @@ http_request_duration_seconds = Histogram(
     "http_request_duration_seconds",
     "HTTP latency",
     ["method", "endpoint"],
-    buckets=(0.1, 0.5, 1.0, 5.0),
+    buckets=(0.01, 0.05, 0.1, 0.5, 1.0, 2.5, 5.0, 10.0),
     registry=registry,
 )
 http_errors_total = Counter(
@@ -57,7 +57,14 @@ ai_request_duration_seconds = Histogram(
     "ai_request_duration_seconds",
     "AI latency",
     ["provider", "model"],
-    buckets=(1, 5, 10, 30, 60),
+    buckets=(0.5, 1, 2.5, 5, 10, 30, 60, 120),
+    registry=registry,
+)
+pdf_generation_duration_seconds = Histogram(
+    "pdf_generation_duration_seconds",
+    "PDF generation latency",
+    ["variant"],
+    buckets=(0.5, 1, 2.5, 5, 7.5, 10, 15, 20),
     registry=registry,
 )
 db_connections_active = Gauge(
@@ -67,7 +74,7 @@ db_query_duration_seconds = Histogram(
     "db_query_duration_seconds",
     "DB query latency",
     ["operation"],
-    buckets=(0.01, 0.05, 0.1, 0.5, 1.0),
+    buckets=(0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1.0, 2.0),
     registry=registry,
 )
 db_queries_total = Counter(
@@ -219,3 +226,8 @@ def increment_oauth_storage_errors(error_type="unknown"):
 
 def set_oauth_active_connections(count):
     oauth_active_connections_gauge.set(count)
+
+
+def observe_pdf_generation_duration(variant, duration_seconds):
+    """Observe PDF generation duration for percentile tracking."""
+    pdf_generation_duration_seconds.labels(variant=variant).observe(duration_seconds)
