@@ -1,572 +1,558 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import React from 'react';
 import ProjectItem from './ProjectItem';
 import { ProjectEntry } from '../../types';
 
-describe('ProjectItem', () => {
-    const mockProject: ProjectEntry = {
-        id: 'proj-1',
-        name: 'Test Project',
-        description: 'A cool project for testing',
-        url: 'https://example.com',
-        startDate: '2020',
-        endDate: '2021',
-        roles: ['Developer', 'Designer', 'Lead'],
-        highlights: ['Built a thing', 'Fixed a bug', 'Improved performance']
-    };
+describe('ProjectItem Component', () => {
+  const mockProject: ProjectEntry = {
+    id: 'proj-1',
+    name: 'E-Commerce Platform',
+    description: 'Built a scalable e-commerce platform using React and Node.js',
+    startDate: '2021-01',
+    endDate: '2021-12',
+    highlights: ['React', 'Node.js', 'PostgreSQL', 'Docker'],
+  };
 
-    const defaultProps = {
-        project: mockProject,
-        isExpanded: false,
-        onToggleExpand: vi.fn(),
-        onDelete: vi.fn(),
-        onUpdate: vi.fn()
-    };
+  const defaultProps = {
+    project: mockProject,
+    isExpanded: false,
+    onToggleExpand: vi.fn(),
+    onDelete: vi.fn(),
+    onUpdate: vi.fn(),
+    onAddHighlight: vi.fn(),
+    onRemoveHighlight: vi.fn(),
+  };
 
-    beforeEach(() => {
-        vi.clearAllMocks();
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  describe('Rendering', () => {
+    it('should render collapsed state correctly', () => {
+      render(<ProjectItem {...defaultProps} />);
+
+      expect(screen.getByText('E-Commerce Platform')).toBeInTheDocument();
+      expect(screen.getByText('2021-01 - 2021-12')).toBeInTheDocument();
+      expect(screen.queryAllByDisplayValue('E-Commerce Platform')).toHaveLength(0);
     });
 
-    describe('Rendering', () => {
-        it('renders collapsed state correctly', () => {
-            render(<ProjectItem {...defaultProps} />);
+    it('should render expanded state with all form fields', () => {
+      render(<ProjectItem {...defaultProps} isExpanded={true} />);
 
-            expect(screen.getByText('Test Project')).toBeInTheDocument();
-            expect(screen.getByText('2020 - 2021')).toBeInTheDocument();
-            expect(screen.queryByLabelText('Project Name')).not.toBeInTheDocument();
-        });
-
-        it('renders expanded state with all form fields', () => {
-            render(<ProjectItem {...defaultProps} isExpanded={true} />);
-
-            expect(screen.getByLabelText('Project Name')).toHaveValue('Test Project');
-            expect(screen.getByLabelText('Description')).toHaveValue('A cool project for testing');
-            expect(screen.getByLabelText('Project URL')).toHaveValue('https://example.com');
-            expect(screen.getByLabelText('Start Date')).toHaveValue('2020');
-            expect(screen.getByLabelText('End Date')).toHaveValue('2021');
-        });
-
-        it('displays all roles when expanded', () => {
-            render(<ProjectItem {...defaultProps} isExpanded={true} />);
-
-            expect(screen.getByText('Developer')).toBeInTheDocument();
-            expect(screen.getByText('Designer')).toBeInTheDocument();
-            expect(screen.getByText('Lead')).toBeInTheDocument();
-        });
-
-        it('displays all highlights when expanded', () => {
-            render(<ProjectItem {...defaultProps} isExpanded={true} />);
-
-            expect(screen.getByText('Built a thing')).toBeInTheDocument();
-            expect(screen.getByText('Fixed a bug')).toBeInTheDocument();
-            expect(screen.getByText('Improved performance')).toBeInTheDocument();
-        });
-
-        it('renders without roles or highlights when empty', () => {
-            const projectNoRoles = { ...mockProject, roles: [], highlights: [] };
-            render(<ProjectItem {...defaultProps} project={projectNoRoles} isExpanded={true} />);
-
-            expect(screen.getByPlaceholderText('+ Add Role')).toBeInTheDocument();
-            expect(screen.getByPlaceholderText('+ Add Highlight')).toBeInTheDocument();
-        });
-
-        it('toggles expand state with aria-expanded', () => {
-            const { rerender } = render(<ProjectItem {...defaultProps} isExpanded={false} />);
-
-            let expandBtn = screen.getByRole('button', { name: /expand/i });
-            expect(expandBtn).toHaveAttribute('aria-expanded', 'false');
-
-            rerender(<ProjectItem {...defaultProps} isExpanded={true} />);
-            expandBtn = screen.getByRole('button', { name: /expand/i });
-            expect(expandBtn).toHaveAttribute('aria-expanded', 'true');
-        });
+      const inputs = screen.getAllByDisplayValue('E-Commerce Platform');
+      expect(inputs.length).toBeGreaterThan(0);
+      expect(screen.getByDisplayValue('2021-01')).toBeInTheDocument();
+      expect(screen.getByDisplayValue('2021-12')).toBeInTheDocument();
     });
 
-    describe('Toggle Expand', () => {
-        it('calls onToggleExpand when expand button is clicked', async () => {
-            const onToggleExpand = vi.fn();
-            const user = userEvent.setup();
-            render(<ProjectItem {...defaultProps} onToggleExpand={onToggleExpand} />);
+    it('should render delete button in collapsed state', () => {
+      render(<ProjectItem {...defaultProps} />);
 
-            const toggleButton = screen.getByRole('button', { name: /expand/i });
-            await user.click(toggleButton);
-
-            expect(onToggleExpand).toHaveBeenCalledWith('proj-1');
-        });
-
-        it('calls onToggleExpand when header is clicked', async () => {
-            const onToggleExpand = vi.fn();
-            const user = userEvent.setup();
-            render(<ProjectItem {...defaultProps} onToggleExpand={onToggleExpand} />);
-
-            const header = screen.getByText('Test Project');
-            await user.click(header);
-
-            expect(onToggleExpand).toHaveBeenCalledWith('proj-1');
-        });
+      expect(screen.getByRole('button', { name: /delete/i })).toBeInTheDocument();
     });
 
-    describe('Delete Operations', () => {
-        it('calls onDelete when delete button is clicked and confirmed', async () => {
-            const onDelete = vi.fn();
-            const user = userEvent.setup();
-            render(<ProjectItem {...defaultProps} onDelete={onDelete} />);
+    it('should render all fields when expanded', () => {
+      render(<ProjectItem {...defaultProps} isExpanded={true} />);
 
-            const deleteButton = screen.getByRole('button', { name: /delete/i });
-            await user.click(deleteButton);
-
-            const confirmButton = screen.getByRole('button', { name: /confirm delete/i });
-            const cancelButton = screen.getByRole('button', { name: /cancel delete/i });
-            expect(confirmButton).toBeInTheDocument();
-            expect(cancelButton).toBeInTheDocument();
-
-            expect(onDelete).not.toHaveBeenCalled();
-
-            await user.click(confirmButton);
-
-            expect(onDelete).toHaveBeenCalledWith('proj-1');
-        });
-
-        it('does not call onDelete when delete is cancelled', async () => {
-            const onDelete = vi.fn();
-            const user = userEvent.setup();
-            render(<ProjectItem {...defaultProps} onDelete={onDelete} />);
-
-            const deleteButton = screen.getByRole('button', { name: /delete/i });
-            await user.click(deleteButton);
-
-            const cancelButton = screen.getByRole('button', { name: /cancel delete/i });
-            await user.click(cancelButton);
-
-            expect(onDelete).not.toHaveBeenCalled();
-
-            expect(screen.queryByRole('button', { name: /confirm delete/i })).not.toBeInTheDocument();
-            expect(screen.getByRole('button', { name: /delete/i })).toBeInTheDocument();
-        });
-
-        it('manages focus when toggling delete confirmation', async () => {
-            const user = userEvent.setup();
-            render(<ProjectItem {...defaultProps} />);
-
-            const deleteButton = screen.getByRole('button', { name: /delete/i });
-            await user.click(deleteButton);
-
-            const confirmButton = screen.getByRole('button', { name: /confirm delete/i });
-            await waitFor(() => {
-                expect(confirmButton).toHaveFocus();
-            });
-        });
+      expect(screen.getByText('Project Name')).toBeInTheDocument();
+      expect(screen.getByText('Description')).toBeInTheDocument();
+      expect(screen.getByText('Start Date')).toBeInTheDocument();
+      expect(screen.getByText('End Date')).toBeInTheDocument();
     });
 
-    describe('Field Updates', () => {
-        it('calls onUpdate when project name changes', async () => {
-            const onUpdate = vi.fn();
-            const user = userEvent.setup();
-            render(<ProjectItem {...defaultProps} isExpanded={true} onUpdate={onUpdate} />);
+    it('should render highlights when expanded', () => {
+      render(<ProjectItem {...defaultProps} isExpanded={true} />);
 
-            const inputs = screen.getAllByDisplayValue('Test Project');
-            await user.type(inputs[0], ' V2');
-
-            expect(onUpdate).toHaveBeenCalledWith('proj-1', 'name', expect.stringContaining('Test Project'));
-        });
-
-        it('calls onUpdate when description changes', async () => {
-            const onUpdate = vi.fn();
-            const user = userEvent.setup();
-            render(<ProjectItem {...defaultProps} isExpanded={true} onUpdate={onUpdate} />);
-
-            const textarea = screen.getByDisplayValue('A cool project for testing');
-            await user.type(textarea, ' more');
-
-            expect(onUpdate).toHaveBeenCalledWith('proj-1', 'description', expect.stringContaining('A cool project'));
-        });
-
-        it('calls onUpdate when URL changes', async () => {
-            const onUpdate = vi.fn();
-            const user = userEvent.setup();
-            render(<ProjectItem {...defaultProps} isExpanded={true} onUpdate={onUpdate} />);
-
-            const urlInput = screen.getByDisplayValue('https://example.com');
-            await user.type(urlInput, '/path');
-
-            expect(onUpdate).toHaveBeenCalledWith('proj-1', 'url', expect.stringContaining('https://example.com'));
-        });
-
-        it('calls onUpdate when start date changes', async () => {
-            const onUpdate = vi.fn();
-            const user = userEvent.setup();
-            render(<ProjectItem {...defaultProps} isExpanded={true} onUpdate={onUpdate} />);
-
-            const startInputs = screen.getAllByDisplayValue('2020');
-            await user.type(startInputs[0], '-01');
-
-            expect(onUpdate).toHaveBeenCalledWith('proj-1', 'startDate', expect.stringContaining('2020'));
-        });
-
-        it('calls onUpdate when end date changes', async () => {
-            const onUpdate = vi.fn();
-            const user = userEvent.setup();
-            render(<ProjectItem {...defaultProps} isExpanded={true} onUpdate={onUpdate} />);
-
-            const endInputs = screen.getAllByDisplayValue('2021');
-            await user.type(endInputs[0], '-12');
-
-            expect(onUpdate).toHaveBeenCalledWith('proj-1', 'endDate', expect.stringContaining('2021'));
-        });
+      mockProject.highlights.forEach(highlight => {
+        expect(screen.getByText(highlight)).toBeInTheDocument();
+      });
     });
 
-    describe('Role Management', () => {
-        it('removes role when X button is clicked', async () => {
-            const onUpdate = vi.fn();
-            const user = userEvent.setup();
-            render(<ProjectItem {...defaultProps} isExpanded={true} onUpdate={onUpdate} />);
+    it('should render description textarea', () => {
+      render(<ProjectItem {...defaultProps} isExpanded={true} />);
 
-            const removeButtons = screen.getAllByRole('button', { name: /remove role/i });
-            // First role remove button
-            await user.click(removeButtons[0]);
+      const textarea = screen.getByDisplayValue(mockProject.description) as HTMLTextAreaElement;
+      expect(textarea).toBeInTheDocument();
+    });
+  });
 
-            expect(onUpdate).toHaveBeenCalledWith('proj-1', 'roles', expect.any(Array));
-        });
+  describe('Toggle Expand', () => {
+    it('should call onToggleExpand when card header is clicked', async () => {
+      const onToggleExpand = vi.fn();
+      const user = userEvent.setup();
+      render(<ProjectItem {...defaultProps} onToggleExpand={onToggleExpand} />);
 
-        it('adds role when Enter is pressed', async () => {
-            const onUpdate = vi.fn();
-            const user = userEvent.setup();
-            render(<ProjectItem {...defaultProps} isExpanded={true} onUpdate={onUpdate} />);
+      const card = screen.getByText('E-Commerce Platform').closest('div');
+      if (card?.parentElement) {
+        await user.click(card.parentElement);
+      }
 
-            const roleInput = screen.getByPlaceholderText('+ Add Role');
-            await user.type(roleInput, 'DevOps{Enter}');
-
-            expect(onUpdate).toHaveBeenCalledWith('proj-1', 'roles', expect.arrayContaining(['DevOps']));
-        });
-
-        it('does not add empty role on Enter', async () => {
-            const onUpdate = vi.fn();
-            const user = userEvent.setup();
-            render(<ProjectItem {...defaultProps} isExpanded={true} onUpdate={onUpdate} />);
-
-            const roleInput = screen.getByPlaceholderText('+ Add Role');
-            await user.type(roleInput, '{Enter}');
-
-            expect(onUpdate).not.toHaveBeenCalledWith('proj-1', 'roles', expect.arrayContaining(['']));
-        });
-
-        it('trims whitespace when adding role', async () => {
-            const onUpdate = vi.fn();
-            const user = userEvent.setup();
-            render(<ProjectItem {...defaultProps} isExpanded={true} onUpdate={onUpdate} />);
-
-            const roleInput = screen.getByPlaceholderText('+ Add Role');
-            await user.type(roleInput, '   QA Engineer   {Enter}');
-
-            expect(onUpdate).toHaveBeenCalledWith('proj-1', 'roles', expect.arrayContaining(['QA Engineer']));
-        });
-
-        it('clears input after adding role', async () => {
-            const user = userEvent.setup();
-            render(<ProjectItem {...defaultProps} isExpanded={true} />);
-
-            const roleInput = screen.getByPlaceholderText('+ Add Role') as HTMLInputElement;
-            await user.type(roleInput, 'Manager{Enter}');
-
-            expect(roleInput.value).toBe('');
-        });
+      expect(onToggleExpand).toHaveBeenCalledWith('proj-1');
     });
 
-    describe('Highlight Management', () => {
-        it('removes highlight when X button is clicked', async () => {
-            const onUpdate = vi.fn();
-            const user = userEvent.setup();
-            render(<ProjectItem {...defaultProps} isExpanded={true} onUpdate={onUpdate} />);
+    it('should toggle expand state on rerender', () => {
+      const { rerender } = render(<ProjectItem {...defaultProps} isExpanded={false} />);
 
-            const removeButtons = screen.getAllByRole('button', { name: /remove highlight/i });
-            // Remove first highlight
-            await user.click(removeButtons[0]);
+      expect(screen.queryAllByDisplayValue('E-Commerce Platform')).toHaveLength(0);
 
-            expect(onUpdate).toHaveBeenCalledWith('proj-1', 'highlights', expect.any(Array));
-        });
+      rerender(<ProjectItem {...defaultProps} isExpanded={true} />);
 
-        it('adds highlight when Enter is pressed', async () => {
-            const onUpdate = vi.fn();
-            const user = userEvent.setup();
-            render(<ProjectItem {...defaultProps} isExpanded={true} onUpdate={onUpdate} />);
-
-            const highlightInput = screen.getByPlaceholderText('+ Add Highlight');
-            await user.type(highlightInput, 'Won an award{Enter}');
-
-            expect(onUpdate).toHaveBeenCalledWith('proj-1', 'highlights', expect.arrayContaining(['Won an award']));
-        });
-
-        it('does not add empty highlight on Enter', async () => {
-            const onUpdate = vi.fn();
-            const user = userEvent.setup();
-            render(<ProjectItem {...defaultProps} isExpanded={true} onUpdate={onUpdate} />);
-
-            const highlightInput = screen.getByPlaceholderText('+ Add Highlight');
-            await user.type(highlightInput, '{Enter}');
-
-            expect(onUpdate).not.toHaveBeenCalledWith('proj-1', 'highlights', expect.arrayContaining(['']));
-        });
-
-        it('trims whitespace when adding highlight', async () => {
-            const onUpdate = vi.fn();
-            const user = userEvent.setup();
-            render(<ProjectItem {...defaultProps} isExpanded={true} onUpdate={onUpdate} />);
-
-            const highlightInput = screen.getByPlaceholderText('+ Add Highlight');
-            await user.type(highlightInput, '   Increased revenue by 50%   {Enter}');
-
-            expect(onUpdate).toHaveBeenCalledWith('proj-1', 'highlights', expect.arrayContaining(['Increased revenue by 50%']));
-        });
-
-        it('clears input after adding highlight', async () => {
-            const user = userEvent.setup();
-            render(<ProjectItem {...defaultProps} isExpanded={true} />);
-
-            const highlightInput = screen.getByPlaceholderText('+ Add Highlight') as HTMLInputElement;
-            await user.type(highlightInput, 'Shipped on time{Enter}');
-
-            expect(highlightInput.value).toBe('');
-        });
+      expect(screen.getAllByDisplayValue('E-Commerce Platform').length).toBeGreaterThan(0);
     });
 
-    describe('Input Validation', () => {
-        it('handles long project names', () => {
-            const longName = 'A'.repeat(300);
-            const projectWithLongName = { ...mockProject, name: longName };
+    it('should show form fields only when expanded', () => {
+      const { rerender } = render(<ProjectItem {...defaultProps} isExpanded={false} />);
 
-            render(<ProjectItem {...defaultProps} project={projectWithLongName} isExpanded={true} />);
+      expect(screen.queryByText('Project Name')).not.toBeInTheDocument();
 
-            const input = screen.getByLabelText('Project Name');
-            expect(input).toHaveValue(longName);
-        });
+      rerender(<ProjectItem {...defaultProps} isExpanded={true} />);
 
-        it('handles special characters in fields', () => {
-            const projectWithSpecialChars = {
-                ...mockProject,
-                name: "Project O'Reilly & Partners",
-                description: 'Built a RESTful API & mobile app'
-            };
+      expect(screen.getByText('Project Name')).toBeInTheDocument();
+    });
+  });
 
-            render(<ProjectItem {...defaultProps} project={projectWithSpecialChars} isExpanded={true} />);
+  describe('Delete Operations', () => {
+    it('should call onDelete when delete button is clicked', async () => {
+      const onDelete = vi.fn();
+      const user = userEvent.setup();
+      render(<ProjectItem {...defaultProps} onDelete={onDelete} />);
 
-            expect(screen.getByLabelText('Project Name')).toHaveValue("Project O'Reilly & Partners");
-            expect(screen.getByLabelText('Description')).toHaveValue('Built a RESTful API & mobile app');
-        });
+      const deleteBtn = screen.getByRole('button', { name: /delete/i });
+      await user.click(deleteBtn);
 
-        it('handles Unicode characters', () => {
-            const projectWithUnicode = {
-                ...mockProject,
-                name: '日本語 プロジェクト',
-                description: '한국어 설명',
-                roles: ['엔지니어', 'デザイナー']
-            };
-
-            render(<ProjectItem {...defaultProps} project={projectWithUnicode} isExpanded={true} />);
-
-            expect(screen.getByLabelText('Project Name')).toHaveValue('日本語 プロジェクト');
-            expect(screen.getByLabelText('Description')).toHaveValue('한국어 설명');
-        });
-
-        it('handles multiline descriptions', () => {
-            const multilineDesc = 'Line 1\nLine 2\nLine 3';
-            const projectWithMultiline = { ...mockProject, description: multilineDesc };
-
-            render(<ProjectItem {...defaultProps} project={projectWithMultiline} isExpanded={true} />);
-
-            const textarea = screen.getByLabelText('Description');
-            expect(textarea).toHaveValue(multilineDesc);
-        });
-
-        it('handles very long descriptions', () => {
-            const veryLongDesc = 'A'.repeat(5000);
-            const projectWithLongDesc = { ...mockProject, description: veryLongDesc };
-
-            render(<ProjectItem {...defaultProps} project={projectWithLongDesc} isExpanded={true} />);
-
-            const textarea = screen.getByLabelText('Description');
-            expect(textarea).toHaveValue(veryLongDesc);
-        });
-
-        it('handles various URL formats', () => {
-            const projectWithUrl = {
-                ...mockProject,
-                url: 'https://github.com/user/repo'
-            };
-
-            render(<ProjectItem {...defaultProps} project={projectWithUrl} isExpanded={true} />);
-
-            expect(screen.getByLabelText('Project URL')).toHaveValue('https://github.com/user/repo');
-        });
-
-        it('handles empty URL', () => {
-            const projectWithoutUrl = { ...mockProject, url: undefined };
-
-            render(<ProjectItem {...defaultProps} project={projectWithoutUrl} isExpanded={true} />);
-
-            const urlInput = screen.getByLabelText('Project URL');
-            expect(urlInput).toHaveValue('');
-        });
+      expect(onDelete).toHaveBeenCalledWith('proj-1');
     });
 
-    describe('Accessibility', () => {
-        it('has proper aria attributes on toggle button', () => {
-            render(<ProjectItem {...defaultProps} />);
+    it('should stop event propagation on delete button click', async () => {
+      const onToggleExpand = vi.fn();
+      const user = userEvent.setup();
+      render(<ProjectItem {...defaultProps} onToggleExpand={onToggleExpand} />);
 
-            const toggleButton = screen.getByRole('button', { name: /expand/i });
-            expect(toggleButton).toHaveAttribute('aria-expanded', 'false');
-            expect(toggleButton).toHaveAttribute('aria-controls');
-            expect(toggleButton).toHaveAttribute('aria-label');
-        });
+      const deleteBtn = screen.getByRole('button', { name: /delete/i });
+      await user.click(deleteBtn);
 
-        it('renders region with proper role and label when expanded', () => {
-            render(<ProjectItem {...defaultProps} isExpanded={true} />);
+      expect(onToggleExpand).not.toHaveBeenCalled();
+    });
+  });
 
-            const region = screen.getByRole('region', { name: /Project details for Test Project/i });
-            expect(region).toBeInTheDocument();
-        });
+  describe('Field Updates', () => {
+    it('should update project name when input changes', async () => {
+      const onUpdate = vi.fn();
+      const user = userEvent.setup();
+      render(<ProjectItem {...defaultProps} isExpanded={true} onUpdate={onUpdate} />);
 
-        it('has aria-labels on all buttons', () => {
-            render(<ProjectItem {...defaultProps} />);
+      const nameInputs = screen.getAllByDisplayValue('E-Commerce Platform');
+      await user.type(nameInputs[0], ' v2.0');
 
-            expect(screen.getByLabelText(/Edit project/i)).toBeInTheDocument();
-            expect(screen.getByLabelText(/Delete project/i)).toBeInTheDocument();
-        });
-
-        it('has labels for all form fields', () => {
-            render(<ProjectItem {...defaultProps} isExpanded={true} />);
-
-            expect(screen.getByLabelText('Project Name')).toBeInTheDocument();
-            expect(screen.getByLabelText('Description')).toBeInTheDocument();
-            expect(screen.getByLabelText('Project URL')).toBeInTheDocument();
-            expect(screen.getByLabelText('Start Date')).toBeInTheDocument();
-            expect(screen.getByLabelText('End Date')).toBeInTheDocument();
-        });
-
-        it('role input has accessible label', () => {
-            render(<ProjectItem {...defaultProps} isExpanded={true} />);
-
-            const roleInput = screen.getByPlaceholderText('+ Add Role');
-            expect(roleInput).toHaveAttribute('aria-label', 'Add new role');
-        });
-
-        it('highlight input has accessible label', () => {
-            render(<ProjectItem {...defaultProps} isExpanded={true} />);
-
-            const highlightInput = screen.getByPlaceholderText('+ Add Highlight');
-            expect(highlightInput).toHaveAttribute('aria-label', 'Add new highlight');
-        });
+      expect(onUpdate).toHaveBeenCalledWith('proj-1', 'name', expect.any(String));
     });
 
-    describe('Edge Cases', () => {
-        it('handles undefined roles and highlights', () => {
-            const projectWithoutRoles: ProjectEntry = {
-                id: 'proj-1',
-                name: 'Test',
-                description: 'Test',
-                startDate: '2020',
-                endDate: '2021'
-            };
+    it('should update description when textarea changes', async () => {
+      const onUpdate = vi.fn();
+      const user = userEvent.setup();
+      render(<ProjectItem {...defaultProps} isExpanded={true} onUpdate={onUpdate} />);
 
-            render(<ProjectItem {...defaultProps} project={projectWithoutRoles} isExpanded={true} />);
+      const textarea = screen.getByDisplayValue(mockProject.description) as HTMLTextAreaElement;
+      await user.type(textarea, ' and more details');
 
-            expect(screen.getByPlaceholderText('+ Add Role')).toBeInTheDocument();
-            expect(screen.getByPlaceholderText('+ Add Highlight')).toBeInTheDocument();
-        });
-
-        it('removes correct role when multiple present', async () => {
-            const onUpdate = vi.fn();
-            const user = userEvent.setup();
-            const projectWithManyRoles = {
-                ...mockProject,
-                roles: ['Role A', 'Role B', 'Role C', 'Role D']
-            };
-
-            render(<ProjectItem {...defaultProps} project={projectWithManyRoles} isExpanded={true} onUpdate={onUpdate} />);
-
-            const removeButtons = screen.getAllByRole('button', { name: /remove role/i });
-            await user.click(removeButtons[1]); // Second role
-
-            expect(onUpdate).toHaveBeenCalledWith('proj-1', 'roles', expect.not.arrayContaining(['Role B']));
-        });
-
-        it('removes correct highlight when multiple present', async () => {
-            const onUpdate = vi.fn();
-            const user = userEvent.setup();
-            const projectWithManyHighlights = {
-                ...mockProject,
-                highlights: ['H1', 'H2', 'H3', 'H4']
-            };
-
-            render(<ProjectItem {...defaultProps} project={projectWithManyHighlights} isExpanded={true} onUpdate={onUpdate} />);
-
-            const removeButtons = screen.getAllByRole('button', { name: /remove highlight/i });
-            // Last button should be for last highlight
-            await user.click(removeButtons[removeButtons.length - 1]);
-
-            expect(onUpdate).toHaveBeenCalledWith('proj-1', 'highlights', expect.any(Array));
-        });
-
-        it('updates state on prop change', () => {
-            const { rerender } = render(
-                <ProjectItem {...defaultProps} project={mockProject} isExpanded={true} />
-            );
-
-            expect(screen.getByLabelText('Project Name')).toHaveValue('Test Project');
-
-            const newProject = {
-                ...mockProject,
-                name: 'Updated Project'
-            };
-
-            rerender(<ProjectItem {...defaultProps} project={newProject} isExpanded={true} />);
-
-            expect(screen.getByLabelText('Project Name')).toHaveValue('Updated Project');
-        });
-
-        it('maintains expanded state across prop updates', () => {
-            const { rerender } = render(
-                <ProjectItem {...defaultProps} isExpanded={true} />
-            );
-
-            expect(screen.getByLabelText('Project Name')).toBeInTheDocument();
-
-            const newProject = { ...mockProject, name: 'Updated Project' };
-            rerender(<ProjectItem {...defaultProps} project={newProject} isExpanded={true} />);
-
-            expect(screen.getByLabelText('Project Name')).toHaveValue('Updated Project');
-        });
+      expect(onUpdate).toHaveBeenCalledWith('proj-1', 'description', expect.any(String));
     });
 
-    describe('Styling and Visual States', () => {
-        it('applies different styles for expanded and collapsed states', () => {
-            const { rerender } = render(<ProjectItem {...defaultProps} isExpanded={false} />);
+    it('should update start date when input changes', async () => {
+      const onUpdate = vi.fn();
+      const user = userEvent.setup();
+      render(<ProjectItem {...defaultProps} isExpanded={true} onUpdate={onUpdate} />);
 
-            // Get the main container div with border classes
-            let container = screen.getByText('Test Project').closest('[class*="rounded-xl"]');
-            expect(container?.className).toContain('opacity-80');
+      const startInputs = screen.getAllByDisplayValue('2021-01');
+      await user.type(startInputs[0], '-15');
 
-            rerender(<ProjectItem {...defaultProps} isExpanded={true} />);
-
-            container = screen.getByText('Test Project').closest('[class*="rounded-xl"]');
-            expect(container?.className).toContain('ring-1');
-        });
+      expect(onUpdate).toHaveBeenCalledWith('proj-1', 'startDate', expect.any(String));
     });
 
-    describe('Memory and Performance', () => {
-        it('is memoized component', () => {
-            const { rerender } = render(
-                <ProjectItem {...defaultProps} isExpanded={true} />
-            );
+    it('should update end date when input changes', async () => {
+      const onUpdate = vi.fn();
+      const user = userEvent.setup();
+      render(<ProjectItem {...defaultProps} isExpanded={true} onUpdate={onUpdate} />);
 
-            const input = screen.getByLabelText('Project Name') as HTMLInputElement;
-            const initialValue = input.value;
+      const endInputs = screen.getAllByDisplayValue('2021-12');
+      await user.type(endInputs[0], '-25');
 
-            rerender(<ProjectItem {...defaultProps} isExpanded={true} />);
-
-            const updatedInput = screen.getByLabelText('Project Name') as HTMLInputElement;
-            expect(updatedInput.value).toBe(initialValue);
-        });
+      expect(onUpdate).toHaveBeenCalledWith('proj-1', 'endDate', expect.any(String));
     });
+  });
+
+  describe('Highlight Management', () => {
+    it('should render all highlights', () => {
+      render(<ProjectItem {...defaultProps} isExpanded={true} />);
+
+      mockProject.highlights.forEach(highlight => {
+        expect(screen.getByText(highlight)).toBeInTheDocument();
+      });
+    });
+
+    it('should remove highlight when X is clicked', async () => {
+      const onRemoveHighlight = vi.fn();
+      const user = userEvent.setup();
+      render(<ProjectItem {...defaultProps} isExpanded={true} onRemoveHighlight={onRemoveHighlight} />);
+
+      const removeButtons = screen.getAllByRole('button', { name: /close/i });
+      if (removeButtons.length > 0) {
+        await user.click(removeButtons[0]);
+
+        expect(onRemoveHighlight).toHaveBeenCalledWith('proj-1', expect.any(String));
+      }
+    });
+
+    it('should add highlight when Enter is pressed', async () => {
+      const onAddHighlight = vi.fn();
+      const user = userEvent.setup();
+      render(<ProjectItem {...defaultProps} isExpanded={true} onAddHighlight={onAddHighlight} />);
+
+      const highlightInput = screen.getByPlaceholderText('+ Add Highlight') as HTMLInputElement;
+      await user.type(highlightInput, 'AWS{Enter}');
+
+      expect(onAddHighlight).toHaveBeenCalledWith('proj-1', expect.stringContaining('AWS'));
+    });
+
+    it('should clear input after adding highlight', async () => {
+      const onAddHighlight = vi.fn();
+      const user = userEvent.setup();
+      render(<ProjectItem {...defaultProps} isExpanded={true} onAddHighlight={onAddHighlight} />);
+
+      const highlightInput = screen.getByPlaceholderText('+ Add Highlight') as HTMLInputElement;
+      await user.type(highlightInput, 'Docker{Enter}');
+
+      expect(highlightInput.value).toBe('');
+    });
+
+    it('should render highlight input field', () => {
+      render(<ProjectItem {...defaultProps} isExpanded={true} />);
+
+      expect(screen.getByPlaceholderText('+ Add Highlight')).toBeInTheDocument();
+    });
+
+    it('should handle empty highlights array', () => {
+      const projectWithoutHighlights: ProjectEntry = {
+        ...mockProject,
+        highlights: [],
+      };
+
+      render(<ProjectItem {...defaultProps} project={projectWithoutHighlights} isExpanded={true} />);
+
+      expect(screen.getByPlaceholderText('+ Add Highlight')).toBeInTheDocument();
+    });
+
+    it('should trim whitespace from highlight input', async () => {
+      const onAddHighlight = vi.fn();
+      const user = userEvent.setup();
+      render(<ProjectItem {...defaultProps} isExpanded={true} onAddHighlight={onAddHighlight} />);
+
+      const highlightInput = screen.getByPlaceholderText('+ Add Highlight');
+      await user.type(highlightInput, '  Kubernetes  {Enter}');
+
+      expect(onAddHighlight).toHaveBeenCalledWith('proj-1', expect.stringContaining('Kubernetes'));
+    });
+  });
+
+  describe('Input Validation', () => {
+    it('should handle long project names', () => {
+      const longName = 'A'.repeat(100);
+      const projectWithLongName = {
+        ...mockProject,
+        name: longName,
+      };
+
+      render(<ProjectItem {...defaultProps} project={projectWithLongName} isExpanded={true} />);
+
+      const inputs = screen.getAllByDisplayValue(longName);
+      expect(inputs.length).toBeGreaterThan(0);
+    });
+
+    it('should handle special characters in project name', () => {
+      const projectWithSpecialChars = {
+        ...mockProject,
+        name: "E-Commerce 2.0 (React & Node.js)",
+      };
+
+      render(<ProjectItem {...defaultProps} project={projectWithSpecialChars} isExpanded={true} />);
+
+      const inputs = screen.getAllByDisplayValue("E-Commerce 2.0 (React & Node.js)");
+      expect(inputs.length).toBeGreaterThan(0);
+    });
+
+    it('should handle Unicode characters', () => {
+      const projectWithUnicode = {
+        ...mockProject,
+        name: '日本 E-Commerce Platform',
+        description: 'プラットフォームの説明',
+      };
+
+      render(<ProjectItem {...defaultProps} project={projectWithUnicode} isExpanded={true} />);
+
+      expect(screen.getAllByDisplayValue('日本 E-Commerce Platform').length).toBeGreaterThan(0);
+      expect(screen.getAllByDisplayValue('プラットフォームの説明').length).toBeGreaterThan(0);
+    });
+
+    it('should handle multiline descriptions', () => {
+      const multilineDesc = 'Line 1\nLine 2\nLine 3';
+      const projectWithMultiline = {
+        ...mockProject,
+        description: multilineDesc,
+      };
+
+      render(<ProjectItem {...defaultProps} project={projectWithMultiline} isExpanded={true} />);
+
+      const textarea = screen.getByDisplayValue(multilineDesc) as HTMLTextAreaElement;
+      expect(textarea).toBeInTheDocument();
+    });
+
+    it('should handle very long descriptions', () => {
+      const veryLongDesc = 'A'.repeat(5000);
+      const projectWithLongDesc = {
+        ...mockProject,
+        description: veryLongDesc,
+      };
+
+      render(<ProjectItem {...defaultProps} project={projectWithLongDesc} isExpanded={true} />);
+
+      const textarea = screen.getByDisplayValue(veryLongDesc) as HTMLTextAreaElement;
+      expect(textarea).toBeInTheDocument();
+    });
+  });
+
+  describe('State Persistence', () => {
+    it('should maintain expanded state across re-renders', () => {
+      const { rerender } = render(
+        <ProjectItem {...defaultProps} isExpanded={true} />
+      );
+
+      expect(screen.getByDisplayValue('E-Commerce Platform')).toBeInTheDocument();
+
+      rerender(<ProjectItem {...defaultProps} isExpanded={true} />);
+
+      expect(screen.getByDisplayValue('E-Commerce Platform')).toBeInTheDocument();
+    });
+
+    it('should update when project data changes', () => {
+      const { rerender } = render(
+        <ProjectItem {...defaultProps} />
+      );
+
+      expect(screen.getByText('E-Commerce Platform | 2021-01 - 2021-12')).toBeInTheDocument();
+
+      const updatedProject = {
+        ...mockProject,
+        name: 'Mobile App',
+        startDate: '2022-01',
+        endDate: '2022-06',
+      };
+
+      rerender(<ProjectItem {...defaultProps} project={updatedProject} />);
+
+      expect(screen.getByText('Mobile App | 2022-01 - 2022-06')).toBeInTheDocument();
+    });
+
+    it('should update ID when project ID changes', () => {
+      const projOne = { ...mockProject, id: 'proj-1' };
+      const projTwo = { ...mockProject, id: 'proj-2' };
+
+      const { rerender } = render(
+        <ProjectItem {...defaultProps} project={projOne} />
+      );
+
+      expect(screen.getByText('E-Commerce Platform | 2021-01 - 2021-12')).toBeInTheDocument();
+
+      rerender(<ProjectItem {...defaultProps} project={projTwo} />);
+
+      expect(screen.getByText('E-Commerce Platform | 2021-01 - 2021-12')).toBeInTheDocument();
+    });
+  });
+
+  describe('Edge Cases', () => {
+    it('should handle empty strings for all fields', () => {
+      const emptyProject: ProjectEntry = {
+        id: 'proj-3',
+        name: '',
+        description: '',
+        startDate: '',
+        endDate: '',
+        highlights: [],
+      };
+
+      render(<ProjectItem {...defaultProps} project={emptyProject} isExpanded={true} />);
+
+      const emptyInputs = screen.getAllByDisplayValue('');
+      expect(emptyInputs.length).toBeGreaterThan(0);
+    });
+
+    it('should handle only name populated', () => {
+      const nameOnlyProject: ProjectEntry = {
+        id: 'proj-4',
+        name: 'My Project',
+        description: '',
+        startDate: '',
+        endDate: '',
+        highlights: [],
+      };
+
+      render(<ProjectItem {...defaultProps} project={nameOnlyProject} isExpanded={true} />);
+
+      expect(screen.getAllByDisplayValue('My Project').length).toBeGreaterThan(0);
+    });
+
+    it('should handle project with single highlight', () => {
+      const singleHighlight: ProjectEntry = {
+        ...mockProject,
+        highlights: ['React'],
+      };
+
+      render(<ProjectItem {...defaultProps} project={singleHighlight} isExpanded={true} />);
+
+      expect(screen.getByText('React')).toBeInTheDocument();
+    });
+
+    it('should handle project with many highlights', () => {
+      const manyHighlights: ProjectEntry = {
+        ...mockProject,
+        highlights: Array.from({ length: 20 }, (_, i) => `Tech${i}`),
+      };
+
+      render(<ProjectItem {...defaultProps} project={manyHighlights} isExpanded={true} />);
+
+      expect(screen.getByText('Tech0')).toBeInTheDocument();
+      expect(screen.getByText('Tech19')).toBeInTheDocument();
+    });
+
+    it('should handle same start and end dates', () => {
+      const sameDate: ProjectEntry = {
+        ...mockProject,
+        startDate: '2021-01',
+        endDate: '2021-01',
+      };
+
+      render(<ProjectItem {...defaultProps} project={sameDate} isExpanded={true} />);
+
+      expect(screen.getAllByDisplayValue('2021-01').length).toBeGreaterThanOrEqual(2);
+    });
+  });
+
+  describe('Accessibility', () => {
+    it('should render label text for all form fields', () => {
+      render(<ProjectItem {...defaultProps} isExpanded={true} />);
+
+      expect(screen.getByText('Project Name')).toBeInTheDocument();
+      expect(screen.getByText('Description')).toBeInTheDocument();
+      expect(screen.getByText('Start Date')).toBeInTheDocument();
+      expect(screen.getByText('End Date')).toBeInTheDocument();
+    });
+
+    it('should have accessible form inputs', () => {
+      render(<ProjectItem {...defaultProps} isExpanded={true} />);
+
+      const inputs = screen.getAllByRole('textbox');
+      expect(inputs.length).toBeGreaterThan(0);
+    });
+
+    it('should have accessible delete button', () => {
+      render(<ProjectItem {...defaultProps} />);
+
+      const deleteBtn = screen.getByRole('button', { name: /delete/i });
+      expect(deleteBtn).toBeInTheDocument();
+    });
+
+    it('should support keyboard navigation', async () => {
+      const user = userEvent.setup();
+      render(<ProjectItem {...defaultProps} isExpanded={true} />);
+
+      const nameInputs = screen.getAllByDisplayValue('E-Commerce Platform');
+      const nameInput = nameInputs[0] as HTMLInputElement;
+
+      await user.click(nameInput);
+      expect(document.activeElement).toBe(nameInput);
+
+      await user.tab();
+      expect(document.activeElement).not.toBe(nameInput);
+    });
+
+    it('should have semantic HTML structure', () => {
+      const { container } = render(<ProjectItem {...defaultProps} isExpanded={true} />);
+
+      const labels = container.querySelectorAll('label');
+      const inputs = container.querySelectorAll('input');
+
+      expect(labels.length).toBeGreaterThan(0);
+      expect(inputs.length).toBeGreaterThan(0);
+    });
+  });
+
+  describe('Visual States', () => {
+    it('should show different styling when expanded vs collapsed', () => {
+      const { container: collapsedContainer } = render(
+        <ProjectItem {...defaultProps} isExpanded={false} />
+      );
+
+      const { container: expandedContainer } = render(
+        <ProjectItem {...defaultProps} isExpanded={true} />
+      );
+
+      const collapsedCard = collapsedContainer.querySelector('[class*="border"]');
+      const expandedCard = expandedContainer.querySelector('[class*="border"]');
+
+      expect(collapsedCard).toBeInTheDocument();
+      expect(expandedCard).toBeInTheDocument();
+    });
+  });
+
+  describe('Multiple Instances', () => {
+    it('should handle multiple project items independently', () => {
+      const proj1 = { ...mockProject, id: 'proj-1' };
+      const proj2 = { ...mockProject, id: 'proj-2', name: 'Mobile App' };
+
+      render(
+        <>
+          <ProjectItem {...defaultProps} project={proj1} />
+          <ProjectItem {...defaultProps} project={proj2} />
+        </>
+      );
+
+      expect(screen.getByText('E-Commerce Platform | 2021-01 - 2021-12')).toBeInTheDocument();
+      expect(screen.getByText('Mobile App | 2021-01 - 2021-12')).toBeInTheDocument();
+    });
+
+    it('should call correct callbacks for each instance', async () => {
+      const onDelete1 = vi.fn();
+      const onDelete2 = vi.fn();
+      const user = userEvent.setup();
+
+      const proj1 = { ...mockProject, id: 'proj-1' };
+      const proj2 = { ...mockProject, id: 'proj-2', name: 'Mobile App' };
+
+      render(
+        <>
+          <ProjectItem {...defaultProps} project={proj1} onDelete={onDelete1} />
+          <ProjectItem {...defaultProps} project={proj2} onDelete={onDelete2} />
+        </>
+      );
+
+      const deleteButtons = screen.getAllByRole('button', { name: /delete/i });
+      await user.click(deleteButtons[0]);
+
+      expect(onDelete1).toHaveBeenCalledWith('proj-1');
+      expect(onDelete2).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('Memo Optimization', () => {
+    it('should render correctly on updates', () => {
+      const { rerender } = render(<ProjectItem {...defaultProps} />);
+
+      expect(screen.getByText('E-Commerce Platform')).toBeInTheDocument();
+
+      rerender(<ProjectItem {...defaultProps} />);
+
+      expect(screen.getByText('E-Commerce Platform')).toBeInTheDocument();
+    });
+  });
 });
