@@ -11,6 +11,7 @@
     "test": "vitest",
     "test:coverage": "vitest --coverage",
     "test:a11y": "vitest tests/a11y --run",
+    "test:a11y:watch": "vitest tests/a11y",
     "a11y:scan": "node scripts/a11y-scan.js",
     "docs": "typedoc --out docs --entryPoints components/ pages/ utils/ hooks/ --excludeNotDocumented --excludeInternal --theme default",
     "lint": "eslint . --ext .ts,.tsx",
