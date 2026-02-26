@@ -1,165 +1,99 @@
-import React, { useState, useEffect } from 'react';
-import { StorageManager, getStorageQuota } from '../lib/storage';
-import { toast } from 'react-toastify';
-
-interface StorageWarningProps {
-  onStorageCleaned?: () => void;
-}
+import React from 'react';
+import { useStorageQuota } from '../hooks/useStorageQuota';
 
 /**
  * StorageWarning Component
- * Displays storage quota usage and offers cleanup options
+ * Displays visual warning when localStorage approaches capacity
+ * Shows yellow warning at 80% and red alert at 95%
  */
-export const StorageWarning: React.FC<StorageWarningProps> = ({
-  onStorageCleaned
-}) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [quotaInfo, setQuotaInfo] = useState<{
-    percentUsed: number;
-    used: number;
-    quota: number;
-  } | null>(null);
-  const [isClearing, setIsClearing] = useState(false);
+const StorageWarning: React.FC = () => {
+  const { stats, isWarning, isCritical, refresh } = useStorageQuota();
 
-  useEffect(() => {
-    const checkQuota = async () => {
-      const quota = await getStorageQuota();
-      if (quota.percentUsed > 80) {
-        setIsOpen(true);
-        setQuotaInfo({
-          percentUsed: quota.percentUsed,
-          used: quota.estimatedUsage,
-          quota: quota.estimatedQuota
-        });
-      }
-    };
-
-    checkQuota();
-    // Check every 30 seconds
-    const interval = setInterval(checkQuota, 30000);
-
-    return () => clearInterval(interval);
-  }, []);
-
-  const formatBytes = (bytes: number): string => {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
-  };
-
-  const handleClearOldData = async () => {
-    setIsClearing(true);
-    try {
-      // Clear all resumeai_ prefixed items except current resume
-      const keysToKeep = ['resumeai_master_profile']; // Keep the main resume
-      
-      for (const key in localStorage) {
-        if (key.startsWith('resumeai_') && !keysToKeep.includes(key)) {
-          localStorage.removeItem(key);
-        }
-      }
-
-      toast.success('Storage cleaned successfully');
-      setIsOpen(false);
-      onStorageCleaned?.();
-
-      // Refresh quota info
-      const quota = await getStorageQuota();
-      setQuotaInfo({
-        percentUsed: quota.percentUsed,
-        used: quota.estimatedUsage,
-        quota: quota.estimatedQuota
-      });
-    } catch (error) {
-      toast.error('Failed to clear storage');
-      console.error('Storage cleanup error:', error);
-    } finally {
-      setIsClearing(false);
-    }
-  };
-
-  const handleClearAll = async () => {
-    if (!confirm('Are you sure? This will delete all saved data.')) {
-      return;
-    }
-
-    setIsClearing(true);
-    try {
-      StorageManager.clear();
-      toast.success('All storage cleared');
-      setIsOpen(false);
-      onStorageCleaned?.();
-    } catch (error) {
-      toast.error('Failed to clear storage');
-      console.error('Storage clear error:', error);
-    } finally {
-      setIsClearing(false);
-    }
-  };
-
-  if (!isOpen || !quotaInfo) {
+  if (!stats || (!isWarning && !isCritical)) {
     return null;
   }
 
-  const isCritical = quotaInfo.percentUsed > 95;
-  const bgColor = isCritical ? 'bg-red-50' : 'bg-yellow-50';
-  const borderColor = isCritical ? 'border-red-200' : 'border-yellow-200';
+  const usagePercent = Math.round(stats.usagePercent);
+  const usageMB = (stats.usedBytes / 1024 / 1024).toFixed(1);
+  const totalMB = (stats.totalBytes / 1024 / 1024).toFixed(1);
+
+  const bgColor = isCritical
+    ? 'bg-red-50 border-red-200'
+    : 'bg-yellow-50 border-yellow-200';
   const textColor = isCritical ? 'text-red-800' : 'text-yellow-800';
-  const accentColor = isCritical ? 'text-red-600' : 'text-yellow-600';
+  const iconColor = isCritical ? 'text-red-500' : 'text-yellow-500';
+  const progressBg = isCritical ? 'bg-red-200' : 'bg-yellow-200';
+  const progressFill = isCritical ? 'bg-red-500' : 'bg-yellow-500';
+  const badge = isCritical ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800';
+
+  const handleRefresh = async () => {
+    await refresh();
+  };
+
+  const handleManageStorage = () => {
+    window.location.hash = '#settings';
+  };
 
   return (
     <div
-      className={`fixed bottom-4 right-4 z-40 ${bgColor} border ${borderColor} ${textColor} px-4 py-3 rounded-lg shadow-lg max-w-md`}
+      className={`fixed bottom-4 right-4 z-40 max-w-sm border rounded-lg shadow-lg p-4 ${bgColor} ${textColor} animate-in slide-in-from-bottom-2 fade-in`}
     >
-      <div className="flex items-start gap-3">
-        <span className={`material-symbols-outlined ${accentColor} text-2xl flex-shrink-0 mt-0.5`}>
-          {isCritical ? 'warning' : 'info'}
-        </span>
-        <div className="flex-1">
-          <h3 className="font-semibold mb-2">
-            {isCritical ? 'Storage Critical' : 'Storage Getting Full'}
+      <div className="flex gap-3">
+        <div className="flex-shrink-0 mt-0.5">
+          <span className={`material-symbols-outlined ${iconColor} text-[24px]`}>
+            {isCritical ? 'storage_alert' : 'warning'}
+          </span>
+        </div>
+        <div className="flex-1 min-w-0">
+          <h3 className="text-sm font-semibold mb-2">
+            {isCritical ? 'Storage Critical' : 'Storage Warning'}
           </h3>
-          <p className="text-sm mb-3">
-            Your storage is {quotaInfo.percentUsed}% full ({formatBytes(quotaInfo.used)} of{' '}
-            {formatBytes(quotaInfo.quota)})
+          <p className="text-xs mb-3 leading-relaxed">
+            {isCritical
+              ? 'Your storage is almost full. Please clear some data soon.'
+              : 'Your storage usage is getting high. Consider clearing old data.'}
           </p>
 
-          {/* Storage usage bar */}
-          <div className="w-full bg-gray-200 rounded-full h-2 mb-3 overflow-hidden">
-            <div
-              className={`h-full ${isCritical ? 'bg-red-500' : 'bg-yellow-500'} rounded-full transition-all`}
-              style={{ width: `${Math.min(quotaInfo.percentUsed, 100)}%` }}
-            />
+          {/* Progress bar */}
+          <div className="mb-2">
+            <div className={`h-2 rounded-full ${progressBg} overflow-hidden`}>
+              <div
+                className={`h-full ${progressFill} transition-all duration-300`}
+                style={{ width: `${Math.min(usagePercent, 100)}%` }}
+              />
+            </div>
+          </div>
+
+          {/* Stats */}
+          <div className="flex items-center justify-between gap-2 text-xs mb-3">
+            <span className="font-medium">
+              {usageMB} MB / {totalMB} MB
+            </span>
+            <span className={`px-2 py-1 rounded text-xs font-semibold ${badge}`}>
+              {usagePercent}%
+            </span>
           </div>
 
           {/* Action buttons */}
-          <div className="flex gap-2 flex-wrap">
+          <div className="flex gap-2">
             <button
-              onClick={handleClearOldData}
-              disabled={isClearing}
-              className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
-                isClearing
-                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                  : `bg-${isCritical ? 'red' : 'yellow'}-500 text-white hover:bg-${isCritical ? 'red' : 'yellow'}-600`
+              onClick={handleRefresh}
+              className={`text-xs px-3 py-1.5 rounded font-medium transition-colors ${
+                isCritical
+                  ? 'hover:bg-red-100 text-red-700'
+                  : 'hover:bg-yellow-100 text-yellow-700'
               }`}
             >
-              {isClearing ? 'Clearing...' : 'Clean Storage'}
+              Refresh
             </button>
-            <button
-              onClick={handleClearAll}
-              disabled={isClearing}
-              className="px-3 py-1 rounded text-sm font-medium bg-gray-200 text-gray-700 hover:bg-gray-300 disabled:bg-gray-100 disabled:text-gray-400 transition-colors"
-            >
-              {isClearing ? 'Clearing...' : 'Clear All'}
-            </button>
-            <button
-              onClick={() => setIsOpen(false)}
-              className="px-3 py-1 rounded text-sm font-medium bg-gray-200 text-gray-700 hover:bg-gray-300 transition-colors"
-            >
-              Dismiss
-            </button>
+            {isCritical && (
+              <button
+                onClick={handleManageStorage}
+                className="text-xs px-3 py-1.5 rounded font-medium bg-red-200 text-red-800 hover:bg-red-300 transition-colors"
+              >
+                Manage Storage
+              </button>
+            )}
           </div>
         </div>
       </div>
