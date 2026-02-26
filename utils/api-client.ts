@@ -211,6 +211,44 @@ export async function tailorResume(
   return response.json();
 }
 
+export interface CoverLetterResponse {
+  header: string;
+  introduction: string;
+  body: string;
+  closing: string;
+  full_text: string;
+  metadata: Record<string, unknown>;
+}
+
+export async function generateCoverLetter(
+  resumeData: ResumeDataForAPI,
+  jobDescription: string,
+  companyName: string,
+  jobTitle: string,
+  tone: string = 'professional',
+): Promise<CoverLetterResponse> {
+  const response = await fetchWithTimeout(
+    `${API_URL}/v1/cover-letter`,
+    {
+      method: 'POST',
+      headers: { ...getHeaders(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        resume_data: resumeData,
+        job_description: jobDescription,
+        company_name: companyName,
+        job_title: jobTitle,
+        tone,
+      }),
+    },
+    TIMEOUT_CONFIG.AI_OPERATION,
+  );
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ detail: 'Cover letter generation failed' }));
+    throw new Error(error.detail || 'Failed to generate cover letter');
+  }
+  return response.json();
+}
+
 export async function createResume(
   title: string,
   data: ResumeData,

@@ -76,6 +76,15 @@ export interface TailoredResumeResponse {
   markdown?: string;
 }
 
+export interface CoverLetterData {
+  header: string;
+  introduction: string;
+  body: string;
+  closing: string;
+  full_text: string;
+  metadata: Record<string, unknown>;
+}
+
 export interface RenderPDFRequest {
   resume_data: ResumeData;
   variant: string;
@@ -112,6 +121,8 @@ export const useGeneratePackage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<TailoredResumeResponse | null>(null);
+  const [coverLetter, setCoverLetter] = useState<CoverLetterData | null>(null);
+  const [coverLetterLoading, setCoverLetterLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
 
@@ -276,6 +287,51 @@ export const useGeneratePackage = () => {
   };
 
   /**
+   * Generate a cover letter using the production API
+   */
+  const generateCoverLetterRequest = async (params: {
+    resume_data: ResumeData;
+    job_description: string;
+    company_name: string;
+    job_title: string;
+    tone?: string;
+  }): Promise<CoverLetterData> => {
+    setCoverLetterLoading(true);
+    setError(null);
+    try {
+      const response = await fetch(`${API_URL}/v1/cover-letter`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(API_KEY && { 'X-API-KEY': API_KEY }),
+        },
+        body: JSON.stringify({
+          resume_data: params.resume_data,
+          job_description: params.job_description,
+          company_name: params.company_name,
+          job_title: params.job_title,
+          tone: params.tone || 'professional',
+        }),
+      });
+
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.detail || `Server error: ${response.status}`);
+      }
+
+      const result: CoverLetterData = await response.json();
+      setCoverLetter(result);
+      return result;
+    } catch (err: any) {
+      const message = err.message || 'Failed to generate cover letter';
+      setError(message);
+      throw err;
+    } finally {
+      setCoverLetterLoading(false);
+    }
+  };
+
+  /**
    * Test connection to backend API
    */
   const testConnection = useCallback(async (): Promise<boolean> => {
@@ -301,6 +357,7 @@ export const useGeneratePackage = () => {
 
   return {
     generatePackage,
+    generateCoverLetterRequest,
     downloadPDF,
     renderMarkdown,
     saveResume,
@@ -312,6 +369,8 @@ export const useGeneratePackage = () => {
     loading,
     error,
     data,
+    coverLetter,
+    coverLetterLoading,
     isSaving,
     lastSaved,
   };
