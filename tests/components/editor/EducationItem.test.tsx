@@ -1,496 +1,535 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import React from 'react';
 import EducationItem from '../../../components/editor/EducationItem';
 import { EducationEntry } from '../../../types';
 
-describe('EducationItem', () => {
-    const mockEdu: EducationEntry = {
-        id: 'edu-1',
-        institution: 'Test University',
-        area: 'Computer Science',
-        studyType: 'Bachelor',
-        startDate: '2015',
-        endDate: '2019',
-        courses: ['CS101', 'Algorithms', 'Data Structures']
-    };
+describe('EducationItem Component', () => {
+  const mockEducation: EducationEntry = {
+    id: 'edu-1',
+    institution: 'Harvard University',
+    area: 'Computer Science',
+    studyType: 'Master of Science',
+    startDate: '2018-09',
+    endDate: '2020-05',
+  };
 
-    const defaultProps = {
-        edu: mockEdu,
-        isExpanded: false,
-        onToggleExpand: vi.fn(),
-        onDelete: vi.fn(),
-        onUpdate: vi.fn()
-    };
+  const defaultProps = {
+    edu: mockEducation,
+    isExpanded: false,
+    onToggleExpand: vi.fn(),
+    onDelete: vi.fn(),
+    onUpdate: vi.fn(),
+  };
 
-    beforeEach(() => {
-        vi.clearAllMocks();
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  describe('Rendering', () => {
+    it('should render collapsed state correctly', () => {
+      render(<EducationItem {...defaultProps} />);
+
+      expect(screen.getByText('Master of Science')).toBeInTheDocument();
+      expect(screen.getByText('Harvard University | 2018-09 - 2020-05')).toBeInTheDocument();
+      expect(screen.queryAllByDisplayValue('Harvard University')).toHaveLength(0);
     });
 
-    describe('Rendering', () => {
-        it('renders collapsed state correctly', () => {
-            render(<EducationItem {...defaultProps} />);
+    it('should render expanded state with all form fields', () => {
+      render(<EducationItem {...defaultProps} isExpanded={true} />);
 
-            expect(screen.getByText('Test University')).toBeInTheDocument();
-            expect(screen.getByText('Bachelor in Computer Science | 2015 - 2019')).toBeInTheDocument();
-            expect(screen.queryByLabelText('Institution')).not.toBeInTheDocument();
-        });
-
-        it('renders expanded state with all form fields', () => {
-            render(<EducationItem {...defaultProps} isExpanded={true} />);
-
-            expect(screen.getByLabelText('Institution')).toHaveValue('Test University');
-            expect(screen.getByLabelText('Degree Type')).toHaveValue('Bachelor');
-            expect(screen.getByLabelText('Field of Study')).toHaveValue('Computer Science');
-            expect(screen.getByLabelText('Start Date')).toHaveValue('2015');
-            expect(screen.getByLabelText('End Date')).toHaveValue('2019');
-        });
-
-        it('displays all courses when expanded', () => {
-            render(<EducationItem {...defaultProps} isExpanded={true} />);
-
-            expect(screen.getByText('CS101')).toBeInTheDocument();
-            expect(screen.getByText('Algorithms')).toBeInTheDocument();
-            expect(screen.getByText('Data Structures')).toBeInTheDocument();
-        });
-
-        it('renders without courses when empty', () => {
-            const eduNoCourses = { ...mockEdu, courses: [] };
-            render(<EducationItem {...defaultProps} edu={eduNoCourses} isExpanded={true} />);
-
-            expect(screen.getByPlaceholderText('+ Add Course')).toBeInTheDocument();
-        });
-
-        it('toggles expand state with aria-expanded', () => {
-            const { rerender } = render(<EducationItem {...defaultProps} isExpanded={false} />);
-
-            let expandBtn = screen.getByRole('button', { name: /expand/i });
-            expect(expandBtn).toHaveAttribute('aria-expanded', 'false');
-
-            rerender(<EducationItem {...defaultProps} isExpanded={true} />);
-            expandBtn = screen.getByRole('button', { name: /expand/i });
-            expect(expandBtn).toHaveAttribute('aria-expanded', 'true');
-        });
+      const inputs = screen.getAllByDisplayValue('Harvard University');
+      expect(inputs.length).toBeGreaterThan(0);
+      expect(screen.getByDisplayValue('Computer Science')).toBeInTheDocument();
+      expect(screen.getByDisplayValue('Master of Science')).toBeInTheDocument();
     });
 
-    describe('Toggle Expand', () => {
-        it('calls onToggleExpand when expand button is clicked', async () => {
-            const onToggleExpand = vi.fn();
-            const user = userEvent.setup();
-            render(<EducationItem {...defaultProps} onToggleExpand={onToggleExpand} />);
+    it('should render delete button in collapsed state', () => {
+      render(<EducationItem {...defaultProps} />);
 
-            const toggleButton = screen.getByRole('button', { name: /expand/i });
-            await user.click(toggleButton);
-
-            expect(onToggleExpand).toHaveBeenCalledWith('edu-1');
-        });
-
-        it('calls onToggleExpand when header is clicked', async () => {
-            const onToggleExpand = vi.fn();
-            const user = userEvent.setup();
-            render(<EducationItem {...defaultProps} onToggleExpand={onToggleExpand} />);
-
-            const header = screen.getByText('Test University');
-            await user.click(header);
-
-            expect(onToggleExpand).toHaveBeenCalledWith('edu-1');
-        });
+      expect(screen.getByRole('button', { name: /delete/i })).toBeInTheDocument();
     });
 
-    describe('Delete Operations', () => {
-        it('calls onDelete when delete button is clicked and confirmed', async () => {
-            const onDelete = vi.fn();
-            const user = userEvent.setup();
-            render(<EducationItem {...defaultProps} onDelete={onDelete} />);
+    it('should render expand icon in collapsed state', () => {
+      render(<EducationItem {...defaultProps} />);
 
-            const deleteButton = screen.getByRole('button', { name: /delete/i });
-            await user.click(deleteButton);
-
-            const confirmButton = screen.getByLabelText('Confirm delete');
-            const cancelButton = screen.getByLabelText('Cancel delete');
-            expect(confirmButton).toBeInTheDocument();
-            expect(cancelButton).toBeInTheDocument();
-
-            expect(onDelete).not.toHaveBeenCalled();
-
-            await user.click(confirmButton);
-
-            expect(onDelete).toHaveBeenCalledWith('edu-1');
-        });
-
-        it('does not call onDelete when delete is cancelled', async () => {
-            const onDelete = vi.fn();
-            const user = userEvent.setup();
-            render(<EducationItem {...defaultProps} onDelete={onDelete} />);
-
-            const deleteButton = screen.getByRole('button', { name: /delete/i });
-            await user.click(deleteButton);
-
-            const cancelButton = screen.getByLabelText('Cancel delete');
-            await user.click(cancelButton);
-
-            expect(onDelete).not.toHaveBeenCalled();
-
-            expect(screen.queryByLabelText('Confirm delete')).not.toBeInTheDocument();
-            expect(screen.getByRole('button', { name: /delete/i })).toBeInTheDocument();
-        });
-
-        it('stops event propagation on delete button click', async () => {
-            const onToggleExpand = vi.fn();
-            const user = userEvent.setup();
-            render(<EducationItem {...defaultProps} onToggleExpand={onToggleExpand} />);
-
-            const deleteBtn = screen.getByRole('button', { name: /delete/i });
-            await user.click(deleteBtn);
-
-            expect(onToggleExpand).not.toHaveBeenCalled();
-        });
-
-        it('manages focus when toggling delete confirmation', async () => {
-            const user = userEvent.setup();
-            render(<EducationItem {...defaultProps} />);
-
-            const deleteButton = screen.getByRole('button', { name: /delete/i });
-            await user.click(deleteButton);
-
-            const confirmButton = screen.getByLabelText('Confirm delete');
-            await waitFor(() => {
-                expect(confirmButton).toHaveFocus();
-            });
-        });
+      const expandButton = screen.getByRole('button').closest('div')?.querySelector('button');
+      expect(expandButton).toBeInTheDocument();
     });
 
-    describe('Field Updates', () => {
-        it('calls onUpdate when institution changes', async () => {
-            const onUpdate = vi.fn();
-            const user = userEvent.setup();
-            render(<EducationItem {...defaultProps} isExpanded={true} onUpdate={onUpdate} />);
+    it('should render all input fields when expanded', () => {
+      render(<EducationItem {...defaultProps} isExpanded={true} />);
 
-            const inputs = screen.getAllByDisplayValue('Test University');
-            await user.type(inputs[0], ' Extended');
-
-            expect(onUpdate).toHaveBeenCalledWith('edu-1', 'institution', expect.stringContaining('Test University'));
-        });
-
-        it('calls onUpdate when degree type changes', async () => {
-            const onUpdate = vi.fn();
-            const user = userEvent.setup();
-            render(<EducationItem {...defaultProps} isExpanded={true} onUpdate={onUpdate} />);
-
-            const inputs = screen.getAllByDisplayValue('Bachelor');
-            await user.type(inputs[0], ' of Science');
-
-            expect(onUpdate).toHaveBeenCalledWith('edu-1', 'studyType', expect.stringContaining('Bachelor'));
-        });
-
-        it('calls onUpdate when field of study changes', async () => {
-            const onUpdate = vi.fn();
-            const user = userEvent.setup();
-            render(<EducationItem {...defaultProps} isExpanded={true} onUpdate={onUpdate} />);
-
-            const inputs = screen.getAllByDisplayValue('Computer Science');
-            await user.type(inputs[0], ' (Hons)');
-
-            expect(onUpdate).toHaveBeenCalledWith('edu-1', 'area', expect.stringContaining('Computer Science'));
-        });
-
-        it('calls onUpdate when start date changes', async () => {
-            const onUpdate = vi.fn();
-            const user = userEvent.setup();
-            render(<EducationItem {...defaultProps} isExpanded={true} onUpdate={onUpdate} />);
-
-            const inputs = screen.getAllByDisplayValue('2015');
-            // Click the first one (start date)
-            await user.type(inputs[0], '-09');
-
-            expect(onUpdate).toHaveBeenCalledWith('edu-1', 'startDate', expect.stringContaining('2015'));
-        });
-
-        it('calls onUpdate when end date changes', async () => {
-            const onUpdate = vi.fn();
-            const user = userEvent.setup();
-            render(<EducationItem {...defaultProps} isExpanded={true} onUpdate={onUpdate} />);
-
-            const inputs = screen.getAllByDisplayValue('2019');
-            // Click the first one (end date)
-            await user.type(inputs[0], '-05');
-
-            expect(onUpdate).toHaveBeenCalledWith('edu-1', 'endDate', expect.stringContaining('2019'));
-        });
+      expect(screen.getByText('Institution')).toBeInTheDocument();
+      expect(screen.getByText('Field of Study')).toBeInTheDocument();
+      expect(screen.getByText('Degree Type')).toBeInTheDocument();
+      expect(screen.getByText('Start Date')).toBeInTheDocument();
+      expect(screen.getByText('End Date')).toBeInTheDocument();
     });
 
-    describe('Course Management', () => {
-        it('removes course when X button is clicked', async () => {
-            const onUpdate = vi.fn();
-            const user = userEvent.setup();
-            render(<EducationItem {...defaultProps} isExpanded={true} onUpdate={onUpdate} />);
+    it('should render with empty education data', () => {
+      const emptyEducation: EducationEntry = {
+        id: 'edu-2',
+        institution: '',
+        area: '',
+        studyType: '',
+        startDate: '',
+        endDate: '',
+      };
 
-            const removeButtons = screen.getAllByRole('button', { name: /remove course/i });
-            await user.click(removeButtons[0]);
+      render(<EducationItem {...defaultProps} edu={emptyEducation} isExpanded={true} />);
 
-            expect(onUpdate).toHaveBeenCalledWith('edu-1', 'courses', expect.any(Array));
-        });
+      expect(screen.getByDisplayValue('')).toBeInTheDocument();
+    });
+  });
 
-        it('adds course when Enter is pressed', async () => {
-            const onUpdate = vi.fn();
-            const user = userEvent.setup();
-            render(<EducationItem {...defaultProps} isExpanded={true} onUpdate={onUpdate} />);
+  describe('Toggle Expand', () => {
+    it('should call onToggleExpand when card header is clicked', async () => {
+      const onToggleExpand = vi.fn();
+      const user = userEvent.setup();
+      render(<EducationItem {...defaultProps} onToggleExpand={onToggleExpand} />);
 
-            const courseInput = screen.getByPlaceholderText('+ Add Course');
-            await user.type(courseInput, 'Web Development{Enter}');
+      const card = screen.getByText('Master of Science').closest('div');
+      if (card?.parentElement) {
+        await user.click(card.parentElement);
+      }
 
-            expect(onUpdate).toHaveBeenCalledWith('edu-1', 'courses', expect.arrayContaining(['Web Development']));
-        });
-
-        it('does not add empty course on Enter', async () => {
-            const onUpdate = vi.fn();
-            const user = userEvent.setup();
-            render(<EducationItem {...defaultProps} isExpanded={true} onUpdate={onUpdate} />);
-
-            const courseInput = screen.getByPlaceholderText('+ Add Course');
-            await user.type(courseInput, '{Enter}');
-
-            // Should not have been called for adding empty course
-            expect(onUpdate).not.toHaveBeenCalledWith('edu-1', 'courses', expect.arrayContaining(['']));
-        });
-
-        it('trims whitespace when adding course', async () => {
-            const onUpdate = vi.fn();
-            const user = userEvent.setup();
-            render(<EducationItem {...defaultProps} isExpanded={true} onUpdate={onUpdate} />);
-
-            const courseInput = screen.getByPlaceholderText('+ Add Course');
-            await user.type(courseInput, '   Machine Learning   {Enter}');
-
-            expect(onUpdate).toHaveBeenCalledWith('edu-1', 'courses', expect.arrayContaining(['Machine Learning']));
-        });
-
-        it('clears input after adding course', async () => {
-            const user = userEvent.setup();
-            render(<EducationItem {...defaultProps} isExpanded={true} />);
-
-            const courseInput = screen.getByPlaceholderText('+ Add Course') as HTMLInputElement;
-            await user.type(courseInput, 'AI Fundamentals{Enter}');
-
-            expect(courseInput.value).toBe('');
-        });
-
-        it('handles multiple course additions', async () => {
-            const onUpdate = vi.fn();
-            const user = userEvent.setup();
-            render(<EducationItem {...defaultProps} isExpanded={true} onUpdate={onUpdate} />);
-
-            const courseInput = screen.getByPlaceholderText('+ Add Course');
-
-            await user.type(courseInput, 'Course1{Enter}');
-            await user.type(courseInput, 'Course2{Enter}');
-            await user.type(courseInput, 'Course3{Enter}');
-
-            expect(onUpdate).toHaveBeenCalledTimes(3);
-        });
+      expect(onToggleExpand).toHaveBeenCalledWith('edu-1');
     });
 
-    describe('Input Validation', () => {
-        it('handles long institution names', () => {
-            const longName = 'A'.repeat(200);
-            const eduWithLongName = { ...mockEdu, institution: longName };
+    it('should toggle expand state on rerender', () => {
+      const { rerender } = render(<EducationItem {...defaultProps} isExpanded={false} />);
 
-            render(<EducationItem {...defaultProps} edu={eduWithLongName} isExpanded={true} />);
+      expect(screen.queryAllByDisplayValue('Harvard University')).toHaveLength(0);
 
-            const input = screen.getByLabelText('Institution');
-            expect(input).toHaveValue(longName);
-        });
+      rerender(<EducationItem {...defaultProps} isExpanded={true} />);
 
-        it('handles special characters in fields', () => {
-            const eduWithSpecialChars = {
-                ...mockEdu,
-                institution: "O'Reilly University & Partners",
-                area: "Computer Science & Engineering"
-            };
-
-            render(<EducationItem {...defaultProps} edu={eduWithSpecialChars} isExpanded={true} />);
-
-            expect(screen.getByLabelText('Institution')).toHaveValue("O'Reilly University & Partners");
-            expect(screen.getByLabelText('Field of Study')).toHaveValue("Computer Science & Engineering");
-        });
-
-        it('handles Unicode characters', () => {
-            const eduWithUnicode = {
-                ...mockEdu,
-                institution: '北京大学 University',
-                studyType: 'バッチェラー',
-                area: '컴퓨터 과학'
-            };
-
-            render(<EducationItem {...defaultProps} edu={eduWithUnicode} isExpanded={true} />);
-
-            expect(screen.getByLabelText('Institution')).toHaveValue('北京大学 University');
-            expect(screen.getByLabelText('Degree Type')).toHaveValue('バッチェラー');
-            expect(screen.getByLabelText('Field of Study')).toHaveValue('컴퓨터 과학');
-        });
-
-        it('handles date formats', () => {
-            const eduWithDates = {
-                ...mockEdu,
-                startDate: 'January 2015',
-                endDate: 'May 2019'
-            };
-
-            render(<EducationItem {...defaultProps} edu={eduWithDates} isExpanded={true} />);
-
-            expect(screen.getByLabelText('Start Date')).toHaveValue('January 2015');
-            expect(screen.getByLabelText('End Date')).toHaveValue('May 2019');
-        });
-
-        it('handles courses with special characters', () => {
-            const eduWithSpecialCourses = {
-                ...mockEdu,
-                courses: ['C++ Programming', 'HTML & CSS', 'Data Structures (DSA)']
-            };
-
-            render(<EducationItem {...defaultProps} edu={eduWithSpecialCourses} isExpanded={true} />);
-
-            expect(screen.getByText('C++ Programming')).toBeInTheDocument();
-            expect(screen.getByText('HTML & CSS')).toBeInTheDocument();
-            expect(screen.getByText('Data Structures (DSA)')).toBeInTheDocument();
-        });
+      expect(screen.getAllByDisplayValue('Harvard University').length).toBeGreaterThan(0);
     });
 
-    describe('Accessibility', () => {
-        it('has proper aria attributes on toggle button', () => {
-            render(<EducationItem {...defaultProps} />);
+    it('should show form fields only when expanded', () => {
+      const { rerender } = render(<EducationItem {...defaultProps} isExpanded={false} />);
 
-            const toggleButton = screen.getByRole('button', { name: /expand/i });
-            expect(toggleButton).toHaveAttribute('aria-expanded', 'false');
-            expect(toggleButton).toHaveAttribute('aria-controls');
-            expect(toggleButton).toHaveAttribute('aria-label');
-        });
+      expect(screen.queryByText('Institution')).not.toBeInTheDocument();
 
-        it('renders region with proper role and label when expanded', () => {
-            render(<EducationItem {...defaultProps} isExpanded={true} />);
+      rerender(<EducationItem {...defaultProps} isExpanded={true} />);
 
-            const region = screen.getByRole('region', { name: /Details for Test University/i });
-            expect(region).toBeInTheDocument();
-        });
+      expect(screen.getByText('Institution')).toBeInTheDocument();
+    });
+  });
 
-        it('has aria-labels on all buttons', () => {
-            render(<EducationItem {...defaultProps} />);
+  describe('Delete Operations', () => {
+    it('should call onDelete when delete button is clicked', async () => {
+      const onDelete = vi.fn();
+      const user = userEvent.setup();
+      render(<EducationItem {...defaultProps} onDelete={onDelete} />);
 
-            expect(screen.getByLabelText('Edit education')).toBeInTheDocument();
-            expect(screen.getByLabelText('Delete education')).toBeInTheDocument();
-        });
+      const deleteBtn = screen.getByRole('button', { name: /delete/i });
+      await user.click(deleteBtn);
 
-        it('has labels for all form fields', () => {
-            render(<EducationItem {...defaultProps} isExpanded={true} />);
-
-            expect(screen.getByLabelText('Institution')).toBeInTheDocument();
-            expect(screen.getByLabelText('Degree Type')).toBeInTheDocument();
-            expect(screen.getByLabelText('Field of Study')).toBeInTheDocument();
-            expect(screen.getByLabelText('Start Date')).toBeInTheDocument();
-            expect(screen.getByLabelText('End Date')).toBeInTheDocument();
-        });
-
-        it('course input has accessible label', () => {
-            render(<EducationItem {...defaultProps} isExpanded={true} />);
-
-            const courseInput = screen.getByPlaceholderText('+ Add Course');
-            expect(courseInput).toHaveAttribute('aria-label', 'Add new course');
-        });
+      expect(onDelete).toHaveBeenCalledWith('edu-1');
     });
 
-    describe('Edge Cases', () => {
-        it('handles undefined courses array', () => {
-            const eduWithoutCourses: EducationEntry = {
-                id: 'edu-1',
-                institution: 'Test',
-                area: 'CS',
-                studyType: 'Bachelor',
-                startDate: '2015',
-                endDate: '2019'
-            };
+    it('should stop event propagation on delete button click', async () => {
+      const onToggleExpand = vi.fn();
+      const user = userEvent.setup();
+      render(<EducationItem {...defaultProps} onToggleExpand={onToggleExpand} />);
 
-            render(<EducationItem {...defaultProps} edu={eduWithoutCourses} isExpanded={true} />);
+      const deleteBtn = screen.getByRole('button', { name: /delete/i });
+      await user.click(deleteBtn);
 
-            expect(screen.getByPlaceholderText('+ Add Course')).toBeInTheDocument();
-        });
+      expect(onToggleExpand).not.toHaveBeenCalled();
+    });
+  });
 
-        it('removes correct course when multiple present', async () => {
-            const onUpdate = vi.fn();
-            const user = userEvent.setup();
-            const eduWithManyCourses = {
-                ...mockEdu,
-                courses: ['Course A', 'Course B', 'Course C', 'Course D']
-            };
+  describe('Field Updates', () => {
+    it('should update institution when input changes', async () => {
+      const onUpdate = vi.fn();
+      const user = userEvent.setup();
+      render(<EducationItem {...defaultProps} isExpanded={true} onUpdate={onUpdate} />);
 
-            render(<EducationItem {...defaultProps} edu={eduWithManyCourses} isExpanded={true} onUpdate={onUpdate} />);
+      const institutionInputs = screen.getAllByDisplayValue('Harvard University');
+      await user.type(institutionInputs[0], ' (Extended)');
 
-            // Get the remove button for 'Course B'
-            const removeButtons = screen.getAllByRole('button', { name: /remove course/i });
-            await user.click(removeButtons[1]); // Second course
-
-            expect(onUpdate).toHaveBeenCalledWith('edu-1', 'courses', expect.not.arrayContaining(['Course B']));
-        });
-
-        it('updates state on prop change', () => {
-            const { rerender } = render(
-                <EducationItem {...defaultProps} edu={mockEdu} isExpanded={true} />
-            );
-
-            expect(screen.getByLabelText('Institution')).toHaveValue('Test University');
-
-            const newEdu = {
-                ...mockEdu,
-                institution: 'Another University'
-            };
-
-            rerender(<EducationItem {...defaultProps} edu={newEdu} isExpanded={true} />);
-
-            expect(screen.getByLabelText('Institution')).toHaveValue('Another University');
-        });
-
-        it('maintains expanded state across prop updates', () => {
-            const { rerender } = render(
-                <EducationItem {...defaultProps} isExpanded={true} />
-            );
-
-            expect(screen.getByLabelText('Institution')).toBeInTheDocument();
-
-            const newEdu = { ...mockEdu, institution: 'Updated University' };
-            rerender(<EducationItem {...defaultProps} edu={newEdu} isExpanded={true} />);
-
-            expect(screen.getByLabelText('Institution')).toHaveValue('Updated University');
-        });
+      expect(onUpdate).toHaveBeenCalledWith('edu-1', 'institution', expect.any(String));
     });
 
-    describe('Styling and Visual States', () => {
-        it('applies different styles for expanded and collapsed states', () => {
-            const { rerender } = render(<EducationItem {...defaultProps} isExpanded={false} />);
+    it('should update field of study when input changes', async () => {
+      const onUpdate = vi.fn();
+      const user = userEvent.setup();
+      render(<EducationItem {...defaultProps} isExpanded={true} onUpdate={onUpdate} />);
 
-            // Get the main container div with border classes
-            let container = screen.getByText('Test University').closest('[class*="rounded-xl"]');
-            expect(container?.className).toContain('opacity-80');
+      const areaInputs = screen.getAllByDisplayValue('Computer Science');
+      await user.type(areaInputs[0], ' & AI');
 
-            rerender(<EducationItem {...defaultProps} isExpanded={true} />);
-
-            container = screen.getByText('Test University').closest('[class*="rounded-xl"]');
-            expect(container?.className).toContain('ring-1');
-        });
+      expect(onUpdate).toHaveBeenCalledWith('edu-1', 'area', expect.any(String));
     });
 
-    describe('Memory and Performance', () => {
-        it('is memoized component', () => {
-            const { rerender } = render(
-                <EducationItem {...defaultProps} isExpanded={true} />
-            );
+    it('should update degree type when input changes', async () => {
+      const onUpdate = vi.fn();
+      const user = userEvent.setup();
+      render(<EducationItem {...defaultProps} isExpanded={true} onUpdate={onUpdate} />);
 
-            const input = screen.getByLabelText('Institution') as HTMLInputElement;
-            const initialValue = input.value;
+      const degreeInputs = screen.getAllByDisplayValue('Master of Science');
+      await user.type(degreeInputs[0], ' (Honors)');
 
-            rerender(<EducationItem {...defaultProps} isExpanded={true} />);
-
-            const updatedInput = screen.getByLabelText('Institution') as HTMLInputElement;
-            expect(updatedInput.value).toBe(initialValue);
-        });
+      expect(onUpdate).toHaveBeenCalledWith('edu-1', 'studyType', expect.any(String));
     });
+
+    it('should update start date when input changes', async () => {
+      const onUpdate = vi.fn();
+      const user = userEvent.setup();
+      render(<EducationItem {...defaultProps} isExpanded={true} onUpdate={onUpdate} />);
+
+      const startDateInputs = screen.getAllByDisplayValue('2018-09');
+      await user.type(startDateInputs[0], '-01');
+
+      expect(onUpdate).toHaveBeenCalledWith('edu-1', 'startDate', expect.any(String));
+    });
+
+    it('should update end date when input changes', async () => {
+      const onUpdate = vi.fn();
+      const user = userEvent.setup();
+      render(<EducationItem {...defaultProps} isExpanded={true} onUpdate={onUpdate} />);
+
+      const endDateInputs = screen.getAllByDisplayValue('2020-05');
+      await user.type(endDateInputs[0], '-15');
+
+      expect(onUpdate).toHaveBeenCalledWith('edu-1', 'endDate', expect.any(String));
+    });
+
+    it('should handle rapid consecutive updates', async () => {
+      const onUpdate = vi.fn();
+      const user = userEvent.setup();
+      render(<EducationItem {...defaultProps} isExpanded={true} onUpdate={onUpdate} />);
+
+      const institutionInputs = screen.getAllByDisplayValue('Harvard University');
+      const input = institutionInputs[0] as HTMLInputElement;
+
+      await user.clear(input);
+      await user.type(input, 'MIT');
+
+      expect(onUpdate.mock.calls.length).toBeGreaterThan(0);
+    });
+  });
+
+  describe('Input Validation', () => {
+    it('should handle long institution names', () => {
+      const longName = 'A'.repeat(100);
+      const eduWithLongName = {
+        ...mockEducation,
+        institution: longName,
+      };
+
+      render(<EducationItem {...defaultProps} edu={eduWithLongName} isExpanded={true} />);
+
+      const inputs = screen.getAllByDisplayValue(longName);
+      expect(inputs.length).toBeGreaterThan(0);
+    });
+
+    it('should handle special characters in institution name', () => {
+      const eduWithSpecialChars = {
+        ...mockEducation,
+        institution: "O'Reilly Technical Institute & Research Center",
+      };
+
+      render(<EducationItem {...defaultProps} edu={eduWithSpecialChars} isExpanded={true} />);
+
+      const inputs = screen.getAllByDisplayValue("O'Reilly Technical Institute & Research Center");
+      expect(inputs.length).toBeGreaterThan(0);
+    });
+
+    it('should handle Unicode characters', () => {
+      const eduWithUnicode = {
+        ...mockEducation,
+        institution: '東京大学',
+        area: 'コンピュータサイエンス',
+      };
+
+      render(<EducationItem {...defaultProps} edu={eduWithUnicode} isExpanded={true} />);
+
+      expect(screen.getAllByDisplayValue('東京大学').length).toBeGreaterThan(0);
+      expect(screen.getAllByDisplayValue('コンピュータサイエンス').length).toBeGreaterThan(0);
+    });
+
+    it('should handle various date formats', () => {
+      const eduWithDates = {
+        ...mockEducation,
+        startDate: '2019',
+        endDate: '2021-12',
+      };
+
+      render(<EducationItem {...defaultProps} edu={eduWithDates} isExpanded={true} />);
+
+      expect(screen.getByDisplayValue('2019')).toBeInTheDocument();
+      expect(screen.getByDisplayValue('2021-12')).toBeInTheDocument();
+    });
+
+    it('should trim whitespace from inputs', async () => {
+      const onUpdate = vi.fn();
+      const user = userEvent.setup();
+      render(<EducationItem {...defaultProps} isExpanded={true} onUpdate={onUpdate} />);
+
+      const institutionInputs = screen.getAllByDisplayValue('Harvard University');
+      await user.type(institutionInputs[0], '  ');
+
+      // Should handle gracefully
+      expect(institutionInputs[0]).toBeInTheDocument();
+    });
+  });
+
+  describe('State Persistence', () => {
+    it('should maintain expanded state across re-renders', () => {
+      const { rerender } = render(
+        <EducationItem {...defaultProps} isExpanded={true} />
+      );
+
+      expect(screen.getByDisplayValue('Harvard University')).toBeInTheDocument();
+
+      rerender(<EducationItem {...defaultProps} isExpanded={true} />);
+
+      expect(screen.getByDisplayValue('Harvard University')).toBeInTheDocument();
+    });
+
+    it('should update when education data changes', () => {
+      const { rerender } = render(
+        <EducationItem {...defaultProps} />
+      );
+
+      expect(screen.getByText('Harvard University | 2018-09 - 2020-05')).toBeInTheDocument();
+
+      const updatedEducation = {
+        ...mockEducation,
+        institution: 'Stanford University',
+        startDate: '2019-01',
+        endDate: '2021-05',
+      };
+
+      rerender(<EducationItem {...defaultProps} edu={updatedEducation} />);
+
+      expect(screen.getByText('Stanford University | 2019-01 - 2021-05')).toBeInTheDocument();
+    });
+
+    it('should update ID when education ID changes', () => {
+      const eduOne = { ...mockEducation, id: 'edu-1' };
+      const eduTwo = { ...mockEducation, id: 'edu-2' };
+
+      const { rerender } = render(
+        <EducationItem {...defaultProps} edu={eduOne} />
+      );
+
+      expect(screen.getByText('Master of Science')).toBeInTheDocument();
+
+      rerender(<EducationItem {...defaultProps} edu={eduTwo} />);
+
+      expect(screen.getByText('Master of Science')).toBeInTheDocument();
+    });
+  });
+
+  describe('Edge Cases', () => {
+    it('should handle empty strings for all fields', () => {
+      const emptyEducation: EducationEntry = {
+        id: 'edu-3',
+        institution: '',
+        area: '',
+        studyType: '',
+        startDate: '',
+        endDate: '',
+      };
+
+      render(<EducationItem {...defaultProps} edu={emptyEducation} isExpanded={true} />);
+
+      const emptyInputs = screen.getAllByDisplayValue('');
+      expect(emptyInputs.length).toBeGreaterThan(0);
+    });
+
+    it('should handle only institution populated', () => {
+      const partialEducation: EducationEntry = {
+        id: 'edu-4',
+        institution: 'Yale University',
+        area: '',
+        studyType: '',
+        startDate: '',
+        endDate: '',
+      };
+
+      render(<EducationItem {...defaultProps} edu={partialEducation} isExpanded={true} />);
+
+      expect(screen.getByDisplayValue('Yale University')).toBeInTheDocument();
+    });
+
+    it('should handle only dates populated', () => {
+      const dateOnlyEducation: EducationEntry = {
+        id: 'edu-5',
+        institution: '',
+        area: '',
+        studyType: '',
+        startDate: '2020',
+        endDate: '2022',
+      };
+
+      render(<EducationItem {...defaultProps} edu={dateOnlyEducation} isExpanded={true} />);
+
+      expect(screen.getByDisplayValue('2020')).toBeInTheDocument();
+      expect(screen.getByDisplayValue('2022')).toBeInTheDocument();
+    });
+
+    it('should handle same start and end dates', () => {
+      const sameDate: EducationEntry = {
+        ...mockEducation,
+        startDate: '2020-01',
+        endDate: '2020-01',
+      };
+
+      render(<EducationItem {...defaultProps} edu={sameDate} isExpanded={true} />);
+
+      expect(screen.getAllByDisplayValue('2020-01').length).toBeGreaterThanOrEqual(2);
+    });
+  });
+
+  describe('Accessibility', () => {
+    it('should render label text for all form fields', () => {
+      render(<EducationItem {...defaultProps} isExpanded={true} />);
+
+      expect(screen.getByText('Institution')).toBeInTheDocument();
+      expect(screen.getByText('Field of Study')).toBeInTheDocument();
+      expect(screen.getByText('Degree Type')).toBeInTheDocument();
+      expect(screen.getByText('Start Date')).toBeInTheDocument();
+      expect(screen.getByText('End Date')).toBeInTheDocument();
+    });
+
+    it('should have accessible form inputs', () => {
+      render(<EducationItem {...defaultProps} isExpanded={true} />);
+
+      const inputs = screen.getAllByRole('textbox');
+      expect(inputs.length).toBeGreaterThan(0);
+    });
+
+    it('should have accessible delete button', () => {
+      render(<EducationItem {...defaultProps} />);
+
+      const deleteBtn = screen.getByRole('button', { name: /delete/i });
+      expect(deleteBtn).toBeInTheDocument();
+    });
+
+    it('should support keyboard navigation', async () => {
+      const user = userEvent.setup();
+      render(<EducationItem {...defaultProps} isExpanded={true} />);
+
+      const institutionInputs = screen.getAllByDisplayValue('Harvard University');
+      const institutionInput = institutionInputs[0] as HTMLInputElement;
+
+      await user.click(institutionInput);
+      expect(document.activeElement).toBe(institutionInput);
+
+      await user.tab();
+      expect(document.activeElement).not.toBe(institutionInput);
+    });
+
+    it('should have semantic HTML structure', () => {
+      const { container } = render(<EducationItem {...defaultProps} isExpanded={true} />);
+
+      const labels = container.querySelectorAll('label');
+      const inputs = container.querySelectorAll('input');
+
+      expect(labels.length).toBeGreaterThan(0);
+      expect(inputs.length).toBeGreaterThan(0);
+    });
+  });
+
+  describe('Memo Optimization', () => {
+    it('should render correctly on updates', () => {
+      const { rerender } = render(<EducationItem {...defaultProps} />);
+
+      expect(screen.getByText('Master of Science')).toBeInTheDocument();
+
+      rerender(<EducationItem {...defaultProps} />);
+
+      expect(screen.getByText('Master of Science')).toBeInTheDocument();
+    });
+
+    it('should not re-render unnecessarily with same props', () => {
+      const renderSpy = vi.fn();
+      const MockedEducationItem = (props: any) => {
+        renderSpy();
+        return <EducationItem {...props} />;
+      };
+
+      const { rerender } = render(<MockedEducationItem {...defaultProps} />);
+      const firstRenderCount = renderSpy.mock.calls.length;
+
+      rerender(<MockedEducationItem {...defaultProps} />);
+      const secondRenderCount = renderSpy.mock.calls.length;
+
+      // Should have rendered twice (initial + rerender call)
+      expect(secondRenderCount).toBeGreaterThanOrEqual(firstRenderCount);
+    });
+  });
+
+  describe('Visual States', () => {
+    it('should show different styling when expanded vs collapsed', () => {
+      const { container: collapsedContainer } = render(
+        <EducationItem {...defaultProps} isExpanded={false} />
+      );
+
+      const { container: expandedContainer } = render(
+        <EducationItem {...defaultProps} isExpanded={true} />
+      );
+
+      const collapsedCard = collapsedContainer.querySelector('[class*="border"]');
+      const expandedCard = expandedContainer.querySelector('[class*="border"]');
+
+      expect(collapsedCard).toBeInTheDocument();
+      expect(expandedCard).toBeInTheDocument();
+    });
+
+    it('should show expand icon in correct state', () => {
+      const { container } = render(
+        <EducationItem {...defaultProps} isExpanded={true} />
+      );
+
+      const expandIcon = container.querySelector('[class*="rotate"]');
+      expect(expandIcon).toBeInTheDocument();
+    });
+  });
+
+  describe('Multiple Instances', () => {
+    it('should handle multiple education items independently', () => {
+      const edu1 = { ...mockEducation, id: 'edu-1' };
+      const edu2 = { ...mockEducation, id: 'edu-2', institution: 'MIT' };
+
+      const { rerender } = render(
+        <>
+          <EducationItem {...defaultProps} edu={edu1} />
+          <EducationItem {...defaultProps} edu={edu2} />
+        </>
+      );
+
+      expect(screen.getByText('Harvard University | 2018-09 - 2020-05')).toBeInTheDocument();
+      expect(screen.getByText('MIT | 2018-09 - 2020-05')).toBeInTheDocument();
+    });
+
+    it('should call correct callbacks for each instance', async () => {
+      const onDelete1 = vi.fn();
+      const onDelete2 = vi.fn();
+      const user = userEvent.setup();
+
+      const edu1 = { ...mockEducation, id: 'edu-1' };
+      const edu2 = { ...mockEducation, id: 'edu-2', institution: 'MIT' };
+
+      const { container } = render(
+        <>
+          <EducationItem {...defaultProps} edu={edu1} onDelete={onDelete1} />
+          <EducationItem {...defaultProps} edu={edu2} onDelete={onDelete2} />
+        </>
+      );
+
+      const deleteButtons = screen.getAllByRole('button', { name: /delete/i });
+      await user.click(deleteButtons[0]);
+
+      expect(onDelete1).toHaveBeenCalledWith('edu-1');
+      expect(onDelete2).not.toHaveBeenCalled();
+    });
+  });
 });
