@@ -42,10 +42,6 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-<<<<<<< HEAD
-      - name: Run unit tests
-        run: npm run test -- --run --reporter=verbose --exclude="utils/storage.test.ts" || true
-=======
       - name: Run tests
         run: npm run test -- --run --reporter=verbose --exclude="utils/storage.test.ts"
 
@@ -60,7 +56,6 @@ jobs:
           name: frontend-coverage
           path: coverage/
           retention-days: 30
->>>>>>> eb06d43 (feat: add testing and timeout protection for issues 386-390)
 
       - name: Run integration tests
         run: npm run test -- --run --reporter=verbose tests/integration/ || true
