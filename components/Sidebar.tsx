@@ -15,6 +15,12 @@ interface SidebarProps {
   onNavigate: (route: Route) => void;
   /** Callback function to show keyboard shortcuts help */
   onShowShortcuts: () => void;
+  /** Whether the user is authenticated */
+  isAuthenticated?: boolean;
+  /** Username of the authenticated user */
+  username?: string;
+  /** Callback function to handle logout */
+  onLogout?: () => void;
 }
 
 const NAV_ITEMS = [
@@ -46,7 +52,7 @@ const NAV_ITEMS = [
  * ```
  */
 const Sidebar: React.FC<SidebarProps> = React.memo(
-  ({ currentRoute, onNavigate, onShowShortcuts }) => {
+  ({ currentRoute, onNavigate, onShowShortcuts, isAuthenticated, username, onLogout }) => {
     return (
       <aside className="w-72 bg-white border-r border-slate-200 flex flex-col justify-between p-6 fixed h-full z-20">
         <div className="flex flex-col gap-8">
@@ -121,7 +127,7 @@ const Sidebar: React.FC<SidebarProps> = React.memo(
             </span>
             <span>New Application</span>
           </button>
-          <div className="border-t border-slate-100 pt-4">
+          <div className="border-t border-slate-100 pt-4 flex flex-col gap-2">
             <button
               type="button"
               onClick={onShowShortcuts}
@@ -135,6 +141,39 @@ const Sidebar: React.FC<SidebarProps> = React.memo(
               </span>
               <span className="text-sm font-medium">Keyboard Shortcuts</span>
             </button>
+            {isAuthenticated && username ? (
+              <div className="flex items-center justify-between px-3 py-2">
+                <div className="flex items-center gap-2">
+                  <span className="material-symbols-outlined text-slate-400" aria-hidden="true">
+                    account_circle
+                  </span>
+                  <span className="text-sm font-medium text-slate-600 truncate max-w-[120px]">
+                    {username}
+                  </span>
+                </div>
+                {onLogout && (
+                  <button
+                    type="button"
+                    onClick={onLogout}
+                    className="text-slate-400 hover:text-red-500 transition-colors"
+                    title="Sign out"
+                  >
+                    <span className="material-symbols-outlined text-[20px]">logout</span>
+                  </button>
+                )}
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => onNavigate(Route.LOGIN)}
+                className="flex items-center gap-3 px-3 py-2 text-slate-500 hover:text-primary-600 transition-colors w-full text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 rounded-lg"
+              >
+                <span className="material-symbols-outlined" aria-hidden="true">
+                  login
+                </span>
+                <span className="text-sm font-medium">Sign In</span>
+              </button>
+            )}
           </div>
         </div>
       </aside>
