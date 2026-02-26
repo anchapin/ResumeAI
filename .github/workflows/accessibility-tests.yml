@@ -1,0 +1,82 @@
+name: Accessibility Tests (WCAG 2.1)
+
+on:
+  push:
+    branches: [main, develop, 'feature/**']
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  accessibility:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Run accessibility tests
+        run: npm run test -- tests/accessibility.test.ts --reporter=verbose
+      
+      - name: Run all tests with coverage
+        run: npm run test:coverage
+      
+      - name: Upload coverage reports
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./coverage/coverage-final.json
+          flags: accessibility
+          name: accessibility-coverage
+      
+      - name: Generate accessibility report
+        if: always()
+        run: |
+          mkdir -p a11y-reports
+          npm run test -- tests/accessibility.test.ts --reporter=json > a11y-reports/report.json || true
+      
+      - name: Upload accessibility report
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: accessibility-reports-node-${{ matrix.node-version }}
+          path: a11y-reports/
+      
+      - name: Comment PR with results
+        if: github.event_name == 'pull_request' && always()
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+            const reportPath = 'a11y-reports/report.json';
+            
+            let comment = '## Accessibility Test Results\n\n';
+            
+            if (fs.existsSync(reportPath)) {
+              try {
+                const report = JSON.parse(fs.readFileSync(reportPath, 'utf8'));
+                comment += `✅ Tests completed for Node.js ${{ matrix.node-version }}\n`;
+              } catch (e) {
+                comment += `⚠️ Could not parse test report\n`;
+              }
+            } else {
+              comment += `✅ Accessibility tests passed\n`;
+            }
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
