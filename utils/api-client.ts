@@ -37,7 +37,7 @@ function getAPIKey(): string | null {
   return localStorage.getItem('RESUMEAI_API_KEY');
 }
 
-function getHeaders(): HeadersInit {
+export function getHeaders(): HeadersInit {
   const headers: HeadersInit = { 'Content-Type': 'application/json' };
 
   // Try JWT token first (Issue 477 - Bearer token auth)

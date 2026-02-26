@@ -1,9 +1,9 @@
+import { getHeaders } from '../utils/api-client';
 import { useState, useCallback, useEffect } from 'react';
 import { ResumeData, SimpleResumeData } from '../types';
 
 // Get API URL from environment variable
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-const API_KEY = import.meta.env.RESUMEAI_API_KEY || '';
 
 // Local storage keys
 const RESUME_STORAGE_KEY = 'resumeai_resume_data';
@@ -190,16 +190,12 @@ export const useGeneratePackage = () => {
    * Tailor a resume to a job description using the production API
    */
   const generatePackage = async (requestBody: TailorRequest) => {
-    console.log('GEMINI_CODE_ACTIVE', requestBody);
     setLoading(true);
     setError(null);
     try {
       const response = await fetch(`${API_URL}/v1/tailor`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(API_KEY && { 'X-API-KEY': API_KEY }),
-        },
+        headers: getHeaders(),
         body: JSON.stringify(requestBody),
       });
 
@@ -231,10 +227,7 @@ export const useGeneratePackage = () => {
     try {
       const response = await fetch(`${API_URL}/v1/render/pdf`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(API_KEY && { 'X-API-KEY': API_KEY }),
-        },
+        headers: getHeaders(),
         body: JSON.stringify(requestBody),
       });
 
@@ -266,10 +259,7 @@ export const useGeneratePackage = () => {
     try {
       const response = await fetch(`${API_URL}/v1/render/markdown`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(API_KEY && { 'X-API-KEY': API_KEY }),
-        },
+        headers: getHeaders(),
         body: JSON.stringify(requestBody),
       });
 
@@ -301,10 +291,7 @@ export const useGeneratePackage = () => {
     try {
       const response = await fetch(`${API_URL}/v1/cover-letter`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(API_KEY && { 'X-API-KEY': API_KEY }),
-        },
+        headers: getHeaders(),
         body: JSON.stringify({
           resume_data: params.resume_data,
           job_description: params.job_description,
