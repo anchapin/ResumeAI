@@ -8,15 +8,18 @@ import { getResume, listResumeVersions, listComments } from '../utils/api-client
 
 /**
  * @interface WorkspaceProps
- * @description Props for the Workspace component
- * @property {SimpleResumeData} resumeData - The resume data to use in the workspace
+ * @description Props for Workspace component
+ * @property {SimpleResumeData} resumeData - The resume data to use in workspace
  * @property {Function} onNavigate - Callback function to handle navigation
+ * @property {number} resumeId - Optional resume ID for fetching metadata (versions, comments)
  */
 interface WorkspaceProps {
-  /** The resume data to use in the workspace */
+  /** The resume data to use in workspace */
   resumeData: SimpleResumeData;
   /** Callback function to handle navigation */
   onNavigate: (route: Route) => void;
+  /** Optional resume ID for fetching metadata (versions, comments) */
+  resumeId?: number;
 }
 
 /** Available tab types for the workspace */
@@ -29,8 +32,9 @@ const TABS: TabType[] = ['Resume', 'Cover Letter', 'Keywords', 'Suggestions', 'A
  * @component
  * @description Workspace page component for tailoring resumes to job descriptions
  * @param {WorkspaceProps} props - Component properties
- * @param {SimpleResumeData} props.resumeData - The resume data to use in the workspace
+ * @param {SimpleResumeData} props.resumeData - The resume data to use in workspace
  * @param {Function} props.onNavigate - Callback function to handle navigation
+ * @param {number} props.resumeId - Optional resume ID for fetching metadata
  * @returns {JSX.Element} The rendered workspace page component
  *
  * @example
@@ -38,10 +42,15 @@ const TABS: TabType[] = ['Resume', 'Cover Letter', 'Keywords', 'Suggestions', 'A
  * <Workspace
  *   resumeData={sampleResumeData}
  *   onNavigate={(route) => console.log(`Navigating to ${route}`)}
+ *   resumeId={1}
  * />
  * ```
  */
-const Workspace: React.FC<WorkspaceProps> = ({ resumeData, onNavigate }) => {
+const Workspace: React.FC<WorkspaceProps> = ({
+  resumeData,
+  onNavigate,
+  resumeId: propResumeId,
+}) => {
   const {
     generatePackage,
     generateCoverLetterRequest,
@@ -73,8 +82,8 @@ const Workspace: React.FC<WorkspaceProps> = ({ resumeData, onNavigate }) => {
   const [lastUpdated, setLastUpdated] = useState<string>('');
   const [loadingMetadata, setLoadingMetadata] = useState<boolean>(true);
 
-  // Mock resume ID - in real app, this would come from props
-  const mockResumeId = 1;
+  // Use provided resumeId from props, default to 1 if not provided
+  const resumeId = propResumeId ?? 1;
 
   // Initialize with API variants once loaded
   useEffect(() => {
@@ -93,8 +102,8 @@ const Workspace: React.FC<WorkspaceProps> = ({ resumeData, onNavigate }) => {
       try {
         setLoadingMetadata(true);
         const [versions, comments] = await Promise.all([
-          listResumeVersions(mockResumeId),
-          listComments(mockResumeId),
+          listResumeVersions(resumeId),
+          listComments(resumeId),
         ]);
         setVersionCount(versions.length);
         setCommentCount(comments.length);
@@ -117,7 +126,7 @@ const Workspace: React.FC<WorkspaceProps> = ({ resumeData, onNavigate }) => {
     };
 
     loadMetadata();
-  }, [mockResumeId]);
+  }, [resumeId]);
 
   // Helper function to format time ago
   const formatTimeAgo = (date: Date): string => {

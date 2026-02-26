@@ -159,7 +159,9 @@ function App() {
     if (token && TokenManager.isTokenExpired(token)) {
       // Token is expired, remove it
       TokenManager.removeToken();
-      console.warn('Authentication token expired, please log in again');
+      if (import.meta.env.DEV) {
+        console.warn('Authentication token expired, please log in again');
+      }
       // In a real app, you might show a notification or redirect to login
     }
 
@@ -175,24 +177,28 @@ function App() {
           projects: Array.isArray(savedData.projects) ? savedData.projects : [],
         };
         setResumeData(validatedData);
-        console.log('Resume data loaded and validated:', {
-          skills: validatedData.skills.length,
-          education: validatedData.education.length,
-          experience: validatedData.experience.length,
-        });
-      } else {
+        if (import.meta.env.DEV) {
+          console.log('Resume data loaded and validated:', {
+            skills: validatedData.skills.length,
+            education: validatedData.education.length,
+            experience: validatedData.experience.length,
+          });
+        }
+      } else if (import.meta.env.DEV) {
         console.log('No saved resume data found, using initial data');
       }
     } catch (error) {
       if (error instanceof StorageError) {
-        console.error('Storage error:', error.message, error.type);
+        if (import.meta.env.DEV) {
+          console.error('Storage error:', error.message, error.type);
+        }
         // Show a user-friendly error message
         const errorMessage = getErrorMessage(error);
         setStorageError(errorMessage);
 
         // Auto-dismiss error after 5 seconds
         setTimeout(() => setStorageError(null), 5000);
-      } else {
+      } else if (import.meta.env.DEV) {
         console.error('Unexpected error loading resume data:', error);
       }
     } finally {
@@ -213,20 +219,24 @@ function App() {
       try {
         saveResumeData(resumeData);
         setSaveStatus('saved');
-        console.log('Resume data saved to localStorage');
+        if (import.meta.env.DEV) {
+          console.log('Resume data saved to localStorage');
+        }
 
         // Reset to idle after 3 seconds
         setTimeout(() => setSaveStatus('idle'), 3000);
       } catch (error) {
         setSaveStatus('error');
         if (error instanceof StorageError) {
-          console.error('Storage error:', error.message, error.type);
+          if (import.meta.env.DEV) {
+            console.error('Storage error:', error.message, error.type);
+          }
           const errorMessage = getErrorMessage(error);
           setStorageError(errorMessage);
 
           // Auto-dismiss error after 5 seconds
           setTimeout(() => setStorageError(null), 5000);
-        } else {
+        } else if (import.meta.env.DEV) {
           console.error('Unexpected error saving resume data:', error);
         }
 
