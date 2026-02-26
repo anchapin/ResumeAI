@@ -939,10 +939,17 @@ class HealthResponse(BaseModel):
 
 
 class ErrorResponse(BaseModel):
-    """Error response."""
+    """Unified error response model - DO NOT USE, import from config.errors instead"""
 
     error: str
     detail: Optional[str] = None
+    
+    class Config:
+        # Deprecated: Use config.errors.ErrorResponse instead
+        json_schema_extra = {
+            "deprecated": True,
+            "note": "This model is deprecated. Use config.errors.ErrorResponse instead"
+        }
 
 
 # Template Customization Models

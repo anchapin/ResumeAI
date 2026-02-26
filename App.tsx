@@ -11,8 +11,10 @@ import InterviewPractice from './pages/InterviewPractice';
 import { Route, SimpleResumeData } from './types';
 import { loadResumeData, saveResumeData, StorageError } from './utils/storage';
 import ErrorBoundary from './components/ErrorBoundary';
+import ErrorDisplay from './components/ErrorDisplay';
 import { TokenManager } from './utils/security';
 import { useTheme } from './hooks/useTheme';
+import { useGlobalErrors } from './hooks/useGlobalErrors';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import './components/toast-styles.css';
@@ -97,6 +99,9 @@ function App() {
   const { theme, isDark, toggleTheme } = useTheme();
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
   const [showShortcuts, setShowShortcuts] = useState(false);
+
+  // Setup global error handling
+  const { currentError, dismissError } = useGlobalErrors();
 
   // Register global keyboard shortcuts
   useEffect(() => {
@@ -304,6 +309,9 @@ function App() {
 
   return (
     <ErrorBoundary>
+      {/* Global error display */}
+      <ErrorDisplay error={currentError} onDismiss={dismissError} />
+
       {showShortcuts && (
         <KeyboardShortcutsHelp onClose={() => setShowShortcuts(false)} />
       )}

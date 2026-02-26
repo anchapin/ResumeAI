@@ -16,6 +16,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from api import router
 from api.websocket import handle_websocket_connection
 from config import settings
+from config.errors import create_error_response, ErrorCode
 from config.dependencies import (
     limiter,
     rate_limit_exceeded_handler,
@@ -23,6 +24,7 @@ from config.dependencies import (
 )
 from database import create_db_and_tables, User
 from middleware.monitoring import MonitoringMiddleware
+from middleware.error_handling import ErrorHandlingMiddleware
 from monitoring import logging_config, health, alerting, analytics
 from slowapi.errors import RateLimitExceeded
 
@@ -198,16 +200,42 @@ app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, rate_limit_exceeded_handler)
 
 
-# Register validation error handler for debugging
+# Register validation error handler with unified error response
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
-    """Log validation errors for debugging."""
+    """Handle validation errors with unified error response format."""
     logger.error("validation_error", errors=exc.errors())
+    
+    # Extract field errors from validation errors
+    from config.errors import FieldError
+    field_errors = []
+    for error in exc.errors():
+        if len(error.get("loc", [])) > 1:
+            field_name = str(error["loc"][1])
+            field_errors.append(
+                FieldError(
+                    field=field_name,
+                    message=error.get("msg", "Invalid value"),
+                    code=error.get("type", "VALIDATION_ERROR")
+                )
+            )
+    
+    error_response = create_error_response(
+        error_code=ErrorCode.VALIDATION_ERROR,
+        message="Request validation failed",
+        path=str(request.url.path),
+        method=request.method,
+        field_errors=field_errors if field_errors else None,
+    )
+    
     return JSONResponse(
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-        content={"detail": "Validation error in resume data. Check all fields."},
+        content=error_response.model_dump(exclude_none=True),
     )
 
+
+# Add error handling middleware (must be added before other middleware)
+app.add_middleware(ErrorHandlingMiddleware)
 
 # Add monitoring middleware (must be added before security middleware)
 app.add_middleware(MonitoringMiddleware)
