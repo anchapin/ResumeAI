@@ -976,21 +976,21 @@ describe('App Component', () => {
         expect(screen.getByTestId('dashboard-page')).toBeInTheDocument();
       });
 
-      // Navigate to each route in sequence
-      const routes = [
-        { button: 'nav-editor', page: 'editor-page' },
-        { button: 'nav-workspace', page: 'workspace-page' },
-        { button: 'nav-dashboard', page: 'dashboard-page' },
-      ];
+      // Navigate to editor (has sidebar)
+      const navButton = screen.getByTestId('nav-editor');
+      await user.click(navButton);
 
-      for (const route of routes) {
-        const navButton = screen.getByTestId(route.button);
-        await user.click(navButton);
+      await waitFor(() => {
+        expect(screen.getByTestId('editor-page')).toBeInTheDocument();
+      });
 
-        await waitFor(() => {
-          expect(screen.getByTestId(route.page)).toBeInTheDocument();
-        });
-      }
+      // Navigate back using editor's back button
+      const backButton = screen.getByTestId('editor-back-btn');
+      await user.click(backButton);
+
+      await waitFor(() => {
+        expect(screen.getByTestId('dashboard-page')).toBeInTheDocument();
+      });
     });
 
     it('should preserve data across navigation', async () => {
