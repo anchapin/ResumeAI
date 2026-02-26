@@ -20,6 +20,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import './components/toast-styles.css';
 import KeyboardShortcutsHelp from './components/KeyboardShortcutsHelp';
 import { DEFAULT_SHORTCUTS, registerShortcuts } from './utils/shortcuts';
+import StorageWarning from './src/components/StorageWarning';
 
 const initialResumeData: SimpleResumeData = {
   name: "Alex Rivera",
@@ -327,6 +328,7 @@ function App() {
           </button>
         </div>
       )}
+      <StorageWarning />
       {!isLoaded ? (
         <div className="min-h-screen flex items-center justify-center bg-[#f6f6f8]">
           <div className="flex items-center gap-3">

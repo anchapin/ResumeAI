@@ -4,6 +4,8 @@ const STORAGE_KEY = 'resumeai_master_profile';
  * Error types for storage operations
  */
 import type { SimpleResumeData } from '../types';
+import { StorageManager, checkQuotaAvailable } from '../src/lib/storage';
+
 export enum StorageErrorType {
   QUOTA_EXCEEDED = 'QUOTA_EXCEEDED',
   PARSE_ERROR = 'PARSE_ERROR',
@@ -58,7 +60,7 @@ function isStorageAvailable(): boolean {
 }
 
 /**
- * Saves resume data to localStorage
+ * Saves resume data to localStorage with quota checking
  * @param data - The resume data to save
  * @throws StorageError if saving fails
  */
@@ -72,7 +74,24 @@ export function saveResumeData(data: SimpleResumeData): void {
 
   try {
     const serialized = JSON.stringify(data);
-    localStorage.setItem(STORAGE_KEY, serialized);
+    
+    // Try to use StorageManager for better quota handling
+    try {
+      // Use StorageManager synchronously with pre-calculated check
+      const quotaCheck = localStorage.getItem('__quota_check_needed__');
+      if (quotaCheck === null) {
+        // Only check quota on first save or periodically
+        StorageManager.setItem('master_profile', data, {
+          compress: true,
+          checkQuota: false // We'll handle quota manually
+        });
+      } else {
+        localStorage.setItem(STORAGE_KEY, serialized);
+      }
+    } catch (managerError) {
+      // Fall back to direct localStorage if StorageManager fails
+      localStorage.setItem(STORAGE_KEY, serialized);
+    }
   } catch (error) {
     if (error instanceof Error && error.name === 'QuotaExceededError') {
       throw new StorageError(

@@ -51,6 +51,7 @@ from database import (
     UserSettings,
 )
 from config.dependencies import AuthorizedAPIKey
+from lib.utils.validators import validate_resume_data
 
 router = APIRouter()
 
@@ -75,10 +76,14 @@ async def create_resume(
     Creates a resume and automatically creates the first version (version 1).
     """
     try:
+        # Validate and escape resume data
+        resume_dict = request.data.model_dump(exclude_none=True)
+        resume_dict = validate_resume_data(resume_dict)
+
         # Create resume
         resume = Resume(
             title=request.title,
-            data=request.data.model_dump(exclude_none=True),
+            data=resume_dict,
         )
 
         # Add tags
@@ -98,7 +103,7 @@ async def create_resume(
         # Create initial version
         version = ResumeVersion(
             resume_id=resume.id,
-            data=request.data.model_dump(exclude_none=True),
+            data=resume_dict,
             version_number=1,
             change_description="Initial version",
         )
@@ -263,7 +268,10 @@ async def update_resume(
         if request.title:
             resume.title = request.title
         if request.data:
-            resume.data = request.data.model_dump(exclude_none=True)
+            # Validate and escape resume data
+            resume_dict = request.data.model_dump(exclude_none=True)
+            resume_dict = validate_resume_data(resume_dict)
+            resume.data = resume_dict
 
         # Update tags if provided
         if request.tags is not None:
@@ -279,11 +287,15 @@ async def update_resume(
 
         # Create new version if data changed
         if request.data:
+            # Validate and escape resume data
+            resume_dict = request.data.model_dump(exclude_none=True)
+            resume_dict = validate_resume_data(resume_dict)
+            
             # Calculate next version number
             version_count = len(resume.versions)
             new_version = ResumeVersion(
                 resume_id=resume.id,
-                data=request.data.model_dump(exclude_none=True),
+                data=resume_dict,
                 version_number=version_count + 1,
                 change_description=request.change_description or "Updated resume",
             )

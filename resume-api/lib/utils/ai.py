@@ -10,6 +10,14 @@ import re
 from typing import Dict, Any, List, Optional
 from abc import ABC, abstractmethod
 
+from .circuit_breaker import (
+    CircuitBreaker,
+    CircuitBreakerOpen,
+    openai_breaker,
+    claude_breaker,
+    gemini_breaker,
+)
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -272,19 +280,41 @@ class OpenAIProvider(AIProvider):
         """Initialize OpenAI provider."""
         self.api_key = api_key
         self.model = model
+        self.breaker = openai_breaker
         # In production:
         # import openai
         # self.client = openai.OpenAI(api_key=api_key)
 
     def generate_response(self, prompt: str) -> str:
-        """Generate response using OpenAI API."""
-        # In production:
+        """
+        Generate response using OpenAI API with circuit breaker protection.
+
+        Args:
+            prompt: Input prompt for the model
+
+        Returns:
+            Generated response text
+
+        Raises:
+            CircuitBreakerOpen: If circuit breaker is open
+        """
+        try:
+            return self.breaker.call(self._call_api, prompt)
+        except CircuitBreakerOpen as e:
+            logger.error(f"OpenAI circuit breaker open: {e}")
+            raise
+
+    def _call_api(self, prompt: str) -> str:
+        """
+        Internal method to call OpenAI API.
+
+        In production:
         # response = self.client.chat.completions.create(
         #     model=self.model,
         #     messages=[{"role": "user", "content": prompt}]
         # )
         # return response.choices[0].message.content
-
+        """
         # Placeholder
         return "OpenAI response placeholder"
 
@@ -296,20 +326,42 @@ class AnthropicProvider(AIProvider):
         """Initialize Anthropic provider."""
         self.api_key = api_key
         self.model = model
+        self.breaker = claude_breaker
         # In production:
         # import anthropic
         # self.client = anthropic.Anthropic(api_key=api_key)
 
     def generate_response(self, prompt: str) -> str:
-        """Generate response using Anthropic API."""
-        # In production:
+        """
+        Generate response using Anthropic API with circuit breaker protection.
+
+        Args:
+            prompt: Input prompt for the model
+
+        Returns:
+            Generated response text
+
+        Raises:
+            CircuitBreakerOpen: If circuit breaker is open
+        """
+        try:
+            return self.breaker.call(self._call_api, prompt)
+        except CircuitBreakerOpen as e:
+            logger.error(f"Claude circuit breaker open: {e}")
+            raise
+
+    def _call_api(self, prompt: str) -> str:
+        """
+        Internal method to call Anthropic API.
+
+        In production:
         # response = self.client.messages.create(
         #     model=self.model,
         #     max_tokens=1024,
         #     messages=[{"role": "user", "content": prompt}]
         # )
         # return response.content[0].text
-
+        """
         # Placeholder
         return "Anthropic response placeholder"
 
@@ -321,16 +373,38 @@ class GeminiProvider(AIProvider):
         """Initialize Gemini provider."""
         self.api_key = api_key
         self.model = model
+        self.breaker = gemini_breaker
         # In production:
         # import google.generativeai as genai
         # genai.configure(api_key=api_key)
         # self.client = genai.GenerativeModel(model)
 
     def generate_response(self, prompt: str) -> str:
-        """Generate response using Gemini API."""
-        # In production:
+        """
+        Generate response using Gemini API with circuit breaker protection.
+
+        Args:
+            prompt: Input prompt for the model
+
+        Returns:
+            Generated response text
+
+        Raises:
+            CircuitBreakerOpen: If circuit breaker is open
+        """
+        try:
+            return self.breaker.call(self._call_api, prompt)
+        except CircuitBreakerOpen as e:
+            logger.error(f"Gemini circuit breaker open: {e}")
+            raise
+
+    def _call_api(self, prompt: str) -> str:
+        """
+        Internal method to call Gemini API.
+
+        In production:
         # response = self.client.generate_content(prompt)
         # return response.text
-
+        """
         # Placeholder
         return "Gemini response placeholder"

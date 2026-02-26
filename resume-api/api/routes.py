@@ -40,6 +40,10 @@ from lib.cli import (  # noqa: E402
     VariantManager,
     CoverLetterGenerator,
 )
+from lib.utils.validators import (  # noqa: E402
+    validate_resume_data,
+    escape_latex,
+)
 
 # Import authentication and rate limiting
 from config.dependencies import AuthorizedAPIKey, rate_limit  # noqa: E402
@@ -98,6 +102,13 @@ async def render_pdf(request: Request, body: ResumeRequest, auth: AuthorizedAPIK
     try:
         # Convert Pydantic model to dict
         resume_dict = body.resume_data.model_dump(exclude_none=True)
+
+        # Validate and escape resume data
+        resume_dict = validate_resume_data(resume_dict)
+
+        # Validate variant
+        if not body.variant or len(body.variant) > 100:
+            raise ValueError("Invalid variant name")
 
         # Initialize generator
         generator = ResumeGenerator(
@@ -160,6 +171,17 @@ async def tailor_resume(request: Request, body: TailorRequest, auth: AuthorizedA
         # Convert Pydantic model to dict
         resume_dict = body.resume_data.model_dump(exclude_none=True)
 
+        # Validate and escape resume data
+        resume_dict = validate_resume_data(resume_dict)
+
+        # Validate tailoring inputs
+        if not body.job_description or len(body.job_description) > 50000:
+            raise ValueError("Invalid job description")
+        if body.company_name and len(body.company_name) > 500:
+            raise ValueError("Company name exceeds maximum length")
+        if body.job_title and len(body.job_title) > 500:
+            raise ValueError("Job title exceeds maximum length")
+
         # Initialize tailorer
         ai_provider = os.getenv("AI_PROVIDER", "openai")
         tailorer = ResumeTailorer(
@@ -175,6 +197,9 @@ async def tailor_resume(request: Request, body: TailorRequest, auth: AuthorizedA
             company_name=body.company_name,
             job_title=body.job_title,
         )
+
+        # Validate tailored data
+        tailored_dict = validate_resume_data(tailored_dict)
 
         # Get keywords
         keywords = tailorer.extract_keywords(body.job_description)
