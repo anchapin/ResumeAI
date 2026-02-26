@@ -1,662 +1,870 @@
 # ResumeAI Troubleshooting Guide
 
-Common issues you might encounter while using ResumeAI and their solutions.
+A comprehensive guide to diagnose and resolve common issues in the ResumeAI FastAPI backend.
+
+---
 
 ## PDF Generation Timeout
 
+### Overview
+PDF generation timeouts occur when the PDF rendering service takes too long to process a resume document.
+
 ### Root Causes
-1. **PDF rendering engine overloaded** - System load high, limited resources
-2. **Large resume content** - Excessive images, formatted text, or custom styling
-3. **AI-powered formatting** - AI provider latency increased
-4. **File system issues** - Slow disk I/O, insufficient temp space
-5. **Network problems** - Slow connection to AI providers
-6. **Memory constraints** - Insufficient heap space for PDF library
+
+- **Large File Size**: Resume contains high-resolution images or complex formatting
+- **System Resource Constraints**: Insufficient CPU or memory on the server
+- **Network Issues**: Slow connection to external PDF rendering service
+- **Complex HTML/CSS**: Intricate styling that requires more processing time
+- **Misconfigured Timeout Value**: Timeout threshold set too low for your workload
+- **Browser Engine Overload**: Multiple concurrent PDF generation requests overwhelming the system
 
 ### Solutions
 
 #### Immediate Fixes
-```bash
-# Check system resources
-free -h
-df -h /tmp
 
-# Increase Node.js heap (if using Node backend)
-export NODE_OPTIONS="--max-old-space-size=4096"
+1. **Increase Timeout Value**
+   ```python
+   # In config.py or environment variables
+   PDF_GENERATION_TIMEOUT = 60  # Increase from default 30 seconds
+   ```
 
-# Restart application with fresh state
-systemctl restart resumeai-api
-```
+2. **Reduce Image Resolution**
+   - Compress images in the resume before upload
+   - Recommendation: Keep images under 2MB total
+   - Use JPEG format instead of PNG where possible
 
-#### Long-term Strategies
-1. **Enable PDF caching** - Cache frequently generated PDFs
-2. **Optimize resume content** - Reduce image sizes, simplify formatting
-3. **Implement async processing** - Queue PDF generation jobs
-4. **Scale resources** - Add more memory, faster disk storage
-5. **Monitor AI provider** - Check provider status page if using external AI
+3. **Simplify HTML/CSS**
+   - Remove unnecessary styling
+   - Avoid complex gradients or filters
+   - Use standard fonts instead of custom web fonts
+
+4. **Retry with Exponential Backoff**
+   ```python
+   import asyncio
+   from tenacity import retry, stop_after_attempt, wait_exponential
+
+   @retry(
+       stop=stop_after_attempt(3),
+       wait=wait_exponential(multiplier=1, min=2, max=10)
+   )
+   async def generate_pdf_with_retry(resume_data):
+       # Your PDF generation code
+       pass
+   ```
+
+#### Long-term Solutions
+
+1. **Implement Async PDF Generation**
+   - Process PDFs in background queue (e.g., Celery, RQ)
+   - Return job ID immediately to client
+   - Use polling or WebSocket to check status
+
+2. **Add Caching Layer**
+   ```python
+   from redis import Redis
+   
+   redis_client = Redis(host='localhost', port=6379)
+   
+   def get_cached_pdf(user_id, resume_id):
+       cache_key = f"pdf:{user_id}:{resume_id}"
+       return redis_client.get(cache_key)
+   ```
+
+3. **Enable Horizontal Scaling**
+   - Deploy multiple instances of PDF service
+   - Use load balancer (nginx, HAProxy)
+   - Monitor queue depth and auto-scale
+
+4. **Monitor with Metrics**
+   ```python
+   from prometheus_client import Histogram
+   
+   pdf_generation_time = Histogram(
+       'pdf_generation_seconds',
+       'Time spent generating PDF'
+   )
+   ```
 
 ### Prevention
-- Keep resume content under 500KB
-- Compress images before upload (< 100KB each)
-- Monitor `pdf_generation_duration_seconds` Prometheus metric
-- Set up alerts when p95 latency > 3 seconds
-- Implement request timeout of 30 seconds max
+
+- Set reasonable timeout based on benchmarks (typically 45-60 seconds)
+- Implement request size limits to prevent oversized uploads
+- Add monitoring alerts for timeout rates > 5%
+- Regular performance testing with real-world resume samples
+- Document timeout expectations in API response headers
 
 ---
 
 ## GitHub OAuth 401
 
+### Overview
+GitHub OAuth authentication returns a 401 Unauthorized error, preventing user login.
+
 ### Root Causes
-1. **Expired access token** - Token expired, needs refresh
-2. **Revoked application** - User removed app from GitHub
-3. **Invalid client credentials** - Mismatched client ID/secret
-4. **Network issues** - GitHub API unreachable
-5. **Rate limiting** - GitHub API rate limit exceeded
-6. **Token refresh failed** - Refresh token expired
-7. **Scope changes** - App requested new permissions
+
+- **Invalid OAuth Credentials**: Client ID or Client Secret is wrong or expired
+- **Token Revoked**: User revoked app access in GitHub settings
+- **Invalid Grant**: Authorization code is expired (typically 10 minutes)
+- **Mismatched Redirect URI**: Registered URI doesn't match request URI
+- **Network Connectivity**: Cannot reach GitHub OAuth endpoint
+- **Token Expiration**: Access token expired and refresh token missing
+- **Scope Mismatch**: Requested scopes don't match configured scopes
 
 ### Solutions
 
 #### Immediate Fixes
-```bash
-# Check GitHub API connectivity
-curl -s -H "Authorization: Bearer $GITHUB_TOKEN" \
-  https://api.github.com/user | jq .
 
-# Verify client credentials in environment
-env | grep GITHUB_CLIENT
-```
+1. **Verify OAuth Credentials**
+   ```bash
+   # Check environment variables
+   echo $GITHUB_CLIENT_ID
+   echo $GITHUB_CLIENT_SECRET
+   
+   # Verify credentials at https://github.com/settings/developers
+   ```
 
-#### Token Refresh Implementation
-```python
-from datetime import datetime, timedelta
+2. **Check Authorization Code**
+   ```python
+   # In your OAuth callback handler
+   import time
+   from urllib.parse import parse_qs, urlparse
+   
+   def handle_oauth_callback(request):
+       code = request.query_params.get('code')
+       # Code is valid for 10 minutes only
+       if code:
+           # Exchange immediately
+           exchange_auth_code(code)
+   ```
 
-async def refresh_github_token(refresh_token: str) -> str:
-    """Refresh GitHub OAuth token."""
-    async with httpx.AsyncClient() as client:
-        response = await client.post(
-            "https://github.com/login/oauth/access_token",
-            json={
-                "client_id": settings.GITHUB_CLIENT_ID,
-                "client_secret": settings.GITHUB_CLIENT_SECRET,
-                "refresh_token": refresh_token,
-                "grant_type": "refresh_token",
-            },
-            headers={"Accept": "application/json"},
-        )
-        if response.status_code == 200:
-            data = response.json()
-            return data["access_token"]
-        raise HTTPException(status_code=401, detail="Token refresh failed")
-```
+3. **Verify Redirect URI**
+   ```python
+   # Must match exactly in GitHub OAuth app settings
+   GITHUB_REDIRECT_URI = "https://yourdomain.com/api/auth/github/callback"
+   # Not:
+   # - http://yourdomain.com/api/auth/github/callback (different protocol)
+   # - https://yourdomain.com/api/auth/github/callback/ (trailing slash)
+   ```
 
-#### PKCE Implementation (for public clients)
-```python
-import secrets
-import hashlib
-import base64
-from urllib.parse import urlencode
+4. **Check Token Expiration**
+   ```python
+   import jwt
+   from datetime import datetime
+   
+   def validate_token(token):
+       try:
+           decoded = jwt.decode(token, options={"verify_signature": False})
+           exp = decoded.get('exp')
+           if exp < datetime.utcnow().timestamp():
+               return False, "Token expired"
+           return True, "Token valid"
+       except Exception as e:
+           return False, str(e)
+   ```
 
-def create_pkce_pair():
-    """Generate PKCE challenge and verifier."""
-    code_verifier = base64.urlsafe_b64encode(
-        secrets.token_bytes(32)
-    ).decode('utf-8').rstrip('=')
-    
-    code_challenge = base64.urlsafe_b64encode(
-        hashlib.sha256(code_verifier.encode()).digest()
-    ).decode('utf-8').rstrip('=')
-    
-    return code_verifier, code_challenge
-```
+#### Long-term Solutions
+
+1. **Implement Token Refresh Logic**
+   ```python
+   async def refresh_oauth_token(refresh_token):
+       async with httpx.AsyncClient() as client:
+           response = await client.post(
+               "https://github.com/login/oauth/access_token",
+               json={
+                   "client_id": GITHUB_CLIENT_ID,
+                   "client_secret": GITHUB_CLIENT_SECRET,
+                   "grant_type": "refresh_token",
+                   "refresh_token": refresh_token
+               },
+               headers={"Accept": "application/json"}
+           )
+           return response.json()
+   ```
+
+2. **Add PKCE Flow for Extra Security**
+   ```python
+   import secrets
+   import hashlib
+   import base64
+   
+   def create_pkce_pair():
+       code_verifier = base64.urlsafe_b64encode(
+           secrets.token_bytes(32)
+       ).decode('utf-8').rstrip('=')
+       code_challenge = base64.urlsafe_b64encode(
+           hashlib.sha256(code_verifier.encode()).digest()
+       ).decode('utf-8').rstrip('=')
+       return code_verifier, code_challenge
+   ```
+
+3. **Implement Token Storage with Encryption**
+   ```python
+   from cryptography.fernet import Fernet
+   
+   cipher = Fernet(ENCRYPTION_KEY)
+   
+   def store_oauth_token(user_id, token):
+       encrypted = cipher.encrypt(token.encode())
+       db.store(user_id, encrypted)
+   ```
 
 ### Prevention
-- Implement token refresh 5 minutes before expiration
-- Store refresh tokens securely (encrypted at rest)
-- Monitor `github_oauth_failures_total` metric
-- Implement exponential backoff for token refresh failures
-- Document required OAuth scopes in README
-- Test OAuth flow in staging before production changes
+
+- Rotate OAuth credentials every 90 days
+- Monitor 401 error rates on auth endpoints
+- Implement automatic retry with exponential backoff
+- Add detailed logging for OAuth flow steps
+- Set up alerts when OAuth failure rate exceeds 2%
+- Document all required OAuth scopes clearly
+- Test OAuth flow in staging after any credential rotation
 
 ---
 
 ## API Rate Limit Exceeded
 
+### Overview
+Too many requests to the API result in 429 Too Many Requests responses.
+
 ### Root Causes
-1. **Burst traffic** - Sudden spike in requests
-2. **Misconfigured client** - Not implementing backoff/retry
-3. **DoS attack** - Malicious traffic overwhelming API
-4. **Crawler/bot** - Automated requests without throttling
-5. **Third-party integration** - Partner app making excessive requests
-6. **Production incident** - Bug causing request loop
-7. **Load test not controlled** - Testing without rate limiting
+
+- **Aggressive Client Polling**: Client making requests too frequently
+- **Missing Cache Implementation**: Requesting same data repeatedly
+- **Denial of Service**: Intentional or unintentional attack
+- **Inefficient Client Logic**: Loop making repeated calls without backoff
+- **Multiple Concurrent Users**: Shared rate limit across all users exhausted
+- **Background Job Errors**: Retry loops causing cascade of requests
+- **Endpoint Not Optimized**: Single endpoint handling too many requests
 
 ### Solutions
 
-#### Exponential Backoff Implementation
-```python
-import asyncio
-from typing import Callable, TypeVar, Any
+#### Immediate Fixes
 
-T = TypeVar('T')
+1. **Implement Exponential Backoff**
+   ```python
+   import asyncio
+   import random
+   
+   async def call_api_with_backoff(endpoint, max_retries=5):
+       for attempt in range(max_retries):
+           try:
+               response = await client.get(endpoint)
+               if response.status_code == 429:
+                   # Get retry-after header
+                   retry_after = int(
+                       response.headers.get('Retry-After', 2 ** attempt)
+                   )
+                   await asyncio.sleep(retry_after)
+                   continue
+               return response
+           except Exception as e:
+               if attempt == max_retries - 1:
+                   raise
+               wait_time = (2 ** attempt) + random.uniform(0, 1)
+               await asyncio.sleep(wait_time)
+   ```
 
-async def exponential_backoff_retry(
-    func: Callable[..., Any],
-    max_retries: int = 3,
-    base_delay: float = 1.0,
-    max_delay: float = 60.0,
-):
-    """Retry with exponential backoff and jitter."""
-    for attempt in range(max_retries):
-        try:
-            return await func()
-        except RateLimitError as e:
-            if attempt == max_retries - 1:
-                raise
-            
-            delay = min(
-                base_delay * (2 ** attempt),
-                max_delay
-            )
-            # Add jitter: ± 20%
-            jitter = delay * 0.2 * (random.random() - 0.5)
-            wait_time = delay + jitter
-            
-            logger.warning(f"Rate limited, retrying in {wait_time:.1f}s")
-            await asyncio.sleep(wait_time)
-```
+2. **Add Client-Side Rate Limiting**
+   ```python
+   from slowapi import Limiter
+   from slowapi.util import get_remote_address
+   
+   limiter = Limiter(key_func=get_remote_address)
+   
+   @app.get("/api/resumes")
+   @limiter.limit("10/minute")
+   async def get_resumes(request: Request):
+       # Implementation
+       pass
+   ```
 
-#### Client-side Rate Limiting
-```python
-from time import time
-from collections import deque
+3. **Implement Request Caching**
+   ```python
+   from functools import lru_cache
+   import aiocache
+   
+   cache = aiocache.cached(
+       ttl=300,  # 5 minutes
+       namespace="resumes"
+   )
+   
+   @cache
+   async def get_user_resumes(user_id):
+       # This will be cached for 5 minutes
+       pass
+   ```
 
-class RateLimiter:
-    """Implement token bucket rate limiter."""
-    
-    def __init__(self, rate: int, per_seconds: int = 1):
-        self.rate = rate
-        self.per_seconds = per_seconds
-        self.tokens = rate
-        self.last_update = time()
-    
-    async def acquire(self):
-        """Wait until token available."""
-        while True:
-            now = time()
-            elapsed = now - self.last_update
-            
-            # Refill tokens
-            self.tokens = min(
-                self.rate,
-                self.tokens + elapsed * (self.rate / self.per_seconds)
-            )
-            self.last_update = now
-            
-            if self.tokens >= 1:
-                self.tokens -= 1
-                return
-            
-            await asyncio.sleep(0.01)
+4. **Check Rate Limit Headers**
+   ```python
+   response = await client.get(endpoint)
+   remaining = response.headers.get('X-RateLimit-Remaining')
+   reset = response.headers.get('X-RateLimit-Reset')
+   
+   if int(remaining) < 10:
+       logger.warning(f"Rate limit approaching: {remaining} requests left")
+   ```
 
-# Usage
-limiter = RateLimiter(rate=100, per_seconds=60)  # 100 req/min
-await limiter.acquire()
-response = await make_api_call()
-```
+#### Long-term Solutions
+
+1. **Implement Tiered Rate Limiting**
+   ```python
+   RATE_LIMITS = {
+       "free": "10/minute",
+       "pro": "100/minute",
+       "enterprise": "1000/minute"
+   }
+   
+   @app.get("/api/resumes")
+   async def get_resumes(current_user: User):
+       tier = current_user.subscription_tier
+       limit = RATE_LIMITS.get(tier, RATE_LIMITS["free"])
+       # Apply limit
+   ```
+
+2. **Create Rate Limit Queue**
+   ```python
+   from aioredis import Redis
+   
+   async def check_rate_limit(user_id, endpoint):
+       key = f"ratelimit:{user_id}:{endpoint}"
+       count = await redis.incr(key)
+       if count == 1:
+           await redis.expire(key, 60)  # Reset after 60 seconds
+       return count <= LIMIT
+   ```
+
+3. **Optimize High-Traffic Endpoints**
+   ```python
+   # Bad: Fetches all resumes
+   @app.get("/api/resumes")
+   async def get_resumes(user_id: int):
+       return db.query(Resume).filter_by(user_id=user_id).all()
+   
+   # Good: Paginated with indices
+   @app.get("/api/resumes")
+   async def get_resumes(user_id: int, page: int = 1, limit: int = 20):
+       skip = (page - 1) * limit
+       return db.query(Resume).filter_by(user_id=user_id).offset(skip).limit(limit).all()
+   ```
+
+4. **Monitor and Alert**
+   ```python
+   from prometheus_client import Counter
+   
+   rate_limit_errors = Counter(
+       'api_rate_limit_errors_total',
+       'Total rate limit errors',
+       ['endpoint', 'user_tier']
+   )
+   
+   rate_limit_errors.labels(
+       endpoint="/api/resumes",
+       user_tier="free"
+   ).inc()
+   ```
 
 ### Prevention
-- Implement client-side rate limiting (token bucket)
-- Cache responses to reduce repeat requests
-- Monitor `http_requests_total` by endpoint
-- Set up alerts when request rate > threshold
-- Document API rate limits in API docs
-- Use connection pooling to reduce overhead
-- Implement request deduplication for idempotent operations
+
+- Document rate limits clearly in API documentation
+- Provide rate limit headers in all responses
+- Implement quota management dashboard for users
+- Set up monitoring alerts for rate limit spikes
+- Regular load testing to identify bottlenecks
+- Educate clients on best practices (batching, caching)
+- Implement circuit breaker pattern for dependent services
 
 ---
 
 ## Storage Quota Exceeded
 
+### Overview
+User has exceeded their allowed storage limit for resumes and associated files.
+
 ### Root Causes
-1. **Large resume versions** - Keeping old versions, accumulating data
-2. **Unoptimized images** - High-resolution images stored as-is
-3. **Cache not cleaned** - Temporary files not removed
-4. **Duplicates** - Accidental uploads of same content
-5. **Media library** - Accumulated profile photos, examples
-6. **AI generation artifacts** - Generated content stored incorrectly
-7. **No retention policy** - Old data never cleaned up
+
+- **Large PDF Files**: Generated PDFs consuming quota
+- **Media Assets**: High-resolution images or videos
+- **Undeleted Drafts**: Old resume versions not cleaned up
+- **Version History**: Multiple versions of resumes stored
+- **Temporary Files**: Cache or temporary files not cleaned up
+- **Inadequate Quota**: Initial quota too low for user needs
+- **No Cleanup Policy**: No automatic cleanup of old data
 
 ### Solutions
 
 #### Immediate Fixes
-```bash
-# Find largest files
-du -sh /data/storage/* | sort -rh | head -20
 
-# Clean old drafts
-find /data/storage -name "*.draft" -mtime +30 -delete
+1. **Check Storage Usage**
+   ```python
+   from sqlalchemy import func
+   
+   def get_user_storage_usage(user_id):
+       total_size = db.query(func.sum(Resume.file_size)).filter_by(
+           user_id=user_id
+       ).scalar() or 0
+       return total_size
+   
+   def get_user_quota(user_id):
+       user = db.query(User).get(user_id)
+       return user.storage_quota
+   ```
 
-# Compress large files
-find /data/storage -name "*.json" -size +1M -exec gzip {} \;
-```
+2. **List Large Files**
+   ```python
+   def get_user_large_files(user_id, min_size_mb=5):
+       large_files = db.query(Resume).filter(
+           Resume.user_id == user_id,
+           Resume.file_size > min_size_mb * 1024 * 1024
+       ).order_by(Resume.file_size.desc()).all()
+       return large_files
+   ```
 
-#### Database Cleanup
-```python
-async def cleanup_old_drafts(days_old: int = 30):
-    """Delete drafts not modified in N days."""
-    cutoff_date = datetime.utcnow() - timedelta(days=days_old)
-    
-    await db.execute(
-        """
-        DELETE FROM resumes 
-        WHERE status = 'draft' 
-        AND updated_at < $1
-        """,
-        cutoff_date
-    )
-```
+3. **Delete Old Drafts**
+   ```python
+   from datetime import datetime, timedelta
+   
+   def cleanup_old_drafts(user_id, days_old=30):
+       cutoff_date = datetime.utcnow() - timedelta(days=days_old)
+       old_drafts = db.query(Resume).filter(
+           Resume.user_id == user_id,
+           Resume.status == 'draft',
+           Resume.created_at < cutoff_date
+       ).all()
+       
+       for draft in old_drafts:
+           db.delete(draft)
+       db.commit()
+   ```
 
-#### Automatic Storage Cleanup
-```python
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
+4. **Compress Existing Files**
+   ```python
+   import zlib
+   
+   def compress_resume(resume_id):
+       resume = db.query(Resume).get(resume_id)
+       if resume.content:
+           compressed = zlib.compress(resume.content.encode())
+           resume.content_compressed = compressed
+           original_size = len(resume.content.encode())
+           compressed_size = len(compressed)
+           resume.compression_ratio = compressed_size / original_size
+           db.commit()
+   ```
 
-async def setup_storage_cleanup():
-    scheduler = AsyncIOScheduler()
-    
-    # Clean daily at 2 AM
-    scheduler.add_job(
-        cleanup_old_drafts,
-        "cron",
-        hour=2,
-        minute=0,
-        kwargs={"days_old": 30}
-    )
-    
-    # Clean images older than 90 days
-    scheduler.add_job(
-        cleanup_old_images,
-        "cron",
-        hour=3,
-        minute=0,
-        kwargs={"days_old": 90}
-    )
-    
-    scheduler.start()
-```
+#### Long-term Solutions
 
-#### Version Management
-```python
-async def keep_last_n_versions(resume_id: str, keep_count: int = 5):
-    """Keep only N most recent versions."""
-    old_versions = await db.fetch(
-        """
-        SELECT id FROM resume_versions
-        WHERE resume_id = $1
-        ORDER BY created_at DESC
-        OFFSET $2
-        """,
-        resume_id, keep_count
-    )
-    
-    for version in old_versions:
-        await delete_version(version["id"])
-```
+1. **Implement Automatic Cleanup**
+   ```python
+   from celery import shared_task
+   from datetime import datetime, timedelta
+   
+   @shared_task
+   def cleanup_expired_drafts():
+       cutoff_date = datetime.utcnow() - timedelta(days=30)
+       expired = db.query(Resume).filter(
+           Resume.status == 'draft',
+           Resume.created_at < cutoff_date
+       ).delete()
+       logger.info(f"Cleaned up {expired} expired drafts")
+   
+   # Schedule in Celery Beat
+   # celery beat: cleanup_expired_drafts every day at 2 AM
+   ```
+
+2. **Tiered Storage Quotas**
+   ```python
+   STORAGE_QUOTAS = {
+       "free": 50 * 1024 * 1024,          # 50 MB
+       "pro": 500 * 1024 * 1024,          # 500 MB
+       "enterprise": 5 * 1024 * 1024 * 1024  # 5 GB
+   }
+   
+   def get_user_quota(user_id):
+       user = db.query(User).get(user_id)
+       return STORAGE_QUOTAS.get(user.tier, STORAGE_QUOTAS["free"])
+   ```
+
+3. **Implement Storage Warnings**
+   ```python
+   def check_storage_quota(user_id):
+       usage = get_user_storage_usage(user_id)
+       quota = get_user_quota(user_id)
+       usage_percent = (usage / quota) * 100
+       
+       if usage_percent >= 90:
+           send_storage_warning_email(user_id, usage_percent)
+           return "warning"
+       elif usage_percent >= 100:
+           return "exceeded"
+       return "ok"
+   ```
+
+4. **Version Management**
+   ```python
+   class Resume(Base):
+       __tablename__ = "resumes"
+       
+       id = Column(Integer, primary_key=True)
+       user_id = Column(Integer, ForeignKey("users.id"))
+       content = Column(Text)
+       version = Column(Integer, default=1)
+       created_at = Column(DateTime, default=datetime.utcnow)
+       is_latest = Column(Boolean, default=True)
+   
+   def cleanup_old_versions(user_id, resume_id, keep_versions=5):
+       old_versions = db.query(Resume).filter(
+           Resume.user_id == user_id,
+           Resume.resume_id == resume_id,
+           Resume.is_latest == False
+       ).order_by(Resume.created_at.desc()).offset(keep_versions).all()
+       
+       for version in old_versions:
+           db.delete(version)
+       db.commit()
+   ```
 
 ### Prevention
-- Set storage warning threshold at 80% quota
-- Implement per-user quota limits
-- Monitor `storage_usage_bytes` Prometheus metric
-- Alert when approaching quota (daily digest)
-- Implement automated cleanup of 90+ day old drafts
-- Compress images to < 500KB
-- Document retention policy to users
-- Set hard quota limits to prevent disk full
+
+- Set appropriate default quotas based on tier
+- Display storage usage in user dashboard
+- Implement storage warnings at 75%, 90%, 100%
+- Auto-delete old drafts (> 30 days) weekly
+- Keep only last 5 resume versions
+- Compress PDF content using gzip
+- Monitor storage growth trends
+- Offer upgrade path when quota reached
 
 ---
 
 ## AI Provider Down
 
+### Overview
+AI provider (OpenAI, Anthropic, etc.) is unavailable, preventing AI-powered features.
+
 ### Root Causes
-1. **AI provider service outage** - External API unavailable
-2. **Authentication failure** - Invalid API key, rate limit
-3. **Network connectivity** - Can't reach provider (firewall, DNS)
-4. **Regional endpoint issue** - Wrong region/zone selected
-5. **API version mismatch** - Client outdated, API changed
-6. **Account issues** - Suspended account, payment failed
-7. **Quota exceeded** - Monthly token limit reached
+
+- **Service Outage**: Provider's servers are down
+- **API Key Expired**: Key needs rotation or subscription needs renewal
+- **Rate Limit**: Provider's rate limit exceeded
+- **Network Issue**: Cannot reach provider's endpoint
+- **Misconfigured Endpoint**: Wrong API endpoint URL
+- **Invalid Request**: Request doesn't match provider's expected format
+- **Authentication Failure**: API key invalid or insufficient permissions
 
 ### Solutions
 
-#### Fallback Provider Strategy
-```python
-from enum import Enum
-from typing import Optional
+#### Immediate Fixes
 
-class AIProvider(str, Enum):
-    OPENAI = "openai"
-    ANTHROPIC = "anthropic"
-    LOCAL = "local"
+1. **Check Provider Status**
+   ```python
+   import httpx
+   
+   async def check_provider_health(provider: str):
+       status_endpoints = {
+           "openai": "https://status.openai.com/api/v2/status.json",
+           "anthropic": "https://status.anthropic.com/api/v2/status.json"
+       }
+       
+       if provider in status_endpoints:
+           async with httpx.AsyncClient() as client:
+               response = await client.get(status_endpoints[provider])
+               return response.json()
+   ```
 
-async def generate_resume_content(
-    content: str,
-    primary_provider: AIProvider = AIProvider.OPENAI,
-) -> str:
-    """Try primary, fall back to alternatives."""
-    
-    providers = [primary_provider]
-    
-    # Add fallbacks in order
-    if primary_provider != AIProvider.ANTHROPIC:
-        providers.append(AIProvider.ANTHROPIC)
-    if len(providers) < 2:
-        providers.append(AIProvider.LOCAL)
-    
-    last_error = None
-    
-    for provider in providers:
-        try:
-            logger.info(f"Trying {provider.value}")
-            result = await call_ai_provider(provider, content)
-            
-            # Log successful provider for metrics
-            ai_provider_success.labels(provider=provider.value).inc()
-            return result
-            
-        except Exception as e:
-            logger.warning(f"{provider.value} failed: {e}")
-            last_error = e
-            continue
-    
-    # All providers failed
-    logger.error(f"All AI providers failed")
-    ai_provider_failures.labels().inc()
-    raise last_error
-```
+2. **Verify API Credentials**
+   ```python
+   import os
+   
+   def verify_api_credentials(provider: str):
+       if provider == "openai":
+           api_key = os.getenv("OPENAI_API_KEY")
+           if not api_key:
+               return False, "OPENAI_API_KEY not set"
+           if not api_key.startswith("sk-"):
+               return False, "Invalid OpenAI API key format"
+       return True, "Credentials valid"
+   ```
 
-#### Circuit Breaker Pattern
-```python
-from datetime import datetime, timedelta
-from enum import Enum
+3. **Implement Fallback Provider**
+   ```python
+   async def generate_resume_content(user_id, resume_data):
+       providers = ["openai", "anthropic", "cohere"]  # Priority order
+       
+       for provider in providers:
+           try:
+               result = await call_ai_provider(provider, resume_data)
+               return result
+           except ProviderError as e:
+               logger.warning(f"{provider} failed: {e}")
+               continue
+       
+       # All providers failed
+       return generate_default_content(resume_data)
+   ```
 
-class CircuitState(str, Enum):
-    CLOSED = "closed"      # Normal operation
-    OPEN = "open"          # Provider failing, reject requests
-    HALF_OPEN = "half_open"  # Testing if recovered
+4. **Test Connectivity**
+   ```python
+   import httpx
+   
+   async def test_provider_connection(provider: str):
+       endpoints = {
+           "openai": "https://api.openai.com/v1/models",
+           "anthropic": "https://api.anthropic.com/status"
+       }
+       
+       async with httpx.AsyncClient() as client:
+           try:
+               response = await client.get(
+                   endpoints[provider],
+                   headers={"Authorization": f"Bearer {API_KEY}"},
+                   timeout=10.0
+               )
+               return response.status_code == 200
+           except Exception as e:
+               logger.error(f"Connection test failed: {e}")
+               return False
+   ```
 
-class CircuitBreaker:
-    """Prevent cascading failures."""
-    
-    def __init__(
-        self,
-        failure_threshold: int = 5,
-        recovery_timeout: int = 60,
-    ):
-        self.failure_threshold = failure_threshold
-        self.recovery_timeout = recovery_timeout
-        self.failures = 0
-        self.last_failure_time = None
-        self.state = CircuitState.CLOSED
-    
-    async def call(self, func, *args, **kwargs):
-        """Execute function with circuit breaker protection."""
-        
-        if self.state == CircuitState.OPEN:
-            if self._should_attempt_recovery():
-                self.state = CircuitState.HALF_OPEN
-            else:
-                raise CircuitBreakerOpen(
-                    f"Circuit open, retry in "
-                    f"{self._time_until_retry():.0f}s"
-                )
-        
-        try:
-            result = await func(*args, **kwargs)
-            self._on_success()
-            return result
-        except Exception as e:
-            self._on_failure()
-            raise
-    
-    def _on_success(self):
-        self.failures = 0
-        self.state = CircuitState.CLOSED
-    
-    def _on_failure(self):
-        self.failures += 1
-        self.last_failure_time = datetime.utcnow()
-        
-        if self.failures >= self.failure_threshold:
-            self.state = CircuitState.OPEN
-    
-    def _should_attempt_recovery(self) -> bool:
-        elapsed = (
-            datetime.utcnow() - self.last_failure_time
-        ).total_seconds()
-        return elapsed >= self.recovery_timeout
-    
-    def _time_until_retry(self) -> float:
-        elapsed = (
-            datetime.utcnow() - self.last_failure_time
-        ).total_seconds()
-        return max(0, self.recovery_timeout - elapsed)
-```
+#### Long-term Solutions
 
-#### Multi-Provider Caching
-```python
-from functools import lru_cache
+1. **Multi-Provider Strategy**
+   ```python
+   class AIProvider(ABC):
+       @abstractmethod
+       async def generate(self, prompt: str) -> str:
+           pass
+   
+   class OpenAIProvider(AIProvider):
+       async def generate(self, prompt: str) -> str:
+           # Implementation
+           pass
+   
+   class AnthropicProvider(AIProvider):
+       async def generate(self, prompt: str) -> str:
+           # Implementation
+           pass
+   
+   @app.get("/api/generate")
+   async def generate_resume(data: ResumeData):
+       providers = [
+           OpenAIProvider(),
+           AnthropicProvider()
+       ]
+       for provider in providers:
+           try:
+               return await provider.generate(data.prompt)
+           except ProviderError:
+               continue
+   ```
 
-class AICache:
-    """Cache AI responses to handle provider outages."""
-    
-    def __init__(self, ttl_seconds: int = 86400):  # 24 hours
-        self.cache = {}
-        self.ttl = ttl_seconds
-    
-    def _cache_key(self, prompt: str, provider: str) -> str:
-        import hashlib
-        h = hashlib.sha256(prompt.encode()).hexdigest()
-        return f"{provider}:{h}"
-    
-    async def get_or_generate(
-        self,
-        prompt: str,
-        provider: AIProvider,
-        force_refresh: bool = False,
-    ) -> str:
-        """Get cached result or generate new."""
-        
-        key = self._cache_key(prompt, provider.value)
-        
-        if not force_refresh:
-            cached = self.cache.get(key)
-            if cached and not self._is_expired(cached):
-                logger.info("Cache hit")
-                return cached["result"]
-        
-        try:
-            result = await generate_resume_content(prompt, provider)
-            self.cache[key] = {
-                "result": result,
-                "timestamp": datetime.utcnow(),
-            }
-            return result
-        except Exception as e:
-            # Fall back to stale cache
-            cached = self.cache.get(key)
-            if cached:
-                logger.warning(
-                    f"Provider failed, using cached result "
-                    f"({self._age(cached):.0f}s old)"
-                )
-                return cached["result"]
-            raise
-    
-    def _is_expired(self, cached: dict) -> bool:
-        age = (datetime.utcnow() - cached["timestamp"]).total_seconds()
-        return age > self.ttl
-    
-    def _age(self, cached: dict) -> float:
-        return (datetime.utcnow() - cached["timestamp"]).total_seconds()
-```
+2. **Circuit Breaker Pattern**
+   ```python
+   from pybreaker import CircuitBreaker
+   
+   openai_breaker = CircuitBreaker(
+       fail_max=5,
+       reset_timeout=60,
+       listeners=[on_circuit_opened, on_circuit_closed]
+   )
+   
+   @openai_breaker
+   async def call_openai(prompt: str):
+       # Will automatically open circuit after 5 failures
+       async with httpx.AsyncClient() as client:
+           response = await client.post(
+               "https://api.openai.com/v1/chat/completions",
+               json={"messages": [{"role": "user", "content": prompt}]}
+           )
+           return response.json()
+   ```
 
-#### Degraded Mode
-```python
-async def generate_content_with_degradation(
-    content: str,
-    required_quality: str = "full",
-) -> dict:
-    """Generate with graceful degradation."""
-    
-    try:
-        # Try full AI enhancement
-        return {
-            "content": await generate_resume_content(content),
-            "quality": "full",
-        }
-    except AIProviderError:
-        logger.warning("AI provider down, using degraded mode")
-        
-        if required_quality == "full":
-            # Still try fallback, but mark as degraded
-            return {
-                "content": await generate_with_fallback(content),
-                "quality": "degraded",
-                "notice": "Using cached/local generation"
-            }
-        else:
-            # Just return original content
-            return {
-                "content": content,
-                "quality": "none",
-                "notice": "AI enhancements unavailable"
-            }
-```
+3. **Cache AI Responses**
+   ```python
+   from functools import lru_cache
+   import hashlib
+   
+   def get_cache_key(prompt: str, model: str) -> str:
+       return hashlib.md5(f"{model}:{prompt}".encode()).hexdigest()
+   
+   async def generate_with_cache(prompt: str, model: str = "gpt-4"):
+       cache_key = get_cache_key(prompt, model)
+       cached = redis.get(cache_key)
+       
+       if cached:
+           logger.info(f"Cache hit for {cache_key}")
+           return cached.decode()
+       
+       result = await call_ai_provider(prompt, model)
+       redis.setex(cache_key, 86400, result)  # Cache for 24 hours
+       return result
+   ```
+
+4. **Local/Degraded Mode**
+   ```python
+   def generate_default_content(resume_data):
+       """Generate basic content when AI provider is unavailable"""
+       template = """
+       **Professional Summary**
+       Experienced professional with expertise in {skills}.
+       
+       **Experience**
+       {experience_text}
+       
+       **Education**
+       {education_text}
+       """
+       return template.format(**resume_data.dict())
+   ```
+
+5. **Monitoring and Alerts**
+   ```python
+   from prometheus_client import Counter, Gauge
+   
+   ai_provider_errors = Counter(
+       'ai_provider_errors_total',
+       'Total AI provider errors',
+       ['provider', 'error_type']
+   )
+   
+   ai_provider_latency = Gauge(
+       'ai_provider_latency_ms',
+       'AI provider response latency',
+       ['provider']
+   )
+   
+   # Usage
+   try:
+       start = time.time()
+       result = await openai_provider.generate(prompt)
+       latency = (time.time() - start) * 1000
+       ai_provider_latency.labels(provider="openai").set(latency)
+   except Exception as e:
+       ai_provider_errors.labels(
+           provider="openai",
+           error_type=type(e).__name__
+       ).inc()
+   ```
 
 ### Prevention
-- Monitor provider status pages continuously
-- Implement multi-provider support from start
-- Cache AI responses for common queries
-- Set up alerts for provider failures (Prometheus)
-- Test fallback paths regularly (game days)
-- Implement circuit breakers to prevent cascades
-- Document provider SLAs and incident procedures
-- Keep local model option as backup (cheaper, slower)
-- Monitor tokens used vs quota in provider
+
+- Monitor provider health dashboards continuously
+- Implement health check endpoints for each provider
+- Rotate API keys every 90 days
+- Set up alerts for provider error rates > 1%
+- Maintain backup provider relationship
+- Cache responses aggressively (24+ hours)
+- Document provider rate limits and quotas
+- Test failover procedures monthly
+- Keep audit log of all provider calls
+- Use Circuit Breaker to prevent cascading failures
 
 ---
 
 ## General Troubleshooting Tips
 
-### Debug Logging Setup
-```bash
-# Enable debug logging
-export LOG_LEVEL=DEBUG
+### Enable Debug Logging
 
-# View structured logs in real-time
-tail -f logs/app.log | jq '.'
+```python
+import logging
 
-# Filter by component
-tail -f logs/app.log | jq 'select(.component=="pdf")'
-
-# Find errors
-cat logs/app.log | jq 'select(.level=="ERROR")'
-```
-
-### Environment Variable Verification
-```bash
-# Check all required vars are set
-required_vars=(
-    "DATABASE_URL"
-    "GITHUB_CLIENT_ID"
-    "GITHUB_CLIENT_SECRET"
-    "OPENAI_API_KEY"
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 
-for var in "${required_vars[@]}"; do
-    if [ -z "${!var}" ]; then
-        echo "ERROR: $var not set"
-        exit 1
-    fi
-done
+logger = logging.getLogger(__name__)
+logger.debug("Detailed debugging information")
 ```
 
-### Database Health Checks
+### Check Environment Variables
+
 ```bash
-# Connect to database
-psql $DATABASE_URL -c "SELECT version();"
-
-# Check connection pool
-psql $DATABASE_URL -c "SELECT count(*) FROM pg_stat_activity;"
-
-# View active queries
-psql $DATABASE_URL -c "
-    SELECT pid, query, state
-    FROM pg_stat_activity
-    WHERE state != 'idle';"
+# List all environment variables related to config
+env | grep -E "(API|OAUTH|STORAGE|TIMEOUT|RATE)" | sort
 ```
 
-### Key Metrics to Monitor
-- `http_requests_total` - API request volume
-- `http_request_duration_seconds` - API latency (p50, p95, p99)
-- `pdf_generation_duration_seconds` - PDF generation performance
-- `database_connection_errors_total` - DB connectivity
-- `ai_provider_failures_total` - AI provider issues
-- `storage_usage_bytes` - Storage consumption
-- `github_oauth_failures_total` - OAuth issues
+### Database Health Check
 
-### Useful Bash Commands
+```python
+async def check_database_health():
+    try:
+        result = await db.execute("SELECT 1")
+        return {"status": "healthy", "response_time": result.duration}
+    except Exception as e:
+        return {"status": "unhealthy", "error": str(e)}
+```
+
+### Monitor Key Metrics
+
+```python
+# Track these in production
+- API response times (p50, p95, p99)
+- Error rates by status code (5xx, 4xx)
+- Database query times
+- Cache hit rate
+- External service health (OAuth, AI providers)
+- Queue depths and processing times
+- Memory usage and disk space
+```
+
+### Useful Commands
+
 ```bash
-# View recent errors
-grep ERROR logs/app.log | tail -20
+# Check logs
+tail -f /var/log/resumeai/app.log
 
-# Count errors by type
-grep ERROR logs/app.log | jq -r '.error_type' | sort | uniq -c
-
-# Check API response times
-grep "http_request" logs/app.log | jq '.duration_ms' | sort -n | tail -20
-
-# Monitor in real-time
-watch -n 1 'ps aux | grep resumeai'
+# Monitor process
+ps aux | grep python
 
 # Check disk space
 df -h
-du -sh /data/storage
 
-# Restart services
-systemctl restart resumeai-api resumeai-workers
+# Check memory usage
+free -h
+
+# Test connectivity to external service
+curl -v https://api.openai.com/v1/models
+
+# Check network ports
+netstat -tuln | grep LISTEN
 ```
 
 ---
 
 ## Support and Escalation
 
-### Diagnostic Information Checklist
-Before contacting support, gather:
-- [ ] Error message and stack trace
-- [ ] Request/User ID from logs
-- [ ] Recent changes to deployment/config
-- [ ] Screenshots of issue (if UI-related)
-- [ ] Prometheus metrics graph (timerange of issue)
-- [ ] Related log excerpts (last 30 minutes)
-- [ ] Reproduction steps
+If none of these solutions resolve your issue:
 
-### Severity Levels
+1. **Collect Diagnostic Information**
+   - Full error message and stack trace
+   - Request ID (from logs)
+   - Timestamp of the issue
+   - Steps to reproduce
+   - Environment (staging/production)
+   - Browser/client information
 
-| Level | Impact | Response Time | Example |
-|-------|--------|---------------|---------|
-| **P1** | Prod down, users blocked | 15 minutes | API completely offline |
-| **P2** | Major feature broken | 1 hour | PDF generation broken |
-| **P3** | Minor feature issues | 4 hours | Slow performance |
-| **P4** | Enhancement requests | 1 week | UI improvements |
+2. **Check Recent Changes**
+   - Review deployment logs
+   - Check for config changes
+   - Look at recent commits
 
-### Escalation Path
-1. Check this troubleshooting guide
-2. Check status page: https://status.resumeai.io
-3. Check GitHub issues for known problems
-4. Contact support via dashboard
-5. Page on-call engineer (P1 only)
+3. **Contact Support**
+   - Include diagnostic info above
+   - Provide access to relevant logs
+   - Describe impact (number of users affected)
+
+4. **Escalate if Critical**
+   - Severity 1: System down, all users affected
+   - Severity 2: Feature broken for subset of users
+   - Severity 3: Workaround available
+   - Severity 4: Documentation/enhancement
 
 ---
 
-**Last Updated**: February 26, 2026  
-**Version**: 2.1
+**Last Updated**: February 26, 2026
+
+**Maintainer**: Engineering Team
+
+**Related Documentation**:
+- [ERROR_HANDLING_QUICK_REFERENCE.md](../ERROR_HANDLING_QUICK_REFERENCE.md)
+- [DEPLOYMENT_GUIDE.md](../DEPLOYMENT_GUIDE.md)
+- [API_DOCUMENTATION.md](../API_DOCUMENTATION.md)

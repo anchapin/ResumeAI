@@ -12,7 +12,7 @@ Comprehensive tests for:
 
 import pytest
 from datetime import datetime, timedelta
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, patch, MagicMock
 from monitoring.alerting import (
     Alert,
     AlertManager,
@@ -38,9 +38,11 @@ class TestHighErrorRateAlert:
 
     @pytest.mark.asyncio
     async def test_high_error_rate_rule_check(self):
-        """Test high error rate rule check."""
+        """Test high error rate rule check (returns None in fallback mode)."""
         rule = HighErrorRateRule(threshold=0.001)
+
         result = await rule.check()
+        # Fallback implementation returns None
         assert result is None
 
     def test_high_error_rate_alert_message(self):
@@ -74,6 +76,7 @@ class TestPDFGenerationSlowAlert:
     async def test_pdf_generation_slow_rule_check(self):
         """Test PDF generation slow rule check."""
         rule = PDFGenerationSlowRule(threshold_seconds=5, percentile=0.95)
+
         result = await rule.check()
         assert result is None
 
@@ -101,12 +104,14 @@ class TestDatabaseConnectionPoolAlert:
 
         assert rule.name == "database_connection_pool_exhausted"
         assert rule.enabled is True
+        # Should have a 2-minute cooldown instead of default 5
         assert rule.alert_cooldown == timedelta(minutes=2)
 
     @pytest.mark.asyncio
     async def test_database_connection_pool_exhausted_rule_check(self):
         """Test database connection pool exhausted rule check."""
         rule = DatabaseConnectionPoolExhaustedRule()
+
         result = await rule.check()
         assert result is None
 
@@ -141,6 +146,7 @@ class TestAPIKeyInvalidAlert:
     async def test_api_key_invalid_rule_check(self):
         """Test API key invalid rule check."""
         rule = APIKeyInvalidRule(threshold_per_second=1)
+
         result = await rule.check()
         assert result is None
 
@@ -166,6 +172,7 @@ class TestAlertManagerWithIssue402Rules:
         manager = AlertManager()
         manager.add_default_rules()
 
+        # Verify all Issue #402 rules are added
         rule_names = [rule.name for rule in manager.rules]
 
         assert "high_error_rate" in rule_names
@@ -174,7 +181,7 @@ class TestAlertManagerWithIssue402Rules:
         assert "api_key_invalid" in rule_names
 
     def test_alert_manager_add_default_handlers(self):
-        """Test that AlertManager adds default handlers."""
+        """Test that AlertManager adds default handlers including notify."""
         manager = AlertManager()
         manager.add_default_handlers()
 
@@ -191,6 +198,7 @@ class TestAlertManagerWithIssue402Rules:
             details={"error_rate": 0.002},
         )
 
+        # Should not raise
         manager.log_alert(alert)
 
     def test_alert_manager_notify_alert_sends_to_sentry(self):
@@ -204,6 +212,7 @@ class TestAlertManagerWithIssue402Rules:
             details={},
         )
 
+        # Should not raise even without Sentry configured
         manager.notify_alert(alert)
 
     @pytest.mark.asyncio
@@ -211,7 +220,9 @@ class TestAlertManagerWithIssue402Rules:
         """Test checking all rules."""
         manager = AlertManager()
 
+        # Create a mock rule that returns an alert
         mock_rule = Mock()
+        mock_rule.evaluate = Mock()
 
         async def mock_evaluate():
             return Alert(
@@ -249,6 +260,7 @@ class TestSentryConfiguration:
         """Test getting Sentry frontend configuration."""
         from config.sentry import SentryConfig
 
+        # When disabled
         with patch.object(SentryConfig, "ENABLED", False):
             config = SentryConfig.get_frontend_config()
             assert config == {}
@@ -264,7 +276,8 @@ class TestAlertIntegration:
         manager.add_default_rules()
         manager.add_default_handlers()
 
-        assert len(manager.rules) >= 4
+        # Verify setup
+        assert len(manager.rules) >= 4  # At least the 4 Issue #402 rules
         assert len(manager.handlers) >= 1
 
     def test_all_issue_402_alerts_have_required_fields(self):
@@ -312,19 +325,25 @@ class TestAlertMetrics:
         """Test alert cooldown behavior."""
         rule = HighErrorRateRule()
 
+        # First alert should be allowed
         assert rule.should_alert() is True
 
+        # Set last alert time
         rule.last_alert_time = datetime.utcnow()
+
+        # Should not alert within cooldown
         assert rule.should_alert() is False
 
+        # Move past cooldown
         rule.last_alert_time = datetime.utcnow() - timedelta(minutes=10)
         assert rule.should_alert() is True
 
     def test_different_cooldown_durations(self):
-        """Test different cooldown durations."""
+        """Test different cooldown durations for different rule types."""
         high_error_rate = HighErrorRateRule()
         pool_exhausted = DatabaseConnectionPoolExhaustedRule()
 
+        # Pool exhaustion should have shorter cooldown (2 min vs 5 min)
         assert pool_exhausted.alert_cooldown < high_error_rate.alert_cooldown
         assert pool_exhausted.alert_cooldown == timedelta(minutes=2)
         assert high_error_rate.alert_cooldown == timedelta(minutes=5)
