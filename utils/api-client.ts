@@ -39,6 +39,27 @@ function getAPIKey(): string | null {
 
 function getHeaders(): HeadersInit {
   const headers: HeadersInit = { 'Content-Type': 'application/json' };
+
+  // Try JWT token first (Issue 477 - Bearer token auth)
+  const token = localStorage.getItem('resume_ai_auth_token');
+  if (token) {
+    try {
+      // Check if token is expired
+      const parts = token.split('.');
+      if (parts.length === 3) {
+        const payload = JSON.parse(atob(parts[1]));
+        const currentTime = Math.floor(Date.now() / 1000);
+        if (!payload.exp || payload.exp >= currentTime) {
+          headers['Authorization'] = `Bearer ${token}`;
+          return headers;
+        }
+      }
+    } catch {
+      // Invalid token, fall through to API key
+    }
+  }
+
+  // Fall back to API key authentication
   const apiKey = getAPIKey();
   if (apiKey) headers['X-API-KEY'] = apiKey;
   return headers;
@@ -211,13 +232,24 @@ export async function tailorResume(
   return response.json();
 }
 
+export interface CoverLetterRequest {
+  resume_data: ResumeDataForAPI;
+  job_description: string;
+  company_name: string;
+  job_title: string;
+  tone?: string;
+}
+
 export interface CoverLetterResponse {
   header: string;
   introduction: string;
   body: string;
   closing: string;
   full_text: string;
-  metadata: Record<string, unknown>;
+  metadata: {
+    word_count: number;
+    note?: string;
+  };
 }
 
 export async function generateCoverLetter(
