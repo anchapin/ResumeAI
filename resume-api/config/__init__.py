@@ -105,7 +105,7 @@ class Settings(BaseSettings):
 
     @field_validator("jwt_secret")
     @classmethod
-    def validate_jwt_secret(cls, v: str, info: pydantic.ValidationInfo) -> str:
+    def validate_jwt_secret(cls, v: str, info: ValidationInfo) -> str:
         """
         Validate JWT secret is provided and secure.
 
