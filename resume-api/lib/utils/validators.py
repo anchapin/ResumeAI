@@ -277,7 +277,7 @@ def sanitize_html(text: Optional[str]) -> Optional[str]:
     # 1. Quoted attributes: onX="Y" or onX='Y'
     text = re.sub(r'on\w+\s*=\s*["\'][^"\']*["\']', "", text, flags=re.IGNORECASE)
     # 2. Unquoted attributes: onX=Y (matches until space, >, or end of string)
-    text = re.sub(r'on\w+\s*=\s*[^>\s]+', "", text, flags=re.IGNORECASE)
+    text = re.sub(r"on\w+\s*=\s*[^>\s]+", "", text, flags=re.IGNORECASE)
 
     # Remove javascript: and data: URLs
     text = re.sub(r"javascript\s*:", "", text, flags=re.IGNORECASE)
