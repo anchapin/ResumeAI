@@ -9,7 +9,7 @@ from typing import Callable
 from fastapi import Request, Response, HTTPException, status
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import JSONResponse
-from config.errors import (
+from ..config.errors import (
     ErrorCode,
     create_error_response,
     generate_request_id,
