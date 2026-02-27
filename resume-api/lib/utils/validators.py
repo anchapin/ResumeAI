@@ -15,7 +15,6 @@ from typing import Optional, List, Dict, Any, Tuple
 from urllib.parse import urlparse
 from pathlib import Path
 
-
 # LaTeX special characters that need escaping
 LATEX_SPECIAL_CHARS = {
     "\\": "\\textbackslash{}",
@@ -116,7 +115,9 @@ def validate_email(email: Optional[str]) -> Optional[str]:
 
     # Check length
     if len(email) > MAX_STRING_LENGTH:
-        raise ValueError(f"Email exceeds maximum length of {MAX_STRING_LENGTH} characters")
+        raise ValueError(
+            f"Email exceeds maximum length of {MAX_STRING_LENGTH} characters"
+        )
 
     return email
 
@@ -144,10 +145,16 @@ def validate_url(url: Optional[str]) -> Optional[str]:
 
     # Check length
     if len(url) > MAX_STRING_LENGTH:
-        raise ValueError(f"URL exceeds maximum length of {MAX_STRING_LENGTH} characters")
+        raise ValueError(
+            f"URL exceeds maximum length of {MAX_STRING_LENGTH} characters"
+        )
 
     try:
-        parsed = urlparse(url if url.startswith(("http://", "https://", "ftp://")) else f"https://{url}")
+        parsed = urlparse(
+            url
+            if url.startswith(("http://", "https://", "ftp://"))
+            else f"https://{url}"
+        )
         if not parsed.netloc:
             raise ValueError("URL must have a valid domain")
     except Exception as e:
@@ -365,9 +372,7 @@ def validate_resume_data(resume_dict: Dict[str, Any]) -> Dict[str, Any]:
 
     # Validate work experience
     if "work" in resume_dict and resume_dict["work"]:
-        validated["work"] = [
-            validate_work_item(item) for item in resume_dict["work"]
-        ]
+        validated["work"] = [validate_work_item(item) for item in resume_dict["work"]]
 
     # Validate education
     if "education" in resume_dict and resume_dict["education"]:
@@ -477,9 +482,7 @@ def validate_education_item(item: Dict[str, Any]) -> Dict[str, Any]:
             item.get("area"), "Area of Study", MAX_STRING_LENGTH
         )
     if "score" in item:
-        validated["score"] = validate_resume_field(
-            item.get("score"), "Score", 50
-        )
+        validated["score"] = validate_resume_field(item.get("score"), "Score", 50)
     if "startDate" in item:
         validated["startDate"] = item.get("startDate")
     if "endDate" in item:
@@ -499,9 +502,7 @@ def validate_skill_item(item: Dict[str, Any]) -> Dict[str, Any]:
             item.get("name"), "Skill Name", MAX_STRING_LENGTH
         )
     if "level" in item:
-        validated["level"] = validate_resume_field(
-            item.get("level"), "Skill Level", 50
-        )
+        validated["level"] = validate_resume_field(item.get("level"), "Skill Level", 50)
     if "keywords" in item and item["keywords"]:
         validated["keywords"] = [
             validate_resume_field(k, "Keyword", MAX_STRING_LENGTH)

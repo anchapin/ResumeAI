@@ -290,7 +290,7 @@ async def update_resume(
             # Validate and escape resume data
             resume_dict = request.data.model_dump(exclude_none=True)
             resume_dict = validate_resume_data(resume_dict)
-            
+
             # Calculate next version number
             version_count = len(resume.versions)
             new_version = ResumeVersion(

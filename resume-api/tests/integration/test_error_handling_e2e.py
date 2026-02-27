@@ -98,9 +98,7 @@ class TestMissingRequiredFields:
     """Test handling of missing required fields."""
 
     @pytest.mark.asyncio
-    async def test_pdf_missing_resume_data(
-        self, authenticated_client: AsyncClient
-    ):
+    async def test_pdf_missing_resume_data(self, authenticated_client: AsyncClient):
         """Test PDF endpoint with missing resume_data."""
         response = await authenticated_client.post(
             "/v1/render/pdf",
@@ -159,9 +157,7 @@ class TestInvalidDataTypes:
     """Test handling of invalid data types."""
 
     @pytest.mark.asyncio
-    async def test_resume_data_not_dict(
-        self, authenticated_client: AsyncClient
-    ):
+    async def test_resume_data_not_dict(self, authenticated_client: AsyncClient):
         """Test error when resume_data is not a dict."""
         response = await authenticated_client.post(
             "/v1/render/pdf",
@@ -211,9 +207,7 @@ class TestContentLimitations:
     """Test handling of content size limitations."""
 
     @pytest.mark.asyncio
-    async def test_extremely_long_text_content(
-        self, authenticated_client: AsyncClient
-    ):
+    async def test_extremely_long_text_content(self, authenticated_client: AsyncClient):
         """Test handling of extremely long text."""
         very_long_text = "x" * 50000  # 50KB of text
 
@@ -241,9 +235,7 @@ class TestContentLimitations:
         assert response.status_code in [200, 400, 413]
 
     @pytest.mark.asyncio
-    async def test_many_experience_entries(
-        self, authenticated_client: AsyncClient
-    ):
+    async def test_many_experience_entries(self, authenticated_client: AsyncClient):
         """Test handling of many experience entries."""
         resume_data = {
             "contact": {
@@ -314,9 +306,7 @@ class TestAuthenticationErrors:
         assert response.status_code == 401
 
     @pytest.mark.asyncio
-    async def test_wrong_api_key(
-        self, api_client: AsyncClient, minimal_resume_data
-    ):
+    async def test_wrong_api_key(self, api_client: AsyncClient, minimal_resume_data):
         """Test error with wrong API key."""
         api_client.headers = {"X-API-KEY": "wrong_key_xyz_123"}
 
@@ -373,9 +363,7 @@ class TestErrorResponseFormat:
         assert isinstance(data, dict)
 
     @pytest.mark.asyncio
-    async def test_error_includes_http_status(
-        self, authenticated_client: AsyncClient
-    ):
+    async def test_error_includes_http_status(self, authenticated_client: AsyncClient):
         """Test that error response has proper HTTP status."""
         response = await authenticated_client.post(
             "/v1/render/pdf",
@@ -390,9 +378,7 @@ class TestEdgeCaseErrors:
     """Test edge case error scenarios."""
 
     @pytest.mark.asyncio
-    async def test_null_values_in_data(
-        self, authenticated_client: AsyncClient
-    ):
+    async def test_null_values_in_data(self, authenticated_client: AsyncClient):
         """Test handling of null values in data."""
         response = await authenticated_client.post(
             "/v1/render/pdf",
@@ -431,9 +417,7 @@ class TestEdgeCaseErrors:
         assert response.status_code == 200
 
     @pytest.mark.asyncio
-    async def test_duplicate_field_names(
-        self, authenticated_client: AsyncClient
-    ):
+    async def test_duplicate_field_names(self, authenticated_client: AsyncClient):
         """Test handling of duplicate field names."""
         # This is a JSON parsing edge case
         # Most JSON parsers handle this by keeping last value

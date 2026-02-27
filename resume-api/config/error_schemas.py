@@ -3,8 +3,10 @@ from typing import Optional, Dict, Any
 from datetime import datetime
 import uuid
 
+
 class APIError(BaseModel):
     """Standardized API error response format"""
+
     error_code: str
     error_message: str
     request_id: str
@@ -21,9 +23,10 @@ class APIError(BaseModel):
                 "request_id": "req_abc123def456",
                 "http_status": 401,
                 "timestamp": "2024-02-26T13:40:22.892Z",
-                "path": "/v1/render/pdf"
+                "path": "/v1/render/pdf",
             }
         }
+
 
 # Standard error codes
 ERROR_CODES = {
@@ -36,11 +39,12 @@ ERROR_CODES = {
     "ERR_TIMEOUT": ("Request timeout", 504),
 }
 
+
 def create_error_response(
     error_code: str,
     request_id: Optional[str] = None,
     path: Optional[str] = None,
-    details: Optional[Dict[str, Any]] = None
+    details: Optional[Dict[str, Any]] = None,
 ) -> APIError:
     """Factory function for creating standardized error responses"""
     if error_code not in ERROR_CODES:
@@ -59,5 +63,5 @@ def create_error_response(
         http_status=http_status,
         timestamp=datetime.utcnow().isoformat() + "Z",
         path=path,
-        details=details
+        details=details,
     )

@@ -1,7 +1,7 @@
 """
 Redis and Cache Configuration
 
-Handles Redis connection pooling, cache settings per data type, 
+Handles Redis connection pooling, cache settings per data type,
 and fallback to in-memory cache on failures.
 """
 
@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 
 class RedisConnectionPool:
     """Manages Redis connection pooling and health checks"""
-    
+
     def __init__(
         self,
         host: str = "localhost",
@@ -43,15 +43,15 @@ class RedisConnectionPool:
         self.socket_timeout = socket_timeout
         self.socket_connect_timeout = socket_connect_timeout
         self.health_check_interval = health_check_interval
-        
+
         self.redis_client: Optional[Any] = None
         self.is_available = False
         self._health_check_task: Optional[asyncio.Task] = None
-    
+
     async def connect(self) -> bool:
         """
         Connect to Redis with fallback
-        
+
         Returns:
             True if connected, False if using fallback
         """
@@ -60,7 +60,7 @@ class RedisConnectionPool:
         except ImportError:
             logger.warning("aioredis not installed, using in-memory cache")
             return False
-        
+
         try:
             # Create connection pool
             self.redis_client = await aioredis.create_redis_pool(
@@ -69,17 +69,17 @@ class RedisConnectionPool:
                 timeout=self.socket_timeout,
                 encoding="utf-8",
             )
-            
+
             # Verify connection
             await self.redis_client.ping()
             self.is_available = True
             logger.info(f"Connected to Redis at {self.host}:{self.port}")
-            
+
             # Start health check
             self._health_check_task = asyncio.create_task(self._health_check_loop())
-            
+
             return True
-        
+
         except ImportError:
             logger.warning("aioredis not installed, using in-memory cache")
             return False
@@ -90,24 +90,24 @@ class RedisConnectionPool:
             )
             self.is_available = False
             return False
-    
+
     async def _health_check_loop(self):
         """Periodically check Redis health"""
         while True:
             try:
                 await asyncio.sleep(self.health_check_interval)
-                
+
                 if self.redis_client:
                     await self.redis_client.ping()
                     if not self.is_available:
                         self.is_available = True
                         logger.info("Redis connection restored")
-                
+
             except Exception as e:
                 if self.is_available:
                     self.is_available = False
                     logger.warning(f"Redis health check failed: {e}")
-    
+
     async def disconnect(self):
         """Disconnect from Redis"""
         if self._health_check_task:
@@ -116,12 +116,12 @@ class RedisConnectionPool:
                 await self._health_check_task
             except asyncio.CancelledError:
                 pass
-        
+
         if self.redis_client:
             self.redis_client.close()
             await self.redis_client.wait_closed()
             logger.info("Disconnected from Redis")
-    
+
     @asynccontextmanager
     async def get_client(self):
         """Get Redis client with fallback"""
@@ -133,29 +133,29 @@ class RedisConnectionPool:
 
 class CacheTTLConfig:
     """Cache TTL settings for different data types"""
-    
+
     # Resume-related cache
     RESUME_VARIANT = 300  # 5 minutes
     RESUME_PROFILE = 900  # 15 minutes
     RESUME_TEMPLATE = 3600  # 1 hour (templates change less frequently)
-    
+
     # Tailoring cache
     TAILORING_RESULT = 600  # 10 minutes
     JD_ANALYSIS = 1800  # 30 minutes
-    
+
     # User-related cache
     USER_PROFILE = 1800  # 30 minutes
     USER_SETTINGS = 3600  # 1 hour
     API_KEY = 3600  # 1 hour
-    
+
     # Third-party integrations
     LINKEDIN_PROFILE = 3600  # 1 hour
     GITHUB_DATA = 3600  # 1 hour
     SALARY_DATA = 86400  # 24 hours (rarely changes)
-    
+
     # AI API responses
     AI_RESPONSE = 600  # 10 minutes
-    
+
     # General
     DEFAULT = 300  # 5 minutes
 
@@ -245,21 +245,21 @@ async def initialize_cache(
 ) -> CacheManager:
     """
     Initialize cache manager with Redis or in-memory backend
-    
+
     Args:
         redis_host: Redis host (default from env or localhost)
         redis_port: Redis port (default from env or 6379)
         force_memory: Force in-memory cache even if Redis available
-    
+
     Returns:
         Initialized CacheManager instance
     """
     # Get Redis configuration from environment
     redis_host = redis_host or os.getenv("REDIS_HOST", "localhost")
     redis_port = redis_port or int(os.getenv("REDIS_PORT", 6379))
-    
+
     cache_manager: Optional[CacheManager] = None
-    
+
     # Try Redis if not forced to memory
     if not force_memory:
         pool = RedisConnectionPool(host=redis_host, port=redis_port)
@@ -272,19 +272,19 @@ async def initialize_cache(
                 logger.info("Using Redis cache backend")
             except Exception as e:
                 logger.warning(f"Failed to initialize Redis cache: {e}")
-    
+
     # Fallback to in-memory cache
     if cache_manager is None:
         cache_manager = CacheManager(backend=CacheBackend.MEMORY)
         logger.info("Using in-memory cache backend")
-    
+
     # Register all cache configurations
     for config_name, config in get_cache_configs().items():
         cache_manager.register_config(config_name, config)
-    
+
     # Set as global instance
     set_cache_manager(cache_manager)
-    
+
     return cache_manager
 
 
@@ -297,10 +297,10 @@ async def get_cache_stats() -> dict:
 async def invalidate_cache_tags(*tags: str) -> int:
     """
     Invalidate cache by tags
-    
+
     Args:
         *tags: Tags to invalidate
-    
+
     Returns:
         Number of entries invalidated
     """

@@ -39,48 +39,48 @@ def generate_oauth_state() -> str:
 def generate_pkce_code_verifier() -> str:
     """
     Generate a PKCE code verifier (RFC 7636).
-    
+
     Returns a 128-character cryptographically random string using only
     unreserved characters: [A-Z] [a-z] [0-9] - . _ ~
-    
+
     Returns:
         A 128-character code verifier string
     """
     # Generate 96 random bytes and base64url encode to get ~128 chars
     random_bytes = secrets.token_bytes(96)
     # Use urlsafe base64 and remove padding
-    verifier = base64.urlsafe_b64encode(random_bytes).decode('utf-8').rstrip('=')
+    verifier = base64.urlsafe_b64encode(random_bytes).decode("utf-8").rstrip("=")
     return verifier[:128]  # Ensure exactly 128 chars
 
 
 def generate_pkce_code_challenge(verifier: str) -> str:
     """
     Generate PKCE code challenge from a code verifier (RFC 7636).
-    
+
     Creates a SHA256 hash of the verifier and base64url encodes it.
-    
+
     Args:
         verifier: The code verifier string
-        
+
     Returns:
         Base64url-encoded SHA256 hash of the verifier
     """
     # Hash the verifier with SHA-256
-    sha256_hash = hashlib.sha256(verifier.encode('utf-8')).digest()
-    
+    sha256_hash = hashlib.sha256(verifier.encode("utf-8")).digest()
+
     # Base64url encode without padding
-    challenge = base64.urlsafe_b64encode(sha256_hash).decode('utf-8').rstrip('=')
+    challenge = base64.urlsafe_b64encode(sha256_hash).decode("utf-8").rstrip("=")
     return challenge
 
 
 def verify_pkce_challenge(verifier: str, challenge: str) -> bool:
     """
     Verify that a code verifier matches a code challenge.
-    
+
     Args:
         verifier: The code verifier to verify
         challenge: The code challenge to verify against
-        
+
     Returns:
         True if verifier matches challenge, False otherwise
     """
@@ -112,7 +112,7 @@ async def exchange_code_for_token(
 ) -> dict:
     """
     Exchange OAuth authorization code for access token.
-    
+
     Supports both standard OAuth and PKCE flows (RFC 7636).
 
     Args:
@@ -412,8 +412,6 @@ async def github_oauth_callback(
         )
 
 
-
-
 async def _get_oauth_status(user_id: int, db: AsyncSession) -> GitHubStatusResponse:
     """Helper to check OAuth connection status."""
     try:
@@ -513,9 +511,7 @@ async def get_github_status(
                 username=connection.github_username,
                 github_user_id=str(connection.github_user_id),
                 connected_at=(
-                    connection.created_at.isoformat()
-                    if connection.created_at
-                    else None
+                    connection.created_at.isoformat() if connection.created_at else None
                 ),
                 error=None,
             )
@@ -530,9 +526,7 @@ async def get_github_status(
                 error="No GitHub connection found",
             )
     except Exception as e:
-        logger.error(
-            "github_oauth_status_error", user_id=current_user.id, error=str(e)
-        )
+        logger.error("github_oauth_status_error", user_id=current_user.id, error=str(e))
         return GitHubStatusResponse(
             authenticated=False,
             mode="oauth",
@@ -563,7 +557,7 @@ async def github_connect(
     This endpoint generates a GitHub OAuth authorization URL for the frontend
     to redirect the user to. The user will be prompted to authorize the
     application to access their GitHub account.
-    
+
     Uses OAuth 2.0 PKCE (RFC 7636) to protect against authorization code
     interception attacks by public clients.
 
@@ -575,7 +569,7 @@ async def github_connect(
     A cryptographically secure random state parameter is generated and stored.
     This must be stored (e.g., in session storage) and verified in the callback
     to prevent CSRF attacks.
-    
+
     **PKCE (Proof Key for Public Clients):**
     RFC 7636 PKCE is implemented with:
     - Code verifier: 128-character cryptographic random string
@@ -612,7 +606,7 @@ async def github_connect(
 
     # Generate cryptographically secure random state
     state = generate_oauth_state()
-    
+
     # Generate PKCE code verifier and challenge
     code_verifier = generate_pkce_code_verifier()
     code_challenge = generate_pkce_code_challenge(code_verifier)
@@ -670,7 +664,7 @@ async def github_connect(
         state=state,
         scopes="user:email",
     )
-    
+
     # Add PKCE parameters to URL
     github_auth_url += f"&code_challenge={code_challenge}&code_challenge_method=S256"
 

@@ -16,9 +16,7 @@ class TestVariantListing:
     """Test listing and retrieving resume variants."""
 
     @pytest.mark.asyncio
-    async def test_list_all_variants(
-        self, api_client: AsyncClient
-    ):
+    async def test_list_all_variants(self, api_client: AsyncClient):
         """Test listing all available resume variants."""
         response = await api_client.get("/v1/variants")
 
@@ -37,9 +35,7 @@ class TestVariantListing:
         assert len(variants) > 0
 
     @pytest.mark.asyncio
-    async def test_variant_has_required_fields(
-        self, api_client: AsyncClient
-    ):
+    async def test_variant_has_required_fields(self, api_client: AsyncClient):
         """Test that each variant has required metadata."""
         response = await api_client.get("/v1/variants")
 
@@ -57,9 +53,7 @@ class TestVariantListing:
             assert "name" in variant or "id" in variant or "template" in variant
 
     @pytest.mark.asyncio
-    async def test_variant_metadata(
-        self, api_client: AsyncClient
-    ):
+    async def test_variant_metadata(self, api_client: AsyncClient):
         """Test variant metadata is complete."""
         response = await api_client.get("/v1/variants")
 
@@ -81,9 +75,7 @@ class TestVariantFiltering:
     """Test variant filtering capabilities."""
 
     @pytest.mark.asyncio
-    async def test_filter_variants_by_search(
-        self, api_client: AsyncClient
-    ):
+    async def test_filter_variants_by_search(self, api_client: AsyncClient):
         """Test filtering variants by search term."""
         response = await api_client.get(
             "/v1/variants",
@@ -97,9 +89,7 @@ class TestVariantFiltering:
         assert "variants" in data or isinstance(data, list)
 
     @pytest.mark.asyncio
-    async def test_filter_variants_by_category(
-        self, api_client: AsyncClient
-    ):
+    async def test_filter_variants_by_category(self, api_client: AsyncClient):
         """Test filtering variants by category."""
         response = await api_client.get(
             "/v1/variants",
@@ -113,9 +103,7 @@ class TestVariantFiltering:
         assert isinstance(data, (dict, list))
 
     @pytest.mark.asyncio
-    async def test_filter_variants_by_layout(
-        self, api_client: AsyncClient
-    ):
+    async def test_filter_variants_by_layout(self, api_client: AsyncClient):
         """Test filtering variants by layout."""
         response = await api_client.get(
             "/v1/variants",
@@ -125,9 +113,7 @@ class TestVariantFiltering:
         assert response.status_code == 200
 
     @pytest.mark.asyncio
-    async def test_filter_variants_by_color_theme(
-        self, api_client: AsyncClient
-    ):
+    async def test_filter_variants_by_color_theme(self, api_client: AsyncClient):
         """Test filtering variants by color theme."""
         response = await api_client.get(
             "/v1/variants",
@@ -137,9 +123,7 @@ class TestVariantFiltering:
         assert response.status_code == 200
 
     @pytest.mark.asyncio
-    async def test_filter_variants_by_tags(
-        self, api_client: AsyncClient
-    ):
+    async def test_filter_variants_by_tags(self, api_client: AsyncClient):
         """Test filtering variants by tags."""
         response = await api_client.get(
             "/v1/variants",
@@ -149,9 +133,7 @@ class TestVariantFiltering:
         assert response.status_code == 200
 
     @pytest.mark.asyncio
-    async def test_combine_multiple_filters(
-        self, api_client: AsyncClient
-    ):
+    async def test_combine_multiple_filters(self, api_client: AsyncClient):
         """Test combining multiple filters."""
         response = await api_client.get(
             "/v1/variants",
@@ -224,9 +206,7 @@ class TestVariantMetadata:
     """Test variant metadata and descriptions."""
 
     @pytest.mark.asyncio
-    async def test_variant_description(
-        self, api_client: AsyncClient
-    ):
+    async def test_variant_description(self, api_client: AsyncClient):
         """Test that variants have descriptions."""
         response = await api_client.get("/v1/variants")
 
@@ -245,9 +225,7 @@ class TestVariantMetadata:
                 assert isinstance(variant["description"], str)
 
     @pytest.mark.asyncio
-    async def test_variant_preview_info(
-        self, api_client: AsyncClient
-    ):
+    async def test_variant_preview_info(self, api_client: AsyncClient):
         """Test that variant metadata includes preview information."""
         response = await api_client.get("/v1/variants")
 
@@ -263,9 +241,7 @@ class TestVariantMetadata:
         assert isinstance(variants, list)
 
     @pytest.mark.asyncio
-    async def test_variant_categorization(
-        self, api_client: AsyncClient
-    ):
+    async def test_variant_categorization(self, api_client: AsyncClient):
         """Test that variants are properly categorized."""
         response = await api_client.get("/v1/variants")
 
@@ -281,16 +257,16 @@ class TestVariantMetadata:
 
         # Variants should be organized in some way
         if len(variants) > 1:
-            assert any("category" in v or "tags" in v for v in variants if isinstance(v, dict))
+            assert any(
+                "category" in v or "tags" in v for v in variants if isinstance(v, dict)
+            )
 
 
 class TestVariantPerformance:
     """Test variant listing performance."""
 
     @pytest.mark.asyncio
-    async def test_list_variants_response_time(
-        self, api_client: AsyncClient
-    ):
+    async def test_list_variants_response_time(self, api_client: AsyncClient):
         """Test that listing variants is fast."""
         import time
 
@@ -302,9 +278,7 @@ class TestVariantPerformance:
         assert elapsed < 2  # Should complete quickly
 
     @pytest.mark.asyncio
-    async def test_filter_variants_response_time(
-        self, api_client: AsyncClient
-    ):
+    async def test_filter_variants_response_time(self, api_client: AsyncClient):
         """Test that filtering variants is fast."""
         import time
 
@@ -333,9 +307,7 @@ class TestVariantAvailability:
         assert response.status_code == 200
 
     @pytest.mark.asyncio
-    async def test_default_variant_exists(
-        self, api_client: AsyncClient
-    ):
+    async def test_default_variant_exists(self, api_client: AsyncClient):
         """Test that a default variant is available."""
         response = await api_client.get("/v1/variants")
 

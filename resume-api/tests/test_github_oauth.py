@@ -42,7 +42,7 @@ class TestOAuthStateGeneration:
         for _ in range(100):
             state = generate_oauth_state()
             states.add(state)
-        
+
         # All states should be unique (probability of collision is negligible)
         assert len(states) == 100
 
@@ -137,7 +137,9 @@ class TestTokenExchange:
         with patch("routes.github.AsyncClient") as mock_client_class:
             mock_response = AsyncMock()
             mock_response.status_code = 400
-            mock_response.json = AsyncMock(return_value={"error": "bad_verification_code"})
+            mock_response.json = AsyncMock(
+                return_value={"error": "bad_verification_code"}
+            )
 
             mock_client = AsyncMock()
             mock_client.post = AsyncMock(return_value=mock_response)
@@ -321,7 +323,7 @@ class TestOAuthErrorHandling:
         with patch.object(settings, "github_client_id", None):
             with pytest.raises(HTTPException) as exc_info:
                 await exchange_code_for_token("test_code")
-            
+
             assert exc_info.value.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
 
     @pytest.mark.asyncio
@@ -347,7 +349,7 @@ class TestOAuthErrorHandling:
             "javascript://alert('xss')",
             "//evil.com/callback",
         ]
-        
+
         for uri in invalid_uris:
             # These should fail validation
             assert not uri.startswith("http://") and not uri.startswith("https://")
@@ -361,10 +363,10 @@ class TestOAuthRateLimiting:
         """Test handling multiple concurrent OAuth requests."""
         # Simulate multiple users initiating OAuth flow
         states = [generate_oauth_state() for _ in range(5)]
-        
+
         # All should be unique
         assert len(set(states)) == 5
-        
+
         # All should be valid
         for state in states:
             assert isinstance(state, str)

@@ -51,7 +51,9 @@ class TestPDFGenerationRateLimit:
 
         # Headers may contain rate limit info
         # Common patterns: x-ratelimit-limit, x-ratelimit-remaining, retry-after
-        rate_limit_headers = [h for h in headers if "ratelimit" in h.lower() or "retry" in h.lower()]
+        rate_limit_headers = [
+            h for h in headers if "ratelimit" in h.lower() or "retry" in h.lower()
+        ]
         # At least one rate limit related header should be present
         # or headers are simply not exposed
 
@@ -61,7 +63,10 @@ class TestTailoringRateLimit:
 
     @pytest.mark.asyncio
     async def test_tailor_endpoint_rate_limit(
-        self, authenticated_client: AsyncClient, minimal_resume_data, job_description_tech
+        self,
+        authenticated_client: AsyncClient,
+        minimal_resume_data,
+        job_description_tech,
     ):
         """Test that tailor endpoint has rate limits."""
         response = await authenticated_client.post(
@@ -76,7 +81,10 @@ class TestTailoringRateLimit:
 
     @pytest.mark.asyncio
     async def test_tailor_higher_limit_than_pdf(
-        self, authenticated_client: AsyncClient, minimal_resume_data, job_description_tech
+        self,
+        authenticated_client: AsyncClient,
+        minimal_resume_data,
+        job_description_tech,
     ):
         """Test that tailor endpoint may have higher limit than PDF."""
         # Tailor is typically allowed more frequently than PDF
@@ -96,18 +104,14 @@ class TestVariantsRateLimit:
     """Test rate limiting on variants endpoint."""
 
     @pytest.mark.asyncio
-    async def test_variants_endpoint_rate_limit(
-        self, api_client: AsyncClient
-    ):
+    async def test_variants_endpoint_rate_limit(self, api_client: AsyncClient):
         """Test that variants endpoint has rate limits."""
         response = await api_client.get("/v1/variants")
 
         assert response.status_code == 200
 
     @pytest.mark.asyncio
-    async def test_variants_higher_limit_than_generation(
-        self, api_client: AsyncClient
-    ):
+    async def test_variants_higher_limit_than_generation(self, api_client: AsyncClient):
         """Test that variants endpoint may have higher limit."""
         # Variants listing is typically less expensive than generation
         response = await api_client.get("/v1/variants")
@@ -125,7 +129,7 @@ class TestRateLimitedResponses:
         """Test that rate limit returns 429 status code."""
         # This test would require hitting the actual rate limit
         # Most tests would fail before reaching this in normal test runs
-        
+
         # We can at least verify 429 is understood
         assert 429 == 429  # HTTP Too Many Requests
 
@@ -195,9 +199,7 @@ class TestRateLimitBehavior:
     """Test rate limiting behavior and configuration."""
 
     @pytest.mark.asyncio
-    async def test_rate_limit_configured(
-        self, authenticated_client: AsyncClient
-    ):
+    async def test_rate_limit_configured(self, authenticated_client: AsyncClient):
         """Test that rate limits are configured."""
         # Verify rate limiting is active
         response = await authenticated_client.get("/health")
@@ -249,9 +251,7 @@ class TestRateLimitBypass:
     """Test rate limit bypass scenarios."""
 
     @pytest.mark.asyncio
-    async def test_health_check_not_rate_limited(
-        self, api_client: AsyncClient
-    ):
+    async def test_health_check_not_rate_limited(self, api_client: AsyncClient):
         """Test that health check is not rate limited."""
         # Health checks should bypass rate limiting
         for _ in range(10):
@@ -259,9 +259,7 @@ class TestRateLimitBypass:
             assert response.status_code == 200
 
     @pytest.mark.asyncio
-    async def test_docs_endpoint_not_rate_limited(
-        self, api_client: AsyncClient
-    ):
+    async def test_docs_endpoint_not_rate_limited(self, api_client: AsyncClient):
         """Test that API docs are not rate limited."""
         # Documentation endpoints typically bypass rate limiting
         response = await api_client.get("/docs")
@@ -296,4 +294,7 @@ class TestRateLimitConsistency:
         )
 
         # Both should have same limit applied
-        assert response1.status_code == response2.status_code or response1.status_code == 200
+        assert (
+            response1.status_code == response2.status_code
+            or response1.status_code == 200
+        )

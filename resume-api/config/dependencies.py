@@ -283,15 +283,15 @@ async def rate_limit_exceeded_handler(
 ) -> JSONResponse:
     """Handle rate limit exceeded errors with unified error response."""
     from config.errors import create_error_response, ErrorCode
-    
+
     error_response = create_error_response(
         error_code=ErrorCode.RATE_LIMITED,
         message="Rate limit exceeded. Please retry after a short delay.",
         path=str(request.url.path),
         method=request.method,
-        details={"retry_after_seconds": 60}
+        details={"retry_after_seconds": 60},
     )
-    
+
     response = JSONResponse(
         status_code=status.HTTP_429_TOO_MANY_REQUESTS,
         content=error_response.model_dump(exclude_none=True),

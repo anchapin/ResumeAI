@@ -31,7 +31,9 @@ class HealthCheckResult(BaseModel):
     status: ComponentStatus = Field(..., description="Component status")
     message: str = Field(default="", description="Status message")
     latency_ms: float = Field(default=0.0, description="Check latency in milliseconds")
-    details: Dict[str, Any] = Field(default_factory=dict, description="Additional details")
+    details: Dict[str, Any] = Field(
+        default_factory=dict, description="Additional details"
+    )
     timestamp: datetime = Field(default_factory=datetime.utcnow)
 
     def is_healthy(self) -> bool:

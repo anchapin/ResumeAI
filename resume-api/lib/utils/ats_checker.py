@@ -339,7 +339,9 @@ class ATSCompatibilityChecker:
 
         # Check keyword matching (if job description provided)
         if job_description:
-            self._check_keyword_matching(resume_data, job_description, report, extracted_text)
+            self._check_keyword_matching(
+                resume_data, job_description, report, extracted_text
+            )
 
         # Calculate overall score
         self._calculate_overall_score(report)
@@ -421,7 +423,7 @@ class ATSCompatibilityChecker:
         self,
         resume_data: Dict[str, Any],
         report: ATSCompatibilityReport,
-        extracted_text: Optional[str] = None
+        extracted_text: Optional[str] = None,
     ) -> None:
         """Check content quality for ATS compatibility."""
         issues = []
@@ -537,7 +539,11 @@ class ATSCompatibilityChecker:
 
         # Check for keywords
         # Use provided text or extract it if not available
-        resume_text = extracted_text if extracted_text is not None else self._extract_resume_text(resume_data)
+        resume_text = (
+            extracted_text
+            if extracted_text is not None
+            else self._extract_resume_text(resume_data)
+        )
         word_count = len(resume_text.split())
 
         if word_count < 300:
@@ -622,7 +628,7 @@ class ATSCompatibilityChecker:
         resume_data: Dict[str, Any],
         job_description: str,
         report: ATSCompatibilityReport,
-        extracted_text: Optional[str] = None
+        extracted_text: Optional[str] = None,
     ) -> None:
         """Check keyword matching between resume and job description."""
         # Extract keywords from job description
@@ -630,7 +636,11 @@ class ATSCompatibilityChecker:
 
         # Extract resume text
         # Use provided text or extract it if not available
-        resume_text = extracted_text if extracted_text is not None else self._extract_resume_text(resume_data)
+        resume_text = (
+            extracted_text
+            if extracted_text is not None
+            else self._extract_resume_text(resume_data)
+        )
         resume_text_lower = resume_text.lower()
 
         # Calculate match rate
