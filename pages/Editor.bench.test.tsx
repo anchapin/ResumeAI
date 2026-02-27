@@ -1,6 +1,7 @@
 import { describe, it, vi } from 'vitest';
 import { render, screen, fireEvent, act } from '@testing-library/react';
 import React, { useState } from 'react';
+import { MemoryRouter } from 'react-router-dom';
 import Editor from './Editor';
 import { SimpleResumeData, WorkExperience } from '../types';
 
@@ -34,7 +35,11 @@ const generateLargeResumeData = (count: number): SimpleResumeData => {
 const TestWrapper = ({ count }: { count: number }) => {
   const [resumeData, setResumeData] = useState(generateLargeResumeData(count));
 
-  return <Editor resumeData={resumeData} onUpdate={setResumeData} />;
+  return (
+    <MemoryRouter>
+      <Editor resumeData={resumeData} onUpdate={setResumeData} />
+    </MemoryRouter>
+  );
 };
 
 describe('Editor Performance', () => {
