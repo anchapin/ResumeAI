@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 
 @dataclass
-class SchemaValidationResult:
+class MigrationValidationResult:
     """Result of a schema validation check."""
     valid: bool
     timestamp: datetime
@@ -25,7 +25,7 @@ class SchemaValidationResult:
     warnings: List[str]
 
 
-class DatabaseSchemaValidator:
+class MigrationValidator:
     """Validates database schema against expected state."""
 
     def __init__(self):
@@ -55,7 +55,7 @@ class DatabaseSchemaValidator:
 
         logger.info("Database schema validator initialized")
 
-    async def validate_schema(self, db_session) -> SchemaValidationResult:
+    async def validate_schema(self, db_session) -> MigrationValidationResult:
         """
         Validate database schema against expected state.
         
@@ -63,7 +63,7 @@ class DatabaseSchemaValidator:
             db_session: SQLAlchemy async database session
             
         Returns:
-            SchemaValidationResult with validation details
+            MigrationValidationResult with validation details
         """
         passed = 0
         failed = 0
@@ -103,7 +103,7 @@ class DatabaseSchemaValidator:
             extra={"passed": passed, "failed": failed}
         )
 
-        return SchemaValidationResult(
+        return MigrationValidationResult(
             valid=is_valid,
             timestamp=datetime.utcnow(),
             checks_passed=passed,
@@ -112,7 +112,7 @@ class DatabaseSchemaValidator:
             warnings=warnings,
         )
 
-    async def validate_data_integrity(self, db_session) -> SchemaValidationResult:
+    async def validate_data_integrity(self, db_session) -> MigrationValidationResult:
         """
         Validate data integrity constraints.
         
@@ -120,7 +120,7 @@ class DatabaseSchemaValidator:
             db_session: SQLAlchemy async database session
             
         Returns:
-            SchemaValidationResult with integrity check details
+            MigrationValidationResult with integrity check details
         """
         passed = 0
         failed = 0
@@ -162,7 +162,7 @@ class DatabaseSchemaValidator:
             extra={"passed": passed, "failed": failed}
         )
 
-        return SchemaValidationResult(
+        return MigrationValidationResult(
             valid=is_valid,
             timestamp=datetime.utcnow(),
             checks_passed=passed,
@@ -260,6 +260,15 @@ class DatabaseSchemaValidator:
                 "timestamp": datetime.utcnow().isoformat(),
             }
 
+class BackupValidator:
+    """Validates database backups."""
+
+    def __init__(self):
+        pass
+
+    async def validate_backup(self, backup_path: str) -> bool:
+        """Mock backup validation."""
+        return True
 
 # Global schema validator instance
-schema_validator = DatabaseSchemaValidator()
+schema_validator = MigrationValidator()

@@ -323,11 +323,15 @@ class ATSCompatibilityChecker:
         """
         report = ATSCompatibilityReport()
 
+        # ⚡ Bolt Optimization: Extract resume text once
+        # This prevents redundant calls to _extract_resume_text in subsequent checks
+        extracted_text = self._extract_resume_text(resume_data)
+
         # Check sections
         self._check_sections(resume_data, report)
 
         # Check content quality
-        self._check_content(resume_data, report)
+        self._check_content(resume_data, report, extracted_text)
 
         # Check formatting (if raw text provided)
         if resume_text:
@@ -335,7 +339,7 @@ class ATSCompatibilityChecker:
 
         # Check keyword matching (if job description provided)
         if job_description:
-            self._check_keyword_matching(resume_data, job_description, report)
+            self._check_keyword_matching(resume_data, job_description, report, extracted_text)
 
         # Calculate overall score
         self._calculate_overall_score(report)
@@ -414,7 +418,10 @@ class ATSCompatibilityChecker:
         return True
 
     def _check_content(
-        self, resume_data: Dict[str, Any], report: ATSCompatibilityReport
+        self,
+        resume_data: Dict[str, Any],
+        report: ATSCompatibilityReport,
+        extracted_text: Optional[str] = None
     ) -> None:
         """Check content quality for ATS compatibility."""
         issues = []
@@ -529,7 +536,8 @@ class ATSCompatibilityChecker:
             )
 
         # Check for keywords
-        resume_text = self._extract_resume_text(resume_data)
+        # Use provided text or extract it if not available
+        resume_text = extracted_text if extracted_text is not None else self._extract_resume_text(resume_data)
         word_count = len(resume_text.split())
 
         if word_count < 300:
@@ -614,13 +622,15 @@ class ATSCompatibilityChecker:
         resume_data: Dict[str, Any],
         job_description: str,
         report: ATSCompatibilityReport,
+        extracted_text: Optional[str] = None
     ) -> None:
         """Check keyword matching between resume and job description."""
         # Extract keywords from job description
         jd_keywords = self._extract_keywords(job_description)
 
         # Extract resume text
-        resume_text = self._extract_resume_text(resume_data)
+        # Use provided text or extract it if not available
+        resume_text = extracted_text if extracted_text is not None else self._extract_resume_text(resume_data)
         resume_text_lower = resume_text.lower()
 
         # Calculate match rate

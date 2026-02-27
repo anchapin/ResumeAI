@@ -18,6 +18,7 @@ from .migration_validator import (
     MigrationValidator,
     BackupValidator,
     MigrationValidationResult,
+    schema_validator,
 )
 
 __all__ = [
@@ -28,4 +29,5 @@ __all__ = [
     "MigrationValidator",
     "BackupValidator",
     "MigrationValidationResult",
+    "schema_validator",
 ]
