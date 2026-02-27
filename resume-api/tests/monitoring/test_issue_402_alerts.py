@@ -156,7 +156,11 @@ class TestAPIKeyInvalidAlert:
             alert_type="api_key_invalid",
             severity="warning",
             message="Repeated 401 Unauthorized responses detected",
-            details={"endpoint": "/v1/render/pdf", "rate_per_second": 2.5, "threshold": 1},
+            details={
+                "endpoint": "/v1/render/pdf",
+                "rate_per_second": 2.5,
+                "threshold": 1,
+            },
         )
 
         assert alert.alert_type == "api_key_invalid"

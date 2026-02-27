@@ -39,9 +39,9 @@ class SentryConfig:
     def get_frontend_config() -> dict:
         """
         Get Sentry configuration for frontend JavaScript/React integration.
-        
+
         Returns a dictionary suitable for Sentry.init() in the browser.
-        
+
         Returns:
             dict: Sentry frontend configuration
         """
@@ -82,7 +82,7 @@ class SentryConfig:
     def get_backend_integrations() -> list:
         """
         Get Sentry integrations for FastAPI backend.
-        
+
         Returns:
             list: Sentry integration instances
         """

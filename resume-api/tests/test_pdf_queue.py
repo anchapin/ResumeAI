@@ -29,7 +29,7 @@ class TestJobQueue:
     async def test_enqueue_job(self, queue):
         """Test enqueueing a job."""
         job = Job(
-            payload={'test': 'data'},
+            payload={"test": "data"},
             priority=JobPriority.NORMAL,
         )
 
@@ -41,7 +41,7 @@ class TestJobQueue:
     @pytest.mark.asyncio
     async def test_dequeue_job(self, queue):
         """Test dequeueing a job."""
-        job = Job(payload={'test': 'data'})
+        job = Job(payload={"test": "data"})
         await queue.enqueue(job)
 
         dequeued = await queue.dequeue()
@@ -59,7 +59,7 @@ class TestJobQueue:
     @pytest.mark.asyncio
     async def test_get_job(self, queue):
         """Test getting job by ID."""
-        job = Job(payload={'test': 'data'})
+        job = Job(payload={"test": "data"})
         await queue.enqueue(job)
 
         retrieved = await queue.get_job(job.job_id)
@@ -70,13 +70,13 @@ class TestJobQueue:
     @pytest.mark.asyncio
     async def test_get_nonexistent_job(self, queue):
         """Test getting nonexistent job."""
-        retrieved = await queue.get_job('nonexistent-id')
+        retrieved = await queue.get_job("nonexistent-id")
         assert retrieved is None
 
     @pytest.mark.asyncio
     async def test_update_job(self, queue):
         """Test updating job status."""
-        job = Job(payload={'test': 'data'})
+        job = Job(payload={"test": "data"})
         await queue.enqueue(job)
 
         job.state = JobState.PROCESSING
@@ -90,9 +90,9 @@ class TestJobQueue:
     @pytest.mark.asyncio
     async def test_job_priority_ordering(self, queue):
         """Test jobs are dequeued in priority order."""
-        job1 = Job(payload={'id': 1}, priority=JobPriority.LOW)
-        job2 = Job(payload={'id': 2}, priority=JobPriority.HIGH)
-        job3 = Job(payload={'id': 3}, priority=JobPriority.NORMAL)
+        job1 = Job(payload={"id": 1}, priority=JobPriority.LOW)
+        job2 = Job(payload={"id": 2}, priority=JobPriority.HIGH)
+        job3 = Job(payload={"id": 3}, priority=JobPriority.NORMAL)
 
         await queue.enqueue(job1)
         await queue.enqueue(job2)
@@ -100,13 +100,13 @@ class TestJobQueue:
 
         # Dequeue in priority order
         first = await queue.dequeue()
-        assert first.payload['id'] == 2  # HIGH priority
+        assert first.payload["id"] == 2  # HIGH priority
 
         first.state = JobState.COMPLETED
         await queue.update_job(first)
 
         second = await queue.dequeue()
-        assert second.payload['id'] == 3  # NORMAL priority
+        assert second.payload["id"] == 3  # NORMAL priority
 
     @pytest.mark.asyncio
     async def test_get_jobs_by_state(self, queue):
@@ -125,7 +125,7 @@ class TestJobQueue:
     @pytest.mark.asyncio
     async def test_cancel_job(self, queue):
         """Test cancelling a job."""
-        job = Job(payload={'test': 'data'})
+        job = Job(payload={"test": "data"})
         await queue.enqueue(job)
 
         success = await queue.cancel_job(job.job_id)
@@ -197,9 +197,9 @@ class TestJobQueue:
 
         stats = queue.get_stats()
 
-        assert stats['total_jobs'] == 3
-        assert stats['pending'] == 2
-        assert stats['completed'] == 1
+        assert stats["total_jobs"] == 3
+        assert stats["pending"] == 2
+        assert stats["completed"] == 1
 
 
 class TestPDFWorker:
@@ -229,6 +229,7 @@ class TestPDFWorker:
     @pytest.mark.asyncio
     async def test_set_render_handler(self, worker):
         """Test setting render handler."""
+
         async def mock_render(job):
             return b"PDF content"
 
@@ -239,13 +240,14 @@ class TestPDFWorker:
     @pytest.mark.asyncio
     async def test_worker_process_job(self, queue, worker, tmp_path):
         """Test worker processing a job."""
+
         async def mock_render(job):
             return b"PDF content"
 
         worker.set_render_handler(mock_render)
 
         # Create and enqueue job
-        job = Job(payload={'test': 'data'})
+        job = Job(payload={"test": "data"})
         await queue.enqueue(job)
 
         # Process one job
@@ -255,7 +257,7 @@ class TestPDFWorker:
         result_job = await queue.get_job(job.job_id)
         assert result_job.state == JobState.COMPLETED
         assert result_job.progress == 100
-        assert 'pdf_path' in result_job.result
+        assert "pdf_path" in result_job.result
 
     @pytest.mark.asyncio
     async def test_worker_handles_error(self, queue, worker):
@@ -269,7 +271,7 @@ class TestPDFWorker:
         worker.set_render_handler(failing_render)
 
         # Create and enqueue job
-        job = Job(payload={'test': 'data'}, max_retries=2)
+        job = Job(payload={"test": "data"}, max_retries=2)
         await queue.enqueue(job)
 
         # Process job
@@ -284,13 +286,14 @@ class TestPDFWorker:
     @pytest.mark.asyncio
     async def test_worker_fails_after_max_retries(self, queue, worker):
         """Test worker marks job failed after max retries."""
+
         async def failing_render(job):
             raise RuntimeError("Render failed")
 
         worker.set_render_handler(failing_render)
 
         # Create and enqueue job with low retry count
-        job = Job(payload={'test': 'data'}, max_retries=0)
+        job = Job(payload={"test": "data"}, max_retries=0)
         await queue.enqueue(job)
 
         # Process job
@@ -317,7 +320,7 @@ class TestPDFWorker:
         worker.set_render_handler(slow_render)
 
         # Create and enqueue job
-        job = Job(payload={'test': 'data'}, max_retries=0)
+        job = Job(payload={"test": "data"}, max_retries=0)
         await queue.enqueue(job)
 
         # Process job (should timeout)
@@ -326,13 +329,13 @@ class TestPDFWorker:
         # Check job is marked failed
         result_job = await queue.get_job(job.job_id)
         assert result_job.state == JobState.FAILED
-        assert 'timeout' in result_job.error.lower()
+        assert "timeout" in result_job.error.lower()
 
     @pytest.mark.asyncio
     async def test_worker_get_job_status(self, queue, worker):
         """Test getting job status from worker."""
         job = Job(
-            payload={'test': 'data'},
+            payload={"test": "data"},
             state=JobState.PROCESSING,
             progress=50,
         )
@@ -341,9 +344,9 @@ class TestPDFWorker:
         status = await worker.get_job_status(job.job_id)
 
         assert status is not None
-        assert status['job_id'] == job.job_id
-        assert status['state'] == 'processing'
-        assert status['progress'] == 50
+        assert status["job_id"] == job.job_id
+        assert status["state"] == "processing"
+        assert status["progress"] == 50
 
     @pytest.mark.asyncio
     async def test_worker_get_queue_stats(self, queue, worker):
@@ -353,9 +356,9 @@ class TestPDFWorker:
 
         stats = await worker.get_queue_stats()
 
-        assert 'total_jobs' in stats
-        assert stats['total_jobs'] == 2
-        assert stats['worker_running'] is False
+        assert "total_jobs" in stats
+        assert stats["total_jobs"] == 2
+        assert stats["worker_running"] is False
 
 
 class TestPDFWorkerPool:
@@ -384,6 +387,7 @@ class TestPDFWorkerPool:
     @pytest.mark.asyncio
     async def test_pool_set_render_handler(self, pool):
         """Test setting render handler on pool."""
+
         async def mock_render(job):
             return b"PDF content"
 
@@ -395,6 +399,7 @@ class TestPDFWorkerPool:
     @pytest.mark.asyncio
     async def test_pool_start_stop(self, pool):
         """Test starting and stopping pool."""
+
         async def mock_render(job):
             return b"PDF content"
 
@@ -415,10 +420,10 @@ class TestPDFWorkerPool:
         """Test getting stats from worker pool."""
         stats = await pool.get_worker_stats()
 
-        assert 'total_workers' in stats
-        assert stats['total_workers'] == 2
-        assert 'workers' in stats
-        assert len(stats['workers']) == 2
+        assert "total_workers" in stats
+        assert stats["total_workers"] == 2
+        assert "workers" in stats
+        assert len(stats["workers"]) == 2
 
 
 class TestJobModel:
@@ -427,32 +432,32 @@ class TestJobModel:
     def test_job_to_dict(self):
         """Test converting job to dictionary."""
         job = Job(
-            payload={'test': 'data'},
+            payload={"test": "data"},
             state=JobState.PROCESSING,
             priority=JobPriority.HIGH,
         )
 
         data = job.to_dict()
 
-        assert data['job_id'] == job.job_id
-        assert data['state'] == 'processing'
-        assert data['priority'] == 10
-        assert data['payload'] == {'test': 'data'}
+        assert data["job_id"] == job.job_id
+        assert data["state"] == "processing"
+        assert data["priority"] == 10
+        assert data["payload"] == {"test": "data"}
 
     def test_job_from_dict(self):
         """Test creating job from dictionary."""
         data = {
-            'job_id': 'test-id',
-            'state': 'processing',
-            'priority': 5,
-            'payload': {'test': 'data'},
-            'progress': 50,
-            'created_at': datetime.utcnow().isoformat(),
+            "job_id": "test-id",
+            "state": "processing",
+            "priority": 5,
+            "payload": {"test": "data"},
+            "progress": 50,
+            "created_at": datetime.utcnow().isoformat(),
         }
 
         job = Job.from_dict(data)
 
-        assert job.job_id == 'test-id'
+        assert job.job_id == "test-id"
         assert job.state == JobState.PROCESSING
         assert job.priority == JobPriority.NORMAL
         assert job.progress == 50
@@ -460,7 +465,7 @@ class TestJobModel:
     def test_job_roundtrip(self):
         """Test job serialization roundtrip."""
         job1 = Job(
-            payload={'test': 'data'},
+            payload={"test": "data"},
             state=JobState.COMPLETED,
             priority=JobPriority.HIGH,
             progress=100,

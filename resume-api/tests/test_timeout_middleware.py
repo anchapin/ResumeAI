@@ -44,7 +44,7 @@ def test_timeout_middleware_fast_request(app_with_timeout):
     """Test that fast requests complete successfully."""
     client = TestClient(app_with_timeout)
     response = client.get("/fast")
-    
+
     assert response.status_code == 200
     assert response.json() == {"status": "ok"}
 
@@ -53,7 +53,7 @@ def test_timeout_middleware_timeout_request(app_with_timeout):
     """Test that slow requests timeout with 504 status."""
     client = TestClient(app_with_timeout)
     response = client.get("/slow")
-    
+
     assert response.status_code == 504
     data = response.json()
     assert "timeout" in data["detail"].lower()
@@ -65,7 +65,7 @@ def test_timeout_middleware_medium_request(app_with_timeout):
     """Test that requests completing before timeout succeed."""
     client = TestClient(app_with_timeout)
     response = client.get("/medium")
-    
+
     assert response.status_code == 200
     assert response.json() == {"status": "ok"}
 
@@ -74,7 +74,7 @@ def test_timeout_middleware_medium_request(app_with_timeout):
 async def test_timeout_middleware_with_extended_timeout():
     """Test endpoints with extended timeouts."""
     app = FastAPI()
-    
+
     # Add timeout middleware with default 1 second timeout
     app.add_middleware(TimeoutMiddleware, timeout_seconds=1)
 
@@ -87,7 +87,7 @@ async def test_timeout_middleware_with_extended_timeout():
 
     client = TestClient(app)
     response = client.post("/v1/render/pdf")
-    
+
     # Should succeed due to extended timeout for PDF endpoint
     assert response.status_code == 200
     assert response.json() == {"status": "ok"}
@@ -111,7 +111,7 @@ async def test_timeout_response_headers():
 
     client = TestClient(app)
     response = client.get("/slow")
-    
+
     assert response.status_code == 504
     # Check that response is JSON
     assert response.headers.get("content-type") == "application/json"
@@ -120,15 +120,15 @@ async def test_timeout_response_headers():
 def test_timeout_multiple_requests(app_with_timeout):
     """Test that timeout works correctly for multiple sequential requests."""
     client = TestClient(app_with_timeout)
-    
+
     # First request should succeed
     response1 = client.get("/fast")
     assert response1.status_code == 200
-    
+
     # Second request should timeout
     response2 = client.get("/slow")
     assert response2.status_code == 504
-    
+
     # Third request should succeed again
     response3 = client.get("/fast")
     assert response3.status_code == 200
