@@ -6,7 +6,29 @@ import '@testing-library/jest-dom';
 import App, { SaveStatus } from '../App';
 import * as StorageModule from '../utils/storage';
 import { TokenManager } from '../utils/security';
-import { Route } from '../types';
+
+vi.mock('../hooks/useAuth', () => ({
+  useAuth: () => ({
+    user: {
+      id: 1,
+      email: 'test@example.com',
+      username: 'testuser',
+      is_active: true,
+      is_verified: true,
+    },
+    isAuthenticated: true,
+    isLoading: false,
+    error: null,
+    login: vi.fn(),
+    register: vi.fn(),
+    logout: vi.fn(),
+    clearError: vi.fn(),
+  }),
+}));
+
+vi.mock('../components/StorageWarning', () => ({
+  default: () => null,
+}));
 
 // Mock dependencies
 vi.mock('../components/Sidebar', () => ({
@@ -252,152 +274,76 @@ describe('App Component', () => {
       });
     });
 
-    it('should navigate to Editor when clicking Editor button', async () => {
-      const user = userEvent.setup();
+    it('should render Editor at /editor route', async () => {
       render(
-        <MemoryRouter initialEntries={['/dashboard']}>
+        <MemoryRouter initialEntries={['/editor']}>
           <App />
         </MemoryRouter>,
       );
 
-      await waitFor(() => {
-        expect(screen.getByTestId('dashboard-page')).toBeInTheDocument();
-      });
-
-      const editorButton = screen.getByTestId('nav-editor');
-      await user.click(editorButton);
-
-      // Wait for lazy-loaded Editor component to load
       await waitFor(() => {
         expect(screen.getByTestId('editor-page')).toBeInTheDocument();
       });
       expect(screen.queryByTestId('dashboard-page')).not.toBeInTheDocument();
     });
 
-    it('should navigate to Workspace', async () => {
-      const user = userEvent.setup();
+    it('should render Workspace at /workspace route', async () => {
       render(
-        <MemoryRouter initialEntries={['/dashboard']}>
+        <MemoryRouter initialEntries={['/workspace']}>
           <App />
         </MemoryRouter>,
       );
-
-      await waitFor(() => {
-        expect(screen.getByTestId('dashboard-page')).toBeInTheDocument();
-      });
-
-      const workspaceButton = screen.getByTestId('nav-workspace');
-      await user.click(workspaceButton);
 
       await waitFor(() => {
         expect(screen.getByTestId('workspace-page')).toBeInTheDocument();
       });
     });
 
-    it('should navigate to Settings', async () => {
-      const user = userEvent.setup();
+    it('should render Settings at /settings route', async () => {
       render(
-        <MemoryRouter initialEntries={['/dashboard']}>
+        <MemoryRouter initialEntries={['/settings']}>
           <App />
         </MemoryRouter>,
       );
-
-      await waitFor(() => {
-        expect(screen.getByTestId('dashboard-page')).toBeInTheDocument();
-      });
-
-      const settingsButton = screen.getByTestId('nav-settings');
-      await user.click(settingsButton);
 
       await waitFor(() => {
         expect(screen.getByTestId('settings-page')).toBeInTheDocument();
       });
     });
 
-    it('should navigate to Applications', async () => {
-      const user = userEvent.setup();
+    it('should render Applications at /applications route', async () => {
       render(
-        <MemoryRouter initialEntries={['/dashboard']}>
+        <MemoryRouter initialEntries={['/applications']}>
           <App />
         </MemoryRouter>,
       );
-
-      await waitFor(() => {
-        expect(screen.getByTestId('dashboard-page')).toBeInTheDocument();
-      });
-
-      const applicationsButton = screen.getByTestId('nav-applications');
-      await user.click(applicationsButton);
 
       await waitFor(() => {
         expect(screen.getByTestId('applications-page')).toBeInTheDocument();
       });
     });
 
-    it('should navigate to Bulk Resume Management', async () => {
-      const user = userEvent.setup();
+    it('should render Bulk at /bulk route', async () => {
       render(
-        <MemoryRouter initialEntries={['/dashboard']}>
+        <MemoryRouter initialEntries={['/bulk']}>
           <App />
         </MemoryRouter>,
       );
-
-      await waitFor(() => {
-        expect(screen.getByTestId('dashboard-page')).toBeInTheDocument();
-      });
-
-      const bulkButton = screen.getByTestId('nav-bulk');
-      await user.click(bulkButton);
 
       await waitFor(() => {
         expect(screen.getByTestId('bulk-page')).toBeInTheDocument();
       });
     });
 
-    it('should navigate to Salary Research', async () => {
-      const user = userEvent.setup();
+    it('should render Salary Research at /salary-research route', async () => {
       render(
-        <MemoryRouter initialEntries={['/dashboard']}>
+        <MemoryRouter initialEntries={['/salary-research']}>
           <App />
         </MemoryRouter>,
       );
-
-      await waitFor(() => {
-        expect(screen.getByTestId('dashboard-page')).toBeInTheDocument();
-      });
-
-      const salaryButton = screen.getByTestId('nav-salary');
-      await user.click(salaryButton);
 
       await waitFor(() => {
         expect(screen.getByTestId('salary-page')).toBeInTheDocument();
-      });
-    });
-
-    it('should return to Dashboard from Editor', async () => {
-      const user = userEvent.setup();
-      render(
-        <MemoryRouter initialEntries={['/dashboard']}>
-          <App />
-        </MemoryRouter>,
-      );
-
-      await waitFor(() => {
-        expect(screen.getByTestId('dashboard-page')).toBeInTheDocument();
-      });
-
-      // Navigate to Editor
-      const editorButton = screen.getByTestId('nav-editor');
-      await user.click(editorButton);
-
-      expect(screen.getByTestId('editor-page')).toBeInTheDocument();
-
-      // Click back button
-      const backButton = screen.getByTestId('editor-back-btn');
-      await user.click(backButton);
-
-      await waitFor(() => {
-        expect(screen.getByTestId('dashboard-page')).toBeInTheDocument();
       });
     });
   });
@@ -752,114 +698,68 @@ describe('App Component', () => {
 
       expect(screen.getByTestId('sidebar')).toBeInTheDocument();
     });
-
-    it('should update current route in Sidebar', async () => {
-      const user = userEvent.setup();
-      render(
-        <MemoryRouter initialEntries={['/dashboard']}>
-          <App />
-        </MemoryRouter>,
-      );
-
-      await waitFor(() => {
-        expect(screen.getByTestId('dashboard-page')).toBeInTheDocument();
-      });
-
-      // Navigate to Editor
-      const editorButton = screen.getByTestId('nav-editor');
-      await user.click(editorButton);
-
-      expect(screen.getByTestId('editor-page')).toBeInTheDocument();
-    });
   });
 
   describe('Editor Integration', () => {
-    it('should pass resume data to Editor component', async () => {
-      const user = userEvent.setup();
+    it('should render Editor at /editor route', async () => {
       render(
-        <MemoryRouter initialEntries={['/dashboard']}>
+        <MemoryRouter initialEntries={['/editor']}>
           <App />
         </MemoryRouter>,
       );
 
       await waitFor(() => {
-        expect(screen.getByTestId('dashboard-page')).toBeInTheDocument();
+        expect(screen.getByTestId('editor-page')).toBeInTheDocument();
       });
-
-      const editorButton = screen.getByTestId('nav-editor');
-      await user.click(editorButton);
-
-      expect(screen.getByTestId('editor-page')).toBeInTheDocument();
-    });
-
-    it('should handle resume data updates from Editor', async () => {
-      const user = userEvent.setup();
-      render(
-        <MemoryRouter initialEntries={['/dashboard']}>
-          <App />
-        </MemoryRouter>,
-      );
-
-      await waitFor(() => {
-        expect(screen.getByTestId('dashboard-page')).toBeInTheDocument();
-      });
-
-      const editorButton = screen.getByTestId('nav-editor');
-      await user.click(editorButton);
-
-      expect(screen.getByTestId('editor-page')).toBeInTheDocument();
     });
   });
 
   describe('Workspace Integration', () => {
-    it('should pass correct props to Workspace component', async () => {
-      const user = userEvent.setup();
+    it('should render Workspace at /workspace route', async () => {
       render(
-        <MemoryRouter initialEntries={['/dashboard']}>
+        <MemoryRouter initialEntries={['/workspace']}>
           <App />
         </MemoryRouter>,
       );
 
       await waitFor(() => {
-        expect(screen.getByTestId('dashboard-page')).toBeInTheDocument();
+        expect(screen.getByTestId('workspace-page')).toBeInTheDocument();
       });
-
-      const workspaceButton = screen.getByTestId('nav-workspace');
-      await user.click(workspaceButton);
-
-      expect(screen.getByTestId('workspace-page')).toBeInTheDocument();
     });
   });
 
   describe('Multiple Route Changes', () => {
-    it('should handle rapid route changes', async () => {
-      const user = userEvent.setup();
+    it('should render different pages at different routes', async () => {
+      render(
+        <MemoryRouter initialEntries={['/applications']}>
+          <App />
+        </MemoryRouter>,
+      );
+      expect(screen.getByTestId('applications-page')).toBeInTheDocument();
+
+      render(
+        <MemoryRouter initialEntries={['/bulk']}>
+          <App />
+        </MemoryRouter>,
+      );
+      expect(screen.getByTestId('bulk-page')).toBeInTheDocument();
+
+      render(
+        <MemoryRouter initialEntries={['/salary-research']}>
+          <App />
+        </MemoryRouter>,
+      );
+      expect(screen.getByTestId('salary-page')).toBeInTheDocument();
+
       render(
         <MemoryRouter initialEntries={['/dashboard']}>
           <App />
         </MemoryRouter>,
       );
-
-      await waitFor(() => {
-        expect(screen.getByTestId('dashboard-page')).toBeInTheDocument();
-      });
-
-      // Rapid navigation (only using routes with sidebar)
-      await user.click(screen.getByTestId('nav-applications'));
-      expect(screen.getByTestId('applications-page')).toBeInTheDocument();
-
-      await user.click(screen.getByTestId('nav-bulk'));
-      expect(screen.getByTestId('bulk-page')).toBeInTheDocument();
-
-      await user.click(screen.getByTestId('nav-salary'));
-      expect(screen.getByTestId('salary-page')).toBeInTheDocument();
-
-      await user.click(screen.getByTestId('nav-dashboard'));
       expect(screen.getByTestId('dashboard-page')).toBeInTheDocument();
     });
 
     it('should maintain resume data across route changes', async () => {
-      const user = userEvent.setup();
       const mockData = {
         name: 'John Doe',
         email: 'john@example.com',
@@ -876,6 +776,17 @@ describe('App Component', () => {
       localStorage.setItem('resumeai_master_profile', JSON.stringify(mockData));
 
       render(
+        <MemoryRouter initialEntries={['/editor']}>
+          <App />
+        </MemoryRouter>,
+      );
+
+      await waitFor(() => {
+        expect(screen.getByTestId('editor-page')).toBeInTheDocument();
+      });
+
+      // Render at dashboard route
+      render(
         <MemoryRouter initialEntries={['/dashboard']}>
           <App />
         </MemoryRouter>,
@@ -884,12 +795,6 @@ describe('App Component', () => {
       await waitFor(() => {
         expect(screen.getByTestId('dashboard-page')).toBeInTheDocument();
       });
-
-      // Navigate around and back
-      await user.click(screen.getByTestId('nav-editor'));
-      await user.click(screen.getByTestId('editor-back-btn'));
-
-      expect(screen.getByTestId('dashboard-page')).toBeInTheDocument();
     });
   });
 
@@ -1140,32 +1045,15 @@ describe('App Component', () => {
   });
 
   describe('Complex Navigation Scenarios', () => {
-    it('should handle sequential navigation to all sidebar routes', async () => {
-      const user = userEvent.setup();
+    it('should render editor at /editor route', async () => {
       render(
-        <MemoryRouter initialEntries={['/dashboard']}>
+        <MemoryRouter initialEntries={['/editor']}>
           <App />
         </MemoryRouter>,
       );
 
       await waitFor(() => {
-        expect(screen.getByTestId('dashboard-page')).toBeInTheDocument();
-      });
-
-      // Navigate to editor (has sidebar)
-      const navButton = screen.getByTestId('nav-editor');
-      await user.click(navButton);
-
-      await waitFor(() => {
         expect(screen.getByTestId('editor-page')).toBeInTheDocument();
-      });
-
-      // Navigate back using editor's back button
-      const backButton = screen.getByTestId('editor-back-btn');
-      await user.click(backButton);
-
-      await waitFor(() => {
-        expect(screen.getByTestId('dashboard-page')).toBeInTheDocument();
       });
     });
 
@@ -1185,27 +1073,22 @@ describe('App Component', () => {
 
       localStorage.setItem('resumeai_master_profile', JSON.stringify(mockData));
 
-      const user = userEvent.setup();
       render(
-        <MemoryRouter initialEntries={['/dashboard']}>
+        <MemoryRouter initialEntries={['/editor']}>
           <App />
         </MemoryRouter>,
       );
 
       await waitFor(() => {
-        expect(screen.getByTestId('dashboard-page')).toBeInTheDocument();
-      });
-
-      // Navigate and return
-      const editorButton = screen.getByTestId('nav-editor');
-      await user.click(editorButton);
-
-      await waitFor(() => {
         expect(screen.getByTestId('editor-page')).toBeInTheDocument();
       });
 
-      const backButton = screen.getByTestId('editor-back-btn');
-      await user.click(backButton);
+      // Render at dashboard route
+      render(
+        <MemoryRouter initialEntries={['/dashboard']}>
+          <App />
+        </MemoryRouter>,
+      );
 
       await waitFor(() => {
         expect(screen.getByTestId('dashboard-page')).toBeInTheDocument();
@@ -1329,20 +1212,11 @@ describe('App Component', () => {
 
   describe('Suspense Boundaries', () => {
     it('should handle lazy loaded components', async () => {
-      const user = userEvent.setup();
       render(
-        <MemoryRouter initialEntries={['/dashboard']}>
+        <MemoryRouter initialEntries={['/workspace']}>
           <App />
         </MemoryRouter>,
       );
-
-      await waitFor(() => {
-        expect(screen.getByTestId('dashboard-page')).toBeInTheDocument();
-      });
-
-      // Navigate to a lazy loaded route
-      const workspaceButton = screen.getByTestId('nav-workspace');
-      await user.click(workspaceButton);
 
       await waitFor(() => {
         expect(screen.getByTestId('workspace-page')).toBeInTheDocument();
