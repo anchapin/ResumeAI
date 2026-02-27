@@ -9,29 +9,15 @@ import { Route } from '../types';
 
 // Mock dependencies
 vi.mock('../components/Sidebar', () => ({
-  default: ({ onNavigate, onShowShortcuts }: any) => (
+  default: ({ onShowShortcuts }: any) => (
     <div data-testid="sidebar">
-      <button onClick={() => onNavigate(Route.DASHBOARD)} data-testid="nav-dashboard">
-        Dashboard
-      </button>
-      <button onClick={() => onNavigate(Route.EDITOR)} data-testid="nav-editor">
-        Editor
-      </button>
-      <button onClick={() => onNavigate(Route.WORKSPACE)} data-testid="nav-workspace">
-        Workspace
-      </button>
-      <button onClick={() => onNavigate(Route.SETTINGS)} data-testid="nav-settings">
-        Settings
-      </button>
-      <button onClick={() => onNavigate(Route.APPLICATIONS)} data-testid="nav-applications">
-        Applications
-      </button>
-      <button onClick={() => onNavigate(Route.BULK)} data-testid="nav-bulk">
-        Bulk
-      </button>
-      <button onClick={() => onNavigate(Route.SALARY_RESEARCH)} data-testid="nav-salary">
-        Salary
-      </button>
+      <button data-testid="nav-dashboard">Dashboard</button>
+      <button data-testid="nav-editor">Editor</button>
+      <button data-testid="nav-workspace">Workspace</button>
+      <button data-testid="nav-settings">Settings</button>
+      <button data-testid="nav-applications">Applications</button>
+      <button data-testid="nav-bulk">Bulk</button>
+      <button data-testid="nav-salary">Salary</button>
       <button onClick={onShowShortcuts} data-testid="show-shortcuts">
         Shortcuts
       </button>
@@ -44,14 +30,7 @@ vi.mock('../pages/Dashboard', () => ({
 }));
 
 vi.mock('../pages/Editor', () => ({
-  default: ({ onBack }: any) => (
-    <div data-testid="editor-page">
-      Editor Page
-      <button onClick={onBack} data-testid="editor-back-btn">
-        Back
-      </button>
-    </div>
-  ),
+  default: () => <div data-testid="editor-page">Editor Page</div>,
 }));
 
 vi.mock('../pages/Workspace', () => ({

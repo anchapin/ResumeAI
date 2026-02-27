@@ -127,7 +127,7 @@ describe('Workspace Component', () => {
   });
 
   it('renders the Workspace component with all elements', () => {
-    render(<Workspace resumeData={mockResumeData} onNavigate={mockOnNavigate} />);
+    render(<Workspace resumeData={mockResumeData} />);
 
     // Check for key elements
     expect(screen.getByText('Tailored Resume Workspace')).toBeInTheDocument();
@@ -143,7 +143,7 @@ describe('Workspace Component', () => {
   });
 
   it('allows navigation back to dashboard', () => {
-    render(<Workspace resumeData={mockResumeData} onNavigate={mockOnNavigate} />);
+    render(<Workspace resumeData={mockResumeData} />);
 
     const backButton = screen.getByRole('button', { name: /arrow_back/i });
     fireEvent.click(backButton);
@@ -152,7 +152,7 @@ describe('Workspace Component', () => {
   });
 
   it('updates form inputs correctly', () => {
-    render(<Workspace resumeData={mockResumeData} onNavigate={mockOnNavigate} />);
+    render(<Workspace resumeData={mockResumeData} />);
 
     // Test company name input
     const companyInput = screen.getByLabelText('Company Name');
@@ -173,14 +173,14 @@ describe('Workspace Component', () => {
   it('displays loading state for variants', () => {
     // Note: The useVariants mock is set at module level to return loading: false
     // This test verifies the component renders correctly with the mocked data
-    render(<Workspace resumeData={mockResumeData} onNavigate={mockOnNavigate} />);
+    render(<Workspace resumeData={mockResumeData} />);
 
     // Since variants are loaded (not loading), the select should be visible
     expect(screen.getByLabelText('Select Template')).toBeInTheDocument();
   });
 
   it('handles tab switching', () => {
-    render(<Workspace resumeData={mockResumeData} onNavigate={mockOnNavigate} />);
+    render(<Workspace resumeData={mockResumeData} />);
 
     // Initially Resume tab should be active
     const resumeTab = screen.getByRole('button', { name: 'Resume' });
@@ -200,7 +200,7 @@ describe('Workspace Component', () => {
   });
 
   it('validates required fields before generation', async () => {
-    render(<Workspace resumeData={mockResumeData} onNavigate={mockOnNavigate} />);
+    render(<Workspace resumeData={mockResumeData} />);
 
     // Click generate without job description (should trigger validation)
     const generateButton = screen.getByText('Generate Package');
