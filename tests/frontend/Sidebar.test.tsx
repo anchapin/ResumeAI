@@ -1,18 +1,13 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
-import { BrowserRouter } from 'react-router-dom';
 import Sidebar from '../../components/Sidebar';
 import { Route } from '../../types';
 
 describe('Sidebar', () => {
   it('renders navigation items', () => {
     const onShowShortcuts = vi.fn();
-    render(
-      <BrowserRouter>
-        <Sidebar currentRoute={Route.DASHBOARD} onShowShortcuts={onShowShortcuts} />
-      </BrowserRouter>,
-    );
+    render(<Sidebar currentRoute={Route.DASHBOARD} onShowShortcuts={onShowShortcuts} />);
 
     expect(screen.getByText('Dashboard')).toBeDefined();
     expect(screen.getByText('My Master Profile')).toBeDefined();
@@ -22,26 +17,18 @@ describe('Sidebar', () => {
 
   it('highlights current route', () => {
     const onShowShortcuts = vi.fn();
-    render(
-      <BrowserRouter>
-        <Sidebar currentRoute={Route.DASHBOARD} onShowShortcuts={onShowShortcuts} />
-      </BrowserRouter>,
-    );
+    render(<Sidebar currentRoute={Route.DASHBOARD} onShowShortcuts={onShowShortcuts} />);
 
-    const dashboardLink = screen.getByText('Dashboard').closest('a');
-    expect(dashboardLink?.getAttribute('aria-current')).toBe('page');
+    const dashboardButton = screen.getByText('Dashboard').closest('button');
+    expect(dashboardButton?.getAttribute('aria-current')).toBe('page');
 
-    const settingsLink = screen.getByText('Settings').closest('a');
-    expect(settingsLink?.getAttribute('aria-current')).toBeNull();
+    const settingsButton = screen.getByText('Settings').closest('button');
+    expect(settingsButton?.getAttribute('aria-current')).toBeNull();
   });
 
   it('calls onNavigate when clicked', () => {
     const onShowShortcuts = vi.fn();
-    render(
-      <BrowserRouter>
-        <Sidebar currentRoute={Route.DASHBOARD} onShowShortcuts={onShowShortcuts} />
-      </BrowserRouter>,
-    );
+    render(<Sidebar currentRoute={Route.DASHBOARD} onShowShortcuts={onShowShortcuts} />);
 
     fireEvent.click(screen.getByText('Settings'));
     expect(screen.getByText('Settings')).toBeDefined();
@@ -49,11 +36,7 @@ describe('Sidebar', () => {
 
   it('calls onShowShortcuts when keyboard shortcuts button is clicked', () => {
     const onShowShortcuts = vi.fn();
-    render(
-      <BrowserRouter>
-        <Sidebar currentRoute={Route.DASHBOARD} onShowShortcuts={onShowShortcuts} />
-      </BrowserRouter>,
-    );
+    render(<Sidebar currentRoute={Route.DASHBOARD} onShowShortcuts={onShowShortcuts} />);
 
     fireEvent.click(screen.getByText('Keyboard Shortcuts'));
     expect(onShowShortcuts).toHaveBeenCalled();

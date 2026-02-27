@@ -1,6 +1,5 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { BrowserRouter } from 'react-router-dom';
 import Workspace from '../pages/Workspace';
 import { Route, SimpleResumeData } from '../types';
 import { showErrorToast, showSuccessToast } from '../utils/toast';
@@ -117,6 +116,7 @@ describe('Workspace Component', () => {
     ],
   };
 
+  const mockOnNavigate = vi.fn();
   const mockShowErrorToast = vi.fn();
   const mockShowSuccessToast = vi.fn();
 
@@ -127,11 +127,7 @@ describe('Workspace Component', () => {
   });
 
   it('renders the Workspace component with all elements', () => {
-    render(
-      <BrowserRouter>
-        <Workspace resumeData={mockResumeData} />
-      </BrowserRouter>,
-    );
+    render(<Workspace resumeData={mockResumeData} />);
 
     // Check for key elements
     expect(screen.getByText('Tailored Resume Workspace')).toBeInTheDocument();
@@ -147,22 +143,16 @@ describe('Workspace Component', () => {
   });
 
   it('allows navigation back to dashboard', () => {
-    render(
-      <BrowserRouter>
-        <Workspace resumeData={mockResumeData} />
-      </BrowserRouter>,
-    );
+    render(<Workspace resumeData={mockResumeData} />);
 
     const backButton = screen.getByRole('button', { name: /arrow_back/i });
-    expect(backButton).toBeInTheDocument();
+    fireEvent.click(backButton);
+
+    expect(mockOnNavigate).toHaveBeenCalledWith(Route.DASHBOARD);
   });
 
   it('updates form inputs correctly', () => {
-    render(
-      <BrowserRouter>
-        <Workspace resumeData={mockResumeData} />
-      </BrowserRouter>,
-    );
+    render(<Workspace resumeData={mockResumeData} />);
 
     // Test company name input
     const companyInput = screen.getByLabelText('Company Name');
@@ -183,22 +173,14 @@ describe('Workspace Component', () => {
   it('displays loading state for variants', () => {
     // Note: The useVariants mock is set at module level to return loading: false
     // This test verifies the component renders correctly with the mocked data
-    render(
-      <BrowserRouter>
-        <Workspace resumeData={mockResumeData} />
-      </BrowserRouter>,
-    );
+    render(<Workspace resumeData={mockResumeData} />);
 
     // Since variants are loaded (not loading), the select should be visible
     expect(screen.getByLabelText('Select Template')).toBeInTheDocument();
   });
 
   it('handles tab switching', () => {
-    render(
-      <BrowserRouter>
-        <Workspace resumeData={mockResumeData} />
-      </BrowserRouter>,
-    );
+    render(<Workspace resumeData={mockResumeData} />);
 
     // Initially Resume tab should be active
     const resumeTab = screen.getByRole('button', { name: 'Resume' });
@@ -218,11 +200,7 @@ describe('Workspace Component', () => {
   });
 
   it('validates required fields before generation', async () => {
-    render(
-      <BrowserRouter>
-        <Workspace resumeData={mockResumeData} />
-      </BrowserRouter>,
-    );
+    render(<Workspace resumeData={mockResumeData} />);
 
     // Click generate without job description (should trigger validation)
     const generateButton = screen.getByText('Generate Package');
