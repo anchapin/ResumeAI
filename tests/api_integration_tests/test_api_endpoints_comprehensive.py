@@ -101,12 +101,7 @@ class TestPdfRenderingEndpoint:
     @pytest.mark.api
     def test_render_pdf_invalid_email(self, client):
         """Test email validation."""
-        resume = {
-            "basics": {
-                "name": "Test",
-                "email": "not-an-email"
-            }
-        }
+        resume = {"basics": {"name": "Test", "email": "not-an-email"}}
         payload = {"resume_data": resume, "variant": "professional"}
         response = client.post("/v1/render/pdf", json=payload)
         assert response.status_code in [400, 422]
@@ -185,12 +180,7 @@ class TestRequestValidation:
     @pytest.mark.api
     def test_string_length_validation(self, client):
         """Test string length validation."""
-        resume = {
-            "basics": {
-                "name": "x" * 5000,
-                "email": "test@example.com"
-            }
-        }
+        resume = {"basics": {"name": "x" * 5000, "email": "test@example.com"}}
         payload = {"resume_data": resume, "variant": "professional"}
         response = client.post("/v1/render/pdf", json=payload)
         assert response.status_code in [400, 422]
@@ -211,12 +201,7 @@ class TestEdgeCases:
     @pytest.mark.api
     def test_unicode_characters(self, client):
         """Test Unicode support."""
-        resume = {
-            "basics": {
-                "name": "José García",
-                "email": "test@example.com"
-            }
-        }
+        resume = {"basics": {"name": "José García", "email": "test@example.com"}}
         payload = {"resume_data": resume, "variant": "professional"}
         response = client.post("/v1/render/pdf", json=payload)
         assert response.status_code in [200, 400, 422]
@@ -268,7 +253,7 @@ class TestResponseStructure:
         # JSON endpoint
         response = client.get("/health")
         assert "application/json" in response.headers["content-type"]
-        
+
         # PDF endpoint
         payload = {"resume_data": sample_resume, "variant": "professional"}
         response = client.post("/v1/render/pdf", json=payload)
@@ -284,7 +269,7 @@ class TestApiRecovery:
         """Test API works after error."""
         # Send invalid request
         client.post("/v1/render/pdf", json={})
-        
+
         # Send valid request
         payload = {"resume_data": sample_resume, "variant": "professional"}
         response = client.post("/v1/render/pdf", json=payload)
@@ -297,7 +282,7 @@ class TestApiRecovery:
         # Generate errors
         client.post("/v1/render/pdf", json={})
         client.get("/nonexistent")
-        
+
         # Health should work
         response = client.get("/health")
         assert response.status_code == 200

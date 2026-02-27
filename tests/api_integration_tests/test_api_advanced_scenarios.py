@@ -46,9 +46,7 @@ def large_resume_data():
                 "startDate": "2020-01-01",
                 "endDate": "2023-12-31",
                 "summary": f"Led development of major project {i}",
-                "highlights": [
-                    f"Achievement {j}" for j in range(10)
-                ]
+                "highlights": [f"Achievement {j}" for j in range(10)],
             }
             for i in range(15)
         ],
@@ -62,10 +60,7 @@ def large_resume_data():
             }
             for i in range(3)
         ],
-        "skills": [
-            {"name": f"Skill {i}", "level": "Expert"}
-            for i in range(20)
-        ],
+        "skills": [{"name": f"Skill {i}", "level": "Expert"} for i in range(20)],
     }
 
 
@@ -130,7 +125,7 @@ class TestPayloadHandling:
                     "startDate": "2020-01-01",
                 }
                 for i in range(50)  # Max items
-            ]
+            ],
         }
         payload = {
             "resume_data": data,
@@ -186,12 +181,9 @@ class TestConcurrentRequests:
     def test_concurrent_health_checks(self, client):
         """Test multiple concurrent health check requests."""
         with ThreadPoolExecutor(max_workers=5) as executor:
-            futures = [
-                executor.submit(client.get, "/health")
-                for _ in range(5)
-            ]
+            futures = [executor.submit(client.get, "/health") for _ in range(5)]
             results = [f.result() for f in as_completed(futures)]
-            
+
         assert all(r.status_code == 200 for r in results)
         assert all("status" in r.json() for r in results)
 
@@ -200,12 +192,9 @@ class TestConcurrentRequests:
     def test_concurrent_variant_requests(self, client):
         """Test multiple concurrent variant requests."""
         with ThreadPoolExecutor(max_workers=3) as executor:
-            futures = [
-                executor.submit(client.get, "/v1/variants")
-                for _ in range(3)
-            ]
+            futures = [executor.submit(client.get, "/v1/variants") for _ in range(3)]
             results = [f.result() for f in as_completed(futures)]
-            
+
         assert all(r.status_code == 200 for r in results)
 
 
@@ -262,11 +251,11 @@ class TestDataIntegrity:
             "resume_data": resume_data,
             "variant": "professional",
         }
-        
+
         # Generate PDF twice
         response1 = client.post("/v1/render/pdf", json=payload)
         response2 = client.post("/v1/render/pdf", json=payload)
-        
+
         assert response1.status_code == 200
         assert response2.status_code == 200
         # PDFs may have timestamps, so just verify both are valid
@@ -278,7 +267,7 @@ class TestDataIntegrity:
         """Test that variant list is consistent across calls."""
         response1 = client.get("/v1/variants")
         response2 = client.get("/v1/variants")
-        
+
         assert response1.status_code == 200
         assert response2.status_code == 200
         # Data structure should be consistent
@@ -306,7 +295,7 @@ class TestResponseConsistency:
             "/analytics/summary",
             "/v1/variants",
         ]
-        
+
         for endpoint in endpoints:
             response = client.get(endpoint)
             assert response.status_code == 200
@@ -330,15 +319,10 @@ class TestErrorRecovery:
         # Send invalid request
         response1 = client.post("/v1/render/pdf", json={})
         assert response1.status_code == 422
-        
+
         # Send valid request after error
         valid_payload = {
-            "resume_data": {
-                "basics": {
-                    "name": "Test",
-                    "email": "test@example.com"
-                }
-            },
+            "resume_data": {"basics": {"name": "Test", "email": "test@example.com"}},
             "variant": "professional",
         }
         response2 = client.post("/v1/render/pdf", json=valid_payload)
@@ -350,7 +334,7 @@ class TestErrorRecovery:
         """Test that health endpoint works after failed request."""
         # Send invalid request
         client.get("/v1/nonexistent")
-        
+
         # Health check should still work
         response = client.get("/health")
         assert response.status_code == 200
@@ -372,9 +356,7 @@ class TestContentNegotiation:
     def test_accept_header_pdf(self, client):
         """Test PDF response with Accept header."""
         payload = {
-            "resume_data": {
-                "basics": {"name": "Test", "email": "test@example.com"}
-            },
+            "resume_data": {"basics": {"name": "Test", "email": "test@example.com"}},
             "variant": "professional",
         }
         headers = {"Accept": "application/pdf"}
@@ -392,12 +374,10 @@ class TestEndpointCombinations:
         # Get variants
         var_response = client.get("/v1/variants")
         assert var_response.status_code == 200
-        
+
         # Generate PDF with a variant
         payload = {
-            "resume_data": {
-                "basics": {"name": "Test", "email": "test@example.com"}
-            },
+            "resume_data": {"basics": {"name": "Test", "email": "test@example.com"}},
             "variant": "professional",
         }
         pdf_response = client.post("/v1/render/pdf", json=payload)
@@ -409,6 +389,6 @@ class TestEndpointCombinations:
         """Test calling health and analytics endpoints together."""
         health_response = client.get("/health")
         assert health_response.status_code == 200
-        
+
         analytics_response = client.get("/analytics/summary")
         assert analytics_response.status_code == 200

@@ -169,7 +169,7 @@ class TestEdgeCaseHandling:
                     "startDate": "2020-01-01",
                     "highlights": ["x" * 10000 for _ in range(100)],
                 }
-            ]
+            ],
         }
         payload = {"resume_data": large_resume, "variant": "professional"}
         response = client.post("/v1/render/pdf", json=payload)
@@ -187,7 +187,7 @@ class TestErrorRecovery:
         # Send invalid request
         response1 = client.post("/v1/render/pdf", json={})
         assert response1.status_code == 422
-        
+
         # Send valid request - should work
         payload = {"resume_data": valid_resume, "variant": "professional"}
         response2 = client.post("/v1/render/pdf", json=payload)
@@ -201,7 +201,7 @@ class TestErrorRecovery:
         for _ in range(3):
             client.post("/v1/render/pdf", json={})
             client.get("/v1/nonexistent")
-        
+
         # Health check should still work
         response = client.get("/health")
         assert response.status_code == 200
@@ -220,12 +220,9 @@ class TestResponseConsistency:
             {"variant": "professional"},  # Missing resume_data
             {"resume_data": None},  # Null resume_data
         ]
-        
-        responses = [
-            client.post("/v1/render/pdf", json=err)
-            for err in errors
-        ]
-        
+
+        responses = [client.post("/v1/render/pdf", json=err) for err in errors]
+
         # All should be validation errors
         assert all(r.status_code == 422 for r in responses)
         # All should have response body
@@ -238,10 +235,7 @@ class TestInvalidInputs:
     @pytest.mark.api
     def test_invalid_variant_name(self, client, valid_resume):
         """Test invalid variant name."""
-        payload = {
-            "resume_data": valid_resume,
-            "variant": "nonexistent-variant-xyz"
-        }
+        payload = {"resume_data": valid_resume, "variant": "nonexistent-variant-xyz"}
         response = client.post("/v1/render/pdf", json=payload)
         # May be 200 if variant falls back, or 400 if strict
         assert response.status_code in [200, 400]
@@ -353,8 +347,7 @@ class TestBoundaryConditions:
         """Test with many skills."""
         resume = valid_resume.copy()
         resume["skills"] = [
-            {"name": f"Skill {i}", "level": "Expert"}
-            for i in range(100)
+            {"name": f"Skill {i}", "level": "Expert"} for i in range(100)
         ]
         payload = {"resume_data": resume, "variant": "professional"}
         response = client.post("/v1/render/pdf", json=payload)

@@ -44,9 +44,9 @@ class ResumeAIUser(HttpUser):
                         "company": "Tech Corp",
                         "role": "Senior Engineer",
                         "duration": "5 years",
-                        "description": "Led architecture and team"
+                        "description": "Led architecture and team",
                     }
-                ]
+                ],
             },
             "job_description": """
                 Senior Full Stack Engineer
@@ -54,15 +54,15 @@ class ResumeAIUser(HttpUser):
                 - Python, JavaScript, React proficiency
                 - AWS/Cloud experience
                 - Team lead capability
-            """
+            """,
         }
-        
+
         self.client.post(
             "/v1/tailor",
             json=payload,
             headers=self.headers,
             name="/v1/tailor",
-            timeout=10
+            timeout=10,
         )
 
     @task(3)
@@ -81,31 +81,31 @@ class ResumeAIUser(HttpUser):
                         "company": "StartupXYZ",
                         "role": "Senior PM",
                         "duration": "3 years",
-                        "description": "Managed product roadmap for 50M+ users"
+                        "description": "Managed product roadmap for 50M+ users",
                     },
                     {
                         "company": "Tech Giants",
                         "role": "PM",
                         "duration": "5 years",
-                        "description": "Launched mobile app generating $10M revenue"
-                    }
+                        "description": "Launched mobile app generating $10M revenue",
+                    },
                 ],
                 "education": [
                     {
                         "institution": "Stanford University",
                         "degree": "MBA",
-                        "field": "Business Administration"
+                        "field": "Business Administration",
                     }
-                ]
+                ],
             }
         }
-        
+
         self.client.post(
             "/v1/render/pdf",
             json=payload,
             headers=self.headers,
             name="/v1/render/pdf",
-            timeout=15
+            timeout=15,
         )
 
     @task(2)
@@ -123,19 +123,19 @@ class ResumeAIUser(HttpUser):
                         "company": "AI Startup",
                         "role": "ML Engineer",
                         "duration": "2 years",
-                        "description": "Built recommendation system"
+                        "description": "Built recommendation system",
                     }
-                ]
+                ],
             },
-            "variants": 3  # Generate 3 variants
+            "variants": 3,  # Generate 3 variants
         }
-        
+
         self.client.post(
             "/v1/variants",
             json=payload,
             headers=self.headers,
             name="/v1/variants",
-            timeout=10
+            timeout=10,
         )
 
 
