@@ -1,5 +1,5 @@
 {
   "event_name": "workflow_dispatch",
   "repository": { "default_branch": "main" },
-  "ref": "fix-xss-unquoted-attributes-14517308743122712770"
+  "ref": "palette-github-a11y-2768151836319683663"
 }

@@ -13,6 +13,7 @@ logger = logging.getLogger(__name__)
 
 class FeatureFlagStatus(str, Enum):
     """Status of a feature flag."""
+
     DISABLED = "disabled"
     ENABLED = "enabled"
     ROLLOUT = "rollout"
@@ -21,9 +22,14 @@ class FeatureFlagStatus(str, Enum):
 
 class FeatureFlagConfig(BaseModel):
     """Configuration for a feature flag."""
+
     name: str = Field(..., description="Unique feature flag name")
-    status: FeatureFlagStatus = Field(default=FeatureFlagStatus.DISABLED, description="Current status")
-    rollout_percentage: int = Field(default=0, ge=0, le=100, description="Percentage of requests to enable (0-100)")
+    status: FeatureFlagStatus = Field(
+        default=FeatureFlagStatus.DISABLED, description="Current status"
+    )
+    rollout_percentage: int = Field(
+        default=0, ge=0, le=100, description="Percentage of requests to enable (0-100)"
+    )
     description: str = Field(default="", description="Feature description")
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
@@ -42,10 +48,26 @@ class FeatureFlagManager:
     def _init_default_flags(self):
         """Initialize default feature flags."""
         default_flags = [
-            FeatureFlagConfig(name="new_pdf_renderer", status=FeatureFlagStatus.DISABLED, description="New PDF rendering engine"),
-            FeatureFlagConfig(name="ai_tailoring_v2", status=FeatureFlagStatus.DISABLED, description="Enhanced AI tailoring"),
-            FeatureFlagConfig(name="advanced_analytics", status=FeatureFlagStatus.DISABLED, description="Advanced analytics dashboard"),
-            FeatureFlagConfig(name="real_time_collaboration", status=FeatureFlagStatus.DISABLED, description="Real-time collaboration"),
+            FeatureFlagConfig(
+                name="new_pdf_renderer",
+                status=FeatureFlagStatus.DISABLED,
+                description="New PDF rendering engine",
+            ),
+            FeatureFlagConfig(
+                name="ai_tailoring_v2",
+                status=FeatureFlagStatus.DISABLED,
+                description="Enhanced AI tailoring",
+            ),
+            FeatureFlagConfig(
+                name="advanced_analytics",
+                status=FeatureFlagStatus.DISABLED,
+                description="Advanced analytics dashboard",
+            ),
+            FeatureFlagConfig(
+                name="real_time_collaboration",
+                status=FeatureFlagStatus.DISABLED,
+                description="Real-time collaboration",
+            ),
         ]
         for flag in default_flags:
             self.flags[flag.name] = flag
@@ -86,11 +108,17 @@ class FeatureFlagManager:
             self.flags[flag_name] = FeatureFlagConfig(name=flag_name)
 
         flag = self.flags[flag_name]
-        flag.status = FeatureFlagStatus.ENABLED if rollout_percentage == 100 else FeatureFlagStatus.ROLLOUT
+        flag.status = (
+            FeatureFlagStatus.ENABLED
+            if rollout_percentage == 100
+            else FeatureFlagStatus.ROLLOUT
+        )
         flag.rollout_percentage = rollout_percentage
         flag.updated_at = datetime.utcnow()
 
-        logger.info(f"Enabled feature flag: {flag_name} (rollout: {rollout_percentage}%)")
+        logger.info(
+            f"Enabled feature flag: {flag_name} (rollout: {rollout_percentage}%)"
+        )
 
     def disable_flag(self, flag_name: str):
         """Disable a feature flag."""
@@ -112,10 +140,14 @@ class FeatureFlagManager:
 
         flag = self.flags[flag_name]
         flag.status = FeatureFlagStatus.MAINTENANCE
-        flag.metadata["maintenance_end"] = (datetime.utcnow() + timedelta(minutes=duration_minutes)).isoformat()
+        flag.metadata["maintenance_end"] = (
+            datetime.utcnow() + timedelta(minutes=duration_minutes)
+        ).isoformat()
         flag.updated_at = datetime.utcnow()
 
-        logger.info(f"Set feature flag to maintenance: {flag_name} (duration: {duration_minutes}m)")
+        logger.info(
+            f"Set feature flag to maintenance: {flag_name} (duration: {duration_minutes}m)"
+        )
 
     def get_all_flags(self) -> Dict[str, FeatureFlagConfig]:
         """Get all feature flags."""
@@ -127,7 +159,11 @@ class FeatureFlagManager:
 
     def get_enabled_flags(self) -> Set[str]:
         """Get all enabled feature flags."""
-        return {name for name, flag in self.flags.items() if flag.status in [FeatureFlagStatus.ENABLED, FeatureFlagStatus.ROLLOUT]}
+        return {
+            name
+            for name, flag in self.flags.items()
+            if flag.status in [FeatureFlagStatus.ENABLED, FeatureFlagStatus.ROLLOUT]
+        }
 
 
 # Global feature flag manager instance

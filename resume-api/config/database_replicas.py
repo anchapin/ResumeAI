@@ -50,7 +50,9 @@ class ReplicaHealth:
     response_time_ms: Optional[float] = None
     consecutive_failures: int = 0
 
-    def mark_healthy(self, lag: Optional[float] = None, response_time: Optional[float] = None):
+    def mark_healthy(
+        self, lag: Optional[float] = None, response_time: Optional[float] = None
+    ):
         """Mark replica as healthy."""
         self.is_healthy = True
         self.last_check_at = datetime.utcnow()
@@ -71,7 +73,9 @@ class ReplicaHealth:
 class ReplicaPool:
     """Manages a pool of read replicas with health monitoring and failover."""
 
-    def __init__(self, primary_url: str, replicas: Optional[List[ReplicaConfig]] = None):
+    def __init__(
+        self, primary_url: str, replicas: Optional[List[ReplicaConfig]] = None
+    ):
         """
         Initialize replica pool.
 
@@ -133,7 +137,9 @@ class ReplicaPool:
                 echo=config.echo,
             )
 
-        logger.info(f"Initialized replica pool with {len(self.replica_engines)} replicas")
+        logger.info(
+            f"Initialized replica pool with {len(self.replica_engines)} replicas"
+        )
 
     async def close(self):
         """Close all database connections."""
@@ -154,9 +160,7 @@ class ReplicaPool:
 
         # Check primary
         primary_healthy = await self._check_replica_health(
-            self.primary_engine,
-            self.primary_url,
-            timeout=timeout
+            self.primary_engine, self.primary_url, timeout=timeout
         )
         health_status[self.primary_url] = primary_healthy
 
@@ -168,10 +172,7 @@ class ReplicaPool:
         return health_status
 
     async def _check_replica_health(
-        self,
-        engine: AsyncEngine,
-        url: str,
-        timeout: int = 5
+        self, engine: AsyncEngine, url: str, timeout: int = 5
     ) -> bool:
         """Check if a single replica is healthy."""
         try:
@@ -185,9 +186,7 @@ class ReplicaPool:
                     lag = None
                     if url != self.primary_url:
                         try:
-                            result = await conn.execute(
-                                text("SHOW SLAVE STATUS")
-                            )
+                            result = await conn.execute(text("SHOW SLAVE STATUS"))
                             row = result.fetchone()
                             if row and len(row) > 32:  # Seconds_Behind_Master position
                                 lag = float(row[32])
@@ -196,7 +195,9 @@ class ReplicaPool:
                             pass
 
                     if url in self.replica_health:
-                        self.replica_health[url].mark_healthy(lag=lag, response_time=elapsed)
+                        self.replica_health[url].mark_healthy(
+                            lag=lag, response_time=elapsed
+                        )
 
                     return True
         except asyncio.TimeoutError:
@@ -222,7 +223,8 @@ class ReplicaPool:
 
         # Get list of healthy replicas
         healthy_replicas = [
-            url for url, health in self.replica_health.items()
+            url
+            for url, health in self.replica_health.items()
             if health.is_healthy and url in self.replica_engines
         ]
 
@@ -269,8 +271,7 @@ class ReplicaPool:
 def create_replica_pool_from_env() -> ReplicaPool:
     """Create a replica pool from environment variables."""
     primary_url = os.getenv(
-        "DATABASE_URL",
-        "postgresql+asyncpg://user:password@localhost/resumeai"
+        "DATABASE_URL", "postgresql+asyncpg://user:password@localhost/resumeai"
     )
 
     return ReplicaPool(primary_url)
