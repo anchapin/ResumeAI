@@ -273,7 +273,11 @@ def sanitize_html(text: Optional[str]) -> Optional[str]:
         text = re.sub(f"<{tag}[^>]*/?>", "", text, flags=re.IGNORECASE)
 
     # Remove event handlers
+    # Use a two-pass approach or a more complex regex to handle both quoted and unquoted attributes
+    # 1. Quoted attributes: onX="Y" or onX='Y'
     text = re.sub(r'on\w+\s*=\s*["\'][^"\']*["\']', "", text, flags=re.IGNORECASE)
+    # 2. Unquoted attributes: onX=Y (matches until space, >, or end of string)
+    text = re.sub(r"on\w+\s*=\s*[^>\s]+", "", text, flags=re.IGNORECASE)
 
     # Remove javascript: and data: URLs
     text = re.sub(r"javascript\s*:", "", text, flags=re.IGNORECASE)
