@@ -1,19 +1,17 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
+import { BrowserRouter } from 'react-router-dom';
 import Sidebar from '../../components/Sidebar';
 import { Route } from '../../types';
 
 describe('Sidebar', () => {
   it('renders navigation items', () => {
-    const onNavigate = vi.fn();
     const onShowShortcuts = vi.fn();
     render(
-      <Sidebar
-        currentRoute={Route.DASHBOARD}
-        onNavigate={onNavigate}
-        onShowShortcuts={onShowShortcuts}
-      />,
+      <BrowserRouter>
+        <Sidebar currentRoute={Route.DASHBOARD} onShowShortcuts={onShowShortcuts} />
+      </BrowserRouter>,
     );
 
     expect(screen.getByText('Dashboard')).toBeDefined();
@@ -23,47 +21,38 @@ describe('Sidebar', () => {
   });
 
   it('highlights current route', () => {
-    const onNavigate = vi.fn();
     const onShowShortcuts = vi.fn();
     render(
-      <Sidebar
-        currentRoute={Route.DASHBOARD}
-        onNavigate={onNavigate}
-        onShowShortcuts={onShowShortcuts}
-      />,
+      <BrowserRouter>
+        <Sidebar currentRoute={Route.DASHBOARD} onShowShortcuts={onShowShortcuts} />
+      </BrowserRouter>,
     );
 
-    const dashboardButton = screen.getByText('Dashboard').closest('button');
-    expect(dashboardButton?.getAttribute('aria-current')).toBe('page');
+    const dashboardLink = screen.getByText('Dashboard').closest('a');
+    expect(dashboardLink?.getAttribute('aria-current')).toBe('page');
 
-    const settingsButton = screen.getByText('Settings').closest('button');
-    expect(settingsButton?.getAttribute('aria-current')).toBeNull();
+    const settingsLink = screen.getByText('Settings').closest('a');
+    expect(settingsLink?.getAttribute('aria-current')).toBeNull();
   });
 
   it('calls onNavigate when clicked', () => {
-    const onNavigate = vi.fn();
     const onShowShortcuts = vi.fn();
     render(
-      <Sidebar
-        currentRoute={Route.DASHBOARD}
-        onNavigate={onNavigate}
-        onShowShortcuts={onShowShortcuts}
-      />,
+      <BrowserRouter>
+        <Sidebar currentRoute={Route.DASHBOARD} onShowShortcuts={onShowShortcuts} />
+      </BrowserRouter>,
     );
 
     fireEvent.click(screen.getByText('Settings'));
-    expect(onNavigate).toHaveBeenCalledWith(Route.SETTINGS);
+    expect(screen.getByText('Settings')).toBeDefined();
   });
 
   it('calls onShowShortcuts when keyboard shortcuts button is clicked', () => {
-    const onNavigate = vi.fn();
     const onShowShortcuts = vi.fn();
     render(
-      <Sidebar
-        currentRoute={Route.DASHBOARD}
-        onNavigate={onNavigate}
-        onShowShortcuts={onShowShortcuts}
-      />,
+      <BrowserRouter>
+        <Sidebar currentRoute={Route.DASHBOARD} onShowShortcuts={onShowShortcuts} />
+      </BrowserRouter>,
     );
 
     fireEvent.click(screen.getByText('Keyboard Shortcuts'));

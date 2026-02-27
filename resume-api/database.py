@@ -63,16 +63,6 @@ class Resume(Base):
     title = Column(String(200), nullable=False, index=True)
     data = Column(JSON, nullable=False)  # Stores resume data as JSON
 
-    # Version tracking
-    # Note: use_alter=True breaks the circular FK dependency with resume_versions
-    current_version_id = Column(
-        Integer,
-        ForeignKey(
-            "resume_versions.id", use_alter=True, name="fk_resume_current_version"
-        ),
-    )
-    current_version = relationship("ResumeVersion", foreign_keys=[current_version_id])
-
     # Sharing settings
     is_public = Column(Boolean, default=False, index=True)
     share_token = Column(String(64), unique=True, nullable=True, index=True)
