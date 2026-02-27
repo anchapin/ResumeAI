@@ -90,7 +90,10 @@ class Resume(Base):
     # Relationships
     owner = relationship("User", back_populates="resumes")
     versions = relationship(
-        "ResumeVersion", foreign_keys="ResumeVersion.resume_id", back_populates="resume"
+        "ResumeVersion",
+        foreign_keys="ResumeVersion.resume_id",
+        back_populates="resume",
+        cascade="all, delete-orphan",
     )
     comments = relationship(
         "Comment", back_populates="resume", cascade="all, delete-orphan"
