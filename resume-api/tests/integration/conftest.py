@@ -31,6 +31,7 @@ from config.dependencies import get_current_user
 from config.jwt_utils import create_access_token
 from config.security import hash_password, encrypt_token
 
+
 # ============================================================================
 # Database Setup
 # ============================================================================
@@ -426,7 +427,13 @@ def mock_openai_response():
 @pytest.fixture
 def mock_anthropic_response():
     """Mock Anthropic Claude API response."""
-    return {"content": [{"text": "Tailored resume optimized for the target position."}]}
+    return {
+        "content": [
+            {
+                "text": "Tailored resume optimized for the target position."
+            }
+        ]
+    }
 
 
 @pytest.fixture
@@ -469,7 +476,6 @@ def mock_github_token_response():
 @pytest.fixture
 def mock_pdf_generation(monkeypatch):
     """Mock PDF generation to avoid LaTeX dependency."""
-
     async def mock_generate(*args, **kwargs):
         # Return a mock PDF binary
         return b"%PDF-1.4\n%mock pdf content"

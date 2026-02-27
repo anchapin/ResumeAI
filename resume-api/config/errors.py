@@ -53,7 +53,6 @@ class ErrorCode(str, Enum):
 
 class FieldError(BaseModel):
     """Error details for a specific field"""
-
     field: str = Field(..., description="Field name")
     message: str = Field(..., description="Error message for field")
     code: str = Field(default="VALIDATION_ERROR", description="Error code for field")
@@ -73,14 +72,10 @@ class ErrorResponse(BaseModel):
     method: Optional[str] = Field(None, description="HTTP method")
 
     # Optional field for detailed validation errors
-    field_errors: Optional[list[FieldError]] = Field(
-        None, description="Field-specific errors"
-    )
+    field_errors: Optional[list[FieldError]] = Field(None, description="Field-specific errors")
 
     # Optional context for debugging
-    details: Optional[Dict[str, Any]] = Field(
-        None, description="Additional error details"
-    )
+    details: Optional[Dict[str, Any]] = Field(None, description="Additional error details")
 
     class Config:
         json_schema_extra = {
@@ -91,7 +86,7 @@ class ErrorResponse(BaseModel):
                 "timestamp": "2024-02-26T13:40:22.892Z",
                 "status": 400,
                 "path": "/v1/render/pdf",
-                "method": "POST",
+                "method": "POST"
             }
         }
 
@@ -107,19 +102,23 @@ ERROR_MESSAGES = {
     ErrorCode.NOT_FOUND: "Resource not found",
     ErrorCode.CONFLICT: "Resource conflict",
     ErrorCode.RATE_LIMITED: "Rate limit exceeded",
+
     ErrorCode.RESUME_NOT_FOUND: "Resume not found",
     ErrorCode.RESUME_INVALID: "Resume data is invalid",
     ErrorCode.RESUME_LOCKED: "Resume is locked and cannot be modified",
     ErrorCode.RESUME_ARCHIVED: "Resume is archived",
+
     ErrorCode.PDF_GENERATION_FAILED: "PDF generation failed",
     ErrorCode.PDF_NOT_FOUND: "PDF not found",
     ErrorCode.PDF_INVALID_TEMPLATE: "Invalid PDF template",
     ErrorCode.PDF_RENDERING_ERROR: "Error rendering PDF",
+
     ErrorCode.OAUTH_INVALID_CODE: "Invalid OAuth authorization code",
     ErrorCode.OAUTH_INVALID_STATE: "OAuth state mismatch",
     ErrorCode.OAUTH_SCOPE_DENIED: "OAuth scope was denied",
     ErrorCode.OAUTH_PROVIDER_ERROR: "OAuth provider error",
     ErrorCode.OAUTH_TOKEN_EXPIRED: "OAuth token has expired",
+
     ErrorCode.INTERNAL_SERVER_ERROR: "Internal server error",
     ErrorCode.SERVICE_UNAVAILABLE: "Service temporarily unavailable",
     ErrorCode.DATABASE_ERROR: "Database error",
@@ -137,19 +136,23 @@ ERROR_STATUS_CODES = {
     ErrorCode.NOT_FOUND: status.HTTP_404_NOT_FOUND,
     ErrorCode.CONFLICT: status.HTTP_409_CONFLICT,
     ErrorCode.RATE_LIMITED: status.HTTP_429_TOO_MANY_REQUESTS,
+
     ErrorCode.RESUME_NOT_FOUND: status.HTTP_404_NOT_FOUND,
     ErrorCode.RESUME_INVALID: status.HTTP_400_BAD_REQUEST,
     ErrorCode.RESUME_LOCKED: status.HTTP_409_CONFLICT,
     ErrorCode.RESUME_ARCHIVED: status.HTTP_410_GONE,
+
     ErrorCode.PDF_GENERATION_FAILED: status.HTTP_500_INTERNAL_SERVER_ERROR,
     ErrorCode.PDF_NOT_FOUND: status.HTTP_404_NOT_FOUND,
     ErrorCode.PDF_INVALID_TEMPLATE: status.HTTP_400_BAD_REQUEST,
     ErrorCode.PDF_RENDERING_ERROR: status.HTTP_500_INTERNAL_SERVER_ERROR,
+
     ErrorCode.OAUTH_INVALID_CODE: status.HTTP_400_BAD_REQUEST,
     ErrorCode.OAUTH_INVALID_STATE: status.HTTP_400_BAD_REQUEST,
     ErrorCode.OAUTH_SCOPE_DENIED: status.HTTP_403_FORBIDDEN,
     ErrorCode.OAUTH_PROVIDER_ERROR: status.HTTP_502_BAD_GATEWAY,
     ErrorCode.OAUTH_TOKEN_EXPIRED: status.HTTP_401_UNAUTHORIZED,
+
     ErrorCode.INTERNAL_SERVER_ERROR: status.HTTP_500_INTERNAL_SERVER_ERROR,
     ErrorCode.SERVICE_UNAVAILABLE: status.HTTP_503_SERVICE_UNAVAILABLE,
     ErrorCode.DATABASE_ERROR: status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -186,7 +189,7 @@ def create_error_response(
     method: Optional[str] = None,
     field_errors: Optional[list[FieldError]] = None,
     details: Optional[Dict[str, Any]] = None,
-    **kwargs,
+    **kwargs
 ) -> ErrorResponse:
     """
     Factory function for creating standardized error responses
@@ -219,5 +222,5 @@ def create_error_response(
         path=path,
         method=method,
         field_errors=field_errors,
-        details=details,
+        details=details
     )

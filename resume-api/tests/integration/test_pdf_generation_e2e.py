@@ -129,7 +129,9 @@ class TestPDFGenerationEdgeCases:
         assert "detail" in response.json()
 
     @pytest.mark.asyncio
-    async def test_generate_pdf_empty_sections(self, authenticated_client: AsyncClient):
+    async def test_generate_pdf_empty_sections(
+        self, authenticated_client: AsyncClient
+    ):
         """Test PDF generation with empty sections."""
         resume_data = {
             "contact": {
@@ -227,10 +229,7 @@ class TestPDFGenerationRateLimiting:
 
         assert response.status_code == 200
         # Rate limit headers should be present
-        assert (
-            "x-ratelimit-limit" in response.headers
-            or "retry-after" not in response.headers
-        )
+        assert "x-ratelimit-limit" in response.headers or "retry-after" not in response.headers
 
 
 class TestPDFGenerationPerformance:

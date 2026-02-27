@@ -966,7 +966,7 @@ class ErrorResponse(BaseModel):
         # Deprecated: Use config.errors.ErrorResponse instead
         json_schema_extra = {
             "deprecated": True,
-            "note": "This model is deprecated. Use config.errors.ErrorResponse instead",
+            "note": "This model is deprecated. Use config.errors.ErrorResponse instead"
         }
 
 
@@ -1950,7 +1950,6 @@ class GitHubCLIStatus(BaseModel):
 
 # Interview Practice Models
 
-
 class InterviewQuestion(BaseModel):
     """Interview question model."""
 
@@ -1959,10 +1958,10 @@ class InterviewQuestion(BaseModel):
     category: str = Field(
         ..., description="Question category: technical, behavioral, situational, domain"
     )
-    difficulty: str = Field(..., description="Difficulty level: easy, medium, hard")
-    tips: Optional[List[str]] = Field(
-        None, description="Tips for answering the question"
+    difficulty: str = Field(
+        ..., description="Difficulty level: easy, medium, hard"
     )
+    tips: Optional[List[str]] = Field(None, description="Tips for answering the question")
 
 
 class InterviewAnswer(BaseModel):
@@ -1998,18 +1997,10 @@ class InterviewSession(BaseModel):
     job_title: Optional[str] = Field(None, description="Target job title")
     company: Optional[str] = Field(None, description="Target company")
     questions: List[InterviewQuestion] = Field(..., description="Interview questions")
-    answers: List[InterviewAnswer] = Field(
-        default_factory=list, description="User answers"
-    )
-    feedback: Optional[List[InterviewFeedback]] = Field(
-        None, description="Feedback on answers"
-    )
-    completion_percentage: int = Field(
-        ..., description="Percentage of interview completed"
-    )
-    average_score: Optional[float] = Field(
-        None, description="Average score across answers"
-    )
+    answers: List[InterviewAnswer] = Field(default_factory=list, description="User answers")
+    feedback: Optional[List[InterviewFeedback]] = Field(None, description="Feedback on answers")
+    completion_percentage: int = Field(..., description="Percentage of interview completed")
+    average_score: Optional[float] = Field(None, description="Average score across answers")
 
 
 class GenerateQuestionsRequest(BaseModel):
@@ -2017,14 +2008,10 @@ class GenerateQuestionsRequest(BaseModel):
 
     job_title: Optional[str] = Field(None, description="Target job title")
     company: Optional[str] = Field(None, description="Target company")
-    count: int = Field(
-        default=5, ge=1, le=20, description="Number of questions to generate"
-    )
+    count: int = Field(default=5, ge=1, le=20, description="Number of questions to generate")
     difficulty: Optional[str] = Field(None, description="Difficulty level filter")
     categories: Optional[List[str]] = Field(None, description="Question categories")
-    resume_data: Optional[Dict[str, Any]] = Field(
-        None, description="User's resume data for context"
-    )
+    resume_data: Optional[Dict[str, Any]] = Field(None, description="User's resume data for context")
 
 
 class GenerateQuestionsResponse(BaseModel):
@@ -2057,19 +2044,15 @@ class SessionHistoryResponse(BaseModel):
 
     sessions: List[InterviewSession] = Field(..., description="List of past sessions")
     total_sessions: int = Field(..., description="Total number of sessions")
-    average_score: Optional[float] = Field(
-        None, description="Average score across all sessions"
-    )
+    average_score: Optional[float] = Field(None, description="Average score across all sessions")
 
 
 # ========================
 # Job Queue Models (Issue #417)
 # ========================
 
-
 class JobStatus(str, Enum):
     """Job status values."""
-
     PENDING = "pending"
     PROCESSING = "processing"
     COMPLETED = "completed"
@@ -2079,7 +2062,6 @@ class JobStatus(str, Enum):
 
 class JobPriorityLevel(str, Enum):
     """Job priority levels."""
-
     LOW = "low"
     NORMAL = "normal"
     HIGH = "high"
@@ -2091,9 +2073,7 @@ class SubmitPDFRenderJobRequest(BaseModel):
 
     resume_data: Dict[str, Any] = Field(..., description="Resume data to render")
     variant: Optional[str] = Field("default", description="Resume variant/template")
-    priority: JobPriorityLevel = Field(
-        JobPriorityLevel.NORMAL, description="Job priority"
-    )
+    priority: JobPriorityLevel = Field(JobPriorityLevel.NORMAL, description="Job priority")
 
     class Config:
         json_schema_extra = {
@@ -2120,9 +2100,7 @@ class JobStatusResponse(BaseModel):
     retry_count: int = Field(..., description="Number of retries attempted")
     created_at: str = Field(..., description="ISO format creation timestamp")
     started_at: Optional[str] = Field(None, description="ISO format start timestamp")
-    completed_at: Optional[str] = Field(
-        None, description="ISO format completion timestamp"
-    )
+    completed_at: Optional[str] = Field(None, description="ISO format completion timestamp")
     result: Optional[Dict[str, Any]] = Field(None, description="Job result data")
 
     class Config:

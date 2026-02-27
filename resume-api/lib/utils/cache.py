@@ -20,19 +20,17 @@ from collections import OrderedDict
 
 logger = logging.getLogger(__name__)
 
-T = TypeVar("T")
+T = TypeVar('T')
 
 
 class CacheBackend(str, Enum):
     """Available cache backends"""
-
     REDIS = "redis"
     MEMORY = "memory"
 
 
 class InvalidationStrategy(str, Enum):
     """Cache invalidation strategies"""
-
     TTL = "ttl"  # Time-based expiration
     LRU = "lru"  # Least Recently Used
     FIFO = "fifo"  # First In First Out
@@ -42,7 +40,6 @@ class InvalidationStrategy(str, Enum):
 @dataclass
 class CacheConfig:
     """Cache configuration for a specific data type"""
-
     key_prefix: str
     ttl_seconds: int = 300  # 5 minutes default
     max_entries: int = 1000  # For in-memory cache
@@ -57,7 +54,6 @@ class CacheConfig:
 @dataclass
 class CacheEntry:
     """Internal cache entry structure"""
-
     key: str
     value: Any
     created_at: float
@@ -93,7 +89,11 @@ class CacheBackendInterface(ABC):
 
     @abstractmethod
     async def set(
-        self, key: str, value: Any, ttl_seconds: int, tags: Optional[Set[str]] = None
+        self,
+        key: str,
+        value: Any,
+        ttl_seconds: int,
+        tags: Optional[Set[str]] = None
     ) -> bool:
         """Set value in cache"""
         pass
@@ -158,7 +158,11 @@ class InMemoryCache(CacheBackendInterface):
             return entry.value
 
     async def set(
-        self, key: str, value: Any, ttl_seconds: int, tags: Optional[Set[str]] = None
+        self,
+        key: str,
+        value: Any,
+        ttl_seconds: int,
+        tags: Optional[Set[str]] = None
     ) -> bool:
         """Set value in in-memory cache"""
         async with self._lock:
@@ -178,7 +182,7 @@ class InMemoryCache(CacheBackendInterface):
                 created_at=time.time(),
                 ttl_seconds=ttl_seconds,
                 accessed_at=time.time(),
-                tags=tags or set(),
+                tags=tags or set()
             )
 
             # Update tag index
@@ -260,7 +264,7 @@ class InMemoryCache(CacheBackendInterface):
                 "hits": self.hits,
                 "misses": self.misses,
                 "hit_rate": hit_rate,
-                "tags": len(self.tag_index),
+                "tags": len(self.tag_index)
             }
 
 
@@ -300,7 +304,11 @@ class RedisCache(CacheBackendInterface):
             return None
 
     async def set(
-        self, key: str, value: Any, ttl_seconds: int, tags: Optional[Set[str]] = None
+        self,
+        key: str,
+        value: Any,
+        ttl_seconds: int,
+        tags: Optional[Set[str]] = None
     ) -> bool:
         """Set value in Redis"""
         try:
@@ -399,7 +407,7 @@ class CacheManager:
         self,
         backend: CacheBackend = CacheBackend.MEMORY,
         redis_client: Optional[Any] = None,
-        memory_max_size: int = 10000,
+        memory_max_size: int = 10000
     ):
         """
         Initialize cache manager
@@ -488,7 +496,7 @@ class CacheManager:
         value: Any,
         ttl_seconds: Optional[int] = None,
         config_name: Optional[str] = None,
-        tags: Optional[Set[str]] = None,
+        tags: Optional[Set[str]] = None
     ) -> bool:
         """
         Set value in cache
@@ -568,7 +576,8 @@ def set_cache_manager(manager: CacheManager) -> None:
 
 
 async def initialize_cache(
-    backend: CacheBackend = CacheBackend.MEMORY, redis_client: Optional[Any] = None
+    backend: CacheBackend = CacheBackend.MEMORY,
+    redis_client: Optional[Any] = None
 ) -> CacheManager:
     """
     Initialize and set global cache manager

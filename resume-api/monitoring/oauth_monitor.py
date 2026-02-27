@@ -25,7 +25,6 @@ logger = logging_config.get_logger(__name__)
 @dataclass
 class OAuthEvent:
     """Represents an OAuth operation event."""
-
     timestamp: datetime
     provider: str
     event_type: str  # "connect", "disconnect", "token_refresh", "callback", etc.
@@ -43,7 +42,6 @@ class OAuthEvent:
 @dataclass
 class OAuthMetricsSnapshot:
     """Snapshot of OAuth metrics at a point in time."""
-
     timestamp: datetime
     provider: str
     total_events: int = 0
@@ -109,7 +107,8 @@ class OAuthMonitor:
                 monitoring_metrics.increment_oauth_connection_success(event.provider)
             elif event.status == "failure":
                 monitoring_metrics.increment_oauth_connection_failure(
-                    provider=event.provider, error_type=event.error_code or "unknown"
+                    provider=event.provider,
+                    error_type=event.error_code or "unknown"
                 )
                 # Track failed attempt by IP for suspicious activity detection
                 if event.ip_address:
@@ -117,9 +116,7 @@ class OAuthMonitor:
             elif event.status == "rate_limited":
                 monitoring_metrics.increment_oauth_rate_limit_hits(event.provider)
             elif event.status == "token_expired":
-                monitoring_metrics.increment_oauth_token_expiration_events(
-                    event.provider
-                )
+                monitoring_metrics.increment_oauth_token_expiration_events(event.provider)
 
             # Log the event
             logger.info(
@@ -147,7 +144,7 @@ class OAuthMonitor:
         self,
         provider: str = "github",
         window_minutes: int = 5,
-        since: Optional[datetime] = None,
+        since: Optional[datetime] = None
     ) -> OAuthMetricsSnapshot:
         """
         Get aggregated metrics for a time window.
@@ -166,8 +163,7 @@ class OAuthMonitor:
         with self.events_lock:
             # Filter events for the provider and time window
             relevant_events = [
-                e
-                for e in self.events
+                e for e in self.events
                 if e.provider == provider and e.timestamp >= since
             ]
 
@@ -200,9 +196,7 @@ class OAuthMonitor:
 
         # Calculate average response time
         if relevant_events:
-            avg_time = sum(e.duration_ms for e in relevant_events) / len(
-                relevant_events
-            )
+            avg_time = sum(e.duration_ms for e in relevant_events) / len(relevant_events)
             snapshot.avg_response_time_ms = avg_time
 
         # Aggregate error codes
@@ -213,13 +207,16 @@ class OAuthMonitor:
 
         snapshot.error_counts = dict(error_counts)
         snapshot.top_errors = sorted(
-            error_counts.items(), key=lambda x: x[1], reverse=True
+            error_counts.items(),
+            key=lambda x: x[1],
+            reverse=True
         )[:5]
 
         return snapshot
 
     def get_suspicious_ips(
-        self, window_minutes: Optional[int] = None
+        self,
+        window_minutes: Optional[int] = None
     ) -> List[Tuple[str, int]]:
         """
         Detect suspicious IPs with multiple failed attempts.
@@ -260,61 +257,53 @@ class OAuthMonitor:
 
             # High failure rate
             if metrics.success_rate < (1 - self.failure_rate_threshold):
-                anomalies.append(
-                    {
-                        "type": "high_failure_rate",
-                        "severity": "high",
-                        "window": window_name,
-                        "window_minutes": window,
-                        "success_rate": metrics.success_rate,
-                        "threshold": 1 - self.failure_rate_threshold,
-                        "details": {
-                            "total_events": metrics.total_events,
-                            "success_events": metrics.success_events,
-                            "failure_events": metrics.failure_events,
-                            "top_errors": metrics.top_errors,
-                        },
+                anomalies.append({
+                    "type": "high_failure_rate",
+                    "severity": "high",
+                    "window": window_name,
+                    "window_minutes": window,
+                    "success_rate": metrics.success_rate,
+                    "threshold": 1 - self.failure_rate_threshold,
+                    "details": {
+                        "total_events": metrics.total_events,
+                        "success_events": metrics.success_events,
+                        "failure_events": metrics.failure_events,
+                        "top_errors": metrics.top_errors,
                     }
-                )
+                })
 
             # High rate limiting hits
             if metrics.rate_limit_events >= self.rate_limit_hit_threshold:
-                anomalies.append(
-                    {
-                        "type": "rate_limit_detected",
-                        "severity": "medium",
-                        "window": window_name,
-                        "window_minutes": window,
-                        "rate_limit_hits": metrics.rate_limit_events,
-                        "threshold": self.rate_limit_hit_threshold,
-                    }
-                )
+                anomalies.append({
+                    "type": "rate_limit_detected",
+                    "severity": "medium",
+                    "window": window_name,
+                    "window_minutes": window,
+                    "rate_limit_hits": metrics.rate_limit_events,
+                    "threshold": self.rate_limit_hit_threshold,
+                })
 
             # High token expiration
             if metrics.token_expiration_events >= self.token_expiration_threshold:
-                anomalies.append(
-                    {
-                        "type": "token_expiration_spike",
-                        "severity": "medium",
-                        "window": window_name,
-                        "window_minutes": window,
-                        "token_expiration_events": metrics.token_expiration_events,
-                        "threshold": self.token_expiration_threshold,
-                    }
-                )
+                anomalies.append({
+                    "type": "token_expiration_spike",
+                    "severity": "medium",
+                    "window": window_name,
+                    "window_minutes": window,
+                    "token_expiration_events": metrics.token_expiration_events,
+                    "threshold": self.token_expiration_threshold,
+                })
 
         # Check for suspicious IPs
         suspicious_ips = self.get_suspicious_ips()
         if suspicious_ips:
-            anomalies.append(
-                {
-                    "type": "suspicious_activity",
-                    "severity": "high",
-                    "suspicious_ips": suspicious_ips,
-                    "threshold": self.failed_attempts_threshold,
-                    "window_minutes": self.suspicious_ip_window,
-                }
-            )
+            anomalies.append({
+                "type": "suspicious_activity",
+                "severity": "high",
+                "suspicious_ips": suspicious_ips,
+                "threshold": self.failed_attempts_threshold,
+                "window_minutes": self.suspicious_ip_window,
+            })
 
         return anomalies
 

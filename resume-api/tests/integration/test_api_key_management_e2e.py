@@ -19,7 +19,9 @@ class TestAPIKeyCreation:
     """Test API key creation and management."""
 
     @pytest.mark.asyncio
-    async def test_create_api_key(self, authenticated_client: AsyncClient, test_user):
+    async def test_create_api_key(
+        self, authenticated_client: AsyncClient, test_user
+    ):
         """Test creating a new API key."""
         response = await authenticated_client.post(
             "/v1/api-keys",
@@ -38,7 +40,9 @@ class TestAPIKeyCreation:
             assert "name" in data
 
     @pytest.mark.asyncio
-    async def test_api_key_has_required_fields(self, test_api_key):
+    async def test_api_key_has_required_fields(
+        self, test_api_key
+    ):
         """Test API key contains required fields."""
         assert test_api_key.key == "test_key_1234567890abcdef"
         assert test_api_key.name == "Test API Key"
@@ -46,9 +50,13 @@ class TestAPIKeyCreation:
         assert test_api_key.user_id is not None
 
     @pytest.mark.asyncio
-    async def test_list_api_keys(self, authenticated_client: AsyncClient, test_api_key):
+    async def test_list_api_keys(
+        self, authenticated_client: AsyncClient, test_api_key
+    ):
         """Test listing user's API keys."""
-        response = await authenticated_client.get("/v1/api-keys")
+        response = await authenticated_client.get(
+            "/v1/api-keys"
+        )
 
         # May not be implemented
         assert response.status_code in [200, 401, 404]
@@ -201,7 +209,9 @@ class TestAPIKeyDeactivation:
         self, authenticated_client: AsyncClient, test_api_key
     ):
         """Test deleting an API key."""
-        response = await authenticated_client.delete(f"/v1/api-keys/{test_api_key.id}")
+        response = await authenticated_client.delete(
+            f"/v1/api-keys/{test_api_key.id}"
+        )
 
         # May not be implemented
         assert response.status_code in [200, 204, 401, 404]
@@ -211,7 +221,9 @@ class TestAPIKeyMetadata:
     """Test API key metadata and tracking."""
 
     @pytest.mark.asyncio
-    async def test_api_key_tracks_creation_time(self, test_api_key):
+    async def test_api_key_tracks_creation_time(
+        self, test_api_key
+    ):
         """Test that API key tracks creation time."""
         assert test_api_key.created_at is not None
         assert isinstance(test_api_key.created_at, datetime)
@@ -235,12 +247,16 @@ class TestAPIKeyMetadata:
         assert True
 
     @pytest.mark.asyncio
-    async def test_api_key_name_is_optional(self, test_api_key):
+    async def test_api_key_name_is_optional(
+        self, test_api_key
+    ):
         """Test that API key name can be customized."""
         assert test_api_key.name == "Test API Key"
 
     @pytest.mark.asyncio
-    async def test_api_key_description_optional(self, test_api_key):
+    async def test_api_key_description_optional(
+        self, test_api_key
+    ):
         """Test that API key can have optional description."""
         # Description may be stored
         assert True
@@ -275,7 +291,9 @@ class TestAPIKeyPermissions:
     """Test API key permission scoping."""
 
     @pytest.mark.asyncio
-    async def test_api_key_scoped_to_user(self, test_user, test_api_key):
+    async def test_api_key_scoped_to_user(
+        self, test_user, test_api_key
+    ):
         """Test that API key is scoped to specific user."""
         assert test_api_key.user_id == test_user.id
 

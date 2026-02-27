@@ -49,7 +49,7 @@ def generate_pkce_code_verifier() -> str:
     # Generate 96 random bytes and base64url encode to get ~128 chars
     random_bytes = secrets.token_bytes(96)
     # Use urlsafe base64 and remove padding
-    verifier = base64.urlsafe_b64encode(random_bytes).decode("utf-8").rstrip("=")
+    verifier = base64.urlsafe_b64encode(random_bytes).decode('utf-8').rstrip('=')
     return verifier[:128]  # Ensure exactly 128 chars
 
 
@@ -66,10 +66,10 @@ def generate_pkce_code_challenge(verifier: str) -> str:
         Base64url-encoded SHA256 hash of the verifier
     """
     # Hash the verifier with SHA-256
-    sha256_hash = hashlib.sha256(verifier.encode("utf-8")).digest()
+    sha256_hash = hashlib.sha256(verifier.encode('utf-8')).digest()
 
     # Base64url encode without padding
-    challenge = base64.urlsafe_b64encode(sha256_hash).decode("utf-8").rstrip("=")
+    challenge = base64.urlsafe_b64encode(sha256_hash).decode('utf-8').rstrip('=')
     return challenge
 
 
@@ -412,6 +412,8 @@ async def github_oauth_callback(
         )
 
 
+
+
 async def _get_oauth_status(user_id: int, db: AsyncSession) -> GitHubStatusResponse:
     """Helper to check OAuth connection status."""
     try:
@@ -511,7 +513,9 @@ async def get_github_status(
                 username=connection.github_username,
                 github_user_id=str(connection.github_user_id),
                 connected_at=(
-                    connection.created_at.isoformat() if connection.created_at else None
+                    connection.created_at.isoformat()
+                    if connection.created_at
+                    else None
                 ),
                 error=None,
             )
@@ -526,7 +530,9 @@ async def get_github_status(
                 error="No GitHub connection found",
             )
     except Exception as e:
-        logger.error("github_oauth_status_error", user_id=current_user.id, error=str(e))
+        logger.error(
+            "github_oauth_status_error", user_id=current_user.id, error=str(e)
+        )
         return GitHubStatusResponse(
             authenticated=False,
             mode="oauth",

@@ -46,7 +46,7 @@ def migrate_from_env_file(env_file: str) -> dict:
                 continue
 
             if line.startswith("API_KEYS="):
-                keys_str = line.replace("API_KEYS=", "").strip("\"'")
+                keys_str = line.replace("API_KEYS=", "").strip('"\'')
                 if keys_str:
                     api_keys = [k.strip() for k in keys_str.split(",") if k.strip()]
                     try:
@@ -56,7 +56,7 @@ def migrate_from_env_file(env_file: str) -> dict:
                         print(f"Error migrating API_KEYS: {e}")
 
             elif line.startswith("MASTER_API_KEY="):
-                master_key = line.replace("MASTER_API_KEY=", "").strip("\"'")
+                master_key = line.replace("MASTER_API_KEY=", "").strip('"\'')
                 if master_key:
                     try:
                         hashed = hash_api_key(master_key)

@@ -51,7 +51,6 @@ class ErrorCode(str, Enum):
 
 class FieldError(BaseModel):
     """Error details for a specific field"""
-
     field: str = Field(..., description="Field name")
     message: str = Field(..., description="Error message for field")
     code: str = Field(..., description="Error code for field")
@@ -63,9 +62,7 @@ class ErrorResponse(BaseModel):
     error_code: ErrorCode = Field(..., description="Machine-readable error code")
     error_message: str = Field(..., description="Human-readable error message")
     request_id: str = Field(..., description="Unique request identifier for tracking")
-    timestamp: datetime = Field(
-        default_factory=datetime.utcnow, description="Error timestamp"
-    )
+    timestamp: datetime = Field(default_factory=datetime.utcnow, description="Error timestamp")
 
     # Optional fields for additional context
     status_code: Optional[int] = Field(None, description="HTTP status code")
@@ -73,9 +70,7 @@ class ErrorResponse(BaseModel):
     method: Optional[str] = Field(None, description="HTTP method")
 
     # Optional field for detailed validation errors
-    field_errors: Optional[List[FieldError]] = Field(
-        None, description="Field-specific errors"
-    )
+    field_errors: Optional[List[FieldError]] = Field(None, description="Field-specific errors")
 
     # Optional context for debugging
     debug_info: Optional[Dict[str, Any]] = Field(None, description="Debug information")
@@ -92,19 +87,23 @@ ERROR_MESSAGES = {
     ErrorCode.NOT_FOUND: "Resource not found",
     ErrorCode.CONFLICT: "Resource conflict",
     ErrorCode.RATE_LIMITED: "Rate limit exceeded",
+
     ErrorCode.RESUME_NOT_FOUND: "Resume not found",
     ErrorCode.RESUME_INVALID: "Resume data is invalid",
     ErrorCode.RESUME_LOCKED: "Resume is locked and cannot be modified",
     ErrorCode.RESUME_ARCHIVED: "Resume is archived",
+
     ErrorCode.PDF_GENERATION_FAILED: "PDF generation failed",
     ErrorCode.PDF_NOT_FOUND: "PDF not found",
     ErrorCode.PDF_INVALID_TEMPLATE: "Invalid PDF template",
     ErrorCode.PDF_RENDERING_ERROR: "Error rendering PDF",
+
     ErrorCode.OAUTH_INVALID_CODE: "Invalid OAuth authorization code",
     ErrorCode.OAUTH_INVALID_STATE: "OAuth state mismatch",
     ErrorCode.OAUTH_SCOPE_DENIED: "OAuth scope was denied",
     ErrorCode.OAUTH_PROVIDER_ERROR: "OAuth provider error",
     ErrorCode.OAUTH_TOKEN_EXPIRED: "OAuth token has expired",
+
     ErrorCode.INTERNAL_SERVER_ERROR: "Internal server error",
     ErrorCode.SERVICE_UNAVAILABLE: "Service temporarily unavailable",
     ErrorCode.DATABASE_ERROR: "Database error",

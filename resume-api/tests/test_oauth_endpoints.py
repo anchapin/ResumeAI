@@ -32,6 +32,7 @@ from config.jwt_utils import create_access_token, create_refresh_token
 from config.security import hash_password, encrypt_token
 from lib.token_encryption import generate_encryption_key
 
+
 # ============================================================================
 # Fixtures
 # ============================================================================
@@ -144,9 +145,7 @@ class TestGitHubConnectEndpoint:
         assert response.status_code == 401
 
     @pytest.mark.asyncio
-    async def test_connect_state_persistence(
-        self, authenticated_client, db_session, test_user
-    ):
+    async def test_connect_state_persistence(self, authenticated_client, db_session, test_user):
         """Test that state is persisted in database."""
         with patch("routes.github.settings") as mock_settings:
             mock_settings.github_client_id = "test_client_id"
@@ -181,9 +180,7 @@ class TestGitHubConnectEndpoint:
             oauth_state = result.scalar_one()
 
             # Should expire in approximately 10 minutes
-            time_until_expire = (
-                oauth_state.expires_at - datetime.now(timezone.utc)
-            ).total_seconds()
+            time_until_expire = (oauth_state.expires_at - datetime.now(timezone.utc)).total_seconds()
             assert 590 < time_until_expire < 610  # ~10 minutes
 
     @pytest.mark.asyncio
@@ -326,9 +323,7 @@ class TestGitHubStatusEndpoint:
     """Test /github/status endpoint."""
 
     @pytest.mark.asyncio
-    async def test_status_returns_connection_info(
-        self, authenticated_client, db_session, test_user
-    ):
+    async def test_status_returns_connection_info(self, authenticated_client, db_session, test_user):
         """Test status endpoint with active connection."""
         # Create connection
         connection = GitHubConnection(
@@ -367,9 +362,7 @@ class TestGitHubStatusEndpoint:
         assert response.status_code == 401
 
     @pytest.mark.asyncio
-    async def test_status_inactive_connection(
-        self, authenticated_client, db_session, test_user
-    ):
+    async def test_status_inactive_connection(self, authenticated_client, db_session, test_user):
         """Test status with inactive connection."""
         connection = GitHubConnection(
             user_id=test_user.id,
@@ -397,9 +390,7 @@ class TestGitHubDisconnectEndpoint:
     """Test /github/disconnect endpoint."""
 
     @pytest.mark.asyncio
-    async def test_disconnect_removes_connection(
-        self, authenticated_client, db_session, test_user
-    ):
+    async def test_disconnect_removes_connection(self, authenticated_client, db_session, test_user):
         """Test disconnect removes GitHub connection."""
         # Create connection
         connection = GitHubConnection(
@@ -440,9 +431,7 @@ class TestGitHubDisconnectEndpoint:
         assert response.status_code == 401
 
     @pytest.mark.asyncio
-    async def test_disconnect_attempts_token_revocation(
-        self, authenticated_client, db_session, test_user
-    ):
+    async def test_disconnect_attempts_token_revocation(self, authenticated_client, db_session, test_user):
         """Test that disconnect attempts to revoke token."""
         connection = GitHubConnection(
             user_id=test_user.id,
@@ -477,7 +466,6 @@ class TestAuthRefreshEndpoint:
         refresh_token = create_refresh_token(token_data)
 
         import hashlib
-
         token_hash = hashlib.sha256(refresh_token.encode()).hexdigest()
         stored = RefreshToken(
             user_id=test_user.id,
@@ -504,7 +492,6 @@ class TestAuthRefreshEndpoint:
         refresh_token = create_refresh_token(token_data)
 
         import hashlib
-
         token_hash = hashlib.sha256(refresh_token.encode()).hexdigest()
         stored = RefreshToken(
             user_id=test_user.id,
@@ -528,7 +515,6 @@ class TestAuthRefreshEndpoint:
         refresh_token = create_refresh_token(token_data)
 
         import hashlib
-
         token_hash = hashlib.sha256(refresh_token.encode()).hexdigest()
         stored = RefreshToken(
             user_id=test_user.id,
@@ -547,15 +533,12 @@ class TestAuthRefreshEndpoint:
         assert response.status_code == 401
 
     @pytest.mark.asyncio
-    async def test_refresh_returns_correct_expiration(
-        self, client, test_user, db_session
-    ):
+    async def test_refresh_returns_correct_expiration(self, client, test_user, db_session):
         """Test that refresh returns correct token expiration."""
         token_data = {"sub": str(test_user.id), "email": test_user.email}
         refresh_token = create_refresh_token(token_data)
 
         import hashlib
-
         token_hash = hashlib.sha256(refresh_token.encode()).hexdigest()
         stored = RefreshToken(
             user_id=test_user.id,
@@ -590,7 +573,6 @@ class TestAuthLogoutEndpoint:
         refresh_token = create_refresh_token(token_data)
 
         import hashlib
-
         token_hash = hashlib.sha256(refresh_token.encode()).hexdigest()
         stored = RefreshToken(
             user_id=test_user.id,
@@ -631,7 +613,6 @@ class TestAuthLogoutEndpoint:
         refresh_token = create_refresh_token(token_data)
 
         import hashlib
-
         token_hash = hashlib.sha256(refresh_token.encode()).hexdigest()
         stored = RefreshToken(
             user_id=test_user.id,

@@ -39,7 +39,7 @@ class ReplicationMetrics:
     def to_dict(self) -> Dict:
         """Convert to dictionary."""
         d = asdict(self)
-        d["timestamp"] = self.timestamp.isoformat()
+        d['timestamp'] = self.timestamp.isoformat()
         return d
 
     def is_lagging(self, threshold_seconds: float = 5.0) -> bool:
@@ -75,9 +75,8 @@ class ReplicationSyncMonitor:
         self.is_running = False
         self.monitor_task: Optional[asyncio.Task] = None
 
-    async def start_monitoring(
-        self, replica_engines: Dict[str, AsyncEngine], primary_engine: AsyncEngine
-    ):
+    async def start_monitoring(self, replica_engines: Dict[str, AsyncEngine],
+                              primary_engine: AsyncEngine):
         """
         Start continuous monitoring of replicas.
 
@@ -93,7 +92,9 @@ class ReplicationSyncMonitor:
         self.replica_engines = replica_engines
         self.primary_engine = primary_engine
 
-        self.monitor_task = asyncio.create_task(self._monitoring_loop())
+        self.monitor_task = asyncio.create_task(
+            self._monitoring_loop()
+        )
         logger.info("Replication sync monitoring started")
 
     async def stop_monitoring(self):
@@ -138,14 +139,14 @@ class ReplicationSyncMonitor:
                     if row:
                         # Parse MySQL SHOW SLAVE STATUS output
                         # Field positions vary by MySQL version, use column names
-                        row_dict = row._mapping if hasattr(row, "_mapping") else {}
+                        row_dict = row._mapping if hasattr(row, '_mapping') else {}
 
-                        metrics.lag_seconds = row_dict.get("Seconds_Behind_Master")
-                        metrics.binlog_position = row_dict.get("Master_Log_Pos")
-                        metrics.relay_log_position = row_dict.get("Relay_Log_Pos")
-                        metrics.master_log_file = row_dict.get("Master_Log_File")
-                        metrics.last_io_error = row_dict.get("Last_IO_Error")
-                        metrics.last_sql_error = row_dict.get("Last_SQL_Error")
+                        metrics.lag_seconds = row_dict.get('Seconds_Behind_Master')
+                        metrics.binlog_position = row_dict.get('Master_Log_Pos')
+                        metrics.relay_log_position = row_dict.get('Relay_Log_Pos')
+                        metrics.master_log_file = row_dict.get('Master_Log_File')
+                        metrics.last_io_error = row_dict.get('Last_IO_Error')
+                        metrics.last_sql_error = row_dict.get('Last_SQL_Error')
 
                         # Check for errors
                         if metrics.last_io_error or metrics.last_sql_error:
@@ -159,13 +160,13 @@ class ReplicationSyncMonitor:
                     result = await conn.execute(text("SHOW STATUS"))
                     rows = result.fetchall()
                     for row in rows:
-                        row_dict = row._mapping if hasattr(row, "_mapping") else {}
-                        if row_dict.get("Variable_name") == "Threads_connected":
-                            metrics.threads_connected = int(row_dict.get("Value", 0))
-                        elif row_dict.get("Variable_name") == "Questions":
-                            metrics.questions = int(row_dict.get("Value", 0))
-                        elif row_dict.get("Variable_name") == "Slow_queries":
-                            metrics.slow_queries = int(row_dict.get("Value", 0))
+                        row_dict = row._mapping if hasattr(row, '_mapping') else {}
+                        if row_dict.get('Variable_name') == 'Threads_connected':
+                            metrics.threads_connected = int(row_dict.get('Value', 0))
+                        elif row_dict.get('Variable_name') == 'Questions':
+                            metrics.questions = int(row_dict.get('Value', 0))
+                        elif row_dict.get('Variable_name') == 'Slow_queries':
+                            metrics.slow_queries = int(row_dict.get('Value', 0))
                 except Exception:
                     pass
 
@@ -187,9 +188,8 @@ class ReplicationSyncMonitor:
 
         # Trim history
         if len(self.metrics_history[metrics.replica_url]) > self.max_history_size:
-            self.metrics_history[metrics.replica_url] = self.metrics_history[
-                metrics.replica_url
-            ][-self.max_history_size :]
+            self.metrics_history[metrics.replica_url] = \
+                self.metrics_history[metrics.replica_url][-self.max_history_size:]
 
     async def _check_for_alerts(self, metrics: ReplicationMetrics):
         """Check for alert conditions and generate alerts."""
@@ -223,9 +223,8 @@ class ReplicationSyncMonitor:
             latest[replica_url] = history[-1] if history else None
         return latest
 
-    def get_metrics_history(
-        self, replica_url: str, lookback_minutes: int = 60
-    ) -> List[ReplicationMetrics]:
+    def get_metrics_history(self, replica_url: str,
+                           lookback_minutes: int = 60) -> List[ReplicationMetrics]:
         """
         Get metrics history for a replica.
 
@@ -240,16 +239,19 @@ class ReplicationSyncMonitor:
             return []
 
         cutoff = datetime.utcnow() - timedelta(minutes=lookback_minutes)
-        return [m for m in self.metrics_history[replica_url] if m.timestamp >= cutoff]
+        return [
+            m for m in self.metrics_history[replica_url]
+            if m.timestamp >= cutoff
+        ]
 
     def get_replication_stats(self) -> Dict:
         """Get overall replication statistics."""
         stats = {
-            "timestamp": datetime.utcnow().isoformat(),
-            "total_replicas": len(self.metrics_history),
-            "healthy_replicas": 0,
-            "lagging_replicas": 0,
-            "replicas": {},
+            'timestamp': datetime.utcnow().isoformat(),
+            'total_replicas': len(self.metrics_history),
+            'healthy_replicas': 0,
+            'lagging_replicas': 0,
+            'replicas': {}
         }
 
         for replica_url, history in self.metrics_history.items():
@@ -258,20 +260,20 @@ class ReplicationSyncMonitor:
 
             latest = history[-1]
             replica_stats = {
-                "is_healthy": latest.is_healthy,
-                "lag_seconds": latest.lag_seconds,
-                "response_time_ms": latest.response_time_ms,
-                "threads_connected": latest.threads_connected,
-                "slow_queries": latest.slow_queries,
+                'is_healthy': latest.is_healthy,
+                'lag_seconds': latest.lag_seconds,
+                'response_time_ms': latest.response_time_ms,
+                'threads_connected': latest.threads_connected,
+                'slow_queries': latest.slow_queries,
             }
 
-            stats["replicas"][replica_url] = replica_stats
+            stats['replicas'][replica_url] = replica_stats
 
             if latest.is_healthy:
-                stats["healthy_replicas"] += 1
+                stats['healthy_replicas'] += 1
 
             if latest.is_lagging(self.lag_threshold):
-                stats["lagging_replicas"] += 1
+                stats['lagging_replicas'] += 1
 
         return stats
 
@@ -279,8 +281,11 @@ class ReplicationSyncMonitor:
         """Export all metrics as JSON."""
         latest = self.get_latest_metrics()
         data = {
-            "timestamp": datetime.utcnow().isoformat(),
-            "metrics": {url: m.to_dict() if m else None for url, m in latest.items()},
+            'timestamp': datetime.utcnow().isoformat(),
+            'metrics': {
+                url: m.to_dict() if m else None
+                for url, m in latest.items()
+            }
         }
         return json.dumps(data, indent=2)
 
@@ -304,9 +309,7 @@ class ReplicationSyncMonitor:
                 )
 
         # Add replica health
-        lines.append(
-            "# HELP replica_health Replica health status (1=healthy, 0=unhealthy)"
-        )
+        lines.append("# HELP replica_health Replica health status (1=healthy, 0=unhealthy)")
         lines.append("# TYPE replica_health gauge")
 
         for replica_url, history in self.metrics_history.items():
@@ -316,6 +319,8 @@ class ReplicationSyncMonitor:
             latest = history[-1]
             safe_url = replica_url.replace("://", "_").replace("/", "_")
             health_value = 1 if latest.is_healthy else 0
-            lines.append(f'replica_health{{replica="{safe_url}"}} {health_value}')
+            lines.append(
+                f'replica_health{{replica="{safe_url}"}} {health_value}'
+            )
 
         return "\n".join(lines)

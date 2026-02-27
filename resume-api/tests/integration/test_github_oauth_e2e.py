@@ -21,9 +21,13 @@ class TestGitHubOAuthInitiation:
     """Test GitHub OAuth flow initiation."""
 
     @pytest.mark.asyncio
-    async def test_get_authorization_url(self, authenticated_client: AsyncClient):
+    async def test_get_authorization_url(
+        self, authenticated_client: AsyncClient
+    ):
         """Test getting GitHub authorization URL."""
-        response = await authenticated_client.get("/github/authorize")
+        response = await authenticated_client.get(
+            "/github/authorize"
+        )
 
         # May be 200 or 302 depending on implementation
         assert response.status_code in [200, 302, 404]
@@ -38,7 +42,9 @@ class TestGitHubOAuthInitiation:
         self, authenticated_client: AsyncClient
     ):
         """Test that authorization URL includes client ID."""
-        response = await authenticated_client.get("/github/authorize")
+        response = await authenticated_client.get(
+            "/github/authorize"
+        )
 
         if response.status_code == 200:
             data = response.json()
@@ -51,7 +57,9 @@ class TestGitHubOAuthInitiation:
         self, authenticated_client: AsyncClient
     ):
         """Test that authorization URL includes redirect URI."""
-        response = await authenticated_client.get("/github/authorize")
+        response = await authenticated_client.get(
+            "/github/authorize"
+        )
 
         if response.status_code == 200:
             data = response.json()
@@ -85,7 +93,9 @@ class TestGitHubOAuthCallback:
             assert response.status_code in [200, 302, 307]
 
     @pytest.mark.asyncio
-    async def test_callback_without_code(self, authenticated_client: AsyncClient):
+    async def test_callback_without_code(
+        self, authenticated_client: AsyncClient
+    ):
         """Test callback fails without authorization code."""
         response = await authenticated_client.get(
             "/github/callback",
@@ -178,13 +188,17 @@ class TestGitHubUserProfile:
         assert "avatar_url" in mock_github_user
 
     @pytest.mark.asyncio
-    async def test_user_profile_email_extraction(self, mock_github_user):
+    async def test_user_profile_email_extraction(
+        self, mock_github_user
+    ):
         """Test extracting email from GitHub user profile."""
         assert isinstance(mock_github_user["email"], str)
         assert "@" in mock_github_user["email"]
 
     @pytest.mark.asyncio
-    async def test_user_profile_avatar_url(self, mock_github_user):
+    async def test_user_profile_avatar_url(
+        self, mock_github_user
+    ):
         """Test GitHub avatar URL in profile."""
         assert mock_github_user["avatar_url"].startswith("https://")
 
@@ -194,22 +208,24 @@ class TestGitHubConnectionManagement:
 
     @pytest.mark.asyncio
     async def test_get_github_connections(
-        self,
-        authenticated_client: AsyncClient,
-        test_user,
-        test_db_session,
-        github_connection,
+        self, authenticated_client: AsyncClient, test_user, test_db_session, github_connection
     ):
         """Test retrieving user's GitHub connections."""
-        response = await authenticated_client.get("/github/connections")
+        response = await authenticated_client.get(
+            "/github/connections"
+        )
 
         # Endpoint may require auth or specific implementation
         assert response.status_code in [200, 401, 404]
 
     @pytest.mark.asyncio
-    async def test_disconnect_github(self, authenticated_client: AsyncClient):
+    async def test_disconnect_github(
+        self, authenticated_client: AsyncClient
+    ):
         """Test disconnecting GitHub account."""
-        response = await authenticated_client.post("/github/disconnect")
+        response = await authenticated_client.post(
+            "/github/disconnect"
+        )
 
         # May require specific implementation
         assert response.status_code in [200, 201, 401, 404]
@@ -233,9 +249,13 @@ class TestGitHubScopeHandling:
     """Test GitHub OAuth scope handling."""
 
     @pytest.mark.asyncio
-    async def test_request_required_scopes(self, authenticated_client: AsyncClient):
+    async def test_request_required_scopes(
+        self, authenticated_client: AsyncClient
+    ):
         """Test that required OAuth scopes are requested."""
-        response = await authenticated_client.get("/github/authorize")
+        response = await authenticated_client.get(
+            "/github/authorize"
+        )
 
         if response.status_code == 200:
             data = response.json()
@@ -245,7 +265,9 @@ class TestGitHubScopeHandling:
                 assert "scope=" in auth_url or "user%3Aemail" in auth_url
 
     @pytest.mark.asyncio
-    async def test_handle_insufficient_scopes(self, github_connection):
+    async def test_handle_insufficient_scopes(
+        self, github_connection
+    ):
         """Test handling of insufficient OAuth scopes."""
         # Connection should store scope information
         assert github_connection.scope == "user:email public_repo"
@@ -256,20 +278,26 @@ class TestGitHubErrorHandling:
     """Test error handling in GitHub OAuth flow."""
 
     @pytest.mark.asyncio
-    async def test_handle_expired_token(self, authenticated_client: AsyncClient):
+    async def test_handle_expired_token(
+        self, authenticated_client: AsyncClient
+    ):
         """Test handling expired access token."""
         # This would be tested during API calls with expired token
         # Implementation dependent
         assert True
 
     @pytest.mark.asyncio
-    async def test_handle_revoked_access(self, authenticated_client: AsyncClient):
+    async def test_handle_revoked_access(
+        self, authenticated_client: AsyncClient
+    ):
         """Test handling revoked access."""
         # Implementation dependent
         assert True
 
     @pytest.mark.asyncio
-    async def test_handle_rate_limited_github(self, authenticated_client: AsyncClient):
+    async def test_handle_rate_limited_github(
+        self, authenticated_client: AsyncClient
+    ):
         """Test handling GitHub API rate limiting."""
         # Should gracefully handle GitHub rate limits
         assert True
@@ -289,7 +317,9 @@ class TestGitHubIntegrationFlow:
     ):
         """Test complete OAuth flow from start to finish."""
         # 1. Get authorization URL
-        auth_response = await authenticated_client.get("/github/authorize")
+        auth_response = await authenticated_client.get(
+            "/github/authorize"
+        )
 
         if auth_response.status_code not in [200, 302]:
             pytest.skip("OAuth flow not fully implemented")
@@ -312,6 +342,8 @@ class TestGitHubIntegrationFlow:
     ):
         """Test that user can authenticate using GitHub connection."""
         # After OAuth, user should be able to authenticate
-        response = await authenticated_client.get("/health")
+        response = await authenticated_client.get(
+            "/health"
+        )
 
         assert response.status_code == 200

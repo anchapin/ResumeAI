@@ -107,7 +107,7 @@ class TestReplicaPool:
         """Test getting read engine with healthy replicas."""
         pool = ReplicaPool(
             "postgresql://primary:5432/resumeai",
-            [ReplicaConfig(url="postgresql://replica1:5432/resumeai")],
+            [ReplicaConfig(url="postgresql://replica1:5432/resumeai")]
         )
 
         # Mock engines
@@ -123,7 +123,7 @@ class TestReplicaPool:
         """Test fallback to primary when no healthy replicas."""
         pool = ReplicaPool(
             "postgresql://primary:5432/resumeai",
-            [ReplicaConfig(url="postgresql://replica1:5432/resumeai")],
+            [ReplicaConfig(url="postgresql://replica1:5432/resumeai")]
         )
 
         # Mock engines
@@ -139,7 +139,7 @@ class TestReplicaPool:
         """Test write operations always use primary."""
         pool = ReplicaPool(
             "postgresql://primary:5432/resumeai",
-            [ReplicaConfig(url="postgresql://replica1:5432/resumeai")],
+            [ReplicaConfig(url="postgresql://replica1:5432/resumeai")]
         )
 
         pool.primary_engine = Mock()
@@ -157,7 +157,7 @@ class TestReplicaPool:
             [
                 ReplicaConfig(url=replica1_url),
                 ReplicaConfig(url=replica2_url),
-            ],
+            ]
         )
 
         pool.primary_engine = Mock()
@@ -182,12 +182,13 @@ class TestReplicaPool:
         """Test getting replica status."""
         pool = ReplicaPool(
             "postgresql://primary:5432/resumeai",
-            [ReplicaConfig(url="postgresql://replica1:5432/resumeai")],
+            [ReplicaConfig(url="postgresql://replica1:5432/resumeai")]
         )
 
         # Mark replica as healthy with lag
         pool.replica_health["postgresql://replica1:5432/resumeai"].mark_healthy(
-            lag=0.5, response_time=10.0
+            lag=0.5,
+            response_time=10.0
         )
 
         status = pool.get_replica_status()
@@ -274,7 +275,7 @@ class TestDatabaseConnectionManager:
         mock_pool = Mock(spec=ReplicaPool)
         manager = DatabaseConnectionManager(mock_pool)
 
-        assert hasattr(manager, "health_check")
+        assert hasattr(manager, 'health_check')
         assert callable(manager.health_check)
 
 
@@ -298,22 +299,24 @@ class TestReplicationMetrics:
         )
 
         d = metrics.to_dict()
-        assert d["replica_url"] == "postgresql://replica1:5432/resumeai"
-        assert d["lag_seconds"] == 0.5
-        assert d["response_time_ms"] == 10.0
-        assert "timestamp" in d
+        assert d['replica_url'] == "postgresql://replica1:5432/resumeai"
+        assert d['lag_seconds'] == 0.5
+        assert d['response_time_ms'] == 10.0
+        assert 'timestamp' in d
 
     def test_is_lagging(self):
         """Test checking if replica is lagging."""
         # Not lagging
         metrics1 = ReplicationMetrics(
-            replica_url="postgresql://replica1:5432/resumeai", lag_seconds=1.0
+            replica_url="postgresql://replica1:5432/resumeai",
+            lag_seconds=1.0
         )
         assert metrics1.is_lagging(threshold_seconds=5.0) is False
 
         # Lagging
         metrics2 = ReplicationMetrics(
-            replica_url="postgresql://replica1:5432/resumeai", lag_seconds=10.0
+            replica_url="postgresql://replica1:5432/resumeai",
+            lag_seconds=10.0
         )
         assert metrics2.is_lagging(threshold_seconds=5.0) is True
 
@@ -346,12 +349,12 @@ class TestReplicationSyncMonitor:
         metrics1 = ReplicationMetrics(
             replica_url="postgresql://replica1:5432/resumeai",
             is_healthy=True,
-            lag_seconds=0.5,
+            lag_seconds=0.5
         )
         metrics2 = ReplicationMetrics(
             replica_url="postgresql://replica2:5432/resumeai",
             is_healthy=False,
-            lag_seconds=10.0,
+            lag_seconds=10.0
         )
 
         monitor._store_metrics(metrics1)
@@ -359,9 +362,9 @@ class TestReplicationSyncMonitor:
 
         stats = monitor.get_replication_stats()
 
-        assert stats["total_replicas"] == 2
-        assert stats["healthy_replicas"] == 1
-        assert stats["lagging_replicas"] == 1
+        assert stats['total_replicas'] == 2
+        assert stats['healthy_replicas'] == 1
+        assert stats['lagging_replicas'] == 1
 
 
 class TestMigrationManager:
@@ -386,19 +389,20 @@ class TestMigrationManager:
 
         # Mock migration function
         migration_called = False
-
         async def mock_migration():
             nonlocal migration_called
             migration_called = True
 
         success = await manager.apply_migration(
-            mock_migration, description="test_migration", verify_replicas=False
+            mock_migration,
+            description="test_migration",
+            verify_replicas=False
         )
 
         assert success is True
         assert migration_called is True
         assert len(manager.migration_history) == 1
-        assert manager.migration_history[0]["success"] is True
+        assert manager.migration_history[0]['success'] is True
 
     async def test_apply_migration_failure(self):
         """Test failed migration application."""
@@ -412,12 +416,14 @@ class TestMigrationManager:
             raise Exception("Migration failed")
 
         success = await manager.apply_migration(
-            mock_migration, description="test_migration", verify_replicas=False
+            mock_migration,
+            description="test_migration",
+            verify_replicas=False
         )
 
         assert success is False
         assert len(manager.migration_history) == 1
-        assert manager.migration_history[0]["success"] is False
+        assert manager.migration_history[0]['success'] is False
 
     async def test_migration_with_rollback(self):
         """Test migration with rollback on failure."""
@@ -427,7 +433,6 @@ class TestMigrationManager:
         manager = MigrationManager(primary, replicas)
 
         rollback_called = False
-
         async def mock_rollback():
             nonlocal rollback_called
             rollback_called = True
@@ -439,7 +444,7 @@ class TestMigrationManager:
             mock_migration,
             description="test_migration",
             verify_replicas=False,
-            rollback_func=mock_rollback,
+            rollback_func=mock_rollback
         )
 
         assert success is False

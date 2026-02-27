@@ -53,7 +53,9 @@ def verify_api_key(plaintext_key: str, key_hash: str) -> bool:
         return False
 
     try:
-        return bcrypt.checkpw(plaintext_key.encode("utf-8"), key_hash.encode("utf-8"))
+        return bcrypt.checkpw(
+            plaintext_key.encode("utf-8"), key_hash.encode("utf-8")
+        )
     except (ValueError, TypeError):
         # Invalid hash format or type
         return False

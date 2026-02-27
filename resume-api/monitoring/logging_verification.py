@@ -44,9 +44,7 @@ class LogVerifier:
         """Verify JSON output format is configured."""
         try:
             if settings.log_format != "json":
-                print(
-                    f"Warning: log_format is '{settings.log_format}', expected 'json'"
-                )
+                print(f"Warning: log_format is '{settings.log_format}', expected 'json'")
                 return False
 
             config = structlog.get_config()
@@ -70,9 +68,7 @@ class LogVerifier:
             root_logger = logging.getLogger()
 
             if root_logger.level != numeric_level:
-                print(
-                    f"Warning: root logger level is {root_logger.level}, expected {numeric_level}"
-                )
+                print(f"Warning: root logger level is {root_logger.level}, expected {numeric_level}")
 
             return True
         except Exception as e:
@@ -90,10 +86,7 @@ class LogVerifier:
 
             processors = config.get("processors", [])
 
-            has_timestamp = any(
-                "timestamp" in str(p).lower() or "add_timestamp" in str(p)
-                for p in processors
-            )
+            has_timestamp = any("timestamp" in str(p).lower() or "add_timestamp" in str(p) for p in processors)
             has_log_level = any("log_level" in str(p).lower() for p in processors)
 
             if not has_timestamp:
@@ -117,7 +110,7 @@ class LogVerifier:
             "format": None,
             "parsed": None,
             "required_fields": {},
-            "issues": [],
+            "issues": []
         }
 
         if not log_output or not log_output.strip():
@@ -166,7 +159,7 @@ class LoggingComponentSpec:
                 "auth_failure",
                 "token_issued",
                 "token_revoked",
-            ],
+            ]
         },
         "routes.github": {
             "name": "GitHub OAuth Routes",
@@ -177,7 +170,7 @@ class LoggingComponentSpec:
                 "github_oauth_failed",
                 "github_user_fetched",
                 "github_token_revoked",
-            ],
+            ]
         },
         "routes.linkedin": {
             "name": "LinkedIn OAuth Routes",
@@ -187,7 +180,7 @@ class LoggingComponentSpec:
                 "linkedin_oauth_success",
                 "linkedin_oauth_failed",
                 "linkedin_user_fetched",
-            ],
+            ]
         },
         "api.v1": {
             "name": "API Routes (V1)",
@@ -196,7 +189,7 @@ class LoggingComponentSpec:
                 "endpoint_called",
                 "request_validated",
                 "response_generated",
-            ],
+            ]
         },
         "database": {
             "name": "Database",
@@ -207,7 +200,7 @@ class LoggingComponentSpec:
                 "transaction_started",
                 "transaction_committed",
                 "transaction_rolled_back",
-            ],
+            ]
         },
         "config.cache": {
             "name": "Cache Configuration",
@@ -218,7 +211,7 @@ class LoggingComponentSpec:
                 "cache_evicted",
                 "redis_connected",
                 "redis_disconnected",
-            ],
+            ]
         },
         "config.database_replicas": {
             "name": "Database Replicas",
@@ -227,7 +220,7 @@ class LoggingComponentSpec:
                 "replica_health_check",
                 "replica_marked_unhealthy",
                 "replica_restored",
-            ],
+            ]
         },
         "monitoring.health": {
             "name": "Health Checks",
@@ -236,7 +229,7 @@ class LoggingComponentSpec:
                 "health_check_passed",
                 "health_check_failed",
                 "health_check_degraded",
-            ],
+            ]
         },
         "middleware.error_handling": {
             "name": "Error Handling Middleware",
@@ -245,7 +238,7 @@ class LoggingComponentSpec:
                 "request_error",
                 "unhandled_exception",
                 "validation_error",
-            ],
+            ]
         },
         "middleware.monitoring": {
             "name": "Monitoring Middleware",
@@ -254,7 +247,7 @@ class LoggingComponentSpec:
                 "request_started",
                 "request_completed",
                 "request_failed",
-            ],
+            ]
         },
         "lib.utils.retry": {
             "name": "Retry Logic",
@@ -263,7 +256,7 @@ class LoggingComponentSpec:
                 "retry_attempt",
                 "retry_exhausted",
                 "retry_success",
-            ],
+            ]
         },
         "lib.deployment.feature_flags": {
             "name": "Feature Flags",
@@ -272,7 +265,7 @@ class LoggingComponentSpec:
                 "feature_flag_enabled",
                 "feature_flag_disabled",
                 "feature_flag_maintenance",
-            ],
+            ]
         },
     }
 
@@ -287,9 +280,7 @@ class LoggingComponentSpec:
         return cls.COMPONENTS.copy()
 
     @classmethod
-    def validate_component_logging(
-        cls, component_name: str, log_entries: List[str]
-    ) -> Dict[str, Any]:
+    def validate_component_logging(cls, component_name: str, log_entries: List[str]) -> Dict[str, Any]:
         """Validate that a component is logging at the correct level."""
         spec = cls.get_component_spec(component_name)
 

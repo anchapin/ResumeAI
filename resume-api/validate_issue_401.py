@@ -31,7 +31,7 @@ def validate_metrics_module():
     print(f"✅ Found {metrics_path}")
 
     # Read metrics.py
-    with open(metrics_path, "r") as f:
+    with open(metrics_path, 'r') as f:
         content = f.read()
 
     # Check for required metrics
@@ -110,7 +110,7 @@ def validate_dashboards():
 
         # Validate JSON
         try:
-            with open(dashboard_path, "r") as f:
+            with open(dashboard_path, 'r') as f:
                 dashboard_json = json.load(f)
 
             title = dashboard_json.get("title", "Unknown")
@@ -131,9 +131,7 @@ def validate_dashboards():
                 if len(targets) == 0:
                     errors.append(f"⚠️  Panel {i} ({panel_title}) has no targets")
                 else:
-                    print(
-                        f"   ✓ Panel {i}: {panel_title} ({panel_type}) - {len(targets)} targets"
-                    )
+                    print(f"   ✓ Panel {i}: {panel_title} ({panel_type}) - {len(targets)} targets")
 
         except json.JSONDecodeError as e:
             errors.append(f"❌ Dashboard {dashboard} has invalid JSON: {e}")
@@ -161,7 +159,7 @@ def validate_tests():
 
     print(f"✅ Found test file: {test_file}")
 
-    with open(test_file, "r") as f:
+    with open(test_file, 'r') as f:
         content = f.read()
 
     # Check for test classes
@@ -199,7 +197,7 @@ def validate_documentation():
 
     print(f"✅ Found documentation: {doc_file}")
 
-    with open(doc_file, "r") as f:
+    with open(doc_file, 'r') as f:
         content = f.read()
 
     # Check for required sections

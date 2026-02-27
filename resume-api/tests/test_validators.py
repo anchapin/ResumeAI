@@ -59,10 +59,7 @@ class TestLatexEscaping:
 
     def test_escape_backslash(self):
         """Test escaping of backslash."""
-        assert (
-            escape_latex("C:\\folder\\file")
-            == "C:\\textbackslash{}folder\\textbackslash{}file"
-        )
+        assert escape_latex("C:\\folder\\file") == "C:\\textbackslash{}folder\\textbackslash{}file"
 
     def test_escape_multiple_special_chars(self):
         """Test escaping of multiple special characters."""
@@ -250,13 +247,13 @@ class TestHTMLSanitization:
 
     def test_sanitize_onclick(self):
         """Test removal of onclick handlers."""
-        result = sanitize_html("<div onclick=\"alert('xss')\">Click me</div>")
+        result = sanitize_html('<div onclick="alert(\'xss\')">Click me</div>')
         assert "onclick" not in result
         assert "alert" not in result
 
     def test_sanitize_javascript_url(self):
         """Test removal of javascript: URLs."""
-        result = sanitize_html("<a href=\"javascript:alert('xss')\">Link</a>")
+        result = sanitize_html('<a href="javascript:alert(\'xss\')">Link</a>')
         assert "javascript:" not in result
         assert "alert" not in result
 

@@ -20,10 +20,7 @@ class TestResumeTailoringBasic:
 
     @pytest.mark.asyncio
     async def test_tailor_resume_with_job_description(
-        self,
-        authenticated_client: AsyncClient,
-        minimal_resume_data,
-        job_description_tech,
+        self, authenticated_client: AsyncClient, minimal_resume_data, job_description_tech
     ):
         """Test basic resume tailoring with job description."""
         response = await authenticated_client.post(
@@ -50,10 +47,7 @@ class TestResumeTailoringBasic:
 
     @pytest.mark.asyncio
     async def test_tailor_resume_comprehensive_data(
-        self,
-        authenticated_client: AsyncClient,
-        comprehensive_resume_data,
-        job_description_tech,
+        self, authenticated_client: AsyncClient, comprehensive_resume_data, job_description_tech
     ):
         """Test tailoring comprehensive resume data."""
         response = await authenticated_client.post(
@@ -79,10 +73,7 @@ class TestResumeTailoringBasic:
 
     @pytest.mark.asyncio
     async def test_tailor_resume_keywords_extraction(
-        self,
-        authenticated_client: AsyncClient,
-        minimal_resume_data,
-        job_description_tech,
+        self, authenticated_client: AsyncClient, minimal_resume_data, job_description_tech
     ):
         """Test keyword extraction from job description."""
         response = await authenticated_client.post(
@@ -105,10 +96,7 @@ class TestResumeTailoringBasic:
 
     @pytest.mark.asyncio
     async def test_tailor_resume_suggestions(
-        self,
-        authenticated_client: AsyncClient,
-        minimal_resume_data,
-        job_description_tech,
+        self, authenticated_client: AsyncClient, minimal_resume_data, job_description_tech
     ):
         """Test suggestions generation."""
         response = await authenticated_client.post(
@@ -135,10 +123,7 @@ class TestResumeTailoringSpecialContent:
 
     @pytest.mark.asyncio
     async def test_tailor_resume_with_special_characters(
-        self,
-        authenticated_client: AsyncClient,
-        resume_with_special_chars,
-        job_description_tech,
+        self, authenticated_client: AsyncClient, resume_with_special_chars, job_description_tech
     ):
         """Test tailoring resume with special characters."""
         response = await authenticated_client.post(
@@ -155,10 +140,7 @@ class TestResumeTailoringSpecialContent:
 
     @pytest.mark.asyncio
     async def test_tailor_resume_with_long_text(
-        self,
-        authenticated_client: AsyncClient,
-        resume_with_long_text,
-        job_description_tech,
+        self, authenticated_client: AsyncClient, resume_with_long_text, job_description_tech
     ):
         """Test tailoring resume with very long text."""
         response = await authenticated_client.post(
@@ -175,11 +157,7 @@ class TestResumeTailoringSpecialContent:
 
     @pytest.mark.asyncio
     async def test_tailor_resume_for_different_roles(
-        self,
-        authenticated_client: AsyncClient,
-        minimal_resume_data,
-        job_description_tech,
-        job_description_ai,
+        self, authenticated_client: AsyncClient, minimal_resume_data, job_description_tech, job_description_ai
     ):
         """Test tailoring for different job types."""
         tech_response = await authenticated_client.post(
@@ -291,10 +269,7 @@ class TestResumeTailoringAuthentication:
 
     @pytest.mark.asyncio
     async def test_tailor_without_api_key(
-        self,
-        unauthenticated_client: AsyncClient,
-        minimal_resume_data,
-        job_description_tech,
+        self, unauthenticated_client: AsyncClient, minimal_resume_data, job_description_tech
     ):
         """Test tailoring fails without API key."""
         response = await unauthenticated_client.post(
@@ -330,10 +305,7 @@ class TestResumeTailoringRateLimiting:
 
     @pytest.mark.asyncio
     async def test_tailor_rate_limit_header(
-        self,
-        authenticated_client: AsyncClient,
-        minimal_resume_data,
-        job_description_tech,
+        self, authenticated_client: AsyncClient, minimal_resume_data, job_description_tech
     ):
         """Test rate limit headers are present."""
         response = await authenticated_client.post(
@@ -352,10 +324,7 @@ class TestResumeTailoringPerformance:
 
     @pytest.mark.asyncio
     async def test_tailor_response_time(
-        self,
-        authenticated_client: AsyncClient,
-        minimal_resume_data,
-        job_description_tech,
+        self, authenticated_client: AsyncClient, minimal_resume_data, job_description_tech
     ):
         """Test tailoring completes in reasonable time."""
         import time

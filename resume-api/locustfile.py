@@ -30,14 +30,8 @@ class ResumeData:
         "summary": "Experienced software engineer with 5+ years in full-stack development",
         "location": "San Francisco, CA",
         "skills": [
-            "Python",
-            "JavaScript",
-            "React",
-            "FastAPI",
-            "PostgreSQL",
-            "Docker",
-            "AWS",
-            "System Design",
+            "Python", "JavaScript", "React", "FastAPI", "PostgreSQL",
+            "Docker", "AWS", "System Design"
         ],
         "experience": [
             {
@@ -48,8 +42,8 @@ class ResumeData:
                 "achievements": [
                     "Improved API response time by 40%",
                     "Mentored 3 junior engineers",
-                    "Architected real-time data pipeline processing 1M+ events/day",
-                ],
+                    "Architected real-time data pipeline processing 1M+ events/day"
+                ]
             }
         ],
         "education": [
@@ -57,9 +51,9 @@ class ResumeData:
                 "school": "State University",
                 "degree": "Bachelor of Science",
                 "field": "Computer Science",
-                "year": "2019",
+                "year": "2019"
             }
-        ],
+        ]
     }
 
     SAMPLE_JOB_POSTING = """Senior Software Engineer - Full Stack
@@ -68,7 +62,7 @@ Requirements: 5+ years experience, Python, JavaScript, React, AWS, microservices
     SAMPLE_VARIANTS_CONFIG = {
         "formats": ["ats-optimized", "creative", "minimalist"],
         "lengths": ["full", "condensed"],
-        "styles": ["modern", "traditional"],
+        "styles": ["modern", "traditional"]
     }
 
 
@@ -85,13 +79,13 @@ class ResumeAITasks(TaskSet):
         """Test PDF rendering with sample resume."""
         payload = {
             "resume": ResumeData.SAMPLE_RESUME,
-            "template": random.choice(["modern", "classic", "minimal"]),
+            "template": random.choice(["modern", "classic", "minimal"])
         }
         self.client.post(
             "/v1/render/pdf",
             json=payload,
             headers={"X-API-KEY": "test-key"},
-            name="/v1/render/pdf",
+            name="/v1/render/pdf"
         )
 
     @task(2)
@@ -100,14 +94,14 @@ class ResumeAITasks(TaskSet):
         payload = {
             "resume": ResumeData.SAMPLE_RESUME,
             "job_posting": ResumeData.SAMPLE_JOB_POSTING,
-            "provider": random.choice(["openai", "claude", "gemini"]),
+            "provider": random.choice(["openai", "claude", "gemini"])
         }
         self.client.post(
             "/v1/tailor",
             json=payload,
             headers={"X-API-KEY": "test-key"},
             name="/v1/tailor",
-            timeout=30,
+            timeout=30
         )
 
     @task(2)
@@ -115,14 +109,14 @@ class ResumeAITasks(TaskSet):
         """Test variant generation."""
         payload = {
             "resume": ResumeData.SAMPLE_RESUME,
-            "config": ResumeData.SAMPLE_VARIANTS_CONFIG,
+            "config": ResumeData.SAMPLE_VARIANTS_CONFIG
         }
         self.client.post(
             "/v1/variants",
             json=payload,
             headers={"X-API-KEY": "test-key"},
             name="/v1/variants",
-            timeout=30,
+            timeout=30
         )
 
 
@@ -141,14 +135,14 @@ class HeavyLoadUser(HttpUser):
         def render_pdf(self):
             payload = {
                 "resume": ResumeData.SAMPLE_RESUME,
-                "template": random.choice(["modern", "classic", "minimal"]),
+                "template": random.choice(["modern", "classic", "minimal"])
             }
             self.client.post(
                 "/v1/render/pdf",
                 json=payload,
                 headers={"X-API-KEY": "test-key"},
                 timeout=30,
-                name="/v1/render/pdf",
+                name="/v1/render/pdf"
             )
 
     tasks = [HeavyTasks]

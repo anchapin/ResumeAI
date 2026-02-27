@@ -74,16 +74,14 @@ class IndexAnalyzer:
                 if table_name not in indexes:
                     indexes[table_name] = []
 
-                indexes[table_name].append(
-                    {
-                        "index_name": index_name,
-                        "columns": [column_name],
-                        "is_unique": is_unique,
-                        "is_primary": is_primary,
-                        "type": "UNIQUE" if is_unique else "BTREE",
-                        "usage_stats": None,
-                    }
-                )
+                indexes[table_name].append({
+                    "index_name": index_name,
+                    "columns": [column_name],
+                    "is_unique": is_unique,
+                    "is_primary": is_primary,
+                    "type": "UNIQUE" if is_unique else "BTREE",
+                    "usage_stats": None
+                })
 
             return indexes
         except Exception as e:
@@ -130,16 +128,14 @@ class IndexAnalyzer:
                 if table_name not in indexes:
                     indexes[table_name] = []
 
-                indexes[table_name].append(
-                    {
-                        "index_name": index_name,
-                        "columns": columns,
-                        "is_unique": is_unique,
-                        "is_primary": False,
-                        "type": "UNIQUE" if is_unique else "BTREE",
-                        "usage_stats": None,
-                    }
-                )
+                indexes[table_name].append({
+                    "index_name": index_name,
+                    "columns": columns,
+                    "is_unique": is_unique,
+                    "is_primary": False,
+                    "type": "UNIQUE" if is_unique else "BTREE",
+                    "usage_stats": None
+                })
 
             return indexes
         except Exception as e:
@@ -176,7 +172,7 @@ class IndexAnalyzer:
                         "scans": scans or 0,
                         "tuples_read": tup_read or 0,
                         "tuples_fetched": tup_fetch or 0,
-                        "efficiency": (tup_fetch / tup_read) if tup_read > 0 else 0,
+                        "efficiency": (tup_fetch / tup_read) if tup_read > 0 else 0
                     }
 
                 return stats
@@ -191,45 +187,45 @@ class IndexAnalyzer:
                 "table": "resumes",
                 "columns": ["owner_id", "created_at"],
                 "reason": "Fast lookup of user resumes by creation date",
-                "estimated_improvement": "30-40%",
+                "estimated_improvement": "30-40%"
             },
             {
                 "table": "resumes",
                 "columns": ["owner_id", "updated_at"],
                 "reason": "Fast lookup of recently modified resumes",
-                "estimated_improvement": "30-40%",
+                "estimated_improvement": "30-40%"
             },
             {
                 "table": "resume_versions",
                 "columns": ["resume_id", "created_at"],
                 "reason": "Fast lookup of resume version history",
-                "estimated_improvement": "25-35%",
+                "estimated_improvement": "25-35%"
             },
             {
                 "table": "api_keys",
                 "columns": ["key_hash"],
                 "reason": "Fast API key validation lookups",
-                "estimated_improvement": "40-50%",
+                "estimated_improvement": "40-50%"
             },
             {
                 "table": "usage_analytics",
                 "columns": ["user_id", "timestamp"],
                 "reason": "Fast user analytics queries",
-                "estimated_improvement": "30-40%",
+                "estimated_improvement": "30-40%"
             },
             {
                 "table": "subscriptions",
                 "columns": ["user_id", "status"],
                 "reason": "Fast user subscription lookup",
-                "estimated_improvement": "30-40%",
+                "estimated_improvement": "30-40%"
             },
         ]
 
     async def print_index_report(self):
         """Print a comprehensive index analysis report."""
-        print("\n" + "=" * 80)
+        print("\n" + "="*80)
         print("DATABASE INDEX ANALYSIS REPORT")
-        print("=" * 80 + "\n")
+        print("="*80 + "\n")
 
         # Get all indexes
         all_indexes = await self.get_all_indexes()
@@ -252,65 +248,57 @@ class IndexAnalyzer:
         # Get usage stats if available
         usage_stats = await self.get_index_usage_stats()
         if usage_stats:
-            print("\n" + "=" * 80)
+            print("\n" + "="*80)
             print("INDEX USAGE STATISTICS")
-            print("=" * 80 + "\n")
+            print("="*80 + "\n")
 
             stats_table = []
             for index_name, stats in sorted(
-                usage_stats.items(), key=lambda x: x[1]["scans"], reverse=True
+                usage_stats.items(),
+                key=lambda x: x[1]["scans"],
+                reverse=True
             ):
-                stats_table.append(
-                    [
-                        index_name,
-                        stats["table"],
-                        stats["scans"],
-                        stats["tuples_read"],
-                        stats["tuples_fetched"],
-                        f"{stats['efficiency']:.2%}",
-                    ]
-                )
+                stats_table.append([
+                    index_name,
+                    stats["table"],
+                    stats["scans"],
+                    stats["tuples_read"],
+                    stats["tuples_fetched"],
+                    f"{stats['efficiency']:.2%}"
+                ])
 
-            print(
-                tabulate(
-                    stats_table,
-                    headers=[
-                        "Index Name",
-                        "Table",
-                        "Scans",
-                        "Tuples Read",
-                        "Tuples Fetched",
-                        "Efficiency",
-                    ],
-                    tablefmt="grid",
-                )
-            )
+            print(tabulate(
+                stats_table,
+                headers=["Index Name", "Table", "Scans", "Tuples Read", "Tuples Fetched", "Efficiency"],
+                tablefmt="grid"
+            ))
 
         # Recommendations
-        print("\n" + "=" * 80)
+        print("\n" + "="*80)
         print("RECOMMENDED INDEXES")
-        print("=" * 80 + "\n")
+        print("="*80 + "\n")
 
         recommendations = self.get_recommended_indexes()
         rec_table = []
         for rec in recommendations:
             cols = ", ".join(rec["columns"])
-            rec_table.append(
-                [rec["table"], cols, rec["reason"], rec["estimated_improvement"]]
-            )
+            rec_table.append([
+                rec["table"],
+                cols,
+                rec["reason"],
+                rec["estimated_improvement"]
+            ])
 
-        print(
-            tabulate(
-                rec_table,
-                headers=["Table", "Columns", "Reason", "Est. Improvement"],
-                tablefmt="grid",
-            )
-        )
+        print(tabulate(
+            rec_table,
+            headers=["Table", "Columns", "Reason", "Est. Improvement"],
+            tablefmt="grid"
+        ))
 
         # Performance Impact
-        print("\n" + "=" * 80)
+        print("\n" + "="*80)
         print("EXPECTED PERFORMANCE IMPACT")
-        print("=" * 80)
+        print("="*80)
         print("""
 Estimated Query Performance Improvements (after applying all indexes):
 - User resume queries: 30-40% faster
@@ -327,9 +315,9 @@ Storage Impact:
 - Benefits outweigh storage cost due to query improvement
         """)
 
-        print("\n" + "=" * 80)
+        print("\n" + "="*80)
         print("IMPLEMENTATION")
-        print("=" * 80)
+        print("="*80)
         print("""
 To apply recommended indexes:
 1. Review the migration script: resume-api/migrations/001_add_performance_indexes.py

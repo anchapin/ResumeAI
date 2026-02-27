@@ -273,9 +273,9 @@ class TestSensitiveVariables:
         }
 
         for var in expected_sensitive:
-            assert (
-                var in SecretValidator.SENSITIVE_VARS
-            ), f"{var} should be in SENSITIVE_VARS"
+            assert var in SecretValidator.SENSITIVE_VARS, (
+                f"{var} should be in SENSITIVE_VARS"
+            )
 
     def test_no_false_positives_in_sensitive_vars(self):
         """Test that non-sensitive vars are not in sensitive list."""
@@ -288,6 +288,6 @@ class TestSensitiveVariables:
         }
 
         for var in non_sensitive:
-            assert (
-                var not in SecretValidator.SENSITIVE_VARS
-            ), f"{var} should NOT be in SENSITIVE_VARS"
+            assert var not in SecretValidator.SENSITIVE_VARS, (
+                f"{var} should NOT be in SENSITIVE_VARS"
+            )

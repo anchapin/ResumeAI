@@ -8,7 +8,6 @@ Tests the core functionality without requiring pytest.
 from datetime import datetime, timezone, timedelta
 from monitoring.oauth_monitor import OAuthEvent, OAuthMonitor
 
-
 def test_basic_functionality():
     """Test basic OAuth monitoring functionality."""
     print("=" * 60)
@@ -35,15 +34,13 @@ def test_basic_functionality():
     # Test 2: Metrics snapshot
     print("\n[TEST 2] Metrics Snapshot")
     for i in range(9):
-        monitor.record_event(
-            OAuthEvent(
-                timestamp=datetime.now(timezone.utc),
-                provider="github",
-                event_type="connect",
-                status="success",
-                duration_ms=100.0 + i * 10,
-            )
-        )
+        monitor.record_event(OAuthEvent(
+            timestamp=datetime.now(timezone.utc),
+            provider="github",
+            event_type="connect",
+            status="success",
+            duration_ms=100.0 + i * 10,
+        ))
 
     snapshot = monitor.get_metrics_snapshot("github", 5)
     print(f"✓ Total events: {snapshot.total_events}")
@@ -56,15 +53,13 @@ def test_basic_functionality():
     # Test 3: Error tracking
     print("\n[TEST 3] Error Tracking")
     for i in range(5):
-        monitor.record_event(
-            OAuthEvent(
-                timestamp=datetime.now(timezone.utc),
-                provider="github",
-                event_type="callback",
-                status="failure",
-                error_code="invalid_state" if i < 3 else "expired_state",
-            )
-        )
+        monitor.record_event(OAuthEvent(
+            timestamp=datetime.now(timezone.utc),
+            provider="github",
+            event_type="callback",
+            status="failure",
+            error_code="invalid_state" if i < 3 else "expired_state",
+        ))
 
     snapshot = monitor.get_metrics_snapshot("github", 5)
     print(f"✓ Total errors: {snapshot.failure_events}")
@@ -79,15 +74,13 @@ def test_basic_functionality():
 
     # Record 6 failed attempts from same IP
     for _ in range(6):
-        monitor.record_event(
-            OAuthEvent(
-                timestamp=datetime.now(timezone.utc),
-                provider="github",
-                event_type="connect",
-                status="failure",
-                ip_address="192.168.1.100",
-            )
-        )
+        monitor.record_event(OAuthEvent(
+            timestamp=datetime.now(timezone.utc),
+            provider="github",
+            event_type="connect",
+            status="failure",
+            ip_address="192.168.1.100",
+        ))
 
     suspicious = monitor.get_suspicious_ips(5)
     print(f"✓ Detected suspicious IPs: {len(suspicious)}")
@@ -101,25 +94,21 @@ def test_basic_functionality():
 
     # Create high failure rate scenario
     for _ in range(3):
-        monitor.record_event(
-            OAuthEvent(
-                timestamp=datetime.now(timezone.utc),
-                provider="github",
-                event_type="connect",
-                status="success",
-            )
-        )
+        monitor.record_event(OAuthEvent(
+            timestamp=datetime.now(timezone.utc),
+            provider="github",
+            event_type="connect",
+            status="success",
+        ))
 
     for _ in range(7):
-        monitor.record_event(
-            OAuthEvent(
-                timestamp=datetime.now(timezone.utc),
-                provider="github",
-                event_type="connect",
-                status="failure",
-                error_code="auth_failed",
-            )
-        )
+        monitor.record_event(OAuthEvent(
+            timestamp=datetime.now(timezone.utc),
+            provider="github",
+            event_type="connect",
+            status="failure",
+            error_code="auth_failed",
+        ))
 
     anomalies = monitor.detect_anomalies("github")
     print(f"✓ Detected anomalies: {len(anomalies)}")
@@ -141,25 +130,21 @@ def test_basic_functionality():
     now = datetime.now(timezone.utc)
 
     # Add recent event
-    monitor.record_event(
-        OAuthEvent(
-            timestamp=now,
-            provider="github",
-            event_type="connect",
-            status="success",
-        )
-    )
+    monitor.record_event(OAuthEvent(
+        timestamp=now,
+        provider="github",
+        event_type="connect",
+        status="success",
+    ))
 
     # Add old event
     old_time = now - timedelta(hours=25)
-    monitor.events.append(
-        OAuthEvent(
-            timestamp=old_time,
-            provider="github",
-            event_type="connect",
-            status="success",
-        )
-    )
+    monitor.events.append(OAuthEvent(
+        timestamp=old_time,
+        provider="github",
+        event_type="connect",
+        status="success",
+    ))
 
     print(f"✓ Events before cleanup: {len(monitor.events)}")
     removed = monitor.cleanup_old_events(max_age_hours=24)
@@ -172,15 +157,13 @@ def test_basic_functionality():
     monitor.reset()
 
     for _ in range(5):
-        monitor.record_event(
-            OAuthEvent(
-                timestamp=datetime.now(timezone.utc),
-                provider="github",
-                event_type="connect",
-                status="success",
-                duration_ms=100,
-            )
-        )
+        monitor.record_event(OAuthEvent(
+            timestamp=datetime.now(timezone.utc),
+            provider="github",
+            event_type="connect",
+            status="success",
+            duration_ms=100,
+        ))
 
     snapshot = monitor.get_metrics_snapshot("github", 5)
     metrics_dict = {
@@ -192,15 +175,12 @@ def test_basic_functionality():
         "success_rate": snapshot.success_rate,
         "avg_response_time_ms": snapshot.avg_response_time_ms,
     }
-    print(
-        f"✓ Snapshot data exportable: {all(v is not None for v in metrics_dict.values())}"
-    )
+    print(f"✓ Snapshot data exportable: {all(v is not None for v in metrics_dict.values())}")
     print(f"  {metrics_dict}")
 
     print("\n" + "=" * 60)
     print("ALL TESTS PASSED ✓")
     print("=" * 60)
-
 
 if __name__ == "__main__":
     try:
@@ -211,6 +191,5 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"\n✗ ERROR: {e}")
         import traceback
-
         traceback.print_exc()
         exit(1)

@@ -33,7 +33,7 @@ class MigrationManager:
         replica_engines: dict,
         check_interval: float = 1.0,
         timeout_seconds: float = 300.0,
-        lag_threshold: float = 1.0,
+        lag_threshold: float = 1.0
     ):
         """
         Initialize migration manager.
@@ -57,7 +57,7 @@ class MigrationManager:
         migration_func: Callable,
         description: str = "",
         verify_replicas: bool = True,
-        rollback_func: Optional[Callable] = None,
+        rollback_func: Optional[Callable] = None
     ) -> bool:
         """
         Apply a migration to primary and optionally wait for replicas.
@@ -83,13 +83,12 @@ class MigrationManager:
             # Optionally wait for replicas
             if verify_replicas and self.replica_engines:
                 success = await self.wait_for_replica_catchup(
-                    migration_id, timeout=self.timeout_seconds
+                    migration_id,
+                    timeout=self.timeout_seconds
                 )
 
                 if not success:
-                    logger.error(
-                        f"Migration {description} not replicated to all replicas"
-                    )
+                    logger.error(f"Migration {description} not replicated to all replicas")
 
                     # Attempt rollback if provided
                     if rollback_func:
@@ -103,14 +102,12 @@ class MigrationManager:
                     return False
 
             # Record migration
-            self.migration_history.append(
-                {
-                    "id": migration_id,
-                    "description": description,
-                    "timestamp": start_time.isoformat(),
-                    "success": True,
-                }
-            )
+            self.migration_history.append({
+                'id': migration_id,
+                'description': description,
+                'timestamp': start_time.isoformat(),
+                'success': True,
+            })
 
             return True
 
@@ -126,20 +123,20 @@ class MigrationManager:
                 except Exception as rb_error:
                     logger.error(f"Rollback failed: {rb_error}")
 
-            self.migration_history.append(
-                {
-                    "id": migration_id,
-                    "description": description,
-                    "timestamp": start_time.isoformat(),
-                    "success": False,
-                    "error": str(e),
-                }
-            )
+            self.migration_history.append({
+                'id': migration_id,
+                'description': description,
+                'timestamp': start_time.isoformat(),
+                'success': False,
+                'error': str(e),
+            })
 
             return False
 
     async def wait_for_replica_catchup(
-        self, migration_id: str, timeout: float = 300.0
+        self,
+        migration_id: str,
+        timeout: float = 300.0
     ) -> bool:
         """
         Wait for all replicas to catch up with migration.
@@ -199,8 +196,8 @@ class MigrationManager:
                 row = result.fetchone()
 
                 if row:
-                    row_dict = row._mapping if hasattr(row, "_mapping") else {}
-                    lag = row_dict.get("Seconds_Behind_Master")
+                    row_dict = row._mapping if hasattr(row, '_mapping') else {}
+                    lag = row_dict.get('Seconds_Behind_Master')
                     if lag is not None:
                         return float(lag)
 
@@ -216,7 +213,10 @@ class MigrationManager:
         Returns:
             Dict with replication status for each replica
         """
-        state = {"timestamp": datetime.utcnow().isoformat(), "replicas": {}}
+        state = {
+            'timestamp': datetime.utcnow().isoformat(),
+            'replicas': {}
+        }
 
         for replica_url, engine in self.replica_engines.items():
             try:
@@ -226,23 +226,24 @@ class MigrationManager:
                     row = result.fetchone()
 
                     if row:
-                        row_dict = row._mapping if hasattr(row, "_mapping") else {}
-                        state["replicas"][replica_url] = {
-                            "is_running": True,
-                            "lag_seconds": row_dict.get("Seconds_Behind_Master"),
-                            "master_log_file": row_dict.get("Master_Log_File"),
-                            "relay_log_file": row_dict.get("Relay_Master_Log_File"),
-                            "seconds_behind_master": row_dict.get(
-                                "Seconds_Behind_Master"
-                            ),
-                            "io_running": row_dict.get("Slave_IO_Running"),
-                            "sql_running": row_dict.get("Slave_SQL_Running"),
+                        row_dict = row._mapping if hasattr(row, '_mapping') else {}
+                        state['replicas'][replica_url] = {
+                            'is_running': True,
+                            'lag_seconds': row_dict.get('Seconds_Behind_Master'),
+                            'master_log_file': row_dict.get('Master_Log_File'),
+                            'relay_log_file': row_dict.get('Relay_Master_Log_File'),
+                            'seconds_behind_master': row_dict.get('Seconds_Behind_Master'),
+                            'io_running': row_dict.get('Slave_IO_Running'),
+                            'sql_running': row_dict.get('Slave_SQL_Running'),
                         }
                     else:
-                        state["replicas"][replica_url] = {"is_running": False}
+                        state['replicas'][replica_url] = {'is_running': False}
 
             except Exception as e:
-                state["replicas"][replica_url] = {"error": str(e), "is_running": False}
+                state['replicas'][replica_url] = {
+                    'error': str(e),
+                    'is_running': False
+                }
 
         return state
 
@@ -284,7 +285,7 @@ class BatchMigrationManager:
         self,
         primary_engine: AsyncEngine,
         batch_size: int = 1000,
-        delay_between_batches: float = 0.1,
+        delay_between_batches: float = 0.1
     ):
         """
         Initialize batch migration manager.
@@ -299,7 +300,10 @@ class BatchMigrationManager:
         self.delay_between_batches = delay_between_batches
 
     async def migrate_table_in_batches(
-        self, table_name: str, migration_func: Callable, id_column: str = "id"
+        self,
+        table_name: str,
+        migration_func: Callable,
+        id_column: str = "id"
     ) -> int:
         """
         Apply migration to table in batches.
@@ -324,7 +328,7 @@ class BatchMigrationManager:
                         ORDER BY {id_column}
                         LIMIT :limit OFFSET :offset
                     """),
-                    {"limit": self.batch_size, "offset": offset},
+                    {'limit': self.batch_size, 'offset': offset}
                 )
                 rows = result.fetchall()
 

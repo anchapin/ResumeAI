@@ -289,7 +289,7 @@ async def rate_limit_exceeded_handler(
         message="Rate limit exceeded. Please retry after a short delay.",
         path=str(request.url.path),
         method=request.method,
-        details={"retry_after_seconds": 60},
+        details={"retry_after_seconds": 60}
     )
 
     response = JSONResponse(

@@ -59,7 +59,7 @@ def _get_queue():
     if _job_queue is None:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Job queue is not initialized",
+            detail="Job queue is not initialized"
         )
     return _job_queue
 
@@ -69,7 +69,7 @@ def _get_worker():
     if _pdf_worker is None:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="PDF worker is not initialized",
+            detail="PDF worker is not initialized"
         )
     return _pdf_worker
 
@@ -84,8 +84,8 @@ async def _render_pdf_handler(job: Job) -> bytes:
 
         # Render PDF
         pdf_bytes = generator.render_pdf(
-            resume_data=job.payload.get("resume_data", {}),
-            variant=job.metadata.get("variant", "default"),
+            resume_data=job.payload.get('resume_data', {}),
+            variant=job.metadata.get('variant', 'default')
         )
 
         return pdf_bytes
@@ -167,11 +167,11 @@ async def submit_pdf_render_job(
         job = Job(
             state=JobState.PENDING,
             priority=priority_map.get(body.priority, JobPriority.NORMAL),
-            payload={"resume_data": body.resume_data},
+            payload={'resume_data': body.resume_data},
             metadata={
-                "variant": body.variant,
-                "api_key": auth.api_key_id,
-                "user_id": auth.user_id,
+                'variant': body.variant,
+                'api_key': auth.api_key_id,
+                'user_id': auth.user_id,
             },
             max_retries=3,
         )
@@ -182,26 +182,29 @@ async def submit_pdf_render_job(
         logger.info(
             f"PDF render job {job_id} submitted by {auth.api_key_id}",
             extra={
-                "job_id": job_id,
-                "api_key": auth.api_key_id,
-                "priority": body.priority.value,
-            },
+                'job_id': job_id,
+                'api_key': auth.api_key_id,
+                'priority': body.priority.value,
+            }
         )
 
         return SubmitPDFRenderJobResponse(
             job_id=job_id,
             status=JobStatus.PENDING,
-            message="PDF render job submitted successfully",
+            message="PDF render job submitted successfully"
         )
 
     except ValueError as e:
         logger.error(f"Invalid request: {e}")
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
     except Exception as e:
         logger.error(f"Failed to submit PDF render job: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to submit PDF render job",
+            detail="Failed to submit PDF render job"
         )
 
 
@@ -260,7 +263,8 @@ async def get_job_status(
 
         if not job:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail=f"Job {job_id} not found"
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Job {job_id} not found"
             )
 
         # Verify ownership (optional - comment out if not needed)
@@ -298,7 +302,7 @@ async def get_job_status(
         logger.error(f"Failed to get job status: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to get job status",
+            detail="Failed to get job status"
         )
 
 
@@ -344,52 +348,53 @@ async def download_pdf(
 
         if not job:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail=f"Job {job_id} not found"
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Job {job_id} not found"
             )
 
         # Check job state
         if job.state == JobState.PENDING:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail="Job is still pending. Check status and try again later.",
+                detail="Job is still pending. Check status and try again later."
             )
         elif job.state == JobState.PROCESSING:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail="Job is still processing. Check status and try again later.",
+                detail="Job is still processing. Check status and try again later."
             )
         elif job.state == JobState.FAILED:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail=f"Job failed: {job.error}",
+                detail=f"Job failed: {job.error}"
             )
         elif job.state == JobState.CANCELLED:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail="Job was cancelled",
+                detail="Job was cancelled"
             )
 
         # Get PDF path from result
-        if not job.result or "pdf_path" not in job.result:
+        if not job.result or 'pdf_path' not in job.result:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail="Job completed but PDF path not found",
+                detail="Job completed but PDF path not found"
             )
 
-        pdf_path = job.result["pdf_path"]
+        pdf_path = job.result['pdf_path']
         path_obj = Path(pdf_path)
 
         if not path_obj.exists():
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail="PDF file not found on disk",
+                detail="PDF file not found on disk"
             )
 
         # Return PDF file
         return FileResponse(
             path=str(path_obj),
             filename=f"resume_{job_id[:8]}.pdf",
-            media_type="application/pdf",
+            media_type="application/pdf"
         )
 
     except HTTPException:
@@ -398,7 +403,7 @@ async def download_pdf(
         logger.error(f"Failed to download PDF: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to download PDF",
+            detail="Failed to download PDF"
         )
 
 
@@ -445,12 +450,12 @@ async def cancel_job(
             if not job:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
-                    detail=f"Job {job_id} not found",
+                    detail=f"Job {job_id} not found"
                 )
             else:
                 raise HTTPException(
                     status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                    detail=f"Cannot cancel job in state: {job.state.value}",
+                    detail=f"Cannot cancel job in state: {job.state.value}"
                 )
 
         logger.info(f"Job {job_id} cancelled by {auth.api_key_id}")
@@ -462,7 +467,7 @@ async def cancel_job(
         logger.error(f"Failed to cancel job: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to cancel job",
+            detail="Failed to cancel job"
         )
 
 
@@ -523,5 +528,5 @@ async def get_queue_stats(
         logger.error(f"Failed to get queue stats: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to get queue stats",
+            detail="Failed to get queue stats"
         )

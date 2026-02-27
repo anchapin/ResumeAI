@@ -19,28 +19,18 @@ from typing import List, Dict, Any
 
 # Import models
 import sys
-
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
 from database import (
-    Base,
-    Resume,
-    ResumeVersion,
-    APIKey,
-    User,
-    UsageAnalytics,
-    Subscription,
-    Invoice,
-    GitHubConnection,
-    GitHubOAuthState,
-    create_db_and_tables,
+    Base, Resume, ResumeVersion, APIKey, User,
+    UsageAnalytics, Subscription, Invoice,
+    GitHubConnection, GitHubOAuthState,
+    create_db_and_tables
 )
 
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///./test_indexes.db")
 TEST_ENGINE = create_async_engine(DATABASE_URL, echo=False)
-TestAsyncSession = sessionmaker(
-    TEST_ENGINE, class_=AsyncSession, expire_on_commit=False
-)
+TestAsyncSession = sessionmaker(TEST_ENGINE, class_=AsyncSession, expire_on_commit=False)
 
 
 @pytest.fixture(scope="function")
@@ -66,78 +56,60 @@ class TestIndexExistence:
         async with test_db.begin() as conn:
             if "sqlite" in DATABASE_URL:
                 # SQLite
-                result = await conn.execute(
-                    text(
-                        "SELECT name FROM sqlite_master WHERE type='index' AND tbl_name='resumes'"
-                    )
-                )
+                result = await conn.execute(text(
+                    "SELECT name FROM sqlite_master WHERE type='index' AND tbl_name='resumes'"
+                ))
                 index_names = [row[0] for row in result.fetchall()]
 
                 # Check for key indexes
-                assert any(
-                    "user" in idx.lower() and "created" in idx.lower()
-                    for idx in index_names
-                ), "Missing index on resumes(owner_id, created_at)"
-                assert any(
-                    "updated" in idx.lower() for idx in index_names
-                ), "Missing index on resumes(updated_at)"
+                assert any("user" in idx.lower() and "created" in idx.lower() for idx in index_names), \
+                    "Missing index on resumes(owner_id, created_at)"
+                assert any("updated" in idx.lower() for idx in index_names), \
+                    "Missing index on resumes(updated_at)"
             else:
                 # PostgreSQL
-                result = await conn.execute(
-                    text("SELECT indexname FROM pg_indexes WHERE tablename='resumes'")
-                )
+                result = await conn.execute(text(
+                    "SELECT indexname FROM pg_indexes WHERE tablename='resumes'"
+                ))
                 index_names = [row[0] for row in result.fetchall()]
-                assert (
-                    len(index_names) >= 4
-                ), f"Expected at least 4 indexes on resumes, found {len(index_names)}"
+                assert len(index_names) >= 4, f"Expected at least 4 indexes on resumes, found {len(index_names)}"
 
     @pytest.mark.asyncio
     async def test_resume_version_indexes_exist(self, test_db):
         """Test that resume_versions table indexes are created."""
         async with test_db.begin() as conn:
             if "sqlite" in DATABASE_URL:
-                result = await conn.execute(
-                    text(
-                        "SELECT name FROM sqlite_master WHERE type='index' AND tbl_name='resume_versions'"
-                    )
-                )
+                result = await conn.execute(text(
+                    "SELECT name FROM sqlite_master WHERE type='index' AND tbl_name='resume_versions'"
+                ))
                 index_names = [row[0] for row in result.fetchall()]
 
-                assert any(
-                    "resume" in idx.lower() and "created" in idx.lower()
-                    for idx in index_names
-                ), "Missing composite index on resume_versions(resume_id, created_at)"
+                assert any("resume" in idx.lower() and "created" in idx.lower() for idx in index_names), \
+                    "Missing composite index on resume_versions(resume_id, created_at)"
 
     @pytest.mark.asyncio
     async def test_api_key_indexes_exist(self, test_db):
         """Test that api_keys table indexes are created."""
         async with test_db.begin() as conn:
             if "sqlite" in DATABASE_URL:
-                result = await conn.execute(
-                    text(
-                        "SELECT name FROM sqlite_master WHERE type='index' AND tbl_name='api_keys'"
-                    )
-                )
+                result = await conn.execute(text(
+                    "SELECT name FROM sqlite_master WHERE type='index' AND tbl_name='api_keys'"
+                ))
                 index_names = [row[0] for row in result.fetchall()]
 
-                assert any(
-                    "hash" in idx.lower() for idx in index_names
-                ), "Missing index on api_keys(key_hash)"
-                assert any(
-                    "user" in idx.lower() and "active" in idx.lower()
-                    for idx in index_names
-                ), "Missing index on api_keys(user_id, is_active)"
+                assert any("hash" in idx.lower() for idx in index_names), \
+                    "Missing index on api_keys(key_hash)"
+                assert any("user" in idx.lower() and "active" in idx.lower() for idx in index_names), \
+                    "Missing index on api_keys(user_id, is_active)"
 
     @pytest.mark.asyncio
     async def test_user_indexes_exist(self, test_db):
         """Test that users table indexes are created."""
         async with test_db.begin() as conn:
             if "sqlite" in DATABASE_URL:
-                result = await conn.execute(
-                    text(
-                        "SELECT name FROM sqlite_master WHERE type='index' AND tbl_name='users'"
-                    )
-                )
+                result = await conn.execute(text(
+                    "SELECT name FROM sqlite_master WHERE type='index' AND tbl_name='users'"
+                ))
                 index_names = [row[0] for row in result.fetchall()]
 
                 # SQLite creates some default indexes
@@ -152,34 +124,31 @@ class TestIndexColumns:
         """Test resume user_created composite index columns."""
         async with test_db.begin() as conn:
             if "sqlite" in DATABASE_URL:
-                result = await conn.execute(
-                    text(
-                        "SELECT sql FROM sqlite_master WHERE type='index' AND name LIKE '%user%created%'"
-                    )
-                )
+                result = await conn.execute(text(
+                    "SELECT sql FROM sqlite_master WHERE type='index' AND name LIKE '%user%created%'"
+                ))
                 sql = result.scalar()
 
                 if sql:
                     # Index should contain both owner_id and created_at
-                    assert (
-                        "owner_id" in sql or "user_id" in sql.lower()
-                    ), "Index missing owner_id column"
-                    assert "created_at" in sql, "Index missing created_at column"
+                    assert "owner_id" in sql or "user_id" in sql.lower(), \
+                        "Index missing owner_id column"
+                    assert "created_at" in sql, \
+                        "Index missing created_at column"
 
     @pytest.mark.asyncio
     async def test_api_key_hash_index_columns(self, test_db):
         """Test api_key_hash index contains key_hash column."""
         async with test_db.begin() as conn:
             if "sqlite" in DATABASE_URL:
-                result = await conn.execute(
-                    text(
-                        "SELECT sql FROM sqlite_master WHERE type='index' AND name LIKE '%key_hash%'"
-                    )
-                )
+                result = await conn.execute(text(
+                    "SELECT sql FROM sqlite_master WHERE type='index' AND name LIKE '%key_hash%'"
+                ))
                 sql = result.scalar()
 
                 if sql:
-                    assert "key_hash" in sql, "Index missing key_hash column"
+                    assert "key_hash" in sql, \
+                        "Index missing key_hash column"
 
 
 class TestQueryPerformance:
@@ -193,7 +162,7 @@ class TestQueryPerformance:
             user = User(
                 email="test@example.com",
                 username="testuser",
-                hashed_password="hashed_password",
+                hashed_password="hashed_password"
             )
             session.add(user)
             await session.flush()
@@ -203,7 +172,7 @@ class TestQueryPerformance:
                 resume = Resume(
                     owner_id=user.id,
                     title=f"Resume {i}",
-                    data={"content": f"test resume {i}"},
+                    data={"content": f"test resume {i}"}
                 )
                 session.add(resume)
 
@@ -232,7 +201,7 @@ class TestQueryPerformance:
             user = User(
                 email="test2@example.com",
                 username="testuser2",
-                hashed_password="hashed_password",
+                hashed_password="hashed_password"
             )
             session.add(user)
             await session.flush()
@@ -243,7 +212,7 @@ class TestQueryPerformance:
                     user_id=user.id,
                     key_hash=f"hash_{i:03d}",
                     key_prefix=f"rai_{i:03d}",
-                    name=f"Key {i}",
+                    name=f"Key {i}"
                 )
                 session.add(api_key)
 
@@ -263,9 +232,7 @@ class TestQueryPerformance:
 
             assert api_key is not None, "Should find the API key"
             assert api_key.key_prefix == "rai_025", "Should find correct key"
-            assert (
-                elapsed < 0.5
-            ), f"Key lookup took {elapsed:.2f}s, should be <0.5s with index"
+            assert elapsed < 0.5, f"Key lookup took {elapsed:.2f}s, should be <0.5s with index"
 
     @pytest.mark.asyncio
     async def test_version_history_lookup(self, test_db):
@@ -275,13 +242,15 @@ class TestQueryPerformance:
             user = User(
                 email="test3@example.com",
                 username="testuser3",
-                hashed_password="hashed_password",
+                hashed_password="hashed_password"
             )
             session.add(user)
             await session.flush()
 
             resume = Resume(
-                owner_id=user.id, title="Test Resume", data={"content": "test"}
+                owner_id=user.id,
+                title="Test Resume",
+                data={"content": "test"}
             )
             session.add(resume)
             await session.flush()
@@ -291,7 +260,7 @@ class TestQueryPerformance:
                 version = ResumeVersion(
                     resume_id=resume.id,
                     data={"content": f"version {i}"},
-                    version_number=i + 1,
+                    version_number=i + 1
                 )
                 session.add(version)
 
@@ -310,9 +279,7 @@ class TestQueryPerformance:
             elapsed = time.time() - start
 
             assert len(versions) == 50, "Should find all versions"
-            assert (
-                elapsed < 1.0
-            ), f"Version lookup took {elapsed:.2f}s, should be <1s with index"
+            assert elapsed < 1.0, f"Version lookup took {elapsed:.2f}s, should be <1s with index"
 
 
 class TestIndexNoNegativeEffects:
@@ -326,7 +293,7 @@ class TestIndexNoNegativeEffects:
             user = User(
                 email="test4@example.com",
                 username="testuser4",
-                hashed_password="hashed_password",
+                hashed_password="hashed_password"
             )
             session.add(user)
             await session.flush()
@@ -339,7 +306,9 @@ class TestIndexNoNegativeEffects:
 
             for i in range(100):
                 resume = Resume(
-                    owner_id=user_id, title=f"Resume {i}", data={"content": f"test {i}"}
+                    owner_id=user_id,
+                    title=f"Resume {i}",
+                    data={"content": f"test {i}"}
                 )
                 session.add(resume)
 
@@ -348,9 +317,7 @@ class TestIndexNoNegativeEffects:
 
             # Should be able to insert 100 resumes in < 5 seconds
             # This is reasonable with indexes
-            assert (
-                elapsed < 5.0
-            ), f"Bulk insert took {elapsed:.2f}s, indexes may cause excessive overhead"
+            assert elapsed < 5.0, f"Bulk insert took {elapsed:.2f}s, indexes may cause excessive overhead"
 
     @pytest.mark.asyncio
     async def test_update_with_indexes(self, test_db):
@@ -360,13 +327,15 @@ class TestIndexNoNegativeEffects:
             user = User(
                 email="test5@example.com",
                 username="testuser5",
-                hashed_password="hashed_password",
+                hashed_password="hashed_password"
             )
             session.add(user)
             await session.flush()
 
             resume = Resume(
-                owner_id=user.id, title="Original Title", data={"content": "test"}
+                owner_id=user.id,
+                title="Original Title",
+                data={"content": "test"}
             )
             session.add(resume)
             await session.flush()
@@ -394,13 +363,15 @@ class TestIndexNoNegativeEffects:
             user = User(
                 email="test6@example.com",
                 username="testuser6",
-                hashed_password="hashed_password",
+                hashed_password="hashed_password"
             )
             session.add(user)
             await session.flush()
 
             resume = Resume(
-                owner_id=user.id, title="To Delete", data={"content": "test"}
+                owner_id=user.id,
+                title="To Delete",
+                data={"content": "test"}
             )
             session.add(resume)
             await session.flush()
@@ -438,22 +409,18 @@ class TestIndexCoverage:
         async with test_db.begin() as conn:
             if "sqlite" in DATABASE_URL:
                 for table_name in critical_tables:
-                    result = await conn.execute(
-                        text(
-                            f"SELECT COUNT(*) FROM sqlite_master WHERE type='index' AND tbl_name='{table_name}'"
-                        )
-                    )
+                    result = await conn.execute(text(
+                        f"SELECT COUNT(*) FROM sqlite_master WHERE type='index' AND tbl_name='{table_name}'"
+                    ))
                     index_count = result.scalar()
 
                     # Allow for system indexes
                     if table_name in ["resumes", "resume_versions", "api_keys"]:
-                        assert (
-                            index_count >= 2
-                        ), f"Table {table_name} should have at least 2 indexes, found {index_count}"
+                        assert index_count >= 2, \
+                            f"Table {table_name} should have at least 2 indexes, found {index_count}"
                     else:
-                        assert (
-                            index_count >= 1
-                        ), f"Table {table_name} should have at least 1 index, found {index_count}"
+                        assert index_count >= 1, \
+                            f"Table {table_name} should have at least 1 index, found {index_count}"
 
 
 class TestIndexIntegration:
@@ -468,7 +435,7 @@ class TestIndexIntegration:
                 user = User(
                     email=f"user{u}@example.com",
                     username=f"user{u}",
-                    hashed_password="hashed",
+                    hashed_password="hashed"
                 )
                 session.add(user)
                 await session.flush()
@@ -477,7 +444,7 @@ class TestIndexIntegration:
                     resume = Resume(
                         owner_id=user.id,
                         title=f"Resume {i}",
-                        data={"content": f"content {i}"},
+                        data={"content": f"content {i}"}
                     )
                     session.add(resume)
 
@@ -502,7 +469,7 @@ class TestIndexIntegration:
             user = User(
                 email="public@example.com",
                 username="publicuser",
-                hashed_password="hashed",
+                hashed_password="hashed"
             )
             session.add(user)
             await session.flush()
@@ -513,7 +480,7 @@ class TestIndexIntegration:
                     owner_id=user.id,
                     title=f"Resume {i}",
                     data={"content": f"content {i}"},
-                    is_public=(i % 2 == 0),  # 50% public
+                    is_public=(i % 2 == 0)  # 50% public
                 )
                 session.add(resume)
 
@@ -534,7 +501,9 @@ class TestIndexIntegration:
 # Pytest configuration
 def pytest_configure(config):
     """Configure pytest."""
-    config.addinivalue_line("markers", "asyncio: mark test as async")
+    config.addinivalue_line(
+        "markers", "asyncio: mark test as async"
+    )
 
 
 if __name__ == "__main__":

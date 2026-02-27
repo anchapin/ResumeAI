@@ -231,9 +231,7 @@ class DatabaseConnectionPoolExhaustedRule(AlertRule):
             # This would be evaluated by Prometheus in production
             pass
         except Exception as e:
-            logger.error(
-                "database_connection_pool_exhausted_rule_check_error", error=str(e)
-            )
+            logger.error("database_connection_pool_exhausted_rule_check_error", error=str(e))
         return None
 
 
@@ -272,9 +270,7 @@ class AlertManager:
         """Add default alert rules."""
         # Issue #402: Prometheus alert rules
         self.add_rule(HighErrorRateRule(threshold=0.001))  # > 0.1%
-        self.add_rule(
-            PDFGenerationSlowRule(threshold_seconds=5, percentile=0.95)
-        )  # p95 > 5s
+        self.add_rule(PDFGenerationSlowRule(threshold_seconds=5, percentile=0.95))  # p95 > 5s
         self.add_rule(DatabaseConnectionPoolExhaustedRule())
         self.add_rule(APIKeyInvalidRule(threshold_per_second=1))
 

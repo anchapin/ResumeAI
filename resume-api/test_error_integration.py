@@ -17,16 +17,17 @@ def test_error_response_structure():
 
     # Test basic error
     response = create_error_response(
-        error_code=ErrorCode.VALIDATION_ERROR, path="/v1/render/pdf", method="POST"
+        error_code=ErrorCode.VALIDATION_ERROR,
+        path="/v1/render/pdf",
+        method="POST"
     )
 
     # Verify all required fields exist
     json_data = response.model_dump(exclude_none=True)
 
     required_fields = {"error_code", "message", "request_id", "timestamp", "status"}
-    assert required_fields.issubset(
-        json_data.keys()
-    ), f"Missing required fields: {required_fields - json_data.keys()}"
+    assert required_fields.issubset(json_data.keys()), \
+        f"Missing required fields: {required_fields - json_data.keys()}"
 
     # Verify field types
     assert isinstance(json_data["error_code"], str), "error_code should be string"
@@ -39,9 +40,7 @@ def test_error_response_structure():
     assert json_data["timestamp"].endswith("Z"), "timestamp should end with Z"
 
     # Verify request ID format
-    assert json_data["request_id"].startswith(
-        "req_"
-    ), "request_id should start with req_"
+    assert json_data["request_id"].startswith("req_"), "request_id should start with req_"
 
     print("✓ Error response structure is valid")
 
@@ -51,14 +50,13 @@ def test_validation_error_with_field_errors():
     from config.errors import create_error_response, ErrorCode, FieldError
 
     field_errors = [
-        FieldError(
-            field="email", message="Invalid email format", code="INVALID_FORMAT"
-        ),
-        FieldError(field="phone", message="Too short", code="VALIDATION_ERROR"),
+        FieldError(field="email", message="Invalid email format", code="INVALID_FORMAT"),
+        FieldError(field="phone", message="Too short", code="VALIDATION_ERROR")
     ]
 
     response = create_error_response(
-        error_code=ErrorCode.VALIDATION_ERROR, field_errors=field_errors
+        error_code=ErrorCode.VALIDATION_ERROR,
+        field_errors=field_errors
     )
 
     json_data = response.model_dump(exclude_none=True)
@@ -74,10 +72,15 @@ def test_error_with_details():
     """Test error with additional details"""
     from config.errors import create_error_response, ErrorCode
 
-    details = {"resume_id": "123", "template": "modern", "error_type": "LaTeX"}
+    details = {
+        "resume_id": "123",
+        "template": "modern",
+        "error_type": "LaTeX"
+    }
 
     response = create_error_response(
-        error_code=ErrorCode.PDF_GENERATION_FAILED, details=details
+        error_code=ErrorCode.PDF_GENERATION_FAILED,
+        details=details
     )
 
     json_data = response.model_dump(exclude_none=True)
@@ -105,9 +108,8 @@ def test_error_status_codes():
 
     for error_code, expected_status in test_cases:
         actual_status = get_status_code(error_code)
-        assert (
-            actual_status == expected_status
-        ), f"{error_code.value} should map to {expected_status}, got {actual_status}"
+        assert actual_status == expected_status, \
+            f"{error_code.value} should map to {expected_status}, got {actual_status}"
 
     print("✓ All error codes map to correct HTTP status codes")
 
@@ -136,26 +138,22 @@ def test_all_error_codes_defined():
 
     for error_code in ErrorCode:
         # Each code should have a message
-        assert (
-            error_code in ERROR_MESSAGES
-        ), f"Missing message for error code: {error_code.value}"
+        assert error_code in ERROR_MESSAGES, \
+            f"Missing message for error code: {error_code.value}"
 
         # Each code should have a status code
-        assert (
-            error_code in ERROR_STATUS_CODES
-        ), f"Missing status code for error code: {error_code.value}"
+        assert error_code in ERROR_STATUS_CODES, \
+            f"Missing status code for error code: {error_code.value}"
 
         # Message should not be empty
         msg = ERROR_MESSAGES[error_code]
-        assert (
-            isinstance(msg, str) and len(msg) > 0
-        ), f"Invalid message for {error_code.value}: {msg}"
+        assert isinstance(msg, str) and len(msg) > 0, \
+            f"Invalid message for {error_code.value}: {msg}"
 
         # Status code should be 4xx or 5xx
         status = ERROR_STATUS_CODES[error_code]
-        assert (
-            400 <= status < 600
-        ), f"Invalid status code for {error_code.value}: {status}"
+        assert 400 <= status < 600, \
+            f"Invalid status code for {error_code.value}: {status}"
 
     print(f"✓ All {len(ErrorCode)} error codes properly defined")
 
@@ -184,7 +182,7 @@ def test_error_response_json_serialization():
         error_code=ErrorCode.PDF_GENERATION_FAILED,
         path="/v1/render/pdf",
         method="POST",
-        details={"reason": "LaTeX error"},
+        details={"reason": "LaTeX error"}
     )
 
     json_str = response.model_dump_json()
@@ -208,7 +206,8 @@ def test_middleware_error_conversion():
 
     # Create an HTTPException like the routes would
     exc = HTTPException(
-        status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid resume data"
+        status_code=status.HTTP_400_BAD_REQUEST,
+        detail="Invalid resume data"
     )
 
     # The middleware would convert this to unified error response
@@ -219,7 +218,7 @@ def test_middleware_error_conversion():
         error_code=ErrorCode.VALIDATION_ERROR,
         message=exc.detail,
         path="/v1/render/pdf",
-        method="POST",
+        method="POST"
     )
 
     assert error_response.error_code == "VALIDATION_ERROR"
@@ -237,19 +236,11 @@ def test_example_error_responses():
     response = create_error_response(
         error_code=ErrorCode.VALIDATION_ERROR,
         field_errors=[
-            FieldError(
-                field="resume_data.name",
-                message="Name is required",
-                code="MISSING_FIELD",
-            ),
-            FieldError(
-                field="resume_data.email",
-                message="Invalid email format",
-                code="INVALID_FORMAT",
-            ),
+            FieldError(field="resume_data.name", message="Name is required", code="MISSING_FIELD"),
+            FieldError(field="resume_data.email", message="Invalid email format", code="INVALID_FORMAT"),
         ],
         path="/v1/render/pdf",
-        method="POST",
+        method="POST"
     )
 
     data = response.model_dump(exclude_none=True)
@@ -262,7 +253,7 @@ def test_example_error_responses():
         error_code=ErrorCode.UNAUTHORIZED,
         message="Invalid API key",
         path="/v1/render/pdf",
-        method="POST",
+        method="POST"
     )
 
     data = response.model_dump(exclude_none=True)
@@ -275,7 +266,7 @@ def test_example_error_responses():
         error_code=ErrorCode.NOT_FOUND,
         message="Resume with ID '123' not found",
         path="/v1/resumes/123",
-        method="GET",
+        method="GET"
     )
 
     data = response.model_dump(exclude_none=True)
@@ -288,7 +279,7 @@ def test_example_error_responses():
         error_code=ErrorCode.RATE_LIMITED,
         path="/v1/render/pdf",
         method="POST",
-        details={"retry_after_seconds": 60},
+        details={"retry_after_seconds": 60}
     )
 
     data = response.model_dump(exclude_none=True)
@@ -298,7 +289,9 @@ def test_example_error_responses():
 
     # Example 5: Server error
     response = create_error_response(
-        error_code=ErrorCode.INTERNAL_SERVER_ERROR, path="/v1/render/pdf", method="POST"
+        error_code=ErrorCode.INTERNAL_SERVER_ERROR,
+        path="/v1/render/pdf",
+        method="POST"
     )
 
     data = response.model_dump(exclude_none=True)
@@ -324,9 +317,9 @@ def run_all_tests():
         test_example_error_responses,
     ]
 
-    print("\n" + "=" * 60)
+    print("\n" + "="*60)
     print("ERROR INTEGRATION TESTS")
-    print("=" * 60 + "\n")
+    print("="*60 + "\n")
 
     passed = 0
     failed = 0
@@ -338,13 +331,12 @@ def run_all_tests():
         except Exception as e:
             print(f"✗ {test.__name__}: {e}")
             import traceback
-
             traceback.print_exc()
             failed += 1
 
-    print("\n" + "=" * 60)
+    print("\n" + "="*60)
     print(f"Results: {passed} passed, {failed} failed")
-    print("=" * 60 + "\n")
+    print("="*60 + "\n")
 
     return failed == 0
 

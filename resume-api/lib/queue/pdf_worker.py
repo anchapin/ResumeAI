@@ -92,7 +92,10 @@ class PDFWorker:
 
         # Wait for tasks to complete
         if self.active_jobs:
-            await asyncio.gather(*self.active_jobs.values(), return_exceptions=True)
+            await asyncio.gather(
+                *self.active_jobs.values(),
+                return_exceptions=True
+            )
 
         logger.info("PDFWorker stopped")
 
@@ -127,12 +130,15 @@ class PDFWorker:
             try:
                 job.progress = 20
                 pdf_bytes = await asyncio.wait_for(
-                    self.render_handler(job), timeout=self.timeout
+                    self.render_handler(job),
+                    timeout=self.timeout
                 )
                 job.progress = 90
 
             except asyncio.TimeoutError:
-                raise RuntimeError(f"PDF rendering timeout after {self.timeout}s")
+                raise RuntimeError(
+                    f"PDF rendering timeout after {self.timeout}s"
+                )
 
             # Save PDF
             result_path = self.result_dir / f"{job.job_id}.pdf"
@@ -143,15 +149,13 @@ class PDFWorker:
             # Mark as complete
             job.state = JobState.COMPLETED
             job.result = {
-                "pdf_path": str(result_path),
-                "size_bytes": len(pdf_bytes),
+                'pdf_path': str(result_path),
+                'size_bytes': len(pdf_bytes),
             }
             job.progress = 100
             await self.queue.update_job(job)
 
-            logger.info(
-                f"Completed job {job.job_id} - PDF size: {len(pdf_bytes)} bytes"
-            )
+            logger.info(f"Completed job {job.job_id} - PDF size: {len(pdf_bytes)} bytes")
 
         except Exception as e:
             await self._handle_job_error(job, e)
@@ -175,9 +179,7 @@ class PDFWorker:
             job.state = JobState.FAILED
             job.progress = 0
             await self.queue.update_job(job)
-            logger.error(
-                f"Job {job.job_id} permanently failed after {job.retry_count} retries"
-            )
+            logger.error(f"Job {job.job_id} permanently failed after {job.retry_count} retries")
 
     async def get_job_status(self, job_id: str) -> Optional[Dict[str, Any]]:
         """Get current status of a job."""
@@ -186,25 +188,25 @@ class PDFWorker:
             return None
 
         return {
-            "job_id": job.job_id,
-            "state": job.state.value,
-            "progress": job.progress,
-            "eta_seconds": job.eta_seconds,
-            "error": job.error,
-            "retry_count": job.retry_count,
-            "created_at": job.created_at.isoformat(),
-            "started_at": job.started_at.isoformat() if job.started_at else None,
-            "completed_at": job.completed_at.isoformat() if job.completed_at else None,
-            "result": job.result,
+            'job_id': job.job_id,
+            'state': job.state.value,
+            'progress': job.progress,
+            'eta_seconds': job.eta_seconds,
+            'error': job.error,
+            'retry_count': job.retry_count,
+            'created_at': job.created_at.isoformat(),
+            'started_at': job.started_at.isoformat() if job.started_at else None,
+            'completed_at': job.completed_at.isoformat() if job.completed_at else None,
+            'result': job.result,
         }
 
     async def get_queue_stats(self) -> Dict[str, Any]:
         """Get queue statistics."""
-        stats = self.queue.get_stats() if hasattr(self.queue, "get_stats") else {}
+        stats = self.queue.get_stats() if hasattr(self.queue, 'get_stats') else {}
         return {
             **stats,
-            "worker_active_jobs": len(self.active_jobs),
-            "worker_running": self.running,
+            'worker_active_jobs': len(self.active_jobs),
+            'worker_running': self.running,
         }
 
 
@@ -276,9 +278,12 @@ class PDFWorkerPool:
     async def get_worker_stats(self) -> Dict[str, Any]:
         """Get stats from all workers."""
         return {
-            "total_workers": len(self.workers),
-            "workers": [
-                {"index": i, **await worker.get_queue_stats()}
+            'total_workers': len(self.workers),
+            'workers': [
+                {
+                    'index': i,
+                    **await worker.get_queue_stats()
+                }
                 for i, worker in enumerate(self.workers)
-            ],
+            ]
         }

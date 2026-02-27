@@ -50,7 +50,9 @@ class TestHashedKeyVerification:
         mock_settings.api_keys = [hashed_key]
 
         client = TestClient(
-            FastAPI(dependencies=[Depends(get_api_key)]),
+            FastAPI(
+                dependencies=[Depends(get_api_key)]
+            ),
         )
 
         # Would work with the plaintext key
@@ -176,9 +178,9 @@ class TestSecureKeyComparison:
         # These wrong keys should all fail in constant time
         wrong_keys = [
             "api_key_1234567890ac",  # Very similar
-            "api_key_1234567890",  # Shorter
-            "api_key_1234567890ab_",  # Longer
-            "wrong_key",  # Completely different
+            "api_key_1234567890",    # Shorter
+            "api_key_1234567890ab_", # Longer
+            "wrong_key",              # Completely different
         ]
 
         # All should fail with same timing

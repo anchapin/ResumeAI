@@ -53,7 +53,10 @@ class TestStructuredLoggingConfiguration:
         logger = logging_config.get_logger("test.context")
 
         with logging_config.RequestContext(
-            request_id="req-123", user_id="user-456", method="POST", path="/api/test"
+            request_id="req-123",
+            user_id="user-456",
+            method="POST",
+            path="/api/test"
         ):
             logger.info("context_test")
 
@@ -65,7 +68,7 @@ class TestStructuredLoggingConfiguration:
             "request_id": "test-req-001",
             "user_id": "test-user-001",
             "method": "GET",
-            "path": "/api/v1/test",
+            "path": "/api/v1/test"
         }
 
         with logging_config.RequestContext(**context_data) as ctx:
@@ -83,7 +86,10 @@ class TestErrorLogging:
             raise ValueError("Test validation error")
         except Exception as exc:
             logging_config.log_exception(
-                logger=logger, exc=exc, endpoint="/api/test", user_id="test-user"
+                logger=logger,
+                exc=exc,
+                endpoint="/api/test",
+                user_id="test-user"
             )
 
         captured = capsys.readouterr()
@@ -116,10 +122,7 @@ class TestErrorLogging:
         output = captured.out
 
         if output:
-            assert (
-                "Specific validation failure" in output
-                or "validation" in output.lower()
-            )
+            assert "Specific validation failure" in output or "validation" in output.lower()
 
     def test_error_reproduction_json_format(self, capsys):
         """Reproduce error scenario and verify JSON logging output."""
@@ -129,7 +132,7 @@ class TestErrorLogging:
             "request_id": "err-req-001",
             "user_id": "err-user-001",
             "endpoint": "/api/v1/resume/tailor",
-            "method": "POST",
+            "method": "POST"
         }
 
         with logging_config.RequestContext(**request_context):
@@ -137,7 +140,10 @@ class TestErrorLogging:
                 raise KeyError("Missing required field: skills")
             except KeyError as e:
                 logging_config.log_exception(
-                    logger=logger, exc=e, status_code=400, error_code="INVALID_REQUEST"
+                    logger=logger,
+                    exc=e,
+                    status_code=400,
+                    error_code="INVALID_REQUEST"
                 )
 
         captured = capsys.readouterr()
@@ -164,7 +170,7 @@ class TestLogRequest:
             path="/api/v1/resumes",
             status_code=200,
             duration_ms=45.23,
-            user_id="test-user",
+            user_id="test-user"
         )
 
         captured = capsys.readouterr()
@@ -184,7 +190,7 @@ class TestLogRequest:
             method="POST",
             path="/test",
             status_code=201,
-            duration_ms=duration_ms,
+            duration_ms=duration_ms
         )
 
         captured = capsys.readouterr()
@@ -313,7 +319,7 @@ def test_integration_structured_logging_full_flow(capsys):
             method="POST",
             path="/api/v1/tailor",
             status_code=200,
-            duration_ms=234.56,
+            duration_ms=234.56
         )
 
     captured = capsys.readouterr()

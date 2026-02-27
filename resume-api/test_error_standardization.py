@@ -24,7 +24,6 @@ try:
         ERROR_MESSAGES,
         ERROR_STATUS_CODES,
     )
-
     print("✓ All imports successful")
 except ImportError as e:
     print(f"✗ Import failed: {e}")
@@ -55,9 +54,7 @@ def test_error_messages():
     for code in ErrorCode:
         assert code in ERROR_MESSAGES, f"Missing message for {code}"
         message = ERROR_MESSAGES[code]
-        assert (
-            isinstance(message, str) and len(message) > 0
-        ), f"Invalid message for {code}"
+        assert isinstance(message, str) and len(message) > 0, f"Invalid message for {code}"
 
     print("✓ All error codes have messages")
 
@@ -113,7 +110,9 @@ def test_get_status_code():
 def test_field_error_model():
     """Test FieldError model"""
     field_error = FieldError(
-        field="email", message="Invalid email format", code="INVALID_FORMAT"
+        field="email",
+        message="Invalid email format",
+        code="INVALID_FORMAT"
     )
 
     assert field_error.field == "email"
@@ -136,7 +135,7 @@ def test_error_response_model():
         timestamp="2024-02-26T13:40:22.892Z",
         status=400,
         path="/v1/render/pdf",
-        method="POST",
+        method="POST"
     )
 
     assert response.error_code == "VALIDATION_ERROR"
@@ -160,7 +159,7 @@ def test_create_error_response():
         error_code=ErrorCode.VALIDATION_ERROR,
         message="Custom message",
         path="/test",
-        method="POST",
+        method="POST"
     )
 
     assert response.error_code == "VALIDATION_ERROR"
@@ -172,9 +171,12 @@ def test_create_error_response():
     assert response.timestamp.endswith("Z")
 
     # Test with field errors
-    field_errors = [FieldError(field="email", message="Invalid email")]
+    field_errors = [
+        FieldError(field="email", message="Invalid email")
+    ]
     response = create_error_response(
-        error_code=ErrorCode.VALIDATION_ERROR, field_errors=field_errors
+        error_code=ErrorCode.VALIDATION_ERROR,
+        field_errors=field_errors
     )
 
     assert response.field_errors is not None
@@ -190,7 +192,7 @@ def test_error_response_json_structure():
         error_code=ErrorCode.NOT_FOUND,
         path="/v1/resumes/123",
         method="GET",
-        details={"resume_id": "123"},
+        details={"resume_id": "123"}
     )
 
     json_data = response.model_dump(exclude_none=True)
@@ -237,9 +239,7 @@ def test_consistent_error_schema():
     # All should have the same required keys
     required_keys = {"error_code", "message", "request_id", "timestamp", "status"}
     for schema in schemas:
-        assert required_keys.issubset(
-            schema
-        ), f"Missing required keys in schema: {schema}"
+        assert required_keys.issubset(schema), f"Missing required keys in schema: {schema}"
 
     print("✓ All errors have consistent schema")
 
@@ -260,9 +260,9 @@ def run_all_tests():
         test_consistent_error_schema,
     ]
 
-    print("\n" + "=" * 60)
+    print("\n" + "="*60)
     print("ERROR STANDARDIZATION TESTS")
-    print("=" * 60 + "\n")
+    print("="*60 + "\n")
 
     passed = 0
     failed = 0
@@ -275,9 +275,9 @@ def run_all_tests():
             print(f"✗ {test.__name__}: {e}")
             failed += 1
 
-    print("\n" + "=" * 60)
+    print("\n" + "="*60)
     print(f"Results: {passed} passed, {failed} failed")
-    print("=" * 60 + "\n")
+    print("="*60 + "\n")
 
     return failed == 0
 

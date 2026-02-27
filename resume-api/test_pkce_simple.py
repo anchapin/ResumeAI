@@ -21,9 +21,7 @@ def test_code_verifier_generation():
     assert len(verifier) == 128, f"Verifier length should be 128, got {len(verifier)}"
 
     # Check valid characters (RFC 7636: unreserved = ALPHA / DIGIT / "-" / "." / "_" / "~")
-    valid_chars = set(
-        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~"
-    )
+    valid_chars = set('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~')
     for char in verifier:
         assert char in valid_chars, f"Invalid character in verifier: {char}"
 
@@ -38,14 +36,12 @@ def test_code_challenge_generation(verifier):
     challenge = generate_pkce_code_challenge(verifier)
 
     # Check no padding characters
-    assert "+" not in challenge, "Challenge should not contain +"
-    assert "/" not in challenge, "Challenge should not contain /"
-    assert "=" not in challenge, "Challenge should not contain padding ="
+    assert '+' not in challenge, "Challenge should not contain +"
+    assert '/' not in challenge, "Challenge should not contain /"
+    assert '=' not in challenge, "Challenge should not contain padding ="
 
     # Check base64url alphabet
-    valid_chars = set(
-        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"
-    )
+    valid_chars = set('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_')
     for char in challenge:
         assert char in valid_chars, f"Invalid character in challenge: {char}"
 
@@ -137,9 +133,9 @@ def test_attack_scenario():
 
 def main():
     """Run all PKCE tests."""
-    print("\n" + "=" * 70)
+    print("\n" + "="*70)
     print("OAuth 2.0 PKCE Implementation Tests")
-    print("=" * 70 + "\n")
+    print("="*70 + "\n")
 
     try:
         # Generate test data
@@ -154,9 +150,9 @@ def main():
         test_multiple_flows()
         test_attack_scenario()
 
-        print("\n" + "=" * 70)
+        print("\n" + "="*70)
         print("✓ All PKCE tests passed!")
-        print("=" * 70 + "\n")
+        print("="*70 + "\n")
         return True
     except AssertionError as e:
         print(f"\n✗ Test failed: {e}\n")
@@ -164,7 +160,6 @@ def main():
     except Exception as e:
         print(f"\n✗ Unexpected error: {e}\n")
         import traceback
-
         traceback.print_exc()
         return False
 
