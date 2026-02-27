@@ -25,6 +25,14 @@ import { fetchWithRetry, RetryConfig } from './retryLogic';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
 
+// In-memory cache for variants
+const VARIANTS_CACHE_DURATION = 5 * 60 * 1000;
+let variantsCache: {
+  data: VariantMetadata[];
+  timestamp: number;
+  filters: string;
+} | null = null;
+
 // Default retry configuration for all API calls
 const DEFAULT_RETRY_CONFIG: RetryConfig = {
   maxRetries: 3,
@@ -190,6 +198,15 @@ export async function getVariants(filters?: {
   if (filters?.search) params.append('search', filters.search);
   if (filters?.category) params.append('category', filters.category);
   if (filters?.tags) params.append('tags', filters.tags.join(','));
+  const cacheKey = params.toString();
+  const now = Date.now();
+
+  if (variantsCache && cacheKey === variantsCache.filters) {
+    if (now - variantsCache.timestamp < VARIANTS_CACHE_DURATION) {
+      return variantsCache.data;
+    }
+  }
+
   const response = await fetchWithTimeout(
     `${API_URL}/v1/variants?${params}`,
     { headers: getHeaders() },
@@ -197,7 +214,19 @@ export async function getVariants(filters?: {
   );
   if (!response.ok) throw new Error('Failed to fetch variants');
   const data: VariantsResponse = await response.json();
-  return data.variants;
+  const variants = data.variants;
+
+  variantsCache = {
+    data: variants,
+    timestamp: now,
+    filters: cacheKey,
+  };
+
+  return variants;
+}
+
+export function invalidateVariantsCache(): void {
+  variantsCache = null;
 }
 
 export interface TailoredResumeResponse {
