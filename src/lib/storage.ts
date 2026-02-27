@@ -3,18 +3,15 @@
  * Provides localStorage quota estimation, compression, and safe storage operations
  */
 
-// pako is a common gzip compression library. For browser environments,
-// we'll use a simple approach with JSON stringification and base64 encoding
-// as a fallback if pako is not available
+import LZString from 'lz-string';
 
 /**
- * Compress data using a simple encoding approach
- * In production, consider using pako or similar library
+ * Compress data using LZString compression
+ * Reduces data size by ~50% instead of increasing by 33% like base64
  */
 function compressData(data: string): string {
   try {
-    // Convert string to base64 (simple compression)
-    return btoa(unescape(encodeURIComponent(data)));
+    return LZString.compressToUTF16(data);
   } catch (error) {
     console.warn('Failed to compress data:', error);
     return data;
@@ -22,12 +19,11 @@ function compressData(data: string): string {
 }
 
 /**
- * Decompress data that was encoded with compressData
+ * Decompress data that was encoded with LZString
  */
 function decompressData(compressedData: string): string {
   try {
-    // Decode from base64
-    return decodeURIComponent(escape(atob(compressedData)));
+    return LZString.decompressFromUTF16(compressedData) || compressedData;
   } catch (error) {
     console.warn('Failed to decompress data:', error);
     return compressedData;
