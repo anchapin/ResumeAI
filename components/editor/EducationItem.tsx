@@ -41,6 +41,7 @@ const EducationItem = React.memo(
         {/* Card Header */}
         <div className="flex items-start">
           <button
+            data-testid={`edu-header-${edu.id}`}
             className="flex-1 p-6 flex items-center gap-4 text-left hover:bg-slate-50 focus-visible:outline-none focus-visible:bg-slate-50 transition-colors group"
             onClick={() => onToggleExpand(edu.id)}
             aria-expanded={isExpanded}
@@ -71,6 +72,7 @@ const EducationItem = React.memo(
               <div className="flex items-center bg-slate-50 rounded-lg p-0.5 border border-slate-200 animate-in fade-in zoom-in duration-200">
                 <button
                   ref={confirmBtnRef}
+                  data-testid={`edu-confirm-delete-${edu.id}`}
                   onClick={(e) => {
                     e.stopPropagation();
                     onDelete(edu.id);
@@ -83,6 +85,7 @@ const EducationItem = React.memo(
                 </button>
                 <div className="w-px h-4 bg-slate-200 mx-0.5"></div>
                 <button
+                  data-testid={`edu-cancel-delete-${edu.id}`}
                   onClick={(e) => {
                     e.stopPropagation();
                     setIsDeleting(false);
@@ -96,6 +99,7 @@ const EducationItem = React.memo(
             ) : (
               <button
                 ref={deleteBtnRef}
+                data-testid={`edu-delete-${edu.id}`}
                 onClick={(e) => {
                   e.stopPropagation();
                   setIsDeleting(true);
@@ -127,6 +131,7 @@ const EducationItem = React.memo(
                 </label>
                 <input
                   id={`edu-institution-${edu.id}`}
+                  data-testid={`edu-institution-${edu.id}`}
                   type="text"
                   value={edu.institution}
                   onChange={(e) => onUpdate(edu.id, 'institution', e.target.value)}
@@ -142,6 +147,7 @@ const EducationItem = React.memo(
                 </label>
                 <input
                   id={`edu-studyType-${edu.id}`}
+                  data-testid={`edu-studyType-${edu.id}`}
                   type="text"
                   value={edu.studyType}
                   onChange={(e) => onUpdate(edu.id, 'studyType', e.target.value)}
@@ -154,6 +160,7 @@ const EducationItem = React.memo(
                 </label>
                 <input
                   id={`edu-area-${edu.id}`}
+                  data-testid={`edu-area-${edu.id}`}
                   type="text"
                   value={edu.area}
                   onChange={(e) => onUpdate(edu.id, 'area', e.target.value)}
@@ -170,6 +177,7 @@ const EducationItem = React.memo(
                 </label>
                 <input
                   id={`edu-startDate-${edu.id}`}
+                  data-testid={`edu-startDate-${edu.id}`}
                   type="text"
                   value={edu.startDate}
                   onChange={(e) => onUpdate(edu.id, 'startDate', e.target.value)}
@@ -185,6 +193,7 @@ const EducationItem = React.memo(
                 </label>
                 <input
                   id={`edu-endDate-${edu.id}`}
+                  data-testid={`edu-endDate-${edu.id}`}
                   type="text"
                   value={edu.endDate}
                   onChange={(e) => onUpdate(edu.id, 'endDate', e.target.value)}
