@@ -48,8 +48,8 @@ class Settings(BaseSettings):
     cors_origins: list[str] = ["*"]
 
     # JWT Configuration
-    # Securely generate JWT secret if not provided
-    jwt_secret: str = Field(default_factory=lambda: secrets.token_urlsafe(32))
+    # JWT secret must be provided via environment variable
+    jwt_secret: str = Field(default="")
     jwt_algorithm: str = "HS256"
     jwt_access_token_expire_minutes: int = 30
 
