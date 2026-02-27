@@ -110,11 +110,16 @@ async def create_resume(
         db.add(version)
         await db.flush()
 
-        # Set current version
-        resume.current_version_id = version.id
-
         await db.commit()
         await db.refresh(resume)
+
+        current_version_result = await db.execute(
+            select(ResumeVersion)
+            .where(ResumeVersion.resume_id == resume.id)
+            .order_by(ResumeVersion.version_number.desc())
+            .limit(1)
+        )
+        current_version = current_version_result.scalar_one_or_none()
 
         return ResumeResponse(
             id=resume.id,
@@ -122,7 +127,7 @@ async def create_resume(
             data=ResumeData(**resume.data),
             tags=[tag.name for tag in resume.tags],
             is_public=resume.is_public,
-            current_version_id=resume.current_version_id,
+            current_version_id=current_version.id if current_version else None,
             created_at=resume.created_at.isoformat(),
             updated_at=resume.updated_at.isoformat(),
         )
@@ -214,13 +219,22 @@ async def get_resume(
                 detail=f"Resume with ID {resume_id} not found",
             )
 
+        # Get current version (latest by version_number)
+        current_version_result = await db.execute(
+            select(ResumeVersion)
+            .where(ResumeVersion.resume_id == resume.id)
+            .order_by(ResumeVersion.version_number.desc())
+            .limit(1)
+        )
+        current_version = current_version_result.scalar_one_or_none()
+
         return ResumeResponse(
             id=resume.id,
             title=resume.title,
             data=ResumeData(**resume.data),
             tags=[tag.name for tag in resume.tags],
             is_public=resume.is_public,
-            current_version_id=resume.current_version_id,
+            current_version_id=current_version.id if current_version else None,
             created_at=resume.created_at.isoformat(),
             updated_at=resume.updated_at.isoformat(),
         )
@@ -302,11 +316,17 @@ async def update_resume(
             db.add(new_version)
             await db.flush()
 
-            # Update current version
-            resume.current_version_id = new_version.id
-
         await db.commit()
         await db.refresh(resume)
+
+        # Get current version (latest by version_number)
+        current_version_result = await db.execute(
+            select(ResumeVersion)
+            .where(ResumeVersion.resume_id == resume.id)
+            .order_by(ResumeVersion.version_number.desc())
+            .limit(1)
+        )
+        current_version = current_version_result.scalar_one_or_none()
 
         return ResumeResponse(
             id=resume.id,
@@ -314,7 +334,7 @@ async def update_resume(
             data=ResumeData(**resume.data),
             tags=[tag.name for tag in resume.tags],
             is_public=resume.is_public,
-            current_version_id=resume.current_version_id,
+            current_version_id=current_version.id if current_version else None,
             created_at=resume.created_at.isoformat(),
             updated_at=resume.updated_at.isoformat(),
         )
@@ -533,11 +553,17 @@ async def restore_resume_version(
         db.add(new_version)
         await db.flush()
 
-        # Update current version
-        resume.current_version_id = new_version.id
-
         await db.commit()
         await db.refresh(resume)
+
+        # Get current version (latest by version_number)
+        current_version_result = await db.execute(
+            select(ResumeVersion)
+            .where(ResumeVersion.resume_id == resume.id)
+            .order_by(ResumeVersion.version_number.desc())
+            .limit(1)
+        )
+        current_version = current_version_result.scalar_one_or_none()
 
         return ResumeResponse(
             id=resume.id,
@@ -545,7 +571,7 @@ async def restore_resume_version(
             data=ResumeData(**resume.data),
             tags=[tag.name for tag in resume.tags],
             is_public=resume.is_public,
-            current_version_id=resume.current_version_id,
+            current_version_id=current_version.id if current_version else None,
             created_at=resume.created_at.isoformat(),
             updated_at=resume.updated_at.isoformat(),
         )
@@ -890,13 +916,22 @@ async def access_shared_resume(
                 detail="Resume not found",
             )
 
+        # Get current version (latest by version_number)
+        current_version_result = await db.execute(
+            select(ResumeVersion)
+            .where(ResumeVersion.resume_id == resume.id)
+            .order_by(ResumeVersion.version_number.desc())
+            .limit(1)
+        )
+        current_version = current_version_result.scalar_one_or_none()
+
         return ResumeResponse(
             id=resume.id,
             title=resume.title,
             data=ResumeData(**resume.data),
             tags=[tag.name for tag in resume.tags],
             is_public=resume.is_public,
-            current_version_id=resume.current_version_id,
+            current_version_id=current_version.id if current_version else None,
             created_at=resume.created_at.isoformat(),
             updated_at=resume.updated_at.isoformat(),
         )
