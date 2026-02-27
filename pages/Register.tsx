@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Route } from '../types';
+import { Link } from 'react-router-dom';
 
 interface RegisterProps {
   onRegister: (
@@ -8,12 +8,11 @@ interface RegisterProps {
     password: string,
     fullName?: string,
   ) => Promise<any>;
-  onNavigate: (route: Route) => void;
   error: string | null;
   isLoading: boolean;
 }
 
-const Register: React.FC<RegisterProps> = ({ onRegister, onNavigate, error, isLoading }) => {
+const Register: React.FC<RegisterProps> = ({ onRegister, error, isLoading }) => {
   const [email, setEmail] = useState('');
   const [username, setUsername] = useState('');
   const [fullName, setFullName] = useState('');
@@ -65,13 +64,12 @@ const Register: React.FC<RegisterProps> = ({ onRegister, onNavigate, error, isLo
             <p className="text-slate-500 mb-6">
               Your account has been created successfully. You can now sign in.
             </p>
-            <button
-              type="button"
-              onClick={() => onNavigate(Route.LOGIN)}
-              className="w-full py-3 bg-primary-600 text-white rounded-lg font-bold text-sm hover:bg-primary-700 transition-all shadow-md shadow-primary-600/20"
+            <Link
+              to="/login"
+              className="w-full py-3 bg-primary-600 text-white rounded-lg font-bold text-sm hover:bg-primary-700 transition-all shadow-md shadow-primary-600/20 inline-block text-center"
             >
               Go to Sign In
-            </button>
+            </Link>
           </div>
         </div>
       </div>
@@ -197,13 +195,9 @@ const Register: React.FC<RegisterProps> = ({ onRegister, onNavigate, error, isLo
           <div className="mt-6 text-center">
             <p className="text-sm text-slate-500">
               Already have an account?{' '}
-              <button
-                type="button"
-                onClick={() => onNavigate(Route.LOGIN)}
-                className="text-primary-600 font-bold hover:text-primary-700"
-              >
+              <Link to="/login" className="text-primary-600 font-bold hover:text-primary-700">
                 Sign in
-              </button>
+              </Link>
             </p>
           </div>
         </div>

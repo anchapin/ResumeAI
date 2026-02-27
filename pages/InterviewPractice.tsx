@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Sidebar from '../components/Sidebar';
-import { Route, InterviewQuestion, InterviewSession, GenerateQuestionsRequest } from '../types';
+import { InterviewQuestion, InterviewSession, GenerateQuestionsRequest, Route } from '../types';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
 
@@ -10,7 +10,6 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
  * @returns {JSX.Element} The rendered interview practice page
  */
 function InterviewPractice() {
-  const [currentRoute, setCurrentRoute] = useState<Route>(Route.INTERVIEW_PRACTICE);
   const [activeTab, setActiveTab] = useState<'setup' | 'practice' | 'history'>('setup');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -208,8 +207,7 @@ function InterviewPractice() {
   return (
     <div className="flex min-h-screen bg-[#f6f6f8]">
       <Sidebar
-        currentRoute={currentRoute}
-        onNavigate={setCurrentRoute}
+        currentRoute={Route.INTERVIEW_PRACTICE}
         onShowShortcuts={() => console.log('Show shortcuts')}
       />
       <main className="flex-1 overflow-auto">

@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { SimpleResumeData, WorkExperience, EducationEntry, ProjectEntry } from '../types';
 import {
   convertToAPIData,
@@ -23,7 +24,6 @@ import { showSuccessToast, showErrorToast } from '../utils/toast';
  * @description Props for the Editor component
  * @property {SimpleResumeData} resumeData - The resume data to edit
  * @property {Function} onUpdate - Callback to update resume data
- * @property {Function} onBack - Callback to navigate back
  * @property {string} saveStatus - Current save status: 'idle', 'saving', 'saved', or 'error'
  */
 interface EditorProps {
@@ -31,8 +31,6 @@ interface EditorProps {
   resumeData: SimpleResumeData;
   /** Callback to update resume data */
   onUpdate: (data: SimpleResumeData) => void;
-  /** Callback to navigate back */
-  onBack: () => void;
   /** Current save status for auto-save indicator */
   saveStatus?: 'idle' | 'saving' | 'saved' | 'error';
 }
@@ -71,7 +69,6 @@ function getTimeSince(date: Date): string {
  * @param {EditorProps} props - Component properties
  * @param {SimpleResumeData} props.resumeData - The resume data to edit
  * @param {Function} props.onUpdate - Callback to update resume data
- * @param {Function} props.onBack - Callback to navigate back
  * @returns {JSX.Element} The rendered editor page component
  *
  * @example
@@ -79,11 +76,11 @@ function getTimeSince(date: Date): string {
  * <Editor
  *   resumeData={sampleResumeData}
  *   onUpdate={(data) => console.log('Updated:', data)}
- *   onBack={() => console.log('Going back')}
  * />
  * ```
  */
-const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, onBack, saveStatus = 'idle' }) => {
+const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, saveStatus = 'idle' }) => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<string>('Experience');
 
   // PDF generation state
@@ -912,7 +909,10 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, onBack, saveStatu
     <div className="min-h-screen bg-[#f6f6f8] flex flex-col">
       {/* Navbar */}
       <header className="flex items-center justify-between px-10 py-3 bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
-        <div className="flex items-center gap-4 cursor-pointer" onClick={onBack}>
+        <div
+          className="flex items-center gap-4 cursor-pointer"
+          onClick={() => navigate('/dashboard')}
+        >
           <div className="bg-primary-600 size-8 rounded-lg flex items-center justify-center text-white">
             <span className="material-symbols-outlined text-[18px]">description</span>
           </div>
@@ -923,7 +923,7 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, onBack, saveStatu
             {NAV_ITEMS.map((item) => (
               <button
                 key={item}
-                onClick={onBack}
+                onClick={() => navigate('/dashboard')}
                 className="text-sm font-semibold text-slate-500 hover:text-primary-600 transition-colors"
               >
                 {item}
@@ -1088,7 +1088,7 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, onBack, saveStatu
                 Save as Draft
               </button>
               <button
-                onClick={onBack}
+                onClick={() => navigate('/dashboard')}
                 className="px-6 py-2.5 rounded-lg bg-primary-600 text-white font-bold text-sm hover:bg-primary-700 shadow-md shadow-primary-600/20 transition-all"
               >
                 Save & Continue
