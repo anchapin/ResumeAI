@@ -7,7 +7,7 @@ import secrets
 from pathlib import Path
 from typing import Optional, Union
 
-from pydantic import Field, field_validator
+from pydantic import Field, ValidationInfo, field_validator
 from pydantic_settings import BaseSettings
 from pydantic_settings import SettingsConfigDict
 
@@ -105,27 +105,42 @@ class Settings(BaseSettings):
 
     @field_validator("jwt_secret")
     @classmethod
-    def validate_jwt_secret(cls, v: str) -> str:
+    def validate_jwt_secret(cls, v: str, info: ValidationInfo) -> str:
         """
-        Validate JWT secret is secure.
+        Validate JWT secret is provided and secure.
 
-        This validator checks against multiple insecure defaults and ensures
-        the secret meets minimum length requirements. If an insecure default
-        is found, a secure random secret is generated.
+        Fails fast if JWT_SECRET is missing in production (debug=False).
         """
+        if not v or v == "":
+            debug = info.data.get("debug", False)
+            if not debug:
+                raise ValueError(
+                    "JWT_SECRET environment variable is required in production. "
+                    "Set it to a secure random value: "
+                    "python -c 'import secrets; print(secrets.token_urlsafe(32))'"
+                )
+            logger = logging.getLogger("config")
+            logger.warning(
+                "SECURITY WARNING: JWT_SECRET not set. "
+                "Using temporary secret for development. "
+                "Set JWT_SECRET environment variable."
+            )
+            return secrets.token_urlsafe(32)
+
         insecure_defaults = [
             "your-secret-key-change-in-production",
             "your-super-secret-jwt-key-change-in-production",
+            "changeme",
+            "secret",
+            "test-secret",
         ]
 
         if v in insecure_defaults:
-            logger = logging.getLogger("config")
-            logger.critical(
-                "SECURITY WARNING: Using insecure default JWT_SECRET! "
-                "Generating a random temporary secret. "
-                "Set JWT_SECRET environment variable in production."
+            raise ValueError(
+                "SECURITY ERROR: JWT_SECRET is set to an insecure default value. "
+                "Set JWT_SECRET to a secure random value: "
+                "python -c 'import secrets; print(secrets.token_urlsafe(32))'"
             )
-            return secrets.token_urlsafe(32)
 
         if len(v) < 32:
             logger = logging.getLogger("config")
