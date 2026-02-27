@@ -12,7 +12,7 @@ from dataclasses import dataclass
 
 logger = logging.getLogger(__name__)
 
-F = TypeVar('F', bound=Callable[..., Any])
+F = TypeVar("F", bound=Callable[..., Any])
 
 # Status codes that should trigger retry
 RETRYABLE_STATUS_CODES: Set[int] = {
@@ -28,6 +28,7 @@ RETRYABLE_STATUS_CODES: Set[int] = {
 @dataclass
 class RetryConfig:
     """Configuration for retry logic"""
+
     max_retries: int = 3
     initial_delay: float = 0.1  # seconds
     max_delay: float = 10.0  # seconds
@@ -37,6 +38,7 @@ class RetryConfig:
 
 class RetryError(Exception):
     """Error raised when retries are exhausted"""
+
     def __init__(
         self,
         message: str,
@@ -65,7 +67,9 @@ def calculate_backoff_delay(
         delay in seconds
     """
     # exponential: initial_delay * (backoff_multiplier ^ attempt_number)
-    exponential_delay = config.initial_delay * (config.backoff_multiplier ** attempt_number)
+    exponential_delay = config.initial_delay * (
+        config.backoff_multiplier**attempt_number
+    )
     capped_delay = min(exponential_delay, config.max_delay)
 
     # add jitter: random variance of 0 to jitter_fraction * delay
@@ -83,15 +87,15 @@ def is_retryable_exception(exception: Exception) -> bool:
     # Network-related exceptions are generally retryable
     exception_type = type(exception).__name__
     retryable_exceptions = {
-        'ConnectionError',
-        'TimeoutError',
-        'ConnectionResetError',
-        'ConnectionRefusedError',
-        'BrokenPipeError',
-        'ConnectError',  # aiohttp
-        'ClientConnectorError',  # aiohttp
-        'ClientOSError',  # aiohttp
-        'ClientSSLError',  # aiohttp (SSL errors are retryable)
+        "ConnectionError",
+        "TimeoutError",
+        "ConnectionResetError",
+        "ConnectionRefusedError",
+        "BrokenPipeError",
+        "ConnectError",  # aiohttp
+        "ClientConnectorError",  # aiohttp
+        "ClientOSError",  # aiohttp
+        "ClientSSLError",  # aiohttp (SSL errors are retryable)
     }
     return exception_type in retryable_exceptions
 
@@ -318,6 +322,7 @@ def retry_sync_call(
                 f"retrying in {delay:.2f}s"
             )
             import time
+
             time.sleep(delay)
 
     # Should not reach here

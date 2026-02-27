@@ -17,6 +17,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class SchemaValidationResult:
     """Result of a schema validation check."""
+
     valid: bool
     timestamp: datetime
     checks_passed: int
@@ -33,12 +34,24 @@ class DatabaseSchemaValidator:
         self.expected_tables = {
             "users": ["id", "email", "username", "password_hash", "created_at"],
             "resumes": ["id", "owner_id", "title", "data", "is_public", "created_at"],
-            "resume_versions": ["id", "resume_id", "version_number", "data", "created_at"],
+            "resume_versions": [
+                "id",
+                "resume_id",
+                "version_number",
+                "data",
+                "created_at",
+            ],
             "tags": ["id", "name", "created_at"],
             "resume_tags": ["resume_id", "tag_id"],
             "sharing_logs": ["id", "resume_id", "action", "created_at"],
             "api_keys": ["id", "user_id", "key_hash", "name", "created_at"],
-            "oauth_tokens": ["id", "user_id", "provider", "access_token", "refresh_token"],
+            "oauth_tokens": [
+                "id",
+                "user_id",
+                "provider",
+                "access_token",
+                "refresh_token",
+            ],
             "teams": ["id", "name", "owner_id", "created_at"],
             "team_members": ["id", "team_id", "user_id", "role", "created_at"],
         }
@@ -100,7 +113,7 @@ class DatabaseSchemaValidator:
 
         logger.info(
             f"Schema validation completed: {passed} passed, {failed} failed",
-            extra={"passed": passed, "failed": failed}
+            extra={"passed": passed, "failed": failed},
         )
 
         return SchemaValidationResult(
@@ -159,7 +172,7 @@ class DatabaseSchemaValidator:
 
         logger.info(
             f"Data integrity validation completed: {passed} passed, {failed} failed",
-            extra={"passed": passed, "failed": failed}
+            extra={"passed": passed, "failed": failed},
         )
 
         return SchemaValidationResult(
@@ -216,7 +229,11 @@ class DatabaseSchemaValidator:
     async def _check_orphaned_team_members(self, db_session) -> Tuple[str, bool, str]:
         """Check for team members with non-existent teams/users."""
         try:
-            return ("Orphaned team members check", True, "No orphaned team members found")
+            return (
+                "Orphaned team members check",
+                True,
+                "No orphaned team members found",
+            )
         except Exception as e:
             return ("Orphaned team members check", False, str(e))
 
@@ -250,7 +267,7 @@ class DatabaseSchemaValidator:
                 "ready": checks["ready_for_migration"],
                 "timestamp": datetime.utcnow().isoformat(),
                 "checks": checks,
-                "details": []
+                "details": [],
             }
         except Exception as e:
             logger.error(f"Migration readiness check error: {e}")

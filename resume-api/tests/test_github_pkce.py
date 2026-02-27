@@ -35,7 +35,10 @@ class TestPKCEGeneration:
         verifier = generate_pkce_code_verifier()
         # RFC 7636: unreserved characters are [A-Z] [a-z] [0-9] - . _ ~
         import re
-        assert re.match(r'^[A-Za-z0-9\-._~]+$', verifier), f"Invalid chars in verifier: {verifier}"
+
+        assert re.match(
+            r"^[A-Za-z0-9\-._~]+$", verifier
+        ), f"Invalid chars in verifier: {verifier}"
 
     def test_code_verifier_randomness(self):
         """Different calls should generate different verifiers."""
@@ -49,15 +52,15 @@ class TestPKCEGeneration:
         challenge = generate_pkce_code_challenge(verifier)
 
         # Challenge should not contain + / =
-        assert '+' not in challenge
-        assert '/' not in challenge
-        assert '=' not in challenge
+        assert "+" not in challenge
+        assert "/" not in challenge
+        assert "=" not in challenge
 
         # Challenge should be base64url-decodable
         # Add padding if needed
         padding = 4 - (len(challenge) % 4)
         if padding != 4:
-            padded_challenge = challenge + ('=' * padding)
+            padded_challenge = challenge + ("=" * padding)
         else:
             padded_challenge = challenge
 
@@ -104,7 +107,7 @@ class TestPKCEVerification:
         challenge = generate_pkce_code_challenge(verifier)
 
         # Tamper with challenge
-        tampered = challenge[:-1] + ('A' if challenge[-1] != 'A' else 'B')
+        tampered = challenge[:-1] + ("A" if challenge[-1] != "A" else "B")
 
         assert verify_pkce_challenge(verifier, tampered) is False
 
@@ -118,7 +121,9 @@ class TestPKCEVerification:
 
         # Should be False for incorrect verifier (all cases)
         for i in range(len(verifier)):
-            wrong_verifier = verifier[:i] + ('X' if verifier[i] != 'X' else 'Y') + verifier[i + 1:]
+            wrong_verifier = (
+                verifier[:i] + ("X" if verifier[i] != "X" else "Y") + verifier[i + 1 :]
+            )
             assert verify_pkce_challenge(wrong_verifier, challenge) is False
 
 
@@ -179,10 +184,13 @@ class TestPKCEIntegration:
 
         # Verify verifier meets RFC 7636 requirements
         assert 43 <= len(verifier) <= 128
-        assert all(c in 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~' for c in verifier)
+        assert all(
+            c in "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~"
+            for c in verifier
+        )
 
         # Step 2: Challenge should be base64url without padding
-        assert '+' not in challenge and '/' not in challenge and '=' not in challenge
+        assert "+" not in challenge and "/" not in challenge and "=" not in challenge
 
         # Step 3: Verification should succeed
         assert verify_pkce_challenge(verifier, challenge) is True
@@ -265,7 +273,9 @@ class TestRFC7636Compliance:
         """Code verifier must use only unreserved characters (RFC 7636)."""
         verifier = generate_pkce_code_verifier()
         # RFC 3986: unreserved = ALPHA / DIGIT / "-" / "." / "_" / "~"
-        unreserved = set('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~')
+        unreserved = set(
+            "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~"
+        )
         assert all(c in unreserved for c in verifier)
 
     def test_challenge_method_s256(self):
@@ -276,8 +286,10 @@ class TestRFC7636Compliance:
 
         # Should be base64url(SHA256(verifier))
         # Verify by comparing with manual SHA256
-        sha256_hash = hashlib.sha256(verifier.encode('utf-8')).digest()
-        expected_challenge = base64.urlsafe_b64encode(sha256_hash).decode('utf-8').rstrip('=')
+        sha256_hash = hashlib.sha256(verifier.encode("utf-8")).digest()
+        expected_challenge = (
+            base64.urlsafe_b64encode(sha256_hash).decode("utf-8").rstrip("=")
+        )
         assert challenge == expected_challenge
 
     def test_challenge_base64url_encoding(self):
@@ -286,12 +298,12 @@ class TestRFC7636Compliance:
         challenge = generate_pkce_code_challenge(verifier)
 
         # Must not contain + / =
-        assert '+' not in challenge
-        assert '/' not in challenge
-        assert '=' not in challenge
+        assert "+" not in challenge
+        assert "/" not in challenge
+        assert "=" not in challenge
 
         # Must be decodable when padding is added
         padding = (4 - (len(challenge) % 4)) % 4
-        padded = challenge + ('=' * padding)
+        padded = challenge + ("=" * padding)
         decoded = base64.urlsafe_b64decode(padded)
         assert len(decoded) == 32  # SHA256 = 32 bytes

@@ -30,7 +30,6 @@ from config.dependencies import get_current_user
 from config.jwt_utils import create_access_token, create_refresh_token
 from config.security import hash_password, encrypt_token
 
-
 # ============================================================================
 # Database Fixtures
 # ============================================================================
@@ -226,6 +225,7 @@ async def valid_refresh_token(test_db_session, test_user):
     refresh_token = create_refresh_token(token_data)
 
     import hashlib
+
     token_hash = hashlib.sha256(refresh_token.encode()).hexdigest()
     stored = RefreshToken(
         user_id=test_user.id,
@@ -246,6 +246,7 @@ async def expired_refresh_token(test_db_session, test_user):
     refresh_token = create_refresh_token(token_data)
 
     import hashlib
+
     token_hash = hashlib.sha256(refresh_token.encode()).hexdigest()
     stored = RefreshToken(
         user_id=test_user.id,
@@ -266,6 +267,7 @@ async def revoked_refresh_token(test_db_session, test_user):
     refresh_token = create_refresh_token(token_data)
 
     import hashlib
+
     token_hash = hashlib.sha256(refresh_token.encode()).hexdigest()
     stored = RefreshToken(
         user_id=test_user.id,

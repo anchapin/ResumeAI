@@ -1,4 +1,5 @@
 """Simulated AI Provider Outage Tests."""
+
 import sys
 import pytest
 from pathlib import Path
@@ -8,7 +9,12 @@ from datetime import datetime, timedelta
 sys.path.insert(0, str(Path("resume-api").absolute()))
 
 from lib.utils.ai_provider_manager import AIProviderManager, ProviderType
-from lib.utils.circuit_breaker import CircuitState, openai_breaker, claude_breaker, gemini_breaker
+from lib.utils.circuit_breaker import (
+    CircuitState,
+    openai_breaker,
+    claude_breaker,
+    gemini_breaker,
+)
 
 
 class TestProviderOutageScenarios:
@@ -118,9 +124,7 @@ class TestCircuitBreakerMetrics:
         provider = MagicMock()
         provider.generate_response.side_effect = Exception("Error")
 
-        manager = AIProviderManager(
-            providers={ProviderType.OPENAI: provider}
-        )
+        manager = AIProviderManager(providers={ProviderType.OPENAI: provider})
 
         for i in range(5):
             try:

@@ -160,14 +160,12 @@ class MigrationValidator:
 
         cutoff_time = time.time() - (24 * 3600)
         recent_backups = [
-            f for f in backup_dir.glob("*.sql")
-            if f.stat().st_mtime > cutoff_time
+            f for f in backup_dir.glob("*.sql") if f.stat().st_mtime > cutoff_time
         ]
 
         if recent_backups:
             self.log_pass(
-                "Recent backup",
-                f"Found {len(recent_backups)} recent backup(s)"
+                "Recent backup", f"Found {len(recent_backups)} recent backup(s)"
             )
             return True
         else:
@@ -188,8 +186,7 @@ class MigrationValidator:
             migrations = list(migration_dir.glob("*.py"))
             if migrations:
                 self.log_pass(
-                    "Migration files",
-                    f"Found {len(migrations)} migration file(s)"
+                    "Migration files", f"Found {len(migrations)} migration file(s)"
                 )
                 return True
             else:
@@ -217,20 +214,18 @@ class MigrationValidator:
             import shutil
 
             stat = shutil.disk_usage("/")
-            free_gb = stat.free / (1024 ** 3)
-            total_gb = stat.total / (1024 ** 3)
+            free_gb = stat.free / (1024**3)
+            total_gb = stat.total / (1024**3)
             percent_free = (stat.free / stat.total) * 100
 
             if percent_free > 20:  # At least 20% free
                 self.log_pass(
-                    "Disk space",
-                    f"{free_gb:.1f}GB free ({percent_free:.1f}%)"
+                    "Disk space", f"{free_gb:.1f}GB free ({percent_free:.1f}%)"
                 )
                 return True
             else:
                 self.log_fail(
-                    "Disk space",
-                    f"Only {percent_free:.1f}% free (need >= 20%)"
+                    "Disk space", f"Only {percent_free:.1f}% free (need >= 20%)"
                 )
                 return False
 
@@ -371,10 +366,12 @@ class MigrationValidator:
             "warnings": self.warnings,
             "summary": {
                 "total_checks": len(self.results),
-                "passed": sum(1 for r in self.results.values() if r["status"] == "passed"),
+                "passed": sum(
+                    1 for r in self.results.values() if r["status"] == "passed"
+                ),
                 "failed": len(self.errors),
                 "warnings": len(self.warnings),
-            }
+            },
         }
 
         with open(filename, "w") as f:
@@ -385,28 +382,18 @@ class MigrationValidator:
 
 def main():
     """Main entry point."""
-    parser = argparse.ArgumentParser(
-        description="Database Migration Validation"
+    parser = argparse.ArgumentParser(description="Database Migration Validation")
+    parser.add_argument(
+        "--pre-migration", action="store_true", help="Run pre-migration validation"
     )
     parser.add_argument(
-        "--pre-migration",
-        action="store_true",
-        help="Run pre-migration validation"
+        "--post-migration", action="store_true", help="Run post-migration validation"
     )
     parser.add_argument(
-        "--post-migration",
-        action="store_true",
-        help="Run post-migration validation"
+        "--check-integrity", action="store_true", help="Check data integrity only"
     )
     parser.add_argument(
-        "--check-integrity",
-        action="store_true",
-        help="Check data integrity only"
-    )
-    parser.add_argument(
-        "--save-report",
-        action="store_true",
-        help="Save validation report to JSON file"
+        "--save-report", action="store_true", help="Save validation report to JSON file"
     )
 
     args = parser.parse_args()

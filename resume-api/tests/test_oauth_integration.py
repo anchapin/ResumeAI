@@ -30,10 +30,13 @@ from database import (
     get_async_session,
 )
 from config.dependencies import get_current_user
-from config.jwt_utils import create_access_token, create_refresh_token, verify_access_token
+from config.jwt_utils import (
+    create_access_token,
+    create_refresh_token,
+    verify_access_token,
+)
 from config.security import hash_password, encrypt_token
 from lib.token_encryption import generate_encryption_key
-
 
 # ============================================================================
 # Test Fixtures
@@ -123,7 +126,9 @@ class TestGitHubOAuthFlow:
     """Test complete GitHub OAuth flow."""
 
     @pytest.mark.asyncio
-    async def test_github_oauth_complete_flow(self, authenticated_client, db_session, test_user):
+    async def test_github_oauth_complete_flow(
+        self, authenticated_client, db_session, test_user
+    ):
         """Test complete GitHub OAuth flow from connect to disconnect."""
         with patch("routes.github.settings") as mock_settings:
             mock_settings.github_client_id = "test_client_id"
@@ -198,15 +203,15 @@ class TestGitHubOAuthFlow:
 
             # Verify connection deleted
             result = await db_session.execute(
-                select(GitHubConnection).where(
-                    GitHubConnection.user_id == test_user.id
-                )
+                select(GitHubConnection).where(GitHubConnection.user_id == test_user.id)
             )
             connection = result.scalar_one_or_none()
             assert connection is None
 
     @pytest.mark.asyncio
-    async def test_github_oauth_state_expiration(self, authenticated_client, db_session, test_user):
+    async def test_github_oauth_state_expiration(
+        self, authenticated_client, db_session, test_user
+    ):
         """Test that expired OAuth states are rejected."""
         # Create an expired state
         expired_state = GitHubOAuthState(
@@ -249,7 +254,9 @@ class TestGitHubOAuthFlow:
             assert "not configured" in response.json()["detail"]
 
     @pytest.mark.asyncio
-    async def test_github_state_uniqueness(self, authenticated_client, db_session, test_user):
+    async def test_github_state_uniqueness(
+        self, authenticated_client, db_session, test_user
+    ):
         """Test that multiple state values are unique."""
         with patch("routes.github.settings") as mock_settings:
             mock_settings.github_client_id = "test_client_id"
@@ -315,6 +322,7 @@ class TestTokenManagement:
 
         # Store refresh token in database
         import hashlib
+
         token_hash = hashlib.sha256(refresh_token.encode()).hexdigest()
         stored_token = RefreshToken(
             user_id=test_user.id,
@@ -345,6 +353,7 @@ class TestTokenManagement:
 
         # Store with expired timestamp
         import hashlib
+
         token_hash = hashlib.sha256(refresh_token.encode()).hexdigest()
         stored_token = RefreshToken(
             user_id=test_user.id,
@@ -372,6 +381,7 @@ class TestTokenManagement:
 
         # Store token
         import hashlib
+
         token_hash = hashlib.sha256(refresh_token.encode()).hexdigest()
         stored_token = RefreshToken(
             user_id=test_user.id,
@@ -400,7 +410,9 @@ class TestTokenManagement:
     @pytest.mark.asyncio
     async def test_github_token_encryption(self, db_session):
         """Test that GitHub tokens are encrypted at rest."""
-        with patch.dict(os.environ, {"TOKEN_ENCRYPTION_KEY": generate_encryption_key()}):
+        with patch.dict(
+            os.environ, {"TOKEN_ENCRYPTION_KEY": generate_encryption_key()}
+        ):
             # Create encrypted token
             plaintext_token = "gho_test_token_12345"
             encrypted_token = encrypt_token(plaintext_token)
@@ -420,6 +432,7 @@ class TestTokenManagement:
 
             # Verify stored token is encrypted
             from sqlalchemy import select
+
             result = await db_session.execute(
                 select(GitHubConnection).where(GitHubConnection.id == connection.id)
             )
@@ -468,7 +481,9 @@ class TestOAuthErrorHandling:
     """Test error scenarios and edge cases."""
 
     @pytest.mark.asyncio
-    async def test_duplicate_github_connection(self, authenticated_client, db_session, test_user):
+    async def test_duplicate_github_connection(
+        self, authenticated_client, db_session, test_user
+    ):
         """Test handling of duplicate GitHub connections."""
         with patch("routes.github.settings") as mock_settings:
             mock_settings.github_client_id = "test_client_id"
@@ -588,6 +603,7 @@ class TestConcurrentRequests:
         refresh_token = create_refresh_token(token_data)
 
         import hashlib
+
         token_hash = hashlib.sha256(refresh_token.encode()).hexdigest()
         stored_token = RefreshToken(
             user_id=test_user.id,
@@ -616,7 +632,9 @@ class TestConcurrentRequests:
             assert "access_token" in response.json()
 
     @pytest.mark.asyncio
-    async def test_concurrent_github_status_checks(self, authenticated_client, db_session, test_user):
+    async def test_concurrent_github_status_checks(
+        self, authenticated_client, db_session, test_user
+    ):
         """Test concurrent status check requests."""
         import asyncio
 
@@ -663,6 +681,7 @@ class TestRateLimiting:
         refresh_token = create_refresh_token(token_data)
 
         import hashlib
+
         token_hash = hashlib.sha256(refresh_token.encode()).hexdigest()
         stored_token = RefreshToken(
             user_id=test_user.id,
@@ -690,7 +709,9 @@ class TestSessionManagement:
     """Test user session management."""
 
     @pytest.mark.asyncio
-    async def test_user_profile_update(self, authenticated_client, test_user, db_session):
+    async def test_user_profile_update(
+        self, authenticated_client, test_user, db_session
+    ):
         """Test updating user profile."""
         response = await authenticated_client.put(
             "/auth/me",
@@ -719,9 +740,11 @@ class TestSessionManagement:
 
         # Verify old password doesn't work
         from routes.auth import login
+
         result = await db_session.execute(select(User).where(User.id == test_user.id))
         updated_user = result.scalar_one()
         from config.security import verify_password
+
         assert not verify_password("password123", updated_user.hashed_password)
 
     @pytest.mark.asyncio
@@ -732,6 +755,7 @@ class TestSessionManagement:
         refresh_token = create_refresh_token(token_data)
 
         import hashlib
+
         token_hash = hashlib.sha256(refresh_token.encode()).hexdigest()
         stored_token = RefreshToken(
             user_id=test_user.id,

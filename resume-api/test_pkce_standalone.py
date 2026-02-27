@@ -19,7 +19,7 @@ def generate_pkce_code_verifier() -> str:
     # Generate 96 random bytes and base64url encode to get ~128 chars
     random_bytes = secrets.token_bytes(96)
     # Use urlsafe base64 and remove padding
-    verifier = base64.urlsafe_b64encode(random_bytes).decode('utf-8').rstrip('=')
+    verifier = base64.urlsafe_b64encode(random_bytes).decode("utf-8").rstrip("=")
     return verifier[:128]  # Ensure exactly 128 chars
 
 
@@ -30,10 +30,10 @@ def generate_pkce_code_challenge(verifier: str) -> str:
     Creates a SHA256 hash of the verifier and base64url encodes it.
     """
     # Hash the verifier with SHA-256
-    sha256_hash = hashlib.sha256(verifier.encode('utf-8')).digest()
+    sha256_hash = hashlib.sha256(verifier.encode("utf-8")).digest()
 
     # Base64url encode without padding
-    challenge = base64.urlsafe_b64encode(sha256_hash).decode('utf-8').rstrip('=')
+    challenge = base64.urlsafe_b64encode(sha256_hash).decode("utf-8").rstrip("=")
     return challenge
 
 
@@ -56,7 +56,9 @@ def test_code_verifier_generation():
     assert len(verifier) == 128, f"Verifier length should be 128, got {len(verifier)}"
 
     # Check valid characters (RFC 7636: unreserved = ALPHA / DIGIT / "-" / "." / "_" / "~")
-    valid_chars = set('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~')
+    valid_chars = set(
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~"
+    )
     for char in verifier:
         assert char in valid_chars, f"Invalid character in verifier: {char}"
 
@@ -71,12 +73,14 @@ def test_code_challenge_generation(verifier):
     challenge = generate_pkce_code_challenge(verifier)
 
     # Check no padding characters
-    assert '+' not in challenge, "Challenge should not contain +"
-    assert '/' not in challenge, "Challenge should not contain /"
-    assert '=' not in challenge, "Challenge should not contain padding ="
+    assert "+" not in challenge, "Challenge should not contain +"
+    assert "/" not in challenge, "Challenge should not contain /"
+    assert "=" not in challenge, "Challenge should not contain padding ="
 
     # Check base64url alphabet
-    valid_chars = set('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_')
+    valid_chars = set(
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"
+    )
     for char in challenge:
         assert char in valid_chars, f"Invalid character in challenge: {char}"
 
@@ -174,11 +178,13 @@ def test_rfc7636_compliance():
     challenge = generate_pkce_code_challenge(verifier)
 
     # Verifier length requirements
-    assert 43 <= len(verifier) <= 128, f"Verifier length must be 43-128, got {len(verifier)}"
+    assert (
+        43 <= len(verifier) <= 128
+    ), f"Verifier length must be 43-128, got {len(verifier)}"
 
     # Challenge should be SHA256(verifier) in base64url
-    sha256_hash = hashlib.sha256(verifier.encode('utf-8')).digest()
-    expected = base64.urlsafe_b64encode(sha256_hash).decode('utf-8').rstrip('=')
+    sha256_hash = hashlib.sha256(verifier.encode("utf-8")).digest()
+    expected = base64.urlsafe_b64encode(sha256_hash).decode("utf-8").rstrip("=")
     assert challenge == expected, f"Challenge doesn't match RFC 7636 spec"
 
     print(f"  ✓ RFC 7636 compliance verified")
@@ -186,9 +192,9 @@ def test_rfc7636_compliance():
 
 def main():
     """Run all PKCE tests."""
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("OAuth 2.0 PKCE Implementation Tests (Standalone)")
-    print("="*70 + "\n")
+    print("=" * 70 + "\n")
 
     try:
         # Generate test data
@@ -204,9 +210,9 @@ def main():
         test_attack_scenario()
         test_rfc7636_compliance()
 
-        print("\n" + "="*70)
+        print("\n" + "=" * 70)
         print("✓ All PKCE tests passed!")
-        print("="*70 + "\n")
+        print("=" * 70 + "\n")
         return True
     except AssertionError as e:
         print(f"\n✗ Test failed: {e}\n")
@@ -214,6 +220,7 @@ def main():
     except Exception as e:
         print(f"\n✗ Unexpected error: {e}\n")
         import traceback
+
         traceback.print_exc()
         return False
 

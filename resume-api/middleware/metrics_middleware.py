@@ -49,9 +49,9 @@ class MetricsMiddleware(BaseHTTPMiddleware):
         # Get request size
         request_size = 0
         try:
-            if request.method in ['POST', 'PUT', 'PATCH']:
+            if request.method in ["POST", "PUT", "PATCH"]:
                 # Try to get content length
-                content_length = request.headers.get('content-length')
+                content_length = request.headers.get("content-length")
                 if content_length:
                     request_size = int(content_length)
         except (ValueError, TypeError):
@@ -60,8 +60,7 @@ class MetricsMiddleware(BaseHTTPMiddleware):
         # Record request size
         if request_size > 0:
             self.exporter.http_request_size_bytes.labels(
-                method=method,
-                endpoint=endpoint
+                method=method, endpoint=endpoint
             ).observe(request_size)
 
         # Call the endpoint
@@ -84,7 +83,7 @@ class MetricsMiddleware(BaseHTTPMiddleware):
             # Get response size
             response_size = 0
             if response:
-                content_length = response.headers.get('content-length')
+                content_length = response.headers.get("content-length")
                 if content_length:
                     try:
                         response_size = int(content_length)
@@ -99,11 +98,13 @@ class MetricsMiddleware(BaseHTTPMiddleware):
                 duration=duration,
                 request_size=request_size,
                 response_size=response_size,
-                error_type=error_type
+                error_type=error_type,
             )
 
             # Decrement in-progress counter
-            self.exporter.http_in_progress.labels(method=method, endpoint=endpoint).dec()
+            self.exporter.http_in_progress.labels(
+                method=method, endpoint=endpoint
+            ).dec()
 
         return response
 
@@ -135,16 +136,15 @@ class RateLimitMetricsMiddleware(BaseHTTPMiddleware):
         # Check for rate limit response
         if response.status_code == 429:  # Too Many Requests
             endpoint = self._normalize_endpoint(request.url.path)
-            client_id = request.client.host if request.client else 'unknown'
+            client_id = request.client.host if request.client else "unknown"
 
             self.exporter.rate_limit_exceeded_total.labels(
-                endpoint=endpoint,
-                client_id=client_id
+                endpoint=endpoint, client_id=client_id
             ).inc()
 
             # Add retry-after header if not present
-            if 'retry-after' not in response.headers:
-                response.headers['retry-after'] = '60'
+            if "retry-after" not in response.headers:
+                response.headers["retry-after"] = "60"
 
         return response
 
@@ -178,12 +178,12 @@ class CacheMetricsMiddleware(BaseHTTPMiddleware):
             response = await call_next(request)
 
             # Check for cache header
-            cache_status = response.headers.get('x-cache-status', 'unknown')
+            cache_status = response.headers.get("x-cache-status", "unknown")
 
-            if cache_status == 'HIT':
-                self.exporter.record_cache_hit('http_cache', path)
-            elif cache_status == 'MISS':
-                self.exporter.record_cache_miss('http_cache', path)
+            if cache_status == "HIT":
+                self.exporter.record_cache_hit("http_cache", path)
+            elif cache_status == "MISS":
+                self.exporter.record_cache_miss("http_cache", path)
 
             return response
         else:
@@ -209,9 +209,15 @@ class AsyncJobMetricsMiddleware:
         """
         return time.time()
 
-    def record_job_end(self, queue_name: str, job_id: str, job_type: str,
-                      start_time: float, status: str = 'success',
-                      failure_reason: str = None):
+    def record_job_end(
+        self,
+        queue_name: str,
+        job_id: str,
+        job_type: str,
+        start_time: float,
+        status: str = "success",
+        failure_reason: str = None,
+    ):
         """Record the completion of an async job."""
         duration = time.time() - start_time
         self.exporter.record_async_job(
@@ -219,7 +225,7 @@ class AsyncJobMetricsMiddleware:
             job_type=job_type,
             duration=duration,
             status=status,
-            failure_reason=failure_reason
+            failure_reason=failure_reason,
         )
 
 
@@ -238,15 +244,13 @@ class DatabaseMetricsMiddleware:
         """Record the start of a database query."""
         return time.time()
 
-    def record_query_end(self, start_time: float, operation: str, table: str,
-                       status: str = 'success'):
+    def record_query_end(
+        self, start_time: float, operation: str, table: str, status: str = "success"
+    ):
         """Record the completion of a database query."""
         duration = time.time() - start_time
         self.exporter.record_db_query(
-            operation=operation,
-            table=table,
-            duration=duration,
-            status=status
+            operation=operation, table=table, duration=duration, status=status
         )
 
 
@@ -265,10 +269,17 @@ class AIMetricsMiddleware:
         """Record the start of an AI request."""
         return time.time()
 
-    def record_ai_request_end(self, start_time: float, provider: str, model: str,
-                             input_tokens: int = 0, output_tokens: int = 0,
-                             cost: float = 0.0, status: str = 'success',
-                             error_type: str = None):
+    def record_ai_request_end(
+        self,
+        start_time: float,
+        provider: str,
+        model: str,
+        input_tokens: int = 0,
+        output_tokens: int = 0,
+        cost: float = 0.0,
+        status: str = "success",
+        error_type: str = None,
+    ):
         """Record the completion of an AI request."""
         duration = time.time() - start_time
         self.exporter.record_ai_request(
@@ -279,5 +290,5 @@ class AIMetricsMiddleware:
             output_tokens=output_tokens,
             cost=cost,
             status=status,
-            error_type=error_type
+            error_type=error_type,
         )

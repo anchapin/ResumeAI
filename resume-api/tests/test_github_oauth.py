@@ -137,7 +137,9 @@ class TestTokenExchange:
         with patch("routes.github.AsyncClient") as mock_client_class:
             mock_response = AsyncMock()
             mock_response.status_code = 400
-            mock_response.json = AsyncMock(return_value={"error": "bad_verification_code"})
+            mock_response.json = AsyncMock(
+                return_value={"error": "bad_verification_code"}
+            )
 
             mock_client = AsyncMock()
             mock_client.post = AsyncMock(return_value=mock_response)

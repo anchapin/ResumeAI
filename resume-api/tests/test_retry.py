@@ -275,8 +275,7 @@ class TestRetryAsyncCall:
         )
 
         result = await retry_async_call(
-            async_func,
-            config=RetryConfig(max_retries=2, initial_delay=0.01)
+            async_func, config=RetryConfig(max_retries=2, initial_delay=0.01)
         )
 
         assert result == "success"
@@ -289,8 +288,7 @@ class TestRetryAsyncCall:
 
         with pytest.raises(RetryError) as exc_info:
             await retry_async_call(
-                async_func,
-                config=RetryConfig(max_retries=1, initial_delay=0.01)
+                async_func, config=RetryConfig(max_retries=1, initial_delay=0.01)
             )
 
         assert exc_info.value.attempt_count == 2
@@ -313,8 +311,7 @@ class TestRetrySyncCall:
         func = Mock(side_effect=[ConnectionError("Network error"), "success"])
 
         result = retry_sync_call(
-            func,
-            config=RetryConfig(max_retries=2, initial_delay=0.01)
+            func, config=RetryConfig(max_retries=2, initial_delay=0.01)
         )
 
         assert result == "success"
@@ -325,9 +322,6 @@ class TestRetrySyncCall:
         func = Mock(side_effect=ConnectionError("Network error"))
 
         with pytest.raises(RetryError) as exc_info:
-            retry_sync_call(
-                func,
-                config=RetryConfig(max_retries=1, initial_delay=0.01)
-            )
+            retry_sync_call(func, config=RetryConfig(max_retries=1, initial_delay=0.01))
 
         assert exc_info.value.attempt_count == 2

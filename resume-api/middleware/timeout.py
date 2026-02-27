@@ -22,7 +22,7 @@ DEFAULT_REQUEST_TIMEOUT = 30
 # Endpoints that should have longer timeouts (PDF generation, etc.)
 EXTENDED_TIMEOUT_ENDPOINTS = {
     "/v1/render/pdf": 60,  # PDF generation needs more time
-    "/v1/tailor": 45,       # AI tailoring needs more time
+    "/v1/tailor": 45,  # AI tailoring needs more time
 }
 
 

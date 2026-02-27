@@ -33,7 +33,7 @@ router = APIRouter(prefix="/metrics", tags=["Metrics"])
     tags=["OAuth Monitoring"],
     responses={
         200: {"description": "OAuth health status"},
-    }
+    },
 )
 async def oauth_health():
     """
@@ -57,7 +57,7 @@ async def oauth_health():
         logger.error("oauth_health_metrics_error", error=str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve OAuth health metrics"
+            detail="Failed to retrieve OAuth health metrics",
         )
 
 
@@ -67,7 +67,7 @@ async def oauth_health():
     tags=["OAuth Monitoring"],
     responses={
         200: {"description": "Detected anomalies"},
-    }
+    },
 )
 async def oauth_anomalies(
     provider: str = Query("github", description="OAuth provider")
@@ -104,7 +104,7 @@ async def oauth_anomalies(
         logger.error("oauth_anomalies_detection_error", error=str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to detect OAuth anomalies"
+            detail="Failed to detect OAuth anomalies",
         )
 
 
@@ -114,7 +114,7 @@ async def oauth_anomalies(
     tags=["OAuth Monitoring"],
     responses={
         200: {"description": "OAuth metrics"},
-    }
+    },
 )
 async def oauth_metrics(
     provider: str = Query("github", description="OAuth provider"),
@@ -161,7 +161,7 @@ async def oauth_metrics(
         logger.error("oauth_metrics_error", error=str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve OAuth metrics"
+            detail="Failed to retrieve OAuth metrics",
         )
 
 
@@ -171,7 +171,7 @@ async def oauth_metrics(
     tags=["OAuth Monitoring"],
     responses={
         200: {"description": "Suspicious activity report"},
-    }
+    },
 )
 async def suspicious_oauth_activity(
     window_minutes: int = Query(5, ge=1, le=60, description="Time window in minutes"),
@@ -208,7 +208,7 @@ async def suspicious_oauth_activity(
         logger.error("suspicious_oauth_activity_error", error=str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to detect suspicious activity"
+            detail="Failed to detect suspicious activity",
         )
 
 
@@ -218,7 +218,7 @@ async def suspicious_oauth_activity(
     tags=["Health"],
     responses={
         200: {"description": "System health dashboard"},
-    }
+    },
 )
 async def health_dashboard():
     """
@@ -242,7 +242,7 @@ async def health_dashboard():
         logger.error("health_dashboard_error", error=str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve health dashboard"
+            detail="Failed to retrieve health dashboard",
         )
 
 
@@ -251,8 +251,11 @@ async def health_dashboard():
     summary="Prometheus Metrics Export",
     tags=["Metrics"],
     responses={
-        200: {"description": "Prometheus-format metrics", "content": {"text/plain": {}}},
-    }
+        200: {
+            "description": "Prometheus-format metrics",
+            "content": {"text/plain": {}},
+        },
+    },
 )
 async def prometheus_metrics():
     """
@@ -274,13 +277,13 @@ async def prometheus_metrics():
         logger.warning("prometheus_client not available")
         raise HTTPException(
             status_code=status.HTTP_501_NOT_IMPLEMENTED,
-            detail="Prometheus metrics are not available"
+            detail="Prometheus metrics are not available",
         )
     except Exception as e:
         logger.error("prometheus_metrics_error", error=str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to generate Prometheus metrics"
+            detail="Failed to generate Prometheus metrics",
         )
 
 
@@ -290,7 +293,7 @@ async def prometheus_metrics():
     tags=["Metrics"],
     responses={
         200: {"description": "Performance metrics summary"},
-    }
+    },
 )
 async def performance_summary(
     hours: int = Query(24, ge=1, le=168, description="Hours to analyze"),
@@ -327,7 +330,7 @@ async def performance_summary(
         logger.error("performance_summary_error", error=str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve performance summary"
+            detail="Failed to retrieve performance summary",
         )
 
 
@@ -338,7 +341,7 @@ async def performance_summary(
     responses={
         200: {"description": "Cleanup completed"},
         403: {"description": "Not authorized"},
-    }
+    },
 )
 async def cleanup_oauth_monitoring(
     current_user: User = Depends(get_current_user),
@@ -377,7 +380,7 @@ async def cleanup_oauth_monitoring(
         logger.error("oauth_monitoring_cleanup_error", error=str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to cleanup monitoring data"
+            detail="Failed to cleanup monitoring data",
         )
 
 
@@ -387,7 +390,7 @@ async def cleanup_oauth_monitoring(
     tags=["OAuth Monitoring"],
     responses={
         200: {"description": "Endpoint health status"},
-    }
+    },
 )
 async def oauth_endpoint_health():
     """
@@ -419,19 +422,27 @@ async def oauth_endpoint_health():
             },
             "endpoints": {
                 "github_callback": {
-                    "status": "operational" if metrics.success_rate > 0.8 else "degraded",
+                    "status": (
+                        "operational" if metrics.success_rate > 0.8 else "degraded"
+                    ),
                     "availability": f"{metrics.success_rate:.2%}",
                 },
                 "github_connect": {
-                    "status": "operational" if metrics.success_rate > 0.8 else "degraded",
+                    "status": (
+                        "operational" if metrics.success_rate > 0.8 else "degraded"
+                    ),
                     "availability": f"{metrics.success_rate:.2%}",
                 },
                 "github_status": {
-                    "status": "operational" if metrics.success_rate > 0.8 else "degraded",
+                    "status": (
+                        "operational" if metrics.success_rate > 0.8 else "degraded"
+                    ),
                     "availability": f"{metrics.success_rate:.2%}",
                 },
                 "github_disconnect": {
-                    "status": "operational" if metrics.success_rate > 0.8 else "degraded",
+                    "status": (
+                        "operational" if metrics.success_rate > 0.8 else "degraded"
+                    ),
                     "availability": f"{metrics.success_rate:.2%}",
                 },
             },
@@ -441,5 +452,5 @@ async def oauth_endpoint_health():
         logger.error("oauth_endpoint_health_error", error=str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve endpoint health"
+            detail="Failed to retrieve endpoint health",
         )

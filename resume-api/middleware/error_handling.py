@@ -16,7 +16,6 @@ from ..config.errors import (
     get_status_code,
 )
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -38,7 +37,9 @@ class ErrorHandlingMiddleware(BaseHTTPMiddleware):
             error_code = self._map_status_to_error_code(exc.status_code)
             error_response = create_error_response(
                 error_code=error_code,
-                message=exc.detail if isinstance(exc.detail, str) else "An error occurred",
+                message=(
+                    exc.detail if isinstance(exc.detail, str) else "An error occurred"
+                ),
                 request_id=request_id,
                 path=str(request.url.path),
                 method=request.method,
@@ -47,7 +48,7 @@ class ErrorHandlingMiddleware(BaseHTTPMiddleware):
             return JSONResponse(
                 status_code=exc.status_code,
                 content=error_response.model_dump(exclude_none=True),
-                headers={"X-Request-ID": request_id}
+                headers={"X-Request-ID": request_id},
             )
 
         except Exception as exc:
@@ -57,7 +58,7 @@ class ErrorHandlingMiddleware(BaseHTTPMiddleware):
                 request_id=request_id,
                 path=str(request.url.path),
                 method=request.method,
-                details={"error_type": type(exc).__name__}
+                details={"error_type": type(exc).__name__},
             )
 
             logger.exception(
@@ -66,14 +67,14 @@ class ErrorHandlingMiddleware(BaseHTTPMiddleware):
                     "request_id": request_id,
                     "path": str(request.url.path),
                     "method": request.method,
-                    "error": str(exc)
-                }
+                    "error": str(exc),
+                },
             )
 
             return JSONResponse(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 content=error_response.model_dump(exclude_none=True),
-                headers={"X-Request-ID": request_id}
+                headers={"X-Request-ID": request_id},
             )
 
     def _map_status_to_error_code(self, status_code: int) -> ErrorCode:

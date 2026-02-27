@@ -32,7 +32,9 @@ router = APIRouter(prefix="/v1/deployment", tags=["deployment"])
 
 
 @router.get("/health", tags=["health"])
-async def get_health_status(detailed: bool = Query(False, description="Return detailed health info")):
+async def get_health_status(
+    detailed: bool = Query(False, description="Return detailed health info")
+):
     """
     Health check endpoint for load balancers and orchestration.
 
@@ -58,10 +60,7 @@ async def get_health_status(detailed: bool = Query(False, description="Return de
         raise
     except Exception as e:
         logger.error("health_check_error", error=str(e))
-        raise HTTPException(
-            status_code=503,
-            detail="Health check failed"
-        )
+        raise HTTPException(status_code=503, detail="Health check failed")
 
 
 @router.get("/health/detailed", tags=["health"])
@@ -82,10 +81,7 @@ async def get_detailed_health():
         }
     except Exception as e:
         logger.error("detailed_health_check_error", error=str(e))
-        raise HTTPException(
-            status_code=503,
-            detail="Detailed health check failed"
-        )
+        raise HTTPException(status_code=503, detail="Detailed health check failed")
 
 
 @router.get("/ready", tags=["health"])
@@ -144,10 +140,7 @@ async def get_liveness_status():
 # ============================================================================
 
 
-@router.get("/features",
-    tags=["feature-flags"],
-    dependencies=[Depends(verify_api_key)]
-)
+@router.get("/features", tags=["feature-flags"], dependencies=[Depends(verify_api_key)])
 async def get_all_features():
     """
     Get all feature flags and their status.
@@ -166,16 +159,17 @@ async def get_all_features():
                     "updated_at": flag.updated_at.isoformat(),
                 }
                 for name, flag in flags.items()
-            }
+            },
         }
     except Exception as e:
         logger.error("get_features_error", error=str(e))
         raise HTTPException(status_code=500, detail="Failed to get features")
 
 
-@router.get("/features/{feature_name}",
+@router.get(
+    "/features/{feature_name}",
     tags=["feature-flags"],
-    dependencies=[Depends(verify_api_key)]
+    dependencies=[Depends(verify_api_key)],
 )
 async def get_feature_status(feature_name: str):
     """
@@ -187,8 +181,7 @@ async def get_feature_status(feature_name: str):
         flag = feature_flag_manager.get_flag(feature_name)
         if not flag:
             raise HTTPException(
-                status_code=404,
-                detail=f"Feature flag not found: {feature_name}"
+                status_code=404, detail=f"Feature flag not found: {feature_name}"
             )
 
         return {
@@ -206,13 +199,13 @@ async def get_feature_status(feature_name: str):
         raise HTTPException(status_code=500, detail="Failed to get feature status")
 
 
-@router.post("/features/{feature_name}/enable",
+@router.post(
+    "/features/{feature_name}/enable",
     tags=["feature-flags"],
-    dependencies=[Depends(verify_api_key)]
+    dependencies=[Depends(verify_api_key)],
 )
 async def enable_feature(
-    feature_name: str,
-    rollout_percentage: int = Query(100, ge=0, le=100)
+    feature_name: str, rollout_percentage: int = Query(100, ge=0, le=100)
 ):
     """
     Enable a feature flag (optionally with gradual rollout).
@@ -227,9 +220,7 @@ async def enable_feature(
         feature_flag_manager.enable_flag(feature_name, rollout_percentage)
 
         logger.info(
-            "feature_flag_enabled",
-            feature=feature_name,
-            rollout=rollout_percentage
+            "feature_flag_enabled", feature=feature_name, rollout=rollout_percentage
         )
 
         flag = feature_flag_manager.get_flag(feature_name)
@@ -245,9 +236,10 @@ async def enable_feature(
         raise HTTPException(status_code=500, detail="Failed to enable feature")
 
 
-@router.post("/features/{feature_name}/disable",
+@router.post(
+    "/features/{feature_name}/disable",
     tags=["feature-flags"],
-    dependencies=[Depends(verify_api_key)]
+    dependencies=[Depends(verify_api_key)],
 )
 async def disable_feature(feature_name: str):
     """
@@ -258,10 +250,7 @@ async def disable_feature(feature_name: str):
     try:
         feature_flag_manager.disable_flag(feature_name)
 
-        logger.warning(
-            "feature_flag_disabled",
-            feature=feature_name
-        )
+        logger.warning("feature_flag_disabled", feature=feature_name)
 
         flag = feature_flag_manager.get_flag(feature_name)
         return {
@@ -275,13 +264,13 @@ async def disable_feature(feature_name: str):
         raise HTTPException(status_code=500, detail="Failed to disable feature")
 
 
-@router.post("/features/{feature_name}/maintenance",
+@router.post(
+    "/features/{feature_name}/maintenance",
     tags=["feature-flags"],
-    dependencies=[Depends(verify_api_key)]
+    dependencies=[Depends(verify_api_key)],
 )
 async def set_feature_maintenance(
-    feature_name: str,
-    duration_minutes: int = Query(60, ge=1, le=1440)
+    feature_name: str, duration_minutes: int = Query(60, ge=1, le=1440)
 ):
     """
     Mark a feature as under maintenance (temporarily disabled).
@@ -294,7 +283,7 @@ async def set_feature_maintenance(
         logger.info(
             "feature_flag_maintenance",
             feature=feature_name,
-            duration_minutes=duration_minutes
+            duration_minutes=duration_minutes,
         )
 
         flag = feature_flag_manager.get_flag(feature_name)
@@ -315,9 +304,10 @@ async def set_feature_maintenance(
 # ============================================================================
 
 
-@router.post("/database/validate-schema",
+@router.post(
+    "/database/validate-schema",
     tags=["database"],
-    dependencies=[Depends(verify_api_key)]
+    dependencies=[Depends(verify_api_key)],
 )
 async def validate_database_schema():
     """
@@ -349,9 +339,10 @@ async def validate_database_schema():
         raise HTTPException(status_code=500, detail="Schema validation failed")
 
 
-@router.post("/database/validate-integrity",
+@router.post(
+    "/database/validate-integrity",
     tags=["database"],
-    dependencies=[Depends(verify_api_key)]
+    dependencies=[Depends(verify_api_key)],
 )
 async def validate_database_integrity():
     """
@@ -383,9 +374,10 @@ async def validate_database_integrity():
         raise HTTPException(status_code=500, detail="Integrity validation failed")
 
 
-@router.post("/database/migration-ready",
+@router.post(
+    "/database/migration-ready",
     tags=["database"],
-    dependencies=[Depends(verify_api_key)]
+    dependencies=[Depends(verify_api_key)],
 )
 async def check_migration_readiness():
     """
@@ -415,10 +407,7 @@ async def check_migration_readiness():
 # ============================================================================
 
 
-@router.get("/verify",
-    tags=["verification"],
-    dependencies=[Depends(verify_api_key)]
-)
+@router.get("/verify", tags=["verification"], dependencies=[Depends(verify_api_key)])
 async def verify_deployment():
     """
     Verify deployment is successful and all systems operational.
@@ -457,9 +446,7 @@ async def verify_deployment():
         raise HTTPException(status_code=500, detail="Deployment verification failed")
 
 
-@router.get("/status",
-    tags=["verification"]
-)
+@router.get("/status", tags=["verification"])
 async def get_deployment_status():
     """
     Get current deployment status and version information.

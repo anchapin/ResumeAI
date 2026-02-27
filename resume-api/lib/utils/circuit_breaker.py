@@ -113,9 +113,7 @@ class CircuitBreaker:
             if self._should_attempt_reset():
                 self.state = CircuitState.HALF_OPEN
                 self.success_count = 0
-                logger.info(
-                    f"Circuit breaker '{self.name}' transitioning to HALF_OPEN"
-                )
+                logger.info(f"Circuit breaker '{self.name}' transitioning to HALF_OPEN")
 
     def _should_attempt_reset(self) -> bool:
         """Check if timeout has elapsed for OPEN -> HALF_OPEN transition."""

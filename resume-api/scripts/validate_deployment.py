@@ -24,8 +24,8 @@ from typing import Dict, List, Tuple, Optional
 from datetime import datetime
 
 # Configuration
-API_URL = os.getenv('API_URL', 'http://localhost:8000')
-API_KEY = os.getenv('MASTER_API_KEY', '')
+API_URL = os.getenv("API_URL", "http://localhost:8000")
+API_KEY = os.getenv("MASTER_API_KEY", "")
 TIMEOUT = 10
 CHECK_RETRIES = 3
 CHECK_INTERVAL = 2
@@ -70,16 +70,13 @@ class DeploymentValidator:
     def check_health(self) -> bool:
         """Check service health endpoint"""
         try:
-            response = requests.get(
-                f"{self.api_url}/health",
-                timeout=TIMEOUT
-            )
+            response = requests.get(f"{self.api_url}/health", timeout=TIMEOUT)
             if response.status_code == 200:
                 data = response.json()
-                if data.get('status') == 'healthy':
+                if data.get("status") == "healthy":
                     self.log_success(
                         "Health Check",
-                        f"Service healthy (v{data.get('version', 'unknown')})"
+                        f"Service healthy (v{data.get('version', 'unknown')})",
                     )
                     return True
                 else:
@@ -100,30 +97,28 @@ class DeploymentValidator:
         try:
             headers = {"X-API-KEY": self.api_key} if self.api_key else {}
             response = requests.get(
-                f"{self.api_url}/v1/health/detailed",
-                headers=headers,
-                timeout=TIMEOUT
+                f"{self.api_url}/v1/health/detailed", headers=headers, timeout=TIMEOUT
             )
             if response.status_code == 200:
                 data = response.json()
-                status = data.get('status')
+                status = data.get("status")
 
                 # Check database
-                db_status = data.get('database', {}).get('status', 'unknown')
-                if db_status == 'connected':
+                db_status = data.get("database", {}).get("status", "unknown")
+                if db_status == "connected":
                     self.log_success("Database Connection", "Connected")
                 else:
                     self.log_error("Database Connection", f"Status: {db_status}")
                     return False
 
                 # Check AI provider
-                ai_status = data.get('ai_provider', {}).get('status', 'unknown')
-                if ai_status == 'available':
+                ai_status = data.get("ai_provider", {}).get("status", "unknown")
+                if ai_status == "available":
                     self.log_success("AI Provider", "Available")
                 else:
                     self.log_warning("AI Provider", f"Status: {ai_status}")
 
-                return status == 'healthy'
+                return status == "healthy"
             else:
                 self.log_warning("Detailed Health", f"HTTP {response.status_code}")
                 return True  # Don't fail if endpoint doesn't exist yet
@@ -136,9 +131,7 @@ class DeploymentValidator:
         try:
             headers = {"X-API-KEY": self.api_key} if self.api_key else {}
             response = requests.get(
-                f"{self.api_url}/v1/status/database",
-                headers=headers,
-                timeout=TIMEOUT
+                f"{self.api_url}/v1/status/database", headers=headers, timeout=TIMEOUT
             )
             if response.status_code in (200, 404):  # 404 if endpoint doesn't exist
                 self.log_success("Database Status Check", "Endpoint accessible")
@@ -155,17 +148,12 @@ class DeploymentValidator:
         try:
             headers = {"X-API-KEY": self.api_key} if self.api_key else {}
             response = requests.get(
-                f"{self.api_url}/v1/health/features",
-                headers=headers,
-                timeout=TIMEOUT
+                f"{self.api_url}/v1/health/features", headers=headers, timeout=TIMEOUT
             )
             if response.status_code == 200:
                 flags = response.json()
                 enabled_count = sum(1 for v in flags.values() if v is True)
-                self.log_success(
-                    "Feature Flags",
-                    f"{enabled_count} feature(s) enabled"
-                )
+                self.log_success("Feature Flags", f"{enabled_count} feature(s) enabled")
                 return True
             else:
                 self.log_warning("Feature Flags", f"HTTP {response.status_code}")
@@ -189,13 +177,15 @@ class DeploymentValidator:
                     method,
                     f"{self.api_url}{endpoint}",
                     headers=headers,
-                    timeout=TIMEOUT
+                    timeout=TIMEOUT,
                 )
                 if 200 <= response.status_code < 300:
                     self.log_success(f"Endpoint {method} {endpoint}")
                     passed += 1
                 else:
-                    self.log_warning(f"Endpoint {method} {endpoint}", f"HTTP {response.status_code}")
+                    self.log_warning(
+                        f"Endpoint {method} {endpoint}", f"HTTP {response.status_code}"
+                    )
             except Exception as e:
                 self.log_warning(f"Endpoint {method} {endpoint}", str(e))
 
@@ -204,8 +194,8 @@ class DeploymentValidator:
     def check_dependencies(self) -> bool:
         """Check system dependencies"""
         dependencies = {
-            'python': ['python3', '--version'],
-            'docker': ['docker', '--version'],
+            "python": ["python3", "--version"],
+            "docker": ["docker", "--version"],
         }
 
         all_ok = True
@@ -226,14 +216,14 @@ class DeploymentValidator:
     def check_environment_variables(self) -> bool:
         """Check required environment variables"""
         required_vars = [
-            'AI_PROVIDER',
-            'AI_MODEL',
+            "AI_PROVIDER",
+            "AI_MODEL",
         ]
 
         optional_vars = [
-            'OPENAI_API_KEY',
-            'ANTHROPIC_API_KEY',
-            'GEMINI_API_KEY',
+            "OPENAI_API_KEY",
+            "ANTHROPIC_API_KEY",
+            "GEMINI_API_KEY",
         ]
 
         all_ok = True
@@ -256,6 +246,7 @@ class DeploymentValidator:
         """Check available disk space"""
         try:
             import shutil
+
             total, used, free = shutil.disk_usage("/")
             free_percent = (free / total) * 100
 
@@ -274,9 +265,9 @@ class DeploymentValidator:
 
     def pre_deployment_validation(self) -> bool:
         """Run full pre-deployment validation"""
-        print("\n" + "="*50)
+        print("\n" + "=" * 50)
         print("PRE-DEPLOYMENT VALIDATION")
-        print("="*50)
+        print("=" * 50)
 
         checks = [
             ("Environment Variables", self.check_environment_variables),
@@ -302,9 +293,9 @@ class DeploymentValidator:
 
     def smoke_test(self) -> bool:
         """Run smoke tests on critical functionality"""
-        print("\n" + "="*50)
+        print("\n" + "=" * 50)
         print("SMOKE TEST")
-        print("="*50)
+        print("=" * 50)
 
         # Test health endpoint multiple times
         for i in range(3):
@@ -325,15 +316,15 @@ class DeploymentValidator:
 
     def verify_safeguards(self) -> bool:
         """Verify deployment safeguards are in place"""
-        print("\n" + "="*50)
+        print("\n" + "=" * 50)
         print("DEPLOYMENT SAFEGUARDS VERIFICATION")
-        print("="*50)
+        print("=" * 50)
 
         safeguards = {
-            "Feature Flags Configured": os.getenv('FEATURE_FLAG_OAUTH') is not None,
+            "Feature Flags Configured": os.getenv("FEATURE_FLAG_OAUTH") is not None,
             "Health Checks Implemented": True,  # Built-in
             "API Key Authentication": self.api_key is not None,
-            "Logging Configured": os.getenv('LOG_LEVEL') is not None,
+            "Logging Configured": os.getenv("LOG_LEVEL") is not None,
         }
 
         passed = 0
@@ -349,13 +340,13 @@ class DeploymentValidator:
 
     def print_summary(self):
         """Print validation summary"""
-        print("\n" + "-"*50)
+        print("\n" + "-" * 50)
         print("SUMMARY")
-        print("-"*50)
+        print("-" * 50)
 
-        passed = len([r for r in self.results.values() if r.get('status') == 'passed'])
-        failed = len([r for r in self.results.values() if r.get('status') == 'failed'])
-        warned = len([r for r in self.results.values() if r.get('status') == 'warning'])
+        passed = len([r for r in self.results.values() if r.get("status") == "passed"])
+        failed = len([r for r in self.results.values() if r.get("status") == "failed"])
+        warned = len([r for r in self.results.values() if r.get("status") == "warning"])
 
         print(f"Passed: {passed}")
         print(f"Failed: {failed}")
@@ -374,25 +365,36 @@ class DeploymentValidator:
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description='ResumeAI Deployment Validator'
-    )
+    parser = argparse.ArgumentParser(description="ResumeAI Deployment Validator")
 
-    parser.add_argument('--api-url', default=API_URL, help='API URL')
-    parser.add_argument('--api-key', default=API_KEY, help='Master API key')
+    parser.add_argument("--api-url", default=API_URL, help="API URL")
+    parser.add_argument("--api-key", default=API_KEY, help="Master API key")
 
     # Validation modes
-    parser.add_argument('--pre-deployment', action='store_true', help='Run pre-deployment checks')
-    parser.add_argument('--check-health', action='store_true', help='Check service health')
-    parser.add_argument('--smoke-test', action='store_true', help='Run smoke tests')
-    parser.add_argument('--verify-safeguards', action='store_true', help='Verify deployment safeguards')
+    parser.add_argument(
+        "--pre-deployment", action="store_true", help="Run pre-deployment checks"
+    )
+    parser.add_argument(
+        "--check-health", action="store_true", help="Check service health"
+    )
+    parser.add_argument("--smoke-test", action="store_true", help="Run smoke tests")
+    parser.add_argument(
+        "--verify-safeguards", action="store_true", help="Verify deployment safeguards"
+    )
 
     args = parser.parse_args()
 
     validator = DeploymentValidator(args.api_url, args.api_key)
 
     # If no specific mode, run pre-deployment by default
-    if not any([args.pre_deployment, args.check_health, args.smoke_test, args.verify_safeguards]):
+    if not any(
+        [
+            args.pre_deployment,
+            args.check_health,
+            args.smoke_test,
+            args.verify_safeguards,
+        ]
+    ):
         args.pre_deployment = True
 
     success = True
@@ -412,5 +414,5 @@ def main():
     sys.exit(0 if success else 1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

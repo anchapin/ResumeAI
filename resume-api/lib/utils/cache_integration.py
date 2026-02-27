@@ -17,7 +17,7 @@ from lib.utils.cache import CacheManager, get_cache_manager
 
 logger = logging.getLogger(__name__)
 
-F = TypeVar('F', bound=Callable[..., Any])
+F = TypeVar("F", bound=Callable[..., Any])
 
 
 class CacheMetrics:
@@ -60,8 +60,12 @@ class CacheMetrics:
                 "hits": hits,
                 "misses": misses,
                 "hit_rate": (hits / total * 100) if total > 0 else 0,
-                "avg_cache_time": sum(cache_times) / len(cache_times) if cache_times else 0,
-                "avg_compute_time": sum(compute_times) / len(compute_times) if compute_times else 0,
+                "avg_cache_time": (
+                    sum(cache_times) / len(cache_times) if cache_times else 0
+                ),
+                "avg_compute_time": (
+                    sum(compute_times) / len(compute_times) if compute_times else 0
+                ),
             }
 
 
@@ -118,6 +122,7 @@ def cached(
         def get_user_profile(user_id: int) -> dict:
             return {"id": user_id, "name": "John"}
     """
+
     def decorator(func: F) -> F:
         prefix = key_prefix or f"{func.__module__}:{func.__name__}"
 
@@ -143,7 +148,11 @@ def cached(
 
             # Cache miss - execute function
             start_time = time.time()
-            result = await func(*args, **kwargs) if asyncio.iscoroutinefunction(func) else func(*args, **kwargs)
+            result = (
+                await func(*args, **kwargs)
+                if asyncio.iscoroutinefunction(func)
+                else func(*args, **kwargs)
+            )
             exec_time = time.time() - start_time
             await _metrics.record_miss(func.__name__, exec_time)
 
@@ -153,10 +162,12 @@ def cached(
                 result,
                 ttl_seconds=ttl_seconds,
                 config_name=config_name,
-                tags=tags
+                tags=tags,
             )
 
-            logger.debug(f"Cache miss for {func.__name__}: {cache_key} (exec: {exec_time:.3f}s)")
+            logger.debug(
+                f"Cache miss for {func.__name__}: {cache_key} (exec: {exec_time:.3f}s)"
+            )
             return result
 
         @functools.wraps(func)
@@ -188,15 +199,19 @@ def cached(
             loop.run_until_complete(_metrics.record_miss(func.__name__, exec_time))
 
             # Store in cache
-            loop.run_until_complete(cache_mgr.set(
-                cache_key,
-                result,
-                ttl_seconds=ttl_seconds,
-                config_name=config_name,
-                tags=tags
-            ))
+            loop.run_until_complete(
+                cache_mgr.set(
+                    cache_key,
+                    result,
+                    ttl_seconds=ttl_seconds,
+                    config_name=config_name,
+                    tags=tags,
+                )
+            )
 
-            logger.debug(f"Cache miss for {func.__name__}: {cache_key} (exec: {exec_time:.3f}s)")
+            logger.debug(
+                f"Cache miss for {func.__name__}: {cache_key} (exec: {exec_time:.3f}s)"
+            )
             return result
 
         # Return appropriate wrapper

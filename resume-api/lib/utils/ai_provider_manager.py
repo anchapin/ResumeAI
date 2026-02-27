@@ -1,23 +1,31 @@
 """AI Provider Manager with Fallback Logic for Circuit Breaker Pattern."""
+
 import logging
 from typing import Dict, List, Optional, Any, Tuple
 from enum import Enum
 from .circuit_breaker import (
-    CircuitBreaker, CircuitBreakerOpen,
-    openai_breaker, claude_breaker, gemini_breaker,
+    CircuitBreaker,
+    CircuitBreakerOpen,
+    openai_breaker,
+    claude_breaker,
+    gemini_breaker,
 )
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
 class ProviderType(Enum):
     """AI Provider types."""
+
     OPENAI = "openai"
     CLAUDE = "claude"
     GEMINI = "gemini"
 
+
 class ProviderStatus:
     """Status of an AI provider."""
+
     def __init__(self, provider_type: ProviderType, circuit_breaker: CircuitBreaker):
         self.provider_type = provider_type
         self.circuit_breaker = circuit_breaker
@@ -39,6 +47,7 @@ class ProviderStatus:
             return self.circuit_breaker._time_until_retry()
         return 0
 
+
 class AIProviderManager:
     """Manages multiple AI providers with automatic fallback."""
 
@@ -57,7 +66,9 @@ class AIProviderManager:
 
         if provider_priority is None:
             self.provider_priority = [
-                ProviderType.OPENAI, ProviderType.CLAUDE, ProviderType.GEMINI,
+                ProviderType.OPENAI,
+                ProviderType.CLAUDE,
+                ProviderType.GEMINI,
             ]
         else:
             self.provider_priority = provider_priority
@@ -73,7 +84,9 @@ class AIProviderManager:
 
         if preferred_provider and preferred_provider in self.providers:
             provider_order = [preferred_provider]
-            provider_order.extend(p for p in self.provider_priority if p != preferred_provider)
+            provider_order.extend(
+                p for p in self.provider_priority if p != preferred_provider
+            )
         else:
             provider_order = self.provider_priority
 
@@ -106,7 +119,9 @@ class AIProviderManager:
                 last_error = e
                 continue
 
-        raise RuntimeError(f"All AI providers unavailable. Last error: {last_error}") from last_error
+        raise RuntimeError(
+            f"All AI providers unavailable. Last error: {last_error}"
+        ) from last_error
 
     def get_provider_status(self) -> Dict[str, Any]:
         """Get status of all providers."""
@@ -119,7 +134,8 @@ class AIProviderManager:
                 "degraded": provider_status.is_degraded(),
                 "unavailable": provider_status.is_unavailable(),
                 "retry_delay_seconds": provider_status.get_retry_delay(),
-                "configured": provider_type in self.providers and self.providers[provider_type] is not None,
+                "configured": provider_type in self.providers
+                and self.providers[provider_type] is not None,
             }
         return status
 
@@ -141,9 +157,11 @@ class AIProviderManager:
         """Get list of available providers."""
         available = []
         for provider_type, breaker in self.breakers.items():
-            if (provider_type in self.providers
+            if (
+                provider_type in self.providers
                 and self.providers[provider_type] is not None
-                and breaker.get_state() == "CLOSED"):
+                and breaker.get_state() == "CLOSED"
+            ):
                 available.append(provider_type)
         return available
 
@@ -153,4 +171,6 @@ class AIProviderManager:
             if provider_type not in self.providers:
                 logger.warning(f"Provider {provider_type.value} not configured")
         self.provider_priority = priority
-        logger.info(f"Set provider priority: {', '.join(p.value for p in self.provider_priority)}")
+        logger.info(
+            f"Set provider priority: {', '.join(p.value for p in self.provider_priority)}"
+        )

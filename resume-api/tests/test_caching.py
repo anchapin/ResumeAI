@@ -265,6 +265,7 @@ class TestCacheDecorators:
     @pytest.mark.asyncio
     async def test_cache_metrics(self, cache_manager):
         """Test cache metrics collection"""
+
         @cache_async(ttl_seconds=300, key_prefix="test")
         async def test_func(x: int) -> int:
             return x * 2
@@ -298,6 +299,7 @@ class TestCacheDecorators:
     @pytest.mark.asyncio
     async def test_cache_key_builder(self, cache_manager):
         """Test custom key builder"""
+
         def custom_key_builder(x: int) -> str:
             return f"custom:{x}"
 
@@ -341,7 +343,9 @@ class TestCacheInvalidation:
     @pytest.mark.asyncio
     async def test_on_resume_update_hook(self, cache_manager):
         """Test resume update invalidation"""
-        await cache_manager.set("resume:456:data", "value", tags={"resume", "resume:456"})
+        await cache_manager.set(
+            "resume:456:data", "value", tags={"resume", "resume:456"}
+        )
 
         count = await CacheInvalidationHook.on_resume_update(456)
         assert count == 1
@@ -391,6 +395,7 @@ class TestCachePerformance:
     @pytest.mark.asyncio
     async def test_concurrent_cache_operations(self, cache_manager):
         """Test concurrent cache operations"""
+
         async def set_and_get(key: str, value: str):
             await cache_manager.set(key, value, 300)
             return await cache_manager.get(key)
@@ -432,6 +437,7 @@ class TestCachePerformance:
     @pytest.mark.asyncio
     async def test_get_metrics_summary(self, cache_manager):
         """Test metrics summary generation"""
+
         @cache_async(ttl_seconds=300)
         async def test_func(x: int) -> int:
             return x * 2
