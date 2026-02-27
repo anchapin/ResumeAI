@@ -33,12 +33,12 @@ router = APIRouter(prefix="/metrics", tags=["Metrics"])
     tags=["OAuth Monitoring"],
     responses={
         200: {"description": "OAuth health status"},
-    }
+    },
 )
 async def oauth_health():
     """
     Get comprehensive OAuth health status.
-    
+
     Returns:
     - Provider status (GitHub, etc.)
     - Success/failure rates
@@ -57,7 +57,7 @@ async def oauth_health():
         logger.error("oauth_health_metrics_error", error=str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve OAuth health metrics"
+            detail="Failed to retrieve OAuth health metrics",
         )
 
 
@@ -67,30 +67,30 @@ async def oauth_health():
     tags=["OAuth Monitoring"],
     responses={
         200: {"description": "Detected anomalies"},
-    }
+    },
 )
 async def oauth_anomalies(
     provider: str = Query("github", description="OAuth provider")
 ):
     """
     Detect and return OAuth anomalies.
-    
+
     Detects:
     - High failure rates
     - Rate limiting
     - Token expiration spikes
     - Suspicious activity (brute force attempts)
-    
+
     Query Parameters:
     - provider: OAuth provider (default: "github")
     """
     try:
         anomalies = oauth_monitor.detect_anomalies(provider)
-        
+
         # Categorize by severity
         high_severity = [a for a in anomalies if a.get("severity") == "high"]
         medium_severity = [a for a in anomalies if a.get("severity") == "medium"]
-        
+
         return {
             "status": "success",
             "provider": provider,
@@ -104,7 +104,7 @@ async def oauth_anomalies(
         logger.error("oauth_anomalies_detection_error", error=str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to detect OAuth anomalies"
+            detail="Failed to detect OAuth anomalies",
         )
 
 
@@ -114,7 +114,7 @@ async def oauth_anomalies(
     tags=["OAuth Monitoring"],
     responses={
         200: {"description": "OAuth metrics"},
-    }
+    },
 )
 async def oauth_metrics(
     provider: str = Query("github", description="OAuth provider"),
@@ -122,21 +122,21 @@ async def oauth_metrics(
 ):
     """
     Get OAuth metrics for a specific time window.
-    
+
     Metrics Include:
     - Total events processed
     - Success/failure/rate limit counts
     - Average response time
     - Success rate percentage
     - Top error codes
-    
+
     Query Parameters:
     - provider: OAuth provider (default: "github")
     - window_minutes: Time window for metrics (1-1440 minutes, default: 5)
     """
     try:
         snapshot = oauth_monitor.get_metrics_snapshot(provider, window_minutes)
-        
+
         return {
             "status": "success",
             "provider": provider,
@@ -161,7 +161,7 @@ async def oauth_metrics(
         logger.error("oauth_metrics_error", error=str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve OAuth metrics"
+            detail="Failed to retrieve OAuth metrics",
         )
 
 
@@ -171,25 +171,25 @@ async def oauth_metrics(
     tags=["OAuth Monitoring"],
     responses={
         200: {"description": "Suspicious activity report"},
-    }
+    },
 )
 async def suspicious_oauth_activity(
     window_minutes: int = Query(5, ge=1, le=60, description="Time window in minutes"),
 ):
     """
     Detect suspicious OAuth activity (e.g., brute force attempts).
-    
+
     Detects:
     - Multiple failed authentication attempts from same IP
     - Unusual access patterns
     - Rate limiting from specific IPs
-    
+
     Query Parameters:
     - window_minutes: Time window for detection (1-60 minutes, default: 5)
     """
     try:
         suspicious_ips = oauth_monitor.get_suspicious_ips(window_minutes)
-        
+
         return {
             "status": "success",
             "window_minutes": window_minutes,
@@ -208,7 +208,7 @@ async def suspicious_oauth_activity(
         logger.error("suspicious_oauth_activity_error", error=str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to detect suspicious activity"
+            detail="Failed to detect suspicious activity",
         )
 
 
@@ -218,12 +218,12 @@ async def suspicious_oauth_activity(
     tags=["Health"],
     responses={
         200: {"description": "System health dashboard"},
-    }
+    },
 )
 async def health_dashboard():
     """
     Get comprehensive system health dashboard.
-    
+
     Includes:
     - Database health
     - OAuth health
@@ -242,7 +242,7 @@ async def health_dashboard():
         logger.error("health_dashboard_error", error=str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve health dashboard"
+            detail="Failed to retrieve health dashboard",
         )
 
 
@@ -251,36 +251,39 @@ async def health_dashboard():
     summary="Prometheus Metrics Export",
     tags=["Metrics"],
     responses={
-        200: {"description": "Prometheus-format metrics", "content": {"text/plain": {}}},
-    }
+        200: {
+            "description": "Prometheus-format metrics",
+            "content": {"text/plain": {}},
+        },
+    },
 )
 async def prometheus_metrics():
     """
     Export metrics in Prometheus format.
-    
+
     This endpoint returns all collected metrics in Prometheus text format,
     suitable for scraping by Prometheus or other monitoring systems.
-    
+
     Format: Prometheus text exposition format
     """
     try:
         from prometheus_client import generate_latest, CollectorRegistry
-        
+
         # Use the global registry or custom monitoring metrics registry
         output = generate_latest(monitoring_metrics.registry)
-        
+
         return output.decode("utf-8") if isinstance(output, bytes) else output
     except ImportError:
         logger.warning("prometheus_client not available")
         raise HTTPException(
             status_code=status.HTTP_501_NOT_IMPLEMENTED,
-            detail="Prometheus metrics are not available"
+            detail="Prometheus metrics are not available",
         )
     except Exception as e:
         logger.error("prometheus_metrics_error", error=str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to generate Prometheus metrics"
+            detail="Failed to generate Prometheus metrics",
         )
 
 
@@ -290,21 +293,21 @@ async def prometheus_metrics():
     tags=["Metrics"],
     responses={
         200: {"description": "Performance metrics summary"},
-    }
+    },
 )
 async def performance_summary(
     hours: int = Query(24, ge=1, le=168, description="Hours to analyze"),
 ):
     """
     Get performance summary metrics.
-    
+
     Metrics Include:
     - HTTP request rates and latencies
     - Database query performance
     - AI provider performance
     - Rate limiting statistics
     - Error rates
-    
+
     Query Parameters:
     - hours: Time period to analyze (1-168 hours, default: 24)
     """
@@ -327,7 +330,7 @@ async def performance_summary(
         logger.error("performance_summary_error", error=str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve performance summary"
+            detail="Failed to retrieve performance summary",
         )
 
 
@@ -338,7 +341,7 @@ async def performance_summary(
     responses={
         200: {"description": "Cleanup completed"},
         403: {"description": "Not authorized"},
-    }
+    },
 )
 async def cleanup_oauth_monitoring(
     current_user: User = Depends(get_current_user),
@@ -346,9 +349,9 @@ async def cleanup_oauth_monitoring(
 ):
     """
     Clean up old OAuth monitoring data.
-    
+
     Removes monitoring events older than the specified time.
-    
+
     Requires:
     - Authentication (admin user recommended)
     - max_age_hours: Maximum age of events to keep (default: 24 hours)
@@ -356,16 +359,16 @@ async def cleanup_oauth_monitoring(
     try:
         # In a production system, you might want to check if user is admin
         # For now, just require authentication
-        
+
         removed = oauth_monitor.cleanup_old_events(max_age_hours)
-        
+
         logger.info(
             "oauth_monitoring_cleanup",
             user_id=current_user.id,
             removed_count=removed,
             max_age_hours=max_age_hours,
         )
-        
+
         return {
             "status": "success",
             "message": f"Cleaned up {removed} old events",
@@ -377,7 +380,7 @@ async def cleanup_oauth_monitoring(
         logger.error("oauth_monitoring_cleanup_error", error=str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to cleanup monitoring data"
+            detail="Failed to cleanup monitoring data",
         )
 
 
@@ -387,18 +390,18 @@ async def cleanup_oauth_monitoring(
     tags=["OAuth Monitoring"],
     responses={
         200: {"description": "Endpoint health status"},
-    }
+    },
 )
 async def oauth_endpoint_health():
     """
     Get detailed health status for each OAuth endpoint.
-    
+
     Tracks:
     - Endpoint availability/uptime
     - Response times per endpoint
     - Error rates per endpoint
     - Rate limit status
-    
+
     Endpoints monitored:
     - /github/callback
     - /github/connect
@@ -408,7 +411,7 @@ async def oauth_endpoint_health():
     try:
         # Get metrics for the medium-term window
         metrics = oauth_monitor.get_metrics_snapshot("github", 15)
-        
+
         return {
             "status": "success",
             "timestamp": datetime.now(timezone.utc).isoformat(),
@@ -419,19 +422,27 @@ async def oauth_endpoint_health():
             },
             "endpoints": {
                 "github_callback": {
-                    "status": "operational" if metrics.success_rate > 0.8 else "degraded",
+                    "status": (
+                        "operational" if metrics.success_rate > 0.8 else "degraded"
+                    ),
                     "availability": f"{metrics.success_rate:.2%}",
                 },
                 "github_connect": {
-                    "status": "operational" if metrics.success_rate > 0.8 else "degraded",
+                    "status": (
+                        "operational" if metrics.success_rate > 0.8 else "degraded"
+                    ),
                     "availability": f"{metrics.success_rate:.2%}",
                 },
                 "github_status": {
-                    "status": "operational" if metrics.success_rate > 0.8 else "degraded",
+                    "status": (
+                        "operational" if metrics.success_rate > 0.8 else "degraded"
+                    ),
                     "availability": f"{metrics.success_rate:.2%}",
                 },
                 "github_disconnect": {
-                    "status": "operational" if metrics.success_rate > 0.8 else "degraded",
+                    "status": (
+                        "operational" if metrics.success_rate > 0.8 else "degraded"
+                    ),
                     "availability": f"{metrics.success_rate:.2%}",
                 },
             },
@@ -441,5 +452,5 @@ async def oauth_endpoint_health():
         logger.error("oauth_endpoint_health_error", error=str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve endpoint health"
+            detail="Failed to retrieve endpoint health",
         )

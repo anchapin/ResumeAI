@@ -102,7 +102,6 @@ def setup_sentry():
         logger.info("sentry_initialized", environment=settings.sentry_environment)
 
 
-
 def setup_prometheus(app: FastAPI):
     """Initialize Prometheus metrics instrumentation if enabled."""
     if getattr(settings, "enable_metrics", False):
@@ -153,7 +152,7 @@ async def lifespan(app: FastAPI):
         "github_authentication_notice",
         message="GitHub OAuth is the recommended authentication method. "
         "CLI authentication mode has been deprecated and will be removed in a future version. "
-        "Please use OAuth for GitHub integration."
+        "Please use OAuth for GitHub integration.",
     )
 
     # Initialize database tables
@@ -212,9 +211,10 @@ app.add_exception_handler(RateLimitExceeded, rate_limit_exceeded_handler)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
     """Handle validation errors with unified error response format."""
     logger.error("validation_error", errors=exc.errors())
-    
+
     # Extract field errors from validation errors
     from config.errors import FieldError
+
     field_errors = []
     for error in exc.errors():
         if len(error.get("loc", [])) > 1:
@@ -223,10 +223,10 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
                 FieldError(
                     field=field_name,
                     message=error.get("msg", "Invalid value"),
-                    code=error.get("type", "VALIDATION_ERROR")
+                    code=error.get("type", "VALIDATION_ERROR"),
                 )
             )
-    
+
     error_response = create_error_response(
         error_code=ErrorCode.VALIDATION_ERROR,
         message="Request validation failed",
@@ -234,7 +234,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
         method=request.method,
         field_errors=field_errors if field_errors else None,
     )
-    
+
     return JSONResponse(
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
         content=error_response.model_dump(exclude_none=True),

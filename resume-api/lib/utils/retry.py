@@ -12,7 +12,7 @@ from dataclasses import dataclass
 
 logger = logging.getLogger(__name__)
 
-F = TypeVar('F', bound=Callable[..., Any])
+F = TypeVar("F", bound=Callable[..., Any])
 
 # Status codes that should trigger retry
 RETRYABLE_STATUS_CODES: Set[int] = {
@@ -28,6 +28,7 @@ RETRYABLE_STATUS_CODES: Set[int] = {
 @dataclass
 class RetryConfig:
     """Configuration for retry logic"""
+
     max_retries: int = 3
     initial_delay: float = 0.1  # seconds
     max_delay: float = 10.0  # seconds
@@ -37,6 +38,7 @@ class RetryConfig:
 
 class RetryError(Exception):
     """Error raised when retries are exhausted"""
+
     def __init__(
         self,
         message: str,
@@ -56,16 +58,18 @@ def calculate_backoff_delay(
 ) -> float:
     """
     Calculate exponential backoff delay with jitter
-    
+
     Args:
         attempt_number: 0-indexed attempt number
         config: retry configuration
-        
+
     Returns:
         delay in seconds
     """
     # exponential: initial_delay * (backoff_multiplier ^ attempt_number)
-    exponential_delay = config.initial_delay * (config.backoff_multiplier ** attempt_number)
+    exponential_delay = config.initial_delay * (
+        config.backoff_multiplier**attempt_number
+    )
     capped_delay = min(exponential_delay, config.max_delay)
 
     # add jitter: random variance of 0 to jitter_fraction * delay
@@ -83,15 +87,15 @@ def is_retryable_exception(exception: Exception) -> bool:
     # Network-related exceptions are generally retryable
     exception_type = type(exception).__name__
     retryable_exceptions = {
-        'ConnectionError',
-        'TimeoutError',
-        'ConnectionResetError',
-        'ConnectionRefusedError',
-        'BrokenPipeError',
-        'ConnectError',  # aiohttp
-        'ClientConnectorError',  # aiohttp
-        'ClientOSError',  # aiohttp
-        'ClientSSLError',  # aiohttp (SSL errors are retryable)
+        "ConnectionError",
+        "TimeoutError",
+        "ConnectionResetError",
+        "ConnectionRefusedError",
+        "BrokenPipeError",
+        "ConnectError",  # aiohttp
+        "ClientConnectorError",  # aiohttp
+        "ClientOSError",  # aiohttp
+        "ClientSSLError",  # aiohttp (SSL errors are retryable)
     }
     return exception_type in retryable_exceptions
 
@@ -101,10 +105,10 @@ def retry_with_backoff(
 ) -> Callable[[F], F]:
     """
     Decorator for retrying async functions with exponential backoff
-    
+
     Args:
         config: retry configuration
-        
+
     Returns:
         Decorated function
     """
@@ -115,18 +119,18 @@ def retry_with_backoff(
         @wraps(func)
         async def async_wrapper(*args: Any, **kwargs: Any) -> Any:
             last_error: Optional[Exception] = None
-            
+
             for attempt in range(config.max_retries + 1):
                 try:
                     return await func(*args, **kwargs)
                 except Exception as e:
                     last_error = e
-                    
+
                     # Check if error is retryable
                     if not is_retryable_exception(e):
                         # Non-retryable error, raise immediately
                         raise
-                    
+
                     # If this was the last attempt, raise
                     if attempt >= config.max_retries:
                         error_msg = f"Failed after {attempt + 1} attempts: {str(e)}"
@@ -135,7 +139,7 @@ def retry_with_backoff(
                             attempt_count=attempt + 1,
                             last_error=e,
                         ) from e
-                    
+
                     # Calculate backoff and retry
                     delay = calculate_backoff_delay(attempt, config)
                     logger.warning(
@@ -144,29 +148,29 @@ def retry_with_backoff(
                         f"retrying in {delay:.2f}s"
                     )
                     await asyncio.sleep(delay)
-            
+
             # Should not reach here
             raise RetryError(
                 f"Failed after {config.max_retries + 1} attempts",
                 attempt_count=config.max_retries + 1,
                 last_error=last_error,
             )
-        
+
         @wraps(func)
         def sync_wrapper(*args: Any, **kwargs: Any) -> Any:
             last_error: Optional[Exception] = None
-            
+
             for attempt in range(config.max_retries + 1):
                 try:
                     return func(*args, **kwargs)
                 except Exception as e:
                     last_error = e
-                    
+
                     # Check if error is retryable
                     if not is_retryable_exception(e):
                         # Non-retryable error, raise immediately
                         raise
-                    
+
                     # If this was the last attempt, raise
                     if attempt >= config.max_retries:
                         error_msg = f"Failed after {attempt + 1} attempts: {str(e)}"
@@ -175,7 +179,7 @@ def retry_with_backoff(
                             attempt_count=attempt + 1,
                             last_error=e,
                         ) from e
-                    
+
                     # Calculate backoff and retry
                     delay = calculate_backoff_delay(attempt, config)
                     logger.warning(
@@ -184,14 +188,14 @@ def retry_with_backoff(
                         f"retrying in {delay:.2f}s"
                     )
                     asyncio.run(asyncio.sleep(delay))
-            
+
             # Should not reach here
             raise RetryError(
                 f"Failed after {config.max_retries + 1} attempts",
                 attempt_count=config.max_retries + 1,
                 last_error=last_error,
             )
-        
+
         # Determine if function is async
         if asyncio.iscoroutinefunction(func):
             return async_wrapper  # type: ignore
@@ -209,35 +213,35 @@ async def retry_async_call(
 ) -> Any:
     """
     Execute an async function with retry logic
-    
+
     Args:
         func: async function to call
         *args: positional arguments
         config: retry configuration
         **kwargs: keyword arguments
-        
+
     Returns:
         Function result
-        
+
     Raises:
         RetryError: if all retries exhausted
     """
     if config is None:
         config = RetryConfig()
-    
+
     last_error: Optional[Exception] = None
-    
+
     for attempt in range(config.max_retries + 1):
         try:
             return await func(*args, **kwargs)
         except Exception as e:
             last_error = e
-            
+
             # Check if error is retryable
             if not is_retryable_exception(e):
                 # Non-retryable error, raise immediately
                 raise
-            
+
             # If this was the last attempt, raise
             if attempt >= config.max_retries:
                 error_msg = f"Failed after {attempt + 1} attempts: {str(e)}"
@@ -246,7 +250,7 @@ async def retry_async_call(
                     attempt_count=attempt + 1,
                     last_error=e,
                 ) from e
-            
+
             # Calculate backoff and retry
             delay = calculate_backoff_delay(attempt, config)
             logger.warning(
@@ -255,7 +259,7 @@ async def retry_async_call(
                 f"retrying in {delay:.2f}s"
             )
             await asyncio.sleep(delay)
-    
+
     # Should not reach here
     raise RetryError(
         f"Failed after {config.max_retries + 1} attempts",
@@ -272,35 +276,35 @@ def retry_sync_call(
 ) -> Any:
     """
     Execute a sync function with retry logic
-    
+
     Args:
         func: function to call
         *args: positional arguments
         config: retry configuration
         **kwargs: keyword arguments
-        
+
     Returns:
         Function result
-        
+
     Raises:
         RetryError: if all retries exhausted
     """
     if config is None:
         config = RetryConfig()
-    
+
     last_error: Optional[Exception] = None
-    
+
     for attempt in range(config.max_retries + 1):
         try:
             return func(*args, **kwargs)
         except Exception as e:
             last_error = e
-            
+
             # Check if error is retryable
             if not is_retryable_exception(e):
                 # Non-retryable error, raise immediately
                 raise
-            
+
             # If this was the last attempt, raise
             if attempt >= config.max_retries:
                 error_msg = f"Failed after {attempt + 1} attempts: {str(e)}"
@@ -309,7 +313,7 @@ def retry_sync_call(
                     attempt_count=attempt + 1,
                     last_error=e,
                 ) from e
-            
+
             # Calculate backoff and retry
             delay = calculate_backoff_delay(attempt, config)
             logger.warning(
@@ -318,8 +322,9 @@ def retry_sync_call(
                 f"retrying in {delay:.2f}s"
             )
             import time
+
             time.sleep(delay)
-    
+
     # Should not reach here
     raise RetryError(
         f"Failed after {config.max_retries + 1} attempts",

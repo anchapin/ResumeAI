@@ -15,9 +15,9 @@ from .feature_flags import (
     feature_flag_manager,
 )
 from .migration_validator import (
-    MigrationValidator,
-    BackupValidator,
-    MigrationValidationResult,
+    DatabaseSchemaValidator,
+    SchemaValidationResult,
+    schema_validator,
 )
 
 __all__ = [
@@ -25,7 +25,7 @@ __all__ = [
     "FeatureFlagConfig",
     "FeatureFlagStatus",
     "feature_flag_manager",
-    "MigrationValidator",
-    "BackupValidator",
-    "MigrationValidationResult",
+    "DatabaseSchemaValidator",
+    "SchemaValidationResult",
+    "schema_validator",
 ]

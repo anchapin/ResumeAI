@@ -17,6 +17,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class SchemaValidationResult:
     """Result of a schema validation check."""
+
     valid: bool
     timestamp: datetime
     checks_passed: int
@@ -33,12 +34,24 @@ class DatabaseSchemaValidator:
         self.expected_tables = {
             "users": ["id", "email", "username", "password_hash", "created_at"],
             "resumes": ["id", "owner_id", "title", "data", "is_public", "created_at"],
-            "resume_versions": ["id", "resume_id", "version_number", "data", "created_at"],
+            "resume_versions": [
+                "id",
+                "resume_id",
+                "version_number",
+                "data",
+                "created_at",
+            ],
             "tags": ["id", "name", "created_at"],
             "resume_tags": ["resume_id", "tag_id"],
             "sharing_logs": ["id", "resume_id", "action", "created_at"],
             "api_keys": ["id", "user_id", "key_hash", "name", "created_at"],
-            "oauth_tokens": ["id", "user_id", "provider", "access_token", "refresh_token"],
+            "oauth_tokens": [
+                "id",
+                "user_id",
+                "provider",
+                "access_token",
+                "refresh_token",
+            ],
             "teams": ["id", "name", "owner_id", "created_at"],
             "team_members": ["id", "team_id", "user_id", "role", "created_at"],
         }
@@ -58,10 +71,10 @@ class DatabaseSchemaValidator:
     async def validate_schema(self, db_session) -> SchemaValidationResult:
         """
         Validate database schema against expected state.
-        
+
         Args:
             db_session: SQLAlchemy async database session
-            
+
         Returns:
             SchemaValidationResult with validation details
         """
@@ -73,7 +86,7 @@ class DatabaseSchemaValidator:
         try:
             # Check for required tables
             existing_tables = await self._get_existing_tables(db_session)
-            
+
             for table_name, columns in self.expected_tables.items():
                 if table_name not in existing_tables:
                     failed += 1
@@ -82,7 +95,7 @@ class DatabaseSchemaValidator:
 
                 passed += 1
                 table_columns = existing_tables.get(table_name, {})
-                
+
                 # Check for required columns
                 for column in columns:
                     if column not in table_columns:
@@ -97,10 +110,10 @@ class DatabaseSchemaValidator:
             logger.error(f"Schema validation error: {e}")
 
         is_valid = failed == 0
-        
+
         logger.info(
             f"Schema validation completed: {passed} passed, {failed} failed",
-            extra={"passed": passed, "failed": failed}
+            extra={"passed": passed, "failed": failed},
         )
 
         return SchemaValidationResult(
@@ -115,10 +128,10 @@ class DatabaseSchemaValidator:
     async def validate_data_integrity(self, db_session) -> SchemaValidationResult:
         """
         Validate data integrity constraints.
-        
+
         Args:
             db_session: SQLAlchemy async database session
-            
+
         Returns:
             SchemaValidationResult with integrity check details
         """
@@ -159,7 +172,7 @@ class DatabaseSchemaValidator:
 
         logger.info(
             f"Data integrity validation completed: {passed} passed, {failed} failed",
-            extra={"passed": passed, "failed": failed}
+            extra={"passed": passed, "failed": failed},
         )
 
         return SchemaValidationResult(
@@ -175,7 +188,7 @@ class DatabaseSchemaValidator:
         """Get existing tables and their columns from database."""
         try:
             from sqlalchemy import inspect
-            
+
             # This would need real database connection
             # For now, return mock implementation
             return self.expected_tables
@@ -216,23 +229,27 @@ class DatabaseSchemaValidator:
     async def _check_orphaned_team_members(self, db_session) -> Tuple[str, bool, str]:
         """Check for team members with non-existent teams/users."""
         try:
-            return ("Orphaned team members check", True, "No orphaned team members found")
+            return (
+                "Orphaned team members check",
+                True,
+                "No orphaned team members found",
+            )
         except Exception as e:
             return ("Orphaned team members check", False, str(e))
 
     async def validate_migration_ready(self, db_session) -> Dict[str, Any]:
         """
         Validate that database is ready for migration.
-        
+
         Checks:
         - No running queries
         - Sufficient disk space
         - Connection pool availability
         - Backup exists
-        
+
         Args:
             db_session: SQLAlchemy async database session
-            
+
         Returns:
             Dictionary with migration readiness status
         """
@@ -250,7 +267,7 @@ class DatabaseSchemaValidator:
                 "ready": checks["ready_for_migration"],
                 "timestamp": datetime.utcnow().isoformat(),
                 "checks": checks,
-                "details": []
+                "details": [],
             }
         except Exception as e:
             logger.error(f"Migration readiness check error: {e}")

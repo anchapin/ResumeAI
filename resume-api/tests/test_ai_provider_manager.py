@@ -1,4 +1,5 @@
 """Unit tests for AI Provider Manager with fallback logic."""
+
 import sys
 import pytest
 from pathlib import Path
@@ -6,8 +7,18 @@ from unittest.mock import MagicMock
 
 sys.path.insert(0, str(Path("resume-api").absolute()))
 
-from lib.utils.ai_provider_manager import AIProviderManager, ProviderType, ProviderStatus
-from lib.utils.circuit_breaker import CircuitBreaker, CircuitState, openai_breaker, claude_breaker, gemini_breaker
+from lib.utils.ai_provider_manager import (
+    AIProviderManager,
+    ProviderType,
+    ProviderStatus,
+)
+from lib.utils.circuit_breaker import (
+    CircuitBreaker,
+    CircuitState,
+    openai_breaker,
+    claude_breaker,
+    gemini_breaker,
+)
 
 
 class TestProviderStatus:
@@ -47,7 +58,9 @@ class TestAIProviderManagerInitialization:
     def test_default_provider_priority(self):
         manager = AIProviderManager()
         assert manager.provider_priority == [
-            ProviderType.OPENAI, ProviderType.CLAUDE, ProviderType.GEMINI,
+            ProviderType.OPENAI,
+            ProviderType.CLAUDE,
+            ProviderType.GEMINI,
         ]
 
 
@@ -116,9 +129,7 @@ class TestAIProviderManagerReset:
 
     def test_reset_provider(self):
         openai_breaker.state = CircuitState.OPEN
-        manager = AIProviderManager(
-            providers={ProviderType.OPENAI: MagicMock()}
-        )
+        manager = AIProviderManager(providers={ProviderType.OPENAI: MagicMock()})
         assert openai_breaker.get_state() == "OPEN"
         manager.reset_provider(ProviderType.OPENAI)
         assert openai_breaker.get_state() == "CLOSED"

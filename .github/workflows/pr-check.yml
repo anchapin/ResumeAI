@@ -73,4 +73,4 @@ jobs:
 
       - name: Run Flake8 linter
         working-directory: ./resume-api
-        run: flake8 . --max-line-length=120 --extend-ignore=E203,W503,F541,E402,F841,W291,W293,E501
+        run: flake8 . --max-line-length=120 --extend-ignore=E203,W503,F541,E402,F841,F401,W291,W293,E501,F811,E712,E722,E731

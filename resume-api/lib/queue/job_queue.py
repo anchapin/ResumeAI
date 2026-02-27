@@ -20,6 +20,7 @@ logger = logging.getLogger(__name__)
 
 class JobState(str, Enum):
     """Job states."""
+
     PENDING = "pending"
     PROCESSING = "processing"
     COMPLETED = "completed"
@@ -29,6 +30,7 @@ class JobState(str, Enum):
 
 class JobPriority(int, Enum):
     """Job priority levels (higher number = higher priority)."""
+
     LOW = 1
     NORMAL = 5
     HIGH = 10
@@ -38,6 +40,7 @@ class JobPriority(int, Enum):
 @dataclass
 class JobConfig:
     """Configuration for job queue."""
+
     max_retries: int = 3
     retry_backoff_base: float = 2.0  # exponential backoff multiplier
     retry_backoff_max: int = 3600  # max backoff 1 hour
@@ -48,6 +51,7 @@ class JobConfig:
 @dataclass
 class Job:
     """Represents a job in the queue."""
+
     job_id: str = field(default_factory=lambda: str(uuid.uuid4()))
     state: JobState = JobState.PENDING
     priority: JobPriority = JobPriority.NORMAL
@@ -66,27 +70,37 @@ class Job:
     def to_dict(self) -> Dict[str, Any]:
         """Convert job to dictionary."""
         data = asdict(self)
-        data['state'] = self.state.value
-        data['priority'] = self.priority.value
-        data['created_at'] = self.created_at.isoformat()
-        data['started_at'] = self.started_at.isoformat() if self.started_at else None
-        data['completed_at'] = self.completed_at.isoformat() if self.completed_at else None
+        data["state"] = self.state.value
+        data["priority"] = self.priority.value
+        data["created_at"] = self.created_at.isoformat()
+        data["started_at"] = self.started_at.isoformat() if self.started_at else None
+        data["completed_at"] = (
+            self.completed_at.isoformat() if self.completed_at else None
+        )
         return data
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'Job':
+    def from_dict(cls, data: Dict[str, Any]) -> "Job":
         """Create job from dictionary."""
         data = data.copy()
-        if isinstance(data.get('state'), str):
-            data['state'] = JobState(data['state'])
-        if isinstance(data.get('priority'), int):
-            data['priority'] = JobPriority(data['priority'])
-        if isinstance(data.get('created_at'), str):
-            data['created_at'] = datetime.fromisoformat(data['created_at'])
-        if isinstance(data.get('started_at'), str):
-            data['started_at'] = datetime.fromisoformat(data['started_at']) if data['started_at'] else None
-        if isinstance(data.get('completed_at'), str):
-            data['completed_at'] = datetime.fromisoformat(data['completed_at']) if data['completed_at'] else None
+        if isinstance(data.get("state"), str):
+            data["state"] = JobState(data["state"])
+        if isinstance(data.get("priority"), int):
+            data["priority"] = JobPriority(data["priority"])
+        if isinstance(data.get("created_at"), str):
+            data["created_at"] = datetime.fromisoformat(data["created_at"])
+        if isinstance(data.get("started_at"), str):
+            data["started_at"] = (
+                datetime.fromisoformat(data["started_at"])
+                if data["started_at"]
+                else None
+            )
+        if isinstance(data.get("completed_at"), str):
+            data["completed_at"] = (
+                datetime.fromisoformat(data["completed_at"])
+                if data["completed_at"]
+                else None
+            )
         return cls(**data)
 
     def is_completed(self) -> bool:
@@ -95,18 +109,17 @@ class Job:
 
     def should_retry(self) -> bool:
         """Check if job should be retried."""
-        return (
-            self.state == JobState.FAILED and
-            self.retry_count < self.max_retries
-        )
+        return self.state == JobState.FAILED and self.retry_count < self.max_retries
 
     def get_retry_delay(self) -> int:
         """Get delay for next retry (exponential backoff with jitter)."""
         import random
-        delay = min(
-            int(self.retry_backoff_base ** self.retry_count),
-            self.max_retries
-        ) if hasattr(self, 'retry_backoff_base') else (2 ** self.retry_count)
+
+        delay = (
+            min(int(self.retry_backoff_base**self.retry_count), self.max_retries)
+            if hasattr(self, "retry_backoff_base")
+            else (2**self.retry_count)
+        )
         # Add jitter (±20%)
         jitter = random.uniform(0.8, 1.2)
         return int(delay * jitter)
@@ -159,9 +172,7 @@ class LocalQueue(JobQueue):
         self.config = config or JobConfig()
         self.jobs: Dict[str, Job] = {}
         self.queue: List[str] = []  # job_ids in priority order
-        self.job_states: Dict[str, List[str]] = {
-            state: [] for state in JobState
-        }
+        self.job_states: Dict[str, List[str]] = {state: [] for state in JobState}
         logger.info("Initialized LocalQueue")
 
     async def enqueue(self, job: Job) -> str:
@@ -236,7 +247,11 @@ class LocalQueue(JobQueue):
         jobs_to_remove = []
 
         for job_id, job in self.jobs.items():
-            if job.is_completed() and job.completed_at and job.completed_at < cutoff_date:
+            if (
+                job.is_completed()
+                and job.completed_at
+                and job.completed_at < cutoff_date
+            ):
                 jobs_to_remove.append(job_id)
 
         for job_id in jobs_to_remove:
@@ -259,10 +274,14 @@ class LocalQueue(JobQueue):
             if job and job.state == JobState.PENDING:
                 pending_jobs.append((job.priority.value, job.created_at, job_id))
 
-        pending_jobs.sort(key=lambda x: (-x[0], x[1]))  # Sort by priority desc, then created_at asc
+        pending_jobs.sort(
+            key=lambda x: (-x[0], x[1])
+        )  # Sort by priority desc, then created_at asc
         self.queue = [job_id for _, _, job_id in pending_jobs]
 
-    def _update_job_states(self, job_id: str, old_state: JobState, new_state: JobState) -> None:
+    def _update_job_states(
+        self, job_id: str, old_state: JobState, new_state: JobState
+    ) -> None:
         """Update job state tracking."""
         if job_id in self.job_states[old_state]:
             self.job_states[old_state].remove(job_id)
@@ -273,10 +292,10 @@ class LocalQueue(JobQueue):
     def get_stats(self) -> Dict[str, Any]:
         """Get queue statistics."""
         return {
-            'total_jobs': len(self.jobs),
-            'pending': len(self.job_states[JobState.PENDING]),
-            'processing': len(self.job_states[JobState.PROCESSING]),
-            'completed': len(self.job_states[JobState.COMPLETED]),
-            'failed': len(self.job_states[JobState.FAILED]),
-            'cancelled': len(self.job_states[JobState.CANCELLED]),
+            "total_jobs": len(self.jobs),
+            "pending": len(self.job_states[JobState.PENDING]),
+            "processing": len(self.job_states[JobState.PROCESSING]),
+            "completed": len(self.job_states[JobState.COMPLETED]),
+            "failed": len(self.job_states[JobState.FAILED]),
+            "cancelled": len(self.job_states[JobState.CANCELLED]),
         }

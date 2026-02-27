@@ -26,14 +26,14 @@ class LogVerifier:
         try:
             logger = structlog.get_logger(__name__)
             assert logger is not None
-            
+
             assert hasattr(logger, "info")
             assert hasattr(logger, "error")
             assert hasattr(logger, "warning")
             assert hasattr(logger, "debug")
             assert hasattr(logger, "critical")
             assert hasattr(logger, "bind")
-            
+
             return True
         except Exception as e:
             print(f"structlog configuration verification failed: {e}")
@@ -44,14 +44,16 @@ class LogVerifier:
         """Verify JSON output format is configured."""
         try:
             if settings.log_format != "json":
-                print(f"Warning: log_format is '{settings.log_format}', expected 'json'")
+                print(
+                    f"Warning: log_format is '{settings.log_format}', expected 'json'"
+                )
                 return False
-            
+
             config = structlog.get_config()
             if config is None:
                 print("Warning: structlog not yet configured")
                 return False
-            
+
             return True
         except Exception as e:
             print(f"JSON format verification failed: {e}")
@@ -62,14 +64,16 @@ class LogVerifier:
         """Verify log level is correctly set."""
         try:
             expected = expected_level or settings.log_level
-            
+
             numeric_level = getattr(logging, expected.upper(), logging.INFO)
-            
+
             root_logger = logging.getLogger()
-            
+
             if root_logger.level != numeric_level:
-                print(f"Warning: root logger level is {root_logger.level}, expected {numeric_level}")
-            
+                print(
+                    f"Warning: root logger level is {root_logger.level}, expected {numeric_level}"
+                )
+
             return True
         except Exception as e:
             print(f"Log level verification failed: {e}")
@@ -83,20 +87,23 @@ class LogVerifier:
             if config is None:
                 print("Warning: structlog not configured")
                 return False
-            
+
             processors = config.get("processors", [])
-            
-            has_timestamp = any("timestamp" in str(p).lower() or "add_timestamp" in str(p) for p in processors)
+
+            has_timestamp = any(
+                "timestamp" in str(p).lower() or "add_timestamp" in str(p)
+                for p in processors
+            )
             has_log_level = any("log_level" in str(p).lower() for p in processors)
-            
+
             if not has_timestamp:
                 print("Warning: timestamp processor not found")
                 return False
-            
+
             if not has_log_level:
                 print("Warning: log_level processor not found")
                 return False
-            
+
             return True
         except Exception as e:
             print(f"Processor verification failed: {e}")
@@ -110,21 +117,21 @@ class LogVerifier:
             "format": None,
             "parsed": None,
             "required_fields": {},
-            "issues": []
+            "issues": [],
         }
-        
+
         if not log_output or not log_output.strip():
             result["issues"].append("Empty log output")
             return result
-        
+
         output = log_output.strip()
-        
+
         try:
             parsed = json.loads(output)
             result["format"] = "json"
             result["parsed"] = parsed
             result["valid"] = True
-            
+
             required = ["timestamp", "event"]
             for field in required:
                 if field in parsed:
@@ -132,23 +139,23 @@ class LogVerifier:
                 else:
                     result["required_fields"][field] = "missing"
                     result["issues"].append(f"Missing required field: {field}")
-            
+
             return result
         except json.JSONDecodeError as e:
             result["issues"].append(f"Not valid JSON: {e}")
-        
+
         if "timestamp" in output and ("event" in output or "message" in output):
             result["format"] = "console"
             result["valid"] = True
             return result
-        
+
         result["issues"].append("Could not determine log format")
         return result
 
 
 class LoggingComponentSpec:
     """Specification for log levels for each component."""
-    
+
     COMPONENTS = {
         "routes.auth": {
             "name": "Authentication Routes",
@@ -159,7 +166,7 @@ class LoggingComponentSpec:
                 "auth_failure",
                 "token_issued",
                 "token_revoked",
-            ]
+            ],
         },
         "routes.github": {
             "name": "GitHub OAuth Routes",
@@ -170,7 +177,7 @@ class LoggingComponentSpec:
                 "github_oauth_failed",
                 "github_user_fetched",
                 "github_token_revoked",
-            ]
+            ],
         },
         "routes.linkedin": {
             "name": "LinkedIn OAuth Routes",
@@ -180,7 +187,7 @@ class LoggingComponentSpec:
                 "linkedin_oauth_success",
                 "linkedin_oauth_failed",
                 "linkedin_user_fetched",
-            ]
+            ],
         },
         "api.v1": {
             "name": "API Routes (V1)",
@@ -189,7 +196,7 @@ class LoggingComponentSpec:
                 "endpoint_called",
                 "request_validated",
                 "response_generated",
-            ]
+            ],
         },
         "database": {
             "name": "Database",
@@ -200,7 +207,7 @@ class LoggingComponentSpec:
                 "transaction_started",
                 "transaction_committed",
                 "transaction_rolled_back",
-            ]
+            ],
         },
         "config.cache": {
             "name": "Cache Configuration",
@@ -211,7 +218,7 @@ class LoggingComponentSpec:
                 "cache_evicted",
                 "redis_connected",
                 "redis_disconnected",
-            ]
+            ],
         },
         "config.database_replicas": {
             "name": "Database Replicas",
@@ -220,7 +227,7 @@ class LoggingComponentSpec:
                 "replica_health_check",
                 "replica_marked_unhealthy",
                 "replica_restored",
-            ]
+            ],
         },
         "monitoring.health": {
             "name": "Health Checks",
@@ -229,7 +236,7 @@ class LoggingComponentSpec:
                 "health_check_passed",
                 "health_check_failed",
                 "health_check_degraded",
-            ]
+            ],
         },
         "middleware.error_handling": {
             "name": "Error Handling Middleware",
@@ -238,7 +245,7 @@ class LoggingComponentSpec:
                 "request_error",
                 "unhandled_exception",
                 "validation_error",
-            ]
+            ],
         },
         "middleware.monitoring": {
             "name": "Monitoring Middleware",
@@ -247,7 +254,7 @@ class LoggingComponentSpec:
                 "request_started",
                 "request_completed",
                 "request_failed",
-            ]
+            ],
         },
         "lib.utils.retry": {
             "name": "Retry Logic",
@@ -256,7 +263,7 @@ class LoggingComponentSpec:
                 "retry_attempt",
                 "retry_exhausted",
                 "retry_success",
-            ]
+            ],
         },
         "lib.deployment.feature_flags": {
             "name": "Feature Flags",
@@ -265,28 +272,30 @@ class LoggingComponentSpec:
                 "feature_flag_enabled",
                 "feature_flag_disabled",
                 "feature_flag_maintenance",
-            ]
+            ],
         },
     }
-    
+
     @classmethod
     def get_component_spec(cls, component_name: str) -> Optional[Dict[str, Any]]:
         """Get specification for a component."""
         return cls.COMPONENTS.get(component_name)
-    
+
     @classmethod
     def get_all_components(cls) -> Dict[str, Dict[str, Any]]:
         """Get all component specifications."""
         return cls.COMPONENTS.copy()
-    
+
     @classmethod
-    def validate_component_logging(cls, component_name: str, log_entries: List[str]) -> Dict[str, Any]:
+    def validate_component_logging(
+        cls, component_name: str, log_entries: List[str]
+    ) -> Dict[str, Any]:
         """Validate that a component is logging at the correct level."""
         spec = cls.get_component_spec(component_name)
-        
+
         if not spec:
             return {"valid": False, "error": f"Unknown component: {component_name}"}
-        
+
         return {
             "component": component_name,
             "expected_level": logging.getLevelName(spec["level"]),
@@ -298,7 +307,7 @@ class LoggingComponentSpec:
 def log_verification_report() -> str:
     """Generate a verification report for logging configuration."""
     verifier = LogVerifier()
-    
+
     report_lines = [
         "=== Logging Configuration Verification Report ===",
         "",
@@ -317,12 +326,12 @@ def log_verification_report() -> str:
         "",
         "5. Component Specifications:",
     ]
-    
+
     for component, spec in LoggingComponentSpec.get_all_components().items():
         level = logging.getLevelName(spec["level"])
         report_lines.append(f"   - {component}: {level}")
-    
+
     report_lines.append("")
     report_lines.append("=== End Report ===")
-    
+
     return "\n".join(report_lines)
