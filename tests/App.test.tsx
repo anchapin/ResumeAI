@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor, within } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 import App, { SaveStatus } from '../App';
@@ -9,29 +10,15 @@ import { Route } from '../types';
 
 // Mock dependencies
 vi.mock('../components/Sidebar', () => ({
-  default: ({ onNavigate, onShowShortcuts }: any) => (
+  default: ({ onShowShortcuts }: any) => (
     <div data-testid="sidebar">
-      <button onClick={() => onNavigate(Route.DASHBOARD)} data-testid="nav-dashboard">
-        Dashboard
-      </button>
-      <button onClick={() => onNavigate(Route.EDITOR)} data-testid="nav-editor">
-        Editor
-      </button>
-      <button onClick={() => onNavigate(Route.WORKSPACE)} data-testid="nav-workspace">
-        Workspace
-      </button>
-      <button onClick={() => onNavigate(Route.SETTINGS)} data-testid="nav-settings">
-        Settings
-      </button>
-      <button onClick={() => onNavigate(Route.APPLICATIONS)} data-testid="nav-applications">
-        Applications
-      </button>
-      <button onClick={() => onNavigate(Route.BULK)} data-testid="nav-bulk">
-        Bulk
-      </button>
-      <button onClick={() => onNavigate(Route.SALARY_RESEARCH)} data-testid="nav-salary">
-        Salary
-      </button>
+      <button data-testid="nav-dashboard">Dashboard</button>
+      <button data-testid="nav-editor">Editor</button>
+      <button data-testid="nav-workspace">Workspace</button>
+      <button data-testid="nav-settings">Settings</button>
+      <button data-testid="nav-applications">Applications</button>
+      <button data-testid="nav-bulk">Bulk</button>
+      <button data-testid="nav-salary">Salary</button>
       <button onClick={onShowShortcuts} data-testid="show-shortcuts">
         Shortcuts
       </button>
@@ -44,14 +31,7 @@ vi.mock('../pages/Dashboard', () => ({
 }));
 
 vi.mock('../pages/Editor', () => ({
-  default: ({ onBack }: any) => (
-    <div data-testid="editor-page">
-      Editor Page
-      <button onClick={onBack} data-testid="editor-back-btn">
-        Back
-      </button>
-    </div>
-  ),
+  default: () => <div data-testid="editor-page">Editor Page</div>,
 }));
 
 vi.mock('../pages/Workspace', () => ({
@@ -152,7 +132,11 @@ describe('App Component', () => {
     it('should load and render app when data is available', async () => {
       vi.spyOn(StorageModule, 'loadResumeData').mockReturnValue(null);
 
-      render(<App />);
+      render(
+        <MemoryRouter initialEntries={['/dashboard']}>
+          <App />
+        </MemoryRouter>,
+      );
 
       // App should load and render content
       await waitFor(() => {
@@ -176,7 +160,11 @@ describe('App Component', () => {
 
       localStorage.setItem('resumeai_master_profile', JSON.stringify(mockData));
 
-      render(<App />);
+      render(
+        <MemoryRouter initialEntries={['/dashboard']}>
+          <App />
+        </MemoryRouter>,
+      );
 
       await waitFor(() => {
         expect(screen.queryByText('Loading...')).not.toBeInTheDocument();
@@ -189,7 +177,11 @@ describe('App Component', () => {
     it('should use initial data when localStorage is empty', async () => {
       vi.spyOn(StorageModule, 'loadResumeData').mockReturnValue(null);
 
-      render(<App />);
+      render(
+        <MemoryRouter initialEntries={['/dashboard']}>
+          <App />
+        </MemoryRouter>,
+      );
 
       await waitFor(() => {
         expect(screen.queryByText('Loading...')).not.toBeInTheDocument();
@@ -214,7 +206,11 @@ describe('App Component', () => {
 
       localStorage.setItem('resumeai_master_profile', JSON.stringify(invalidData));
 
-      render(<App />);
+      render(
+        <MemoryRouter initialEntries={['/dashboard']}>
+          <App />
+        </MemoryRouter>,
+      );
 
       await waitFor(() => {
         expect(screen.queryByText('Loading...')).not.toBeInTheDocument();
@@ -230,7 +226,11 @@ describe('App Component', () => {
       vi.spyOn(TokenManager, 'isTokenExpired').mockReturnValue(true);
       vi.spyOn(TokenManager, 'removeToken');
 
-      render(<App />);
+      render(
+        <MemoryRouter initialEntries={['/dashboard']}>
+          <App />
+        </MemoryRouter>,
+      );
 
       await waitFor(() => {
         expect(TokenManager.isTokenExpired).toHaveBeenCalledWith(expiredToken);
@@ -241,7 +241,11 @@ describe('App Component', () => {
 
   describe('Navigation', () => {
     it('should render Dashboard on initial load', async () => {
-      render(<App />);
+      render(
+        <MemoryRouter initialEntries={['/dashboard']}>
+          <App />
+        </MemoryRouter>,
+      );
 
       await waitFor(() => {
         expect(screen.getByTestId('dashboard-page')).toBeInTheDocument();
@@ -250,7 +254,11 @@ describe('App Component', () => {
 
     it('should navigate to Editor when clicking Editor button', async () => {
       const user = userEvent.setup();
-      render(<App />);
+      render(
+        <MemoryRouter initialEntries={['/dashboard']}>
+          <App />
+        </MemoryRouter>,
+      );
 
       await waitFor(() => {
         expect(screen.getByTestId('dashboard-page')).toBeInTheDocument();
@@ -268,7 +276,11 @@ describe('App Component', () => {
 
     it('should navigate to Workspace', async () => {
       const user = userEvent.setup();
-      render(<App />);
+      render(
+        <MemoryRouter initialEntries={['/dashboard']}>
+          <App />
+        </MemoryRouter>,
+      );
 
       await waitFor(() => {
         expect(screen.getByTestId('dashboard-page')).toBeInTheDocument();
@@ -284,7 +296,11 @@ describe('App Component', () => {
 
     it('should navigate to Settings', async () => {
       const user = userEvent.setup();
-      render(<App />);
+      render(
+        <MemoryRouter initialEntries={['/dashboard']}>
+          <App />
+        </MemoryRouter>,
+      );
 
       await waitFor(() => {
         expect(screen.getByTestId('dashboard-page')).toBeInTheDocument();
@@ -300,7 +316,11 @@ describe('App Component', () => {
 
     it('should navigate to Applications', async () => {
       const user = userEvent.setup();
-      render(<App />);
+      render(
+        <MemoryRouter initialEntries={['/dashboard']}>
+          <App />
+        </MemoryRouter>,
+      );
 
       await waitFor(() => {
         expect(screen.getByTestId('dashboard-page')).toBeInTheDocument();
@@ -316,7 +336,11 @@ describe('App Component', () => {
 
     it('should navigate to Bulk Resume Management', async () => {
       const user = userEvent.setup();
-      render(<App />);
+      render(
+        <MemoryRouter initialEntries={['/dashboard']}>
+          <App />
+        </MemoryRouter>,
+      );
 
       await waitFor(() => {
         expect(screen.getByTestId('dashboard-page')).toBeInTheDocument();
@@ -332,7 +356,11 @@ describe('App Component', () => {
 
     it('should navigate to Salary Research', async () => {
       const user = userEvent.setup();
-      render(<App />);
+      render(
+        <MemoryRouter initialEntries={['/dashboard']}>
+          <App />
+        </MemoryRouter>,
+      );
 
       await waitFor(() => {
         expect(screen.getByTestId('dashboard-page')).toBeInTheDocument();
@@ -348,7 +376,11 @@ describe('App Component', () => {
 
     it('should return to Dashboard from Editor', async () => {
       const user = userEvent.setup();
-      render(<App />);
+      render(
+        <MemoryRouter initialEntries={['/dashboard']}>
+          <App />
+        </MemoryRouter>,
+      );
 
       await waitFor(() => {
         expect(screen.getByTestId('dashboard-page')).toBeInTheDocument();
@@ -388,7 +420,11 @@ describe('App Component', () => {
 
       localStorage.setItem('resumeai_master_profile', JSON.stringify(mockData));
 
-      render(<App />);
+      render(
+        <MemoryRouter initialEntries={['/dashboard']}>
+          <App />
+        </MemoryRouter>,
+      );
 
       await waitFor(() => {
         expect(screen.queryByText('Loading...')).not.toBeInTheDocument();
@@ -408,7 +444,11 @@ describe('App Component', () => {
         .spyOn(StorageModule, 'saveResumeData')
         .mockImplementation(() => {});
 
-      render(<App />);
+      render(
+        <MemoryRouter initialEntries={['/dashboard']}>
+          <App />
+        </MemoryRouter>,
+      );
 
       await waitFor(() => {
         expect(screen.queryByText('Loading...')).not.toBeInTheDocument();
@@ -430,7 +470,11 @@ describe('App Component', () => {
         return new Promise((resolve) => setTimeout(() => resolve(null), 100));
       });
 
-      const { rerender } = render(<App />);
+      const { rerender } = render(
+        <MemoryRouter initialEntries={['/dashboard']}>
+          <App />
+        </MemoryRouter>,
+      );
 
       // Should not have saved during loading
       expect(saveResumeDataSpy).not.toHaveBeenCalled();
@@ -458,7 +502,11 @@ describe('App Component', () => {
           localStorage.removeItem('resumeai_master_profile');
         });
 
-      render(<App />);
+      render(
+        <MemoryRouter initialEntries={['/dashboard']}>
+          <App />
+        </MemoryRouter>,
+      );
 
       await waitFor(() => {
         expect(screen.queryByText('Loading...')).not.toBeInTheDocument();
@@ -477,7 +525,11 @@ describe('App Component', () => {
         );
       });
 
-      render(<App />);
+      render(
+        <MemoryRouter initialEntries={['/dashboard']}>
+          <App />
+        </MemoryRouter>,
+      );
 
       await waitFor(() => {
         expect(
@@ -494,7 +546,11 @@ describe('App Component', () => {
         );
       });
 
-      render(<App />);
+      render(
+        <MemoryRouter initialEntries={['/dashboard']}>
+          <App />
+        </MemoryRouter>,
+      );
 
       await waitFor(() => {
         expect(screen.getByText('Data corrupted. Using default resume.')).toBeInTheDocument();
@@ -509,7 +565,11 @@ describe('App Component', () => {
         );
       });
 
-      render(<App />);
+      render(
+        <MemoryRouter initialEntries={['/dashboard']}>
+          <App />
+        </MemoryRouter>,
+      );
 
       await waitFor(() => {
         expect(
@@ -526,7 +586,11 @@ describe('App Component', () => {
         );
       });
 
-      render(<App />);
+      render(
+        <MemoryRouter initialEntries={['/dashboard']}>
+          <App />
+        </MemoryRouter>,
+      );
 
       // Wait for error to appear
       expect(screen.getByText('Storage full. Please clear some browser data.')).toBeInTheDocument();
@@ -552,7 +616,11 @@ describe('App Component', () => {
         );
       });
 
-      render(<App />);
+      render(
+        <MemoryRouter initialEntries={['/dashboard']}>
+          <App />
+        </MemoryRouter>,
+      );
 
       await waitFor(() => {
         expect(
@@ -571,7 +639,11 @@ describe('App Component', () => {
     });
 
     it('should wrap content in ErrorBoundary', () => {
-      render(<App />);
+      render(
+        <MemoryRouter initialEntries={['/dashboard']}>
+          <App />
+        </MemoryRouter>,
+      );
 
       expect(screen.getByTestId('error-boundary')).toBeInTheDocument();
     });
@@ -579,7 +651,11 @@ describe('App Component', () => {
 
   describe('Keyboard Shortcuts', () => {
     it('should show shortcuts modal when shortcut triggered', async () => {
-      render(<App />);
+      render(
+        <MemoryRouter initialEntries={['/dashboard']}>
+          <App />
+        </MemoryRouter>,
+      );
 
       await waitFor(() => {
         expect(screen.queryByText('Loading...')).not.toBeInTheDocument();
@@ -591,7 +667,11 @@ describe('App Component', () => {
 
     it('should toggle shortcuts modal visibility', async () => {
       const user = userEvent.setup();
-      render(<App />);
+      render(
+        <MemoryRouter initialEntries={['/dashboard']}>
+          <App />
+        </MemoryRouter>,
+      );
 
       await waitFor(() => {
         expect(screen.queryByText('Loading...')).not.toBeInTheDocument();
@@ -611,7 +691,11 @@ describe('App Component', () => {
     });
 
     it('should register keyboard shortcuts on mount', async () => {
-      render(<App />);
+      render(
+        <MemoryRouter initialEntries={['/dashboard']}>
+          <App />
+        </MemoryRouter>,
+      );
 
       await waitFor(() => {
         expect(screen.queryByText('Loading...')).not.toBeInTheDocument();
@@ -623,7 +707,11 @@ describe('App Component', () => {
 
   describe('Theme Integration', () => {
     it('should initialize theme from useTheme hook', async () => {
-      render(<App />);
+      render(
+        <MemoryRouter initialEntries={['/dashboard']}>
+          <App />
+        </MemoryRouter>,
+      );
 
       await waitFor(() => {
         expect(screen.queryByText('Loading...')).not.toBeInTheDocument();
@@ -636,7 +724,11 @@ describe('App Component', () => {
 
   describe('Toast Container', () => {
     it('should render toast container', async () => {
-      render(<App />);
+      render(
+        <MemoryRouter initialEntries={['/dashboard']}>
+          <App />
+        </MemoryRouter>,
+      );
 
       await waitFor(() => {
         expect(screen.queryByText('Loading...')).not.toBeInTheDocument();
@@ -648,7 +740,11 @@ describe('App Component', () => {
 
   describe('Sidebar Integration', () => {
     it('should pass correct props to Sidebar', async () => {
-      render(<App />);
+      render(
+        <MemoryRouter initialEntries={['/dashboard']}>
+          <App />
+        </MemoryRouter>,
+      );
 
       await waitFor(() => {
         expect(screen.queryByText('Loading...')).not.toBeInTheDocument();
@@ -659,7 +755,11 @@ describe('App Component', () => {
 
     it('should update current route in Sidebar', async () => {
       const user = userEvent.setup();
-      render(<App />);
+      render(
+        <MemoryRouter initialEntries={['/dashboard']}>
+          <App />
+        </MemoryRouter>,
+      );
 
       await waitFor(() => {
         expect(screen.getByTestId('dashboard-page')).toBeInTheDocument();
@@ -676,7 +776,11 @@ describe('App Component', () => {
   describe('Editor Integration', () => {
     it('should pass resume data to Editor component', async () => {
       const user = userEvent.setup();
-      render(<App />);
+      render(
+        <MemoryRouter initialEntries={['/dashboard']}>
+          <App />
+        </MemoryRouter>,
+      );
 
       await waitFor(() => {
         expect(screen.getByTestId('dashboard-page')).toBeInTheDocument();
@@ -690,7 +794,11 @@ describe('App Component', () => {
 
     it('should handle resume data updates from Editor', async () => {
       const user = userEvent.setup();
-      render(<App />);
+      render(
+        <MemoryRouter initialEntries={['/dashboard']}>
+          <App />
+        </MemoryRouter>,
+      );
 
       await waitFor(() => {
         expect(screen.getByTestId('dashboard-page')).toBeInTheDocument();
@@ -706,7 +814,11 @@ describe('App Component', () => {
   describe('Workspace Integration', () => {
     it('should pass correct props to Workspace component', async () => {
       const user = userEvent.setup();
-      render(<App />);
+      render(
+        <MemoryRouter initialEntries={['/dashboard']}>
+          <App />
+        </MemoryRouter>,
+      );
 
       await waitFor(() => {
         expect(screen.getByTestId('dashboard-page')).toBeInTheDocument();
@@ -722,7 +834,11 @@ describe('App Component', () => {
   describe('Multiple Route Changes', () => {
     it('should handle rapid route changes', async () => {
       const user = userEvent.setup();
-      render(<App />);
+      render(
+        <MemoryRouter initialEntries={['/dashboard']}>
+          <App />
+        </MemoryRouter>,
+      );
 
       await waitFor(() => {
         expect(screen.getByTestId('dashboard-page')).toBeInTheDocument();
@@ -759,7 +875,11 @@ describe('App Component', () => {
 
       localStorage.setItem('resumeai_master_profile', JSON.stringify(mockData));
 
-      render(<App />);
+      render(
+        <MemoryRouter initialEntries={['/dashboard']}>
+          <App />
+        </MemoryRouter>,
+      );
 
       await waitFor(() => {
         expect(screen.getByTestId('dashboard-page')).toBeInTheDocument();
@@ -776,7 +896,11 @@ describe('App Component', () => {
   describe('Component Cleanup', () => {
     it('should cleanup shortcuts on unmount', async () => {
       vi.spyOn(StorageModule, 'loadResumeData').mockReturnValue(null);
-      const { unmount } = render(<App />);
+      const { unmount } = render(
+        <MemoryRouter initialEntries={['/dashboard']}>
+          <App />
+        </MemoryRouter>,
+      );
 
       await waitFor(() => {
         expect(screen.getByTestId('dashboard-page')).toBeInTheDocument();
@@ -788,7 +912,11 @@ describe('App Component', () => {
 
     it('should cleanup debounce timers on unmount', async () => {
       vi.spyOn(StorageModule, 'loadResumeData').mockReturnValue(null);
-      const { unmount } = render(<App />);
+      const { unmount } = render(
+        <MemoryRouter initialEntries={['/dashboard']}>
+          <App />
+        </MemoryRouter>,
+      );
 
       await waitFor(() => {
         expect(screen.getByTestId('dashboard-page')).toBeInTheDocument();
@@ -802,7 +930,11 @@ describe('App Component', () => {
     it('should render with initial resume data structure', async () => {
       vi.spyOn(StorageModule, 'loadResumeData').mockReturnValue(null);
 
-      render(<App />);
+      render(
+        <MemoryRouter initialEntries={['/dashboard']}>
+          <App />
+        </MemoryRouter>,
+      );
 
       await waitFor(
         () => {
@@ -815,7 +947,11 @@ describe('App Component', () => {
     it('should have all required fields in initial data', async () => {
       vi.spyOn(StorageModule, 'loadResumeData').mockReturnValue(null);
 
-      render(<App />);
+      render(
+        <MemoryRouter initialEntries={['/dashboard']}>
+          <App />
+        </MemoryRouter>,
+      );
 
       await waitFor(
         () => {
@@ -832,7 +968,11 @@ describe('App Component', () => {
   describe('Sidebar with all routes', () => {
     it('should render sidebar on Dashboard', async () => {
       vi.spyOn(StorageModule, 'loadResumeData').mockReturnValue(null);
-      render(<App />);
+      render(
+        <MemoryRouter initialEntries={['/dashboard']}>
+          <App />
+        </MemoryRouter>,
+      );
 
       await waitFor(() => {
         expect(screen.getByTestId('dashboard-page')).toBeInTheDocument();
@@ -844,7 +984,11 @@ describe('App Component', () => {
     it('should not render sidebar on Interview Practice page', async () => {
       vi.spyOn(StorageModule, 'loadResumeData').mockReturnValue(null);
       const user = userEvent.setup();
-      render(<App />);
+      render(
+        <MemoryRouter initialEntries={['/dashboard']}>
+          <App />
+        </MemoryRouter>,
+      );
 
       await waitFor(() => {
         expect(screen.getByTestId('dashboard-page')).toBeInTheDocument();
@@ -872,7 +1016,11 @@ describe('App Component', () => {
 
       localStorage.setItem('resumeai_master_profile', JSON.stringify(mockData));
 
-      render(<App />);
+      render(
+        <MemoryRouter initialEntries={['/dashboard']}>
+          <App />
+        </MemoryRouter>,
+      );
 
       await waitFor(() => {
         expect(screen.getByTestId('dashboard-page')).toBeInTheDocument();
@@ -885,7 +1033,11 @@ describe('App Component', () => {
     it('should handle missing storage data gracefully', async () => {
       vi.spyOn(StorageModule, 'loadResumeData').mockReturnValue(null);
 
-      render(<App />);
+      render(
+        <MemoryRouter initialEntries={['/dashboard']}>
+          <App />
+        </MemoryRouter>,
+      );
 
       await waitFor(() => {
         expect(screen.getByTestId('dashboard-page')).toBeInTheDocument();
@@ -910,7 +1062,11 @@ describe('App Component', () => {
 
       localStorage.setItem('resumeai_master_profile', JSON.stringify(dataWithInvalidArrays));
 
-      render(<App />);
+      render(
+        <MemoryRouter initialEntries={['/dashboard']}>
+          <App />
+        </MemoryRouter>,
+      );
 
       await waitFor(() => {
         expect(screen.getByTestId('dashboard-page')).toBeInTheDocument();
@@ -922,7 +1078,11 @@ describe('App Component', () => {
 
   describe('Global State Management', () => {
     it('should maintain save status state', async () => {
-      render(<App />);
+      render(
+        <MemoryRouter initialEntries={['/dashboard']}>
+          <App />
+        </MemoryRouter>,
+      );
 
       await waitFor(() => {
         expect(screen.getByTestId('dashboard-page')).toBeInTheDocument();
@@ -932,7 +1092,11 @@ describe('App Component', () => {
     });
 
     it('should track loading state during initialization', async () => {
-      render(<App />);
+      render(
+        <MemoryRouter initialEntries={['/dashboard']}>
+          <App />
+        </MemoryRouter>,
+      );
 
       // Initially should show loading message or dashboard once loaded
       await waitFor(() => {
@@ -943,7 +1107,11 @@ describe('App Component', () => {
     });
 
     it('should handle theme initialization from hook', async () => {
-      render(<App />);
+      render(
+        <MemoryRouter initialEntries={['/dashboard']}>
+          <App />
+        </MemoryRouter>,
+      );
 
       await waitFor(() => {
         expect(screen.getByTestId('dashboard-page')).toBeInTheDocument();
@@ -956,7 +1124,11 @@ describe('App Component', () => {
 
   describe('Storage Warning Component', () => {
     it('should render storage warning component', async () => {
-      render(<App />);
+      render(
+        <MemoryRouter initialEntries={['/dashboard']}>
+          <App />
+        </MemoryRouter>,
+      );
 
       await waitFor(() => {
         expect(screen.getByTestId('dashboard-page')).toBeInTheDocument();
@@ -970,7 +1142,11 @@ describe('App Component', () => {
   describe('Complex Navigation Scenarios', () => {
     it('should handle sequential navigation to all sidebar routes', async () => {
       const user = userEvent.setup();
-      render(<App />);
+      render(
+        <MemoryRouter initialEntries={['/dashboard']}>
+          <App />
+        </MemoryRouter>,
+      );
 
       await waitFor(() => {
         expect(screen.getByTestId('dashboard-page')).toBeInTheDocument();
@@ -1010,7 +1186,11 @@ describe('App Component', () => {
       localStorage.setItem('resumeai_master_profile', JSON.stringify(mockData));
 
       const user = userEvent.setup();
-      render(<App />);
+      render(
+        <MemoryRouter initialEntries={['/dashboard']}>
+          <App />
+        </MemoryRouter>,
+      );
 
       await waitFor(() => {
         expect(screen.getByTestId('dashboard-page')).toBeInTheDocument();
@@ -1041,7 +1221,11 @@ describe('App Component', () => {
       vi.spyOn(TokenManager, 'getToken').mockReturnValue(token);
       vi.spyOn(TokenManager, 'isTokenExpired').mockReturnValue(false);
 
-      render(<App />);
+      render(
+        <MemoryRouter initialEntries={['/dashboard']}>
+          <App />
+        </MemoryRouter>,
+      );
 
       await waitFor(() => {
         expect(screen.getByTestId('dashboard-page')).toBeInTheDocument();
@@ -1060,7 +1244,11 @@ describe('App Component', () => {
         localStorage.removeItem('resume_ai_auth_token');
       });
 
-      render(<App />);
+      render(
+        <MemoryRouter initialEntries={['/dashboard']}>
+          <App />
+        </MemoryRouter>,
+      );
 
       await waitFor(() => {
         expect(screen.getByTestId('dashboard-page')).toBeInTheDocument();
@@ -1082,7 +1270,11 @@ describe('App Component', () => {
         );
       });
 
-      render(<App />);
+      render(
+        <MemoryRouter initialEntries={['/dashboard']}>
+          <App />
+        </MemoryRouter>,
+      );
 
       const errorMessage = await screen.findByText('Storage full. Please clear some browser data.');
       expect(errorMessage).toBeInTheDocument();
@@ -1105,7 +1297,11 @@ describe('App Component', () => {
         );
       });
 
-      render(<App />);
+      render(
+        <MemoryRouter initialEntries={['/dashboard']}>
+          <App />
+        </MemoryRouter>,
+      );
 
       await waitFor(() => {
         expect(
@@ -1119,7 +1315,11 @@ describe('App Component', () => {
         throw new StorageModule.StorageError('Unknown error', 'UNKNOWN' as any);
       });
 
-      render(<App />);
+      render(
+        <MemoryRouter initialEntries={['/dashboard']}>
+          <App />
+        </MemoryRouter>,
+      );
 
       await waitFor(() => {
         expect(screen.getByText('Failed to save data. Please try again.')).toBeInTheDocument();
@@ -1130,7 +1330,11 @@ describe('App Component', () => {
   describe('Suspense Boundaries', () => {
     it('should handle lazy loaded components', async () => {
       const user = userEvent.setup();
-      render(<App />);
+      render(
+        <MemoryRouter initialEntries={['/dashboard']}>
+          <App />
+        </MemoryRouter>,
+      );
 
       await waitFor(() => {
         expect(screen.getByTestId('dashboard-page')).toBeInTheDocument();
