@@ -187,7 +187,7 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, onBack, saveStatu
   const handleRestoreVersion = useCallback(
     async (version: any) => {
       try {
-        onUpdate({
+        onUpdateRef.current({
           ...resumeData,
           ...version.data,
         });
@@ -216,31 +216,28 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, onBack, saveStatu
   }, [resumeData]);
 
   // Handle LinkedIn Import
-  const handleLinkedInImport = useCallback(
-    (importedData: Partial<SimpleResumeData>) => {
-      const currentData = resumeDataRef.current;
+  const handleLinkedInImport = useCallback((importedData: Partial<SimpleResumeData>) => {
+    const currentData = resumeDataRef.current;
 
-      // Merge imported data with existing data (imported data takes precedence)
-      const mergedData: SimpleResumeData = {
-        ...currentData,
-        name: importedData.name || currentData.name,
-        email: importedData.email || currentData.email,
-        phone: importedData.phone || currentData.phone,
-        location: importedData.location || currentData.location,
-        role: importedData.role || currentData.role,
-        summary: importedData.summary || currentData.summary,
-        skills: importedData.skills?.length ? importedData.skills : currentData.skills,
-        experience: importedData.experience?.length
-          ? importedData.experience
-          : currentData.experience,
-        education: importedData.education?.length ? importedData.education : currentData.education,
-        projects: importedData.projects?.length ? importedData.projects : currentData.projects,
-      };
+    // Merge imported data with existing data (imported data takes precedence)
+    const mergedData: SimpleResumeData = {
+      ...currentData,
+      name: importedData.name || currentData.name,
+      email: importedData.email || currentData.email,
+      phone: importedData.phone || currentData.phone,
+      location: importedData.location || currentData.location,
+      role: importedData.role || currentData.role,
+      summary: importedData.summary || currentData.summary,
+      skills: importedData.skills?.length ? importedData.skills : currentData.skills,
+      experience: importedData.experience?.length
+        ? importedData.experience
+        : currentData.experience,
+      education: importedData.education?.length ? importedData.education : currentData.education,
+      projects: importedData.projects?.length ? importedData.projects : currentData.projects,
+    };
 
-      onUpdate(mergedData);
-    },
-    [onUpdate],
-  );
+    onUpdateRef.current(mergedData);
+  }, []);
 
   // Experience state
   const experiences = resumeData.experience;
@@ -271,11 +268,16 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, onBack, saveStatu
     return () => clearTimeout(timer);
   }, [resumeData]);
 
-  // Use a ref to hold the latest resumeData so that callbacks can be stable
+  // Use refs to hold the latest resumeData and onUpdate so that callbacks can be stable
   const resumeDataRef = useRef(resumeData);
   useEffect(() => {
     resumeDataRef.current = resumeData;
   }, [resumeData]);
+
+  const onUpdateRef = useRef(onUpdate);
+  useEffect(() => {
+    onUpdateRef.current = onUpdate;
+  }, []);
 
   // Load unresolved comment count
   useEffect(() => {
@@ -292,109 +294,83 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, onBack, saveStatu
   }, [currentResumeId]);
 
   // Contact Info handlers
-  const updateContact = useCallback(
-    (field: keyof SimpleResumeData, value: string) => {
-      const currentData = resumeDataRef.current;
-      onUpdate({ ...currentData, [field]: value });
-    },
-    [onUpdate],
-  );
+  const updateContact = useCallback((field: keyof SimpleResumeData, value: string) => {
+    const currentData = resumeDataRef.current;
+    onUpdateRef.current({ ...currentData, [field]: value });
+  }, []);
 
   // Summary handlers
-  const updateSummary = useCallback(
-    (summary: string) => {
-      const currentData = resumeDataRef.current;
-      onUpdate({ ...currentData, summary });
-    },
-    [onUpdate],
-  );
+  const updateSummary = useCallback((summary: string) => {
+    const currentData = resumeDataRef.current;
+    onUpdateRef.current({ ...currentData, summary });
+  }, []);
 
   // Skills handlers
-  const addSkill = useCallback(
-    (skill: string) => {
-      if (!skill.trim()) return;
-      const prev = resumeDataRef.current;
-      if (!prev.skills.includes(skill.trim())) {
-        onUpdate({ ...prev, skills: [...prev.skills, skill.trim()] });
-      }
-    },
-    [onUpdate],
-  );
+  const addSkill = useCallback((skill: string) => {
+    if (!skill.trim()) return;
+    const prev = resumeDataRef.current;
+    if (!prev.skills.includes(skill.trim())) {
+      onUpdateRef.current({ ...prev, skills: [...prev.skills, skill.trim()] });
+    }
+  }, []);
 
-  const removeSkill = useCallback(
-    (skill: string) => {
-      const prev = resumeDataRef.current;
-      onUpdate({
-        ...prev,
-        skills: prev.skills.filter((s) => s !== skill),
-      });
-    },
-    [onUpdate],
-  );
+  const removeSkill = useCallback((skill: string) => {
+    const prev = resumeDataRef.current;
+    onUpdateRef.current({
+      ...prev,
+      skills: prev.skills.filter((s) => s !== skill),
+    });
+  }, []);
 
   // Experience handlers
-  const handleDeleteExperience = useCallback(
-    (id: string) => {
-      const prev = resumeDataRef.current;
-      onUpdate({
-        ...prev,
-        experience: prev.experience.filter((exp) => exp.id !== id),
-      });
-    },
-    [onUpdate],
-  );
+  const handleDeleteExperience = useCallback((id: string) => {
+    const prev = resumeDataRef.current;
+    onUpdateRef.current({
+      ...prev,
+      experience: prev.experience.filter((exp) => exp.id !== id),
+    });
+  }, []);
 
   const handleToggleExpandExperience = useCallback((id: string) => {
     setExpandedExpId((prev) => (prev === id ? null : id));
   }, []);
 
-  const updateExperience = useCallback(
-    (id: string, field: keyof WorkExperience, value: any) => {
-      const prev = resumeDataRef.current;
-      onUpdate({
-        ...prev,
-        experience: prev.experience.map((exp) =>
-          exp.id === id ? { ...exp, [field]: value } : exp,
-        ),
-      });
-    },
-    [onUpdate],
-  );
+  const updateExperience = useCallback((id: string, field: keyof WorkExperience, value: any) => {
+    const prev = resumeDataRef.current;
+    onUpdateRef.current({
+      ...prev,
+      experience: prev.experience.map((exp) => (exp.id === id ? { ...exp, [field]: value } : exp)),
+    });
+  }, []);
 
-  const addTagToExperience = useCallback(
-    (id: string, tag: string) => {
-      if (!tag.trim()) return;
-      const prev = resumeDataRef.current;
-      const exp = prev.experience.find((e) => e.id === id);
-      if (exp && !exp.tags.includes(tag.trim())) {
-        onUpdate({
-          ...prev,
-          experience: prev.experience.map((e) =>
-            e.id === id ? { ...e, tags: [...e.tags, tag.trim()] } : e,
-          ),
-        });
-      }
-    },
-    [onUpdate],
-  );
-
-  const removeTagFromExperience = useCallback(
-    (id: string, tag: string) => {
-      const prev = resumeDataRef.current;
-      onUpdate({
+  const addTagToExperience = useCallback((id: string, tag: string) => {
+    if (!tag.trim()) return;
+    const prev = resumeDataRef.current;
+    const exp = prev.experience.find((e) => e.id === id);
+    if (exp && !exp.tags.includes(tag.trim())) {
+      onUpdateRef.current({
         ...prev,
         experience: prev.experience.map((e) =>
-          e.id === id ? { ...e, tags: e.tags.filter((t) => t !== tag) } : e,
+          e.id === id ? { ...e, tags: [...e.tags, tag.trim()] } : e,
         ),
       });
-    },
-    [onUpdate],
-  );
+    }
+  }, []);
+
+  const removeTagFromExperience = useCallback((id: string, tag: string) => {
+    const prev = resumeDataRef.current;
+    onUpdateRef.current({
+      ...prev,
+      experience: prev.experience.map((e) =>
+        e.id === id ? { ...e, tags: e.tags.filter((t) => t !== tag) } : e,
+      ),
+    });
+  }, []);
 
   const addExperience = useCallback(() => {
     const newId = Date.now().toString();
     const prev = resumeDataRef.current;
-    onUpdate({
+    onUpdateRef.current({
       ...prev,
       experience: [
         ...prev.experience,
@@ -411,7 +387,7 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, onBack, saveStatu
       ],
     });
     setExpandedExpId(newId);
-  }, [onUpdate]);
+  }, []);
 
   // Drag and drop handlers for reordering
   const handleDragStart = useCallback((id: string) => {
@@ -445,7 +421,7 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, onBack, saveStatu
       if (draggedIndex !== -1 && targetIndex !== -1) {
         const [draggedItem] = items.splice(draggedIndex, 1);
         items.splice(targetIndex, 0, draggedItem);
-        onUpdate({ ...currentData, experience: items });
+        onUpdateRef.current({ ...currentData, experience: items });
       }
 
       setDraggedItemId(null);
@@ -455,38 +431,32 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, onBack, saveStatu
   );
 
   // Education handlers
-  const handleDeleteEducation = useCallback(
-    (id: string) => {
-      const prev = resumeDataRef.current;
-      onUpdate({
-        ...prev,
-        education: (prev.education || []).filter((edu) => edu.id !== id),
-      });
-    },
-    [onUpdate],
-  );
+  const handleDeleteEducation = useCallback((id: string) => {
+    const prev = resumeDataRef.current;
+    onUpdateRef.current({
+      ...prev,
+      education: (prev.education || []).filter((edu) => edu.id !== id),
+    });
+  }, []);
 
   const handleToggleExpandEducation = useCallback((id: string) => {
     setExpandedEduId((prev) => (prev === id ? null : id));
   }, []);
 
-  const updateEducation = useCallback(
-    (id: string, field: keyof EducationEntry, value: any) => {
-      const prev = resumeDataRef.current;
-      onUpdate({
-        ...prev,
-        education: (prev.education || []).map((edu) =>
-          edu.id === id ? { ...edu, [field]: value } : edu,
-        ),
-      });
-    },
-    [onUpdate],
-  );
+  const updateEducation = useCallback((id: string, field: keyof EducationEntry, value: any) => {
+    const prev = resumeDataRef.current;
+    onUpdateRef.current({
+      ...prev,
+      education: (prev.education || []).map((edu) =>
+        edu.id === id ? { ...edu, [field]: value } : edu,
+      ),
+    });
+  }, []);
 
   const addEducation = useCallback(() => {
     const newId = Date.now().toString();
     const prev = resumeDataRef.current;
-    onUpdate({
+    onUpdateRef.current({
       ...prev,
       education: [
         ...(prev.education || []),
@@ -502,41 +472,35 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, onBack, saveStatu
       ],
     });
     setExpandedEduId(newId);
-  }, [onUpdate]);
+  }, []);
 
   // Projects handlers
-  const handleDeleteProject = useCallback(
-    (id: string) => {
-      const prev = resumeDataRef.current;
-      onUpdate({
-        ...prev,
-        projects: (prev.projects || []).filter((proj) => proj.id !== id),
-      });
-    },
-    [onUpdate],
-  );
+  const handleDeleteProject = useCallback((id: string) => {
+    const prev = resumeDataRef.current;
+    onUpdateRef.current({
+      ...prev,
+      projects: (prev.projects || []).filter((proj) => proj.id !== id),
+    });
+  }, []);
 
   const handleToggleExpandProject = useCallback((id: string) => {
     setExpandedProjId((prev) => (prev === id ? null : id));
   }, []);
 
-  const updateProject = useCallback(
-    (id: string, field: keyof ProjectEntry, value: any) => {
-      const prev = resumeDataRef.current;
-      onUpdate({
-        ...prev,
-        projects: (prev.projects || []).map((proj) =>
-          proj.id === id ? { ...proj, [field]: value } : proj,
-        ),
-      });
-    },
-    [onUpdate],
-  );
+  const updateProject = useCallback((id: string, field: keyof ProjectEntry, value: any) => {
+    const prev = resumeDataRef.current;
+    onUpdateRef.current({
+      ...prev,
+      projects: (prev.projects || []).map((proj) =>
+        proj.id === id ? { ...proj, [field]: value } : proj,
+      ),
+    });
+  }, []);
 
   const addProject = useCallback(() => {
     const newId = Date.now().toString();
     const prev = resumeDataRef.current;
-    onUpdate({
+    onUpdateRef.current({
       ...prev,
       projects: [
         ...(prev.projects || []),
@@ -553,7 +517,7 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, onBack, saveStatu
       ],
     });
     setExpandedProjId(newId);
-  }, [onUpdate]);
+  }, []);
 
   const renderContent = () => {
     switch (activeTab) {
