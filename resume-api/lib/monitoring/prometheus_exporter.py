@@ -10,9 +10,15 @@ Provides comprehensive metrics collection for:
 - Queue depth metrics
 """
 
-from prometheus_client import Counter, Histogram, Gauge, Info, CollectorRegistry
+from prometheus_client import (
+    Counter,
+    Histogram,
+    Gauge,
+    Info,
+    CollectorRegistry,
+    generate_latest,
+)
 from prometheus_client.multiprocess import MultiProcessCollector
-from prometheus_client.generate_latest import generate_latest
 import os
 from typing import Optional, Dict, List
 from dataclasses import dataclass
