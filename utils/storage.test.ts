@@ -140,30 +140,41 @@ describe('Storage Utilities', () => {
   });
 
   it('should handle storage quota exceeded errors gracefully', () => {
-    // Create very large data to potentially exceed storage limits
-    const largeData = {
-      ...testResumeData,
-      experience: Array(1000).fill({
-        id: 'large-test',
-        company: 'A'.repeat(10000),
-        role: 'B'.repeat(10000),
-        startDate: 'C'.repeat(10000),
-        endDate: 'D'.repeat(10000),
-        current: true,
-        description: 'E'.repeat(10000),
-        tags: ['F'.repeat(10000)],
-      }),
-    };
+    const mockSetItem = vi.spyOn(localStorage, 'setItem');
+    const mockGetItem = vi.spyOn(localStorage, 'getItem');
+    const mockRemoveItem = vi.spyOn(localStorage, 'removeItem');
 
-    // This test should not crash even if storage is exceeded
-    try {
-      saveResumeData(largeData);
-    } catch (error) {
-      // If it throws a StorageError, that's acceptable
-      expect(error).toBeInstanceOf(StorageError);
-      if (error instanceof StorageError) {
-        expect(error.type).toMatch(/QUOTA_EXCEEDED|ACCESS_DENIED|NOT_AVAILABLE|UNKNOWN/);
+    mockSetItem.mockImplementation((key: string) => {
+      if (key !== '__storage_test__') {
+        const error = new DOMException('QuotaExceededError', 'QuotaExceededError');
+        (error as any).name = 'QuotaExceededError';
+        throw error;
       }
-    }
+    });
+
+    mockGetItem.mockImplementation((key: string) => {
+      if (key === '__quota_check_needed__') {
+        return 'checked';
+      }
+      if (key === '__storage_test__') {
+        return null;
+      }
+      return null;
+    });
+
+    mockRemoveItem.mockImplementation((key: string) => {
+      if (key !== '__storage_test__') {
+        return;
+      }
+    });
+
+    const serialized = JSON.stringify(testResumeData);
+    expect(() => localStorage.setItem('test_key', serialized)).toThrow();
+
+    expect(() => saveResumeData(testResumeData)).toThrow(StorageError);
+
+    mockSetItem.mockRestore();
+    mockGetItem.mockRestore();
+    mockRemoveItem.mockRestore();
   });
 });
