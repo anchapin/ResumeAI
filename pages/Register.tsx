@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import PasswordStrengthMeter, {
+  calculatePasswordStrength,
+} from '../components/PasswordStrengthMeter';
 
 interface RegisterProps {
   onRegister: (
@@ -30,13 +33,14 @@ const Register: React.FC<RegisterProps> = ({ onRegister, error, isLoading }) => 
       return;
     }
 
-    if (password.length < 8) {
-      setLocalError('Password must be at least 8 characters.');
+    if (password !== confirmPassword) {
+      setLocalError('Passwords do not match.');
       return;
     }
 
-    if (password !== confirmPassword) {
-      setLocalError('Passwords do not match.');
+    const { score } = calculatePasswordStrength(password);
+    if (score < 3) {
+      setLocalError('Password is too weak. Please meet all requirements.');
       return;
     }
 
@@ -156,7 +160,7 @@ const Register: React.FC<RegisterProps> = ({ onRegister, error, isLoading }) => 
                 autoComplete="new-password"
                 className="w-full px-4 py-3 rounded-lg bg-slate-50 border border-slate-200 focus:bg-white focus:border-primary-500 focus:ring-2 focus:ring-primary-100 outline-none transition-all"
               />
-              <p className="text-xs text-slate-400">Minimum 8 characters</p>
+              <PasswordStrengthMeter password={password} />
             </div>
 
             <div className="space-y-2">
