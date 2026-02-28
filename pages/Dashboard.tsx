@@ -53,7 +53,7 @@ const Dashboard: React.FC = () => {
             company: app.company_name,
             role: app.job_title,
             status: mappedStatus,
-            dateApplied: new Date(app.created_at).toLocaleDateString('en-US', {
+            dateApplied: new Date(app.createdAt).toLocaleDateString('en-US', {
               month: 'short',
               day: 'numeric',
               year: 'numeric',

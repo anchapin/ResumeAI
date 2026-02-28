@@ -28,7 +28,7 @@ const CommentPanel: React.FC<CommentPanelProps> = ({ resumeId, onCommentCountCha
   // Notify parent of unresolved comment count whenever comments change
   useEffect(() => {
     if (onCommentCountChange) {
-      const unresolvedCount = comments.filter((c) => !c.is_resolved).length;
+      const unresolvedCount = comments.filter((c) => !c.isResolved).length;
       onCommentCountChange(unresolvedCount);
     }
   }, [comments, onCommentCountChange]);
@@ -53,8 +53,8 @@ const CommentPanel: React.FC<CommentPanelProps> = ({ resumeId, onCommentCountCha
     try {
       setSubmitting(true);
       await createComment(resumeId, {
-        author_name: 'Current User', // In a real app, this would come from user session
-        author_email: 'user@example.com',
+        authorName: 'Current User', // In a real app, this would come from user session
+        authorEmail: 'user@example.com',
         content: newComment,
         section: newCommentSection || undefined,
       });
@@ -98,7 +98,7 @@ const CommentPanel: React.FC<CommentPanelProps> = ({ resumeId, onCommentCountCha
   };
 
   const filteredComments = comments.filter((comment) =>
-    filter === 'unresolved' ? !comment.is_resolved : true,
+    filter === 'unresolved' ? !comment.isResolved : true,
   );
 
   return (
@@ -225,7 +225,7 @@ const CommentPanel: React.FC<CommentPanelProps> = ({ resumeId, onCommentCountCha
               <div
                 key={comment.id}
                 className={`p-4 rounded-lg border transition-all ${
-                  comment.is_resolved
+                  comment.isResolved
                     ? 'bg-slate-50 border-slate-200 opacity-75'
                     : 'bg-white border-slate-200 shadow-sm'
                 }`}
@@ -233,15 +233,13 @@ const CommentPanel: React.FC<CommentPanelProps> = ({ resumeId, onCommentCountCha
                 <div className="flex items-start justify-between gap-3 mb-2">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="font-bold text-slate-900 text-sm">
-                        {comment.author_name}
-                      </span>
+                      <span className="font-bold text-slate-900 text-sm">{comment.authorName}</span>
                       {comment.section && (
                         <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-bold rounded-full">
                           {comment.section}
                         </span>
                       )}
-                      {comment.is_resolved && (
+                      {comment.isResolved && (
                         <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs font-bold rounded-full flex items-center gap-1">
                           <span className="material-symbols-outlined text-[14px]">
                             check_circle
@@ -251,7 +249,7 @@ const CommentPanel: React.FC<CommentPanelProps> = ({ resumeId, onCommentCountCha
                       )}
                     </div>
                     <span className="text-xs text-slate-400">
-                      {new Date(comment.created_at).toLocaleString()}
+                      {new Date(comment.createdAt).toLocaleString()}
                     </span>
                   </div>
                   <button
@@ -263,7 +261,7 @@ const CommentPanel: React.FC<CommentPanelProps> = ({ resumeId, onCommentCountCha
                   </button>
                 </div>
                 <p className="text-sm text-slate-700 mb-3">{comment.content}</p>
-                {!comment.is_resolved && (
+                {!comment.isResolved && (
                   <button
                     onClick={() => handleResolveComment(comment.id)}
                     className="text-sm font-bold text-green-600 hover:text-green-700 transition-colors flex items-center gap-1"

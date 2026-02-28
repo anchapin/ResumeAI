@@ -13,10 +13,10 @@ interface TemplateCustomizerProps {
     color_scheme: string;
     font: string;
     paper_size: string;
-    margin_left: number;
-    margin_right: number;
-    margin_top: number;
-    margin_bottom: number;
+    marginLeft: number;
+    marginRight: number;
+    marginTop: number;
+    marginBottom: number;
   };
   availableSchemes?: ColorScheme[];
   availableFonts?: string[];
@@ -153,8 +153,8 @@ export const TemplateCustomizer: React.FC<TemplateCustomizerProps> = ({
               step="0.05"
               min="0.25"
               max="2.0"
-              value={customization.margin_left}
-              onChange={(e) => onCustomizationChange('margin_left', parseFloat(e.target.value))}
+              value={customization.marginLeft}
+              onChange={(e) => onCustomizationChange('marginLeft', parseFloat(e.target.value))}
               className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none text-sm"
             />
           </div>
@@ -165,8 +165,8 @@ export const TemplateCustomizer: React.FC<TemplateCustomizerProps> = ({
               step="0.05"
               min="0.25"
               max="2.0"
-              value={customization.margin_right}
-              onChange={(e) => onCustomizationChange('margin_right', parseFloat(e.target.value))}
+              value={customization.marginRight}
+              onChange={(e) => onCustomizationChange('marginRight', parseFloat(e.target.value))}
               className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none text-sm"
             />
           </div>
@@ -177,8 +177,8 @@ export const TemplateCustomizer: React.FC<TemplateCustomizerProps> = ({
               step="0.05"
               min="0.25"
               max="2.0"
-              value={customization.margin_top}
-              onChange={(e) => onCustomizationChange('margin_top', parseFloat(e.target.value))}
+              value={customization.marginTop}
+              onChange={(e) => onCustomizationChange('marginTop', parseFloat(e.target.value))}
               className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none text-sm"
             />
           </div>
@@ -189,8 +189,8 @@ export const TemplateCustomizer: React.FC<TemplateCustomizerProps> = ({
               step="0.05"
               min="0.25"
               max="2.0"
-              value={customization.margin_bottom}
-              onChange={(e) => onCustomizationChange('margin_bottom', parseFloat(e.target.value))}
+              value={customization.marginBottom}
+              onChange={(e) => onCustomizationChange('marginBottom', parseFloat(e.target.value))}
               className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none text-sm"
             />
           </div>

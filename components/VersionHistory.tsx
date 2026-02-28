@@ -38,7 +38,7 @@ const VersionHistory: React.FC<VersionHistoryProps> = ({ resumeId, onRestore }) 
     if (
       !confirm(
         `Are you sure you want to restore to ${formatVersionNumber(
-          version.version_number,
+          version.versionNumber,
         )}? This will create a new version with the restored data.`,
       )
     ) {
@@ -48,7 +48,7 @@ const VersionHistory: React.FC<VersionHistoryProps> = ({ resumeId, onRestore }) 
     try {
       setRestoring(version.id);
       await restoreResumeVersion(resumeId, version.id);
-      showSuccessToast(`Successfully restored to ${formatVersionNumber(version.version_number)}`);
+      showSuccessToast(`Successfully restored to ${formatVersionNumber(version.versionNumber)}`);
       await loadVersions(); // Reload versions
       onRestore?.(version);
     } catch (error) {
@@ -92,7 +92,7 @@ const VersionHistory: React.FC<VersionHistoryProps> = ({ resumeId, onRestore }) 
             <div className="flex-1">
               <div className="flex items-center gap-3 mb-2">
                 <span className="font-bold text-slate-900">
-                  {formatVersionNumber(version.version_number)}
+                  {formatVersionNumber(version.versionNumber)}
                 </span>
                 {index === 0 && (
                   <span className="px-2 py-0.5 bg-primary-100 text-primary-700 text-xs font-bold rounded-full">
@@ -100,10 +100,10 @@ const VersionHistory: React.FC<VersionHistoryProps> = ({ resumeId, onRestore }) 
                   </span>
                 )}
               </div>
-              {version.change_description && (
-                <p className="text-sm text-slate-600 mb-1">{version.change_description}</p>
+              {version.changeDescription && (
+                <p className="text-sm text-slate-600 mb-1">{version.changeDescription}</p>
               )}
-              <p className="text-xs text-slate-400">{getVersionTimeAgo(version.created_at)}</p>
+              <p className="text-xs text-slate-400">{getVersionTimeAgo(version.createdAt)}</p>
             </div>
             {index !== 0 && (
               <button

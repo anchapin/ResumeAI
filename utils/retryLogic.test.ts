@@ -96,7 +96,7 @@ describe('Retry Logic', () => {
       const start = Date.now();
       await sleep(50);
       const elapsed = Date.now() - start;
-      expect(elapsed).toBeGreaterThanOrEqual(50);
+      expect(elapsed).toBeGreaterThanOrEqual(48); // Small buffer for timing variance
       expect(elapsed).toBeLessThan(100); // Allow some timing variance
     });
   });

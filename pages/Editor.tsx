@@ -167,7 +167,7 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, saveStatus = 'idl
       setSavingVersion(true);
       await updateResume(currentResumeId, {
         data: convertToAPIData(resumeData),
-        change_description: versionDescription.trim(),
+        changeDescription: versionDescription.trim(),
       });
       showSuccessToast('Version saved successfully!');
       setVersionDescription('');
@@ -354,7 +354,7 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, saveStatus = 'idl
     const loadCommentCount = async () => {
       try {
         const comments = await listComments(currentResumeId);
-        const unresolvedCount = comments.filter((c: any) => !c.is_resolved).length;
+        const unresolvedCount = comments.filter((c: any) => !c.isResolved).length;
         setUnresolvedCommentCount(unresolvedCount);
       } catch (err) {
         console.error('Failed to load comments:', err);

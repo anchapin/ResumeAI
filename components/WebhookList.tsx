@@ -176,7 +176,7 @@ const WebhookList: React.FC<WebhookListProps> = ({ onEdit, onViewDeliveries, onR
                   <div className="flex items-center gap-4 text-xs text-slate-500">
                     <span className="flex items-center gap-1">
                       <span className="material-symbols-outlined text-[14px]">schedule</span>
-                      Created {formatDate(webhook.created_at)}
+                      Created {formatDate(webhook.createdAt)}
                     </span>
                     {webhook.last_triggered_at && (
                       <span className="flex items-center gap-1">

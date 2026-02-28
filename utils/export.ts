@@ -8,17 +8,17 @@ import { ResumeData, FormatOptions } from '../types';
  * Default formatting options
  */
 export const DEFAULT_FORMAT_OPTIONS: FormatOptions = {
-  font_family: 'Arial',
-  font_size: 11,
-  line_spacing: 1.15,
-  margin_top: 0.5,
-  margin_bottom: 0.5,
-  margin_left: 0.75,
-  margin_right: 0.75,
-  color_theme: 'default',
+  fontFamily: 'Arial',
+  fontSize: 11,
+  lineSpacing: 1.15,
+  marginTop: 0.5,
+  marginBottom: 0.5,
+  marginLeft: 0.75,
+  marginRight: 0.75,
+  colorTheme: 'default',
   layout: 'single',
-  show_section_dividers: true,
-  section_order: null,
+  showSectionDividers: true,
+  sectionOrder: null,
 };
 
 /**
@@ -243,9 +243,9 @@ function getHTMLStyles(options: FormatOptions): string {
     }
 
     body {
-      font-family: ${options.font_family}, Arial, sans-serif;
-      font-size: ${options.font_size}pt;
-      line-height: ${options.line_spacing};
+      font-family: ${options.fontFamily}, Arial, sans-serif;
+      font-size: ${options.fontSize}pt;
+      line-height: ${options.lineSpacing};
       color: #333;
       background: white;
     }
@@ -253,7 +253,7 @@ function getHTMLStyles(options: FormatOptions): string {
     .resume {
       max-width: 8.5in;
       margin: 0 auto;
-      padding: ${options.margin_top}in ${options.margin_right}in ${options.margin_bottom}in ${options.margin_left}in;
+      padding: ${options.marginTop}in ${options.marginRight}in ${options.marginBottom}in ${options.marginLeft}in;
     }
 
     .header {
@@ -289,7 +289,7 @@ function getHTMLStyles(options: FormatOptions): string {
       margin: 1.5em 0;
     }
 
-    ${options.show_section_dividers ? '.section { border-top: 1px solid #ccc; padding-top: 0.5em; }' : ''}
+    ${options.showSectionDividers ? '.section { border-top: 1px solid #ccc; padding-top: 0.5em; }' : ''}
 
     h2 {
       font-size: 14pt;
