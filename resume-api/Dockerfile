@@ -1,14 +1,18 @@
-# Multi-stage build for optimized Docker image (Issue #376)
+# Multi-stage build for optimized Docker image (Issues #376, #606)
 # Optimizations:
 # - Multi-stage build (builder -> runtime)
 # - Minimal texlive installation
 # - Layer caching strategy (requirements before code)
 # - Non-root user for security
-# - Health checks
+# - Health checks with curl (smaller footprint)
+# - Build args for flexibility
 
 # Stage 1: Builder - install texlive and dependencies
 # This stage runs once and is cached between builds
 FROM python:3.11-slim AS builder
+
+# Build arguments for customization
+ARG TEXLATE_PACKAGES="texlive-xetex texlive-latex-extra texlive-fonts-recommended texlive-fonts-extra texlive-lang-english"
 
 ENV DEBIAN_FRONTEND=noninteractive \
     LANG=C.UTF-8 \
@@ -16,12 +20,7 @@ ENV DEBIAN_FRONTEND=noninteractive \
 
 # Install texlive and build dependencies
 # Using specific packages only (not full texlive-full to save ~2GB)
-RUN apt-get update -qq && apt-get install -y --no-install-recommends \
-    texlive-xetex \
-    texlive-latex-extra \
-    texlive-fonts-recommended \
-    texlive-fonts-extra \
-    texlive-lang-english \
+RUN apt-get update -qq && apt-get install -y --no-install-recommends ${TEXLATE_PACKAGES} \
     && apt-get clean && rm -rf /var/lib/apt/lists/* \
     && rm -rf /usr/share/texmf-config 2>/dev/null || true \
     && rm -rf /usr/share/texmf-var 2>/dev/null || true \
@@ -32,7 +31,11 @@ FROM python:3.11-slim
 
 LABEL maintainer="ResumeAI" \
       version="1.0" \
-      description="FastAPI Resume Generator Service"
+      description="FastAPI Resume Generator Service" \
+      org.opencontainers.image.title="ResumeAI API" \
+      org.opencontainers.image.description="FastAPI Resume Generator Service with optimized multi-stage build" \
+      org.opencontainers.image.authors="ResumeAI Team" \
+      org.opencontainers.image.version="1.0"
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
@@ -75,8 +78,9 @@ USER appuser
 EXPOSE 8000
 
 # Health check - validate service is responding
+# Using curl instead of Python for smaller footprint
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD python -c "import httpx; r = httpx.get('http://localhost:8000/health', timeout=10); r.raise_for_status(); exit(0 if r.json().get('status') == 'healthy' else 1)"
+    CMD curl -f http://localhost:8000/health || exit 1
 
 # Start FastAPI application
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

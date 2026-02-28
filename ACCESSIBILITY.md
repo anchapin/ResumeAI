@@ -173,7 +173,7 @@ const closeDialog = () => {
 };
 ```
 
-#### 10. **Touch Targets**
+#### 11. **Touch Targets**
 
 - Minimum touch target size: 44×44 pixels
 - Spacing between targets: minimum 8 pixels
@@ -191,6 +191,63 @@ const closeDialog = () => {
   Touch-Friendly Button
 </button>
 ```
+
+#### 12. **Focus Management with Custom Hooks**
+
+ResumeAI provides reusable hooks for managing focus in accessible components:
+
+##### `useFocus` Hook
+
+Basic focus management for individual elements:
+
+```tsx
+import { useFocus } from '../hooks/useFocus';
+
+function MyComponent() {
+  const { ref, setFocus, saveFocus, restoreFocus, blur } = useFocus({
+    autoFocus: true,
+    restoreFocusOnUnmount: true,
+  });
+
+  return (
+    <div>
+      <button ref={ref}>Auto-focused button</button>
+      <button onClick={setFocus}>Set focus programmatically</button>
+    </div>
+  );
+}
+```
+
+##### `useFocusTrap` Hook
+
+Traps focus within modals/dialogs:
+
+```tsx
+import { useFocusTrap } from '../hooks/useFocusTrap';
+
+function Modal({ isOpen, onClose }) {
+  const { ref } = useFocusTrap<HTMLDivElement>({
+    isActive: isOpen,
+    returnFocusOnDeactivate: true,
+  });
+
+  if (!isOpen) return null;
+
+  return (
+    <div role="dialog" aria-modal="true" ref={ref}>
+      <button onClick={onClose}>Close</button>
+      <input type="text" />
+    </div>
+  );
+}
+```
+
+**Features:**
+
+- Automatically traps Tab/Shift+Tab navigation within the container
+- Saves and restores previous focus when activating/deactivating
+- Filters disabled and hidden elements from focusable elements
+- Automatically focuses first focusable element on activation
 
 ## Component Accessibility Checklist
 
@@ -285,6 +342,8 @@ When contributing code:
 4. Run `npm run test:a11y`
 5. Check color contrast
 6. Ensure heading hierarchy
+7. Use `useFocusTrap` for modals/dialogs
+8. Ensure focus management is implemented
 
 ## Questions?
 

@@ -655,8 +655,9 @@ const Workspace: React.FC<WorkspaceProps> = ({ resumeData, resumeId: propResumeI
                     id="template-select"
                     aria-labelledby="template-label"
                     role="status"
-                    className="w-full px-4 py-3 rounded-lg bg-slate-50 border border-slate-200 flex items-center"
+                    className="w-full px-4 py-3 rounded-lg bg-slate-50 border border-slate-200 flex items-center gap-2"
                   >
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-slate-400"></div>
                     <span className="text-slate-500">Loading templates...</span>
                   </div>
                 ) : (
@@ -680,7 +681,10 @@ const Workspace: React.FC<WorkspaceProps> = ({ resumeData, resumeId: propResumeI
                 )}
               </div>
               {variantsLoading && (
-                <p className="text-xs text-slate-500">Fetching available templates...</p>
+                <p className="text-xs text-slate-500 flex items-center gap-1">
+                  <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-slate-400"></div>
+                  Fetching available templates...
+                </p>
               )}
             </div>
           </div>

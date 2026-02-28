@@ -30,6 +30,7 @@ import './components/toast-styles.css';
 import KeyboardShortcutsHelp from './components/KeyboardShortcutsHelp';
 import { DEFAULT_SHORTCUTS, registerShortcuts } from './utils/shortcuts';
 import StorageWarning from './components/StorageWarning';
+import SkipNavigation from './components/SkipNavigation';
 
 /**
  * Loading fallback for code-split chunks
@@ -335,6 +336,8 @@ function App() {
 
   return (
     <ErrorBoundary>
+      <SkipNavigation />
+
       {/* Global error display */}
       <ErrorDisplay error={currentError} onDismiss={dismissError} />
 
@@ -382,14 +385,18 @@ function App() {
             element={
               isAuthenticated ? (
                 <div className="flex min-h-screen bg-[#f6f6f8]">
-                  <Sidebar
-                    currentRoute={getCurrentRouteFromPath()}
-                    onShowShortcuts={() => setShowShortcuts(true)}
-                    isAuthenticated={isAuthenticated}
-                    username={user?.username}
-                    onLogout={handleLogout}
-                  />
-                  <Dashboard />
+                  <nav id="main-nav">
+                    <Sidebar
+                      currentRoute={getCurrentRouteFromPath()}
+                      onShowShortcuts={() => setShowShortcuts(true)}
+                      isAuthenticated={isAuthenticated}
+                      username={user?.username}
+                      onLogout={handleLogout}
+                    />
+                  </nav>
+                  <main id="main-content" tabIndex={-1}>
+                    <Dashboard />
+                  </main>
                 </div>
               ) : (
                 <Navigate to="/login" replace />
