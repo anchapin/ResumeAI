@@ -119,7 +119,7 @@ class TestGenerateApiKeyPrefix:
         key = "rai_1234567890abcdef_extra_chars"
         prefix = generate_api_key_prefix(key, prefix_length=12)
 
-        assert prefix == "rai_1234567"
+        assert prefix == "rai_12345678"
         assert len(prefix) == 12
 
     def test_generate_prefix_with_short_key(self):
