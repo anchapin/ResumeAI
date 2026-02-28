@@ -73,7 +73,7 @@ const ActivityFeed: React.FC<ActivityFeedProps> = ({ activities, loading }) => {
       case 'team_deleted':
         return `${userName} deleted the team`;
       default:
-        return activity.description;
+        return activity.description || 'Unknown activity';
     }
   };
 

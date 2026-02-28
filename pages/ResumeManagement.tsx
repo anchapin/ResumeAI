@@ -516,19 +516,19 @@ const ResumeManagement: React.FC = () => {
               <div className="flex items-center gap-3 mb-4">
                 <div
                   className={`p-2 rounded-full ${
-                    operationResult.failed.length === 0 ? 'bg-emerald-100' : 'bg-amber-100'
+                    operationResult.failed?.length ?? 0 === 0 ? 'bg-emerald-100' : 'bg-amber-100'
                   }`}
                 >
                   <span
                     className={`material-symbols-outlined text-[28px] ${
-                      operationResult.failed.length === 0 ? 'text-emerald-600' : 'text-amber-600'
+                      operationResult.failed?.length ?? 0 === 0 ? 'text-emerald-600' : 'text-amber-600'
                     }`}
                   >
-                    {operationResult.failed.length === 0 ? 'check_circle' : 'info'}
+                    {operationResult.failed?.length ?? 0 === 0 ? 'check_circle' : 'info'}
                   </span>
                 </div>
                 <h3 className="text-xl font-bold text-slate-900">
-                  {operationResult.failed.length === 0 ? 'Success!' : 'Partial Success'}
+                  {operationResult.failed?.length ?? 0 === 0 ? 'Success!' : 'Partial Success'}
                 </h3>
               </div>
 
@@ -536,20 +536,20 @@ const ResumeManagement: React.FC = () => {
                 <div className="flex items-center justify-between p-3 bg-emerald-50 rounded-lg">
                   <span className="text-sm font-medium text-slate-700">Successful:</span>
                   <span className="text-sm font-bold text-emerald-600">
-                    {operationResult.successful.length}
+                    {operationResult.successful?.length ?? 0}
                   </span>
                 </div>
-                {operationResult.failed.length > 0 && (
+                {operationResult.failed?.length ?? 0 > 0 && (
                   <div className="flex items-center justify-between p-3 bg-amber-50 rounded-lg">
                     <span className="text-sm font-medium text-slate-700">Failed:</span>
                     <span className="text-sm font-bold text-amber-600">
-                      {operationResult.failed.length}
+                      {operationResult.failed?.length ?? 0}
                     </span>
                   </div>
                 )}
               </div>
 
-              {operationResult.failed.length > 0 && (
+              {operationResult.failed?.length ?? 0 > 0 && (
                 <div className="max-h-48 overflow-y-auto mb-4 p-3 bg-slate-50 rounded-lg">
                   <p className="text-sm font-medium text-slate-700 mb-2">Failed resumes:</p>
                   <ul className="space-y-1">

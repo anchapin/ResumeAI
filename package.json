@@ -27,7 +27,8 @@
     "react-markdown": "^10.1.0",
     "react-router-dom": "^7.13.1",
     "react-toastify": "^11.0.5",
-    "recharts": "^3.7.0"
+    "recharts": "^3.7.0",
+    "zustand": "^5.0.11"
   },
   "devDependencies": {
     "@axe-core/react": "^4.10.2",
