@@ -92,8 +92,8 @@ const ShareDialog: React.FC<ShareDialogProps> = ({ resumeId, onClose }) => {
 
       const link = await shareResume(resumeId, {
         permissions,
-        expires_at: expiresAt,
-        max_views: maxViews || undefined,
+        expiresAt: expiresAt,
+        maxViews: maxViews || undefined,
         password: password || undefined,
       });
 
@@ -109,7 +109,7 @@ const ShareDialog: React.FC<ShareDialogProps> = ({ resumeId, onClose }) => {
 
   const handleCopyLink = () => {
     if (shareLink) {
-      navigator.clipboard.writeText(shareLink.share_url);
+      navigator.clipboard.writeText(shareLink.shareUrl);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }
@@ -261,7 +261,7 @@ const ShareDialog: React.FC<ShareDialogProps> = ({ resumeId, onClose }) => {
                 <div className="flex gap-2">
                   <input
                     type="text"
-                    value={shareLink.share_url}
+                    value={shareLink.shareUrl}
                     readOnly
                     className="flex-1 px-4 py-2.5 rounded-lg border border-slate-300 bg-slate-50 text-sm"
                   />
@@ -290,7 +290,7 @@ const ShareDialog: React.FC<ShareDialogProps> = ({ resumeId, onClose }) => {
                     </span>
                   </span>
                 </div>
-                {shareLink.expires_at && (
+                {shareLink.expiresAt && (
                   <div className="flex items-center gap-2">
                     <span className="material-symbols-outlined text-[20px] text-slate-400">
                       schedule
@@ -298,19 +298,19 @@ const ShareDialog: React.FC<ShareDialogProps> = ({ resumeId, onClose }) => {
                     <span>
                       Expires:{' '}
                       <span className="font-bold text-slate-900">
-                        {new Date(shareLink.expires_at).toLocaleString()}
+                        {new Date(shareLink.expiresAt).toLocaleString()}
                       </span>
                     </span>
                   </div>
                 )}
-                {shareLink.max_views && (
+                {shareLink.maxViews && (
                   <div className="flex items-center gap-2">
                     <span className="material-symbols-outlined text-[20px] text-slate-400">
                       visibility
                     </span>
                     <span>
                       Max views:{' '}
-                      <span className="font-bold text-slate-900">{shareLink.max_views}</span>
+                      <span className="font-bold text-slate-900">{shareLink.maxViews}</span>
                     </span>
                   </div>
                 )}

@@ -31,11 +31,11 @@ describe('export utilities', () => {
 
   describe('DEFAULT_FORMAT_OPTIONS', () => {
     it('has correct default values', () => {
-      expect(DEFAULT_FORMAT_OPTIONS.font_family).toBe('Arial');
-      expect(DEFAULT_FORMAT_OPTIONS.font_size).toBe(11);
-      expect(DEFAULT_FORMAT_OPTIONS.line_spacing).toBe(1.15);
+      expect(DEFAULT_FORMAT_OPTIONS.fontFamily).toBe('Arial');
+      expect(DEFAULT_FORMAT_OPTIONS.fontSize).toBe(11);
+      expect(DEFAULT_FORMAT_OPTIONS.lineSpacing).toBe(1.15);
       expect(DEFAULT_FORMAT_OPTIONS.layout).toBe('single');
-      expect(DEFAULT_FORMAT_OPTIONS.show_section_dividers).toBe(true);
+      expect(DEFAULT_FORMAT_OPTIONS.showSectionDividers).toBe(true);
     });
   });
 
@@ -205,8 +205,8 @@ describe('export utilities', () => {
 
       const customOptions = {
         ...DEFAULT_FORMAT_OPTIONS,
-        font_family: 'Times New Roman',
-        font_size: 12,
+        fontFamily: 'Times New Roman',
+        fontSize: 12,
       };
 
       const mockAnchor = {

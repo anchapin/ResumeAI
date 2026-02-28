@@ -65,8 +65,8 @@ describe('Dashboard Component', () => {
         status: 'interviewing',
         salary_currency: 'USD',
         tags: [],
-        created_at: '2023-10-24T00:00:00Z',
-        updated_at: '2023-10-24T00:00:00Z',
+        createdAt: '2023-10-24T00:00:00Z',
+        updatedAt: '2023-10-24T00:00:00Z',
       },
       {
         id: 2,
@@ -75,8 +75,8 @@ describe('Dashboard Component', () => {
         status: 'interviewing',
         salary_currency: 'USD',
         tags: [],
-        created_at: '2023-10-22T00:00:00Z',
-        updated_at: '2023-10-22T00:00:00Z',
+        createdAt: '2023-10-22T00:00:00Z',
+        updatedAt: '2023-10-22T00:00:00Z',
       },
       {
         id: 3,
@@ -85,8 +85,8 @@ describe('Dashboard Component', () => {
         status: 'applied',
         salary_currency: 'USD',
         tags: [],
-        created_at: '2023-10-15T00:00:00Z',
-        updated_at: '2023-10-15T00:00:00Z',
+        createdAt: '2023-10-15T00:00:00Z',
+        updatedAt: '2023-10-15T00:00:00Z',
       },
     ]);
   });

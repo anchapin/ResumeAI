@@ -103,8 +103,8 @@ const Workspace: React.FC<WorkspaceProps> = ({ resumeData, resumeId: propResumeI
 
         // Set last updated based on the most recent version or comment
         const allDates = [
-          ...versions.map((v: any) => new Date(v.created_at)),
-          ...comments.map((c: any) => new Date(c.created_at)),
+          ...versions.map((v: any) => new Date(v.createdAt)),
+          ...comments.map((c: any) => new Date(c.createdAt)),
         ];
         if (allDates.length > 0) {
           const latest = new Date(Math.max(...allDates.map((d) => d.getTime())));
