@@ -267,7 +267,6 @@ async def login(
         samesite="strict",
         max_age=1800,  # 30 minutes (matches token expiration)
     )
-
     # Set CSRF cookie
     response.set_cookie(
         key="csrf_token",
