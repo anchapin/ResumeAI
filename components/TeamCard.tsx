@@ -57,7 +57,7 @@ const TeamCard: React.FC<TeamCardProps> = ({ team, onSelect, onDelete, isOwner =
             </div>
             <div>
               <h3 className="text-lg font-bold text-slate-900">{team.name}</h3>
-              <p className="text-xs text-slate-500">{formatDate(team.created_at)}</p>
+              <p className="text-xs text-slate-500">{formatDate(team.createdAt)}</p>
             </div>
           </div>
           {isOwner && onDelete && (
@@ -80,7 +80,7 @@ const TeamCard: React.FC<TeamCardProps> = ({ team, onSelect, onDelete, isOwner =
             <span className="material-symbols-outlined text-primary-500 text-[20px]">group</span>
             <div>
               <p className="text-xs text-slate-500">Members</p>
-              <p className="text-sm font-bold text-slate-900">{team.member_count || 0}</p>
+              <p className="text-sm font-bold text-slate-900">{team.memberCount || 0}</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -89,7 +89,7 @@ const TeamCard: React.FC<TeamCardProps> = ({ team, onSelect, onDelete, isOwner =
             </span>
             <div>
               <p className="text-xs text-slate-500">Shared Resumes</p>
-              <p className="text-sm font-bold text-slate-900">{team.resume_count || 0}</p>
+              <p className="text-sm font-bold text-slate-900">{team.resumeCount || 0}</p>
             </div>
           </div>
         </div>
