@@ -38,6 +38,9 @@ jobs:
         env:
           CI: true
 
+      - name: Run npm audit
+        run: npm audit --audit-level=high
+
   backend-check:
     name: Backend Check
     runs-on: ubuntu-latest
@@ -58,6 +61,11 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install coverage pytest-cov
+          pip install pip-audit
+
+      - name: Run pip-audit
+        working-directory: ./resume-api
+        run: pip-audit --strict
 
       - name: Run tests with coverage (60% minimum)
         working-directory: ./resume-api
