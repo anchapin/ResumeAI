@@ -65,7 +65,7 @@ jobs:
 
       - name: Run pip-audit
         working-directory: ./resume-api
-        run: pip-audit --strict
+        run: pip-audit --config .pip-audit.conf --strict
 
       - name: Run tests with coverage (60% minimum)
         working-directory: ./resume-api
