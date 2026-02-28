@@ -357,7 +357,7 @@ export async function getResume(resumeId: number): Promise<any> {
 
 export async function updateResume(
   resumeId: number,
-  updates: { title?: string; data?: ResumeData; tags?: string[]; change_description?: string },
+  updates: { title?: string; data?: ResumeData; tags?: string[]; changeDescription?: string },
 ): Promise<any> {
   const response = await fetchWithRetry(
     `${API_URL}/resumes/${resumeId}`,
@@ -422,7 +422,7 @@ export async function listComments(resumeId: number): Promise<Comment[]> {
 
 export async function createComment(
   resumeId: number,
-  comment: { author_name: string; author_email: string; content: string; section?: string },
+  comment: { authorName: string; authorEmail: string; content: string; section?: string },
 ): Promise<Comment> {
   const response = await fetchWithRetry(
     `${API_URL}/resumes/${resumeId}/comments`,
@@ -456,8 +456,8 @@ export async function shareResume(
   resumeId: number,
   options: {
     permissions?: 'view' | 'comment' | 'edit';
-    expires_at?: string;
-    max_views?: number;
+    expiresAt?: string;
+    maxViews?: number;
     password?: string;
   },
 ): Promise<ShareLink> {
@@ -565,8 +565,8 @@ export interface Webhook {
   events: string[];
   secret?: string;
   is_active: boolean;
-  created_at: string;
-  updated_at: string;
+  createdAt: string;
+  updatedAt: string;
   last_triggered_at?: string;
   success_count: number;
   failure_count: number;
@@ -981,7 +981,7 @@ export async function compareOffers(
     scores:
       data.offers?.map((o: any, idx: number) => ({
         offerId: o.id || idx,
-        totalScore: o.total_score || 0,
+        totalScore: o.totalScore || 0,
         breakdown: {
           salary: o.breakdown?.salary || 0,
           growth: o.breakdown?.growth || 0,
@@ -1073,11 +1073,11 @@ export interface JobApplication {
   salary_min?: number;
   salary_max?: number;
   salary_currency: string;
-  resume_id?: number;
+  resumeId?: number;
   notes?: string;
   tags: string[];
-  created_at: string;
-  updated_at: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface JobApplicationCreate {
@@ -1088,7 +1088,7 @@ export interface JobApplicationCreate {
   salary_min?: number;
   salary_max?: number;
   salary_currency?: string;
-  resume_id?: number;
+  resumeId?: number;
   notes?: string;
   tags?: string[];
 }

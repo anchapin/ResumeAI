@@ -79,7 +79,7 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
               <h3 className="font-bold text-slate-900 text-lg mb-1">{resume.title}</h3>
               <div className="flex items-center gap-2 text-sm text-slate-500">
                 <span className="material-symbols-outlined text-[16px]">update</span>
-                <span>Last updated {formatDate(resume.updated_at)}</span>
+                <span>Last updated {formatDate(resume.updatedAt)}</span>
               </div>
             </div>
           </div>
@@ -180,15 +180,15 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
           <div className="flex items-center gap-2 text-sm text-slate-500">
             <span className="material-symbols-outlined text-[16px]">history</span>
             <span>
-              {resume.version_count} version{resume.version_count !== 1 ? 's' : ''}
+              {resume.versionCount} version{resume.versionCount !== 1 ? 's' : ''}
             </span>
           </div>
           <div
             className={`px-2 py-1 rounded-md text-xs font-medium ${
-              resume.is_public ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600'
+              resume.isPublic ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600'
             }`}
           >
-            {resume.is_public ? 'Public' : 'Private'}
+            {resume.isPublic ? 'Public' : 'Private'}
           </div>
         </div>
       </div>

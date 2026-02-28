@@ -75,7 +75,7 @@ describe('Settings Page', () => {
             api_key: 'rai_test_key_12345',
             name: 'Test Key',
             key_prefix: 'rai_test',
-            created_at: new Date().toISOString(),
+            createdAt: new Date().toISOString(),
             rate_limit: '100/minute',
             rate_limit_daily: 1000,
           }),

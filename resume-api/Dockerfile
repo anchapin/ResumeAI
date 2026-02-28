@@ -57,14 +57,14 @@ WORKDIR /app
 
 # Copy requirements first for optimal layer caching
 # This layer is only invalidated if requirements.txt changes
-COPY resume-api/requirements.txt .
+COPY requirements.txt .
 
 # Install Python dependencies with no cache/compile to reduce layer size
 RUN pip install --no-cache-dir --no-compile --disable-pip-version-check \
     -r requirements.txt
 
 # Copy application code (most frequently changing layer)
-COPY resume-api/ .
+COPY . .
 
 # Create non-root user for security (UID 1000 for compatibility)
 RUN groupadd -r appuser && useradd -r -g appuser -u 1000 appuser && \

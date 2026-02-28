@@ -25,7 +25,7 @@ interface GitHubRepository {
   language: string | null;
   stargazers_count: number;
   forks_count: number;
-  updated_at: string;
+  updatedAt: string;
   private: boolean;
 }
 
@@ -439,7 +439,7 @@ export const GitHubSyncDialog: React.FC<GitHubSyncDialogProps> = ({
                               </span>
                               {formatNumber(repo.forks_count)}
                             </span>
-                            <span>{formatDate(repo.updated_at)}</span>
+                            <span>{formatDate(repo.updatedAt)}</span>
                           </div>
                         </div>
                         <div className="flex items-center">

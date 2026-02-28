@@ -57,8 +57,8 @@ interface TrackedJobApplication {
   applicationMethod?: 'LinkedIn' | 'Direct' | 'Referral' | 'Indeed' | 'Other';
   notes?: string;
   tags: string[];
-  created_at: string;
-  updated_at: string;
+  createdAt: string;
+  updatedAt: string;
   dateApplied?: string;
   logo?: string;
 }
@@ -129,7 +129,7 @@ const JobApplications: React.FC = () => {
         // Map API response to display format
         const mappedApps: TrackedJobApplication[] = apps.map((app) => ({
           ...app,
-          dateApplied: new Date(app.created_at).toLocaleDateString('en-US', {
+          dateApplied: new Date(app.createdAt).toLocaleDateString('en-US', {
             month: 'short',
             day: 'numeric',
             year: 'numeric',
@@ -719,13 +719,13 @@ const JobApplications: React.FC = () => {
                   {/* Overall Score */}
                   <div className="bg-slate-50 rounded-xl p-6 text-center">
                     <div
-                      className={`text-5xl font-bold ${getScoreColor(atsReport.overall_percentage)}`}
+                      className={`text-5xl font-bold ${getScoreColor(atsReport.overallPercentage)}`}
                     >
-                      {atsReport.overall_percentage.toFixed(0)}%
+                      {atsReport.overallPercentage.toFixed(0)}%
                     </div>
                     <div className="text-lg font-semibold text-slate-700 mt-2">
-                      {getScoreLabel(atsReport.overall_percentage)} - {atsReport.total_score}/
-                      {atsReport.total_possible} points
+                      {getScoreLabel(atsReport.overallPercentage)} - {atsReport.totalScore}/
+                      {atsReport.totalPossible} points
                     </div>
                     <p className="text-sm text-slate-500 mt-2">{atsReport.summary}</p>
                   </div>
@@ -742,7 +742,7 @@ const JobApplications: React.FC = () => {
                               .replace(/\b\w/g, (l) => l.toUpperCase())}
                           </span>
                           <span className={`font-bold ${getScoreColor(category.percentage)}`}>
-                            {category.points_earned}/{category.points_possible} (
+                            {category.pointsEarned}/{category.pointsPossible} (
                             {category.percentage.toFixed(0)}%)
                           </span>
                         </div>

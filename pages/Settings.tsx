@@ -23,14 +23,14 @@ interface APIKeyInfo {
   key_prefix: string;
   name: string;
   description?: string;
-  created_at: string;
+  createdAt: string;
   last_used?: string;
   is_active: boolean;
   is_revoked: boolean;
   request_count: number;
   rate_limit: string;
   rate_limit_daily: number;
-  expires_at?: string;
+  expiresAt?: string;
 }
 
 interface APIKeyCreateResponse {
@@ -38,10 +38,10 @@ interface APIKeyCreateResponse {
   api_key: string;
   name: string;
   key_prefix: string;
-  created_at: string;
+  createdAt: string;
   rate_limit: string;
   rate_limit_daily: number;
-  expires_at?: string;
+  expiresAt?: string;
 }
 
 interface APIKeyListResponse {
@@ -588,7 +588,7 @@ const Settings: React.FC = () => {
                         <div className="flex items-center gap-4 text-xs text-slate-400">
                           <span className="flex items-center gap-1">
                             <span className="material-symbols-outlined text-[14px]">schedule</span>
-                            Created {formatDate(key.created_at)}
+                            Created {formatDate(key.createdAt)}
                           </span>
                           {key.last_used && (
                             <span className="flex items-center gap-1">
@@ -604,9 +604,9 @@ const Settings: React.FC = () => {
                         <div className="flex items-center gap-4 mt-2 text-xs text-slate-400">
                           <span>Rate: {key.rate_limit}</span>
                           <span>Daily: {key.rate_limit_daily}</span>
-                          {key.expires_at && (
+                          {key.expiresAt && (
                             <span className="text-amber-600">
-                              Expires {formatDate(key.expires_at)}
+                              Expires {formatDate(key.expiresAt)}
                             </span>
                           )}
                         </div>

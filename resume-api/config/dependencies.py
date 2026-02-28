@@ -158,14 +158,19 @@ AuthorizedAPIKey = Annotated[str, Depends(get_api_key)]
 
 
 async def get_current_user(
+    request: Request,
     credentials: Annotated[Optional[HTTPAuthorizationCredentials], Depends(security)],
     db: Annotated[AsyncSession, Depends(get_async_session)],
 ) -> User:
     """
-    Get the current authenticated user from JWT token.
+    Get current authenticated user from JWT token.
 
-    This dependency extracts the JWT token from the Authorization header,
-    validates it, and returns the corresponding User object.
+    This dependency extracts JWT token from Authorization header or httpOnly cookie,
+    validates it, and returns corresponding User object.
+
+    **Priority:**
+    1. Authorization header (Bearer token)
+    2. access_token cookie (httpOnly cookie for XSS protection)
 
     Usage:
         @router.get("/protected")
@@ -178,17 +183,24 @@ async def get_current_user(
         HTTPException: 401 if token is missing, invalid, or expired
         HTTPException: 404 if user not found
     """
-    # Handle missing credentials
-    if credentials is None:
+    token = None
+
+    # Try to get token from Authorization header first
+    if credentials is not None:
+        token = credentials.credentials
+    else:
+        # Fallback to httpOnly cookie
+        token = request.cookies.get("access_token")
+
+    # Handle missing token
+    if token is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Not authenticated",
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    token = credentials.credentials
-
-    # Verify the access token
+    # Verify access token
     payload = verify_access_token(token)
     if payload is None:
         raise HTTPException(

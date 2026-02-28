@@ -7,10 +7,10 @@ const mockResume: ResumeMetadata = {
   id: 1,
   title: 'Software Engineer Resume',
   tags: ['Software', 'Engineering', 'Senior'],
-  is_public: true,
-  created_at: '2024-01-15T10:00:00',
-  updated_at: '2024-01-20T10:00:00',
-  version_count: 3,
+  isPublic: true,
+  createdAt: '2024-01-15T10:00:00',
+  updatedAt: '2024-01-20T10:00:00',
+  versionCount: 3,
 };
 
 describe('ResumeCard', () => {
@@ -214,10 +214,10 @@ describe('ResumeCard', () => {
     expect(onShare).toHaveBeenCalledTimes(1);
   });
 
-  it('shows private badge when is_public is false', () => {
+  it('shows private badge when isPublic is false', () => {
     const privateResume: ResumeMetadata = {
       ...mockResume,
-      is_public: false,
+      isPublic: false,
     };
 
     render(

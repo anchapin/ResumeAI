@@ -162,63 +162,63 @@ export interface ResumeMetadata {
   id: number;
   title: string;
   tags: string[];
-  is_public: boolean;
-  created_at: string;
-  updated_at: string;
-  version_count: number;
+  isPublic: boolean;
+  createdAt: string;
+  updatedAt: string;
+  versionCount: number;
 }
 
 export interface ResumeVersion {
   id: number;
-  resume_id: number;
-  version_number: number;
+  resumeId: number;
+  versionNumber: number;
   data: ResumeData;
-  change_description: string | null;
-  created_at: string;
+  changeDescription: string | null;
+  createdAt: string;
 }
 
 export interface Comment {
   id: number;
-  resume_id: number;
-  author_name: string;
-  author_email: string;
+  resumeId: number;
+  authorName: string;
+  authorEmail: string;
   content: string;
   section: string | null;
-  is_resolved: boolean;
-  created_at: string;
-  updated_at: string;
+  isResolved: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface ShareLink {
-  share_token: string;
-  share_url: string;
+  shareToken: string;
+  shareUrl: string;
   permissions: string;
-  expires_at: string | null;
-  max_views: number | null;
+  expiresAt: string | null;
+  maxViews: number | null;
 }
 
 export interface FormatOptions {
-  font_family: string;
-  font_size: number;
-  line_spacing: number;
-  margin_top: number;
-  margin_bottom: number;
-  margin_left: number;
-  margin_right: number;
-  color_theme: string;
+  fontFamily: string;
+  fontSize: number;
+  lineSpacing: number;
+  marginTop: number;
+  marginBottom: number;
+  marginLeft: number;
+  marginRight: number;
+  colorTheme: string;
   layout: 'single' | 'double';
-  show_section_dividers: boolean;
-  section_order: string[] | null;
+  showSectionDividers: boolean;
+  sectionOrder: string[] | null;
 }
 
 export interface UserSettings {
-  keyboard_shortcuts_enabled: boolean;
-  high_contrast_mode: boolean;
-  reduced_motion: boolean;
-  screen_reader_optimized: boolean;
-  default_font: string;
-  default_font_size: number;
-  default_spacing: string;
+  keyboardShortcutsEnabled: boolean;
+  highContrastMode: boolean;
+  reducedMotion: boolean;
+  screenReaderOptimized: boolean;
+  defaultFont: string;
+  defaultFontSize: number;
+  defaultSpacing: string;
 }
 
 export interface KeyboardShortcut {
@@ -233,31 +233,31 @@ export interface TemplateFilter {
   category?: string;
   industry?: string;
   layout?: 'single' | 'double';
-  color_theme?: string;
+  colorTheme?: string;
 }
 
 // ATS Compatibility Checker Types
 
 export interface ATSCategoryScore {
   name: string;
-  points_earned: number;
-  points_possible: number;
+  pointsEarned: number;
+  pointsPossible: number;
   details: string[];
   suggestions: string[];
   percentage: number;
 }
 
 export interface ATSReport {
-  total_score: number;
-  total_possible: number;
-  overall_percentage: number;
+  totalScore: number;
+  totalPossible: number;
+  overallPercentage: number;
   summary: string;
   recommendations: string[];
   categories: {
-    format_parsing: ATSCategoryScore;
+    formatParsing: ATSCategoryScore;
     keywords: ATSCategoryScore;
-    section_structure: ATSCategoryScore;
-    contact_info: ATSCategoryScore;
+    sectionStructure: ATSCategoryScore;
+    contactInfo: ATSCategoryScore;
     readability: ATSCategoryScore;
   };
 }
