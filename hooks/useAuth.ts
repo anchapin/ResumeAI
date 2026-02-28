@@ -1,22 +1,8 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useCallback } from 'react';
+import { useStore } from '../store/store';
 import { TokenManager } from '../utils/security';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
-
-export interface AuthUser {
-  id: number;
-  email: string;
-  username: string;
-  full_name?: string;
-  is_active: boolean;
-  is_verified: boolean;
-}
-
-export interface AuthState {
-  user: AuthUser | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-}
 
 function getAuthHeaders(): Record<string, string> {
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
@@ -28,22 +14,13 @@ function getAuthHeaders(): Record<string, string> {
 }
 
 export const useAuth = () => {
-  const [user, setUser] = useState<AuthUser | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const isAuthenticated = !!user;
-
-  // Check existing token on mount
-  useEffect(() => {
-    const token = TokenManager.getToken();
-    if (token && !TokenManager.isTokenExpired(token)) {
-      fetchCurrentUser().finally(() => setIsLoading(false));
-    } else {
-      if (token) TokenManager.removeToken();
-      setIsLoading(false);
-    }
-  }, []);
+  const user = useStore((state) => state.user);
+  const isAuthenticated = useStore((state) => state.isAuthenticated);
+  const isLoading = useStore((state) => state.isAuthLoading);
+  const error = useStore((state) => state.authError);
+  const setUser = useStore((state) => state.setUser);
+  const setAuthLoading = useStore((state) => state.setAuthLoading);
+  const setAuthError = useStore((state) => state.setAuthError);
 
   const fetchCurrentUser = async () => {
     try {
@@ -51,7 +28,7 @@ export const useAuth = () => {
         headers: getAuthHeaders(),
       });
       if (response.ok) {
-        const userData: AuthUser = await response.json();
+        const userData = await response.json();
         setUser(userData);
         return userData;
       } else {
@@ -64,40 +41,43 @@ export const useAuth = () => {
     return null;
   };
 
-  const login = useCallback(async (email: string, password: string) => {
-    setError(null);
-    setIsLoading(true);
-    try {
-      const response = await fetch(`${API_URL}/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      });
+  const login = useCallback(
+    async (email: string, password: string) => {
+      setAuthError(null);
+      setAuthLoading(true);
+      try {
+        const response = await fetch(`${API_URL}/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password }),
+        });
 
-      if (!response.ok) {
-        const errData = await response.json().catch(() => ({}));
-        throw new Error(errData.detail || 'Login failed');
+        if (!response.ok) {
+          const errData = await response.json().catch(() => ({}));
+          throw new Error(errData.detail || 'Login failed');
+        }
+
+        const data = await response.json();
+        TokenManager.setToken(data.access_token);
+        localStorage.setItem('resumeai_refresh_token', data.refresh_token);
+
+        const userData = await fetchCurrentUser();
+        return userData;
+      } catch (err: any) {
+        const message = err.message || 'Login failed';
+        setAuthError(message);
+        throw err;
+      } finally {
+        setAuthLoading(false);
       }
-
-      const data = await response.json();
-      TokenManager.setToken(data.access_token);
-      localStorage.setItem('resumeai_refresh_token', data.refresh_token);
-
-      const userData = await fetchCurrentUser();
-      return userData;
-    } catch (err: any) {
-      const message = err.message || 'Login failed';
-      setError(message);
-      throw err;
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+    },
+    [setAuthError, setAuthLoading],
+  );
 
   const register = useCallback(
     async (email: string, username: string, password: string, fullName?: string) => {
-      setError(null);
-      setIsLoading(true);
+      setAuthError(null);
+      setAuthLoading(true);
       try {
         const response = await fetch(`${API_URL}/auth/register`, {
           method: 'POST',
@@ -118,13 +98,13 @@ export const useAuth = () => {
         return await response.json();
       } catch (err: any) {
         const message = err.message || 'Registration failed';
-        setError(message);
+        setAuthError(message);
         throw err;
       } finally {
-        setIsLoading(false);
+        setAuthLoading(false);
       }
     },
-    [],
+    [setAuthError, setAuthLoading],
   );
 
   const logout = useCallback(async () => {
@@ -142,9 +122,11 @@ export const useAuth = () => {
       localStorage.removeItem('resumeai_refresh_token');
       setUser(null);
     }
-  }, []);
+  }, [setUser]);
 
-  const clearError = useCallback(() => setError(null), []);
+  const clearError = useCallback(() => {
+    setAuthError(null);
+  }, [setAuthError]);
 
   return {
     user,

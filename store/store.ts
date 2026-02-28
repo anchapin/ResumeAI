@@ -1,0 +1,210 @@
+import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
+import { SimpleResumeData } from '../types';
+import { loadResumeData, saveResumeData, StorageError } from '../utils/storage';
+import { TokenManager } from '../utils/security';
+
+export interface AuthUser {
+  id: number;
+  email: string;
+  username: string;
+  full_name?: string;
+  is_active: boolean;
+  is_verified: boolean;
+}
+
+export type Theme = 'light' | 'dark';
+
+export type SaveStatus = 'idle' | 'saving' | 'saved' | 'error';
+
+interface AppState {
+  user: AuthUser | null;
+  isAuthenticated: boolean;
+  isAuthLoading: boolean;
+  authError: string | null;
+  resumeData: SimpleResumeData;
+  isResumeLoaded: boolean;
+  saveStatus: SaveStatus;
+  resumeError: string | null;
+  theme: Theme;
+  showShortcuts: boolean;
+}
+
+interface AppActions {
+  setUser: (user: AuthUser | null) => void;
+  setAuthLoading: (isLoading: boolean) => void;
+  setAuthError: (error: string | null) => void;
+  clearAuthError: () => void;
+  setResumeData: (data: SimpleResumeData | ((prev: SimpleResumeData) => SimpleResumeData)) => void;
+  loadResume: () => Promise<void>;
+  setSaveStatus: (status: SaveStatus) => void;
+  setResumeError: (error: string | null) => void;
+  setTheme: (theme: Theme) => void;
+  toggleTheme: () => void;
+  setShowShortcuts: (show: boolean) => void;
+  toggleShortcuts: () => void;
+}
+
+type AppStore = AppState & AppActions;
+
+const initialResumeData: SimpleResumeData = {
+  name: 'Alex Rivera',
+  email: 'alex.rivera@example.com',
+  phone: '+1 (555) 012-3456',
+  location: 'San Francisco, CA',
+  role: 'Senior Product Designer',
+  summary:
+    'Passionate and detail-oriented Senior Product Designer with 8+ years of experience creating user-centered digital experiences. Expertise in UX research, interaction design, and design systems. Proven track record of delivering products that drive business growth and user satisfaction.',
+  skills: [
+    'Figma',
+    'Sketch',
+    'Adobe XD',
+    'User Research',
+    'Prototyping',
+    'Design Systems',
+    'React',
+    'TypeScript',
+    'HTML/CSS',
+  ],
+  experience: [
+    {
+      id: '1',
+      company: 'TechCorp Solutions',
+      role: 'Senior Software Engineer',
+      startDate: 'Jan 2020',
+      endDate: 'Present',
+      current: true,
+      description:
+        'Led the migration of legacy monolithic architecture to microservices using AWS and Node.js, improving system scalability by 40%.',
+      tags: ['AWS', 'Microservices'],
+    },
+    {
+      id: '2',
+      company: 'StartupHub Inc',
+      role: 'Software Developer',
+      startDate: 'Jun 2017',
+      endDate: 'Dec 2019',
+      current: false,
+      description:
+        'Mentored a team of 5 junior developers and implemented CI/CD pipelines reducing deployment time by 50%.',
+      tags: ['Mentorship', 'CI/CD'],
+    },
+  ],
+  education: [
+    {
+      id: '1',
+      institution: 'Stanford University',
+      area: 'Computer Science',
+      studyType: 'Bachelor of Science',
+      startDate: '2013',
+      endDate: '2017',
+      courses: ['Data Structures', 'Algorithms', 'Machine Learning', 'Human-Computer Interaction'],
+    },
+  ],
+  projects: [
+    {
+      id: '1',
+      name: 'E-commerce Platform Redesign',
+      description:
+        'Led a complete UX overhaul of a major e-commerce platform, resulting in a 35% increase in conversion rates.',
+      url: 'https://github.com/alexrivera/ecommerce-redesign',
+      roles: ['Lead Designer', 'UX Researcher'],
+      startDate: '2022',
+      endDate: '2023',
+      highlights: [
+        'User interviews with 50+ customers',
+        'A/B testing of new designs',
+        'Design system creation',
+      ],
+    },
+  ],
+};
+
+export const useStore = create<AppStore>()(
+  persist(
+    (set) => ({
+      user: null,
+      isAuthenticated: false,
+      isAuthLoading: true,
+      authError: null,
+      resumeData: initialResumeData,
+      isResumeLoaded: false,
+      saveStatus: 'idle' as SaveStatus,
+      resumeError: null,
+      theme: 'light' as Theme,
+      showShortcuts: false,
+      setUser: (user) => set({ user, isAuthenticated: !!user }),
+      setAuthLoading: (isAuthLoading) => set({ isAuthLoading }),
+      setAuthError: (authError) => set({ authError }),
+      clearAuthError: () => set({ authError: null }),
+      setResumeData: (data) =>
+        set((state) => ({
+          resumeData: typeof data === 'function' ? data(state.resumeData) : data,
+        })),
+      loadResume: async () => {
+        try {
+          const savedData = loadResumeData();
+          if (savedData) {
+            const validatedData: SimpleResumeData = {
+              ...savedData,
+              skills: Array.isArray(savedData.skills) ? savedData.skills : [],
+              experience: Array.isArray(savedData.experience) ? savedData.experience : [],
+              education: Array.isArray(savedData.education) ? savedData.education : [],
+              projects: Array.isArray(savedData.projects) ? savedData.projects : [],
+            };
+            set({ resumeData: validatedData, isResumeLoaded: true });
+          } else {
+            set({ isResumeLoaded: true });
+          }
+        } catch (error) {
+          if (error instanceof StorageError) {
+            const errorMessage = getErrorMessage(error);
+            set({ resumeError: errorMessage, isResumeLoaded: true });
+          }
+        }
+      },
+      setSaveStatus: (saveStatus) => set({ saveStatus }),
+      setResumeError: (resumeError) => set({ resumeError }),
+      setTheme: (theme) => set({ theme }),
+      toggleTheme: () => set((state) => ({ theme: state.theme === 'light' ? 'dark' : 'light' })),
+      setShowShortcuts: (showShortcuts) => set({ showShortcuts }),
+      toggleShortcuts: () => set((state) => ({ showShortcuts: !state.showShortcuts })),
+    }),
+    {
+      name: 'resumeai-storage',
+      partialize: (state) => ({
+        theme: state.theme,
+      }),
+    },
+  ),
+);
+
+function getErrorMessage(error: StorageError): string {
+  switch (error.type) {
+    case 'QUOTA_EXCEEDED':
+      return 'Storage full. Please clear some browser data.';
+    case 'PARSE_ERROR':
+      return 'Data corrupted. Using default resume.';
+    case 'ACCESS_DENIED':
+      return "Storage access denied. Changes won't be saved.";
+    case 'NOT_AVAILABLE':
+      return "Storage not available. Changes won't be saved.";
+    default:
+      return 'Failed to save data. Please try again.';
+  }
+}
+
+export const selectAuthUser = (state: AppStore) => state.user;
+export const selectIsAuthenticated = (state: AppStore) => state.isAuthenticated;
+export const selectAuthLoading = (state: AppStore) => state.isAuthLoading;
+export const selectAuthError = (state: AppStore) => state.authError;
+
+export const selectResumeData = (state: AppStore) => state.resumeData;
+export const selectResumeLoaded = (state: AppStore) => state.isResumeLoaded;
+export const selectSaveStatus = (state: AppStore) => state.saveStatus;
+export const selectResumeError = (state: AppStore) => state.resumeError;
+
+export const selectTheme = (state: AppStore) => state.theme;
+export const selectIsDark = (state: AppStore) => state.theme === 'dark';
+
+export const selectShowShortcuts = (state: AppStore) => state.showShortcuts;
