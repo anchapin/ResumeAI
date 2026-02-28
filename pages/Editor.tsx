@@ -184,7 +184,7 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, saveStatus = 'idl
   const handleRestoreVersion = useCallback(
     async (version: any) => {
       try {
-        onUpdate({
+        trackedUpdate({
           ...resumeData,
           ...version.data,
         });
@@ -234,7 +234,7 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, saveStatus = 'idl
         projects: importedData.projects?.length ? importedData.projects : currentData.projects,
       };
 
-      onUpdate(mergedData);
+      trackedUpdate(mergedData);
     },
     [onUpdate],
   );
@@ -274,6 +274,81 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, saveStatus = 'idl
     resumeDataRef.current = resumeData;
   }, [resumeData]);
 
+  // Undo/Redo functionality
+  const MAX_HISTORY = 50;
+  const [history, setHistory] = useState<SimpleResumeData[]>([]);
+  const [historyIndex, setHistoryIndex] = useState(-1);
+  const historyRef = useRef<{ history: SimpleResumeData[]; index: number }>({
+    history: [],
+    index: -1,
+  });
+
+  // Track history in ref for stable callbacks
+  useEffect(() => {
+    historyRef.current = { history, index: historyIndex };
+  }, [history, historyIndex]);
+
+  // Add state to history
+  const addToHistory = useCallback((newState: SimpleResumeData) => {
+    setHistory((prev) => {
+      const newIndex = historyRef.current.index + 1;
+      // Remove any redo states
+      const trimmed = prev.slice(0, newIndex);
+      // Add new state
+      const updated = [...trimmed, newState];
+      // Keep only last MAX_HISTORY states
+      const final = updated.slice(-MAX_HISTORY);
+      return final;
+    });
+    setHistoryIndex((prev) => Math.min(prev + 1, MAX_HISTORY - 1));
+  }, []);
+
+  const canUndo = historyIndex > 0;
+  const canRedo = historyIndex < history.length - 1;
+
+  const undo = useCallback(() => {
+    if (!canUndo) return;
+    const newIndex = historyIndex - 1;
+    setHistoryIndex(newIndex);
+    trackedUpdate(history[newIndex]);
+  }, [history, historyIndex, onUpdate, canUndo]);
+
+  const redo = useCallback(() => {
+    if (!canRedo) return;
+    const newIndex = historyIndex + 1;
+    setHistoryIndex(newIndex);
+    trackedUpdate(history[newIndex]);
+  }, [history, historyIndex, onUpdate, canRedo]);
+
+  // Wrap onUpdate to track history
+  const trackedUpdate = useCallback(
+    (newData: SimpleResumeData) => {
+      const currentData = resumeDataRef.current;
+      // Only add to history if data actually changed
+      if (JSON.stringify(currentData) !== JSON.stringify(newData)) {
+        addToHistory(newData);
+      }
+      onUpdate(newData);
+    },
+    [onUpdate, addToHistory],
+  );
+
+  // Keyboard shortcuts for undo/redo
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
+        e.preventDefault();
+        undo();
+      } else if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.shiftKey && e.key === 'z'))) {
+        e.preventDefault();
+        redo();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [undo, redo]);
+
   // Load unresolved comment count
   useEffect(() => {
     const loadCommentCount = async () => {
@@ -292,7 +367,7 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, saveStatus = 'idl
   const updateContact = useCallback(
     (field: keyof SimpleResumeData, value: string) => {
       const currentData = resumeDataRef.current;
-      onUpdate({ ...currentData, [field]: value });
+      trackedUpdate({ ...currentData, [field]: value });
     },
     [onUpdate],
   );
@@ -301,7 +376,7 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, saveStatus = 'idl
   const updateSummary = useCallback(
     (summary: string) => {
       const currentData = resumeDataRef.current;
-      onUpdate({ ...currentData, summary });
+      trackedUpdate({ ...currentData, summary });
     },
     [onUpdate],
   );
@@ -312,7 +387,7 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, saveStatus = 'idl
       if (!skill.trim()) return;
       const prev = resumeDataRef.current;
       if (!prev.skills.includes(skill.trim())) {
-        onUpdate({ ...prev, skills: [...prev.skills, skill.trim()] });
+        trackedUpdate({ ...prev, skills: [...prev.skills, skill.trim()] });
       }
     },
     [onUpdate],
@@ -321,7 +396,7 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, saveStatus = 'idl
   const removeSkill = useCallback(
     (skill: string) => {
       const prev = resumeDataRef.current;
-      onUpdate({
+      trackedUpdate({
         ...prev,
         skills: prev.skills.filter((s) => s !== skill),
       });
@@ -333,7 +408,7 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, saveStatus = 'idl
   const handleDeleteExperience = useCallback(
     (id: string) => {
       const prev = resumeDataRef.current;
-      onUpdate({
+      trackedUpdate({
         ...prev,
         experience: prev.experience.filter((exp) => exp.id !== id),
       });
@@ -348,7 +423,7 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, saveStatus = 'idl
   const updateExperience = useCallback(
     (id: string, field: keyof WorkExperience, value: any) => {
       const prev = resumeDataRef.current;
-      onUpdate({
+      trackedUpdate({
         ...prev,
         experience: prev.experience.map((exp) =>
           exp.id === id ? { ...exp, [field]: value } : exp,
@@ -364,7 +439,7 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, saveStatus = 'idl
       const prev = resumeDataRef.current;
       const exp = prev.experience.find((e) => e.id === id);
       if (exp && !exp.tags.includes(tag.trim())) {
-        onUpdate({
+        trackedUpdate({
           ...prev,
           experience: prev.experience.map((e) =>
             e.id === id ? { ...e, tags: [...e.tags, tag.trim()] } : e,
@@ -378,7 +453,7 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, saveStatus = 'idl
   const removeTagFromExperience = useCallback(
     (id: string, tag: string) => {
       const prev = resumeDataRef.current;
-      onUpdate({
+      trackedUpdate({
         ...prev,
         experience: prev.experience.map((e) =>
           e.id === id ? { ...e, tags: e.tags.filter((t) => t !== tag) } : e,
@@ -391,7 +466,7 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, saveStatus = 'idl
   const addExperience = useCallback(() => {
     const newId = Date.now().toString();
     const prev = resumeDataRef.current;
-    onUpdate({
+    trackedUpdate({
       ...prev,
       experience: [
         ...prev.experience,
@@ -442,7 +517,7 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, saveStatus = 'idl
       if (draggedIndex !== -1 && targetIndex !== -1) {
         const [draggedItem] = items.splice(draggedIndex, 1);
         items.splice(targetIndex, 0, draggedItem);
-        onUpdate({ ...currentData, experience: items });
+        trackedUpdate({ ...currentData, experience: items });
       }
 
       setDraggedItemId(null);
@@ -455,7 +530,7 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, saveStatus = 'idl
   const handleDeleteEducation = useCallback(
     (id: string) => {
       const prev = resumeDataRef.current;
-      onUpdate({
+      trackedUpdate({
         ...prev,
         education: (prev.education || []).filter((edu) => edu.id !== id),
       });
@@ -470,7 +545,7 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, saveStatus = 'idl
   const updateEducation = useCallback(
     (id: string, field: keyof EducationEntry, value: any) => {
       const prev = resumeDataRef.current;
-      onUpdate({
+      trackedUpdate({
         ...prev,
         education: (prev.education || []).map((edu) =>
           edu.id === id ? { ...edu, [field]: value } : edu,
@@ -483,7 +558,7 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, saveStatus = 'idl
   const addEducation = useCallback(() => {
     const newId = Date.now().toString();
     const prev = resumeDataRef.current;
-    onUpdate({
+    trackedUpdate({
       ...prev,
       education: [
         ...(prev.education || []),
@@ -505,7 +580,7 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, saveStatus = 'idl
   const handleDeleteProject = useCallback(
     (id: string) => {
       const prev = resumeDataRef.current;
-      onUpdate({
+      trackedUpdate({
         ...prev,
         projects: (prev.projects || []).filter((proj) => proj.id !== id),
       });
@@ -520,7 +595,7 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, saveStatus = 'idl
   const updateProject = useCallback(
     (id: string, field: keyof ProjectEntry, value: any) => {
       const prev = resumeDataRef.current;
-      onUpdate({
+      trackedUpdate({
         ...prev,
         projects: (prev.projects || []).map((proj) =>
           proj.id === id ? { ...proj, [field]: value } : proj,
@@ -533,7 +608,7 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, saveStatus = 'idl
   const addProject = useCallback(() => {
     const newId = Date.now().toString();
     const prev = resumeDataRef.current;
-    onUpdate({
+    trackedUpdate({
       ...prev,
       projects: [
         ...(prev.projects || []),
@@ -991,6 +1066,26 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, saveStatus = 'idl
               </p>
             </div>
             <div className="flex gap-3">
+              {/* Undo Button */}
+              <button
+                onClick={undo}
+                disabled={!canUndo}
+                className="flex items-center gap-2 px-4 h-10 rounded-lg border border-slate-300 bg-white text-slate-700 font-bold text-sm hover:bg-slate-50 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                title="Undo (Ctrl+Z)"
+              >
+                <span className="material-symbols-outlined text-lg">undo</span>
+                <span className="hidden sm:inline">Undo</span>
+              </button>
+              {/* Redo Button */}
+              <button
+                onClick={redo}
+                disabled={!canRedo}
+                className="flex items-center gap-2 px-4 h-10 rounded-lg border border-slate-300 bg-white text-slate-700 font-bold text-sm hover:bg-slate-50 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                title="Redo (Ctrl+Y or Ctrl+Shift+Z)"
+              >
+                <span className="material-symbols-outlined text-lg">redo</span>
+                <span className="hidden sm:inline">Redo</span>
+              </button>
               {/* Comments Button */}
               <button
                 onClick={() => setShowCommentPanel(true)}
