@@ -9,19 +9,21 @@ Endpoints:
 - GET /auth/me - Get current user info
 - PUT /auth/me - Update current user profile
 - POST /auth/change-password - Change password
+- POST /auth/verify-email - Verify email address
+- POST /auth/resend-verification - Resend verification email
 - GET /auth/health - Authentication service health check
 """
 
 import hashlib
 import secrets
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status, Request, Response
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, delete
 
-from database import get_async_session, User, RefreshToken
+from database import get_async_session, User, RefreshToken, EmailVerificationToken
 from api.models import (
     UserCreate,
     UserLogin,
@@ -32,6 +34,8 @@ from api.models import (
     UserUpdate,
     PasswordChangeRequest,
     MessageResponse,
+    VerifyEmailRequest,
+    ResendVerificationRequest,
 )
 from config.security import hash_password, verify_password
 from config.jwt_utils import (
@@ -40,6 +44,7 @@ from config.jwt_utils import (
     verify_refresh_token,
 )
 from config.dependencies import get_current_user, rate_limit
+from config.email_service import send_verification_email
 from monitoring import logging_config
 
 # Get logger
@@ -135,6 +140,26 @@ async def register(
     db.add(new_user)
     await db.commit()
     await db.refresh(new_user)
+
+    # Generate verification token
+    verification_token = secrets.token_urlsafe(32)
+    verification_token_obj = EmailVerificationToken(
+        user_id=new_user.id,
+        token=verification_token,
+        expires_at=datetime.now(timezone.utc) + timedelta(hours=24),
+    )
+    db.add(verification_token_obj)
+    await db.commit()
+
+    # Send verification email (non-blocking)
+    try:
+        await send_verification_email(
+            new_user.email, verification_token, new_user.username
+        )
+    except Exception as e:
+        logger.error(
+            "Failed to send verification email", user_id=new_user.id, error=str(e)
+        )
 
     # Generate CSRF token
     csrf_token = _generate_csrf_token()
@@ -563,6 +588,177 @@ async def change_password(
     )
 
     return MessageResponse(message="Password changed successfully")
+
+
+@router.post(
+    "/verify-email",
+    response_model=UserResponse,
+    responses={
+        200: {"model": UserResponse, "description": "Email verified successfully"},
+        400: {"description": "Invalid or expired token"},
+        404: {"description": "Token not found"},
+        429: {"description": "Too many requests"},
+    },
+    summary="Verify email address",
+)
+@rate_limit("10/minute")
+async def verify_email(
+    request: VerifyEmailRequest,
+    db: Annotated[AsyncSession, Depends(get_async_session)],
+):
+    """
+    Verify user email address using verification token.
+
+    The token is sent to the user's email after registration.
+    Tokens expire after 24 hours.
+    """
+    # Find verification token
+    result = await db.execute(
+        select(EmailVerificationToken).where(
+            EmailVerificationToken.token == request.token,
+            EmailVerificationToken.is_used.is_(False),
+        )
+    )
+    verification_token = result.scalar_one_or_none()
+
+    if not verification_token:
+        logger.warning("email_verification_failed", reason="token_not_found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Verification token not found",
+        )
+
+    # Check if token is expired
+    now = datetime.now(timezone.utc)
+    if verification_token.expires_at < now:
+        logger.warning(
+            "email_verification_failed",
+            token_id=verification_token.id,
+            reason="token_expired",
+        )
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Verification token has expired",
+        )
+
+    # Get user
+    user_result = await db.execute(
+        select(User).where(User.id == verification_token.user_id)
+    )
+    user = user_result.scalar_one_or_none()
+
+    if not user:
+        logger.error(
+            "email_verification_failed",
+            user_id=verification_token.user_id,
+            reason="user_not_found",
+        )
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found",
+        )
+
+    # Mark user as verified
+    user.is_verified = True
+
+    # Mark token as used
+    verification_token.is_used = True
+
+    await db.commit()
+    await db.refresh(user)
+
+    logger.info(
+        "email_verified",
+        user_id=user.id,
+        username=user.username,
+        email=user.email,
+    )
+
+    return user
+
+
+@router.post(
+    "/resend-verification",
+    response_model=MessageResponse,
+    responses={
+        200: {"model": MessageResponse, "description": "Verification email resent"},
+        404: {"description": "Email not found or already verified"},
+        429: {"description": "Too many requests"},
+    },
+    summary="Resend verification email",
+)
+@rate_limit("3/minute")
+async def resend_verification_email(
+    request: ResendVerificationRequest,
+    db: Annotated[AsyncSession, Depends(get_async_session)],
+):
+    """
+    Resend email verification link to user.
+
+    If the user exists and is not verified, a new verification token
+    is generated and sent via email.
+    """
+    # Find user by email
+    result = await db.execute(select(User).where(User.email == request.email.lower()))
+    user = result.scalar_one_or_none()
+
+    if not user:
+        logger.warning(
+            "resend_verification_failed", email=request.email, reason="user_not_found"
+        )
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="If an account exists with this email, you will receive a verification link",
+        )
+
+    if user.is_verified:
+        logger.info(
+            "resend_verification_skipped", user_id=user.id, reason="already_verified"
+        )
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="This email is already verified",
+        )
+
+    # Delete old verification tokens for this user
+    await db.execute(
+        delete(EmailVerificationToken).where(
+            EmailVerificationToken.user_id == user.id,
+            EmailVerificationToken.is_used.is_(False),
+        )
+    )
+
+    # Generate new verification token
+    verification_token = secrets.token_urlsafe(32)
+    verification_token_obj = EmailVerificationToken(
+        user_id=user.id,
+        token=verification_token,
+        expires_at=datetime.now(timezone.utc) + timedelta(hours=24),
+    )
+    db.add(verification_token_obj)
+    await db.commit()
+
+    # Send verification email
+    try:
+        await send_verification_email(user.email, verification_token, user.username)
+        logger.info(
+            "verification_email_resent",
+            user_id=user.id,
+            username=user.username,
+            email=user.email,
+        )
+    except Exception as e:
+        logger.error(
+            "Failed to resend verification email",
+            user_id=user.id,
+            error=str(e),
+        )
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to send verification email. Please try again later.",
+        )
+
+    return MessageResponse(message="Verification email sent successfully")
 
 
 @router.get(
