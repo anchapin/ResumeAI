@@ -1,3 +1,5 @@
+import DOMPurify from 'dompurify';
+
 /**
  * Security configuration and utilities for ResumeAI frontend
  */
@@ -192,18 +194,15 @@ const sanitizeInput = (input: string): string => {
     return input;
   }
 
-  // Remove potentially dangerous characters/patterns
-  return input
-    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '') // Remove script tags
-    .replace(/javascript:/gi, '') // Remove javascript: protocol
-    .replace(/on\w+=/gi, '') // Remove event handlers
-    .replace(/data:/gi, '') // Remove data: protocol
-    .replace(/vbscript:/gi, '') // Remove vbscript: protocol
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&amp;/g, '&')
-    .replace(/&quot;/g, '"')
-    .replace(/&#x27;/g, "'");
+  // Use DOMPurify for robust XSS sanitization
+  // This provides comprehensive protection against XSS attacks
+  // We strip all HTML tags and attributes to ensure maximum security
+  return DOMPurify.sanitize(input, {
+    ALLOWED_TAGS: [],
+    ALLOWED_ATTR: [],
+    KEEP_CONTENT: true,
+    FORCE_BODY: true,
+  });
 };
 
 // Validate file upload
