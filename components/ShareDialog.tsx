@@ -1,7 +1,8 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ShareLink } from '../types';
 import { shareResume } from '../utils/api-client';
 import { showSuccessToast, showErrorToast } from '../utils/toast';
+import { useFocusTrap } from '../hooks/useFocusTrap';
 
 interface ShareDialogProps {
   resumeId: number;
@@ -22,48 +23,21 @@ const ShareDialog: React.FC<ShareDialogProps> = ({ resumeId, onClose }) => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
-  const dialogRef = useRef<HTMLDivElement>(null);
+  const { ref: dialogRef } = useFocusTrap<HTMLDivElement>({
+    isActive: true,
+    returnFocusOnDeactivate: true,
+  });
 
-  // Focus trap and Escape key handling
+  // Escape key handling
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         onClose();
         return;
       }
-
-      if (e.key === 'Tab' && dialogRef.current) {
-        const focusables = dialogRef.current.querySelectorAll(
-          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
-        );
-        if (focusables.length === 0) return;
-
-        const first = focusables[0] as HTMLElement;
-        const last = focusables[focusables.length - 1] as HTMLElement;
-
-        if (e.shiftKey && document.activeElement === first) {
-          last.focus();
-          e.preventDefault();
-        } else if (!e.shiftKey && document.activeElement === last) {
-          first.focus();
-          e.preventDefault();
-        }
-      }
     };
 
     document.addEventListener('keydown', handleKeyDown);
-
-    // Initial focus on the first interactive element or the container
-    // We prefer focusing the container to avoid surprising context shifts,
-    // but focusing the first input is standard for modals.
-    // Here, let's focus the close button or the first permission button.
-    const firstInput = dialogRef.current?.querySelector('button, input, select') as HTMLElement;
-    if (firstInput) {
-      firstInput.focus();
-    } else {
-      dialogRef.current?.focus();
-    }
-
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [onClose]);
 
