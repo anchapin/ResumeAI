@@ -23,7 +23,7 @@ from monitoring import logging_config
 
 logger = logging_config.get_logger(__name__)
 
-router = APIRouter(prefix="/v1/deployment", tags=["deployment"])
+router = APIRouter(prefix="/api/v1/deployment", tags=["deployment"])
 
 
 # ============================================================================
@@ -33,7 +33,7 @@ router = APIRouter(prefix="/v1/deployment", tags=["deployment"])
 
 @router.get("/health", tags=["health"])
 async def get_health_status(
-    detailed: bool = Query(False, description="Return detailed health info")
+    detailed: bool = Query(False, description="Return detailed health info"),
 ):
     """
     Health check endpoint for load balancers and orchestration.

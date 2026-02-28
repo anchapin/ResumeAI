@@ -30,7 +30,7 @@ from monitoring import logging_config
 
 logger = logging_config.get_logger(__name__)
 
-router = APIRouter()
+router = APIRouter(prefix="/api/v1/teams", tags=["Teams"])
 
 
 def rate_limit(limit_value: str):

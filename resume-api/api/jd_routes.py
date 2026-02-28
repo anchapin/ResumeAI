@@ -35,7 +35,7 @@ from lib.utils import (
 
 logger = logging_config.get_logger(__name__)
 
-router = APIRouter()
+router = APIRouter(prefix="/api/v1/jd", tags=["Job Description"])
 
 
 def rate_limit(limit_value: str):

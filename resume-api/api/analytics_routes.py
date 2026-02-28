@@ -12,7 +12,7 @@ from config import settings
 from monitoring import logging_config
 
 logger = logging_config.get_logger(__name__)
-router = APIRouter()
+router = APIRouter(prefix="/api/v1/analytics", tags=["Analytics"])
 
 
 def rate_limit(limit_value: str):

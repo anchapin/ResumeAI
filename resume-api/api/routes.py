@@ -59,7 +59,7 @@ logger = logging_config.get_logger(__name__)
 LIB_DIR = Path(__file__).parent.parent
 TEMPLATES_DIR = LIB_DIR / "templates"
 
-router = APIRouter()
+router = APIRouter(prefix="/api/v1", tags=["Resumes"])
 
 # Initialize managers
 variant_manager = VariantManager(str(TEMPLATES_DIR))
@@ -1216,7 +1216,7 @@ async def import_linkedin_file(
             if len(content) > max_size:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=f"File too large. Maximum size is {max_size // (1024*1024)}MB.",
+                    detail=f"File too large. Maximum size is {max_size // (1024 * 1024)}MB.",
                 )
 
             if is_json:
