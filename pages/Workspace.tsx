@@ -2,23 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import { SimpleResumeData, ResumeMetadata } from '../types';
+import { useStore } from '../store/store';
 import { useGeneratePackage, convertToResumeData } from '../hooks/useGeneratePackage';
 import { useVariants } from '../hooks/useVariants';
 import { showErrorToast, showSuccessToast } from '../utils/toast';
 import { getResume, listResumeVersions, listComments } from '../utils/api-client';
-
-/**
- * @interface WorkspaceProps
- * @description Props for Workspace component
- * @property {SimpleResumeData} resumeData - The resume data to use in workspace
- * @property {number} resumeId - Optional resume ID for fetching metadata (versions, comments)
- */
-interface WorkspaceProps {
-  /** The resume data to use in workspace */
-  resumeData: SimpleResumeData;
-  /** Optional resume ID for fetching metadata (versions, comments) */
-  resumeId?: number;
-}
 
 /** Available tab types for the workspace */
 type TabType = 'Resume' | 'Cover Letter' | 'Keywords' | 'Suggestions' | 'Adjust';
@@ -29,21 +17,11 @@ const TABS: TabType[] = ['Resume', 'Cover Letter', 'Keywords', 'Suggestions', 'A
 /**
  * @component
  * @description Workspace page component for tailoring resumes to job descriptions
- * @param {WorkspaceProps} props - Component properties
- * @param {SimpleResumeData} props.resumeData - The resume data to use in workspace
- * @param {number} props.resumeId - Optional resume ID for fetching metadata
  * @returns {JSX.Element} The rendered workspace page component
- *
- * @example
- * ```tsx
- * <Workspace
- *   resumeData={sampleResumeData}
- *   resumeId={1}
- * />
- * ```
  */
-const Workspace: React.FC<WorkspaceProps> = ({ resumeData, resumeId: propResumeId }) => {
+const Workspace: React.FC = () => {
   const navigate = useNavigate();
+  const resumeData = useStore((state) => state.resumeData);
   const {
     generatePackage,
     generateCoverLetterRequest,
@@ -75,8 +53,8 @@ const Workspace: React.FC<WorkspaceProps> = ({ resumeData, resumeId: propResumeI
   const [lastUpdated, setLastUpdated] = useState<string>('');
   const [loadingMetadata, setLoadingMetadata] = useState<boolean>(true);
 
-  // Use provided resumeId from props, default to 1 if not provided
-  const resumeId = propResumeId ?? 1;
+  // Use default resumeId of 1 for now
+  const resumeId = 1;
 
   // Initialize with API variants once loaded
   useEffect(() => {
@@ -318,9 +296,9 @@ const Workspace: React.FC<WorkspaceProps> = ({ resumeData, resumeId: propResumeI
                     {coverLetter.closing}
                   </p>
                 </div>
-                {coverLetter.metadata?.word_count && (
+                {typeof coverLetter.metadata?.word_count === 'number' && (
                   <p className="text-xs text-slate-400 border-t border-slate-100 pt-4">
-                    Word count: {String(coverLetter.metadata.word_count)}
+                    Word count: {String(coverLetter.metadata.word_count as number)}
                   </p>
                 )}
               </div>

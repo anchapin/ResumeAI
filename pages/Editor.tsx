@@ -782,7 +782,7 @@ const Editor: React.FC = () => {
                   isExpanded={expandedExpId === exp.id}
                   onToggleExpand={handleToggleExpandExperience}
                   onDelete={handleDeleteExperience}
-                  setResumeData={updateExperience}
+                  onUpdate={updateExperience}
                   onAddTag={addTagToExperience}
                   onRemoveTag={removeTagFromExperience}
                 />

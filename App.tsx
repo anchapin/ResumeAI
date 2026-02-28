@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, lazy, Suspense } from 'react';
+import React, { useEffect, lazy, Suspense } from 'react';
 import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
 import Dashboard from './pages/Dashboard';
@@ -17,13 +17,13 @@ const Login = lazy(() => import('./pages/Login'));
 const Register = lazy(() => import('./pages/Register'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 import { Route as RouteEnum, SimpleResumeData } from './types';
-import { loadResumeData, saveResumeData, StorageError } from './utils/storage';
+import { saveResumeData } from './utils/storage';
 import ErrorBoundary from './components/ErrorBoundary';
 import ErrorDisplay from './components/ErrorDisplay';
 import { TokenManager } from './utils/security';
 import { useAuth } from './hooks/useAuth';
-import { useTheme } from './hooks/useTheme';
 import { useGlobalErrors } from './hooks/useGlobalErrors';
+import { useStore } from './store/store';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import './components/toast-styles.css';
@@ -44,90 +44,25 @@ const PageLoader = () => (
   </div>
 );
 
-const initialResumeData: SimpleResumeData = {
-  name: 'Alex Rivera',
-  email: 'alex.rivera@example.com',
-  phone: '+1 (555) 012-3456',
-  location: 'San Francisco, CA',
-  role: 'Senior Product Designer',
-  summary:
-    'Passionate and detail-oriented Senior Product Designer with 8+ years of experience creating user-centered digital experiences. Expertise in UX research, interaction design, and design systems. Proven track record of delivering products that drive business growth and user satisfaction.',
-  skills: [
-    'Figma',
-    'Sketch',
-    'Adobe XD',
-    'User Research',
-    'Prototyping',
-    'Design Systems',
-    'React',
-    'TypeScript',
-    'HTML/CSS',
-  ],
-  experience: [
-    {
-      id: '1',
-      company: 'TechCorp Solutions',
-      role: 'Senior Software Engineer',
-      startDate: 'Jan 2020',
-      endDate: 'Present',
-      current: true,
-      description:
-        'Led the migration of legacy monolithic architecture to microservices using AWS and Node.js, improving system scalability by 40%.',
-      tags: ['AWS', 'Microservices'],
-    },
-    {
-      id: '2',
-      company: 'StartupHub Inc',
-      role: 'Software Developer',
-      startDate: 'Jun 2017',
-      endDate: 'Dec 2019',
-      current: false,
-      description:
-        'Mentored a team of 5 junior developers and implemented CI/CD pipelines reducing deployment time by 50%.',
-      tags: ['Mentorship', 'CI/CD'],
-    },
-  ],
-  education: [
-    {
-      id: '1',
-      institution: 'Stanford University',
-      area: 'Computer Science',
-      studyType: 'Bachelor of Science',
-      startDate: '2013',
-      endDate: '2017',
-      courses: ['Data Structures', 'Algorithms', 'Machine Learning', 'Human-Computer Interaction'],
-    },
-  ],
-  projects: [
-    {
-      id: '1',
-      name: 'E-commerce Platform Redesign',
-      description:
-        'Led a complete UX overhaul of a major e-commerce platform, resulting in a 35% increase in conversion rates.',
-      url: 'https://github.com/alexrivera/ecommerce-redesign',
-      roles: ['Lead Designer', 'UX Researcher'],
-      startDate: '2022',
-      endDate: '2023',
-      highlights: [
-        'User interviews with 50+ customers',
-        'A/B testing of new designs',
-        'Design system creation',
-      ],
-    },
-  ],
-};
-
 /** Save status enum for tracking auto-save state */
 export type SaveStatus = 'idle' | 'saving' | 'saved' | 'error';
 
 function App() {
   const navigate = useNavigate();
   const location = useLocation();
-  const [resumeData, setResumeData] = useState<SimpleResumeData>(initialResumeData);
-  const [isLoaded, setIsLoaded] = useState(false);
-  const [storageError, setStorageError] = useState<string | null>(null);
 
-  // Authentication
+  const resumeData = useStore((state) => state.resumeData);
+  const setResumeData = useStore((state) => state.setResumeData);
+  const isLoaded = useStore((state) => state.isResumeLoaded);
+  const loadResume = useStore((state) => state.loadResume);
+  const saveStatus = useStore((state) => state.saveStatus);
+  const setSaveStatus = useStore((state) => state.setSaveStatus);
+  const setResumeError = useStore((state) => state.setResumeError);
+  const showShortcuts = useStore((state) => state.showShortcuts);
+  const setShowShortcuts = useStore((state) => state.setShowShortcuts);
+  const theme = useStore((state) => state.theme);
+  const [storageError, setStorageError] = React.useState<string | null>(null);
+
   const {
     user,
     isAuthenticated,
@@ -139,11 +74,6 @@ function App() {
     clearError: clearAuthError,
   } = useAuth();
 
-  // Initialize theme (dark mode support)
-  const { theme } = useTheme();
-  const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
-  const [showShortcuts, setShowShortcuts] = useState(false);
-
   // Setup global error handling
   const { currentError, dismissError } = useGlobalErrors();
 
@@ -151,74 +81,35 @@ function App() {
   useEffect(() => {
     return registerShortcuts(DEFAULT_SHORTCUTS, (action) => {
       if (action === 'Show keyboard shortcuts') {
-        setShowShortcuts((prev) => !prev);
+        setShowShortcuts(!showShortcuts);
       }
     });
-  }, []);
+  }, [showShortcuts, setShowShortcuts]);
 
   // Load resume data from localStorage on mount and check security
   useEffect(() => {
     // Check if authentication token is still valid
     const token = TokenManager.getToken();
     if (token && TokenManager.isTokenExpired(token)) {
-      // Token is expired, remove it
       TokenManager.removeToken();
       if (import.meta.env.DEV) {
         console.warn('Authentication token expired, please log in again');
       }
-      // In a real app, you might show a notification or redirect to login
     }
 
-    try {
-      const savedData = loadResumeData();
-      if (savedData) {
-        // Defensive mapping to ensure all arrays exist
-        const validatedData: SimpleResumeData = {
-          ...savedData,
-          skills: Array.isArray(savedData.skills) ? savedData.skills : [],
-          experience: Array.isArray(savedData.experience) ? savedData.experience : [],
-          education: Array.isArray(savedData.education) ? savedData.education : [],
-          projects: Array.isArray(savedData.projects) ? savedData.projects : [],
-        };
-        setResumeData(validatedData);
-        if (import.meta.env.DEV) {
-          console.log('Resume data loaded and validated:', {
-            skills: validatedData.skills.length,
-            education: validatedData.education.length,
-            experience: validatedData.experience.length,
-          });
-        }
-      } else if (import.meta.env.DEV) {
-        console.log('No saved resume data found, using initial data');
-      }
-    } catch (error) {
-      if (error instanceof StorageError) {
-        if (import.meta.env.DEV) {
-          console.error('Storage error:', error.message, error.type);
-        }
-        // Show a user-friendly error message
-        const errorMessage = getErrorMessage(error);
-        setStorageError(errorMessage);
-
-        // Auto-dismiss error after 5 seconds
-        setTimeout(() => setStorageError(null), 5000);
-      } else if (import.meta.env.DEV) {
+    loadResume().catch((error) => {
+      if (import.meta.env.DEV) {
         console.error('Unexpected error loading resume data:', error);
       }
-    } finally {
-      setIsLoaded(true);
-    }
-  }, []);
+    });
+  }, [loadResume]);
 
   // Save resume data to localStorage whenever it changes
   useEffect(() => {
-    // Only save after initial load is complete to avoid overwriting with initial data
     if (!isLoaded) return;
 
-    // Set saving status when data changes
     setSaveStatus('saving');
 
-    // Debounce save to avoid performance issues on rapid updates
     const handler = setTimeout(() => {
       try {
         saveResumeData(resumeData);
@@ -227,60 +118,27 @@ function App() {
           console.log('Resume data saved to localStorage');
         }
 
-        // Reset to idle after 3 seconds
         setTimeout(() => setSaveStatus('idle'), 3000);
       } catch (error) {
         setSaveStatus('error');
-        if (error instanceof StorageError) {
-          if (import.meta.env.DEV) {
-            console.error('Storage error:', error.message, error.type);
-          }
-          const errorMessage = getErrorMessage(error);
-          setStorageError(errorMessage);
+        const errorMessage = getStorageErrorMessage();
+        setStorageError(errorMessage);
 
-          // Auto-dismiss error after 5 seconds
-          setTimeout(() => setStorageError(null), 5000);
-        } else if (import.meta.env.DEV) {
-          console.error('Unexpected error saving resume data:', error);
-        }
+        setTimeout(() => setStorageError(null), 5000);
 
-        // Reset to idle after 5 seconds
         setTimeout(() => setSaveStatus('idle'), 5000);
       }
     }, 1000);
 
     return () => clearTimeout(handler);
-  }, [resumeData, isLoaded]);
+  }, [resumeData, isLoaded, setSaveStatus]);
 
   /**
    * Helper function to get user-friendly error messages
    */
-  const getErrorMessage = (error: StorageError): string => {
-    switch (error.type) {
-      case 'QUOTA_EXCEEDED':
-        return 'Storage full. Please clear some browser data.';
-      case 'PARSE_ERROR':
-        return 'Data corrupted. Using default resume.';
-      case 'ACCESS_DENIED':
-        return "Storage access denied. Changes won't be saved.";
-      case 'NOT_AVAILABLE':
-        return "Storage not available. Changes won't be saved.";
-      default:
-        return 'Failed to save data. Please try again.';
-    }
+  const getStorageErrorMessage = (): string => {
+    return 'Failed to save data. Please try again.';
   };
-
-  /**
-   * Wrapper for setResumeData that can be used externally
-   * This is mainly for type consistency, but could be extended
-   * with additional logic in the future.
-   */
-  const handleUpdateResumeData = useCallback(
-    (newData: SimpleResumeData | ((prev: SimpleResumeData) => SimpleResumeData)) => {
-      setResumeData(newData);
-    },
-    [],
-  );
 
   const handleLogin = async (email: string, password: string) => {
     clearAuthError();
@@ -429,11 +287,7 @@ function App() {
             element={
               isAuthenticated ? (
                 <Suspense fallback={<PageLoader />}>
-                  <Editor
-                    resumeData={resumeData}
-                    onUpdate={handleUpdateResumeData}
-                    saveStatus={saveStatus}
-                  />
+                  <Editor />
                 </Suspense>
               ) : (
                 <Navigate to="/login" replace />
@@ -445,7 +299,7 @@ function App() {
             element={
               isAuthenticated ? (
                 <Suspense fallback={<PageLoader />}>
-                  <Workspace resumeData={resumeData} />
+                  <Workspace />
                 </Suspense>
               ) : (
                 <Navigate to="/login" replace />

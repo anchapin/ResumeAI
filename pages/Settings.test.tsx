@@ -166,6 +166,10 @@ describe('Settings Component', () => {
       const inputs = screen.getAllByRole('textbox') as HTMLInputElement[];
       const firstNameInput = inputs.find((input) => input.value === 'Alex');
 
+      if (!firstNameInput) {
+        throw new Error('First name input not found');
+      }
+
       await user.clear(firstNameInput);
       await user.type(firstNameInput, 'John');
 
@@ -178,6 +182,10 @@ describe('Settings Component', () => {
       const inputs = screen.getAllByRole('textbox') as HTMLInputElement[];
       const lastNameInput = inputs.find((input) => input.value === 'Rivera');
 
+      if (!lastNameInput) {
+        throw new Error('Last name input not found');
+      }
+
       await user.clear(lastNameInput);
       await user.type(lastNameInput, 'Doe');
 
@@ -189,6 +197,10 @@ describe('Settings Component', () => {
       render(<Settings />);
       const inputs = screen.getAllByRole('textbox') as HTMLInputElement[];
       const emailInput = inputs.find((input) => input.value === 'alex.rivera@example.com');
+
+      if (!emailInput) {
+        throw new Error('Email input not found');
+      }
 
       await user.clear(emailInput);
       await user.type(emailInput, 'john.doe@example.com');

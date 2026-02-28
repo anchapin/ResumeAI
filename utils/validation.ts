@@ -33,7 +33,7 @@ const validateInput = (
   input: unknown,
   type: string = 'string',
   options: StringOptions | NumberOptions | ArrayOptions = {},
-) => {
+): unknown => {
   // For object type, we need to handle null differently (null is not a valid object)
   if (type === 'object') {
     if (input === null || input === undefined) {
@@ -63,7 +63,7 @@ const validateInput = (
     // Only validate items if itemType is explicitly specified
     if (arrayOpts.itemType) {
       return input.map((item: unknown) =>
-        validateInput(item, arrayOpts.itemType, arrayOpts.itemOptions),
+        validateInput(item, arrayOpts.itemType!, arrayOpts.itemOptions),
       );
     }
 
@@ -169,7 +169,7 @@ const sanitizeString = (str: unknown): string | unknown => {
 };
 
 // Validate string against a pattern
-const isValidString = (str: string, pattern?: string | RegExp): boolean => {
+const isValidString = (str: string, pattern?: string | RegExp | null): boolean => {
   if (!pattern) return true;
 
   if (pattern instanceof RegExp) {
@@ -180,7 +180,7 @@ const isValidString = (str: string, pattern?: string | RegExp): boolean => {
 };
 
 // Validate resume data structure
-const validateResumeData = (resumeData: Record<string, unknown>): boolean => {
+const validateResumeData = (resumeData: Record<string, unknown> | null): boolean => {
   if (!resumeData) {
     throw new Error('Resume data is required');
   }
@@ -285,7 +285,7 @@ const validateResumeData = (resumeData: Record<string, unknown>): boolean => {
 };
 
 // Validate job application data
-const validateJobApplicationData = (jobData: JobApplicationData): boolean => {
+const validateJobApplicationData = (jobData: JobApplicationData | null): boolean => {
   if (!jobData) {
     throw new Error('Job application data is required');
   }

@@ -5,6 +5,28 @@ import { MemoryRouter } from 'react-router-dom';
 import Editor from './Editor';
 import { SimpleResumeData } from '../types';
 
+vi.mock('../store/store', () => ({
+  useStore: vi.fn((selector) => {
+    const mockState = {
+      resumeData: {
+        name: 'John Doe',
+        email: 'john@example.com',
+        phone: '555-123-4567',
+        location: 'San Francisco, CA',
+        role: 'Software Engineer',
+        summary: 'Experienced software engineer with 5+ years of experience.',
+        skills: ['JavaScript', 'TypeScript', 'React', 'Node.js'],
+        experience: [],
+        education: [],
+        projects: [],
+      } as SimpleResumeData,
+      setResumeData: vi.fn(),
+      saveStatus: 'idle' as const,
+    };
+    return selector(mockState);
+  }),
+}));
+
 const renderWithRouter = (component: React.ReactElement) => {
   return render(<MemoryRouter initialEntries={['/editor']}>{component}</MemoryRouter>);
 };
