@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import PasswordStrengthMeter, {
+import {
+  PasswordStrengthMeter,
   calculatePasswordStrength,
 } from '../components/PasswordStrengthMeter';
 
