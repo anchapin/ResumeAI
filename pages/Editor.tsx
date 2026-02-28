@@ -28,6 +28,8 @@ import { EditorTabs } from '../components/editor/EditorTabs';
 import { EditorActions } from '../components/editor/EditorActions';
 import { SaveVersionDialog } from '../components/editor/SaveVersionDialog';
 import { VersionHistoryDialog } from '../components/editor/VersionHistoryDialog';
+import EducationItem from '../components/editor/EducationItem';
+import ProjectItem from '../components/editor/ProjectItem';
 /**
  * @interface EditorProps
  * @description Props for the Editor component
@@ -176,7 +178,7 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, saveStatus = 'idl
       setSavingVersion(true);
       await updateResume(currentResumeId, {
         data: convertToAPIData(resumeData),
-        change_description: versionDescription.trim(),
+        changeDescription: versionDescription.trim(),
       });
       showSuccessToast('Version saved successfully!');
       setVersionDescription('');
