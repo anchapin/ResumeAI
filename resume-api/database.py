@@ -81,7 +81,6 @@ class Resume(Base):
     owner = relationship("User", back_populates="resumes")
     versions = relationship(
         "ResumeVersion",
-        foreign_keys="ResumeVersion.resume_id",
         back_populates="resume",
         cascade="all, delete-orphan",
     )
