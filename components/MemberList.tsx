@@ -27,7 +27,7 @@ const MemberList: React.FC<MemberListProps> = ({
   const canManageMember = (member: TeamMember): boolean => {
     // Owner can manage everyone except themselves
     if (currentUserRole === 'owner') {
-      return !member.is_owner;
+      return !member.isOwner;
     }
     // Admin can manage members, not other admins or owners
     if (currentUserRole === 'admin') {
@@ -48,9 +48,9 @@ const MemberList: React.FC<MemberListProps> = ({
       return;
     }
 
-    setUpdatingUserId(member.user_id);
+    setUpdatingUserId(member.userId);
     try {
-      await updateMemberRole(teamId, member.user_id, newRole);
+      await updateMemberRole(teamId, member.userId, newRole);
       showSuccessToast(`${member.name || member.email}'s role updated to ${newRole}`);
       if (onRefresh) {
         onRefresh();
@@ -73,9 +73,9 @@ const MemberList: React.FC<MemberListProps> = ({
       return;
     }
 
-    setLoadingUserId(member.user_id);
+    setLoadingUserId(member.userId);
     try {
-      await removeMember(teamId, member.user_id);
+      await removeMember(teamId, member.userId);
       showSuccessToast(`${member.name || member.email} removed from team`);
       if (onRefresh) {
         onRefresh();
@@ -134,9 +134,9 @@ const MemberList: React.FC<MemberListProps> = ({
     <div className="space-y-3">
       {members.map((member) => (
         <div
-          key={member.user_id}
+          key={member.userId}
           className={`flex items-center justify-between p-4 rounded-xl border ${
-            member.user_id === currentUserId
+            member.userId === currentUserId
               ? 'bg-primary-50 border-primary-200'
               : 'bg-white border-slate-200'
           }`}
@@ -150,7 +150,7 @@ const MemberList: React.FC<MemberListProps> = ({
                 <h4 className="font-bold text-slate-900">
                   {member.name || member.email || 'Unknown'}
                 </h4>
-                {member.user_id === currentUserId && (
+                {member.userId === currentUserId && (
                   <span className="px-2 py-0.5 bg-primary-100 text-primary-700 text-xs font-medium rounded-full">
                     You
                   </span>
@@ -159,7 +159,7 @@ const MemberList: React.FC<MemberListProps> = ({
               {member.email && member.name && (
                 <p className="text-sm text-slate-500">{member.email}</p>
               )}
-              <p className="text-xs text-slate-400">{formatDate(member.joined_at)}</p>
+              <p className="text-xs text-slate-400">{formatDate(member.joinedAt)}</p>
             </div>
           </div>
 
@@ -175,23 +175,23 @@ const MemberList: React.FC<MemberListProps> = ({
                 <select
                   value={member.role}
                   onChange={(e) => handleRoleChange(member, e.target.value as MemberRole)}
-                  disabled={updatingUserId === member.user_id}
+                  disabled={updatingUserId === member.userId}
                   className="px-3 py-1.5 rounded-lg border border-slate-300 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none disabled:opacity-50"
                 >
                   <option value="member">Member</option>
                   <option value="admin">Admin</option>
-                  {currentUserRole === 'owner' && !member.is_owner && (
+                  {currentUserRole === 'owner' && !member.isOwner && (
                     <option value="owner">Owner</option>
                   )}
                 </select>
 
                 <button
                   onClick={() => handleRemoveMember(member)}
-                  disabled={loadingUserId === member.user_id || updatingUserId === member.user_id}
+                  disabled={loadingUserId === member.userId || updatingUserId === member.userId}
                   className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   title="Remove member"
                 >
-                  {loadingUserId === member.user_id ? (
+                  {loadingUserId === member.userId ? (
                     <span className="material-symbols-outlined animate-spin text-[18px]">
                       progress_activity
                     </span>

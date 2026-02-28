@@ -165,7 +165,7 @@ const Teams: React.FC = () => {
   };
 
   const getCurrentUserRole = (): MemberRole | undefined => {
-    const currentMember = members.find((m) => m.user_id === currentUserId);
+    const currentMember = members.find((m) => m.userId === currentUserId);
     return currentMember?.role;
   };
 
@@ -235,7 +235,7 @@ const Teams: React.FC = () => {
                   <div>
                     <p className="text-sm text-slate-500 mb-1">Total Members</p>
                     <p className="text-3xl font-bold text-slate-900">
-                      {teams.reduce((sum, team) => sum + (team.member_count || 0), 0)}
+                      {teams.reduce((sum, team) => sum + (team.memberCount || 0), 0)}
                     </p>
                   </div>
                   <div className="w-12 h-12 rounded-lg bg-blue-100 flex items-center justify-center">
@@ -250,7 +250,7 @@ const Teams: React.FC = () => {
                   <div>
                     <p className="text-sm text-slate-500 mb-1">Shared Resumes</p>
                     <p className="text-3xl font-bold text-slate-900">
-                      {teams.reduce((sum, team) => sum + (team.resume_count || 0), 0)}
+                      {teams.reduce((sum, team) => sum + (team.resumeCount || 0), 0)}
                     </p>
                   </div>
                   <div className="w-12 h-12 rounded-lg bg-purple-100 flex items-center justify-center">
@@ -300,7 +300,7 @@ const Teams: React.FC = () => {
                     team={team}
                     onSelect={handleSelectTeam}
                     onDelete={handleDeleteTeam}
-                    isOwner={team.owner_id === currentUserId}
+                    isOwner={team.ownerId === currentUserId}
                   />
                 ))}
               </div>
@@ -385,13 +385,13 @@ const Teams: React.FC = () => {
                               calendar_today
                             </span>
                             <span className="text-sm text-slate-600">
-                              Created {new Date(selectedTeam.created_at).toLocaleDateString()}
+                              Created {new Date(selectedTeam.createdAt).toLocaleDateString()}
                             </span>
                           </div>
                           <div className="flex items-center gap-2">
                             <span className="material-symbols-outlined text-blue-500">person</span>
                             <span className="text-sm text-slate-600">
-                              {selectedTeam.member_count || members.length} member
+                              {selectedTeam.memberCount || members.length} member
                               {members.length !== 1 ? 's' : ''}
                             </span>
                           </div>

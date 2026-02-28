@@ -145,16 +145,16 @@ const TeamResumeLibrary: React.FC<TeamResumeLibraryProps> = ({
                     </span>
                   </div>
                   <div>
-                    <h4 className="font-bold text-slate-900">{sharedResume.resume_title}</h4>
+                    <h4 className="font-bold text-slate-900">{sharedResume.resumeTitle}</h4>
                     <p className="text-sm text-slate-500">
-                      Shared by {sharedResume.shared_by_user_name || 'Unknown'}
+                      Shared by {sharedResume.sharedByUserName || 'Unknown'}
                     </p>
-                    <p className="text-xs text-slate-400">{formatDate(sharedResume.shared_at)}</p>
+                    <p className="text-xs text-slate-400">{formatDate(sharedResume.sharedAt)}</p>
                   </div>
                 </div>
 
                 <button
-                  onClick={() => handleUnshareResume(sharedResume.id, sharedResume.resume_id)}
+                  onClick={() => handleUnshareResume(sharedResume.id, sharedResume.resumeId)}
                   disabled={unsharingResumeId === sharedResume.id}
                   className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   title="Unshare from team"
@@ -215,7 +215,7 @@ const TeamResumeLibrary: React.FC<TeamResumeLibraryProps> = ({
               ) : (
                 <div className="space-y-2">
                   {userResumes.map((resume) => {
-                    const isShared = sharedResumes.some((sr) => sr.resume_id === String(resume.id));
+                    const isShared = sharedResumes.some((sr) => sr.resumeId === String(resume.id));
 
                     return (
                       <div
