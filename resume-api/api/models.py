@@ -11,8 +11,10 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 # Import validators
 try:
     from lib.utils.validators import escape_latex
+    from lib.security.password_validator import validate_password_strength
 except ImportError:
     escape_latex = lambda x: x
+    validate_password_strength = lambda p: (True, None)
 
 # Validation constants
 MAX_STRING_LENGTH = 1000
@@ -145,7 +147,7 @@ class BasicInfo(BaseModel):
             v = sanitize_html(v)
             if not EMAIL_PATTERN.match(v):
                 raise ValueError(
-                    f"Invalid email format: '{v}'. " "Expected format: user@example.com"
+                    f"Invalid email format: '{v}'. Expected format: user@example.com"
                 )
         return v
 
@@ -1405,6 +1407,17 @@ class UserCreate(BaseModel):
         v = v.strip().lower()
         if not EMAIL_PATTERN.match(v):
             raise ValueError("Invalid email format")
+        return v
+
+    @field_validator("password")
+    @classmethod
+    def validate_password(cls, v: str) -> str:
+        """Validate password strength."""
+        is_valid, error_message = validate_password_strength(v)
+        if not is_valid:
+            raise ValueError(
+                error_message or "Password does not meet security requirements"
+            )
         return v
 
     @field_validator("username")
