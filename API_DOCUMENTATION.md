@@ -7,8 +7,45 @@ The ResumeAI API provides endpoints for generating and tailoring professional re
 ## Base URL
 
 ```
-https://api.resumeai.app
+https://api.resumeai.app/api/v1
 ```
+
+## API Versioning
+
+All endpoints are versioned using the `/api/v1/` prefix. This allows for future API changes without breaking existing integrations.
+
+### Version Deprecation Policy
+
+- **Current Version**: v1 (stable)
+- **Deprecation Notice**: At least 6 months before deprecation
+- **Sunset Period**: 3 months minimum after deprecation
+- **Notification**: Updates will be posted in:
+  - API changelog
+  - Email notifications (for registered users)
+  - GitHub releases
+
+When a new version is released:
+
+1. The previous version will be marked as "deprecated"
+2. Existing integrations continue to work for 6 months
+3. After deprecation, the endpoint returns a `410 Gone` status with migration guide
+4. 3 months after deprecation, the version is sunset and no longer available
+
+### Version Migration Guide
+
+When migrating between API versions:
+
+1. Update your base URL to include the new version prefix
+2. Review the changelog for breaking changes
+3. Update your request/response handlers
+4. Test thoroughly in development environment
+5. Deploy to production after successful testing
+
+For v1 → v2 migration (when available):
+
+- Base URL changes from `/api/v1/` to `/api/v2/`
+- Review specific endpoint changes in the migration guide
+- Update authentication headers if required
 
 ## Authentication
 
@@ -27,7 +64,7 @@ All API requests require an API key sent in the `X-API-KEY` header.
 
 Generate a professional PDF resume from JSON data.
 
-**Endpoint:** `POST /v1/render/pdf`
+**Endpoint:** `POST /api/v1/render/pdf`
 
 **Headers:**
 
@@ -98,7 +135,7 @@ Generate a professional PDF resume from JSON data.
 
 Tailor a resume to match a specific job description using AI.
 
-**Endpoint:** `POST /v1/tailor`
+**Endpoint:** `POST /api/v1/tailor`
 
 **Headers:**
 
@@ -139,7 +176,7 @@ Tailor a resume to match a specific job description using AI.
 
 Get a list of available resume template variants.
 
-**Endpoint:** `GET /v1/variants`
+**Endpoint:** `GET /api/v1/variants`
 
 **Headers:**
 
@@ -175,7 +212,7 @@ Get a list of available resume template variants.
 
 Generate a personalized cover letter based on resume and job description using AI.
 
-**Endpoint:** `POST /v1/cover-letter`
+**Endpoint:** `POST /api/v1/cover-letter`
 
 **Headers:**
 

@@ -160,7 +160,7 @@ export async function generatePDF(
   variant: string = 'modern',
 ): Promise<Blob> {
   const response = await fetchWithTimeout(
-    `${API_URL}/v1/render/pdf`,
+    `${API_URL}/api/v1/render/pdf`,
     {
       method: 'POST',
       headers: { ...getHeaders(), 'Content-Type': 'application/json' },
@@ -208,7 +208,7 @@ export async function getVariants(filters?: {
   }
 
   const response = await fetchWithTimeout(
-    `${API_URL}/v1/variants?${params}`,
+    `${API_URL}/api/v1/variants?${params}`,
     { headers: getHeaders() },
     TIMEOUT_CONFIG.STANDARD,
   );
@@ -242,7 +242,7 @@ export async function tailorResume(
   jobTitle?: string,
 ): Promise<TailoredResumeResponse> {
   const response = await fetchWithTimeout(
-    `${API_URL}/v1/tailor`,
+    `${API_URL}/api/v1/tailor`,
     {
       method: 'POST',
       headers: { ...getHeaders(), 'Content-Type': 'application/json' },
@@ -290,7 +290,7 @@ export async function generateCoverLetter(
   tone: string = 'professional',
 ): Promise<CoverLetterResponse> {
   const response = await fetchWithTimeout(
-    `${API_URL}/v1/cover-letter`,
+    `${API_URL}/api/v1/cover-letter`,
     {
       method: 'POST',
       headers: { ...getHeaders(), 'Content-Type': 'application/json' },
@@ -317,7 +317,7 @@ export async function createResume(
   tags: string[] = [],
 ): Promise<any> {
   const response = await fetchWithRetry(
-    `${API_URL}/resumes`,
+    `${API_URL}/api/v1/resumes`,
     { method: 'POST', headers: getHeaders(), body: JSON.stringify({ title, data, tags }) },
     DEFAULT_RETRY_CONFIG,
   );
@@ -337,7 +337,7 @@ export async function listResumes(filters?: {
   if (filters?.skip !== undefined) params.append('skip', filters.skip.toString());
   if (filters?.limit !== undefined) params.append('limit', filters.limit.toString());
   const response = await fetchWithRetry(
-    `${API_URL}/resumes?${params}`,
+    `${API_URL}/api/v1/resumes?${params}`,
     { headers: getHeaders() },
     DEFAULT_RETRY_CONFIG,
   );
@@ -347,7 +347,7 @@ export async function listResumes(filters?: {
 
 export async function getResume(resumeId: number): Promise<any> {
   const response = await fetchWithRetry(
-    `${API_URL}/resumes/${resumeId}`,
+    `${API_URL}/api/v1/resumes/${resumeId}`,
     { headers: getHeaders() },
     DEFAULT_RETRY_CONFIG,
   );
@@ -360,7 +360,7 @@ export async function updateResume(
   updates: { title?: string; data?: ResumeData; tags?: string[]; changeDescription?: string },
 ): Promise<any> {
   const response = await fetchWithRetry(
-    `${API_URL}/resumes/${resumeId}`,
+    `${API_URL}/api/v1/resumes/${resumeId}`,
     { method: 'PUT', headers: getHeaders(), body: JSON.stringify(updates) },
     DEFAULT_RETRY_CONFIG,
   );
@@ -370,7 +370,7 @@ export async function updateResume(
 
 export async function deleteResume(resumeId: number): Promise<void> {
   const response = await fetchWithRetry(
-    `${API_URL}/resumes/${resumeId}`,
+    `${API_URL}/api/v1/resumes/${resumeId}`,
     { method: 'DELETE', headers: getHeaders() },
     DEFAULT_RETRY_CONFIG,
   );
@@ -379,7 +379,7 @@ export async function deleteResume(resumeId: number): Promise<void> {
 
 export async function listResumeVersions(resumeId: number): Promise<ResumeVersion[]> {
   const response = await fetchWithRetry(
-    `${API_URL}/resumes/${resumeId}/versions`,
+    `${API_URL}/api/v1/resumes/${resumeId}/versions`,
     { headers: getHeaders() },
     DEFAULT_RETRY_CONFIG,
   );
@@ -392,7 +392,7 @@ export async function getResumeVersion(
   versionId: number,
 ): Promise<ResumeVersion> {
   const response = await fetchWithRetry(
-    `${API_URL}/resumes/${resumeId}/versions/${versionId}`,
+    `${API_URL}/api/v1/resumes/${resumeId}/versions/${versionId}`,
     { headers: getHeaders() },
     DEFAULT_RETRY_CONFIG,
   );
@@ -402,7 +402,7 @@ export async function getResumeVersion(
 
 export async function restoreResumeVersion(resumeId: number, versionId: number): Promise<any> {
   const response = await fetchWithRetry(
-    `${API_URL}/resumes/${resumeId}/versions/${versionId}/restore`,
+    `${API_URL}/api/v1/resumes/${resumeId}/versions/${versionId}/restore`,
     { method: 'POST', headers: getHeaders() },
     DEFAULT_RETRY_CONFIG,
   );
@@ -412,7 +412,7 @@ export async function restoreResumeVersion(resumeId: number, versionId: number):
 
 export async function listComments(resumeId: number): Promise<Comment[]> {
   const response = await fetchWithRetry(
-    `${API_URL}/resumes/${resumeId}/comments`,
+    `${API_URL}/api/v1/resumes/${resumeId}/comments`,
     { headers: getHeaders() },
     DEFAULT_RETRY_CONFIG,
   );
@@ -425,7 +425,7 @@ export async function createComment(
   comment: { authorName: string; authorEmail: string; content: string; section?: string },
 ): Promise<Comment> {
   const response = await fetchWithRetry(
-    `${API_URL}/resumes/${resumeId}/comments`,
+    `${API_URL}/api/v1/resumes/${resumeId}/comments`,
     { method: 'POST', headers: getHeaders(), body: JSON.stringify(comment) },
     DEFAULT_RETRY_CONFIG,
   );
@@ -435,7 +435,7 @@ export async function createComment(
 
 export async function resolveComment(commentId: number): Promise<Comment> {
   const response = await fetchWithRetry(
-    `${API_URL}/comments/${commentId}/resolve`,
+    `${API_URL}/api/v1/comments/${commentId}/resolve`,
     { method: 'PATCH', headers: getHeaders() },
     DEFAULT_RETRY_CONFIG,
   );
@@ -445,7 +445,7 @@ export async function resolveComment(commentId: number): Promise<Comment> {
 
 export async function deleteComment(commentId: number): Promise<void> {
   const response = await fetchWithRetry(
-    `${API_URL}/comments/${commentId}`,
+    `${API_URL}/api/v1/comments/${commentId}`,
     { method: 'DELETE', headers: getHeaders() },
     DEFAULT_RETRY_CONFIG,
   );
@@ -462,7 +462,7 @@ export async function shareResume(
   },
 ): Promise<ShareLink> {
   const response = await fetchWithRetry(
-    `${API_URL}/resumes/${resumeId}/share`,
+    `${API_URL}/api/v1/resumes/${resumeId}/share`,
     { method: 'POST', headers: getHeaders(), body: JSON.stringify(options) },
     DEFAULT_RETRY_CONFIG,
   );
@@ -474,7 +474,7 @@ export async function accessSharedResume(shareToken: string, password?: string):
   const params = new URLSearchParams();
   if (password) params.append('password', password);
   const response = await fetchWithRetry(
-    `${API_URL}/share/${shareToken}?${params}`,
+    `${API_URL}/api/v1/share/${shareToken}?${params}`,
     {},
     DEFAULT_RETRY_CONFIG,
   );
@@ -488,7 +488,7 @@ export async function bulkOperation(
   options?: { tags?: string[]; export_format?: string },
 ): Promise<{ successful: number[]; failed: Array<{ id: number; error: string }> }> {
   const response = await fetchWithRetry(
-    `${API_URL}/resumes/bulk`,
+    `${API_URL}/api/v1/resumes/bulk`,
     {
       method: 'POST',
       headers: getHeaders(),
@@ -507,7 +507,7 @@ export async function bulkOperation(
 
 export async function getUserSettings(userIdentifier: string): Promise<UserSettings> {
   const response = await fetchWithRetry(
-    `${API_URL}/settings/${userIdentifier}`,
+    `${API_URL}/api/v1/settings/${userIdentifier}`,
     { headers: getHeaders() },
     DEFAULT_RETRY_CONFIG,
   );
@@ -520,7 +520,7 @@ export async function updateUserSettings(
   settings: Partial<UserSettings>,
 ): Promise<UserSettings> {
   const response = await fetchWithRetry(
-    `${API_URL}/settings/${userIdentifier}`,
+    `${API_URL}/api/v1/settings/${userIdentifier}`,
     { method: 'PUT', headers: getHeaders(), body: JSON.stringify(settings) },
     DEFAULT_RETRY_CONFIG,
   );
@@ -540,7 +540,7 @@ export async function checkATSScore(
   jobDescription: string,
 ): Promise<import('../types').ATSReport> {
   const response = await fetchWithTimeout(
-    `${API_URL}/v1/ats/check`,
+    `${API_URL}/api/v1/ats/check`,
     {
       method: 'POST',
       headers: { ...getHeaders(), 'Content-Type': 'application/json' },
@@ -609,7 +609,7 @@ export interface TestWebhookResponse {
 
 export async function createWebhook(params: WebhookCreateParams): Promise<Webhook> {
   const response = await fetchWithRetry(
-    `${API_URL}/v1/webhooks`,
+    `${API_URL}/api/v1/webhooks`,
     {
       method: 'POST',
       headers: { ...getHeaders(), 'Content-Type': 'application/json' },
@@ -626,7 +626,7 @@ export async function createWebhook(params: WebhookCreateParams): Promise<Webhoo
 
 export async function listWebhooks(): Promise<Webhook[]> {
   const response = await fetchWithRetry(
-    `${API_URL}/v1/webhooks`,
+    `${API_URL}/api/v1/webhooks`,
     { headers: getHeaders() },
     DEFAULT_RETRY_CONFIG,
   );
@@ -637,7 +637,7 @@ export async function listWebhooks(): Promise<Webhook[]> {
 
 export async function getWebhook(id: number): Promise<Webhook> {
   const response = await fetchWithRetry(
-    `${API_URL}/v1/webhooks/${id}`,
+    `${API_URL}/api/v1/webhooks/${id}`,
     { headers: getHeaders() },
     DEFAULT_RETRY_CONFIG,
   );
@@ -647,7 +647,7 @@ export async function getWebhook(id: number): Promise<Webhook> {
 
 export async function updateWebhook(id: number, params: WebhookUpdateParams): Promise<Webhook> {
   const response = await fetchWithRetry(
-    `${API_URL}/v1/webhooks/${id}`,
+    `${API_URL}/api/v1/webhooks/${id}`,
     {
       method: 'PUT',
       headers: { ...getHeaders(), 'Content-Type': 'application/json' },
@@ -664,7 +664,7 @@ export async function updateWebhook(id: number, params: WebhookUpdateParams): Pr
 
 export async function deleteWebhook(id: number): Promise<void> {
   const response = await fetchWithRetry(
-    `${API_URL}/v1/webhooks/${id}`,
+    `${API_URL}/api/v1/webhooks/${id}`,
     {
       method: 'DELETE',
       headers: getHeaders(),
@@ -676,7 +676,7 @@ export async function deleteWebhook(id: number): Promise<void> {
 
 export async function testWebhook(id: number): Promise<TestWebhookResponse> {
   const response = await fetchWithRetry(
-    `${API_URL}/v1/webhooks/${id}/test`,
+    `${API_URL}/api/v1/webhooks/${id}/test`,
     {
       method: 'POST',
       headers: getHeaders(),
@@ -692,7 +692,7 @@ export async function testWebhook(id: number): Promise<TestWebhookResponse> {
 
 export async function getWebhookDeliveries(id: number): Promise<WebhookDelivery[]> {
   const response = await fetchWithRetry(
-    `${API_URL}/v1/webhooks/${id}/deliveries`,
+    `${API_URL}/api/v1/webhooks/${id}/deliveries`,
     { headers: getHeaders() },
     DEFAULT_RETRY_CONFIG,
   );
@@ -706,7 +706,7 @@ export async function retryWebhookDelivery(
   deliveryId: number,
 ): Promise<WebhookDelivery> {
   const response = await fetchWithRetry(
-    `${API_URL}/v1/webhooks/${webhookId}/deliveries/${deliveryId}/retry`,
+    `${API_URL}/api/v1/webhooks/${webhookId}/deliveries/${deliveryId}/retry`,
     {
       method: 'POST',
       headers: getHeaders(),
@@ -720,7 +720,7 @@ export async function retryWebhookDelivery(
 // LinkedIn Functions (Real Implementation)
 export async function connectLinkedIn(): Promise<string> {
   const response = await fetchWithRetry(
-    `${API_URL}/api/linkedin/oauth/start`,
+    `${API_URL}/api/v1/linkedin/oauth/start`,
     {
       method: 'GET',
       headers: getHeaders(),
@@ -741,7 +741,7 @@ export async function handleLinkedInCallback(
   state: string,
 ): Promise<LinkedInProfile> {
   const response = await fetchWithRetry(
-    `${API_URL}/api/linkedin/oauth/callback`,
+    `${API_URL}/api/v1/linkedin/oauth/callback`,
     {
       method: 'POST',
       headers: getHeaders(),
@@ -773,7 +773,7 @@ export async function importLinkedInProfile(): Promise<LinkedInProfile> {
   }
 
   const response = await fetchWithRetry(
-    `${API_URL}/api/linkedin/profile`,
+    `${API_URL}/api/v1/linkedin/profile`,
     {
       method: 'GET',
       headers: {
@@ -793,7 +793,7 @@ export async function importLinkedInProfile(): Promise<LinkedInProfile> {
 
 export async function fetchGitHubRepositories(): Promise<GitHubRepository[]> {
   const response = await fetchWithRetry(
-    `${API_URL}/api/github/repositories`,
+    `${API_URL}/api/v1/github/repositories`,
     {
       method: 'GET',
       headers: getHeaders(),
@@ -817,7 +817,7 @@ export async function disconnectLinkedIn(): Promise<void> {
   // Optionally notify backend to revoke token
   try {
     await fetchWithRetry(
-      `${API_URL}/api/linkedin/disconnect`,
+      `${API_URL}/api/v1/linkedin/disconnect`,
       {
         method: 'POST',
         headers: getHeaders(),
@@ -834,7 +834,7 @@ export async function researchSalary(
   request: SalaryResearchRequest,
 ): Promise<SalaryResearchResponse> {
   const response = await fetchWithRetry(
-    `${API_URL}/api/salary/research`,
+    `${API_URL}/api/v1/salary/research`,
     {
       method: 'POST',
       headers: { ...getHeaders(), 'Content-Type': 'application/json' },
@@ -885,7 +885,7 @@ export async function researchSalary(
 
 export async function createOffer(offer: any): Promise<JobOffer> {
   const response = await fetchWithRetry(
-    `${API_URL}/api/salary/offers`,
+    `${API_URL}/api/v1/salary/offers`,
     {
       method: 'POST',
       headers: { ...getHeaders(), 'Content-Type': 'application/json' },
@@ -936,7 +936,7 @@ export async function compareOffers(
   priorities?: ComparisonPriority,
 ): Promise<OfferComparison> {
   const response = await fetchWithRetry(
-    `${API_URL}/api/salary/offers/compare`,
+    `${API_URL}/api/v1/salary/offers/compare`,
     {
       method: 'POST',
       headers: { ...getHeaders(), 'Content-Type': 'application/json' },
@@ -1006,7 +1006,7 @@ export async function compareOffers(
 
 export async function getDefaultPriorities(): Promise<ComparisonPriority> {
   const response = await fetchWithRetry(
-    `${API_URL}/api/salary/offers/priorities/default`,
+    `${API_URL}/api/v1/salary/offers/priorities/default`,
     { headers: getHeaders() },
     DEFAULT_RETRY_CONFIG,
   );
@@ -1025,7 +1025,7 @@ export async function updatePriorities(
   priorities: ComparisonPriority,
 ): Promise<ComparisonPriority> {
   const response = await fetchWithRetry(
-    `${API_URL}/api/salary/offers/priorities`,
+    `${API_URL}/api/v1/salary/offers/priorities`,
     {
       method: 'PUT',
       headers: { ...getHeaders(), 'Content-Type': 'application/json' },
@@ -1139,7 +1139,7 @@ export interface UpcomingEvent {
 
 export async function createJobApplication(app: JobApplicationCreate): Promise<JobApplication> {
   const response = await fetchWithRetry(
-    `${API_URL}/v1/applications`,
+    `${API_URL}/api/v1/applications`,
     {
       method: 'POST',
       headers: { ...getHeaders(), 'Content-Type': 'application/json' },
@@ -1165,7 +1165,7 @@ export async function listJobApplications(
   params.append('offset', offset.toString());
 
   const response = await fetchWithRetry(
-    `${API_URL}/v1/applications?${params}`,
+    `${API_URL}/api/v1/applications?${params}`,
     { headers: getHeaders() },
     DEFAULT_RETRY_CONFIG,
   );
@@ -1175,7 +1175,7 @@ export async function listJobApplications(
 
 export async function getJobApplication(id: number): Promise<JobApplication> {
   const response = await fetchWithRetry(
-    `${API_URL}/v1/applications/${id}`,
+    `${API_URL}/api/v1/applications/${id}`,
     { headers: getHeaders() },
     DEFAULT_RETRY_CONFIG,
   );
@@ -1188,7 +1188,7 @@ export async function updateJobApplication(
   updates: JobApplicationUpdate,
 ): Promise<JobApplication> {
   const response = await fetchWithRetry(
-    `${API_URL}/v1/applications/${id}`,
+    `${API_URL}/api/v1/applications/${id}`,
     {
       method: 'PUT',
       headers: { ...getHeaders(), 'Content-Type': 'application/json' },
@@ -1202,7 +1202,7 @@ export async function updateJobApplication(
 
 export async function deleteJobApplication(id: number): Promise<void> {
   const response = await fetchWithRetry(
-    `${API_URL}/v1/applications/${id}`,
+    `${API_URL}/api/v1/applications/${id}`,
     { method: 'DELETE', headers: getHeaders() },
     DEFAULT_RETRY_CONFIG,
   );
@@ -1211,7 +1211,7 @@ export async function deleteJobApplication(id: number): Promise<void> {
 
 export async function getApplicationStats(days = 30): Promise<ApplicationStats> {
   const response = await fetchWithRetry(
-    `${API_URL}/v1/applications/analytics/stats?days=${days}`,
+    `${API_URL}/api/v1/applications/analytics/stats?days=${days}`,
     { headers: getHeaders() },
     DEFAULT_RETRY_CONFIG,
   );
@@ -1221,7 +1221,7 @@ export async function getApplicationStats(days = 30): Promise<ApplicationStats> 
 
 export async function getApplicationFunnel(days = 30): Promise<ApplicationFunnel> {
   const response = await fetchWithRetry(
-    `${API_URL}/v1/applications/analytics/funnel?days=${days}`,
+    `${API_URL}/api/v1/applications/analytics/funnel?days=${days}`,
     { headers: getHeaders() },
     DEFAULT_RETRY_CONFIG,
   );
@@ -1231,7 +1231,7 @@ export async function getApplicationFunnel(days = 30): Promise<ApplicationFunnel
 
 export async function getApplicationTimeline(days = 30): Promise<ApplicationTimeline> {
   const response = await fetchWithRetry(
-    `${API_URL}/v1/applications/analytics/timeline?days=${days}`,
+    `${API_URL}/api/v1/applications/analytics/timeline?days=${days}`,
     { headers: getHeaders() },
     DEFAULT_RETRY_CONFIG,
   );
@@ -1241,7 +1241,7 @@ export async function getApplicationTimeline(days = 30): Promise<ApplicationTime
 
 export async function getUpcomingEvents(days = 7): Promise<UpcomingEvent[]> {
   const response = await fetchWithRetry(
-    `${API_URL}/v1/applications/analytics/upcoming?days=${days}`,
+    `${API_URL}/api/v1/applications/analytics/upcoming?days=${days}`,
     { headers: getHeaders() },
     DEFAULT_RETRY_CONFIG,
   );
@@ -1253,7 +1253,7 @@ export async function getUpcomingEvents(days = 7): Promise<UpcomingEvent[]> {
 // Team management functions (stubs for unblocking CI)
 export async function getTeams(): Promise<any[]> {
   const response = await fetchWithRetry(
-    `${API_URL}/v1/teams`,
+    `${API_URL}/api/v1/teams`,
     { headers: getHeaders() },
     DEFAULT_RETRY_CONFIG,
   );
@@ -1263,7 +1263,7 @@ export async function getTeams(): Promise<any[]> {
 
 export async function getTeam(teamId: number | string): Promise<any> {
   const response = await fetchWithRetry(
-    `${API_URL}/v1/teams/${teamId}`,
+    `${API_URL}/api/v1/teams/${teamId}`,
     { headers: getHeaders() },
     DEFAULT_RETRY_CONFIG,
   );
@@ -1273,7 +1273,7 @@ export async function getTeam(teamId: number | string): Promise<any> {
 
 export async function createTeam(params: any): Promise<any> {
   const response = await fetchWithRetry(
-    `${API_URL}/v1/teams`,
+    `${API_URL}/api/v1/teams`,
     {
       method: 'POST',
       headers: { ...getHeaders(), 'Content-Type': 'application/json' },
@@ -1287,7 +1287,7 @@ export async function createTeam(params: any): Promise<any> {
 
 export async function updateTeam(teamId: number | string, params: any): Promise<any> {
   const response = await fetchWithRetry(
-    `${API_URL}/v1/teams/${teamId}`,
+    `${API_URL}/api/v1/teams/${teamId}`,
     {
       method: 'PUT',
       headers: { ...getHeaders(), 'Content-Type': 'application/json' },
@@ -1301,7 +1301,7 @@ export async function updateTeam(teamId: number | string, params: any): Promise<
 
 export async function deleteTeam(teamId: number | string): Promise<void> {
   const response = await fetchWithRetry(
-    `${API_URL}/v1/teams/${teamId}`,
+    `${API_URL}/api/v1/teams/${teamId}`,
     { method: 'DELETE', headers: getHeaders() },
     DEFAULT_RETRY_CONFIG,
   );
@@ -1310,7 +1310,7 @@ export async function deleteTeam(teamId: number | string): Promise<void> {
 
 export async function getTeamMembers(teamId: number | string): Promise<any[]> {
   const response = await fetchWithRetry(
-    `${API_URL}/v1/teams/${teamId}/members`,
+    `${API_URL}/api/v1/teams/${teamId}/members`,
     { headers: getHeaders() },
     DEFAULT_RETRY_CONFIG,
   );
@@ -1320,7 +1320,7 @@ export async function getTeamMembers(teamId: number | string): Promise<any[]> {
 
 export async function inviteMember(teamId: number | string, params: any): Promise<any> {
   const response = await fetchWithRetry(
-    `${API_URL}/v1/teams/${teamId}/members/invite`,
+    `${API_URL}/api/v1/teams/${teamId}/members/invite`,
     {
       method: 'POST',
       headers: { ...getHeaders(), 'Content-Type': 'application/json' },
@@ -1338,7 +1338,7 @@ export async function updateMemberRole(
   role: MemberRole,
 ): Promise<any> {
   const response = await fetchWithRetry(
-    `${API_URL}/v1/teams/${teamId}/members/${memberId}`,
+    `${API_URL}/api/v1/teams/${teamId}/members/${memberId}`,
     {
       method: 'PATCH',
       headers: { ...getHeaders(), 'Content-Type': 'application/json' },
@@ -1352,7 +1352,7 @@ export async function updateMemberRole(
 
 export async function removeMember(teamId: number | string, memberId: string): Promise<void> {
   const response = await fetchWithRetry(
-    `${API_URL}/v1/teams/${teamId}/members/${memberId}`,
+    `${API_URL}/api/v1/teams/${teamId}/members/${memberId}`,
     { method: 'DELETE', headers: getHeaders() },
     DEFAULT_RETRY_CONFIG,
   );
@@ -1361,7 +1361,7 @@ export async function removeMember(teamId: number | string, memberId: string): P
 
 export async function shareResumeWithTeam(resumeId: number, teamId: number | string): Promise<any> {
   const response = await fetchWithRetry(
-    `${API_URL}/v1/resumes/${resumeId}/share`,
+    `${API_URL}/api/v1/resumes/${resumeId}/share`,
     {
       method: 'POST',
       headers: { ...getHeaders(), 'Content-Type': 'application/json' },
@@ -1378,7 +1378,7 @@ export async function unshareResumeFromTeam(
   teamId: number | string,
 ): Promise<void> {
   const response = await fetchWithRetry(
-    `${API_URL}/v1/resumes/${resumeId}/share/${teamId}`,
+    `${API_URL}/api/v1/resumes/${resumeId}/share/${teamId}`,
     { method: 'DELETE', headers: getHeaders() },
     DEFAULT_RETRY_CONFIG,
   );
@@ -1387,7 +1387,7 @@ export async function unshareResumeFromTeam(
 
 export async function getTeamActivity(teamId: number | string, days = 30): Promise<any[]> {
   const response = await fetchWithRetry(
-    `${API_URL}/v1/teams/${teamId}/activity?days=${days}`,
+    `${API_URL}/api/v1/teams/${teamId}/activity?days=${days}`,
     { headers: getHeaders() },
     DEFAULT_RETRY_CONFIG,
   );

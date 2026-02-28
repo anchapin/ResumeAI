@@ -27,7 +27,7 @@ from lib.security.key_management import hash_api_key
 # Get logger
 logger = logging_config.get_logger(__name__)
 
-router = APIRouter(prefix="/api-keys", tags=["API Keys"])
+router = APIRouter(prefix="/api/v1/api-keys", tags=["API Keys"])
 
 
 class APIKeyCreateRequest(BaseModel):

@@ -14,7 +14,7 @@ from typing import List, Optional, Dict, Any
 
 from lib.interview import MockInterviewGenerator, InterviewQuestionGenerator
 
-router = APIRouter(prefix="/api/interviews", tags=["interviews"])
+router = APIRouter(prefix="/api/v1/interviews", tags=["interviews"])
 
 # Global interview generator instance
 interview_generator = MockInterviewGenerator()

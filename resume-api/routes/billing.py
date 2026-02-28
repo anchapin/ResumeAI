@@ -37,7 +37,7 @@ from database import (
 from lib.stripe import stripe_service, BILLING_ENABLED
 from config import settings
 
-router = APIRouter(prefix="/api/billing", tags=["billing"])
+router = APIRouter(prefix="/api/v1/billing", tags=["billing"])
 
 
 # ========== Billing Status Response ==========
