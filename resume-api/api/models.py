@@ -1519,6 +1519,18 @@ class MessageResponse(BaseModel):
     message: str = Field(..., description="Response message")
 
 
+class VerifyEmailRequest(BaseModel):
+    """Request to verify email address with token."""
+
+    token: str = Field(..., max_length=255, description="Email verification token")
+
+
+class ResendVerificationRequest(BaseModel):
+    """Request to resend verification email."""
+
+    email: str = Field(..., max_length=255, description="Email address to verify")
+
+
 # =============================================================================
 # Job Description Parsing Models
 # =============================================================================

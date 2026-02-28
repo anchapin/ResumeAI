@@ -106,6 +106,15 @@ class Settings(BaseSettings):
     # client secret
     linkedin_redirect_uri: Optional[str] = None  # LinkedIn OAuth redirect URI
 
+    # Email Configuration
+    smtp_host: Optional[str] = None  # SMTP server host
+    smtp_port: int = 587  # SMTP server port (587 for TLS, 465 for SSL)
+    smtp_user: Optional[str] = None  # SMTP username
+    smtp_password: Optional[str] = None  # SMTP password
+    smtp_from: str = "noreply@resumeai.com"  # Default from address
+    smtp_use_tls: bool = True  # Use TLS for SMTP
+    frontend_url: str = "http://localhost:5173"  # Frontend URL for email links
+
     @field_validator("jwt_secret")
     @classmethod
     def validate_jwt_secret(cls, v: str, info: ValidationInfo) -> str:
