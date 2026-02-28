@@ -61,7 +61,7 @@ def test_generate_api_key_prefix():
     key = "rai_1234567890abcdef_extra_chars"
     prefix = generate_api_key_prefix(key, prefix_length=12)
 
-    assert prefix == "rai_1234567", f"Expected 'rai_1234567' but got '{prefix}'"
+    assert prefix == "rai_12345678", f"Expected 'rai_12345678' but got '{prefix}'"
     assert len(prefix) == 12, f"Expected length 12 but got {len(prefix)}"
 
     # Short key should return 'unknown'
