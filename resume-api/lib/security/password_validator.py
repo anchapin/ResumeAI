@@ -122,16 +122,21 @@ def get_password_strength_score(password: str) -> int:
     elif variety_count == 1:
         score += 0.25
 
-    # Length bonuses
+    # Length bonuses (heavier weighting for longer passwords)
+    has_repeat = re.search(r"(.)\1{1,}", password)
     if len(password) >= 8:
-        score += 1
-    if len(password) >= 12:
         score += 1.5
+    if len(password) >= 12:
+        score += 2
     if len(password) >= 16:
-        score += 0.5
+        score += 1
+
+    # Penalty for repeating characters on short passwords
+    if has_repeat and len(password) < 12:
+        score -= 1
 
     # Bonus for not having repeating characters
-    if not re.search(r"(.)\1{1,}", password):  # No repeating (2 or more in a row)
-        score += 0.5
+    if not has_repeat:
+        score += 1.5
 
-    return max(min(int(round(score)), 5), 0)
+    return max(min(int(score), 5), 0)

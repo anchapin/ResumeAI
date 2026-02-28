@@ -20,7 +20,7 @@ export const calculatePasswordStrength = (
   const hasUpper = /[A-Z]/.test(pwd);
   const hasLower = /[a-z]/.test(pwd);
   const hasDigit = /\d/.test(pwd);
-  const hasSpecial = /[\]!@#$%^&*()_+\-={};:',.<>?/|]/.test(pwd);
+  const hasSpecial = /[!@#$%^&*()_+\-=\[\]{};:',.<>?/|]/.test(pwd); // eslint-disable-line no-useless-escape
 
   let score = 0;
   if (hasLength) score++;
