@@ -29,7 +29,7 @@ describe('Accessibility Tests - WCAG 2.1', () => {
   describe('App Component', () => {
     it('should not have any accessibility violations', async () => {
       const { container } = render(
-        <MemoryRouter>
+        <MemoryRouter initialEntries={['/dashboard']}>
           <App />
         </MemoryRouter>,
       );
@@ -48,7 +48,7 @@ describe('Accessibility Tests - WCAG 2.1', () => {
   describe('Semantic HTML', () => {
     it('should have proper heading hierarchy', () => {
       render(
-        <MemoryRouter>
+        <MemoryRouter initialEntries={['/dashboard']}>
           <App />
         </MemoryRouter>,
       );
@@ -66,7 +66,7 @@ describe('Accessibility Tests - WCAG 2.1', () => {
 
     it('should have proper landmark regions', async () => {
       const { container } = render(
-        <MemoryRouter>
+        <MemoryRouter initialEntries={['/dashboard']}>
           <App />
         </MemoryRouter>,
       );
@@ -81,7 +81,7 @@ describe('Accessibility Tests - WCAG 2.1', () => {
 
     it('should have descriptive button text', () => {
       render(
-        <MemoryRouter>
+        <MemoryRouter initialEntries={['/dashboard']}>
           <App />
         </MemoryRouter>,
       );
@@ -98,7 +98,7 @@ describe('Accessibility Tests - WCAG 2.1', () => {
 
     it('should have descriptive link text', () => {
       render(
-        <MemoryRouter>
+        <MemoryRouter initialEntries={['/dashboard']}>
           <App />
         </MemoryRouter>,
       );
@@ -123,7 +123,7 @@ describe('Accessibility Tests - WCAG 2.1', () => {
   describe('Color Contrast', () => {
     it('should have sufficient color contrast (WCAG AA)', async () => {
       const { container } = render(
-        <MemoryRouter>
+        <MemoryRouter initialEntries={['/dashboard']}>
           <App />
         </MemoryRouter>,
       );
@@ -142,7 +142,7 @@ describe('Accessibility Tests - WCAG 2.1', () => {
   describe('Form Accessibility', () => {
     it('should have labels for all form inputs', async () => {
       const { container } = render(
-        <MemoryRouter>
+        <MemoryRouter initialEntries={['/dashboard']}>
           <App />
         </MemoryRouter>,
       );
@@ -169,7 +169,7 @@ describe('Accessibility Tests - WCAG 2.1', () => {
 
     it('should have proper ARIA attributes on form elements', () => {
       render(
-        <MemoryRouter>
+        <MemoryRouter initialEntries={['/dashboard']}>
           <App />
         </MemoryRouter>,
       );
@@ -194,7 +194,7 @@ describe('Accessibility Tests - WCAG 2.1', () => {
   describe('Focus Management', () => {
     it('should have visible focus indicators', () => {
       render(
-        <MemoryRouter>
+        <MemoryRouter initialEntries={['/dashboard']}>
           <App />
         </MemoryRouter>,
       );
@@ -220,7 +220,7 @@ describe('Accessibility Tests - WCAG 2.1', () => {
 
     it('should have proper tab order', () => {
       render(
-        <MemoryRouter>
+        <MemoryRouter initialEntries={['/dashboard']}>
           <App />
         </MemoryRouter>,
       );
@@ -245,7 +245,7 @@ describe('Accessibility Tests - WCAG 2.1', () => {
   describe('Images', () => {
     it('should have alt text for all images', () => {
       render(
-        <MemoryRouter>
+        <MemoryRouter initialEntries={['/dashboard']}>
           <App />
         </MemoryRouter>,
       );
@@ -269,7 +269,7 @@ describe('Accessibility Tests - WCAG 2.1', () => {
   describe('ARIA Attributes', () => {
     it('should use valid ARIA roles', () => {
       render(
-        <MemoryRouter>
+        <MemoryRouter initialEntries={['/dashboard']}>
           <App />
         </MemoryRouter>,
       );
@@ -298,7 +298,7 @@ describe('Accessibility Tests - WCAG 2.1', () => {
 
     it('should use ARIA live regions for dynamic content', () => {
       render(
-        <MemoryRouter>
+        <MemoryRouter initialEntries={['/dashboard']}>
           <App />
         </MemoryRouter>,
       );
@@ -319,7 +319,7 @@ describe('Accessibility Tests - WCAG 2.1', () => {
   describe('Keyboard Navigation', () => {
     it('should allow keyboard navigation to all interactive elements', () => {
       render(
-        <MemoryRouter>
+        <MemoryRouter initialEntries={['/dashboard']}>
           <App />
         </MemoryRouter>,
       );
@@ -345,7 +345,7 @@ describe('Accessibility Tests - WCAG 2.1', () => {
   describe('Language', () => {
     it('should have language attribute on html element', () => {
       render(
-        <MemoryRouter>
+        <MemoryRouter initialEntries={['/dashboard']}>
           <App />
         </MemoryRouter>,
       );
@@ -363,7 +363,7 @@ describe('Accessibility Tests - WCAG 2.1', () => {
   describe('Skip Links', () => {
     it('should have skip to main content link', () => {
       render(
-        <MemoryRouter>
+        <MemoryRouter initialEntries={['/dashboard']}>
           <App />
         </MemoryRouter>,
       );
@@ -384,7 +384,7 @@ describe('Accessibility - Page Specific Tests', () => {
   describe('Dashboard Page', () => {
     it('should have accessible resume list', async () => {
       const { container } = render(
-        <MemoryRouter>
+        <MemoryRouter initialEntries={['/dashboard']}>
           <App />
         </MemoryRouter>,
       );
@@ -408,7 +408,7 @@ describe('Accessibility - Page Specific Tests', () => {
   describe('Editor Page', () => {
     it('should have accessible form inputs', async () => {
       const { container } = render(
-        <MemoryRouter>
+        <MemoryRouter initialEntries={['/editor']}>
           <App />
         </MemoryRouter>,
       );
@@ -432,7 +432,7 @@ describe('Accessibility - Page Specific Tests', () => {
   describe('Settings Page', () => {
     it('should have accessible settings controls', async () => {
       const { container } = render(
-        <MemoryRouter>
+        <MemoryRouter initialEntries={['/settings']}>
           <App />
         </MemoryRouter>,
       );

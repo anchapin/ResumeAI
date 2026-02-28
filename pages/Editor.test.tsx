@@ -5,6 +5,10 @@ import { MemoryRouter } from 'react-router-dom';
 import Editor from './Editor';
 import { SimpleResumeData } from '../types';
 
+const renderWithRouter = (component: React.ReactElement) => {
+  return render(<MemoryRouter initialEntries={['/editor']}>{component}</MemoryRouter>);
+};
+
 // Mock data for testing
 const mockResumeData: SimpleResumeData = {
   name: 'John Doe',
@@ -67,20 +71,14 @@ describe('Editor Component', () => {
 
   describe('Component Rendering', () => {
     it('renders without crashing', () => {
-      const { container } = render(
-        <MemoryRouter>
-          <Editor resumeData={mockResumeData} onUpdate={mockOnUpdate} />
-        </MemoryRouter>,
+      const { container } = renderWithRouter(
+        <Editor resumeData={mockResumeData} onUpdate={mockOnUpdate} />,
       );
       expect(container).toBeInTheDocument();
     });
 
     it('renders navigation items', () => {
-      render(
-        <MemoryRouter>
-          <Editor resumeData={mockResumeData} onUpdate={mockOnUpdate} />
-        </MemoryRouter>,
-      );
+      renderWithRouter(<Editor resumeData={mockResumeData} onUpdate={mockOnUpdate} />);
 
       expect(screen.getByText('Dashboard')).toBeInTheDocument();
       expect(screen.getByText('My Resumes')).toBeInTheDocument();
@@ -89,11 +87,7 @@ describe('Editor Component', () => {
     });
 
     it('renders tab items', () => {
-      render(
-        <MemoryRouter>
-          <Editor resumeData={mockResumeData} onUpdate={mockOnUpdate} />
-        </MemoryRouter>,
-      );
+      renderWithRouter(<Editor resumeData={mockResumeData} onUpdate={mockOnUpdate} />);
 
       expect(screen.getByText('Contact Info')).toBeInTheDocument();
       expect(screen.getByText('Summary')).toBeInTheDocument();
@@ -104,11 +98,7 @@ describe('Editor Component', () => {
     });
 
     it('renders user avatar in header', () => {
-      render(
-        <MemoryRouter>
-          <Editor resumeData={mockResumeData} onUpdate={mockOnUpdate} />
-        </MemoryRouter>,
-      );
+      renderWithRouter(<Editor resumeData={mockResumeData} onUpdate={mockOnUpdate} />);
       const avatar = screen.getByAltText('Profile');
       expect(avatar).toBeInTheDocument();
     });
@@ -116,38 +106,28 @@ describe('Editor Component', () => {
 
   describe('Save Status Indicator', () => {
     it('renders with default idle status', () => {
-      render(
-        <MemoryRouter>
-          <Editor resumeData={mockResumeData} onUpdate={mockOnUpdate} />
-        </MemoryRouter>,
-      );
+      renderWithRouter(<Editor resumeData={mockResumeData} onUpdate={mockOnUpdate} />);
       // Component should render without errors
       expect(screen.getByText('Contact Info')).toBeInTheDocument();
     });
 
     it('renders with saving status', () => {
-      render(
-        <MemoryRouter>
-          <Editor resumeData={mockResumeData} onUpdate={mockOnUpdate} saveStatus="saving" />
-        </MemoryRouter>,
+      renderWithRouter(
+        <Editor resumeData={mockResumeData} onUpdate={mockOnUpdate} saveStatus="saving" />,
       );
       expect(screen.getByText('Contact Info')).toBeInTheDocument();
     });
 
     it('renders with saved status', () => {
-      render(
-        <MemoryRouter>
-          <Editor resumeData={mockResumeData} onUpdate={mockOnUpdate} saveStatus="saved" />
-        </MemoryRouter>,
+      renderWithRouter(
+        <Editor resumeData={mockResumeData} onUpdate={mockOnUpdate} saveStatus="saved" />,
       );
       expect(screen.getByText('Contact Info')).toBeInTheDocument();
     });
 
     it('renders with error status', () => {
-      render(
-        <MemoryRouter>
-          <Editor resumeData={mockResumeData} onUpdate={mockOnUpdate} saveStatus="error" />
-        </MemoryRouter>,
+      renderWithRouter(
+        <Editor resumeData={mockResumeData} onUpdate={mockOnUpdate} saveStatus="error" />,
       );
       expect(screen.getByText('Contact Info')).toBeInTheDocument();
     });
@@ -155,11 +135,7 @@ describe('Editor Component', () => {
 
   describe('Resume Data Display', () => {
     it('renders experience section with data', () => {
-      render(
-        <MemoryRouter>
-          <Editor resumeData={mockResumeData} onUpdate={mockOnUpdate} />
-        </MemoryRouter>,
-      );
+      renderWithRouter(<Editor resumeData={mockResumeData} onUpdate={mockOnUpdate} />);
 
       // Click on Experience tab
       const experienceTab = screen.getByText('Experience');
@@ -167,11 +143,7 @@ describe('Editor Component', () => {
     });
 
     it('renders skills from resume data', () => {
-      render(
-        <MemoryRouter>
-          <Editor resumeData={mockResumeData} onUpdate={mockOnUpdate} />
-        </MemoryRouter>,
-      );
+      renderWithRouter(<Editor resumeData={mockResumeData} onUpdate={mockOnUpdate} />);
 
       // Skills should be displayed somewhere
       const skills = mockResumeData.skills;
@@ -179,22 +151,14 @@ describe('Editor Component', () => {
     });
 
     it('renders education entries', () => {
-      render(
-        <MemoryRouter>
-          <Editor resumeData={mockResumeData} onUpdate={mockOnUpdate} />
-        </MemoryRouter>,
-      );
+      renderWithRouter(<Editor resumeData={mockResumeData} onUpdate={mockOnUpdate} />);
 
       // Education data exists
       expect(mockResumeData.education.length).toBeGreaterThan(0);
     });
 
     it('renders projects', () => {
-      render(
-        <MemoryRouter>
-          <Editor resumeData={mockResumeData} onUpdate={mockOnUpdate} />
-        </MemoryRouter>,
-      );
+      renderWithRouter(<Editor resumeData={mockResumeData} onUpdate={mockOnUpdate} />);
 
       // Projects data exists
       expect(mockResumeData.projects.length).toBeGreaterThan(0);
@@ -203,33 +167,21 @@ describe('Editor Component', () => {
 
   describe('Layout and Styling', () => {
     it('main container has correct structure', () => {
-      render(
-        <MemoryRouter>
-          <Editor resumeData={mockResumeData} onUpdate={mockOnUpdate} />
-        </MemoryRouter>,
-      );
+      renderWithRouter(<Editor resumeData={mockResumeData} onUpdate={mockOnUpdate} />);
 
       const container = document.querySelector('main');
       expect(container).toHaveClass('flex-1');
     });
 
     it('has header section', () => {
-      render(
-        <MemoryRouter>
-          <Editor resumeData={mockResumeData} onUpdate={mockOnUpdate} />
-        </MemoryRouter>,
-      );
+      renderWithRouter(<Editor resumeData={mockResumeData} onUpdate={mockOnUpdate} />);
 
       const header = document.querySelector('header');
       expect(header).toBeInTheDocument();
     });
 
     it('navigation uses flexbox layout', () => {
-      render(
-        <MemoryRouter>
-          <Editor resumeData={mockResumeData} onUpdate={mockOnUpdate} />
-        </MemoryRouter>,
-      );
+      renderWithRouter(<Editor resumeData={mockResumeData} onUpdate={mockOnUpdate} />);
 
       const nav = document.querySelector('nav');
       expect(nav).toHaveClass('flex', 'gap-6');
@@ -238,11 +190,7 @@ describe('Editor Component', () => {
 
   describe('Interaction', () => {
     it('calls onBack when back button is clicked', () => {
-      render(
-        <MemoryRouter>
-          <Editor resumeData={mockResumeData} onUpdate={mockOnUpdate} />
-        </MemoryRouter>,
-      );
+      renderWithRouter(<Editor resumeData={mockResumeData} onUpdate={mockOnUpdate} />);
 
       // Find back button - the exact selector depends on implementation
       // Navigation is now handled by React Router
@@ -253,11 +201,7 @@ describe('Editor Component', () => {
 
   describe('Accessibility', () => {
     it('navigation items are present', () => {
-      render(
-        <MemoryRouter>
-          <Editor resumeData={mockResumeData} onUpdate={mockOnUpdate} />
-        </MemoryRouter>,
-      );
+      renderWithRouter(<Editor resumeData={mockResumeData} onUpdate={mockOnUpdate} />);
 
       // Navigation items should be accessible
       const dashboard = screen.getByText('Dashboard');
@@ -265,11 +209,7 @@ describe('Editor Component', () => {
     });
 
     it('tab items are present', () => {
-      render(
-        <MemoryRouter>
-          <Editor resumeData={mockResumeData} onUpdate={mockOnUpdate} />
-        </MemoryRouter>,
-      );
+      renderWithRouter(<Editor resumeData={mockResumeData} onUpdate={mockOnUpdate} />);
 
       // Tab items should be accessible
       const contactInfo = screen.getByText('Contact Info');
@@ -280,11 +220,7 @@ describe('Editor Component', () => {
   describe('Props Validation', () => {
     it('accepts valid resume data', () => {
       expect(() => {
-        render(
-          <MemoryRouter>
-            <Editor resumeData={mockResumeData} onUpdate={mockOnUpdate} />
-          </MemoryRouter>,
-        );
+        renderWithRouter(<Editor resumeData={mockResumeData} onUpdate={mockOnUpdate} />);
       }).not.toThrow();
     });
 
@@ -295,11 +231,7 @@ describe('Editor Component', () => {
       };
 
       expect(() => {
-        render(
-          <MemoryRouter>
-            <Editor resumeData={emptyData} onUpdate={mockOnUpdate} />
-          </MemoryRouter>,
-        );
+        renderWithRouter(<Editor resumeData={emptyData} onUpdate={mockOnUpdate} />);
       }).not.toThrow();
     });
 
@@ -310,11 +242,7 @@ describe('Editor Component', () => {
       };
 
       expect(() => {
-        render(
-          <MemoryRouter>
-            <Editor resumeData={emptySkillsData} onUpdate={mockOnUpdate} />
-          </MemoryRouter>,
-        );
+        renderWithRouter(<Editor resumeData={emptySkillsData} onUpdate={mockOnUpdate} />);
       }).not.toThrow();
     });
 
@@ -333,11 +261,7 @@ describe('Editor Component', () => {
       };
 
       expect(() => {
-        render(
-          <MemoryRouter>
-            <Editor resumeData={minimalData} onUpdate={mockOnUpdate} />
-          </MemoryRouter>,
-        );
+        renderWithRouter(<Editor resumeData={minimalData} onUpdate={mockOnUpdate} />);
       }).not.toThrow();
     });
   });

@@ -35,17 +35,17 @@ const generateLargeResumeData = (count: number): SimpleResumeData => {
 const TestWrapper = ({ count }: { count: number }) => {
   const [resumeData, setResumeData] = useState(generateLargeResumeData(count));
 
-  return (
-    <MemoryRouter>
-      <Editor resumeData={resumeData} onUpdate={setResumeData} />
-    </MemoryRouter>
-  );
+  return <Editor resumeData={resumeData} onUpdate={setResumeData} />;
 };
 
 describe('Editor Performance', () => {
   it('measures input update performance with many items', async () => {
     const ITEM_COUNT = 1000;
-    const { container } = render(<TestWrapper count={ITEM_COUNT} />);
+    const { container } = render(
+      <MemoryRouter initialEntries={['/editor']}>
+        <TestWrapper count={ITEM_COUNT} />
+      </MemoryRouter>,
+    );
 
     // The first item is expanded by default.
     // Find the input for the first item's company.
