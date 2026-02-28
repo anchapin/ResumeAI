@@ -11,7 +11,6 @@ All endpoints require JWT authentication and are user-specific.
 """
 
 import secrets
-import hashlib
 from datetime import datetime, timezone, timedelta
 from typing import List, Optional, Annotated
 
@@ -23,6 +22,7 @@ from sqlalchemy import select
 from database import get_async_session, APIKey
 from config.dependencies import CurrentUser
 from monitoring import logging_config
+from lib.security.key_management import hash_api_key
 
 # Get logger
 logger = logging_config.get_logger(__name__)
@@ -109,11 +109,6 @@ class APIKeyUpdateRequest(BaseModel):
     is_active: Optional[bool] = None
 
 
-def _hash_api_key(api_key: str) -> str:
-    """Hash an API key for storage."""
-    return hashlib.sha256(api_key.encode()).hexdigest()
-
-
 def _generate_api_key() -> str:
     """Generate a new API key with prefix."""
     return f"rai_{secrets.token_urlsafe(32)}"
@@ -159,7 +154,7 @@ async def create_api_key(
     """
     # Generate new API key
     api_key = _generate_api_key()
-    key_hash = _hash_api_key(api_key)
+    key_hash = hash_api_key(api_key)
     key_prefix = _get_key_prefix(api_key)
 
     # Calculate expiration date if specified
@@ -488,7 +483,7 @@ async def verify_api_key(
 
     Returns key information if valid.
     """
-    key_hash = _hash_api_key(api_key)
+    key_hash = hash_api_key(api_key)
 
     result = await db.execute(
         select(APIKey).where(

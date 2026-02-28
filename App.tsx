@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, lazy, Suspense } from 'react';
+import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
 import Dashboard from './pages/Dashboard';
 
@@ -14,7 +15,8 @@ const SalaryResearch = lazy(() =>
 const InterviewPractice = lazy(() => import('./pages/InterviewPractice'));
 const Login = lazy(() => import('./pages/Login'));
 const Register = lazy(() => import('./pages/Register'));
-import { Route, SimpleResumeData } from './types';
+const NotFound = lazy(() => import('./pages/NotFound'));
+import { Route as RouteEnum, SimpleResumeData } from './types';
 import { loadResumeData, saveResumeData, StorageError } from './utils/storage';
 import ErrorBoundary from './components/ErrorBoundary';
 import ErrorDisplay from './components/ErrorDisplay';
@@ -118,7 +120,8 @@ const initialResumeData: SimpleResumeData = {
 export type SaveStatus = 'idle' | 'saving' | 'saved' | 'error';
 
 function App() {
-  const [currentRoute, setCurrentRoute] = useState<Route>(Route.DASHBOARD);
+  const navigate = useNavigate();
+  const location = useLocation();
   const [resumeData, setResumeData] = useState<SimpleResumeData>(initialResumeData);
   const [isLoaded, setIsLoaded] = useState(false);
   const [storageError, setStorageError] = useState<string | null>(null);
@@ -282,7 +285,7 @@ function App() {
     clearAuthError();
     const result = await login(email, password);
     if (result) {
-      setCurrentRoute(Route.DASHBOARD);
+      navigate('/dashboard');
     }
     return result;
   };
@@ -299,140 +302,34 @@ function App() {
 
   const handleLogout = async () => {
     await logout();
-    setCurrentRoute(Route.LOGIN);
+    navigate('/login');
   };
 
-  const renderContent = () => {
-    // Show auth pages when not authenticated
-    if (currentRoute === Route.LOGIN || currentRoute === Route.REGISTER) {
-      if (currentRoute === Route.LOGIN) {
-        return (
-          <Suspense fallback={<PageLoader />}>
-            <Login
-              onLogin={handleLogin}
-              onNavigate={setCurrentRoute}
-              error={authError}
-              isLoading={authLoading}
-            />
-          </Suspense>
-        );
-      }
-      return (
-        <Suspense fallback={<PageLoader />}>
-          <Register
-            onRegister={handleRegister}
-            onNavigate={setCurrentRoute}
-            error={authError}
-            isLoading={authLoading}
-          />
-        </Suspense>
-      );
-    }
-
-    switch (currentRoute) {
-      case Route.DASHBOARD:
-        return (
-          <div className="flex min-h-screen bg-[#f6f6f8]">
-            <Sidebar
-              currentRoute={currentRoute}
-              onNavigate={setCurrentRoute}
-              onShowShortcuts={() => setShowShortcuts(true)}
-              isAuthenticated={isAuthenticated}
-              username={user?.username}
-              onLogout={handleLogout}
-            />
-            <Dashboard />
-          </div>
-        );
-      case Route.APPLICATIONS:
-        return (
-          <Suspense fallback={<PageLoader />}>
-            <div className="flex min-h-screen bg-[#f6f6f8]">
-              <Sidebar
-                currentRoute={currentRoute}
-                onNavigate={setCurrentRoute}
-                onShowShortcuts={() => setShowShortcuts(true)}
-                isAuthenticated={isAuthenticated}
-                username={user?.username}
-                onLogout={handleLogout}
-              />
-              <JobApplications />
-            </div>
-          </Suspense>
-        );
-      case Route.EDITOR:
-        return (
-          <Suspense fallback={<PageLoader />}>
-            <Editor
-              resumeData={resumeData}
-              onUpdate={handleUpdateResumeData}
-              onBack={() => setCurrentRoute(Route.DASHBOARD)}
-              saveStatus={saveStatus}
-            />
-          </Suspense>
-        );
-      case Route.WORKSPACE:
-        return (
-          <Suspense fallback={<PageLoader />}>
-            <Workspace resumeData={resumeData} onNavigate={setCurrentRoute} />
-          </Suspense>
-        );
-      case Route.SALARY_RESEARCH:
-        return (
-          <Suspense fallback={<PageLoader />}>
-            <div className="flex min-h-screen bg-[#f6f6f8]">
-              <Sidebar
-                currentRoute={currentRoute}
-                onNavigate={setCurrentRoute}
-                onShowShortcuts={() => setShowShortcuts(true)}
-                isAuthenticated={isAuthenticated}
-                username={user?.username}
-                onLogout={handleLogout}
-              />
-              <SalaryResearch />
-            </div>
-          </Suspense>
-        );
-      case Route.INTERVIEW_PRACTICE:
-        return (
-          <Suspense fallback={<PageLoader />}>
-            <InterviewPractice />
-          </Suspense>
-        );
-      case Route.SETTINGS:
-        return (
-          <Suspense fallback={<PageLoader />}>
-            <div className="flex min-h-screen bg-[#f6f6f8]">
-              <Sidebar
-                currentRoute={currentRoute}
-                onNavigate={setCurrentRoute}
-                onShowShortcuts={() => setShowShortcuts(true)}
-                isAuthenticated={isAuthenticated}
-                username={user?.username}
-                onLogout={handleLogout}
-              />
-              <Settings />
-            </div>
-          </Suspense>
-        );
-      case Route.BULK:
-        return (
-          <Suspense fallback={<PageLoader />}>
-            <div className="flex min-h-screen bg-[#f6f6f8]">
-              <Sidebar
-                currentRoute={currentRoute}
-                onNavigate={setCurrentRoute}
-                onShowShortcuts={() => setShowShortcuts(true)}
-                isAuthenticated={isAuthenticated}
-                username={user?.username}
-                onLogout={handleLogout}
-              />
-              <ResumeManagement />
-            </div>
-          </Suspense>
-        );
+  const getCurrentRouteFromPath = (): RouteEnum => {
+    const path = location.pathname;
+    switch (path) {
+      case '/dashboard':
+        return RouteEnum.DASHBOARD;
+      case '/applications':
+        return RouteEnum.APPLICATIONS;
+      case '/editor':
+        return RouteEnum.EDITOR;
+      case '/workspace':
+        return RouteEnum.WORKSPACE;
+      case '/salary-research':
+        return RouteEnum.SALARY_RESEARCH;
+      case '/interview-practice':
+        return RouteEnum.INTERVIEW_PRACTICE;
+      case '/settings':
+        return RouteEnum.SETTINGS;
+      case '/bulk':
+        return RouteEnum.BULK;
+      case '/login':
+        return RouteEnum.LOGIN;
+      case '/register':
+        return RouteEnum.REGISTER;
       default:
-        return <Dashboard />;
+        return RouteEnum.DASHBOARD;
     }
   };
 
@@ -463,7 +360,176 @@ function App() {
           </div>
         </div>
       ) : (
-        renderContent()
+        <Routes>
+          <Route
+            path="/login"
+            element={
+              <Suspense fallback={<PageLoader />}>
+                <Login onLogin={handleLogin} error={authError} isLoading={authLoading} />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/register"
+            element={
+              <Suspense fallback={<PageLoader />}>
+                <Register onRegister={handleRegister} error={authError} isLoading={authLoading} />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/dashboard"
+            element={
+              isAuthenticated ? (
+                <div className="flex min-h-screen bg-[#f6f6f8]">
+                  <Sidebar
+                    currentRoute={getCurrentRouteFromPath()}
+                    onShowShortcuts={() => setShowShortcuts(true)}
+                    isAuthenticated={isAuthenticated}
+                    username={user?.username}
+                    onLogout={handleLogout}
+                  />
+                  <Dashboard />
+                </div>
+              ) : (
+                <Navigate to="/login" replace />
+              )
+            }
+          />
+          <Route
+            path="/applications"
+            element={
+              isAuthenticated ? (
+                <Suspense fallback={<PageLoader />}>
+                  <div className="flex min-h-screen bg-[#f6f6f8]">
+                    <Sidebar
+                      currentRoute={getCurrentRouteFromPath()}
+                      onShowShortcuts={() => setShowShortcuts(true)}
+                      isAuthenticated={isAuthenticated}
+                      username={user?.username}
+                      onLogout={handleLogout}
+                    />
+                    <JobApplications />
+                  </div>
+                </Suspense>
+              ) : (
+                <Navigate to="/login" replace />
+              )
+            }
+          />
+          <Route
+            path="/editor"
+            element={
+              isAuthenticated ? (
+                <Suspense fallback={<PageLoader />}>
+                  <Editor
+                    resumeData={resumeData}
+                    onUpdate={handleUpdateResumeData}
+                    saveStatus={saveStatus}
+                  />
+                </Suspense>
+              ) : (
+                <Navigate to="/login" replace />
+              )
+            }
+          />
+          <Route
+            path="/workspace"
+            element={
+              isAuthenticated ? (
+                <Suspense fallback={<PageLoader />}>
+                  <Workspace resumeData={resumeData} />
+                </Suspense>
+              ) : (
+                <Navigate to="/login" replace />
+              )
+            }
+          />
+          <Route
+            path="/salary-research"
+            element={
+              isAuthenticated ? (
+                <Suspense fallback={<PageLoader />}>
+                  <div className="flex min-h-screen bg-[#f6f6f8]">
+                    <Sidebar
+                      currentRoute={getCurrentRouteFromPath()}
+                      onShowShortcuts={() => setShowShortcuts(true)}
+                      isAuthenticated={isAuthenticated}
+                      username={user?.username}
+                      onLogout={handleLogout}
+                    />
+                    <SalaryResearch />
+                  </div>
+                </Suspense>
+              ) : (
+                <Navigate to="/login" replace />
+              )
+            }
+          />
+          <Route
+            path="/interview-practice"
+            element={
+              isAuthenticated ? (
+                <Suspense fallback={<PageLoader />}>
+                  <InterviewPractice />
+                </Suspense>
+              ) : (
+                <Navigate to="/login" replace />
+              )
+            }
+          />
+          <Route
+            path="/settings"
+            element={
+              isAuthenticated ? (
+                <Suspense fallback={<PageLoader />}>
+                  <div className="flex min-h-screen bg-[#f6f6f8]">
+                    <Sidebar
+                      currentRoute={getCurrentRouteFromPath()}
+                      onShowShortcuts={() => setShowShortcuts(true)}
+                      isAuthenticated={isAuthenticated}
+                      username={user?.username}
+                      onLogout={handleLogout}
+                    />
+                    <Settings />
+                  </div>
+                </Suspense>
+              ) : (
+                <Navigate to="/login" replace />
+              )
+            }
+          />
+          <Route
+            path="/bulk"
+            element={
+              isAuthenticated ? (
+                <Suspense fallback={<PageLoader />}>
+                  <div className="flex min-h-screen bg-[#f6f6f8]">
+                    <Sidebar
+                      currentRoute={getCurrentRouteFromPath()}
+                      onShowShortcuts={() => setShowShortcuts(true)}
+                      isAuthenticated={isAuthenticated}
+                      username={user?.username}
+                      onLogout={handleLogout}
+                    />
+                    <ResumeManagement />
+                  </div>
+                </Suspense>
+              ) : (
+                <Navigate to="/login" replace />
+              )
+            }
+          />
+          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          <Route
+            path="*"
+            element={
+              <Suspense fallback={<PageLoader />}>
+                <NotFound />
+              </Suspense>
+            }
+          />
+        </Routes>
       )}
       <ToastContainer
         position="top-right"

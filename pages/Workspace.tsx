@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
-import { Route, SimpleResumeData, ResumeMetadata } from '../types';
+import { SimpleResumeData, ResumeMetadata } from '../types';
 import { useGeneratePackage, convertToResumeData } from '../hooks/useGeneratePackage';
 import { useVariants } from '../hooks/useVariants';
 import { showErrorToast, showSuccessToast } from '../utils/toast';
@@ -10,14 +11,11 @@ import { getResume, listResumeVersions, listComments } from '../utils/api-client
  * @interface WorkspaceProps
  * @description Props for Workspace component
  * @property {SimpleResumeData} resumeData - The resume data to use in workspace
- * @property {Function} onNavigate - Callback function to handle navigation
  * @property {number} resumeId - Optional resume ID for fetching metadata (versions, comments)
  */
 interface WorkspaceProps {
   /** The resume data to use in workspace */
   resumeData: SimpleResumeData;
-  /** Callback function to handle navigation */
-  onNavigate: (route: Route) => void;
   /** Optional resume ID for fetching metadata (versions, comments) */
   resumeId?: number;
 }
@@ -33,7 +31,6 @@ const TABS: TabType[] = ['Resume', 'Cover Letter', 'Keywords', 'Suggestions', 'A
  * @description Workspace page component for tailoring resumes to job descriptions
  * @param {WorkspaceProps} props - Component properties
  * @param {SimpleResumeData} props.resumeData - The resume data to use in workspace
- * @param {Function} props.onNavigate - Callback function to handle navigation
  * @param {number} props.resumeId - Optional resume ID for fetching metadata
  * @returns {JSX.Element} The rendered workspace page component
  *
@@ -41,16 +38,12 @@ const TABS: TabType[] = ['Resume', 'Cover Letter', 'Keywords', 'Suggestions', 'A
  * ```tsx
  * <Workspace
  *   resumeData={sampleResumeData}
- *   onNavigate={(route) => console.log(`Navigating to ${route}`)}
  *   resumeId={1}
  * />
  * ```
  */
-const Workspace: React.FC<WorkspaceProps> = ({
-  resumeData,
-  onNavigate,
-  resumeId: propResumeId,
-}) => {
+const Workspace: React.FC<WorkspaceProps> = ({ resumeData, resumeId: propResumeId }) => {
+  const navigate = useNavigate();
   const {
     generatePackage,
     generateCoverLetterRequest,
@@ -508,7 +501,7 @@ const Workspace: React.FC<WorkspaceProps> = ({
       <header className="flex-none h-16 bg-white border-b border-slate-200 px-6 flex items-center justify-between z-20">
         <div className="flex items-center gap-4">
           <button
-            onClick={() => onNavigate(Route.DASHBOARD)}
+            onClick={() => navigate('/dashboard')}
             className="text-primary-600 hover:bg-primary-50 p-2 rounded-lg transition-colors"
           >
             <span className="material-symbols-outlined">arrow_back</span>

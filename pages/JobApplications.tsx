@@ -506,7 +506,7 @@ const JobApplications: React.FC = () => {
                     <td className="px-6 py-5 text-right">
                       <button
                         type="button"
-                        className="text-slate-400 hover:text-primary-600 transition-colors"
+                        className="p-2 rounded-lg text-slate-400 hover:bg-slate-100 hover:text-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 transition-colors"
                         aria-label="More options"
                         title="More options"
                       >
