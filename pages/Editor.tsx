@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { SimpleResumeData, WorkExperience, EducationEntry, ProjectEntry } from '../types';
 import {
   convertToAPIData,
@@ -23,7 +24,6 @@ import { showSuccessToast, showErrorToast } from '../utils/toast';
  * @description Props for the Editor component
  * @property {SimpleResumeData} resumeData - The resume data to edit
  * @property {Function} onUpdate - Callback to update resume data
- * @property {Function} onBack - Callback to navigate back
  * @property {string} saveStatus - Current save status: 'idle', 'saving', 'saved', or 'error'
  */
 interface EditorProps {
@@ -31,8 +31,6 @@ interface EditorProps {
   resumeData: SimpleResumeData;
   /** Callback to update resume data */
   onUpdate: (data: SimpleResumeData) => void;
-  /** Callback to navigate back */
-  onBack: () => void;
   /** Current save status for auto-save indicator */
   saveStatus?: 'idle' | 'saving' | 'saved' | 'error';
 }
@@ -71,7 +69,6 @@ function getTimeSince(date: Date): string {
  * @param {EditorProps} props - Component properties
  * @param {SimpleResumeData} props.resumeData - The resume data to edit
  * @param {Function} props.onUpdate - Callback to update resume data
- * @param {Function} props.onBack - Callback to navigate back
  * @returns {JSX.Element} The rendered editor page component
  *
  * @example
@@ -79,11 +76,11 @@ function getTimeSince(date: Date): string {
  * <Editor
  *   resumeData={sampleResumeData}
  *   onUpdate={(data) => console.log('Updated:', data)}
- *   onBack={() => console.log('Going back')}
  * />
  * ```
  */
-const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, onBack, saveStatus = 'idle' }) => {
+const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, saveStatus = 'idle' }) => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<string>('Experience');
 
   // PDF generation state
@@ -187,7 +184,7 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, onBack, saveStatu
   const handleRestoreVersion = useCallback(
     async (version: any) => {
       try {
-        onUpdateRef.current({
+        trackedUpdate({
           ...resumeData,
           ...version.data,
         });
@@ -216,28 +213,31 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, onBack, saveStatu
   }, [resumeData]);
 
   // Handle LinkedIn Import
-  const handleLinkedInImport = useCallback((importedData: Partial<SimpleResumeData>) => {
-    const currentData = resumeDataRef.current;
+  const handleLinkedInImport = useCallback(
+    (importedData: Partial<SimpleResumeData>) => {
+      const currentData = resumeDataRef.current;
 
-    // Merge imported data with existing data (imported data takes precedence)
-    const mergedData: SimpleResumeData = {
-      ...currentData,
-      name: importedData.name || currentData.name,
-      email: importedData.email || currentData.email,
-      phone: importedData.phone || currentData.phone,
-      location: importedData.location || currentData.location,
-      role: importedData.role || currentData.role,
-      summary: importedData.summary || currentData.summary,
-      skills: importedData.skills?.length ? importedData.skills : currentData.skills,
-      experience: importedData.experience?.length
-        ? importedData.experience
-        : currentData.experience,
-      education: importedData.education?.length ? importedData.education : currentData.education,
-      projects: importedData.projects?.length ? importedData.projects : currentData.projects,
-    };
+      // Merge imported data with existing data (imported data takes precedence)
+      const mergedData: SimpleResumeData = {
+        ...currentData,
+        name: importedData.name || currentData.name,
+        email: importedData.email || currentData.email,
+        phone: importedData.phone || currentData.phone,
+        location: importedData.location || currentData.location,
+        role: importedData.role || currentData.role,
+        summary: importedData.summary || currentData.summary,
+        skills: importedData.skills?.length ? importedData.skills : currentData.skills,
+        experience: importedData.experience?.length
+          ? importedData.experience
+          : currentData.experience,
+        education: importedData.education?.length ? importedData.education : currentData.education,
+        projects: importedData.projects?.length ? importedData.projects : currentData.projects,
+      };
 
-    onUpdateRef.current(mergedData);
-  }, []);
+      trackedUpdate(mergedData);
+    },
+    [onUpdate],
+  );
 
   // Experience state
   const experiences = resumeData.experience;
@@ -268,16 +268,86 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, onBack, saveStatu
     return () => clearTimeout(timer);
   }, [resumeData]);
 
-  // Use refs to hold the latest resumeData and onUpdate so that callbacks can be stable
+  // Use a ref to hold the latest resumeData so that callbacks can be stable
   const resumeDataRef = useRef(resumeData);
   useEffect(() => {
     resumeDataRef.current = resumeData;
   }, [resumeData]);
 
-  const onUpdateRef = useRef(onUpdate);
+  // Undo/Redo functionality
+  const MAX_HISTORY = 50;
+  const [history, setHistory] = useState<SimpleResumeData[]>([]);
+  const [historyIndex, setHistoryIndex] = useState(-1);
+  const historyRef = useRef<{ history: SimpleResumeData[]; index: number }>({
+    history: [],
+    index: -1,
+  });
+
+  // Track history in ref for stable callbacks
   useEffect(() => {
-    onUpdateRef.current = onUpdate;
+    historyRef.current = { history, index: historyIndex };
+  }, [history, historyIndex]);
+
+  // Add state to history
+  const addToHistory = useCallback((newState: SimpleResumeData) => {
+    setHistory((prev) => {
+      const newIndex = historyRef.current.index + 1;
+      // Remove any redo states
+      const trimmed = prev.slice(0, newIndex);
+      // Add new state
+      const updated = [...trimmed, newState];
+      // Keep only last MAX_HISTORY states
+      const final = updated.slice(-MAX_HISTORY);
+      return final;
+    });
+    setHistoryIndex((prev) => Math.min(prev + 1, MAX_HISTORY - 1));
   }, []);
+
+  const canUndo = historyIndex > 0;
+  const canRedo = historyIndex < history.length - 1;
+
+  const undo = useCallback(() => {
+    if (!canUndo) return;
+    const newIndex = historyIndex - 1;
+    setHistoryIndex(newIndex);
+    trackedUpdate(history[newIndex]);
+  }, [history, historyIndex, onUpdate, canUndo]);
+
+  const redo = useCallback(() => {
+    if (!canRedo) return;
+    const newIndex = historyIndex + 1;
+    setHistoryIndex(newIndex);
+    trackedUpdate(history[newIndex]);
+  }, [history, historyIndex, onUpdate, canRedo]);
+
+  // Wrap onUpdate to track history
+  const trackedUpdate = useCallback(
+    (newData: SimpleResumeData) => {
+      const currentData = resumeDataRef.current;
+      // Only add to history if data actually changed
+      if (JSON.stringify(currentData) !== JSON.stringify(newData)) {
+        addToHistory(newData);
+      }
+      onUpdate(newData);
+    },
+    [onUpdate, addToHistory],
+  );
+
+  // Keyboard shortcuts for undo/redo
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
+        e.preventDefault();
+        undo();
+      } else if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.shiftKey && e.key === 'z'))) {
+        e.preventDefault();
+        redo();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [undo, redo]);
 
   // Load unresolved comment count
   useEffect(() => {
@@ -294,83 +364,109 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, onBack, saveStatu
   }, [currentResumeId]);
 
   // Contact Info handlers
-  const updateContact = useCallback((field: keyof SimpleResumeData, value: string) => {
-    const currentData = resumeDataRef.current;
-    onUpdateRef.current({ ...currentData, [field]: value });
-  }, []);
+  const updateContact = useCallback(
+    (field: keyof SimpleResumeData, value: string) => {
+      const currentData = resumeDataRef.current;
+      trackedUpdate({ ...currentData, [field]: value });
+    },
+    [onUpdate],
+  );
 
   // Summary handlers
-  const updateSummary = useCallback((summary: string) => {
-    const currentData = resumeDataRef.current;
-    onUpdateRef.current({ ...currentData, summary });
-  }, []);
+  const updateSummary = useCallback(
+    (summary: string) => {
+      const currentData = resumeDataRef.current;
+      trackedUpdate({ ...currentData, summary });
+    },
+    [onUpdate],
+  );
 
   // Skills handlers
-  const addSkill = useCallback((skill: string) => {
-    if (!skill.trim()) return;
-    const prev = resumeDataRef.current;
-    if (!prev.skills.includes(skill.trim())) {
-      onUpdateRef.current({ ...prev, skills: [...prev.skills, skill.trim()] });
-    }
-  }, []);
+  const addSkill = useCallback(
+    (skill: string) => {
+      if (!skill.trim()) return;
+      const prev = resumeDataRef.current;
+      if (!prev.skills.includes(skill.trim())) {
+        trackedUpdate({ ...prev, skills: [...prev.skills, skill.trim()] });
+      }
+    },
+    [onUpdate],
+  );
 
-  const removeSkill = useCallback((skill: string) => {
-    const prev = resumeDataRef.current;
-    onUpdateRef.current({
-      ...prev,
-      skills: prev.skills.filter((s) => s !== skill),
-    });
-  }, []);
+  const removeSkill = useCallback(
+    (skill: string) => {
+      const prev = resumeDataRef.current;
+      trackedUpdate({
+        ...prev,
+        skills: prev.skills.filter((s) => s !== skill),
+      });
+    },
+    [onUpdate],
+  );
 
   // Experience handlers
-  const handleDeleteExperience = useCallback((id: string) => {
-    const prev = resumeDataRef.current;
-    onUpdateRef.current({
-      ...prev,
-      experience: prev.experience.filter((exp) => exp.id !== id),
-    });
-  }, []);
+  const handleDeleteExperience = useCallback(
+    (id: string) => {
+      const prev = resumeDataRef.current;
+      trackedUpdate({
+        ...prev,
+        experience: prev.experience.filter((exp) => exp.id !== id),
+      });
+    },
+    [onUpdate],
+  );
 
   const handleToggleExpandExperience = useCallback((id: string) => {
     setExpandedExpId((prev) => (prev === id ? null : id));
   }, []);
 
-  const updateExperience = useCallback((id: string, field: keyof WorkExperience, value: any) => {
-    const prev = resumeDataRef.current;
-    onUpdateRef.current({
-      ...prev,
-      experience: prev.experience.map((exp) => (exp.id === id ? { ...exp, [field]: value } : exp)),
-    });
-  }, []);
-
-  const addTagToExperience = useCallback((id: string, tag: string) => {
-    if (!tag.trim()) return;
-    const prev = resumeDataRef.current;
-    const exp = prev.experience.find((e) => e.id === id);
-    if (exp && !exp.tags.includes(tag.trim())) {
-      onUpdateRef.current({
+  const updateExperience = useCallback(
+    (id: string, field: keyof WorkExperience, value: any) => {
+      const prev = resumeDataRef.current;
+      trackedUpdate({
         ...prev,
-        experience: prev.experience.map((e) =>
-          e.id === id ? { ...e, tags: [...e.tags, tag.trim()] } : e,
+        experience: prev.experience.map((exp) =>
+          exp.id === id ? { ...exp, [field]: value } : exp,
         ),
       });
-    }
-  }, []);
+    },
+    [onUpdate],
+  );
 
-  const removeTagFromExperience = useCallback((id: string, tag: string) => {
-    const prev = resumeDataRef.current;
-    onUpdateRef.current({
-      ...prev,
-      experience: prev.experience.map((e) =>
-        e.id === id ? { ...e, tags: e.tags.filter((t) => t !== tag) } : e,
-      ),
-    });
-  }, []);
+  const addTagToExperience = useCallback(
+    (id: string, tag: string) => {
+      if (!tag.trim()) return;
+      const prev = resumeDataRef.current;
+      const exp = prev.experience.find((e) => e.id === id);
+      if (exp && !exp.tags.includes(tag.trim())) {
+        trackedUpdate({
+          ...prev,
+          experience: prev.experience.map((e) =>
+            e.id === id ? { ...e, tags: [...e.tags, tag.trim()] } : e,
+          ),
+        });
+      }
+    },
+    [onUpdate],
+  );
+
+  const removeTagFromExperience = useCallback(
+    (id: string, tag: string) => {
+      const prev = resumeDataRef.current;
+      trackedUpdate({
+        ...prev,
+        experience: prev.experience.map((e) =>
+          e.id === id ? { ...e, tags: e.tags.filter((t) => t !== tag) } : e,
+        ),
+      });
+    },
+    [onUpdate],
+  );
 
   const addExperience = useCallback(() => {
     const newId = Date.now().toString();
     const prev = resumeDataRef.current;
-    onUpdateRef.current({
+    trackedUpdate({
       ...prev,
       experience: [
         ...prev.experience,
@@ -387,7 +483,7 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, onBack, saveStatu
       ],
     });
     setExpandedExpId(newId);
-  }, []);
+  }, [onUpdate]);
 
   // Drag and drop handlers for reordering
   const handleDragStart = useCallback((id: string) => {
@@ -421,7 +517,7 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, onBack, saveStatu
       if (draggedIndex !== -1 && targetIndex !== -1) {
         const [draggedItem] = items.splice(draggedIndex, 1);
         items.splice(targetIndex, 0, draggedItem);
-        onUpdateRef.current({ ...currentData, experience: items });
+        trackedUpdate({ ...currentData, experience: items });
       }
 
       setDraggedItemId(null);
@@ -431,32 +527,38 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, onBack, saveStatu
   );
 
   // Education handlers
-  const handleDeleteEducation = useCallback((id: string) => {
-    const prev = resumeDataRef.current;
-    onUpdateRef.current({
-      ...prev,
-      education: (prev.education || []).filter((edu) => edu.id !== id),
-    });
-  }, []);
+  const handleDeleteEducation = useCallback(
+    (id: string) => {
+      const prev = resumeDataRef.current;
+      trackedUpdate({
+        ...prev,
+        education: (prev.education || []).filter((edu) => edu.id !== id),
+      });
+    },
+    [onUpdate],
+  );
 
   const handleToggleExpandEducation = useCallback((id: string) => {
     setExpandedEduId((prev) => (prev === id ? null : id));
   }, []);
 
-  const updateEducation = useCallback((id: string, field: keyof EducationEntry, value: any) => {
-    const prev = resumeDataRef.current;
-    onUpdateRef.current({
-      ...prev,
-      education: (prev.education || []).map((edu) =>
-        edu.id === id ? { ...edu, [field]: value } : edu,
-      ),
-    });
-  }, []);
+  const updateEducation = useCallback(
+    (id: string, field: keyof EducationEntry, value: any) => {
+      const prev = resumeDataRef.current;
+      trackedUpdate({
+        ...prev,
+        education: (prev.education || []).map((edu) =>
+          edu.id === id ? { ...edu, [field]: value } : edu,
+        ),
+      });
+    },
+    [onUpdate],
+  );
 
   const addEducation = useCallback(() => {
     const newId = Date.now().toString();
     const prev = resumeDataRef.current;
-    onUpdateRef.current({
+    trackedUpdate({
       ...prev,
       education: [
         ...(prev.education || []),
@@ -472,35 +574,41 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, onBack, saveStatu
       ],
     });
     setExpandedEduId(newId);
-  }, []);
+  }, [onUpdate]);
 
   // Projects handlers
-  const handleDeleteProject = useCallback((id: string) => {
-    const prev = resumeDataRef.current;
-    onUpdateRef.current({
-      ...prev,
-      projects: (prev.projects || []).filter((proj) => proj.id !== id),
-    });
-  }, []);
+  const handleDeleteProject = useCallback(
+    (id: string) => {
+      const prev = resumeDataRef.current;
+      trackedUpdate({
+        ...prev,
+        projects: (prev.projects || []).filter((proj) => proj.id !== id),
+      });
+    },
+    [onUpdate],
+  );
 
   const handleToggleExpandProject = useCallback((id: string) => {
     setExpandedProjId((prev) => (prev === id ? null : id));
   }, []);
 
-  const updateProject = useCallback((id: string, field: keyof ProjectEntry, value: any) => {
-    const prev = resumeDataRef.current;
-    onUpdateRef.current({
-      ...prev,
-      projects: (prev.projects || []).map((proj) =>
-        proj.id === id ? { ...proj, [field]: value } : proj,
-      ),
-    });
-  }, []);
+  const updateProject = useCallback(
+    (id: string, field: keyof ProjectEntry, value: any) => {
+      const prev = resumeDataRef.current;
+      trackedUpdate({
+        ...prev,
+        projects: (prev.projects || []).map((proj) =>
+          proj.id === id ? { ...proj, [field]: value } : proj,
+        ),
+      });
+    },
+    [onUpdate],
+  );
 
   const addProject = useCallback(() => {
     const newId = Date.now().toString();
     const prev = resumeDataRef.current;
-    onUpdateRef.current({
+    trackedUpdate({
       ...prev,
       projects: [
         ...(prev.projects || []),
@@ -517,7 +625,7 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, onBack, saveStatu
       ],
     });
     setExpandedProjId(newId);
-  }, []);
+  }, [onUpdate]);
 
   const renderContent = () => {
     switch (activeTab) {
@@ -876,7 +984,10 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, onBack, saveStatu
     <div className="min-h-screen bg-[#f6f6f8] flex flex-col">
       {/* Navbar */}
       <header className="flex items-center justify-between px-10 py-3 bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
-        <div className="flex items-center gap-4 cursor-pointer" onClick={onBack}>
+        <div
+          className="flex items-center gap-4 cursor-pointer"
+          onClick={() => navigate('/dashboard')}
+        >
           <div className="bg-primary-600 size-8 rounded-lg flex items-center justify-center text-white">
             <span className="material-symbols-outlined text-[18px]">description</span>
           </div>
@@ -887,7 +998,7 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, onBack, saveStatu
             {NAV_ITEMS.map((item) => (
               <button
                 key={item}
-                onClick={onBack}
+                onClick={() => navigate('/dashboard')}
                 className="text-sm font-semibold text-slate-500 hover:text-primary-600 transition-colors"
               >
                 {item}
@@ -955,6 +1066,26 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, onBack, saveStatu
               </p>
             </div>
             <div className="flex gap-3">
+              {/* Undo Button */}
+              <button
+                onClick={undo}
+                disabled={!canUndo}
+                className="flex items-center gap-2 px-4 h-10 rounded-lg border border-slate-300 bg-white text-slate-700 font-bold text-sm hover:bg-slate-50 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                title="Undo (Ctrl+Z)"
+              >
+                <span className="material-symbols-outlined text-lg">undo</span>
+                <span className="hidden sm:inline">Undo</span>
+              </button>
+              {/* Redo Button */}
+              <button
+                onClick={redo}
+                disabled={!canRedo}
+                className="flex items-center gap-2 px-4 h-10 rounded-lg border border-slate-300 bg-white text-slate-700 font-bold text-sm hover:bg-slate-50 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                title="Redo (Ctrl+Y or Ctrl+Shift+Z)"
+              >
+                <span className="material-symbols-outlined text-lg">redo</span>
+                <span className="hidden sm:inline">Redo</span>
+              </button>
               {/* Comments Button */}
               <button
                 onClick={() => setShowCommentPanel(true)}
@@ -1052,7 +1183,7 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, onBack, saveStatu
                 Save as Draft
               </button>
               <button
-                onClick={onBack}
+                onClick={() => navigate('/dashboard')}
                 className="px-6 py-2.5 rounded-lg bg-primary-600 text-white font-bold text-sm hover:bg-primary-700 shadow-md shadow-primary-600/20 transition-all"
               >
                 Save & Continue

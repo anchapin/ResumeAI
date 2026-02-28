@@ -53,7 +53,7 @@ const ActivityFeed: React.FC<ActivityFeedProps> = ({ activities, loading }) => {
   };
 
   const getActivityDescription = (activity: TeamActivity): string => {
-    const userName = activity.user_name || 'Someone';
+    const userName = activity.userName || 'Someone';
 
     switch (activity.type) {
       case 'team_created':
@@ -129,9 +129,9 @@ const ActivityFeed: React.FC<ActivityFeedProps> = ({ activities, loading }) => {
               {/* Activity content */}
               <div className="flex-1 pb-4">
                 <div className="flex items-center gap-2 mb-1">
-                  {activity.user_name && (
+                  {activity.userName && (
                     <div className="w-6 h-6 rounded-full bg-gradient-to-br from-slate-400 to-slate-600 flex items-center justify-center text-white text-xs font-bold">
-                      {getInitials(activity.user_name)}
+                      {getInitials(activity.userName)}
                     </div>
                   )}
                   <p className="text-sm font-medium text-slate-900">
@@ -143,9 +143,7 @@ const ActivityFeed: React.FC<ActivityFeedProps> = ({ activities, loading }) => {
                   <p className="text-sm text-slate-600 ml-8">{activity.description}</p>
                 )}
 
-                <p className="text-xs text-slate-400 ml-8 mt-1">
-                  {formatDate(activity.created_at)}
-                </p>
+                <p className="text-xs text-slate-400 ml-8 mt-1">{formatDate(activity.createdAt)}</p>
 
                 {/* Activity metadata */}
                 {activity.metadata && Object.keys(activity.metadata).length > 0 && (

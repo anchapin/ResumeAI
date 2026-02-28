@@ -56,7 +56,6 @@ export default [
       'react-hooks/set-state-in-effect': 'off',
       'prefer-const': 'warn',
       'no-prototype-builtins': 'warn',
-      'preserve-caught-error': 'off',
       'no-useless-assignment': 'warn',
     },
     settings: {

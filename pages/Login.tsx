@@ -1,14 +1,13 @@
 import React, { useState } from 'react';
-import { Route } from '../types';
+import { Link } from 'react-router-dom';
 
 interface LoginProps {
   onLogin: (email: string, password: string) => Promise<any>;
-  onNavigate: (route: Route) => void;
   error: string | null;
   isLoading: boolean;
 }
 
-const Login: React.FC<LoginProps> = ({ onLogin, onNavigate, error, isLoading }) => {
+const Login: React.FC<LoginProps> = ({ onLogin, error, isLoading }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [localError, setLocalError] = useState<string | null>(null);
@@ -104,13 +103,9 @@ const Login: React.FC<LoginProps> = ({ onLogin, onNavigate, error, isLoading }) 
           <div className="mt-6 text-center">
             <p className="text-sm text-slate-500">
               Don&apos;t have an account?{' '}
-              <button
-                type="button"
-                onClick={() => onNavigate(Route.REGISTER)}
-                className="text-primary-600 font-bold hover:text-primary-700"
-              >
+              <Link to="/register" className="text-primary-600 font-bold hover:text-primary-700">
                 Create one
-              </button>
+              </Link>
             </p>
           </div>
         </div>

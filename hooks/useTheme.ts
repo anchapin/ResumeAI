@@ -11,7 +11,9 @@ const THEME_STORAGE_KEY = 'resumeai_theme';
  */
 export function useTheme() {
   const [theme, setThemeState] = useState<Theme>(() => {
-    if (typeof window === 'undefined') return 'light';
+    if (typeof window === 'undefined') {
+      return 'light';
+    }
 
     // Check localStorage first
     const stored = localStorage.getItem(THEME_STORAGE_KEY) as Theme | null;
@@ -41,7 +43,9 @@ export function useTheme() {
 
   // Listen for system preference changes
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined') {
+      return;
+    }
 
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
     const handler = (e: MediaQueryListEvent) => {

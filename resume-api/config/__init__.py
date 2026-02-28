@@ -48,8 +48,8 @@ class Settings(BaseSettings):
     cors_origins: list[str] = ["*"]
 
     # JWT Configuration
-    # Securely generate JWT secret if not provided
-    jwt_secret: str = Field(default_factory=lambda: secrets.token_urlsafe(32))
+    # JWT secret must be provided via environment variable
+    jwt_secret: str = Field(default="")
     jwt_algorithm: str = "HS256"
     jwt_access_token_expire_minutes: int = 30
 
@@ -93,14 +93,17 @@ class Settings(BaseSettings):
 
     # GitHub Configuration
     github_client_id: Optional[str] = None  # GitHub OAuth App client ID
-    github_client_secret: Optional[str] = None  # GitHub OAuth App client secret
+    github_client_secret: Optional[str] = None  # GitHub OAuth App
+    # client secret
     github_redirect_uri: Optional[str] = None  # OAuth redirect URI
     github_callback_url: Optional[str] = None  # Callback URL for OAuth
     frontend_url: str = "http://localhost:5173"
 
     # LinkedIn OAuth Configuration
-    linkedin_client_id: Optional[str] = None  # LinkedIn OAuth App client ID
-    linkedin_client_secret: Optional[str] = None  # LinkedIn OAuth App client secret
+    linkedin_client_id: Optional[str] = None  # LinkedIn OAuth App
+    # client ID
+    linkedin_client_secret: Optional[str] = None  # LinkedIn OAuth App
+    # client secret
     linkedin_redirect_uri: Optional[str] = None  # LinkedIn OAuth redirect URI
 
     @field_validator("jwt_secret")
@@ -115,9 +118,11 @@ class Settings(BaseSettings):
             debug = info.data.get("debug", False)
             if not debug:
                 raise ValueError(
-                    "JWT_SECRET environment variable is required in production. "
+                    "JWT_SECRET environment variable is required in "
+                    "production. "
                     "Set it to a secure random value: "
-                    "python -c 'import secrets; print(secrets.token_urlsafe(32))'"
+                    "python -c 'import secrets; "
+                    "print(secrets.token_urlsafe(32))'"
                 )
             logger = logging.getLogger("config")
             logger.warning(
@@ -137,9 +142,11 @@ class Settings(BaseSettings):
 
         if v in insecure_defaults:
             raise ValueError(
-                "SECURITY ERROR: JWT_SECRET is set to an insecure default value. "
+                "SECURITY ERROR: JWT_SECRET is set to an insecure "
+                "default value. "
                 "Set JWT_SECRET to a secure random value: "
-                "python -c 'import secrets; print(secrets.token_urlsafe(32))'"
+                "python -c 'import secrets; "
+                "print(secrets.token_urlsafe(32))'"
             )
 
         if len(v) < 32:

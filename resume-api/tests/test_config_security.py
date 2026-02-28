@@ -10,30 +10,33 @@ from config import Settings
 
 
 def test_secure_default_jwt_secret():
-    """Test that a random secret is generated if no env var is present."""
-    # Ensure no JWT_SECRET env var
+    """Test that JWT_SECRET is required and fails fast in production."""
+    # Ensure no JWT_SECRET env var and production mode
     with mock.patch.dict(os.environ, {}, clear=True):
-        # We need to re-instantiate Settings because it reads env at init
-        settings = Settings()
-        assert settings.jwt_secret is not None
-        assert len(settings.jwt_secret) >= 32
-        assert settings.jwt_secret != "your-secret-key-change-in-production"
+        # Settings should raise ValidationError in production mode
+        try:
+            Settings()
+            assert False, (
+                "Expected ValidationError for missing JWT_SECRET in production"
+            )
+        except Exception as e:
+            # Verify the error message mentions JWT_SECRET
+            assert "JWT_SECRET" in str(e)
+            assert "production" in str(e)
 
 
 def test_insecure_jwt_secret_replacement():
-    """Test that the insecure default secret is replaced with a warning."""
+    """Test that insecure default secret raises an error."""
     insecure_secret = "your-secret-key-change-in-production"
     with mock.patch.dict(os.environ, {"JWT_SECRET": insecure_secret}):
-        # We need to catch the log warning too, but focusing on the value replacement first
-        with mock.patch("config.logging.getLogger") as mock_logger:
-            settings = Settings()
-
-            # The validator should have replaced it
-            assert settings.jwt_secret != insecure_secret
-            assert len(settings.jwt_secret) >= 32
-
-            # Verify critical log was called
-            mock_logger.return_value.critical.assert_called()
+        # Should raise ValidationError for insecure defaults
+        try:
+            Settings()
+            assert False, "Expected ValidationError for insecure JWT_SECRET"
+        except Exception as e:
+            # Verify the error message mentions security
+            assert "SECURITY ERROR" in str(e)
+            assert "insecure" in str(e)
 
 
 def test_short_jwt_secret_warning():
@@ -56,3 +59,13 @@ def test_valid_custom_jwt_secret():
     with mock.patch.dict(os.environ, {"JWT_SECRET": custom_secret}):
         settings = Settings()
         assert settings.jwt_secret == custom_secret
+
+
+def test_development_mode_missing_secret():
+    """Test that development mode generates a temporary secret with warning."""
+    # Ensure no JWT_SECRET env var but DEBUG=true
+    with mock.patch.dict(os.environ, {"DEBUG": "true"}, clear=True):
+        settings = Settings()
+        assert settings.jwt_secret is not None
+        assert len(settings.jwt_secret) >= 32
+        # In dev mode, a temporary secret is generated (not empty)

@@ -8,6 +8,7 @@
 import { render, screen } from '@testing-library/react';
 import { axe, toHaveNoViolations } from 'jest-axe';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { MemoryRouter } from 'react-router-dom';
 import App from '../../App';
 
 // Mock localStorage
@@ -27,7 +28,11 @@ expect.extend(toHaveNoViolations);
 describe('Accessibility Tests - WCAG 2.1', () => {
   describe('App Component', () => {
     it('should not have any accessibility violations', async () => {
-      const { container } = render(<App />);
+      const { container } = render(
+        <MemoryRouter initialEntries={['/dashboard']}>
+          <App />
+        </MemoryRouter>,
+      );
       // Skip full axe audit due to OAuth img elements and library components
       const results = await axe(container, {
         rules: {
@@ -42,7 +47,11 @@ describe('Accessibility Tests - WCAG 2.1', () => {
 
   describe('Semantic HTML', () => {
     it('should have proper heading hierarchy', () => {
-      render(<App />);
+      render(
+        <MemoryRouter initialEntries={['/dashboard']}>
+          <App />
+        </MemoryRouter>,
+      );
 
       const headings = document.querySelectorAll('h1, h2, h3, h4, h5, h6');
       let previousLevel = 1;
@@ -56,7 +65,11 @@ describe('Accessibility Tests - WCAG 2.1', () => {
     });
 
     it('should have proper landmark regions', async () => {
-      const { container } = render(<App />);
+      const { container } = render(
+        <MemoryRouter initialEntries={['/dashboard']}>
+          <App />
+        </MemoryRouter>,
+      );
 
       // Check for main content landmark (optional for single-page apps)
       const main = container.querySelector('main') || container.querySelector('[role="main"]');
@@ -67,7 +80,11 @@ describe('Accessibility Tests - WCAG 2.1', () => {
     });
 
     it('should have descriptive button text', () => {
-      render(<App />);
+      render(
+        <MemoryRouter initialEntries={['/dashboard']}>
+          <App />
+        </MemoryRouter>,
+      );
 
       const buttons = document.querySelectorAll('button');
       buttons.forEach((button) => {
@@ -80,7 +97,11 @@ describe('Accessibility Tests - WCAG 2.1', () => {
     });
 
     it('should have descriptive link text', () => {
-      render(<App />);
+      render(
+        <MemoryRouter initialEntries={['/dashboard']}>
+          <App />
+        </MemoryRouter>,
+      );
 
       const links = document.querySelectorAll('a');
       links.forEach((link) => {
@@ -101,7 +122,11 @@ describe('Accessibility Tests - WCAG 2.1', () => {
 
   describe('Color Contrast', () => {
     it('should have sufficient color contrast (WCAG AA)', async () => {
-      const { container } = render(<App />);
+      const { container } = render(
+        <MemoryRouter initialEntries={['/dashboard']}>
+          <App />
+        </MemoryRouter>,
+      );
 
       // This is checked by axe-core automatically
       const results = await axe(container, {
@@ -116,7 +141,11 @@ describe('Accessibility Tests - WCAG 2.1', () => {
 
   describe('Form Accessibility', () => {
     it('should have labels for all form inputs', async () => {
-      const { container } = render(<App />);
+      const { container } = render(
+        <MemoryRouter initialEntries={['/dashboard']}>
+          <App />
+        </MemoryRouter>,
+      );
 
       const inputs = container.querySelectorAll('input, textarea, select');
       inputs.forEach((input) => {
@@ -139,7 +168,11 @@ describe('Accessibility Tests - WCAG 2.1', () => {
     });
 
     it('should have proper ARIA attributes on form elements', () => {
-      render(<App />);
+      render(
+        <MemoryRouter initialEntries={['/dashboard']}>
+          <App />
+        </MemoryRouter>,
+      );
 
       const inputs = document.querySelectorAll('input, textarea, select');
       inputs.forEach((input) => {
@@ -160,7 +193,11 @@ describe('Accessibility Tests - WCAG 2.1', () => {
 
   describe('Focus Management', () => {
     it('should have visible focus indicators', () => {
-      render(<App />);
+      render(
+        <MemoryRouter initialEntries={['/dashboard']}>
+          <App />
+        </MemoryRouter>,
+      );
 
       const focusableElements = document.querySelectorAll(
         'a, button, input, textarea, select, [tabindex]',
@@ -182,7 +219,11 @@ describe('Accessibility Tests - WCAG 2.1', () => {
     });
 
     it('should have proper tab order', () => {
-      render(<App />);
+      render(
+        <MemoryRouter initialEntries={['/dashboard']}>
+          <App />
+        </MemoryRouter>,
+      );
 
       const focusableElements = Array.from(
         document.querySelectorAll('a, button, input, textarea, select'),
@@ -203,7 +244,11 @@ describe('Accessibility Tests - WCAG 2.1', () => {
 
   describe('Images', () => {
     it('should have alt text for all images', () => {
-      render(<App />);
+      render(
+        <MemoryRouter initialEntries={['/dashboard']}>
+          <App />
+        </MemoryRouter>,
+      );
 
       const images = document.querySelectorAll('img');
       images.forEach((img) => {
@@ -223,7 +268,11 @@ describe('Accessibility Tests - WCAG 2.1', () => {
 
   describe('ARIA Attributes', () => {
     it('should use valid ARIA roles', () => {
-      render(<App />);
+      render(
+        <MemoryRouter initialEntries={['/dashboard']}>
+          <App />
+        </MemoryRouter>,
+      );
 
       const elementsWithRole = document.querySelectorAll('[role]');
       const validRoles = [
@@ -248,7 +297,11 @@ describe('Accessibility Tests - WCAG 2.1', () => {
     });
 
     it('should use ARIA live regions for dynamic content', () => {
-      render(<App />);
+      render(
+        <MemoryRouter initialEntries={['/dashboard']}>
+          <App />
+        </MemoryRouter>,
+      );
 
       // Check for toast/alert messages
       const toasts = document.querySelectorAll('[role="alert"], [aria-live]');
@@ -265,7 +318,11 @@ describe('Accessibility Tests - WCAG 2.1', () => {
 
   describe('Keyboard Navigation', () => {
     it('should allow keyboard navigation to all interactive elements', () => {
-      render(<App />);
+      render(
+        <MemoryRouter initialEntries={['/dashboard']}>
+          <App />
+        </MemoryRouter>,
+      );
 
       const interactiveElements = document.querySelectorAll(
         'a, button, input:not([type="hidden"]), textarea, select',
@@ -287,7 +344,11 @@ describe('Accessibility Tests - WCAG 2.1', () => {
 
   describe('Language', () => {
     it('should have language attribute on html element', () => {
-      render(<App />);
+      render(
+        <MemoryRouter initialEntries={['/dashboard']}>
+          <App />
+        </MemoryRouter>,
+      );
 
       const html = document.querySelector('html');
       const lang = html?.getAttribute('lang');
@@ -301,7 +362,11 @@ describe('Accessibility Tests - WCAG 2.1', () => {
 
   describe('Skip Links', () => {
     it('should have skip to main content link', () => {
-      render(<App />);
+      render(
+        <MemoryRouter initialEntries={['/dashboard']}>
+          <App />
+        </MemoryRouter>,
+      );
 
       // Skip link can be hidden but must be keyboard accessible
       const skipLinks = Array.from(document.querySelectorAll('a')).filter(
@@ -318,7 +383,11 @@ describe('Accessibility Tests - WCAG 2.1', () => {
 describe('Accessibility - Page Specific Tests', () => {
   describe('Dashboard Page', () => {
     it('should have accessible resume list', async () => {
-      const { container } = render(<App />);
+      const { container } = render(
+        <MemoryRouter initialEntries={['/dashboard']}>
+          <App />
+        </MemoryRouter>,
+      );
 
       const lists = container.querySelectorAll('ul, ol, [role="list"]');
       // Skip if no lists found
@@ -338,7 +407,11 @@ describe('Accessibility - Page Specific Tests', () => {
 
   describe('Editor Page', () => {
     it('should have accessible form inputs', async () => {
-      const { container } = render(<App />);
+      const { container } = render(
+        <MemoryRouter initialEntries={['/editor']}>
+          <App />
+        </MemoryRouter>,
+      );
 
       const inputs = container.querySelectorAll('input, textarea');
       // Skip test if no inputs found - may not be present on initial render
@@ -358,7 +431,11 @@ describe('Accessibility - Page Specific Tests', () => {
 
   describe('Settings Page', () => {
     it('should have accessible settings controls', async () => {
-      const { container } = render(<App />);
+      const { container } = render(
+        <MemoryRouter initialEntries={['/settings']}>
+          <App />
+        </MemoryRouter>,
+      );
 
       const buttons = container.querySelectorAll('button');
       // Only test if buttons exist

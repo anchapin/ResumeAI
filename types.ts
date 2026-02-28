@@ -444,26 +444,21 @@ export interface Team {
   id: number;
   name: string;
   description: string;
-  owner_id: string;
   ownerId: string;
-  created_at: string;
   createdAt: string;
-  updated_at: string;
   updatedAt: string;
-  member_count?: number;
-  resume_count?: number;
+  memberCount?: number;
+  resumeCount?: number;
   members?: TeamMember[];
 }
 
 export interface TeamMember {
   id: string;
-  user_id: string;
   userId: string;
   name: string;
   email: string;
   role: MemberRole;
-  is_owner?: boolean;
-  joined_at: string;
+  isOwner?: boolean;
   joinedAt: string;
 }
 
@@ -481,34 +476,26 @@ export interface InviteMemberRequest {
 
 export interface TeamActivity {
   id: string;
-  team_id: string;
   teamId: string;
-  user_id: string;
   userId: string;
-  user_name: string;
   userName: string;
   action: string;
   type?: string;
   description?: string;
   details?: string;
   metadata?: Record<string, unknown>;
-  created_at: string;
   createdAt: string;
 }
 
 export interface TeamResume {
   id: string;
-  resume_id: string;
+  resumeId: string;
   title: string;
-  resume_title: string;
-  owner_id: string;
+  resumeTitle: string;
   ownerId: string;
-  owner_name: string;
   ownerName: string;
-  shared_by_user_name: string;
-  updated_at: string;
+  sharedByUserName: string;
   updatedAt: string;
-  shared_at: string;
   sharedAt: string;
   permissions: 'view' | 'edit' | 'comment';
 }
