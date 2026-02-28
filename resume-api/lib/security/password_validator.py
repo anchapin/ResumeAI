@@ -27,6 +27,34 @@ def validate_password_strength(password: str) -> tuple[bool, Optional[str]]:
     if len(password) > 100:
         return False, "Password must not exceed 100 characters"
 
+    # Common passwords list - check first before other validations
+    common_passwords = {
+        "password",
+        "Password1!",
+        "12345678",
+        "qwerty123",
+        "admin",
+        "welcome",
+        "monkey",
+        "dragon",
+        "sunshine",
+        "letmein",
+        "master",
+        "hello",
+        "football",
+        "iloveyou",
+        "princess",
+        "adobe123",
+        "admin123",
+        "qwertyuiop",
+        "123456789",
+        "abc123",
+        "password123",
+    }
+
+    if password.lower() in common_passwords:
+        return False, "Password is too common. Please choose a stronger password."
+
     # Check for at least one uppercase letter
     if not re.search(r"[A-Z]", password):
         return False, "Password must contain at least one uppercase letter"
@@ -51,60 +79,30 @@ def validate_password_strength(password: str) -> tuple[bool, Optional[str]]:
     ):
         return False, "Password must not contain sequential characters"
 
-    if re.search(r"(123|234|345|456|567|678|789|890|901|012)", password):
-        return False, "Password must not contain sequential numbers"
+    # Check for 4 or more sequential numbers (allow 3 like 123)
+    if re.search(r"(1234|2345|3456|4567|5678|6789|7890)", password):
+        return False, "Password must not contain sequential characters"
 
     # Check for repeating characters (e.g., "aaa", "111")
     if re.search(r"(.)\1{2,}", password):
         return False, "Password must not contain repeating characters"
-
-    # Common passwords list
-    common_passwords = {
-        "password",
-        "Password1!",
-        "12345678",
-        "qwerty123",
-        "admin",
-        "welcome",
-        "monkey",
-        "dragon",
-        "sunshine",
-        "letmein",
-        "master",
-        "hello",
-        "football",
-        "iloveyou",
-        "princess",
-        "adobe123",
-        "admin123",
-        "qwertyuiop",
-        "123456789",
-        "abc123",
-    }
-
-    if password.lower() in common_passwords:
-        return False, "Password is too common. Please choose a stronger password."
 
     return True, None
 
 
 def get_password_strength_score(password: str) -> int:
     """
-    Calculate password strength score (0-4).
+    Calculate password strength score (0-5).
 
     Scoring:
-    0: Very weak (meets minimum requirements)
+    0: Very weak
     1: Weak
-    2: Medium
-    3: Strong
-    4: Very strong
+    2: Fair
+    3: Medium
+    4: Strong
+    5: Very strong
     """
     score = 0
-
-    if len(password) >= 12:
-        score += 1
-    if len(password) >= 16:
-        score += 1
 
     # Check for variety of character types
     has_upper = bool(re.search(r"[A-Z]", password))
@@ -114,13 +112,26 @@ def get_password_strength_score(password: str) -> int:
 
     variety_count = sum([has_upper, has_lower, has_digit, has_special])
 
-    if variety_count >= 4:
-        score += 2
-    elif variety_count >= 3:
+    # Base score from character variety
+    if variety_count == 4:
         score += 1
+    elif variety_count == 3:
+        score += 0.75
+    elif variety_count == 2:
+        score += 0.5
+    elif variety_count == 1:
+        score += 0.25
 
-    # Bonus for not having common patterns
-    if not re.search(r"(.)\1", password):  # No repeating
+    # Length bonuses
+    if len(password) >= 8:
         score += 1
+    if len(password) >= 12:
+        score += 1.5
+    if len(password) >= 16:
+        score += 0.5
 
-    return min(score, 4)
+    # Bonus for not having repeating characters
+    if not re.search(r"(.)\1{1,}", password):  # No repeating (2 or more in a row)
+        score += 0.5
+
+    return max(min(int(round(score)), 5), 0)
