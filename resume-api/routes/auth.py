@@ -13,10 +13,11 @@ Endpoints:
 """
 
 import hashlib
+import secrets
 from datetime import datetime, timezone
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, status, Request
+from fastapi import APIRouter, Depends, HTTPException, status, Request, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
@@ -55,6 +56,11 @@ def _hash_token(token: str) -> str:
     return hashlib.sha256(token.encode()).hexdigest()
 
 
+def _generate_csrf_token() -> str:
+    """Generate a secure random CSRF token."""
+    return secrets.token_hex(32)
+
+
 @router.post(
     "/register",
     response_model=UserResponse,
@@ -70,6 +76,7 @@ def _hash_token(token: str) -> str:
 @rate_limit("5/minute")
 async def register(
     request: Request,
+    response: Response,
     user_data: UserCreate,
     db: Annotated[AsyncSession, Depends(get_async_session)],
 ):
@@ -87,6 +94,10 @@ async def register(
     - Minimum 3 characters
     - Maximum 100 characters
     - Only letters, numbers, underscores, and hyphens allowed
+
+    **CSRF Protection:**
+    - A CSRF token is set as a cookie and returned in the response headers
+    - Include the CSRF token in the X-CSRF-Token header for state-changing requests
     """
     # Check if email already exists
     email_result = await db.execute(
@@ -125,6 +136,22 @@ async def register(
     await db.commit()
     await db.refresh(new_user)
 
+    # Generate CSRF token
+    csrf_token = _generate_csrf_token()
+
+    # Set CSRF cookie
+    response.set_cookie(
+        key="csrf_token",
+        value=csrf_token,
+        httponly=True,
+        secure=True,
+        samesite="strict",
+        max_age=3600,  # 1 hour
+    )
+
+    # Add CSRF token to response headers
+    response.headers["X-CSRF-Token"] = csrf_token
+
     logger.info(
         "user_registered",
         user_id=new_user.id,
@@ -149,6 +176,7 @@ async def register(
 @rate_limit("5/minute")
 async def login(
     request: Request,
+    response: Response,
     credentials: UserLogin,
     db: Annotated[AsyncSession, Depends(get_async_session)],
 ):
@@ -162,6 +190,10 @@ async def login(
     **Token expiration:**
     - Access token: 30 minutes (configurable)
     - Refresh token: 7 days
+
+    **CSRF Protection:**
+    - A CSRF token is set as a cookie and returned in the response headers
+    - Include the CSRF token in the X-CSRF-Token header for state-changing requests
     """
     # Find user by email
     result = await db.execute(
@@ -209,6 +241,9 @@ async def login(
     access_token = create_access_token(token_data)
     refresh_token = create_refresh_token(token_data)
 
+    # Generate CSRF token
+    csrf_token = _generate_csrf_token()
+
     # Store refresh token hash in database
     from datetime import timedelta
 
@@ -222,6 +257,29 @@ async def login(
     )
     db.add(stored_token)
     await db.commit()
+
+    # Set access token as httpOnly cookie (secure from XSS)
+    response.set_cookie(
+        key="access_token",
+        value=access_token,
+        httponly=True,
+        secure=True,
+        samesite="strict",
+        max_age=1800,  # 30 minutes (matches token expiration)
+    )
+
+    # Set CSRF cookie
+    response.set_cookie(
+        key="csrf_token",
+        value=csrf_token,
+        httponly=True,
+        secure=True,
+        samesite="strict",
+        max_age=3600,  # 1 hour
+    )
+
+    # Add CSRF token to response headers
+    response.headers["X-CSRF-Token"] = csrf_token
 
     logger.info(
         "user_logged_in",
@@ -253,6 +311,7 @@ async def login(
 @rate_limit("20/minute")
 async def refresh_token(
     request: Request,
+    response: Response,
     token_request: RefreshTokenRequest,
     db: Annotated[AsyncSession, Depends(get_async_session)],
 ):
@@ -261,6 +320,10 @@ async def refresh_token(
 
     This endpoint validates the refresh token and returns a new access token.
     The refresh token must not be expired or revoked.
+
+    **Security Note:**
+    - The new access token is set as an httpOnly cookie for XSS protection
+    - The token is also returned in the response body for backward compatibility
     """
     # Verify refresh token
     payload = verify_refresh_token(token_request.refresh_token)
@@ -311,6 +374,16 @@ async def refresh_token(
     token_data = {"sub": str(user_id), "email": payload.get("email")}
     new_access_token = create_access_token(token_data)
 
+    # Set new access token as httpOnly cookie
+    response.set_cookie(
+        key="access_token",
+        value=new_access_token,
+        httponly=True,
+        secure=True,
+        samesite="strict",
+        max_age=1800,  # 30 minutes (matches token expiration)
+    )
+
     return TokenRefreshResponse(
         access_token=new_access_token,
         token_type="bearer",
@@ -331,15 +404,20 @@ async def refresh_token(
 @rate_limit("20/minute")
 async def logout(
     request: Request,
+    response: Response,
     token_request: RefreshTokenRequest,
     db: Annotated[AsyncSession, Depends(get_async_session)],
 ):
     """
-    Logout by revoking the refresh token.
+    Logout by revoking the refresh token and clearing cookies.
 
     This invalidates the refresh token, preventing it from being used
     to obtain new access tokens. Any active sessions using this refresh
     token will need to re-authenticate.
+
+    **Security Note:**
+    - Clears the access_token and csrf_token cookies
+    - Revokes the refresh token in the database
     """
     token_hash = _hash_token(token_request.refresh_token)
 
@@ -353,6 +431,20 @@ async def logout(
         stored_token.is_revoked = True
         await db.commit()
         logger.info("user_logged_out", token_id=stored_token.id)
+
+    # Clear cookies by setting them to expire immediately
+    response.delete_cookie(
+        key="access_token",
+        httponly=True,
+        secure=True,
+        samesite="strict",
+    )
+    response.delete_cookie(
+        key="csrf_token",
+        httponly=True,
+        secure=True,
+        samesite="strict",
+    )
 
     return MessageResponse(message="Successfully logged out")
 
