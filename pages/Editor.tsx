@@ -13,12 +13,21 @@ import {
 import { TemplateSelector } from '../components/TemplateSelector';
 import { LinkedInImportDialog } from '../components/LinkedInImportDialog';
 import ExperienceItem from '../components/ExperienceItem';
-import EducationItem from '../components/editor/EducationItem';
-import ProjectItem from '../components/editor/ProjectItem';
 import ResumePreview from '../components/ResumePreview';
 import VersionHistory from '../components/VersionHistory';
 import CommentPanel from '../components/CommentPanel';
 import { showSuccessToast, showErrorToast } from '../utils/toast';
+import { EditorHeader } from '../components/editor/EditorHeader';
+import { ContactInfoSection } from '../components/editor/ContactInfoSection';
+import { SummarySection } from '../components/editor/SummarySection';
+import { ExperienceSection } from '../components/editor/ExperienceSection';
+import { SkillsSection } from '../components/editor/SkillsSection';
+import { EducationSection } from '../components/editor/EducationSection';
+import { ProjectsSection } from '../components/editor/ProjectsSection';
+import { EditorTabs } from '../components/editor/EditorTabs';
+import { EditorActions } from '../components/editor/EditorActions';
+import { SaveVersionDialog } from '../components/editor/SaveVersionDialog';
+import { VersionHistoryDialog } from '../components/editor/VersionHistoryDialog';
 /**
  * @interface EditorProps
  * @description Props for the Editor component
@@ -167,7 +176,7 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, saveStatus = 'idl
       setSavingVersion(true);
       await updateResume(currentResumeId, {
         data: convertToAPIData(resumeData),
-        changeDescription: versionDescription.trim(),
+        change_description: versionDescription.trim(),
       });
       showSuccessToast('Version saved successfully!');
       setVersionDescription('');
