@@ -27,6 +27,7 @@ from database import create_db_and_tables, User
 from middleware.monitoring import MonitoringMiddleware
 from middleware.error_handling import ErrorHandlingMiddleware
 from middleware.timeout import TimeoutMiddleware
+from middleware.csrf import CSRFMiddleware
 from monitoring import logging_config, health, alerting, analytics
 from slowapi.errors import RateLimitExceeded
 
@@ -253,6 +254,9 @@ app.add_middleware(MonitoringMiddleware)
 
 # Add security headers middleware
 app.add_middleware(SecurityHeadersMiddleware)
+
+# Add CSRF middleware
+app.add_middleware(CSRFMiddleware)
 
 # Configure CORS
 app.add_middleware(
