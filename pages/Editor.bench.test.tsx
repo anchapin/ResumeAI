@@ -1,6 +1,7 @@
 import { describe, it, vi } from 'vitest';
 import { render, screen, fireEvent, act } from '@testing-library/react';
 import React, { useState } from 'react';
+import { MemoryRouter } from 'react-router-dom';
 import Editor from './Editor';
 import { SimpleResumeData, WorkExperience } from '../types';
 
@@ -40,7 +41,11 @@ const TestWrapper = ({ count }: { count: number }) => {
 describe('Editor Performance', () => {
   it('measures input update performance with many items', async () => {
     const ITEM_COUNT = 1000;
-    const { container } = render(<TestWrapper count={ITEM_COUNT} />);
+    const { container } = render(
+      <MemoryRouter initialEntries={['/editor']}>
+        <TestWrapper count={ITEM_COUNT} />
+      </MemoryRouter>,
+    );
 
     // The first item is expanded by default.
     // Find the input for the first item's company.
