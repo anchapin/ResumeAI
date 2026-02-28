@@ -10,6 +10,7 @@ import {
   updateResume,
   listComments,
 } from '../utils/api-client';
+import { useStore } from '../store/store';
 import { TemplateSelector } from '../components/TemplateSelector';
 import { LinkedInImportDialog } from '../components/LinkedInImportDialog';
 import ExperienceItem from '../components/ExperienceItem';
@@ -30,21 +31,6 @@ import { SaveVersionDialog } from '../components/editor/SaveVersionDialog';
 import { VersionHistoryDialog } from '../components/editor/VersionHistoryDialog';
 import EducationItem from '../components/editor/EducationItem';
 import ProjectItem from '../components/editor/ProjectItem';
-/**
- * @interface EditorProps
- * @description Props for the Editor component
- * @property {SimpleResumeData} resumeData - The resume data to edit
- * @property {Function} onUpdate - Callback to update resume data
- * @property {string} saveStatus - Current save status: 'idle', 'saving', 'saved', or 'error'
- */
-interface EditorProps {
-  /** The resume data to edit */
-  resumeData: SimpleResumeData;
-  /** Callback to update resume data */
-  onUpdate: (data: SimpleResumeData) => void;
-  /** Current save status for auto-save indicator */
-  saveStatus?: 'idle' | 'saving' | 'saved' | 'error';
-}
 
 /** Navigation items for the editor header */
 const NAV_ITEMS = ['Dashboard', 'My Resumes', 'Templates', 'Settings'];
@@ -77,21 +63,13 @@ function getTimeSince(date: Date): string {
 /**
  * @component
  * @description Editor page component for editing resume data
- * @param {EditorProps} props - Component properties
- * @param {SimpleResumeData} props.resumeData - The resume data to edit
- * @param {Function} props.onUpdate - Callback to update resume data
  * @returns {JSX.Element} The rendered editor page component
- *
- * @example
- * ```tsx
- * <Editor
- *   resumeData={sampleResumeData}
- *   onUpdate={(data) => console.log('Updated:', data)}
- * />
- * ```
  */
-const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, saveStatus = 'idle' }) => {
+const Editor: React.FC = () => {
   const navigate = useNavigate();
+  const resumeData = useStore((state) => state.resumeData);
+  const setResumeData = useStore((state) => state.setResumeData);
+  const saveStatus = useStore((state) => state.saveStatus);
   const [activeTab, setActiveTab] = useState<string>('Experience');
 
   // PDF generation state
@@ -124,6 +102,67 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, saveStatus = 'idl
   const handleCommentCountChange = useCallback((count: number) => {
     setUnresolvedCommentCount(count);
   }, []);
+
+  // Use a ref to hold the latest resumeData so that callbacks can be stable
+  const resumeDataRef = useRef(resumeData);
+  useEffect(() => {
+    resumeDataRef.current = resumeData;
+  }, [resumeData]);
+
+  // Undo/Redo functionality
+  const MAX_HISTORY = 50;
+  const [history, setHistory] = useState<SimpleResumeData[]>([]);
+  const [historyIndex, setHistoryIndex] = useState(-1);
+  const historyRef = useRef<{ history: SimpleResumeData[]; index: number }>({
+    history: [],
+    index: -1,
+  });
+
+  // Track history in ref for stable callbacks
+  useEffect(() => {
+    historyRef.current = { history, index: historyIndex };
+  }, [history, historyIndex]);
+
+  // Add state to history
+  const addToHistory = useCallback((newState: SimpleResumeData) => {
+    setHistory((prev) => {
+      const newIndex = historyRef.current.index + 1;
+      const trimmed = prev.slice(0, newIndex);
+      const updated = [...trimmed, newState];
+      const final = updated.slice(-MAX_HISTORY);
+      return final;
+    });
+    setHistoryIndex((prev) => Math.min(prev + 1, MAX_HISTORY - 1));
+  }, []);
+
+  // Wrap setResumeData to track history
+  const trackedUpdate = useCallback(
+    (newData: SimpleResumeData) => {
+      const currentData = resumeDataRef.current;
+      if (JSON.stringify(currentData) !== JSON.stringify(newData)) {
+        addToHistory(newData);
+      }
+      setResumeData(newData);
+    },
+    [setResumeData, addToHistory],
+  );
+
+  const canUndo = historyIndex > 0;
+  const canRedo = historyIndex < history.length - 1;
+
+  const undo = useCallback(() => {
+    if (!canUndo) return;
+    const newIndex = historyIndex - 1;
+    setHistoryIndex(newIndex);
+    setResumeData(history[newIndex]);
+  }, [history, historyIndex, setResumeData, canUndo]);
+
+  const redo = useCallback(() => {
+    if (!canRedo) return;
+    const newIndex = historyIndex + 1;
+    setHistoryIndex(newIndex);
+    setResumeData(history[newIndex]);
+  }, [history, historyIndex, setResumeData, canRedo]);
 
   // Fetch variants on mount
   useEffect(() => {
@@ -205,17 +244,13 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, saveStatus = 'idl
         showErrorToast('Failed to restore version. Please try again.');
       }
     },
-    [onUpdate, resumeData],
+    [trackedUpdate, resumeData],
   );
 
   // Handle Save Profile
   const handleSaveProfile = useCallback(async () => {
     try {
-      // Save to localStorage as backup
       localStorage.setItem('resume_draft', JSON.stringify(resumeData));
-
-      // TODO: Connect to backend API when available
-      // For now, just show success
       alert('Profile saved successfully!');
     } catch (err) {
       console.error('Save failed:', err);
@@ -227,8 +262,6 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, saveStatus = 'idl
   const handleLinkedInImport = useCallback(
     (importedData: Partial<SimpleResumeData>) => {
       const currentData = resumeDataRef.current;
-
-      // Merge imported data with existing data (imported data takes precedence)
       const mergedData: SimpleResumeData = {
         ...currentData,
         name: importedData.name || currentData.name,
@@ -244,10 +277,9 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, saveStatus = 'idl
         education: importedData.education?.length ? importedData.education : currentData.education,
         projects: importedData.projects?.length ? importedData.projects : currentData.projects,
       };
-
       trackedUpdate(mergedData);
     },
-    [onUpdate],
+    [trackedUpdate],
   );
 
   // Experience state
@@ -274,75 +306,9 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, saveStatus = 'idl
   useEffect(() => {
     const timer = setTimeout(() => {
       setLastSaved(new Date());
-    }, 500); // Debounce to avoid updating too frequently
-
+    }, 500);
     return () => clearTimeout(timer);
   }, [resumeData]);
-
-  // Use a ref to hold the latest resumeData so that callbacks can be stable
-  const resumeDataRef = useRef(resumeData);
-  useEffect(() => {
-    resumeDataRef.current = resumeData;
-  }, [resumeData]);
-
-  // Undo/Redo functionality
-  const MAX_HISTORY = 50;
-  const [history, setHistory] = useState<SimpleResumeData[]>([]);
-  const [historyIndex, setHistoryIndex] = useState(-1);
-  const historyRef = useRef<{ history: SimpleResumeData[]; index: number }>({
-    history: [],
-    index: -1,
-  });
-
-  // Track history in ref for stable callbacks
-  useEffect(() => {
-    historyRef.current = { history, index: historyIndex };
-  }, [history, historyIndex]);
-
-  // Add state to history
-  const addToHistory = useCallback((newState: SimpleResumeData) => {
-    setHistory((prev) => {
-      const newIndex = historyRef.current.index + 1;
-      // Remove any redo states
-      const trimmed = prev.slice(0, newIndex);
-      // Add new state
-      const updated = [...trimmed, newState];
-      // Keep only last MAX_HISTORY states
-      const final = updated.slice(-MAX_HISTORY);
-      return final;
-    });
-    setHistoryIndex((prev) => Math.min(prev + 1, MAX_HISTORY - 1));
-  }, []);
-
-  const canUndo = historyIndex > 0;
-  const canRedo = historyIndex < history.length - 1;
-
-  const undo = useCallback(() => {
-    if (!canUndo) return;
-    const newIndex = historyIndex - 1;
-    setHistoryIndex(newIndex);
-    trackedUpdate(history[newIndex]);
-  }, [history, historyIndex, onUpdate, canUndo]);
-
-  const redo = useCallback(() => {
-    if (!canRedo) return;
-    const newIndex = historyIndex + 1;
-    setHistoryIndex(newIndex);
-    trackedUpdate(history[newIndex]);
-  }, [history, historyIndex, onUpdate, canRedo]);
-
-  // Wrap onUpdate to track history
-  const trackedUpdate = useCallback(
-    (newData: SimpleResumeData) => {
-      const currentData = resumeDataRef.current;
-      // Only add to history if data actually changed
-      if (JSON.stringify(currentData) !== JSON.stringify(newData)) {
-        addToHistory(newData);
-      }
-      onUpdate(newData);
-    },
-    [onUpdate, addToHistory],
-  );
 
   // Keyboard shortcuts for undo/redo
   useEffect(() => {
@@ -374,25 +340,22 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, saveStatus = 'idl
     loadCommentCount();
   }, [currentResumeId]);
 
-  // Contact Info handlers
   const updateContact = useCallback(
     (field: keyof SimpleResumeData, value: string) => {
       const currentData = resumeDataRef.current;
       trackedUpdate({ ...currentData, [field]: value });
     },
-    [onUpdate],
+    [trackedUpdate],
   );
 
-  // Summary handlers
   const updateSummary = useCallback(
     (summary: string) => {
       const currentData = resumeDataRef.current;
       trackedUpdate({ ...currentData, summary });
     },
-    [onUpdate],
+    [trackedUpdate],
   );
 
-  // Skills handlers
   const addSkill = useCallback(
     (skill: string) => {
       if (!skill.trim()) return;
@@ -401,7 +364,7 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, saveStatus = 'idl
         trackedUpdate({ ...prev, skills: [...prev.skills, skill.trim()] });
       }
     },
-    [onUpdate],
+    [trackedUpdate],
   );
 
   const removeSkill = useCallback(
@@ -412,10 +375,9 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, saveStatus = 'idl
         skills: prev.skills.filter((s) => s !== skill),
       });
     },
-    [onUpdate],
+    [trackedUpdate],
   );
 
-  // Experience handlers
   const handleDeleteExperience = useCallback(
     (id: string) => {
       const prev = resumeDataRef.current;
@@ -424,7 +386,7 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, saveStatus = 'idl
         experience: prev.experience.filter((exp) => exp.id !== id),
       });
     },
-    [onUpdate],
+    [trackedUpdate],
   );
 
   const handleToggleExpandExperience = useCallback((id: string) => {
@@ -441,7 +403,7 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, saveStatus = 'idl
         ),
       });
     },
-    [onUpdate],
+    [trackedUpdate],
   );
 
   const addTagToExperience = useCallback(
@@ -458,7 +420,7 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, saveStatus = 'idl
         });
       }
     },
-    [onUpdate],
+    [trackedUpdate],
   );
 
   const removeTagFromExperience = useCallback(
@@ -471,7 +433,7 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, saveStatus = 'idl
         ),
       });
     },
-    [onUpdate],
+    [trackedUpdate],
   );
 
   const addExperience = useCallback(() => {
@@ -494,7 +456,7 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, saveStatus = 'idl
       ],
     });
     setExpandedExpId(newId);
-  }, [onUpdate]);
+  }, [trackedUpdate]);
 
   // Drag and drop handlers for reordering
   const handleDragStart = useCallback((id: string) => {
@@ -534,10 +496,9 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, saveStatus = 'idl
       setDraggedItemId(null);
       setDragOverItemId(null);
     },
-    [draggedItemId, onUpdate],
+    [draggedItemId, trackedUpdate],
   );
 
-  // Education handlers
   const handleDeleteEducation = useCallback(
     (id: string) => {
       const prev = resumeDataRef.current;
@@ -546,7 +507,7 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, saveStatus = 'idl
         education: (prev.education || []).filter((edu) => edu.id !== id),
       });
     },
-    [onUpdate],
+    [trackedUpdate],
   );
 
   const handleToggleExpandEducation = useCallback((id: string) => {
@@ -563,7 +524,7 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, saveStatus = 'idl
         ),
       });
     },
-    [onUpdate],
+    [trackedUpdate],
   );
 
   const addEducation = useCallback(() => {
@@ -585,9 +546,8 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, saveStatus = 'idl
       ],
     });
     setExpandedEduId(newId);
-  }, [onUpdate]);
+  }, [trackedUpdate]);
 
-  // Projects handlers
   const handleDeleteProject = useCallback(
     (id: string) => {
       const prev = resumeDataRef.current;
@@ -596,7 +556,7 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, saveStatus = 'idl
         projects: (prev.projects || []).filter((proj) => proj.id !== id),
       });
     },
-    [onUpdate],
+    [trackedUpdate],
   );
 
   const handleToggleExpandProject = useCallback((id: string) => {
@@ -613,7 +573,7 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, saveStatus = 'idl
         ),
       });
     },
-    [onUpdate],
+    [trackedUpdate],
   );
 
   const addProject = useCallback(() => {
@@ -636,7 +596,7 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, saveStatus = 'idl
       ],
     });
     setExpandedProjId(newId);
-  }, [onUpdate]);
+  }, [trackedUpdate]);
 
   const renderContent = () => {
     switch (activeTab) {
@@ -822,7 +782,7 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, saveStatus = 'idl
                   isExpanded={expandedExpId === exp.id}
                   onToggleExpand={handleToggleExpandExperience}
                   onDelete={handleDeleteExperience}
-                  onUpdate={updateExperience}
+                  setResumeData={updateExperience}
                   onAddTag={addTagToExperience}
                   onRemoveTag={removeTagFromExperience}
                 />
@@ -927,7 +887,7 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, saveStatus = 'idl
                 isExpanded={expandedEduId === edu.id}
                 onToggleExpand={handleToggleExpandEducation}
                 onDelete={handleDeleteEducation}
-                onUpdate={updateEducation}
+                setResumeData={updateEducation}
               />
             ))}
 
@@ -970,7 +930,7 @@ const Editor: React.FC<EditorProps> = ({ resumeData, onUpdate, saveStatus = 'idl
                 isExpanded={expandedProjId === proj.id}
                 onToggleExpand={handleToggleExpandProject}
                 onDelete={handleDeleteProject}
-                onUpdate={updateProject}
+                setResumeData={updateProject}
               />
             ))}
 
