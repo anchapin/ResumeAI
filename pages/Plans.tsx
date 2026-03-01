@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   BillingPlan,
-  getBillingPlans,
+  listBillingPlans,
   createCheckoutSession,
   CheckoutSessionRequest,
 } from '../utils/api-client';
@@ -19,7 +19,7 @@ const Plans: React.FC = () => {
   const loadPlans = async () => {
     try {
       setLoading(true);
-      const data = await getBillingPlans();
+      const data = await listBillingPlans();
       setPlans(data);
     } catch (err) {
       setError('Failed to load plans. Please try again.');
