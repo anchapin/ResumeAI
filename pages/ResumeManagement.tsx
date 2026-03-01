@@ -539,7 +539,7 @@ const ResumeManagement: React.FC = () => {
                     {operationResult.successful?.length ?? 0}
                   </span>
                 </div>
-                {operationResult.failed?.length ?? 0 > 0 && (
+                {(operationResult.failed?.length ?? 0) > 0 && (
                   <div className="flex items-center justify-between p-3 bg-amber-50 rounded-lg">
                     <span className="text-sm font-medium text-slate-700">Failed:</span>
                     <span className="text-sm font-bold text-amber-600">
@@ -549,7 +549,7 @@ const ResumeManagement: React.FC = () => {
                 )}
               </div>
 
-              {operationResult.failed?.length ?? 0 > 0 && (
+              {(operationResult.failed?.length ?? 0) > 0 && (
                 <div className="max-h-48 overflow-y-auto mb-4 p-3 bg-slate-50 rounded-lg">
                   <p className="text-sm font-medium text-slate-700 mb-2">Failed resumes:</p>
                   <ul className="space-y-1">
