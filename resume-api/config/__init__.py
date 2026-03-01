@@ -115,6 +115,14 @@ class Settings(BaseSettings):
     smtp_use_tls: bool = True  # Use TLS for SMTP
     frontend_url: str = "http://localhost:5173"  # Frontend URL for email links
 
+    # WebSocket Configuration
+    ws_heartbeat_interval: int = 30  # Send heartbeat ping every 30 seconds
+    ws_connection_timeout: int = 30  # Close connection after 30s of inactivity
+    ws_max_connections_per_user: int = (
+        5  # Max concurrent WebSocket connections per user
+    )
+    ws_rate_limit_connections: str = "10/minute"  # Rate limit new connections
+
     @field_validator("jwt_secret")
     @classmethod
     def validate_jwt_secret(cls, v: str, info: ValidationInfo) -> str:
