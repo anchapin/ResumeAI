@@ -108,6 +108,13 @@ function App() {
     });
   }, [loadResume]);
 
+  /**
+   * Helper function to get user-friendly error messages
+   */
+  const getStorageErrorMessage = (): string => {
+    return 'Failed to save data. Please try again.';
+  };
+
   // Save resume data to localStorage whenever it changes
   useEffect(() => {
     if (!isLoaded) return;
@@ -136,13 +143,6 @@ function App() {
 
     return () => clearTimeout(handler);
   }, [resumeData, isLoaded, setSaveStatus]);
-
-  /**
-   * Helper function to get user-friendly error messages
-   */
-  const getStorageErrorMessage = (): string => {
-    return 'Failed to save data. Please try again.';
-  };
 
   const handleLogin = async (email: string, password: string) => {
     clearAuthError();

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { BarChart, Bar, ResponsiveContainer, XAxis, Tooltip, Cell } from 'recharts';
 import { JobApplication } from '../types';
 import StatusBadge from '../components/StatusBadge';
+import DashboardSkeleton from '../components/skeletons/DashboardSkeleton';
 import {
   getApplicationStats,
   getApplicationFunnel,
@@ -81,13 +82,7 @@ const Dashboard: React.FC = () => {
   };
 
   if (isLoading) {
-    return (
-      <div className="flex-1 min-h-screen bg-[#f6f6f8] pl-72 flex items-center justify-center">
-        <span className="material-symbols-outlined animate-spin text-primary-600 text-4xl">
-          progress_activity
-        </span>
-      </div>
-    );
+    return <DashboardSkeleton />;
   }
 
   if (error) {

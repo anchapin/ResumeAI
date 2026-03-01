@@ -6,6 +6,7 @@ import { useStore } from '../store/store';
 import { useGeneratePackage, convertToResumeData } from '../hooks/useGeneratePackage';
 import { useVariants } from '../hooks/useVariants';
 import { showErrorToast, showSuccessToast } from '../utils/toast';
+import WorkspaceSkeleton from '../components/skeletons/WorkspaceSkeleton';
 import { getResume, listResumeVersions, listComments } from '../utils/api-client';
 
 /** Available tab types for the workspace */

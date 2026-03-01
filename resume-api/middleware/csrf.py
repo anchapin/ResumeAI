@@ -57,10 +57,7 @@ class CSRFMiddleware(BaseHTTPMiddleware):
 
         if not csrf_token or not session_token:
             logger.warning(
-                "csrf_validation_failed",
-                path=request.url.path,
-                reason="missing_token",
-                method=request.method,
+                f"csrf_validation_failed: missing_token at {request.url.path} ({request.method})"
             )
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
@@ -70,10 +67,7 @@ class CSRFMiddleware(BaseHTTPMiddleware):
         # Validate CSRF token
         if not secrets.compare_digest(csrf_token, session_token):
             logger.warning(
-                "csrf_validation_failed",
-                path=request.url.path,
-                reason="invalid_token",
-                method=request.method,
+                f"csrf_validation_failed: invalid_token at {request.url.path} ({request.method})"
             )
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
