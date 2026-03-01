@@ -16,6 +16,10 @@ const InterviewPractice = lazy(() => import('./pages/InterviewPractice'));
 const Login = lazy(() => import('./pages/Login'));
 const Register = lazy(() => import('./pages/Register'));
 const NotFound = lazy(() => import('./pages/NotFound'));
+const Billing = lazy(() => import('./pages/Billing'));
+const Plans = lazy(() => import('./pages/Plans'));
+const PaymentMethods = lazy(() => import('./pages/PaymentMethods'));
+const Invoices = lazy(() => import('./pages/Invoices'));
 import { Route as RouteEnum, SimpleResumeData } from './types';
 import { saveResumeData } from './utils/storage';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -104,6 +108,10 @@ function App() {
     });
   }, [loadResume]);
 
+  const getStorageErrorMessage = (): string => {
+    return 'Failed to save data. Please try again.';
+  };
+
   // Save resume data to localStorage whenever it changes
   useEffect(() => {
     if (!isLoaded) return;
@@ -136,10 +144,6 @@ function App() {
   /**
    * Helper function to get user-friendly error messages
    */
-  const getStorageErrorMessage = (): string => {
-    return 'Failed to save data. Please try again.';
-  };
-
   const handleLogin = async (email: string, password: string) => {
     clearAuthError();
     const result = await login(email, password);
@@ -187,6 +191,11 @@ function App() {
         return RouteEnum.LOGIN;
       case '/register':
         return RouteEnum.REGISTER;
+      case '/billing':
+      case '/billing/plans':
+      case '/billing/payment-methods':
+      case '/billing/invoices':
+        return RouteEnum.BILLING;
       default:
         return RouteEnum.DASHBOARD;
     }
@@ -374,6 +383,90 @@ function App() {
                       onLogout={handleLogout}
                     />
                     <ResumeManagement />
+                  </div>
+                </Suspense>
+              ) : (
+                <Navigate to="/login" replace />
+              )
+            }
+          />
+          <Route
+            path="/billing"
+            element={
+              isAuthenticated ? (
+                <Suspense fallback={<PageLoader />}>
+                  <div className="flex min-h-screen bg-[#f6f6f8]">
+                    <Sidebar
+                      currentRoute={getCurrentRouteFromPath()}
+                      onShowShortcuts={() => setShowShortcuts(true)}
+                      isAuthenticated={isAuthenticated}
+                      username={user?.username}
+                      onLogout={handleLogout}
+                    />
+                    <Billing />
+                  </div>
+                </Suspense>
+              ) : (
+                <Navigate to="/login" replace />
+              )
+            }
+          />
+          <Route
+            path="/billing/plans"
+            element={
+              isAuthenticated ? (
+                <Suspense fallback={<PageLoader />}>
+                  <div className="flex min-h-screen bg-[#f6f6f8]">
+                    <Sidebar
+                      currentRoute={getCurrentRouteFromPath()}
+                      onShowShortcuts={() => setShowShortcuts(true)}
+                      isAuthenticated={isAuthenticated}
+                      username={user?.username}
+                      onLogout={handleLogout}
+                    />
+                    <Plans />
+                  </div>
+                </Suspense>
+              ) : (
+                <Navigate to="/login" replace />
+              )
+            }
+          />
+          <Route
+            path="/billing/payment-methods"
+            element={
+              isAuthenticated ? (
+                <Suspense fallback={<PageLoader />}>
+                  <div className="flex min-h-screen bg-[#f6f6f8]">
+                    <Sidebar
+                      currentRoute={getCurrentRouteFromPath()}
+                      onShowShortcuts={() => setShowShortcuts(true)}
+                      isAuthenticated={isAuthenticated}
+                      username={user?.username}
+                      onLogout={handleLogout}
+                    />
+                    <PaymentMethods />
+                  </div>
+                </Suspense>
+              ) : (
+                <Navigate to="/login" replace />
+              )
+            }
+          />
+          <Route
+            path="/billing/invoices"
+            element={
+              isAuthenticated ? (
+                <Suspense fallback={<PageLoader />}>
+                  <div className="flex min-h-screen bg-[#f6f6f8]">
+                    <Sidebar
+                      currentRoute={getCurrentRouteFromPath()}
+                      onShowShortcuts={() => setShowShortcuts(true)}
+                      isAuthenticated={isAuthenticated}
+                      username={user?.username}
+                      onLogout={handleLogout}
+                    />
+                    <Invoices />
                   </div>
                 </Suspense>
               ) : (

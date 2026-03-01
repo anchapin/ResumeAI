@@ -77,27 +77,50 @@ async def get_current_user_ws(
     authentication fails.
     """
     if not token:
-        raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION)
+        raise WebSocketException(
+            code=status.WS_1008_POLICY_VIOLATION,
+            reason="Authentication required: missing token",
+        )
 
     try:
         payload = verify_access_token(token)
         if payload is None:
-            raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION)
+            raise WebSocketException(
+                code=status.WS_1008_POLICY_VIOLATION,
+                reason="Authentication failed: invalid token",
+            )
 
         user_id = payload.get("sub")
         if user_id is None:
-            raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION)
+            raise WebSocketException(
+                code=status.WS_1008_POLICY_VIOLATION,
+                reason="Authentication failed: invalid token payload",
+            )
 
         result = await db.execute(select(User).where(User.id == int(user_id)))
         user = result.scalar_one_or_none()
 
-        if user is None or not user.is_active:
-            raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION)
+        if user is None:
+            raise WebSocketException(
+                code=status.WS_1008_POLICY_VIOLATION,
+                reason="Authentication failed: user not found",
+            )
+
+        if not user.is_active:
+            raise WebSocketException(
+                code=status.WS_1008_POLICY_VIOLATION,
+                reason="Authentication failed: account disabled",
+            )
 
         return user
 
+    except WebSocketException:
+        raise
     except Exception:
-        raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION)
+        raise WebSocketException(
+            code=status.WS_1008_POLICY_VIOLATION,
+            reason="Authentication failed: server error",
+        )
 
 
 # =============================================================================

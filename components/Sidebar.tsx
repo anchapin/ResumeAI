@@ -28,6 +28,7 @@ const NAV_ITEMS = [
   { id: Route.APPLICATIONS, label: 'Job Applications', icon: 'work' },
   { id: Route.INTERVIEW_PRACTICE, label: 'Interview Practice', icon: 'psychology' },
   { id: Route.SALARY_RESEARCH, label: 'Salary Research', icon: 'payments' },
+  { id: Route.BILLING, label: 'Billing', icon: 'credit_card' },
   { id: Route.SETTINGS, label: 'Settings', icon: 'settings' },
 ] as const;
 

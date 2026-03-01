@@ -342,6 +342,13 @@ async def websocket_resume(
     ws://host/ws/resumes/{resume_id}?token=jwt_token
 
     Requires authentication via JWT token in query parameter.
+
+    Features:
+    - JWT authentication
+    - Heartbeat/ping-pong mechanism
+    - Connection timeout (30s inactivity)
+    - Rate limiting on new connections
+    - Max 5 concurrent connections per user
     """
     await handle_websocket_connection(websocket, resume_id, str(current_user.id))
 
