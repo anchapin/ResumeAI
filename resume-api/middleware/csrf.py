@@ -20,8 +20,12 @@ CSRF_PROTECTED_METHODS = {"POST", "PUT", "DELETE", "PATCH"}
 
 # Paths that are exempt from CSRF protection
 CSRF_EXEMPT_PATHS = {
-    "/auth/login",
-    "/auth/register",
+    "/api/v1/auth/login",
+    "/api/v1/auth/register",
+    "/api/v1/auth/refresh",
+    "/api/v1/auth/logout",
+    "/api/v1/auth/github/callback",
+    "/api/v1/auth/linkedin/callback",
     "/health",
     "/health/detailed",
     "/health/oauth",

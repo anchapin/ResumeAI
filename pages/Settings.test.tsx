@@ -3,15 +3,25 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import React from 'react';
 import Settings from './Settings';
+import { useStore } from '../store/store';
 
 // Mock localStorage
+const storageData: Record<string, string> = {};
 const localStorageMock = {
-  getItem: vi.fn(),
-  setItem: vi.fn(),
-  removeItem: vi.fn(),
-  clear: vi.fn(),
+  getItem: (key: string) => storageData[key] ?? null,
+  setItem: (key: string, value: string) => {
+    storageData[key] = value;
+  },
+  removeItem: (key: string) => {
+    delete storageData[key];
+  },
+  clear: () => {
+    Object.keys(storageData).forEach((key) => {
+      delete storageData[key];
+    });
+  },
   length: 0,
-  key: vi.fn(),
+  key: (index: number) => Object.keys(storageData)[index] ?? null,
 };
 
 Object.defineProperty(window, 'localStorage', {
@@ -26,13 +36,22 @@ Object.defineProperty(window, 'alert', {
   writable: true,
 });
 
+// Don't mock useTheme - let it use the real store with light theme default
+
 describe('Settings Component', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Clear localStorage and storage data
+    storageData['resumeai-storage'] = JSON.stringify({
+      theme: 'light',
+    });
   });
 
   afterEach(() => {
     vi.clearAllMocks();
+    Object.keys(storageData).forEach((key) => {
+      delete storageData[key];
+    });
   });
 
   describe('Component Rendering', () => {
@@ -170,9 +189,6 @@ describe('Settings Component', () => {
         throw new Error('Input not found');
       }
       await user.clear(firstNameInput);
-      if (firstNameInput) {
-        throw new Error('Input not found');
-      }
       await user.type(firstNameInput, 'John');
 
       expect(firstNameInput).toHaveValue('John');
@@ -188,9 +204,6 @@ describe('Settings Component', () => {
         throw new Error('Input not found');
       }
       await user.clear(lastNameInput);
-      if (lastNameInput) {
-        throw new Error('Input not found');
-      }
       await user.type(lastNameInput, 'Doe');
 
       expect(lastNameInput).toHaveValue('Doe');
@@ -206,9 +219,6 @@ describe('Settings Component', () => {
         throw new Error('Input not found');
       }
       await user.clear(emailInput);
-      if (emailInput) {
-        throw new Error('Input not found');
-      }
       await user.type(emailInput, 'john.doe@example.com');
 
       expect(emailInput).toHaveValue('john.doe@example.com');

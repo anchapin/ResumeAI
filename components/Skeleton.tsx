@@ -20,7 +20,7 @@ interface SkeletonProps {
  * @param {'pulse' | 'wave' | 'none'} props.animation - Animation type
  * @returns {JSX.Element} The rendered skeleton component
  */
-const Skeleton = React.memo<React.FC<SkeletonProps>>(
+const Skeleton: React.FC<SkeletonProps> = React.memo(
   ({ className = '', width, height, variant = 'text', animation = 'pulse' }) => {
     const baseClasses = 'bg-slate-200';
 
