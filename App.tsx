@@ -108,6 +108,10 @@ function App() {
     });
   }, [loadResume]);
 
+  const getStorageErrorMessage = (): string => {
+    return 'Failed to save data. Please try again.';
+  };
+
   // Save resume data to localStorage whenever it changes
   useEffect(() => {
     if (!isLoaded) return;
@@ -140,10 +144,6 @@ function App() {
   /**
    * Helper function to get user-friendly error messages
    */
-  const getStorageErrorMessage = (): string => {
-    return 'Failed to save data. Please try again.';
-  };
-
   const handleLogin = async (email: string, password: string) => {
     clearAuthError();
     const result = await login(email, password);
@@ -370,6 +370,27 @@ function App() {
             }
           />
           <Route
+            path="/bulk"
+            element={
+              isAuthenticated ? (
+                <Suspense fallback={<PageLoader />}>
+                  <div className="flex min-h-screen bg-[#f6f6f8]">
+                    <Sidebar
+                      currentRoute={getCurrentRouteFromPath()}
+                      onShowShortcuts={() => setShowShortcuts(true)}
+                      isAuthenticated={isAuthenticated}
+                      username={user?.username}
+                      onLogout={handleLogout}
+                    />
+                    <ResumeManagement />
+                  </div>
+                </Suspense>
+              ) : (
+                <Navigate to="/login" replace />
+              )
+            }
+          />
+          <Route
             path="/billing"
             element={
               isAuthenticated ? (
@@ -446,27 +467,6 @@ function App() {
                       onLogout={handleLogout}
                     />
                     <Invoices />
-                  </div>
-                </Suspense>
-              ) : (
-                <Navigate to="/login" replace />
-              )
-            }
-          />
-          <Route
-            path="/bulk"
-            element={
-              isAuthenticated ? (
-                <Suspense fallback={<PageLoader />}>
-                  <div className="flex min-h-screen bg-[#f6f6f8]">
-                    <Sidebar
-                      currentRoute={getCurrentRouteFromPath()}
-                      onShowShortcuts={() => setShowShortcuts(true)}
-                      isAuthenticated={isAuthenticated}
-                      username={user?.username}
-                      onLogout={handleLogout}
-                    />
-                    <ResumeManagement />
                   </div>
                 </Suspense>
               ) : (

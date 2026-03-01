@@ -516,19 +516,21 @@ const ResumeManagement: React.FC = () => {
               <div className="flex items-center gap-3 mb-4">
                 <div
                   className={`p-2 rounded-full ${
-                    operationResult.failed?.length ?? 0 === 0 ? 'bg-emerald-100' : 'bg-amber-100'
+                    (operationResult.failed?.length ?? 0 === 0) ? 'bg-emerald-100' : 'bg-amber-100'
                   }`}
                 >
                   <span
                     className={`material-symbols-outlined text-[28px] ${
-                      operationResult.failed?.length ?? 0 === 0 ? 'text-emerald-600' : 'text-amber-600'
+                      (operationResult.failed?.length ?? 0 === 0)
+                        ? 'text-emerald-600'
+                        : 'text-amber-600'
                     }`}
                   >
-                    {operationResult.failed?.length ?? 0 === 0 ? 'check_circle' : 'info'}
+                    {(operationResult.failed?.length ?? 0 === 0) ? 'check_circle' : 'info'}
                   </span>
                 </div>
                 <h3 className="text-xl font-bold text-slate-900">
-                  {operationResult.failed?.length ?? 0 === 0 ? 'Success!' : 'Partial Success'}
+                  {(operationResult.failed?.length ?? 0 === 0) ? 'Success!' : 'Partial Success'}
                 </h3>
               </div>
 
