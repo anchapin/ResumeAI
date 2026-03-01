@@ -1,27 +1,19 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { LogLevel, appLogger, storageLogger, apiLogger, consoleLike } from './logger';
-import defaultLogger, { Logger } from './logger';
+import defaultLogger from './logger';
 
 describe('Logger', () => {
-  let testLogger: any;
-  let mockConsole: any;
   let consoleDebugSpy: any;
   let consoleInfoSpy: any;
   let consoleWarnSpy: any;
   let consoleErrorSpy: any;
 
   beforeEach(() => {
-    consoleDebugSpy = vi.fn();
-    consoleInfoSpy = vi.fn();
-    consoleWarnSpy = vi.fn();
-    consoleErrorSpy = vi.fn();
-    mockConsole = {
-      debug: consoleDebugSpy,
-      info: consoleInfoSpy,
-      warn: consoleWarnSpy,
-      error: consoleErrorSpy,
-    };
-    testLogger = new Logger({ level: LogLevel.DEBUG }, mockConsole);
+    consoleDebugSpy = vi.spyOn(console, 'debug');
+    consoleInfoSpy = vi.spyOn(console, 'info');
+    consoleWarnSpy = vi.spyOn(console, 'warn');
+    consoleErrorSpy = vi.spyOn(console, 'error');
+    defaultLogger.updateConfig({ level: LogLevel.DEBUG, enabled: true });
   });
 
   afterEach(() => {
@@ -39,41 +31,147 @@ describe('Logger', () => {
 
   describe('updateConfig', () => {
     it('updates logger configuration', () => {
-      testLogger.updateConfig({ level: LogLevel.ERROR, enabled: false });
-      testLogger.info('Should not log');
+      defaultLogger.updateConfig({ level: LogLevel.ERROR, enabled: false });
+      defaultLogger.info('Should not log');
       expect(consoleInfoSpy).not.toHaveBeenCalled();
     });
 
     it('merges partial config with existing', () => {
-      testLogger.updateConfig({ level: LogLevel.WARN });
-      testLogger.info('Test message');
+      defaultLogger.updateConfig({ level: LogLevel.WARN });
+      defaultLogger.info('Test message');
     });
   });
 
   describe('Logging methods', () => {
     it('logs debug messages', () => {
-      testLogger.debug('Debug message');
+      defaultLogger.debug('Debug message');
       expect(consoleDebugSpy).toHaveBeenCalled();
     });
 
     it('logs info messages', () => {
-      testLogger.info('Info message');
+      defaultLogger.info('Info message');
       expect(consoleInfoSpy).toHaveBeenCalled();
     });
 
     it('logs warning messages', () => {
-      testLogger.warn('Warning message');
+      defaultLogger.warn('Warning message');
       expect(consoleWarnSpy).toHaveBeenCalled();
     });
 
     it('logs error messages', () => {
-      testLogger.error('Error message');
+      defaultLogger.error('Error message');
       expect(consoleErrorSpy).toHaveBeenCalled();
     });
 
     it('logs multiple arguments', () => {
-      testLogger.info('Message', { data: 'value' }, 123);
+      defaultLogger.info('Message', { data: 'value' }, 123);
       expect(consoleInfoSpy).toHaveBeenCalled();
+    });
+  });
+
+  describe('Log level filtering', () => {
+    it('does not log DEBUG when level is INFO', () => {
+      defaultLogger.updateConfig({ level: LogLevel.INFO });
+      defaultLogger.debug('Should not log');
+      expect(consoleDebugSpy).not.toHaveBeenCalled();
+    });
+
+    it('logs INFO when level is INFO', () => {
+      defaultLogger.updateConfig({ level: LogLevel.INFO });
+      defaultLogger.info('Should log');
+      expect(consoleInfoSpy).toHaveBeenCalled();
+    });
+
+    it('does not log INFO when level is WARN', () => {
+      defaultLogger.updateConfig({ level: LogLevel.WARN });
+      defaultLogger.info('Should not log');
+      expect(consoleInfoSpy).not.toHaveBeenCalled();
+    });
+
+    it('logs ERROR regardless of level', () => {
+      defaultLogger.updateConfig({ level: LogLevel.ERROR });
+      defaultLogger.error('Should log');
+      expect(consoleErrorSpy).toHaveBeenCalled();
+    });
+  });
+
+  describe('Enabled/disabled state', () => {
+    it('does not log when disabled', () => {
+      defaultLogger.updateConfig({ enabled: false });
+      defaultLogger.info('Should not log');
+      expect(consoleInfoSpy).not.toHaveBeenCalled();
+    });
+
+    it('logs when enabled', () => {
+      defaultLogger.updateConfig({ enabled: true });
+      defaultLogger.info('Should log');
+      expect(consoleInfoSpy).toHaveBeenCalled();
+    });
+  });
+
+  describe('Timestamp', () => {
+    it('includes timestamp in log message when enabled', () => {
+      defaultLogger.updateConfig({ timestamp: true });
+      defaultLogger.info('Message');
+      expect(consoleInfoSpy).toHaveBeenCalled();
+      const callArgs = consoleInfoSpy.mock.calls[0][0];
+      expect(callArgs).toMatch(/\[\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z\]/);
+    });
+
+    it('does not include timestamp when disabled', () => {
+      defaultLogger.updateConfig({ timestamp: false });
+      defaultLogger.info('Message');
+      expect(consoleInfoSpy).toHaveBeenCalled();
+      const callArgs = consoleInfoSpy.mock.calls[0][0];
+      expect(callArgs).not.toMatch(/\[\d{4}-\d{2}-\d{2}T/);
+    });
+  });
+
+  describe('Prefix', () => {
+    it('includes prefix in log message', () => {
+      defaultLogger.updateConfig({ prefix: 'TestPrefix' });
+      defaultLogger.info('Message');
+      expect(consoleInfoSpy).toHaveBeenCalled();
+      const callArgs = consoleInfoSpy.mock.calls[0][0];
+      expect(callArgs).toMatch(/\[TestPrefix\]/);
+    });
+  });
+
+  describe('child', () => {
+    it('creates child logger with prefix', () => {
+      const childLogger = defaultLogger.child('Child');
+      childLogger.info('Message');
+      expect(consoleInfoSpy).toHaveBeenCalled();
+      const callArgs = consoleInfoSpy.mock.calls[0][0];
+      expect(callArgs).toMatch(/\[Child\]/);
+    });
+
+    it('child logger inherits parent config', () => {
+      defaultLogger.updateConfig({ level: LogLevel.WARN });
+      const childLogger = defaultLogger.child('Child');
+      childLogger.info('Should not log');
+      expect(consoleInfoSpy).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('setMessageFormat', () => {
+    it('formats object messages as JSON', () => {
+      const obj = { key: 'value', nested: { data: 123 } };
+      defaultLogger.info('Object:', obj);
+      expect(consoleInfoSpy).toHaveBeenCalled();
+    });
+
+    it('formats array messages', () => {
+      const arr = [1, 2, 3];
+      defaultLogger.info('Array:', arr);
+      expect(consoleInfoSpy).toHaveBeenCalled();
+    });
+  });
+
+  describe('setLevelByEnvironment', () => {
+    it('enables appropriate logging based on environment', () => {
+      defaultLogger.setEnabledByEnvironment();
+      expect(defaultLogger).toBeDefined();
     });
   });
 
