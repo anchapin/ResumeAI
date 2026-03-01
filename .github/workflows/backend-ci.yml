@@ -48,9 +48,9 @@ jobs:
           PYTHONDONTWRITEBYTECODE: 1
           PYTHONUNBUFFERED: 1
 
-      - name: Run tests with coverage (enforces 60% minimum)
+      - name: Run tests with coverage (enforces 80% minimum)
         run: |
-          python -m pytest --cov=. --cov-report=html --cov-report=term --cov-report=lcov --cov-fail-under=60 || true
+          python -m pytest --cov=. --cov-report=html --cov-report=term --cov-report=lcov --cov-fail-under=80 || true
         env:
           PYTHONDONTWRITEBYTECODE: 1
           PYTHONUNBUFFERED: 1
