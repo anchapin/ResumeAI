@@ -555,7 +555,7 @@ const ResumeManagement: React.FC = () => {
                 <div className="max-h-48 overflow-y-auto mb-4 p-3 bg-slate-50 rounded-lg">
                   <p className="text-sm font-medium text-slate-700 mb-2">Failed resumes:</p>
                   <ul className="space-y-1">
-                    {operationResult.failed.map((item, index) => (
+                    {operationResult.failed?.map((item, index) => (
                       <li key={index} className="text-sm text-red-600">
                         Resume #{item.id}: {item.error}
                       </li>
