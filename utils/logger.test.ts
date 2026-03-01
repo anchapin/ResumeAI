@@ -1,19 +1,27 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { LogLevel, appLogger, storageLogger, apiLogger, consoleLike } from './logger';
-import defaultLogger from './logger';
+import defaultLogger, { Logger } from './logger';
 
 describe('Logger', () => {
+  let testLogger: any;
+  let mockConsole: any;
   let consoleDebugSpy: any;
   let consoleInfoSpy: any;
   let consoleWarnSpy: any;
   let consoleErrorSpy: any;
 
   beforeEach(() => {
-    defaultLogger.updateConfig({ level: LogLevel.DEBUG });
-    consoleDebugSpy = vi.spyOn(console, 'debug').mockImplementation(() => {});
-    consoleInfoSpy = vi.spyOn(console, 'info').mockImplementation(() => {});
-    consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    consoleDebugSpy = vi.fn();
+    consoleInfoSpy = vi.fn();
+    consoleWarnSpy = vi.fn();
+    consoleErrorSpy = vi.fn();
+    mockConsole = {
+      debug: consoleDebugSpy,
+      info: consoleInfoSpy,
+      warn: consoleWarnSpy,
+      error: consoleErrorSpy,
+    };
+    testLogger = new Logger({ level: LogLevel.DEBUG }, mockConsole);
   });
 
   afterEach(() => {
@@ -31,40 +39,40 @@ describe('Logger', () => {
 
   describe('updateConfig', () => {
     it('updates logger configuration', () => {
-      defaultLogger.updateConfig({ level: LogLevel.ERROR, enabled: false });
-      defaultLogger.info('Should not log');
+      testLogger.updateConfig({ level: LogLevel.ERROR, enabled: false });
+      testLogger.info('Should not log');
       expect(consoleInfoSpy).not.toHaveBeenCalled();
     });
 
     it('merges partial config with existing', () => {
-      defaultLogger.updateConfig({ level: LogLevel.WARN });
-      defaultLogger.info('Test message');
+      testLogger.updateConfig({ level: LogLevel.WARN });
+      testLogger.info('Test message');
     });
   });
 
   describe('Logging methods', () => {
     it('logs debug messages', () => {
-      defaultLogger.debug('Debug message');
+      testLogger.debug('Debug message');
       expect(consoleDebugSpy).toHaveBeenCalled();
     });
 
     it('logs info messages', () => {
-      defaultLogger.info('Info message');
+      testLogger.info('Info message');
       expect(consoleInfoSpy).toHaveBeenCalled();
     });
 
     it('logs warning messages', () => {
-      defaultLogger.warn('Warning message');
+      testLogger.warn('Warning message');
       expect(consoleWarnSpy).toHaveBeenCalled();
     });
 
     it('logs error messages', () => {
-      defaultLogger.error('Error message');
+      testLogger.error('Error message');
       expect(consoleErrorSpy).toHaveBeenCalled();
     });
 
     it('logs multiple arguments', () => {
-      defaultLogger.info('Message', { data: 'value' }, 123);
+      testLogger.info('Message', { data: 'value' }, 123);
       expect(consoleInfoSpy).toHaveBeenCalled();
     });
   });

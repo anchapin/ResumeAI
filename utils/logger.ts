@@ -20,6 +20,16 @@ export interface LoggerConfig {
 }
 
 /**
+ * Console-like interface for mocking
+ */
+export interface ConsoleLike {
+  debug: (...args: any[]) => void;
+  info: (...args: any[]) => void;
+  warn: (...args: any[]) => void;
+  error: (...args: any[]) => void;
+}
+
+/**
  * Default logger configuration
  */
 const defaultConfig: LoggerConfig = {
@@ -76,11 +86,13 @@ function getEnvironment(): 'development' | 'production' | 'test' {
 /**
  * Logger class for centralized logging
  */
-class Logger {
+export class Logger {
   private config: LoggerConfig;
+  private consoleImpl: ConsoleLike;
 
-  constructor(config?: Partial<LoggerConfig>) {
+  constructor(config?: Partial<LoggerConfig>, consoleImpl?: ConsoleLike) {
     this.config = { ...defaultConfig, ...config };
+    this.consoleImpl = consoleImpl || console;
   }
 
   /**
@@ -88,6 +100,13 @@ class Logger {
    */
   public updateConfig(config: Partial<LoggerConfig>): void {
     this.config = { ...this.config, ...config };
+  }
+
+  /**
+   * Get current logger configuration (for testing)
+   */
+  public getConfig(): Readonly<LoggerConfig> {
+    return { ...this.config };
   }
 
   /**
@@ -151,7 +170,7 @@ class Logger {
    */
   public debug(...message: any[]): void {
     if (this.isLoggable(LogLevel.DEBUG)) {
-      console.debug(this.formatMessage(LogLevel.DEBUG, message));
+      this.consoleImpl.debug(this.formatMessage(LogLevel.DEBUG, message));
     }
   }
 
@@ -160,7 +179,7 @@ class Logger {
    */
   public info(...message: any[]): void {
     if (this.isLoggable(LogLevel.INFO)) {
-      console.info(this.formatMessage(LogLevel.INFO, message));
+      this.consoleImpl.info(this.formatMessage(LogLevel.INFO, message));
     }
   }
 
@@ -169,7 +188,7 @@ class Logger {
    */
   public warn(...message: any[]): void {
     if (this.isLoggable(LogLevel.WARN)) {
-      console.warn(this.formatMessage(LogLevel.WARN, message));
+      this.consoleImpl.warn(this.formatMessage(LogLevel.WARN, message));
     }
   }
 
@@ -178,7 +197,7 @@ class Logger {
    */
   public error(...message: any[]): void {
     if (this.isLoggable(LogLevel.ERROR)) {
-      console.error(this.formatMessage(LogLevel.ERROR, message));
+      this.consoleImpl.error(this.formatMessage(LogLevel.ERROR, message));
     }
   }
 
