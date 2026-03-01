@@ -9,11 +9,11 @@ describe('Logger', () => {
   let consoleErrorSpy: any;
 
   beforeEach(() => {
+    consoleDebugSpy = vi.spyOn(console, 'debug');
+    consoleInfoSpy = vi.spyOn(console, 'info');
+    consoleWarnSpy = vi.spyOn(console, 'warn');
+    consoleErrorSpy = vi.spyOn(console, 'error');
     defaultLogger.updateConfig({ level: LogLevel.DEBUG, enabled: true });
-    consoleDebugSpy = vi.spyOn(console, 'debug').mockImplementation(() => {});
-    consoleInfoSpy = vi.spyOn(console, 'info').mockImplementation(() => {});
-    consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
   });
 
   afterEach(() => {
