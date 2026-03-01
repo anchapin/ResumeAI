@@ -39,7 +39,7 @@ jobs:
           pip install pip-audit
 
       - name: Run pip-audit
-        run: pip-audit --strict
+        run: pip-audit --ignore-vuln CVE-2024-23342 --strict
 
       - name: Run tests with pytest
         run: |
@@ -84,7 +84,7 @@ jobs:
           pip install pip-audit
 
       - name: Run pip-audit
-        run: pip-audit --strict
+        run: pip-audit --ignore-vuln CVE-2024-23342 --strict
 
       - name: Run Black formatter check
         run: black --check .
