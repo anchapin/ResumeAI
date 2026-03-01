@@ -45,6 +45,8 @@ describe('Settings Component', () => {
     storageData['resumeai-storage'] = JSON.stringify({
       theme: 'light',
     });
+    // Reset the store to light theme
+    useStore.setState({ theme: 'light' });
   });
 
   afterEach(() => {
