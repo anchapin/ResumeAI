@@ -620,8 +620,8 @@ export function exportToLinkedInFormat(resumeData: ResumeData): LinkedInProfile 
       fieldOfStudy: edu.area || '',
       degreeName: edu.studyType || '',
       timePeriod: {
-        startDate: { year: edu.startDate ? parseInt(edu.startDate, 10) || undefined },
-        endDate: { year: edu.endDate ? parseInt(edu.endDate, 10) || undefined },
+        startDate: { year: edu.startDate ? parseInt(edu.startDate, 10) : undefined },
+        endDate: { year: edu.endDate ? parseInt(edu.endDate, 10) : undefined },
       },
     }));
   }
