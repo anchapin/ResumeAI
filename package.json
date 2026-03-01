@@ -13,6 +13,10 @@
     "test:a11y": "vitest tests/a11y --run",
     "test:a11y:watch": "vitest tests/a11y",
     "a11y:scan": "node scripts/a11y-scan.js",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:report": "playwright show-report",
     "docs": "typedoc --out docs --entryPoints components/ pages/ utils/ hooks/ --excludeNotDocumented --excludeInternal --theme default",
     "lint": "eslint . --ext .ts,.tsx",
     "lint:fix": "eslint . --ext .ts,.tsx --fix",
@@ -32,6 +36,7 @@
   },
   "devDependencies": {
     "@axe-core/react": "^4.10.2",
+    "@playwright/test": "^1.58.2",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
