@@ -154,6 +154,7 @@ export enum Route {
   BULK = 'bulk',
   SALARY_RESEARCH = 'salary-research',
   INTERVIEW_PRACTICE = 'interview-practice',
+  BILLING = 'billing',
 }
 
 // Advanced Features Types
@@ -561,4 +562,88 @@ export interface GenerateQuestionsRequest {
   count?: number;
   difficulty?: 'easy' | 'medium' | 'hard';
   categories?: string[];
+}
+
+export interface BillingPlan {
+  id: number;
+  name: string;
+  display_name: string;
+  description?: string;
+  price_cents: number;
+  currency: string;
+  interval: string;
+  features: string[];
+  max_resumes_per_month: number;
+  max_ai_tailorings_per_month: number;
+  max_templates: number;
+  include_priority_support: boolean;
+  include_custom_domains: boolean;
+  is_popular: boolean;
+}
+
+export interface Subscription {
+  id: number;
+  user_id: string;
+  status: 'active' | 'past_due' | 'canceled' | 'incomplete' | 'trialing' | 'inactive';
+  plan?: BillingPlan;
+  current_period_start?: string;
+  current_period_end?: string;
+  cancel_at_period_end: boolean;
+  resumes_generated_this_period: number;
+  ai_tailorings_this_period: number;
+  created_at: string;
+}
+
+export interface PaymentMethod {
+  id: number;
+  type: string;
+  brand?: string;
+  last4?: string;
+  exp_month?: number;
+  exp_year?: number;
+  billing_name?: string;
+  is_default: boolean;
+}
+
+export interface Invoice {
+  id: number;
+  amount_cents: number;
+  currency: string;
+  status: 'draft' | 'open' | 'paid' | 'void' | 'uncollectible';
+  description?: string;
+  created_at: string;
+  paid_at?: string;
+  invoice_pdf_url?: string;
+}
+
+export interface UsageStats {
+  allowed: boolean;
+  limit?: number;
+  used: number;
+  remaining?: number;
+}
+
+export interface BillingUsage {
+  resume_generated: UsageStats;
+  ai_tailored: UsageStats;
+}
+
+export interface CheckoutSessionRequest {
+  plan_name: string;
+  success_url: string;
+  cancel_url: string;
+  trial_period_days?: number;
+}
+
+export interface CheckoutSessionResponse {
+  session_id: string;
+  url: string;
+}
+
+export interface PortalSessionRequest {
+  return_url: string;
+}
+
+export interface PortalSessionResponse {
+  url: string;
 }
