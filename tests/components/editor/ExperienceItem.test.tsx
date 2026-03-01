@@ -117,8 +117,25 @@ describe('ExperienceItem', () => {
       const deleteBtn = screen.getByRole('button', { name: /delete/i });
       await user.click(deleteBtn);
 
-      // onDelete should be called immediately in this implementation
+      const confirmBtn = screen.getByRole('button', { name: /confirm delete/i });
+      await user.click(confirmBtn);
+
       expect(onDelete).toHaveBeenCalledWith('exp-1');
+    });
+
+    it('cancels delete operation', async () => {
+      const onDelete = vi.fn();
+      const user = userEvent.setup();
+      render(<ExperienceItem {...defaultProps} onDelete={onDelete} />);
+
+      const deleteBtn = screen.getByRole('button', { name: /delete/i });
+      await user.click(deleteBtn);
+
+      const cancelBtn = screen.getByRole('button', { name: /cancel delete/i });
+      await user.click(cancelBtn);
+
+      expect(onDelete).not.toHaveBeenCalled();
+      expect(screen.queryByRole('button', { name: /confirm delete/i })).not.toBeInTheDocument();
     });
 
     it('stops event propagation on delete button click', async () => {
