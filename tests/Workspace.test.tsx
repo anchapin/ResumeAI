@@ -129,7 +129,7 @@ describe('Workspace Component', () => {
   it('renders the Workspace component with all elements', () => {
     render(
       <BrowserRouter>
-        <Workspace resumeData={mockResumeData} />
+        <Workspace />
       </BrowserRouter>,
     );
 
@@ -149,7 +149,7 @@ describe('Workspace Component', () => {
   it('allows navigation back to dashboard', () => {
     render(
       <BrowserRouter>
-        <Workspace resumeData={mockResumeData} />
+        <Workspace />
       </BrowserRouter>,
     );
 
@@ -160,7 +160,7 @@ describe('Workspace Component', () => {
   it('updates form inputs correctly', () => {
     render(
       <BrowserRouter>
-        <Workspace resumeData={mockResumeData} />
+        <Workspace />
       </BrowserRouter>,
     );
 
@@ -185,7 +185,7 @@ describe('Workspace Component', () => {
     // This test verifies the component renders correctly with the mocked data
     render(
       <BrowserRouter>
-        <Workspace resumeData={mockResumeData} />
+        <Workspace />
       </BrowserRouter>,
     );
 
@@ -196,7 +196,7 @@ describe('Workspace Component', () => {
   it('handles tab switching', () => {
     render(
       <BrowserRouter>
-        <Workspace resumeData={mockResumeData} />
+        <Workspace />
       </BrowserRouter>,
     );
 
@@ -220,7 +220,7 @@ describe('Workspace Component', () => {
   it('validates required fields before generation', async () => {
     render(
       <BrowserRouter>
-        <Workspace resumeData={mockResumeData} />
+        <Workspace />
       </BrowserRouter>,
     );
 

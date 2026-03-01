@@ -782,7 +782,7 @@ const Editor: React.FC = () => {
                   isExpanded={expandedExpId === exp.id}
                   onToggleExpand={handleToggleExpandExperience}
                   onDelete={handleDeleteExperience}
-                  setResumeData={updateExperience}
+                  onUpdate={updateExperience}
                   onAddTag={addTagToExperience}
                   onRemoveTag={removeTagFromExperience}
                 />
@@ -887,7 +887,7 @@ const Editor: React.FC = () => {
                 isExpanded={expandedEduId === edu.id}
                 onToggleExpand={handleToggleExpandEducation}
                 onDelete={handleDeleteEducation}
-                setResumeData={updateEducation}
+                onUpdate={updateEducation}
               />
             ))}
 
@@ -930,7 +930,7 @@ const Editor: React.FC = () => {
                 isExpanded={expandedProjId === proj.id}
                 onToggleExpand={handleToggleExpandProject}
                 onDelete={handleDeleteProject}
-                setResumeData={updateProject}
+                onUpdate={updateProject}
               />
             ))}
 

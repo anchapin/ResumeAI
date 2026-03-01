@@ -33,7 +33,7 @@ const validateInput = (
   input: unknown,
   type: string = 'string',
   options: StringOptions | NumberOptions | ArrayOptions = {},
-) => {
+): unknown => {
   // For object type, we need to handle null differently (null is not a valid object)
   if (type === 'object') {
     if (input === null || input === undefined) {

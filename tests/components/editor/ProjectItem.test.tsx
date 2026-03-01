@@ -65,7 +65,7 @@ describe('ProjectItem Component', () => {
     it('should render highlights when expanded', () => {
       render(<ProjectItem {...defaultProps} isExpanded={true} />);
 
-      mockProject.highlights.forEach((highlight) => {
+      mockProject.highlights?.forEach((highlight) => {
         expect(screen.getByText(highlight)).toBeInTheDocument();
       });
     });
@@ -191,7 +191,7 @@ describe('ProjectItem Component', () => {
     it('should render all highlights', () => {
       render(<ProjectItem {...defaultProps} isExpanded={true} />);
 
-      mockProject.highlights.forEach((highlight) => {
+      mockProject.highlights?.forEach((highlight) => {
         expect(screen.getByText(highlight)).toBeInTheDocument();
       });
     });
