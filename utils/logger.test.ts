@@ -9,6 +9,7 @@ describe('Logger', () => {
   let consoleErrorSpy: any;
 
   beforeEach(() => {
+    defaultLogger.updateConfig({ level: LogLevel.DEBUG, enabled: true });
     consoleDebugSpy = vi.spyOn(console, 'debug').mockImplementation(() => {});
     consoleInfoSpy = vi.spyOn(console, 'info').mockImplementation(() => {});
     consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
@@ -112,6 +113,7 @@ describe('Logger', () => {
     it('includes timestamp in log message when enabled', () => {
       defaultLogger.updateConfig({ timestamp: true });
       defaultLogger.info('Message');
+      expect(consoleInfoSpy).toHaveBeenCalled();
       const callArgs = consoleInfoSpy.mock.calls[0][0];
       expect(callArgs).toMatch(/\[\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z\]/);
     });
@@ -119,6 +121,7 @@ describe('Logger', () => {
     it('does not include timestamp when disabled', () => {
       defaultLogger.updateConfig({ timestamp: false });
       defaultLogger.info('Message');
+      expect(consoleInfoSpy).toHaveBeenCalled();
       const callArgs = consoleInfoSpy.mock.calls[0][0];
       expect(callArgs).not.toMatch(/\[\d{4}-\d{2}-\d{2}T/);
     });
@@ -128,6 +131,7 @@ describe('Logger', () => {
     it('includes prefix in log message', () => {
       defaultLogger.updateConfig({ prefix: 'TestPrefix' });
       defaultLogger.info('Message');
+      expect(consoleInfoSpy).toHaveBeenCalled();
       const callArgs = consoleInfoSpy.mock.calls[0][0];
       expect(callArgs).toMatch(/\[TestPrefix\]/);
     });
@@ -137,6 +141,7 @@ describe('Logger', () => {
     it('creates child logger with prefix', () => {
       const childLogger = defaultLogger.child('Child');
       childLogger.info('Message');
+      expect(consoleInfoSpy).toHaveBeenCalled();
       const callArgs = consoleInfoSpy.mock.calls[0][0];
       expect(callArgs).toMatch(/\[Child\]/);
     });
