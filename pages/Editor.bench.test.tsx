@@ -33,9 +33,7 @@ const generateLargeResumeData = (count: number): SimpleResumeData => {
 };
 
 const TestWrapper = ({ count }: { count: number }) => {
-  const [resumeData, setResumeData] = useState(generateLargeResumeData(count));
-
-  return <Editor resumeData={resumeData} onUpdate={setResumeData} />;
+  return <Editor />;
 };
 
 describe('Editor Performance', () => {
