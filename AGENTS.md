@@ -32,6 +32,14 @@ npm run format:check      # Prettier check
 
 # Type checking
 npx tsc --noEmit          # TypeScript type check
+
+# E2E Tests (Playwright)
+npm run test:e2e          # Run all E2E tests
+npm run test:e2e:ui       # Run E2E tests with UI
+npm run test:e2e:headed   # Run E2E tests in headed mode
+npm run test:e2e:report   # View E2E test report
+npx playwright test <test-file>  # Run specific test
+npx playwright install    # Install Playwright browsers
 ```
 
 ### Backend (Python/FastAPI)

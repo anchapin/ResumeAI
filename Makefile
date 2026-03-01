@@ -1,4 +1,4 @@
-.PHONY: help install install-dev start stop restart logs logs-backend logs-frontend health check-db build clean test test-frontend test-backend
+.PHONY: help install install-dev start stop restart logs logs-backend logs-frontend health check-db build clean test test-frontend test-backend test-e2e
 
 # Colors for output
 BLUE := \033[0;34m
@@ -34,6 +34,7 @@ help:
 	@echo "  make test             Run all tests"
 	@echo "  make test-frontend    Run frontend tests"
 	@echo "  make test-backend     Run backend tests"
+	@echo "  make test-e2e         Run E2E tests (Playwright)"
 	@echo ""
 	@echo "$(GREEN)Database:$(NC)"
 	@echo "  make check-db         Check database status"
@@ -147,3 +148,16 @@ lint:
 	npx eslint src/ 2>/dev/null || echo "ESLint not available"
 	@echo "$(YELLOW)Backend (Flake8):$(NC)"
 	@cd resume-api && source venv/bin/activate && flake8 . || echo "Flake8 not available"
+
+# E2E Tests
+test-e2e:
+	@echo "$(BLUE)Running E2E tests...$(NC)"
+	npm run test:e2e
+
+test-e2e-ui:
+	@echo "$(BLUE)Running E2E tests with UI...$(NC)"
+	npm run test:e2e:ui
+
+test-e2e-headed:
+	@echo "$(BLUE)Running E2E tests in headed mode...$(NC)"
+	npm run test:e2e:headed
