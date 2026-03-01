@@ -47,6 +47,8 @@ jobs:
         env:
           PYTHONDONTWRITEBYTECODE: 1
           PYTHONUNBUFFERED: 1
+          DEBUG: "true"
+          JWT_SECRET: "test-secret-for-ci-testing-32chars"
 
       - name: Run tests with coverage (enforces 80% minimum)
         run: |
@@ -54,6 +56,8 @@ jobs:
         env:
           PYTHONDONTWRITEBYTECODE: 1
           PYTHONUNBUFFERED: 1
+          DEBUG: "true"
+          JWT_SECRET: "test-secret-for-ci-testing-32chars"
 
       - name: Upload coverage reports
         if: always()
@@ -88,9 +92,15 @@ jobs:
 
       - name: Run Black formatter check
         run: black --check .
+        env:
+          DEBUG: "true"
+          JWT_SECRET: "test-secret-for-ci-testing-32chars"
 
       - name: Run Flake8 linter
         run: flake8 . --max-line-length=120 --extend-ignore=E203,W503,F541,E402,F841,W291,W293,E501
 
       - name: Run MyPy type checker (strict mode)
         run: mypy --config-file=../mypy.ini resume_ai_lib resume-api
+        env:
+          DEBUG: "true"
+          JWT_SECRET: "test-secret-for-ci-testing-32chars"
