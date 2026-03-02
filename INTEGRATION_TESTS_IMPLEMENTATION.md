@@ -1,5 +1,3 @@
-<<<<<<< HEAD
-
 # Integration Tests Implementation (Issue #383)
 
 ## Summary
