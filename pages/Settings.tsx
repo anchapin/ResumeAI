@@ -930,7 +930,7 @@ const Settings: React.FC = () => {
                         {isCopied ? (
                           <>
                             <span className="material-symbols-outlined text-[14px]">check</span>
-                            <span>Copied</span>
+                            <span>Copied!</span>
                           </>
                         ) : (
                           'Copy'
