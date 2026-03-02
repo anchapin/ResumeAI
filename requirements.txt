@@ -21,6 +21,8 @@ httpx==0.25.2
 
 # Async LRU cache (for performance optimization)
 async-lru==2.0.4
+redis==5.0.1
+hiredis==2.3.2
 
 # Database and ORM
 sqlmodel==0.0.16

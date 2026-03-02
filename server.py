@@ -4,14 +4,52 @@ import json
 import asyncio
 import tempfile
 import subprocess
+import hashlib
 from pathlib import Path
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict, Any, Union
 from async_lru import alru_cache
 from fastapi import FastAPI, HTTPException, Response, UploadFile, File
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 import yaml
+import redis.asyncio as redis
 
+# --- Caching Configuration ---
+
+REDIS_URL = os.environ.get("REDIS_URL")
+redis_client: Optional[redis.Redis] = None
+
+async def init_redis():
+    global redis_client
+    if REDIS_URL:
+        try:
+            redis_client = redis.from_url(REDIS_URL, decode_responses=True)
+            await redis_client.ping()
+            print(f"Connected to Redis at {REDIS_URL}")
+        except Exception as e:
+            print(f"Failed to connect to Redis: {e}")
+            redis_client = None
+
+async def get_cached_data(key: str) -> Optional[Any]:
+    if redis_client:
+        try:
+            data = await redis_client.get(key)
+            return json.loads(data) if data else None
+        except Exception as e:
+            print(f"Redis get error: {e}")
+    return None
+
+async def set_cached_data(key: str, data: Any, ttl: int = 3600):
+    if redis_client:
+        try:
+            await redis_client.set(key, json.dumps(data), ex=ttl)
+        except Exception as e:
+            print(f"Redis set error: {e}")
+
+def generate_cache_key(prefix: str, *args, **kwargs) -> str:
+    content = json.dumps({"args": args, "kwargs": kwargs}, sort_keys=True)
+    hash_val = hashlib.md5(content.encode()).hexdigest()
+    return f"{prefix}:{hash_val}"
 
 # Initialize Generators (Mocks for local API, but v1 uses resume-cli)
 class MockTemplateGenerator:
@@ -21,6 +59,9 @@ class MockTemplateGenerator:
     def generate_pdf(self, data: Dict, variant: str) -> bytes:
         return b"%PDF-1.4... (Mock PDF Data)"
 
+    def _format_experience(self, experience: List) -> str:
+        return "\n".join([f"- {item.get('company')}: {item.get('role')}" for item in experience])
+
 
 # ... (rest of mocks)
 
@@ -28,6 +69,11 @@ class MockTemplateGenerator:
 class MockAIGenerator:
     @alru_cache(maxsize=32)
     async def tailor_resume(self, resume_json: str, job_description: str) -> str:
+        cache_key = generate_cache_key("tailor", resume_json, job_description)
+        cached = await get_cached_data(cache_key)
+        if cached:
+            return cached
+
         # Simulate AI tailoring logic
         # Simulate expensive operation (uncomment to verify caching behavior)
         # await asyncio.sleep(2)
@@ -37,7 +83,7 @@ class MockAIGenerator:
             data.get("experience", [])
         )
 
-        return f"""# {data.get('name')} (Tailored)
+        result = f"""# {data.get('name')} (Tailored)
 ## {data.get('role')}
 
 **Summary:**
@@ -47,6 +93,8 @@ Highly motivated professional tailored for the following job requirements:
 ### Tailored Experience
 {experience_section}
 """
+        await set_cached_data(cache_key, result)
+        return result
 
     def analyze_match(self, resume_data: Dict, job_description: str) -> str:
         return "Match Score: 88/100. Strong alignment with required skills in React and Python."
@@ -76,6 +124,10 @@ ai_generator = MockAIGenerator()
 cover_letter_generator = MockCoverLetterGenerator()
 
 app = FastAPI(title="ResumeAI API")
+
+@app.on_event("startup")
+async def startup_event():
+    await init_redis()
 
 # Allow CORS for local development
 # Note: allow_credentials=True is invalid with allow_origins=["*"] in strict CORS specs.
@@ -167,7 +219,7 @@ class V1VariantsResponse(BaseModel):
 
 @app.get("/")
 async def health_check():
-    return {"status": "ok", "service": "ResumeAI API"}
+    return {"status": "ok", "service": "ResumeAI API", "cache": "connected" if redis_client else "disconnected"}
 
 
 @app.post("/generate/preview")
@@ -596,6 +648,11 @@ async def v1_variants():
 
     This endpoint returns variant metadata as expected by the frontend.
     """
+    cache_key = "v1_variants"
+    cached = await get_cached_data(cache_key)
+    if cached:
+        return cached
+
     try:
         # Define common variants with metadata
         variants = [
@@ -622,7 +679,9 @@ async def v1_variants():
             },
         ]
 
-        return {"variants": variants}
+        result = {"variants": variants}
+        await set_cached_data(cache_key, result, ttl=86400) # Cache for 24 hours
+        return result
 
     except Exception as e:
         raise HTTPException(
