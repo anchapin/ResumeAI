@@ -134,7 +134,7 @@ describe('Settings Page', () => {
 
     // Verify button text changes (this will fail until implemented)
     await waitFor(() => {
-      expect(screen.getByText('Copied')).toBeInTheDocument();
+      expect(screen.getByText('Copied!')).toBeInTheDocument();
     });
 
     // Verify check icon appears
