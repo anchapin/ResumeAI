@@ -13,12 +13,28 @@ vi.mock('../store/store', () => ({
 }));
 
 describe('useTheme Hook', () => {
-  let localStorageSpy: any;
+  let storageMock: any;
+  let getItemSpy: any;
+  let setItemSpy: any;
   let classListSpy: any;
 
   beforeEach(() => {
-    localStorageSpy = vi.spyOn(Storage.prototype, 'getItem');
-    vi.spyOn(Storage.prototype, 'setItem');
+    storageMock = {
+      getItem: vi.fn(),
+      setItem: vi.fn(),
+      removeItem: vi.fn(),
+      clear: vi.fn(),
+      length: 0,
+      key: vi.fn(),
+    };
+
+    // Spy on Storage prototype to delegate to our mock
+    getItemSpy = vi
+      .spyOn(Storage.prototype, 'getItem')
+      .mockImplementation((key: string) => storageMock.getItem(key));
+    setItemSpy = vi
+      .spyOn(Storage.prototype, 'setItem')
+      .mockImplementation((key: string, value: string) => storageMock.setItem(key, value));
 
     classListSpy = {
       add: vi.fn(),
@@ -75,18 +91,18 @@ describe('useTheme Hook', () => {
     mockStore.theme = 'dark';
     renderHook(() => useTheme());
 
-    expect(localStorage.setItem).toHaveBeenCalledWith('resumeai_theme', 'dark');
+    expect(storageMock.setItem).toHaveBeenCalledWith('resumeai_theme', 'dark');
   });
 
   it('loads theme from localStorage on mount', () => {
-    localStorageSpy.mockReturnValue('dark');
+    storageMock.getItem.mockReturnValue('dark');
     renderHook(() => useTheme());
 
     expect(mockStore.setTheme).toHaveBeenCalledWith('dark');
   });
 
   it('does not load invalid theme from localStorage', () => {
-    localStorageSpy.mockReturnValue('invalid');
+    storageMock.getItem.mockReturnValue('invalid');
     renderHook(() => useTheme());
 
     expect(mockStore.setTheme).not.toHaveBeenCalledWith('invalid');
@@ -99,7 +115,7 @@ describe('useTheme Hook', () => {
       removeEventListener: vi.fn(),
     } as any);
 
-    localStorageSpy.mockReturnValue(null);
+    storageMock.getItem.mockReturnValue(null);
     renderHook(() => useTheme());
 
     expect(mockStore.setTheme).toHaveBeenCalledWith('dark');
@@ -112,7 +128,7 @@ describe('useTheme Hook', () => {
       removeEventListener: vi.fn(),
     } as any);
 
-    localStorageSpy.mockReturnValue(null);
+    storageMock.getItem.mockReturnValue(null);
     renderHook(() => useTheme());
 
     expect(mockStore.setTheme).toHaveBeenCalledWith('light');
@@ -126,7 +142,7 @@ describe('useTheme Hook', () => {
     };
 
     vi.spyOn(window, 'matchMedia').mockReturnValue(mediaQueryMock as any);
-    localStorageSpy.mockReturnValue(null);
+    storageMock.getItem.mockReturnValue(null);
 
     const { unmount } = renderHook(() => useTheme());
 
@@ -143,7 +159,7 @@ describe('useTheme Hook', () => {
     };
 
     vi.spyOn(window, 'matchMedia').mockReturnValue(mediaQueryMock as any);
-    localStorageSpy.mockReturnValue('dark');
+    storageMock.getItem.mockReturnValue('dark');
 
     const { unmount } = renderHook(() => useTheme());
 
@@ -193,6 +209,6 @@ describe('useTheme Hook', () => {
     act(() => {
       rerender();
     });
-    expect(localStorage.setItem).toHaveBeenCalledWith('resumeai_theme', 'dark');
+    expect(storageMock.setItem).toHaveBeenCalledWith('resumeai_theme', 'dark');
   });
 });
