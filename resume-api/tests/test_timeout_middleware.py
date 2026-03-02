@@ -5,9 +5,7 @@ Tests for request timeout middleware.
 import asyncio
 import pytest
 from fastapi import FastAPI
-from fastapi.responses import JSONResponse
 from starlette.testclient import TestClient
-from starlette.middleware.base import BaseHTTPMiddleware
 
 from middleware.timeout import TimeoutMiddleware, DEFAULT_REQUEST_TIMEOUT
 

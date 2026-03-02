@@ -14,14 +14,10 @@ Usage:
 
 import sys
 import os
-import json
 import argparse
 import subprocess
-import time
 import requests
-from pathlib import Path
-from typing import Dict, List, Tuple, Optional
-from datetime import datetime
+from typing import Dict, List
 
 # Configuration
 API_URL = os.getenv("API_URL", "http://localhost:8000")

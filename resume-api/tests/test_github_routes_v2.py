@@ -13,7 +13,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from datetime import datetime, timezone, timedelta
 
 from database import GitHubConnection
-from api.models import UserResponse
 
 # Create test app with all necessary dependencies
 from routes.github import router

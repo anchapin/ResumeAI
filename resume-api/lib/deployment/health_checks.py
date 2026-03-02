@@ -7,7 +7,7 @@ including component checks, dependency validation, and deployment status.
 
 import logging
 import asyncio
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any
 from datetime import datetime
 from enum import Enum
 from pydantic import BaseModel, Field

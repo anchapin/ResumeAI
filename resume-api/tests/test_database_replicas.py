@@ -6,15 +6,12 @@ Tests for replica pool, connection management, failover, and synchronization.
 
 import pytest
 import asyncio
-from unittest.mock import Mock, AsyncMock, patch, MagicMock
-from datetime import datetime, timedelta
+from unittest.mock import Mock, AsyncMock
 
 from config.database_replicas import ReplicaPool, ReplicaConfig, ReplicaHealth
 from lib.db.connection_manager import (
     DatabaseConnectionManager,
     RoutingSession,
-    initialize_connection_manager,
-    get_connection_manager,
 )
 from lib.monitoring.replica_sync import (
     ReplicationSyncMonitor,

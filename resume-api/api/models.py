@@ -13,8 +13,13 @@ try:
     from lib.utils.validators import escape_latex
     from lib.security.password_validator import validate_password_strength
 except ImportError:
-    escape_latex = lambda x: x
-    validate_password_strength = lambda p: (True, None)
+
+    def escape_latex(x):
+        return x
+
+    def validate_password_strength(p):
+        return (True, None)
+
 
 # Validation constants
 MAX_STRING_LENGTH = 1000

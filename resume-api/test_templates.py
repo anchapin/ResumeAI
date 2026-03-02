@@ -451,7 +451,7 @@ def test_template(template_name, resume_data, description):
             print(f"✅ SUCCESS: Generated PDF ({len(pdf_bytes)} bytes)")
             return True
         else:
-            print(f"❌ FAILED: PDF generation returned empty data")
+            print("❌ FAILED: PDF generation returned empty data")
             return False
 
     except Exception as e:
