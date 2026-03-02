@@ -280,6 +280,10 @@ const JobApplications: React.FC = () => {
     return 'Needs Work';
   };
 
+  if (isLoading) {
+    return <JobApplicationsSkeleton />;
+  }
+
   return (
     <div className="flex-1 min-h-screen bg-[#f6f6f8] pl-72">
       <header className="h-16 flex items-center justify-between px-8 bg-white/80 backdrop-blur-sm sticky top-0 z-10 border-b border-slate-200">
@@ -433,13 +437,7 @@ const JobApplications: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {isLoading ? (
-                <tr>
-                  <td colSpan={5} className="px-6 py-12">
-                    <JobApplicationsSkeleton />
-                  </td>
-                </tr>
-              ) : error ? (
+              {error ? (
                 <tr>
                   <td colSpan={5} className="px-6 py-12 text-center">
                     <div className="flex flex-col items-center justify-center text-red-500">
