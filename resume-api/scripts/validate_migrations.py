@@ -11,12 +11,10 @@ Usage:
 """
 
 import sys
-import os
 import json
 import argparse
-import subprocess
 from pathlib import Path
-from typing import Dict, List, Tuple, Optional
+from typing import Dict, List
 from datetime import datetime
 
 # Configuration
@@ -215,7 +213,7 @@ class MigrationValidator:
 
             stat = shutil.disk_usage("/")
             free_gb = stat.free / (1024**3)
-            total_gb = stat.total / (1024**3)
+            stat.total / (1024**3)
             percent_free = (stat.free / stat.total) * 100
 
             if percent_free > 20:  # At least 20% free

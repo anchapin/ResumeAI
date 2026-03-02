@@ -13,7 +13,6 @@ from config.errors import (
     ErrorCode,
     create_error_response,
     generate_request_id,
-    get_status_code,
 )
 
 logger = logging.getLogger(__name__)
