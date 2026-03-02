@@ -6,7 +6,6 @@ plaintext keys against stored hashes.
 """
 
 import logging
-import secrets
 from typing import Optional
 
 import bcrypt

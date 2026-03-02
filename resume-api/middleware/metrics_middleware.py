@@ -9,7 +9,7 @@ import time
 from typing import Callable
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.types import ASGIApp, Scope, Receive, Send
+from starlette.types import ASGIApp
 
 from lib.monitoring.prometheus_exporter import get_exporter
 

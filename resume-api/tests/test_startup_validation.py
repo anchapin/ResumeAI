@@ -4,7 +4,6 @@ Tests that required secrets are validated at application startup.
 """
 
 import os
-import sys
 import pytest
 from unittest import mock
 from config.validation import SecretValidator, MissingSecretError, startup_validation

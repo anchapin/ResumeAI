@@ -4,7 +4,6 @@ Test script for error response standardization.
 Verifies that all error responses follow the unified schema.
 """
 
-import json
 import sys
 from pathlib import Path
 
