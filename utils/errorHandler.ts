@@ -3,7 +3,12 @@
  * Provides centralized error handling, user-friendly messages, and error tracking
  */
 
-import { getErrorMessageByType, getErrorSuggestion, isErrorRetryable, ErrorType } from './errorMessages';
+import {
+  getErrorMessageByType,
+  getErrorSuggestion,
+  isErrorRetryable,
+  ErrorType,
+} from './errorMessages';
 
 // Re-export ErrorType for convenience
 export { ErrorType };
@@ -133,7 +138,7 @@ class GlobalErrorHandlerService {
       }
 
       const messageMap = getErrorMessageByType(errorType);
-      userMessage = getErrorSuggestion(errorType, status);
+      userMessage = messageMap.userMessage;
 
       return {
         type: errorType,

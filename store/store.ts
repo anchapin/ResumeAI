@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { SimpleResumeData } from '../types';
 import { loadResumeData, saveResumeData, StorageError } from '../utils/storage';
-import { TokenManager } from '../utils/security';
+import { TokenManager, sanitizeInput } from '../utils/security';
 
 export interface AuthUser {
   id: number;
@@ -120,6 +120,65 @@ const initialResumeData: SimpleResumeData = {
   ],
 };
 
+const sanitizeResumeData = (data: SimpleResumeData): SimpleResumeData => {
+  const sanitizeString = (str: unknown): string => {
+    if (typeof str === 'string') {
+      return sanitizeInput(str);
+    }
+    return String(str);
+  };
+
+  const sanitizeExperience = (
+    exp: SimpleResumeData['experience'][0],
+  ): SimpleResumeData['experience'][0] => ({
+    ...exp,
+    company: sanitizeString(exp.company),
+    role: sanitizeString(exp.role),
+    startDate: sanitizeString(exp.startDate),
+    endDate: sanitizeString(exp.endDate),
+    description: sanitizeString(exp.description),
+    tags: Array.isArray(exp.tags) ? exp.tags.map(sanitizeString) : [],
+  });
+
+  const sanitizeEducation = (
+    edu: SimpleResumeData['education'][0],
+  ): SimpleResumeData['education'][0] => ({
+    ...edu,
+    institution: sanitizeString(edu.institution),
+    area: sanitizeString(edu.area),
+    studyType: sanitizeString(edu.studyType),
+    startDate: sanitizeString(edu.startDate),
+    endDate: sanitizeString(edu.endDate),
+    courses: Array.isArray(edu.courses) ? edu.courses.map(sanitizeString) : [],
+  });
+
+  const sanitizeProject = (
+    proj: SimpleResumeData['projects'][0],
+  ): SimpleResumeData['projects'][0] => ({
+    ...proj,
+    name: sanitizeString(proj.name),
+    description: sanitizeString(proj.description),
+    url: sanitizeString(proj.url),
+    roles: Array.isArray(proj.roles) ? proj.roles.map(sanitizeString) : [],
+    startDate: sanitizeString(proj.startDate),
+    endDate: sanitizeString(proj.endDate),
+    highlights: Array.isArray(proj.highlights) ? proj.highlights.map(sanitizeString) : [],
+  });
+
+  return {
+    name: sanitizeString(data.name),
+    email: sanitizeString(data.email),
+    phone: sanitizeString(data.phone),
+    location: sanitizeString(data.location),
+    role: sanitizeString(data.role),
+    summary: sanitizeString(data.summary),
+    skills: Array.isArray(data.skills) ? data.skills.map(sanitizeString) : [],
+    experience: Array.isArray(data.experience) ? data.experience.map(sanitizeExperience) : [],
+    education: Array.isArray(data.education) ? data.education.map(sanitizeEducation) : [],
+    projects: Array.isArray(data.projects) ? data.projects.map(sanitizeProject) : [],
+  };
+};
+
 export const useStore = create<AppStore>()(
   persist(
     (set) => ({
@@ -138,9 +197,11 @@ export const useStore = create<AppStore>()(
       setAuthError: (authError) => set({ authError }),
       clearAuthError: () => set({ authError: null }),
       setResumeData: (data) =>
-        set((state) => ({
-          resumeData: typeof data === 'function' ? data(state.resumeData) : data,
-        })),
+        set((state) => {
+          const newData = typeof data === 'function' ? data(state.resumeData) : data;
+          const sanitizedData = sanitizeResumeData(newData);
+          return { resumeData: sanitizedData };
+        }),
       loadResume: async () => {
         try {
           const savedData = loadResumeData();
@@ -152,7 +213,8 @@ export const useStore = create<AppStore>()(
               education: Array.isArray(savedData.education) ? savedData.education : [],
               projects: Array.isArray(savedData.projects) ? savedData.projects : [],
             };
-            set({ resumeData: validatedData, isResumeLoaded: true });
+            const sanitizedData = sanitizeResumeData(validatedData);
+            set({ resumeData: sanitizedData, isResumeLoaded: true });
           } else {
             set({ isResumeLoaded: true });
           }
