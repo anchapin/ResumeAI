@@ -123,9 +123,9 @@ class ConnectionFinder:
                 schools.add(edu["institution"])
 
         # Search GitHub for users from same schools at target company
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            for school in schools:
-                try:
+        for school in schools:
+            try:
+                async with httpx.AsyncClient(timeout=30.0) as client:
                     # Search for users who worked at target_company and attended school
                     response = await client.get(
                         "https://api.github.com/search/users",
@@ -149,8 +149,8 @@ class ConnectionFinder:
                                 similarity_score=0.8,  # Higher score for alumni
                             )
                             connections.append(connection)
-                except Exception as e:
-                    print(f"Alumni search error: {e}")
+            except Exception as e:
+                print(f"Alumni search error: {e}")
 
         return connections
 
@@ -170,9 +170,9 @@ class ConnectionFinder:
                 previous_companies.add(exp["company"])
 
         # Search for users who worked at both previous companies and target
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            for prev_company in previous_companies:
-                try:
+        for prev_company in previous_companies:
+            try:
+                async with httpx.AsyncClient(timeout=30.0) as client:
                     response = await client.get(
                         "https://api.github.com/search/users",
                         params={
@@ -195,8 +195,8 @@ class ConnectionFinder:
                                 similarity_score=0.7,
                             )
                             connections.append(connection)
-                except Exception as e:
-                    print(f"Previous company search error: {e}")
+            except Exception as e:
+                print(f"Previous company search error: {e}")
 
         return connections
 

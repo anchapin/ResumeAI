@@ -667,6 +667,133 @@ User.github_connections = relationship(
 )
 
 
+class Team(Base):
+    """Team model for collaboration features."""
+
+    __tablename__ = "teams"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(200), nullable=False, index=True)
+    description = Column(Text, nullable=True)
+    owner_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+
+    # Metadata
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
+
+    # Relationships
+    owner = relationship("User", back_populates="owned_teams")
+    members = relationship(
+        "TeamMember", back_populates="team", cascade="all, delete-orphan"
+    )
+    shared_resumes = relationship(
+        "TeamResume", back_populates="team", cascade="all, delete-orphan"
+    )
+    activities = relationship(
+        "TeamActivity", back_populates="team", cascade="all, delete-orphan"
+    )
+
+    __table_args__ = (Index("idx_team_owner", "owner_id"),)
+
+
+class TeamMember(Base):
+    """Team member model for managing team membership."""
+
+    __tablename__ = "team_members"
+
+    id = Column(Integer, primary_key=True, index=True)
+    team_id = Column(Integer, ForeignKey("teams.id"), nullable=False, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+
+    # Member role
+    role = Column(
+        String(50), nullable=False, default="member", index=True
+    )  # owner, admin, editor, viewer, member
+
+    # Metadata
+    joined_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    # Relationships
+    team = relationship("Team", back_populates="members")
+    user = relationship("User", back_populates="team_memberships")
+
+    __table_args__ = (
+        Index("idx_team_member_team_user", "team_id", "user_id"),
+        Index("idx_team_member_user", "user_id"),
+    )
+
+
+class TeamResume(Base):
+    """Team resume model for managing shared resumes within teams."""
+
+    __tablename__ = "team_resumes"
+
+    id = Column(Integer, primary_key=True, index=True)
+    team_id = Column(Integer, ForeignKey("teams.id"), nullable=False, index=True)
+    resume_id = Column(Integer, ForeignKey("resumes.id"), nullable=False, index=True)
+
+    # Sharing permissions
+    permissions = Column(String(50), default="view")  # view, edit, comment, admin
+
+    # Metadata
+    shared_by = Column(Integer, ForeignKey("users.id"), nullable=True)
+    shared_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    # Relationships
+    team = relationship("Team", back_populates="shared_resumes")
+    resume = relationship("Resume")
+    sharer = relationship("User", foreign_keys=[shared_by])
+
+    __table_args__ = (
+        Index("idx_team_resume_team", "team_id"),
+        Index("idx_team_resume_resume", "resume_id"),
+        Index("idx_team_resume_team_resume", "team_id", "resume_id"),
+    )
+
+
+class TeamActivity(Base):
+    """Team activity model for tracking team actions."""
+
+    __tablename__ = "team_activities"
+
+    id = Column(Integer, primary_key=True, index=True)
+    team_id = Column(Integer, ForeignKey("teams.id"), nullable=False, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+
+    # Activity details
+    action = Column(String(100), nullable=False, index=True)
+    resource_type = Column(String(50), nullable=True, index=True)
+    resource_id = Column(Integer, nullable=True)
+    description = Column(Text, nullable=False)
+
+    # Additional metadata as JSON (renamed from 'metadata' to avoid SQLAlchemy conflict)
+    activity_metadata = Column(JSON, nullable=True, name="metadata")
+
+    # Timestamp
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), index=True)
+
+    # Relationships
+    team = relationship("Team", back_populates="activities")
+    user = relationship("User", foreign_keys=[user_id])
+
+    __table_args__ = (
+        Index("idx_team_activity_team", "team_id"),
+        Index("idx_team_activity_user", "user_id"),
+        Index("idx_team_activity_created", "created_at"),
+    )
+
+
+# Add relationships to User model
+User.owned_teams = relationship(
+    "Team", back_populates="owner", cascade="all, delete-orphan"
+)
+User.team_memberships = relationship(
+    "TeamMember", back_populates="user", cascade="all, delete-orphan"
+)
+
+
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///./resumeai.db")
 
 engine = create_async_engine(

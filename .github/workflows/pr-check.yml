@@ -74,11 +74,19 @@ jobs:
         env:
           PYTHONDONTWRITEBYTECODE: 1
           PYTHONUNBUFFERED: 1
+          DEBUG: "true"
+          JWT_SECRET: "test-secret-for-ci-testing-32chars"
 
       - name: Run Black formatter check
         working-directory: ./resume-api
         run: black --check .
+        env:
+          DEBUG: "true"
+          JWT_SECRET: "test-secret-for-ci-testing-32chars"
 
       - name: Run Flake8 linter
         working-directory: ./resume-api
         run: flake8 . --max-line-length=120 --extend-ignore=E203,W503,F541,E402,F841,W291,W293,E501,F401,F811,E712,E722,E731
+        env:
+          DEBUG: "true"
+          JWT_SECRET: "test-secret-for-ci-testing-32chars"
