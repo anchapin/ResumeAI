@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
 import { useStore } from '../store/store';
 import { TokenManager } from '../utils/security';
+import { api } from '../src/lib/requestSigning';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
 
@@ -24,9 +25,7 @@ export const useAuth = () => {
 
   const fetchCurrentUser = async () => {
     try {
-      const response = await fetch(`${API_URL}/auth/me`, {
-        headers: getAuthHeaders(),
-      });
+      const response = await api.get('/auth/me');
       if (response.ok) {
         const userData = await response.json();
         setUser(userData);
@@ -46,11 +45,7 @@ export const useAuth = () => {
       setAuthError(null);
       setAuthLoading(true);
       try {
-        const response = await fetch(`${API_URL}/auth/login`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, password }),
-        });
+        const response = await api.post('/auth/login', { email, password });
 
         if (!response.ok) {
           const errData = await response.json().catch(() => ({}));
@@ -79,15 +74,11 @@ export const useAuth = () => {
       setAuthError(null);
       setAuthLoading(true);
       try {
-        const response = await fetch(`${API_URL}/auth/register`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            email,
-            username,
-            password,
-            full_name: fullName,
-          }),
+        const response = await api.post('/auth/register', {
+          email,
+          username,
+          password,
+          full_name: fullName,
         });
 
         if (!response.ok) {
@@ -111,11 +102,7 @@ export const useAuth = () => {
     try {
       const refreshToken = localStorage.getItem('resumeai_refresh_token');
       if (refreshToken) {
-        await fetch(`${API_URL}/auth/logout`, {
-          method: 'POST',
-          headers: getAuthHeaders(),
-          body: JSON.stringify({ refresh_token: refreshToken }),
-        }).catch(() => {});
+        await api.post('/auth/logout', { refresh_token: refreshToken }).catch(() => {});
       }
     } finally {
       TokenManager.removeToken();
