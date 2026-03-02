@@ -30,21 +30,15 @@
 **Before:**
 
 ```python
-<<<<<<< HEAD
 from middleware.error_handling import ErrorHandlingMiddleware
-=======
 from middleware.timeout import TimeoutMiddleware
->>>>>>> eb06d43 (feat: add testing and timeout protection for issues 386-390)
 
 # ... later ...
 
-<<<<<<< HEAD
 # Add error handling middleware (must be added before other middleware)
 app.add_middleware(ErrorHandlingMiddleware)
-=======
 # Add timeout middleware (must be added before monitoring)
 app.add_middleware(TimeoutMiddleware, timeout_seconds=30)
->>>>>>> eb06d43 (feat: add testing and timeout protection for issues 386-390)
 ```
 
 **After:**
