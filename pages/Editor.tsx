@@ -5,20 +5,16 @@ import {
   convertToAPIData,
   generatePDF,
   getVariants,
-  VariantMetadata,
   getResume,
   updateResume,
   listComments,
 } from '../utils/api-client';
 import { useStore } from '../store/store';
-import { TemplateSelector } from '../components/TemplateSelector';
 import { LinkedInImportDialog } from '../components/LinkedInImportDialog';
-import ExperienceItem from '../components/ExperienceItem';
 import ResumePreview from '../components/ResumePreview';
 import VersionHistory from '../components/VersionHistory';
 import CommentPanel from '../components/CommentPanel';
 import { showSuccessToast, showErrorToast } from '../utils/toast';
-import { EditorHeader } from '../components/editor/EditorHeader';
 import { ContactInfoSection } from '../components/editor/ContactInfoSection';
 import { SummarySection } from '../components/editor/SummarySection';
 import { ExperienceSection } from '../components/editor/ExperienceSection';
@@ -26,11 +22,6 @@ import { SkillsSection } from '../components/editor/SkillsSection';
 import { EducationSection } from '../components/editor/EducationSection';
 import { ProjectsSection } from '../components/editor/ProjectsSection';
 import { EditorTabs } from '../components/editor/EditorTabs';
-import { EditorActions } from '../components/editor/EditorActions';
-import { SaveVersionDialog } from '../components/editor/SaveVersionDialog';
-import { VersionHistoryDialog } from '../components/editor/VersionHistoryDialog';
-import EducationItem from '../components/editor/EducationItem';
-import ProjectItem from '../components/editor/ProjectItem';
 
 /** Navigation items for the editor header */
 const NAV_ITEMS = ['Dashboard', 'My Resumes', 'Templates', 'Settings'];
@@ -602,348 +593,79 @@ const Editor: React.FC = () => {
     switch (activeTab) {
       case 'Contact Info':
         return (
-          <div className="space-y-6 pb-20">
-            <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-bold text-slate-900">Contact Information</h2>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setShowCommentPanel(true)}
-                  className="flex items-center gap-1 text-sm font-bold text-slate-500 hover:text-primary-600 transition-colors relative"
-                  title="Add comment to this section"
-                >
-                  <span className="material-symbols-outlined text-[18px]">chat_bubble_outline</span>
-                  <span>Add Comment</span>
-                  {unresolvedCommentCount > 0 && (
-                    <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center">
-                      {unresolvedCommentCount}
-                    </span>
-                  )}
-                </button>
-                <span className="text-sm font-medium text-slate-500">Basic profile details</span>
-              </div>
-            </div>
-
-            {/* LinkedIn Import Card */}
-            <div className="bg-gradient-to-r from-[#0077b5] to-[#00a0dc] rounded-xl p-6 text-white shadow-lg">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="bg-white/20 size-12 rounded-lg flex items-center justify-center">
-                    <span className="material-symbols-outlined text-white">account_circle</span>
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-lg">Import from LinkedIn</h3>
-                    <p className="text-sm text-white/80">
-                      Quickly populate your profile with LinkedIn data
-                    </p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setShowLinkedInImport(true)}
-                  className="px-4 py-2 bg-white text-[#0077b5] font-semibold rounded-lg hover:bg-white/90 transition-colors shadow-md"
-                >
-                  Import Now
-                </button>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-xl border border-slate-200 p-8 space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <label className="text-sm font-bold text-slate-700">Full Name</label>
-                  <input
-                    type="text"
-                    value={resumeData.name}
-                    onChange={(e) => updateContact('name', e.target.value)}
-                    className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all text-slate-900"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-bold text-slate-700">Email</label>
-                  <input
-                    type="email"
-                    value={resumeData.email}
-                    onChange={(e) => updateContact('email', e.target.value)}
-                    className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all text-slate-900"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-bold text-slate-700">Phone</label>
-                  <input
-                    type="tel"
-                    value={resumeData.phone}
-                    onChange={(e) => updateContact('phone', e.target.value)}
-                    className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all text-slate-900"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-bold text-slate-700">Location</label>
-                  <input
-                    type="text"
-                    value={resumeData.location}
-                    onChange={(e) => updateContact('location', e.target.value)}
-                    className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all text-slate-900"
-                  />
-                </div>
-                <div className="space-y-2 md:col-span-2">
-                  <label className="text-sm font-bold text-slate-700">Job Title / Role</label>
-                  <input
-                    type="text"
-                    value={resumeData.role}
-                    onChange={(e) => updateContact('role', e.target.value)}
-                    className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all text-slate-900"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
+          <ContactInfoSection
+            resumeData={resumeData}
+            onUpdate={updateContact}
+            onShowLinkedInImport={() => setShowLinkedInImport(true)}
+            onShowCommentPanel={() => setShowCommentPanel(true)}
+            unresolvedCommentCount={unresolvedCommentCount}
+          />
         );
 
       case 'Summary':
         return (
-          <div className="space-y-6 pb-20">
-            <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-bold text-slate-900">Professional Summary</h2>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setShowCommentPanel(true)}
-                  className="flex items-center gap-1 text-sm font-bold text-slate-500 hover:text-primary-600 transition-colors"
-                  title="Add comment to this section"
-                >
-                  <span className="material-symbols-outlined text-[18px]">chat_bubble_outline</span>
-                  <span>Add Comment</span>
-                </button>
-                <span className="text-sm font-medium text-slate-500">Brief introduction</span>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-xl border border-slate-200 p-8 space-y-4">
-              <label className="text-sm font-bold text-slate-700">Summary</label>
-              <textarea
-                value={resumeData.summary}
-                onChange={(e) => updateSummary(e.target.value)}
-                rows={8}
-                className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all text-slate-900 resize-none"
-                placeholder="Write a brief professional summary highlighting your experience, skills, and career goals..."
-              />
-              <p className="text-xs text-slate-500">
-                Tip: Keep your summary concise (3-5 sentences) and focused on your unique value
-                proposition.
-              </p>
-            </div>
-          </div>
+          <SummarySection
+            summary={resumeData.summary}
+            onUpdate={updateSummary}
+            onShowCommentPanel={() => setShowCommentPanel(true)}
+          />
         );
 
       case 'Experience':
         return (
-          <div className="space-y-6 pb-20">
-            <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-bold text-slate-900">Work Experience</h2>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setShowCommentPanel(true)}
-                  className="flex items-center gap-1 text-sm font-bold text-slate-500 hover:text-primary-600 transition-colors"
-                  title="Add comment to this section"
-                >
-                  <span className="material-symbols-outlined text-[18px]">chat_bubble_outline</span>
-                  <span>Add Comment</span>
-                </button>
-                <span className="text-sm font-medium text-slate-500">
-                  {experiences.length} positions listed
-                </span>
-              </div>
-            </div>
-
-            {/* Drag and Drop Hint */}
-            {experiences.length > 1 && (
-              <div className="flex items-center gap-2 text-xs text-slate-400 bg-slate-50 px-3 py-2 rounded-lg">
-                <span className="material-symbols-outlined text-[16px]">drag_indicator</span>
-                <span>Drag and drop to reorder experience entries</span>
-              </div>
-            )}
-
-            {experiences.map((exp) => (
-              <div
-                key={exp.id}
-                draggable
-                onDragStart={() => handleDragStart(exp.id)}
-                onDragOver={(e) => handleDragOver(e, exp.id)}
-                onDragEnd={handleDragEnd}
-                onDrop={() => handleDrop(exp.id)}
-                className={`transition-all duration-200 ${
-                  draggedItemId === exp.id ? 'opacity-50 scale-[0.98]' : ''
-                } ${
-                  dragOverItemId === exp.id
-                    ? 'ring-2 ring-primary-400 ring-offset-2 rounded-xl'
-                    : ''
-                }`}
-              >
-                <ExperienceItem
-                  exp={exp}
-                  isExpanded={expandedExpId === exp.id}
-                  onToggleExpand={handleToggleExpandExperience}
-                  onDelete={handleDeleteExperience}
-                  onUpdate={updateExperience}
-                  onAddTag={addTagToExperience}
-                  onRemoveTag={removeTagFromExperience}
-                />
-              </div>
-            ))}
-
-            <button
-              onClick={addExperience}
-              className="w-full flex items-center justify-center gap-2 border-2 border-dashed border-primary-200 rounded-xl py-6 text-primary-600 font-bold hover:bg-primary-50/50 hover:border-primary-300 transition-all group"
-            >
-              <span className="material-symbols-outlined group-hover:scale-110 transition-transform">
-                add_box
-              </span>
-              Add New Work Experience
-            </button>
-          </div>
+          <ExperienceSection
+            experiences={experiences}
+            expandedExpId={expandedExpId}
+            onToggleExpand={handleToggleExpandExperience}
+            onDelete={handleDeleteExperience}
+            onUpdate={updateExperience}
+            onAddTag={addTagToExperience}
+            onRemoveTag={removeTagFromExperience}
+            onAdd={addExperience}
+            onDragStart={handleDragStart}
+            onDragOver={handleDragOver}
+            onDragEnd={handleDragEnd}
+            onDrop={handleDrop}
+            draggedItemId={draggedItemId}
+            dragOverItemId={dragOverItemId}
+            onShowCommentPanel={() => setShowCommentPanel(true)}
+          />
         );
 
       case 'Skills':
         return (
-          <div className="space-y-6 pb-20">
-            <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-bold text-slate-900">Skills</h2>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setShowCommentPanel(true)}
-                  className="flex items-center gap-1 text-sm font-bold text-slate-500 hover:text-primary-600 transition-colors"
-                  title="Add comment to this section"
-                >
-                  <span className="material-symbols-outlined text-[18px]">chat_bubble_outline</span>
-                  <span>Add Comment</span>
-                </button>
-                <span className="text-sm font-medium text-slate-500">
-                  {resumeData.skills.length} skills listed
-                </span>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-xl border border-slate-200 p-8 space-y-4">
-              <label className="text-sm font-bold text-slate-700">Your Skills</label>
-              <div className="bg-slate-50 border border-dashed border-slate-300 rounded-xl p-6">
-                <div className="flex flex-wrap items-center gap-3">
-                  {resumeData.skills.map((skill) => (
-                    <span
-                      key={skill}
-                      className="inline-flex items-center gap-1 px-3 py-1.5 bg-primary-50 text-primary-700 rounded-lg text-sm font-bold border border-primary-100"
-                    >
-                      {skill}
-                      <button
-                        onClick={() => removeSkill(skill)}
-                        className="hover:text-primary-900 ml-1"
-                      >
-                        <span className="material-symbols-outlined text-[16px]">close</span>
-                      </button>
-                    </span>
-                  ))}
-                  <input
-                    type="text"
-                    placeholder="+ Add Skill"
-                    className="bg-transparent text-sm p-2 focus:ring-0 border-none w-32 placeholder-slate-400"
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        addSkill(e.currentTarget.value);
-                        e.currentTarget.value = '';
-                      }
-                    }}
-                  />
-                </div>
-              </div>
-              <p className="text-xs text-slate-500">
-                Tip: List both technical skills (programming languages, tools) and soft skills
-                (leadership, communication).
-              </p>
-            </div>
-          </div>
+          <SkillsSection
+            skills={resumeData.skills}
+            onAddSkill={addSkill}
+            onRemoveSkill={removeSkill}
+            onShowCommentPanel={() => setShowCommentPanel(true)}
+          />
         );
 
       case 'Education':
         return (
-          <div className="space-y-6 pb-20">
-            <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-bold text-slate-900">Education</h2>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setShowCommentPanel(true)}
-                  className="flex items-center gap-1 text-sm font-bold text-slate-500 hover:text-primary-600 transition-colors"
-                  title="Add comment to this section"
-                >
-                  <span className="material-symbols-outlined text-[18px]">chat_bubble_outline</span>
-                  <span>Add Comment</span>
-                </button>
-                <span className="text-sm font-medium text-slate-500">
-                  {education.length} entries listed
-                </span>
-              </div>
-            </div>
-
-            {education.map((edu) => (
-              <EducationItem
-                key={edu.id}
-                edu={edu}
-                isExpanded={expandedEduId === edu.id}
-                onToggleExpand={handleToggleExpandEducation}
-                onDelete={handleDeleteEducation}
-                onUpdate={updateEducation}
-              />
-            ))}
-
-            <button
-              onClick={addEducation}
-              className="w-full flex items-center justify-center gap-2 border-2 border-dashed border-primary-200 rounded-xl py-6 text-primary-600 font-bold hover:bg-primary-50/50 hover:border-primary-300 transition-all group"
-            >
-              <span className="material-symbols-outlined group-hover:scale-110 transition-transform">
-                add_box
-              </span>
-              Add Education
-            </button>
-          </div>
+          <EducationSection
+            education={education}
+            expandedEduId={expandedEduId}
+            onToggleExpand={handleToggleExpandEducation}
+            onDelete={handleDeleteEducation}
+            onUpdate={updateEducation}
+            onAdd={addEducation}
+            onShowCommentPanel={() => setShowCommentPanel(true)}
+          />
         );
 
       case 'Projects':
         return (
-          <div className="space-y-6 pb-20">
-            <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-bold text-slate-900">Projects</h2>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setShowCommentPanel(true)}
-                  className="flex items-center gap-1 text-sm font-bold text-slate-500 hover:text-primary-600 transition-colors"
-                  title="Add comment to this section"
-                >
-                  <span className="material-symbols-outlined text-[18px]">chat_bubble_outline</span>
-                  <span>Add Comment</span>
-                </button>
-                <span className="text-sm font-medium text-slate-500">
-                  {projects.length} projects listed
-                </span>
-              </div>
-            </div>
-
-            {projects.map((proj) => (
-              <ProjectItem
-                key={proj.id}
-                project={proj}
-                isExpanded={expandedProjId === proj.id}
-                onToggleExpand={handleToggleExpandProject}
-                onDelete={handleDeleteProject}
-                onUpdate={updateProject}
-              />
-            ))}
-
-            <button
-              onClick={addProject}
-              className="w-full flex items-center justify-center gap-2 border-2 border-dashed border-primary-200 rounded-xl py-6 text-primary-600 font-bold hover:bg-primary-50/50 hover:border-primary-300 transition-all group"
-            >
-              <span className="material-symbols-outlined group-hover:scale-110 transition-transform">
-                add_box
-              </span>
-              Add Project
-            </button>
-          </div>
+          <ProjectsSection
+            projects={projects}
+            expandedProjId={expandedProjId}
+            onToggleExpand={handleToggleExpandProject}
+            onDelete={handleDeleteProject}
+            onUpdate={updateProject}
+            onAdd={addProject}
+            onShowCommentPanel={() => setShowCommentPanel(true)}
+          />
         );
 
       default:
@@ -1120,26 +842,7 @@ const Editor: React.FC = () => {
           </div>
 
           {/* Tabs */}
-          <div className="border-b border-slate-200 mb-8 overflow-x-auto">
-            <div className="flex gap-8">
-              {TAB_ITEMS.map((tab) => {
-                const active = activeTab === tab;
-                return (
-                  <button
-                    key={tab}
-                    onClick={() => setActiveTab(tab)}
-                    className={`pb-3 pt-2 text-sm font-bold border-b-[3px] transition-colors ${
-                      active
-                        ? 'border-primary-600 text-slate-900'
-                        : 'border-transparent text-slate-500 hover:text-primary-600 hover:border-slate-200'
-                    }`}
-                  >
-                    {tab}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
+          <EditorTabs activeTab={activeTab} onTabChange={setActiveTab} />
 
           {/* Content Area */}
           {renderContent()}
