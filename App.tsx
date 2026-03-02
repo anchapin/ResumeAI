@@ -75,6 +75,7 @@ function App() {
   const resumeError = useStore((state) => state.resumeError);
   const showShortcuts = useStore((state) => state.showShortcuts);
   const setShowShortcuts = useStore((state) => state.setShowShortcuts);
+  const globalLoading = useStore((state) => state.globalLoading);
   const theme = useStore((state) => state.theme);
   const [storageError, setStorageError] = React.useState<string | null>(null);
 
@@ -227,6 +228,16 @@ function App() {
   return (
     <ErrorBoundary>
       <SkipNavigation />
+
+      {/* Global loading indicator */}
+      {globalLoading && (
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[60] animate-in fade-in slide-in-from-top-4">
+          <div className="bg-white/90 backdrop-blur-md px-4 py-2 rounded-full shadow-lg border border-primary-100 flex items-center gap-3">
+            <div className="w-4 h-4 rounded-full border-2 border-primary-600 border-t-transparent animate-spin"></div>
+            <span className="text-sm font-semibold text-slate-700">Processing...</span>
+          </div>
+        </div>
+      )}
 
       {/* Global error display */}
       <ErrorDisplay error={currentError} onDismiss={dismissError} />
