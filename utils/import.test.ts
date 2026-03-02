@@ -12,7 +12,7 @@ import {
 import { ResumeData } from '../types';
 
 // Mock resume data for testing
-const mockResumeData: ResumeData = {
+const mockResumeData: any = {
   basics: {
     name: 'John Doe',
     label: 'Software Engineer',
@@ -100,12 +100,16 @@ describe('Import Utilities', () => {
     });
 
     it('should throw on invalid JSON string', async () => {
-      await expect(importFromJSON('{ invalid json')).rejects.toThrow('Failed to import JSON Resume');
+      await expect(importFromJSON('{ invalid json')).rejects.toThrow(
+        'Failed to import JSON Resume',
+      );
     });
 
     it('should throw on null data', async () => {
       // Throws Invalid JSON Resume format but catches and re-throws as "Failed to import"
-      await expect(importFromJSON(null as unknown as string | object)).rejects.toThrow('Failed to import JSON Resume');
+      await expect(importFromJSON(null as unknown as string | object)).rejects.toThrow(
+        'Failed to import JSON Resume',
+      );
     });
 
     it('should throw on non-object data', async () => {
@@ -127,7 +131,7 @@ describe('Import Utilities', () => {
         new Response(JSON.stringify(mockResumeData), {
           status: 200,
           headers: { 'Content-Type': 'application/json' },
-        })
+        }),
       );
 
       const result = await importFromPDF(mockFile);
@@ -137,9 +141,9 @@ describe('Import Utilities', () => {
     it('should include API key in headers if available', async () => {
       localStorage.setItem('RESUMEAI_API_KEY', 'test-api-key');
       const mockFile = new File(['pdf content'], 'resume.pdf', { type: 'application/pdf' });
-      const mockFetch = vi.spyOn(global, 'fetch').mockResolvedValue(
-        new Response(JSON.stringify(mockResumeData), { status: 200 })
-      );
+      const mockFetch = vi
+        .spyOn(global, 'fetch')
+        .mockResolvedValue(new Response(JSON.stringify(mockResumeData), { status: 200 }));
 
       await importFromPDF(mockFile);
 
@@ -148,16 +152,14 @@ describe('Import Utilities', () => {
         expect.objectContaining({
           method: 'POST',
           headers: expect.objectContaining({ 'X-API-KEY': 'test-api-key' }),
-        })
+        }),
       );
     });
 
     it('should throw on failed response', async () => {
       const mockFile = new File(['pdf content'], 'resume.pdf', { type: 'application/pdf' });
 
-      vi.spyOn(global, 'fetch').mockResolvedValue(
-        new Response('Not found', { status: 404 })
-      );
+      vi.spyOn(global, 'fetch').mockResolvedValue(new Response('Not found', { status: 404 }));
 
       await expect(importFromPDF(mockFile)).rejects.toThrow('Failed to import PDF');
     });
@@ -178,7 +180,7 @@ describe('Import Utilities', () => {
       });
 
       vi.spyOn(global, 'fetch').mockResolvedValue(
-        new Response(JSON.stringify(mockResumeData), { status: 200 })
+        new Response(JSON.stringify(mockResumeData), { status: 200 }),
       );
 
       const result = await importFromWord(mockFile);
@@ -190,9 +192,9 @@ describe('Import Utilities', () => {
       const mockFile = new File(['docx content'], 'resume.docx', {
         type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
       });
-      const mockFetch = vi.spyOn(global, 'fetch').mockResolvedValue(
-        new Response(JSON.stringify(mockResumeData), { status: 200 })
-      );
+      const mockFetch = vi
+        .spyOn(global, 'fetch')
+        .mockResolvedValue(new Response(JSON.stringify(mockResumeData), { status: 200 }));
 
       await importFromWord(mockFile);
 
@@ -201,7 +203,7 @@ describe('Import Utilities', () => {
         expect.objectContaining({
           method: 'POST',
           headers: expect.objectContaining({ 'X-API-KEY': 'test-api-key' }),
-        })
+        }),
       );
     });
 
@@ -210,9 +212,7 @@ describe('Import Utilities', () => {
         type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
       });
 
-      vi.spyOn(global, 'fetch').mockResolvedValue(
-        new Response('Error', { status: 500 })
-      );
+      vi.spyOn(global, 'fetch').mockResolvedValue(new Response('Error', { status: 500 }));
 
       await expect(importFromWord(mockFile)).rejects.toThrow('Failed to import Word');
     });
@@ -220,9 +220,9 @@ describe('Import Utilities', () => {
 
   describe('importFromLinkedInUrl', () => {
     it('should import from LinkedIn URL', async () => {
-      const mockFetch = vi.spyOn(global, 'fetch').mockResolvedValue(
-        new Response(JSON.stringify(mockResumeData), { status: 200 })
-      );
+      const mockFetch = vi
+        .spyOn(global, 'fetch')
+        .mockResolvedValue(new Response(JSON.stringify(mockResumeData), { status: 200 }));
 
       const result = await importFromLinkedInUrl('https://linkedin.com/in/johndoe');
 
@@ -231,16 +231,16 @@ describe('Import Utilities', () => {
         expect.objectContaining({
           method: 'POST',
           body: JSON.stringify({ url: 'https://linkedin.com/in/johndoe' }),
-        })
+        }),
       );
       expect(result).toEqual(mockResumeData);
     });
 
     it('should include API key if available', async () => {
       localStorage.setItem('RESUMEAI_API_KEY', 'test-key');
-      const mockFetch = vi.spyOn(global, 'fetch').mockResolvedValue(
-        new Response(JSON.stringify(mockResumeData), { status: 200 })
-      );
+      const mockFetch = vi
+        .spyOn(global, 'fetch')
+        .mockResolvedValue(new Response(JSON.stringify(mockResumeData), { status: 200 }));
 
       await importFromLinkedInUrl('https://linkedin.com/in/johndoe');
 
@@ -248,17 +248,15 @@ describe('Import Utilities', () => {
         expect.any(String),
         expect.objectContaining({
           headers: expect.objectContaining({ 'X-API-KEY': 'test-key' }),
-        })
+        }),
       );
     });
 
     it('should throw on failed response', async () => {
-      vi.spyOn(global, 'fetch').mockResolvedValue(
-        new Response('Unauthorized', { status: 401 })
-      );
+      vi.spyOn(global, 'fetch').mockResolvedValue(new Response('Unauthorized', { status: 401 }));
 
       await expect(importFromLinkedInUrl('https://linkedin.com/in/johndoe')).rejects.toThrow(
-        'Failed to import LinkedIn'
+        'Failed to import LinkedIn',
       );
     });
   });
@@ -266,15 +264,15 @@ describe('Import Utilities', () => {
   describe('importFromLinkedInFile', () => {
     it('should import from single File', async () => {
       const mockFile = new File(['linkedin data'], 'profile.json', { type: 'application/json' });
-      const mockFetch = vi.spyOn(global, 'fetch').mockResolvedValue(
-        new Response(JSON.stringify(mockResumeData), { status: 200 })
-      );
+      const mockFetch = vi
+        .spyOn(global, 'fetch')
+        .mockResolvedValue(new Response(JSON.stringify(mockResumeData), { status: 200 }));
 
       const result = await importFromLinkedInFile(mockFile);
 
       expect(mockFetch).toHaveBeenCalledWith(
         expect.stringContaining('/v1/import/linkedin-file'),
-        expect.objectContaining({ method: 'POST' })
+        expect.objectContaining({ method: 'POST' }),
       );
       expect(result).toEqual(mockResumeData);
     });
@@ -285,7 +283,7 @@ describe('Import Utilities', () => {
         new File(['data2'], 'file2.json', { type: 'application/json' }),
       ];
       vi.spyOn(global, 'fetch').mockResolvedValue(
-        new Response(JSON.stringify(mockResumeData), { status: 200 })
+        new Response(JSON.stringify(mockResumeData), { status: 200 }),
       );
 
       const result = await importFromLinkedInFile(mockFiles);
@@ -296,9 +294,9 @@ describe('Import Utilities', () => {
     it('should import from FileList', async () => {
       const dataTransfer = new DataTransfer();
       dataTransfer.items.add(new File(['data'], 'file.json', { type: 'application/json' }));
-      const mockFetch = vi.spyOn(global, 'fetch').mockResolvedValue(
-        new Response(JSON.stringify(mockResumeData), { status: 200 })
-      );
+      const mockFetch = vi
+        .spyOn(global, 'fetch')
+        .mockResolvedValue(new Response(JSON.stringify(mockResumeData), { status: 200 }));
 
       const result = await importFromLinkedInFile(dataTransfer.files);
 
@@ -309,7 +307,7 @@ describe('Import Utilities', () => {
     it('should handle API error response', async () => {
       const mockFile = new File(['data'], 'file.json');
       vi.spyOn(global, 'fetch').mockResolvedValue(
-        new Response(JSON.stringify({ detail: 'Invalid format' }), { status: 400 })
+        new Response(JSON.stringify({ detail: 'Invalid format' }), { status: 400 }),
       );
 
       // The function throws a generic message, not the error detail
@@ -319,26 +317,26 @@ describe('Import Utilities', () => {
     it('should handle JSON parse error in error response', async () => {
       const mockFile = new File(['data'], 'file.json');
       vi.spyOn(global, 'fetch').mockResolvedValue(
-        new Response('Invalid response', { status: 400 })
+        new Response('Invalid response', { status: 400 }),
       );
 
       await expect(importFromLinkedInFile(mockFile)).rejects.toThrow(
-        'Failed to import LinkedIn file'
+        'Failed to import LinkedIn file',
       );
     });
   });
 
   describe('importFromLinkedIn', () => {
     it('should be an alias for importFromLinkedInUrl', async () => {
-      const mockFetch = vi.spyOn(global, 'fetch').mockResolvedValue(
-        new Response(JSON.stringify(mockResumeData), { status: 200 })
-      );
+      const mockFetch = vi
+        .spyOn(global, 'fetch')
+        .mockResolvedValue(new Response(JSON.stringify(mockResumeData), { status: 200 }));
 
       const result = await importFromLinkedIn('https://linkedin.com/in/johndoe');
 
       expect(mockFetch).toHaveBeenCalledWith(
         expect.stringContaining('/v1/import/linkedin'),
-        expect.any(Object)
+        expect.any(Object),
       );
       expect(result).toEqual(mockResumeData);
     });
@@ -413,11 +411,11 @@ describe('Import Utilities', () => {
 
     it('should accumulate multiple errors and warnings', () => {
       const invalidData = {
-        basics: { name: undefined, email: undefined } as unknown as typeof mockResumeData.basics,
+        basics: { name: undefined, email: undefined } as any,
         work: [],
         education: [],
         skills: [],
-      } as unknown as ResumeData;
+      } as any;
       const result = validateImportedData(invalidData);
 
       // basics exists but name and email are undefined - no errors, only warnings

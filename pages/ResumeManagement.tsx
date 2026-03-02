@@ -379,7 +379,11 @@ const ResumeManagement: React.FC = () => {
 
       {/* Share Dialog */}
       {sharingResumeId !== null && (
-        <ShareDialog resumeId={sharingResumeId} onClose={() => setSharingResumeId(null)} />
+        <ShareDialog
+          isOpen={sharingResumeId !== null}
+          resumeId={sharingResumeId}
+          onClose={() => setSharingResumeId(null)}
+        />
       )}
 
       {/* Delete Confirmation Dialog */}

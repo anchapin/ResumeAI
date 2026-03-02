@@ -63,7 +63,9 @@ const mockResumeData = {
 describe('Workspace Component', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    (useStore as any).mockImplementation((selector) => selector({ resumeData: mockResumeData }));
+    (useStore as any).mockImplementation((selector: any) =>
+      selector({ resumeData: mockResumeData }),
+    );
     (api.listResumeVersions as any).mockResolvedValue([]);
     (api.listComments as any).mockResolvedValue([]);
   });
@@ -405,12 +407,20 @@ describe('Workspace Component', () => {
         generateCoverLetterRequest: vi.fn(),
         downloadPDF: vi.fn(),
         renderMarkdown: vi.fn(),
+        saveResume: vi.fn(),
+        saveDraft: vi.fn(),
+        loadDraft: vi.fn(),
+        clearSavedData: vi.fn(),
+        resetState: vi.fn(),
+        checkHealth: vi.fn(),
+        clearError: vi.fn(),
+        lastSaved: null,
         loading: false,
         error: 'Test error message',
         data: null,
         coverLetter: null,
         coverLetterLoading: false,
-      });
+      } as any);
 
       render(
         <BrowserRouter>

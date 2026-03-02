@@ -66,7 +66,7 @@ describe('API Client', () => {
       localStorage.clear();
       const headers = getHeaders();
 
-      expect(headers['Content-Type']).toBe('application/json');
+      expect((headers as any)['Content-Type']).toBe('application/json');
     });
 
     it('includes Bearer token when JWT token exists and is valid', () => {
@@ -82,7 +82,7 @@ describe('API Client', () => {
 
       const headers = getHeaders();
 
-      expect(headers['Authorization']).toBe(`Bearer ${mockToken}`);
+      expect((headers as any)['Authorization']).toBe(`Bearer ${mockToken}`);
     });
 
     it('excludes expired tokens', () => {
@@ -95,7 +95,7 @@ describe('API Client', () => {
 
       const headers = getHeaders();
 
-      expect(headers['Authorization']).toBeUndefined();
+      expect((headers as any)['Authorization']).toBeUndefined();
     });
 
     it('falls back to API key when JWT is not available', () => {
@@ -104,7 +104,7 @@ describe('API Client', () => {
 
       const headers = getHeaders();
 
-      expect(headers['X-API-KEY']).toBe(apiKey);
+      expect((headers as any)['X-API-KEY']).toBe(apiKey);
     });
 
     it('prefers JWT token over API key', () => {
@@ -117,8 +117,8 @@ describe('API Client', () => {
 
       const headers = getHeaders();
 
-      expect(headers['Authorization']).toBe(`Bearer ${mockToken}`);
-      expect(headers['X-API-KEY']).toBeUndefined();
+      expect((headers as any)['Authorization']).toBe(`Bearer ${mockToken}`);
+      expect((headers as any)['X-API-KEY']).toBeUndefined();
     });
 
     it('handles invalid JWT tokens gracefully', () => {
@@ -126,8 +126,8 @@ describe('API Client', () => {
 
       const headers = getHeaders();
 
-      expect(headers['Authorization']).toBeUndefined();
-      expect(headers['Content-Type']).toBe('application/json');
+      expect((headers as any)['Authorization']).toBeUndefined();
+      expect((headers as any)['Content-Type']).toBe('application/json');
     });
 
     it('handles malformed JWT payload', () => {
@@ -136,7 +136,7 @@ describe('API Client', () => {
 
       const headers = getHeaders();
 
-      expect(headers['Authorization']).toBeUndefined();
+      expect((headers as any)['Authorization']).toBeUndefined();
     });
 
     it('does not include Authorization or API key when neither exists', () => {
@@ -144,9 +144,9 @@ describe('API Client', () => {
 
       const headers = getHeaders();
 
-      expect(headers['Authorization']).toBeUndefined();
-      expect(headers['X-API-KEY']).toBeUndefined();
-      expect(headers['Content-Type']).toBe('application/json');
+      expect((headers as any)['Authorization']).toBeUndefined();
+      expect((headers as any)['X-API-KEY']).toBeUndefined();
+      expect((headers as any)['Content-Type']).toBe('application/json');
     });
   });
 
@@ -185,10 +185,7 @@ describe('API Client', () => {
       expect(result.education?.[0]?.studyType).toBe('Bachelor');
       expect(result.education?.[0]?.startDate).toBe('2016');
       expect(result.education?.[0]?.endDate).toBe('2020');
-      expect(result.education?.[0]?.courses).toEqual([
-        'Data Structures',
-        'Algorithms',
-      ]);
+      expect(result.education?.[0]?.courses).toEqual(['Data Structures', 'Algorithms']);
     });
 
     it('converts skills correctly', () => {

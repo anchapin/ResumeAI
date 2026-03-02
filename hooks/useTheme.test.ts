@@ -9,7 +9,7 @@ const mockStore = {
 };
 
 vi.mock('../store/store', () => ({
-  useStore: vi.fn((selector) => selector(mockStore)),
+  useStore: vi.fn((selector: any) => selector(mockStore)),
 }));
 
 describe('useTheme Hook', () => {
