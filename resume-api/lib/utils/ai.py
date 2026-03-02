@@ -14,7 +14,6 @@ from typing import Dict, Any, List, Optional
 from abc import ABC, abstractmethod
 
 from .circuit_breaker import (
-    CircuitBreaker,
     CircuitBreakerOpen,
     openai_breaker,
     claude_breaker,

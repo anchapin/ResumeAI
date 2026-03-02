@@ -15,7 +15,6 @@ from lib.utils.cache import (
     CacheManager,
     CacheBackend,
     CacheConfig,
-    InvalidationStrategy,
     get_cache_manager,
     set_cache_manager,
 )

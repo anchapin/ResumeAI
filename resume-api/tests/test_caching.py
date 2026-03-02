@@ -5,25 +5,18 @@ Tests cache hit/miss scenarios, invalidation, TTL, decorators, and metrics.
 """
 
 import asyncio
-import json
 import time
-from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
 from lib.utils.cache import (
     CacheBackend,
     CacheConfig,
-    CacheEntry,
     CacheManager,
-    InvalidationStrategy,
     InMemoryCache,
-    get_cache_manager,
     set_cache_manager,
-    initialize_cache,
 )
 from lib.utils.cache_integration import (
-    cached,
     cache_async,
     get_cache_metrics,
     CacheKeyStrategy,

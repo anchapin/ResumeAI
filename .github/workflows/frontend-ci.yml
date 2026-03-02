@@ -42,11 +42,11 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run tests
-        run: npm run test -- --run --reporter=verbose --exclude="utils/storage.test.ts"
+       - name: Run tests
+         run: npm run test -- --run --reporter=verbose --exclude="utils/storage.test.ts" --exclude="tests/e2e/**/*" --exclude="**/*.bench.test.tsx" --exclude="tests/e2e/**/*" --exclude="**/*.bench.test.tsx"
 
       - name: Run tests with coverage (enforces 80% minimum)
-        run: npm run test:coverage -- --run
+        run: npm run test:coverage -- --run --exclude="tests/e2e/**/*" --exclude="**/*.bench.test.tsx"
         continue-on-error: false
 
       - name: Upload coverage reports

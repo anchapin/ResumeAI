@@ -13,7 +13,7 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 try:
-    import bcrypt
+    import bcrypt  # noqa: F401  # noqa: F401
 except ImportError:
     print("ERROR: bcrypt module not found. Install with: pip install bcrypt")
     sys.exit(1)

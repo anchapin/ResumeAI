@@ -8,20 +8,18 @@ Provides endpoints for:
 - Finding connections at target companies
 """
 
-import os
 import secrets
 from datetime import datetime, timedelta
 from typing import List, Optional, Dict, Any
 from urllib.parse import urlencode
 
-from fastapi import APIRouter, HTTPException, Request, Depends, Query
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 import httpx
 
 from lib.linkedin import LinkedInImporter, LinkedInExporter
 from lib.connections import ConnectionFinder
 from config import settings
-from config.jwt_utils import create_access_token
 from monitoring import logging_config
 
 # Get logger

@@ -4,14 +4,12 @@ Job queue abstraction for async PDF rendering.
 Supports local queue, Redis, and SQS implementations.
 """
 
-import json
 import uuid
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, asdict, field
 from datetime import datetime, timedelta
 from enum import Enum
 from typing import Dict, Optional, List, Any
-from pathlib import Path
 
 import logging
 

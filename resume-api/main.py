@@ -28,6 +28,7 @@ from middleware.monitoring import MonitoringMiddleware
 from middleware.error_handling import ErrorHandlingMiddleware
 from middleware.timeout import TimeoutMiddleware
 from middleware.csrf import CSRFMiddleware
+from middleware.request_signing import RequestSigningMiddleware
 from monitoring import logging_config, health, alerting, analytics
 from slowapi.errors import RateLimitExceeded
 
@@ -257,6 +258,9 @@ app.add_middleware(SecurityHeadersMiddleware)
 
 # Add CSRF middleware
 app.add_middleware(CSRFMiddleware)
+
+# Add request signing middleware
+app.add_middleware(RequestSigningMiddleware)
 
 # Configure CORS
 app.add_middleware(
