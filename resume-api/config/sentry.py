@@ -5,7 +5,6 @@ Integrates Sentry for both backend (FastAPI) and frontend (JavaScript/React) err
 Issue #402: Set up Sentry for frontend error tracking.
 """
 
-from typing import Optional
 from config import settings
 
 

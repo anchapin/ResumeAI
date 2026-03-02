@@ -15,7 +15,6 @@ from typing import Dict, List, Optional, Tuple
 from collections import defaultdict
 import threading
 
-from config import settings
 from monitoring import logging_config
 from monitoring import metrics as monitoring_metrics
 

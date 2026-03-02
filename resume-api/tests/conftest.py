@@ -10,9 +10,7 @@ Provides reusable fixtures for:
 
 import pytest
 import pytest_asyncio
-import os
 from datetime import datetime, timedelta, timezone
-from unittest.mock import MagicMock, AsyncMock, patch
 
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 from httpx import AsyncClient, ASGITransport
@@ -26,7 +24,6 @@ from database import (
     RefreshToken,
     get_async_session,
 )
-from config.dependencies import get_current_user
 from config.jwt_utils import create_access_token, create_refresh_token
 from config.security import hash_password, encrypt_token
 

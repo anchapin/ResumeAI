@@ -581,7 +581,7 @@ def validate_file_upload(
         return False, "File is empty"
 
     if file_size > MAX_FILE_SIZE_BYTES:
-        return False, f"File too large"
+        return False, "File too large"
 
     if content_type and content_type not in ALLOWED_MIME_TYPES:
         return False, "Invalid MIME type"

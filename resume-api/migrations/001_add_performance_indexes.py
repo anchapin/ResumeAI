@@ -14,13 +14,10 @@ Estimated Performance Improvement: 30-40% faster queries
 Expected Impact: Reduced database query latency from 100-500ms to 50-150ms
 """
 
-import sqlalchemy as sa
-from sqlalchemy import Index, text
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy import text
+from sqlalchemy.ext.asyncio import create_async_engine
 import os
 import asyncio
-from datetime import datetime
 
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///./resumeai.db")
 

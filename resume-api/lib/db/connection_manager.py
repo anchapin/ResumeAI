@@ -5,10 +5,8 @@ Handles read/write separation with automatic failover and health monitoring.
 Routes SELECT queries to replicas and INSERT/UPDATE/DELETE to primary.
 """
 
-import re
 from typing import Optional, Any
-from sqlalchemy.ext.asyncio import AsyncSession, AsyncEngine, create_async_engine
-from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from config.database_replicas import ReplicaPool
 
@@ -48,10 +46,10 @@ class RoutingSession(AsyncSession):
         # Get appropriate engine
         if is_read and self.replica_pool and self.replica_pool.has_healthy_replicas():
             # Try to use replica
-            replica_engine = await self.replica_pool.get_read_engine()
+            await self.replica_pool.get_read_engine()
             try:
                 return await super().execute(statement, **kwargs)
-            except Exception as e:
+            except Exception:
                 # Fallback to primary on replica failure
                 self.bind = await self.replica_pool.get_write_engine()
                 return await super().execute(statement, **kwargs)

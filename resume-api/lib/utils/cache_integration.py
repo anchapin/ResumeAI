@@ -7,13 +7,11 @@ Supports both sync and async functions with customizable cache strategies.
 
 import asyncio
 import functools
-import inspect
-import json
 import logging
 import time
 from typing import Any, Callable, Dict, Optional, Set, TypeVar
 
-from lib.utils.cache import CacheManager, get_cache_manager
+from lib.utils.cache import get_cache_manager
 
 logger = logging.getLogger(__name__)
 
