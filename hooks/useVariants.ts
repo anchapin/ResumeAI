@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { getHeaders } from '../utils/api-client';
 
 // Define the types for variants
 interface VariantMetadata {
@@ -15,23 +16,19 @@ export interface VariantsResponse {
 
 // Get API URL from environment variable
 const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
-const API_KEY = import.meta.env.RESUMEAI_API_KEY || '';
 
 export const useVariants = () => {
   const [variants, setVariants] = useState<VariantMetadata[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchVariants = async () => {
+  const fetchVariants = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
       const response = await fetch(`${API_URL}/v1/variants`, {
         method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(API_KEY && { 'X-API-KEY': API_KEY }),
-        },
+        headers: getHeaders(),
       });
 
       if (!response.ok) {
@@ -57,12 +54,12 @@ export const useVariants = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   // Fetch variants on mount
   useEffect(() => {
     fetchVariants();
-  }, []);
+  }, [fetchVariants]);
 
   return { variants, loading, error, refetch: fetchVariants };
 };

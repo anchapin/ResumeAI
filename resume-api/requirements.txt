@@ -84,3 +84,4 @@ stripe>=10.0.0
 
 # Email Sending (for verification emails)
 aiosmtplib>=3.0.0
+async-lru==2.0.4
