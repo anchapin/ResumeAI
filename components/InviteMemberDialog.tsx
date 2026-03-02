@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { MemberRole, InviteMemberRequest } from '../types';
 import { inviteMember } from '../utils/api-client';
 import { showSuccessToast, showErrorToast } from '../utils/toast';
+import AccessibleDialog from './AccessibleDialog';
 
 interface InviteMemberDialogProps {
   isOpen: boolean;
@@ -12,6 +13,7 @@ interface InviteMemberDialogProps {
 
 /**
  * InviteMemberDialog component for inviting new team members
+ * Accessible dialog for sending team collaboration invitations
  */
 const InviteMemberDialog: React.FC<InviteMemberDialogProps> = ({
   isOpen,
@@ -88,30 +90,53 @@ const InviteMemberDialog: React.FC<InviteMemberDialogProps> = ({
     }
   };
 
-  if (!isOpen) return null;
+  const footerContent = (
+    <div className="flex gap-3">
+      <button
+        onClick={handleClose}
+        disabled={isInviting}
+        className="flex-1 px-4 py-3 rounded-lg border border-slate-300 text-slate-700 font-bold hover:bg-slate-50 transition-colors disabled:opacity-50"
+      >
+        Cancel
+      </button>
+      <button
+        onClick={handleInvite}
+        disabled={isInviting || !!emailError || !email.trim()}
+        className="flex-1 px-4 py-3 rounded-lg bg-primary-600 text-white font-bold hover:bg-primary-700 transition-colors shadow-lg shadow-primary-600/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+      >
+        {isInviting ? (
+          <>
+            <span className="material-symbols-outlined animate-spin text-[18px]">
+              progress_activity
+            </span>
+            <span>Sending...</span>
+          </>
+        ) : (
+          <>
+            <span className="material-symbols-outlined text-[18px]">send</span>
+            <span>Send Invite</span>
+          </>
+        )}
+      </button>
+    </div>
+  );
 
   return (
-    <div
-      className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
-      onClick={handleClose}
-      role="dialog"
-      aria-labelledby="invite-dialog-title"
-      aria-modal="true"
+    <AccessibleDialog
+      isOpen={isOpen}
+      onClose={handleClose}
+      title="Invite Team Member"
+      headerId="invite-dialog-title"
+      descriptionId="invite-dialog-description"
+      footer={footerContent}
+      className="max-w-md"
     >
-      <div
-        className="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="p-6 border-b border-slate-200">
-          <h2 id="invite-dialog-title" className="text-xl font-bold text-slate-900">
-            Invite Team Member
-          </h2>
-          <p className="text-sm text-slate-500 mt-1">
-            Send an invitation to collaborate on your team
-          </p>
-        </div>
+      <div>
+        <p id="invite-dialog-description" className="text-sm text-slate-500 mb-4">
+          Send an invitation to collaborate on your team
+        </p>
 
-        <div className="p-6 space-y-4">
+        <div className="p-0 space-y-4">
           {/* Email Input */}
           <div className="space-y-2">
             <label htmlFor="invite-email" className="text-sm font-bold text-slate-700">
@@ -180,37 +205,8 @@ const InviteMemberDialog: React.FC<InviteMemberDialogProps> = ({
             </div>
           </div>
         </div>
-
-        <div className="p-6 border-t border-slate-200 flex gap-3">
-          <button
-            onClick={handleClose}
-            disabled={isInviting}
-            className="flex-1 px-4 py-3 rounded-lg border border-slate-300 text-slate-700 font-bold hover:bg-slate-50 transition-colors disabled:opacity-50"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleInvite}
-            disabled={isInviting || !!emailError || !email.trim()}
-            className="flex-1 px-4 py-3 rounded-lg bg-primary-600 text-white font-bold hover:bg-primary-700 transition-colors shadow-lg shadow-primary-600/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-          >
-            {isInviting ? (
-              <>
-                <span className="material-symbols-outlined animate-spin text-[18px]">
-                  progress_activity
-                </span>
-                <span>Sending...</span>
-              </>
-            ) : (
-              <>
-                <span className="material-symbols-outlined text-[18px]">send</span>
-                <span>Send Invite</span>
-              </>
-            )}
-          </button>
-        </div>
       </div>
-    </div>
+    </AccessibleDialog>
   );
 };
 
