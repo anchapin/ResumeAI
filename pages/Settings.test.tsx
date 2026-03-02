@@ -29,6 +29,11 @@ Object.defineProperty(window, 'alert', {
 describe('Settings Component', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.spyOn(window, 'matchMedia').mockReturnValue({
+      matches: false,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    } as any);
   });
 
   afterEach(() => {
@@ -170,9 +175,6 @@ describe('Settings Component', () => {
         throw new Error('Input not found');
       }
       await user.clear(firstNameInput);
-      if (firstNameInput) {
-        throw new Error('Input not found');
-      }
       await user.type(firstNameInput, 'John');
 
       expect(firstNameInput).toHaveValue('John');
@@ -188,9 +190,6 @@ describe('Settings Component', () => {
         throw new Error('Input not found');
       }
       await user.clear(lastNameInput);
-      if (lastNameInput) {
-        throw new Error('Input not found');
-      }
       await user.type(lastNameInput, 'Doe');
 
       expect(lastNameInput).toHaveValue('Doe');
@@ -206,9 +205,36 @@ describe('Settings Component', () => {
         throw new Error('Input not found');
       }
       await user.clear(emailInput);
-      if (emailInput) {
+      await user.type(emailInput, 'john.doe@example.com');
+
+      expect(emailInput).toHaveValue('john.doe@example.com');
+    });
+
+    it('allows typing in Last Name input', async () => {
+      const user = userEvent.setup();
+      render(<Settings />);
+      const inputs = screen.getAllByRole('textbox') as HTMLInputElement[];
+      const lastNameInput = inputs.find((input) => input.value === 'Rivera');
+
+      if (!lastNameInput) {
         throw new Error('Input not found');
       }
+      await user.clear(lastNameInput);
+      await user.type(lastNameInput, 'Doe');
+
+      expect(lastNameInput).toHaveValue('Doe');
+    });
+
+    it('allows typing in Email input', async () => {
+      const user = userEvent.setup();
+      render(<Settings />);
+      const inputs = screen.getAllByRole('textbox') as HTMLInputElement[];
+      const emailInput = inputs.find((input) => input.value === 'alex.rivera@example.com');
+
+      if (!emailInput) {
+        throw new Error('Input not found');
+      }
+      await user.clear(emailInput);
       await user.type(emailInput, 'john.doe@example.com');
 
       expect(emailInput).toHaveValue('john.doe@example.com');
