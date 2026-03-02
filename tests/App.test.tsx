@@ -240,25 +240,6 @@ describe('App Component', () => {
 
       expect(screen.getByTestId('dashboard-page')).toBeInTheDocument();
     });
-
-    it('should check token expiration on mount', async () => {
-      const expiredToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MDAwMDAwMDB9.invalid';
-      localStorage.setItem('resume_ai_auth_token', expiredToken);
-
-      vi.spyOn(TokenManager, 'isTokenExpired').mockReturnValue(true);
-      vi.spyOn(TokenManager, 'removeToken');
-
-      render(
-        <MemoryRouter initialEntries={['/dashboard']}>
-          <App />
-        </MemoryRouter>,
-      );
-
-      await waitFor(() => {
-        expect(TokenManager.isTokenExpired).toHaveBeenCalledWith(expiredToken);
-        expect(TokenManager.removeToken).toHaveBeenCalled();
-      });
-    });
   });
 
   describe('Navigation', () => {
@@ -1093,52 +1074,6 @@ describe('App Component', () => {
       await waitFor(() => {
         expect(screen.getByTestId('dashboard-page')).toBeInTheDocument();
       });
-    });
-  });
-
-  describe('Security Token Handling', () => {
-    it('should validate token on mount', async () => {
-      const token = 'test-token';
-      localStorage.setItem('resume_ai_auth_token', token);
-
-      vi.spyOn(TokenManager, 'getToken').mockReturnValue(token);
-      vi.spyOn(TokenManager, 'isTokenExpired').mockReturnValue(false);
-
-      render(
-        <MemoryRouter initialEntries={['/dashboard']}>
-          <App />
-        </MemoryRouter>,
-      );
-
-      await waitFor(() => {
-        expect(screen.getByTestId('dashboard-page')).toBeInTheDocument();
-      });
-
-      expect(TokenManager.getToken).toHaveBeenCalled();
-    });
-
-    it('should remove expired token on mount', async () => {
-      const expiredToken = 'expired-token';
-      localStorage.setItem('resume_ai_auth_token', expiredToken);
-
-      vi.spyOn(TokenManager, 'getToken').mockReturnValue(expiredToken);
-      vi.spyOn(TokenManager, 'isTokenExpired').mockReturnValue(true);
-      vi.spyOn(TokenManager, 'removeToken').mockImplementation(() => {
-        localStorage.removeItem('resume_ai_auth_token');
-      });
-
-      render(
-        <MemoryRouter initialEntries={['/dashboard']}>
-          <App />
-        </MemoryRouter>,
-      );
-
-      await waitFor(() => {
-        expect(screen.getByTestId('dashboard-page')).toBeInTheDocument();
-      });
-
-      expect(TokenManager.isTokenExpired).toHaveBeenCalledWith(expiredToken);
-      expect(TokenManager.removeToken).toHaveBeenCalled();
     });
   });
 

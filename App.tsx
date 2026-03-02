@@ -71,7 +71,6 @@ function App() {
   const loadResume = useStore((state) => state.loadResume);
   const saveStatus = useStore((state) => state.saveStatus);
   const setSaveStatus = useStore((state) => state.setSaveStatus);
-  const resumeError = useStore((state) => state.resumeError);
   const setResumeError = useStore((state) => state.setResumeError);
   const resumeError = useStore((state) => state.resumeError);
   const showShortcuts = useStore((state) => state.showShortcuts);
@@ -114,15 +113,6 @@ function App() {
 
   // Load resume data from localStorage on mount and check security
   useEffect(() => {
-    // Check if authentication token is still valid
-    const token = TokenManager.getToken();
-    if (token && TokenManager.isTokenExpired(token)) {
-      TokenManager.removeToken();
-      if (import.meta.env.DEV) {
-        console.warn('Authentication token expired, please log in again');
-      }
-    }
-
     loadResume().catch((error) => {
       if (import.meta.env.DEV) {
         console.error('Unexpected error loading resume data:', error);
@@ -253,18 +243,6 @@ function App() {
             }}
             className="ml-2 text-red-500 hover:text-red-700"
             aria-label="close"
-          >
-            <span className="material-symbols-outlined text-[20px]">close</span>
-          </button>
-        </div>
-      )}
-      {resumeError && (
-        <div className="fixed top-20 right-4 z-50 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg shadow-lg flex items-center gap-2 animate-in slide-in-from-top-2 fade-in">
-          <span className="material-symbols-outlined text-red-500">error</span>
-          <span className="text-sm font-semibold">{resumeError}</span>
-          <button
-            onClick={() => setResumeError(null)}
-            className="ml-2 text-red-500 hover:text-red-700"
           >
             <span className="material-symbols-outlined text-[20px]">close</span>
           </button>
