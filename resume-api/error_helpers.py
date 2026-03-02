@@ -6,9 +6,9 @@ Utility functions for creating and handling standardized errors
 import uuid
 import logging
 from datetime import datetime
-from typing import Optional, Dict, Any, List
-from fastapi import HTTPException, status
-from .error_schemas import ErrorResponse, ErrorCode, FieldError, get_error_message
+from typing import Optional, Dict, List
+from fastapi import status
+from .error_schemas import ErrorResponse, ErrorCode, get_error_message
 
 logger = logging.getLogger(__name__)
 

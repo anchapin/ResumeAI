@@ -10,11 +10,8 @@ Provides endpoints for:
 """
 
 from datetime import datetime, timezone
-from typing import Optional
 from fastapi import APIRouter, Depends, Query, HTTPException, status
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from database import get_async_session
 from config.dependencies import get_current_user
 from database import User
 from monitoring import logging_config
@@ -267,7 +264,7 @@ async def prometheus_metrics():
     Format: Prometheus text exposition format
     """
     try:
-        from prometheus_client import generate_latest, CollectorRegistry
+        from prometheus_client import generate_latest
 
         # Use the global registry or custom monitoring metrics registry
         output = generate_latest(monitoring_metrics.registry)

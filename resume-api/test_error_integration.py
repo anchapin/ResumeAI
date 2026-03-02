@@ -178,7 +178,6 @@ def test_request_id_uniqueness():
 def test_error_response_json_serialization():
     """Test that error response can be JSON serialized"""
     from config.errors import create_error_response, ErrorCode
-    import json
 
     response = create_error_response(
         error_code=ErrorCode.PDF_GENERATION_FAILED,
@@ -203,7 +202,6 @@ def test_error_response_json_serialization():
 
 def test_middleware_error_conversion():
     """Test that middleware would properly convert HTTPException to unified error"""
-    from config.errors import ErrorResponse
     from fastapi import HTTPException, status
 
     # Create an HTTPException like the routes would

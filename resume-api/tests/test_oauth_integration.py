@@ -15,7 +15,7 @@ import pytest
 import pytest_asyncio
 import os
 from datetime import datetime, timedelta, timezone
-from unittest.mock import patch, AsyncMock, MagicMock
+from unittest.mock import patch
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 from sqlalchemy import select
@@ -29,7 +29,6 @@ from database import (
     RefreshToken,
     get_async_session,
 )
-from config.dependencies import get_current_user
 from config.jwt_utils import (
     create_access_token,
     create_refresh_token,
@@ -80,7 +79,7 @@ async def client(db_session):
 
     app.dependency_overrides[get_async_session] = override_get_async_session
 
-    from httpx import AsyncClient, ASGITransport
+    from httpx import ASGITransport
 
     transport = ASGITransport(app=app)
     async_client = AsyncClient(transport=transport, base_url="http://testserver")
@@ -739,7 +738,6 @@ class TestSessionManagement:
         assert response.status_code == 200
 
         # Verify old password doesn't work
-        from routes.auth import login
 
         result = await db_session.execute(select(User).where(User.id == test_user.id))
         updated_user = result.scalar_one()
