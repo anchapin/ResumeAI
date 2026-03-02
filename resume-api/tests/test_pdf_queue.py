@@ -5,14 +5,12 @@ Tests for async PDF rendering job queue system.
 import asyncio
 import pytest
 from datetime import datetime, timedelta
-from pathlib import Path
 
 from lib.queue import (
     LocalQueue,
     Job,
     JobState,
     JobPriority,
-    JobConfig,
 )
 from lib.queue.pdf_worker import PDFWorker, PDFWorkerPool
 

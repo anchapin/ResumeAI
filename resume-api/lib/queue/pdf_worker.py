@@ -7,12 +7,10 @@ Processes PDF jobs from queue with timeout protection and error handling.
 import asyncio
 import logging
 import signal
-import sys
-from datetime import datetime
 from pathlib import Path
 from typing import Optional, Callable, Any, Dict
 
-from .job_queue import JobQueue, Job, JobState, JobPriority
+from .job_queue import JobQueue, Job, JobState
 
 logger = logging.getLogger(__name__)
 

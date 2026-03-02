@@ -2,9 +2,8 @@
 Tests for retry logic with exponential backoff (Python backend)
 """
 
-import asyncio
 import pytest
-from unittest.mock import Mock, AsyncMock, patch
+from unittest.mock import Mock, AsyncMock
 from lib.utils.retry import (
     RetryConfig,
     RetryError,
