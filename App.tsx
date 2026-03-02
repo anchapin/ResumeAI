@@ -71,8 +71,8 @@ function App() {
   const loadResume = useStore((state) => state.loadResume);
   const saveStatus = useStore((state) => state.saveStatus);
   const setSaveStatus = useStore((state) => state.setSaveStatus);
-  const setResumeError = useStore((state) => state.setResumeError);
   const resumeError = useStore((state) => state.resumeError);
+  const setResumeError = useStore((state) => state.setResumeError);
   const showShortcuts = useStore((state) => state.showShortcuts);
   const setShowShortcuts = useStore((state) => state.setShowShortcuts);
   const theme = useStore((state) => state.theme);
@@ -101,6 +101,16 @@ function App() {
     });
   }, [showShortcuts, setShowShortcuts]);
 
+  // Auto-dismiss resumeError after 5 seconds
+  useEffect(() => {
+    if (resumeError) {
+      const timer = setTimeout(() => {
+        setResumeError(null);
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [resumeError, setResumeError]);
+
   // Load resume data from localStorage on mount and check security
   useEffect(() => {
     // Check if authentication token is still valid
@@ -119,23 +129,9 @@ function App() {
     });
   }, [loadResume]);
 
-  /**
-   * Helper function to get user-friendly error messages
-   */
   const getStorageErrorMessage = (): string => {
     return 'Failed to save data. Please try again.';
   };
-
-  // Auto-dismiss resumeError after 5 seconds
-  useEffect(() => {
-    if (!resumeError) return;
-
-    const timer = setTimeout(() => {
-      setResumeError(null);
-    }, 5000);
-
-    return () => clearTimeout(timer);
-  }, [resumeError, setResumeError]);
 
   // Save resume data to localStorage whenever it changes
   useEffect(() => {
@@ -147,11 +143,7 @@ function App() {
       try {
         saveResumeData(resumeData);
         setSaveStatus('saved');
-        if (import.meta.env.DEV) {
-          console.log('Resume data saved to localStorage');
-        }
-
-        setTimeout(() => setSaveStatus('idle'), 3000);
+        setTimeout(() => setSaveStatus('idle'), 2000);
       } catch (error) {
         setSaveStatus('error');
         const errorMessage = getStorageErrorMessage();
@@ -172,17 +164,14 @@ function App() {
     if (result) {
       navigate('/dashboard');
     }
-    return result;
   };
 
-  const handleRegister = async (
-    email: string,
-    username: string,
-    password: string,
-    fullName?: string,
-  ) => {
+  const handleRegister = async (email: string, password: string) => {
     clearAuthError();
-    return register(email, username, password, fullName);
+    const result = await register(email, password);
+    if (result) {
+      navigate('/dashboard');
+    }
   };
 
   const handleLogout = async () => {
@@ -190,37 +179,23 @@ function App() {
     navigate('/login');
   };
 
+  /**
+   * Determine the current route enum based on the pathname
+   */
   const getCurrentRouteFromPath = (): RouteEnum => {
     const path = location.pathname;
-    switch (path) {
-      case '/dashboard':
-        return RouteEnum.DASHBOARD;
-      case '/applications':
-        return RouteEnum.APPLICATIONS;
-      case '/editor':
-        return RouteEnum.EDITOR;
-      case '/workspace':
-        return RouteEnum.WORKSPACE;
-      case '/salary-research':
-        return RouteEnum.SALARY_RESEARCH;
-      case '/interview-practice':
-        return RouteEnum.INTERVIEW_PRACTICE;
-      case '/settings':
-        return RouteEnum.SETTINGS;
-      case '/bulk':
-        return RouteEnum.BULK;
-      case '/login':
-        return RouteEnum.LOGIN;
-      case '/register':
-        return RouteEnum.REGISTER;
-      case '/billing':
-      case '/billing/plans':
-      case '/billing/payment-methods':
-      case '/billing/invoices':
-        return RouteEnum.BILLING;
-      default:
-        return RouteEnum.DASHBOARD;
-    }
+    if (path === '/') return RouteEnum.DASHBOARD;
+    if (path.startsWith('/editor')) return RouteEnum.EDITOR;
+    if (path.startsWith('/workspace')) return RouteEnum.WORKSPACE;
+    if (path.startsWith('/applications')) return RouteEnum.APPLICATIONS;
+    if (path.startsWith('/settings')) return RouteEnum.SETTINGS;
+    if (path.startsWith('/bulk')) return RouteEnum.BULK;
+    if (path.startsWith('/salary')) return RouteEnum.SALARY_RESEARCH;
+    if (path.startsWith('/interview')) return RouteEnum.INTERVIEW_PRACTICE;
+    if (path.startsWith('/login')) return RouteEnum.LOGIN;
+    if (path.startsWith('/register')) return RouteEnum.REGISTER;
+    if (path.startsWith('/billing')) return RouteEnum.BILLING;
+    return RouteEnum.DASHBOARD;
   };
 
   return (
@@ -231,17 +206,25 @@ function App() {
       <ErrorDisplay error={currentError} onDismiss={dismissError} />
 
       {showShortcuts && <KeyboardShortcutsHelp onClose={() => setShowShortcuts(false)} />}
-      {(storageError || resumeError) && (
+      {storageError && (
         <div className="fixed top-4 right-4 z-50 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg shadow-lg flex items-center gap-2 animate-in slide-in-from-top-2 fade-in">
           <span className="material-symbols-outlined text-red-500">error</span>
-          <span className="text-sm font-semibold">{storageError || resumeError}</span>
+          <span className="text-sm font-semibold">{storageError}</span>
           <button
-            onClick={() => {
-              setStorageError(null);
-              setResumeError(null);
-            }}
+            onClick={() => setStorageError(null)}
             className="ml-2 text-red-500 hover:text-red-700"
-            aria-label="close"
+          >
+            <span className="material-symbols-outlined text-[20px]">close</span>
+          </button>
+        </div>
+      )}
+      {resumeError && (
+        <div className="fixed top-20 right-4 z-50 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg shadow-lg flex items-center gap-2 animate-in slide-in-from-top-2 fade-in">
+          <span className="material-symbols-outlined text-red-500">error</span>
+          <span className="text-sm font-semibold">{resumeError}</span>
+          <button
+            onClick={() => setResumeError(null)}
+            className="ml-2 text-red-500 hover:text-red-700"
           >
             <span className="material-symbols-outlined text-[20px]">close</span>
           </button>
@@ -274,11 +257,49 @@ function App() {
             }
           />
           <Route
+            path="/"
+            element={
+              isAuthenticated ? (
+                <div className="flex min-h-screen bg-[#f6f6f8]">
+                  <Sidebar
+                    currentRoute={getCurrentRouteFromPath()}
+                    onShowShortcuts={() => setShowShortcuts(true)}
+                    isAuthenticated={isAuthenticated}
+                    username={user?.username}
+                    onLogout={handleLogout}
+                  />
+                  <Dashboard />
+                </div>
+              ) : (
+                <Navigate to="/login" replace />
+              )
+            }
+          />
+          <Route
             path="/dashboard"
             element={
               isAuthenticated ? (
                 <div className="flex min-h-screen bg-[#f6f6f8]">
-                  <nav id="main-nav">
+                  <Sidebar
+                    currentRoute={getCurrentRouteFromPath()}
+                    onShowShortcuts={() => setShowShortcuts(true)}
+                    isAuthenticated={isAuthenticated}
+                    username={user?.username}
+                    onLogout={handleLogout}
+                  />
+                  <Dashboard />
+                </div>
+              ) : (
+                <Navigate to="/login" replace />
+              )
+            }
+          />
+          <Route
+            path="/editor"
+            element={
+              isAuthenticated ? (
+                <Suspense fallback={<PageLoader />}>
+                  <div className="flex min-h-screen bg-[#f6f6f8]">
                     <Sidebar
                       currentRoute={getCurrentRouteFromPath()}
                       onShowShortcuts={() => setShowShortcuts(true)}
@@ -286,11 +307,30 @@ function App() {
                       username={user?.username}
                       onLogout={handleLogout}
                     />
-                  </nav>
-                  <main id="main-content" tabIndex={-1}>
-                    <Dashboard />
-                  </main>
-                </div>
+                    <Editor />
+                  </div>
+                </Suspense>
+              ) : (
+                <Navigate to="/login" replace />
+              )
+            }
+          />
+          <Route
+            path="/workspace"
+            element={
+              isAuthenticated ? (
+                <Suspense fallback={<PageLoader />}>
+                  <div className="flex min-h-screen bg-[#f6f6f8]">
+                    <Sidebar
+                      currentRoute={getCurrentRouteFromPath()}
+                      onShowShortcuts={() => setShowShortcuts(true)}
+                      isAuthenticated={isAuthenticated}
+                      username={user?.username}
+                      onLogout={handleLogout}
+                    />
+                    <Workspace />
+                  </div>
+                </Suspense>
               ) : (
                 <Navigate to="/login" replace />
               )
@@ -318,11 +358,20 @@ function App() {
             }
           />
           <Route
-            path="/editor"
+            path="/settings"
             element={
               isAuthenticated ? (
                 <Suspense fallback={<PageLoader />}>
-                  <Editor />
+                  <div className="flex min-h-screen bg-[#f6f6f8]">
+                    <Sidebar
+                      currentRoute={getCurrentRouteFromPath()}
+                      onShowShortcuts={() => setShowShortcuts(true)}
+                      isAuthenticated={isAuthenticated}
+                      username={user?.username}
+                      onLogout={handleLogout}
+                    />
+                    <Settings />
+                  </div>
                 </Suspense>
               ) : (
                 <Navigate to="/login" replace />
@@ -330,11 +379,20 @@ function App() {
             }
           />
           <Route
-            path="/workspace"
+            path="/bulk"
             element={
               isAuthenticated ? (
                 <Suspense fallback={<PageLoader />}>
-                  <Workspace />
+                  <div className="flex min-h-screen bg-[#f6f6f8]">
+                    <Sidebar
+                      currentRoute={getCurrentRouteFromPath()}
+                      onShowShortcuts={() => setShowShortcuts(true)}
+                      isAuthenticated={isAuthenticated}
+                      username={user?.username}
+                      onLogout={handleLogout}
+                    />
+                    <ResumeManagement />
+                  </div>
                 </Suspense>
               ) : (
                 <Navigate to="/login" replace />
@@ -368,27 +426,6 @@ function App() {
               isAuthenticated ? (
                 <Suspense fallback={<PageLoader />}>
                   <InterviewPractice />
-                </Suspense>
-              ) : (
-                <Navigate to="/login" replace />
-              )
-            }
-          />
-          <Route
-            path="/settings"
-            element={
-              isAuthenticated ? (
-                <Suspense fallback={<PageLoader />}>
-                  <div className="flex min-h-screen bg-[#f6f6f8]">
-                    <Sidebar
-                      currentRoute={getCurrentRouteFromPath()}
-                      onShowShortcuts={() => setShowShortcuts(true)}
-                      isAuthenticated={isAuthenticated}
-                      username={user?.username}
-                      onLogout={handleLogout}
-                    />
-                    <Settings />
-                  </div>
                 </Suspense>
               ) : (
                 <Navigate to="/login" replace />
@@ -479,50 +516,10 @@ function App() {
               )
             }
           />
-          <Route
-            path="/bulk"
-            element={
-              isAuthenticated ? (
-                <Suspense fallback={<PageLoader />}>
-                  <div className="flex min-h-screen bg-[#f6f6f8]">
-                    <Sidebar
-                      currentRoute={getCurrentRouteFromPath()}
-                      onShowShortcuts={() => setShowShortcuts(true)}
-                      isAuthenticated={isAuthenticated}
-                      username={user?.username}
-                      onLogout={handleLogout}
-                    />
-                    <ResumeManagement />
-                  </div>
-                </Suspense>
-              ) : (
-                <Navigate to="/login" replace />
-              )
-            }
-          />
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
-          <Route
-            path="*"
-            element={
-              <Suspense fallback={<PageLoader />}>
-                <NotFound />
-              </Suspense>
-            }
-          />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       )}
-      <ToastContainer
-        position="top-right"
-        autoClose={5000}
-        hideProgressBar={true}
-        newestOnTop
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-        theme="light"
-      />
+      <ToastContainer position="bottom-right" theme="colored" hideProgressBar={false} />
     </ErrorBoundary>
   );
 }

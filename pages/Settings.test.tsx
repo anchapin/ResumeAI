@@ -3,25 +3,15 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import React from 'react';
 import Settings from './Settings';
-import { useStore } from '../store/store';
 
 // Mock localStorage
-const storageData: Record<string, string> = {};
 const localStorageMock = {
-  getItem: (key: string) => storageData[key] ?? null,
-  setItem: (key: string, value: string) => {
-    storageData[key] = value;
-  },
-  removeItem: (key: string) => {
-    delete storageData[key];
-  },
-  clear: () => {
-    Object.keys(storageData).forEach((key) => {
-      delete storageData[key];
-    });
-  },
+  getItem: vi.fn(),
+  setItem: vi.fn(),
+  removeItem: vi.fn(),
+  clear: vi.fn(),
   length: 0,
-  key: (index: number) => Object.keys(storageData)[index] ?? null,
+  key: vi.fn(),
 };
 
 Object.defineProperty(window, 'localStorage', {
@@ -36,22 +26,18 @@ Object.defineProperty(window, 'alert', {
   writable: true,
 });
 
-// Don't mock useTheme - let it use the real store with light theme default
-
 describe('Settings Component', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    // Clear localStorage and storage data
-    storageData['resumeai-storage'] = JSON.stringify({
-      theme: 'light',
-    });
+    vi.spyOn(window, 'matchMedia').mockReturnValue({
+      matches: false,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    } as any);
   });
 
   afterEach(() => {
     vi.clearAllMocks();
-    Object.keys(storageData).forEach((key) => {
-      delete storageData[key];
-    });
   });
 
   describe('Component Rendering', () => {
@@ -192,6 +178,36 @@ describe('Settings Component', () => {
       await user.type(firstNameInput, 'John');
 
       expect(firstNameInput).toHaveValue('John');
+    });
+
+    it('allows typing in Last Name input', async () => {
+      const user = userEvent.setup();
+      render(<Settings />);
+      const inputs = screen.getAllByRole('textbox') as HTMLInputElement[];
+      const lastNameInput = inputs.find((input) => input.value === 'Rivera');
+
+      if (!lastNameInput) {
+        throw new Error('Input not found');
+      }
+      await user.clear(lastNameInput);
+      await user.type(lastNameInput, 'Doe');
+
+      expect(lastNameInput).toHaveValue('Doe');
+    });
+
+    it('allows typing in Email input', async () => {
+      const user = userEvent.setup();
+      render(<Settings />);
+      const inputs = screen.getAllByRole('textbox') as HTMLInputElement[];
+      const emailInput = inputs.find((input) => input.value === 'alex.rivera@example.com');
+
+      if (!emailInput) {
+        throw new Error('Input not found');
+      }
+      await user.clear(emailInput);
+      await user.type(emailInput, 'john.doe@example.com');
+
+      expect(emailInput).toHaveValue('john.doe@example.com');
     });
 
     it('allows typing in Last Name input', async () => {

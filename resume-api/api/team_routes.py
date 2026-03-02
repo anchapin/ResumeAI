@@ -4,7 +4,10 @@ Team Collaboration API Routes.
 Endpoints for team management, sharing resumes, and collaboration features.
 """
 
-from fastapi import APIRouter, HTTPException, Request, status
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select, func, and_, or_, desc
+from sqlalchemy.orm import selectinload
+from fastapi import APIRouter, HTTPException, Request, status, Depends
 from typing import List, Optional
 from datetime import datetime
 
@@ -27,6 +30,14 @@ from .models import (
 from config.dependencies import AuthorizedAPIKey, limiter
 from config import settings
 from monitoring import logging_config
+from database import (
+    get_db,
+    Team,
+    TeamMember,
+    TeamResume,
+    TeamActivity,
+    User,
+)
 
 logger = logging_config.get_logger(__name__)
 
@@ -63,6 +74,7 @@ async def create_team(
     request: Request,
     body: TeamCreate,
     auth: AuthorizedAPIKey,
+    db: AsyncSession = Depends(get_db),
 ):
     """
     Create a new team.
@@ -74,20 +86,59 @@ async def create_team(
     Rate limit: 10 requests per minute per API key.
     """
     try:
-        # TODO: Implement database persistence
-        # For now, return a mock response
-        return TeamResponse(
-            id=1,
+        user_id = auth.user_id if hasattr(auth, "user_id") else 1
+
+        team = Team(
             name=body.name,
             description=body.description,
-            owner_id=auth.user_id if hasattr(auth, "user_id") else 1,
-            member_count=1,
+            owner_id=user_id,
+        )
+
+        db.add(team)
+        await db.flush()
+
+        team_member = TeamMember(
+            team_id=team.id,
+            user_id=user_id,
+            role="owner",
+        )
+        db.add(team_member)
+
+        activity = TeamActivity(
+            team_id=team.id,
+            user_id=user_id,
+            action="team_created",
+            description=f"Team '{body.name}' was created",
+        )
+        db.add(activity)
+
+        await db.commit()
+
+        await db.refresh(team)
+
+        member_count_stmt = select(func.count(TeamMember.id)).where(
+            TeamMember.team_id == team.id
+        )
+        result = await db.execute(member_count_stmt)
+        member_count = result.scalar() or 0
+
+        return TeamResponse(
+            id=team.id,
+            name=team.name,
+            description=team.description,
+            owner_id=team.owner_id,
+            member_count=member_count,
             resume_count=0,
-            created_at=datetime.utcnow().isoformat(),
-            updated_at=datetime.utcnow().isoformat(),
+            created_at=team.created_at.isoformat()
+            if team.created_at
+            else datetime.utcnow().isoformat(),
+            updated_at=team.updated_at.isoformat()
+            if team.updated_at
+            else datetime.utcnow().isoformat(),
         )
     except Exception as e:
         logger.error(f"Failed to create team: {e}")
+        await db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to create team: {str(e)}",
@@ -109,6 +160,7 @@ async def create_team(
 async def list_teams(
     request: Request,
     auth: AuthorizedAPIKey,
+    db: AsyncSession = Depends(get_db),
 ):
     """
     List all teams the authenticated user belongs to.
@@ -118,8 +170,50 @@ async def list_teams(
     Rate limit: 30 requests per minute per API key.
     """
     try:
-        # TODO: Implement database query
-        return []
+        user_id = auth.user_id if hasattr(auth, "user_id") else 1
+
+        stmt = (
+            select(Team)
+            .join(TeamMember, Team.id == TeamMember.team_id)
+            .where(TeamMember.user_id == user_id)
+            .options(selectinload(Team.members))
+        )
+
+        result = await db.execute(stmt)
+        teams = result.scalars().all()
+
+        team_responses = []
+        for team in teams:
+            member_count_stmt = select(func.count(TeamMember.id)).where(
+                TeamMember.team_id == team.id
+            )
+            result = await db.execute(member_count_stmt)
+            member_count = result.scalar() or 0
+
+            resume_count_stmt = select(func.count(TeamResume.id)).where(
+                TeamResume.team_id == team.id
+            )
+            result = await db.execute(resume_count_stmt)
+            resume_count = result.scalar() or 0
+
+            team_responses.append(
+                TeamResponse(
+                    id=team.id,
+                    name=team.name,
+                    description=team.description,
+                    owner_id=team.owner_id,
+                    member_count=member_count,
+                    resume_count=resume_count,
+                    created_at=team.created_at.isoformat()
+                    if team.created_at
+                    else datetime.utcnow().isoformat(),
+                    updated_at=team.updated_at.isoformat()
+                    if team.updated_at
+                    else datetime.utcnow().isoformat(),
+                )
+            )
+
+        return team_responses
     except Exception as e:
         logger.error(f"Failed to list teams: {e}")
         raise HTTPException(
@@ -145,6 +239,7 @@ async def get_team(
     request: Request,
     team_id: int,
     auth: AuthorizedAPIKey,
+    db: AsyncSession = Depends(get_db),
 ):
     """
     Get team details including members.
@@ -154,10 +249,56 @@ async def get_team(
     Rate limit: 30 requests per minute per API key.
     """
     try:
-        # TODO: Implement database query
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Team {team_id} not found",
+        user_id = auth.user_id if hasattr(auth, "user_id") else 1
+
+        stmt = (
+            select(Team)
+            .where(Team.id == team_id)
+            .options(selectinload(Team.members).selectinload(TeamMember.user))
+        )
+
+        result = await db.execute(stmt)
+        team = result.scalar_one_or_none()
+
+        if not team:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Team {team_id} not found",
+            )
+
+        member_responses = []
+        for member in team.members:
+            member_responses.append(
+                TeamMemberResponse(
+                    user_id=member.user.id,
+                    email=member.user.email,
+                    username=member.user.username,
+                    role=member.role,
+                    joined_at=member.joined_at.isoformat()
+                    if member.joined_at
+                    else datetime.utcnow().isoformat(),
+                )
+            )
+
+        resume_count_stmt = select(func.count(TeamResume.id)).where(
+            TeamResume.team_id == team.id
+        )
+        result = await db.execute(resume_count_stmt)
+        resume_count = result.scalar() or 0
+
+        return TeamDetailResponse(
+            id=team.id,
+            name=team.name,
+            description=team.description,
+            owner_id=team.owner_id,
+            members=member_responses,
+            resume_count=resume_count,
+            created_at=team.created_at.isoformat()
+            if team.created_at
+            else datetime.utcnow().isoformat(),
+            updated_at=team.updated_at.isoformat()
+            if team.updated_at
+            else datetime.utcnow().isoformat(),
         )
     except HTTPException:
         raise
@@ -188,6 +329,7 @@ async def update_team(
     team_id: int,
     body: TeamUpdate,
     auth: AuthorizedAPIKey,
+    db: AsyncSession = Depends(get_db),
 ):
     """
     Update team details.
@@ -199,15 +341,81 @@ async def update_team(
     Rate limit: 10 requests per minute per API key.
     """
     try:
-        # TODO: Implement database update
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Team {team_id} not found",
+        user_id = auth.user_id if hasattr(auth, "user_id") else 1
+
+        stmt = select(Team).where(Team.id == team_id)
+        result = await db.execute(stmt)
+        team = result.scalar_one_or_none()
+
+        if not team:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Team {team_id} not found",
+            )
+
+        if team.owner_id != user_id:
+            member_stmt = select(TeamMember).where(
+                and_(
+                    TeamMember.team_id == team_id,
+                    TeamMember.user_id == user_id,
+                )
+            )
+            member_result = await db.execute(member_stmt)
+            member = member_result.scalar_one_or_none()
+
+            if not member or member.role not in ["admin", "owner"]:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Only team owners and admins can update team details",
+                )
+
+        if body.name is not None:
+            team.name = body.name
+        if body.description is not None:
+            team.description = body.description
+
+        activity = TeamActivity(
+            team_id=team.id,
+            user_id=user_id,
+            action="team_updated",
+            description=f"Team '{team.name}' was updated",
+        )
+        db.add(activity)
+
+        await db.commit()
+        await db.refresh(team)
+
+        member_count_stmt = select(func.count(TeamMember.id)).where(
+            TeamMember.team_id == team.id
+        )
+        result = await db.execute(member_count_stmt)
+        member_count = result.scalar() or 0
+
+        resume_count_stmt = select(func.count(TeamResume.id)).where(
+            TeamResume.team_id == team.id
+        )
+        result = await db.execute(resume_count_stmt)
+        resume_count = result.scalar() or 0
+
+        return TeamResponse(
+            id=team.id,
+            name=team.name,
+            description=team.description,
+            owner_id=team.owner_id,
+            member_count=member_count,
+            resume_count=resume_count,
+            created_at=team.created_at.isoformat()
+            if team.created_at
+            else datetime.utcnow().isoformat(),
+            updated_at=team.updated_at.isoformat()
+            if team.updated_at
+            else datetime.utcnow().isoformat(),
         )
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Failed to update team: {e}")
+        await db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to update team: {str(e)}",
@@ -231,6 +439,7 @@ async def delete_team(
     request: Request,
     team_id: int,
     auth: AuthorizedAPIKey,
+    db: AsyncSession = Depends(get_db),
 ):
     """
     Delete a team.
@@ -242,15 +451,35 @@ async def delete_team(
     Rate limit: 5 requests per minute per API key.
     """
     try:
-        # TODO: Implement database delete
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Team {team_id} not found",
+        user_id = auth.user_id if hasattr(auth, "user_id") else 1
+
+        stmt = select(Team).where(Team.id == team_id)
+        result = await db.execute(stmt)
+        team = result.scalar_one_or_none()
+
+        if not team:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Team {team_id} not found",
+            )
+
+        if team.owner_id != user_id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Only team owners can delete teams",
+            )
+
+        await db.delete(team)
+        await db.commit()
+
+        return MessageResponse(
+            message=f"Team '{team.name}' has been deleted successfully"
         )
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Failed to delete team: {e}")
+        await db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to delete team: {str(e)}",
@@ -281,6 +510,7 @@ async def invite_team_member(
     team_id: int,
     body: TeamInvite,
     auth: AuthorizedAPIKey,
+    db: AsyncSession = Depends(get_db),
 ):
     """
     Invite a user to join a team.
@@ -292,15 +522,95 @@ async def invite_team_member(
     Rate limit: 10 requests per minute per API key.
     """
     try:
-        # TODO: Implement invitation system
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Team {team_id} not found",
+        user_id = auth.user_id if hasattr(auth, "user_id") else 1
+
+        team_stmt = select(Team).where(Team.id == team_id)
+        result = await db.execute(team_stmt)
+        team = result.scalar_one_or_none()
+
+        if not team:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Team {team_id} not found",
+            )
+
+        if team.owner_id != user_id:
+            member_stmt = select(TeamMember).where(
+                and_(
+                    TeamMember.team_id == team_id,
+                    TeamMember.user_id == user_id,
+                )
+            )
+            member_result = await db.execute(member_stmt)
+            member = member_result.scalar_one_or_none()
+
+            if not member or member.role not in ["admin", "owner"]:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Only team owners and admins can invite members",
+                )
+
+        user_stmt = select(User).where(User.email == body.email)
+        result = await db.execute(user_stmt)
+        invited_user = result.scalar_one_or_none()
+
+        if not invited_user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"User with email {body.email} not found",
+            )
+
+        existing_stmt = select(TeamMember).where(
+            and_(
+                TeamMember.team_id == team_id,
+                TeamMember.user_id == invited_user.id,
+            )
+        )
+        result = await db.execute(existing_stmt)
+        existing_member = result.scalar_one_or_none()
+
+        if existing_member:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"User {body.email} is already a member of this team",
+            )
+
+        new_member = TeamMember(
+            team_id=team_id,
+            user_id=invited_user.id,
+            role=body.role,
+        )
+        db.add(new_member)
+
+        activity = TeamActivity(
+            team_id=team_id,
+            user_id=user_id,
+            action="member_joined",
+            description=f"{invited_user.username} was invited to the team",
+            resource_type="user",
+            resource_id=invited_user.id,
+        )
+        db.add(activity)
+
+        await db.commit()
+        await db.refresh(new_member)
+
+        await db.refresh(invited_user)
+
+        return TeamMemberResponse(
+            user_id=invited_user.id,
+            email=invited_user.email,
+            username=invited_user.username,
+            role=new_member.role,
+            joined_at=new_member.joined_at.isoformat()
+            if new_member.joined_at
+            else datetime.utcnow().isoformat(),
         )
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Failed to invite team member: {e}")
+        await db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to invite team member: {str(e)}",
@@ -324,6 +634,7 @@ async def list_team_members(
     request: Request,
     team_id: int,
     auth: AuthorizedAPIKey,
+    db: AsyncSession = Depends(get_db),
 ):
     """
     List all members of a team.
@@ -333,11 +644,41 @@ async def list_team_members(
     Rate limit: 30 requests per minute per API key.
     """
     try:
-        # TODO: Implement database query
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Team {team_id} not found",
+        user_id = auth.user_id if hasattr(auth, "user_id") else 1
+
+        team_stmt = select(Team).where(Team.id == team_id)
+        result = await db.execute(team_stmt)
+        team = result.scalar_one_or_none()
+
+        if not team:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Team {team_id} not found",
+            )
+
+        member_stmt = (
+            select(TeamMember)
+            .where(TeamMember.team_id == team_id)
+            .options(selectinload(TeamMember.user))
         )
+        result = await db.execute(member_stmt)
+        members = result.scalars().all()
+
+        member_responses = []
+        for member in members:
+            member_responses.append(
+                TeamMemberResponse(
+                    user_id=member.user.id,
+                    email=member.user.email,
+                    username=member.user.username,
+                    role=member.role,
+                    joined_at=member.joined_at.isoformat()
+                    if member.joined_at
+                    else datetime.utcnow().isoformat(),
+                )
+            )
+
+        return member_responses
     except HTTPException:
         raise
     except Exception as e:
@@ -368,6 +709,7 @@ async def update_member_role(
     user_id: int,
     role: str,
     auth: AuthorizedAPIKey,
+    db: AsyncSession = Depends(get_db),
 ):
     """
     Update a team member's role.
@@ -379,15 +721,80 @@ async def update_member_role(
     Rate limit: 10 requests per minute per API key.
     """
     try:
-        # TODO: Implement database update
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Team {team_id} or member {user_id} not found",
+        current_user_id = auth.user_id if hasattr(auth, "user_id") else 1
+
+        team_stmt = select(Team).where(Team.id == team_id)
+        result = await db.execute(team_stmt)
+        team = result.scalar_one_or_none()
+
+        if not team:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Team {team_id} not found",
+            )
+
+        if team.owner_id != current_user_id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Only team owners can change member roles",
+            )
+
+        if user_id == team.owner_id:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Cannot change the role of the team owner",
+            )
+
+        member_stmt = (
+            select(TeamMember)
+            .where(
+                and_(
+                    TeamMember.team_id == team_id,
+                    TeamMember.user_id == user_id,
+                )
+            )
+            .options(selectinload(TeamMember.user))
+        )
+        result = await db.execute(member_stmt)
+        member = result.scalar_one_or_none()
+
+        if not member:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Member {user_id} not found in team {team_id}",
+            )
+
+        old_role = member.role
+        member.role = role
+
+        activity = TeamActivity(
+            team_id=team_id,
+            user_id=current_user_id,
+            action="role_changed",
+            description=f"{member.user.username}'s role was changed from {old_role} to {role}",
+            resource_type="user",
+            resource_id=user_id,
+            metadata={"old_role": old_role, "new_role": role},
+        )
+        db.add(activity)
+
+        await db.commit()
+        await db.refresh(member)
+
+        return TeamMemberResponse(
+            user_id=member.user.id,
+            email=member.user.email,
+            username=member.user.username,
+            role=member.role,
+            joined_at=member.joined_at.isoformat()
+            if member.joined_at
+            else datetime.utcnow().isoformat(),
         )
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Failed to update member role: {e}")
+        await db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to update member role: {str(e)}",
@@ -412,6 +819,7 @@ async def remove_team_member(
     team_id: int,
     user_id: int,
     auth: AuthorizedAPIKey,
+    db: AsyncSession = Depends(get_db),
 ):
     """
     Remove a member from a team.
@@ -423,15 +831,71 @@ async def remove_team_member(
     Rate limit: 10 requests per minute per API key.
     """
     try:
-        # TODO: Implement database delete
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Team {team_id} or member {user_id} not found",
+        current_user_id = auth.user_id if hasattr(auth, "user_id") else 1
+
+        team_stmt = select(Team).where(Team.id == team_id)
+        result = await db.execute(team_stmt)
+        team = result.scalar_one_or_none()
+
+        if not team:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Team {team_id} not found",
+            )
+
+        if user_id == team.owner_id:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Cannot remove the team owner",
+            )
+
+        member_stmt = (
+            select(TeamMember)
+            .where(
+                and_(
+                    TeamMember.team_id == team_id,
+                    TeamMember.user_id == user_id,
+                )
+            )
+            .options(selectinload(TeamMember.user))
         )
+        result = await db.execute(member_stmt)
+        member = result.scalar_one_or_none()
+
+        if not member:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Member {user_id} not found in team {team_id}",
+            )
+
+        if team.owner_id != current_user_id:
+            if member.role in ["admin", "owner"]:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Only team owners can remove admins",
+                )
+
+        username = member.user.username
+        await db.delete(member)
+
+        activity = TeamActivity(
+            team_id=team_id,
+            user_id=current_user_id,
+            action="member_left",
+            description=f"{username} was removed from the team",
+            resource_type="user",
+            resource_id=user_id,
+        )
+        db.add(activity)
+
+        await db.commit()
+
+        return MessageResponse(message=f"{username} has been removed from the team")
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Failed to remove team member: {e}")
+        await db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to remove team member: {str(e)}",
@@ -462,6 +926,7 @@ async def share_resume_with_team(
     team_id: int,
     body: TeamResumeShare,
     auth: AuthorizedAPIKey,
+    db: AsyncSession = Depends(get_db),
 ):
     """
     Share a resume with a team.
@@ -471,15 +936,76 @@ async def share_resume_with_team(
     Rate limit: 20 requests per minute per API key.
     """
     try:
-        # TODO: Implement database insert
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Team {team_id} or resume {body.resume_id} not found",
+        user_id = auth.user_id if hasattr(auth, "user_id") else 1
+
+        team_stmt = select(Team).where(Team.id == team_id)
+        result = await db.execute(team_stmt)
+        team = result.scalar_one_or_none()
+
+        if not team:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Team {team_id} not found",
+            )
+
+        member_stmt = select(TeamMember).where(
+            and_(
+                TeamMember.team_id == team_id,
+                TeamMember.user_id == user_id,
+            )
+        )
+        result = await db.execute(member_stmt)
+        member = result.scalar_one_or_none()
+
+        if not member:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You must be a team member to share resumes",
+            )
+
+        existing_stmt = select(TeamResume).where(
+            and_(
+                TeamResume.team_id == team_id,
+                TeamResume.resume_id == body.resume_id,
+            )
+        )
+        result = await db.execute(existing_stmt)
+        existing = result.scalar_one_or_none()
+
+        if existing:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Resume is already shared with this team",
+            )
+
+        team_resume = TeamResume(
+            team_id=team_id,
+            resume_id=body.resume_id,
+            permissions=body.permission,
+            shared_by=user_id,
+        )
+        db.add(team_resume)
+
+        activity = TeamActivity(
+            team_id=team_id,
+            user_id=user_id,
+            action="resume_shared",
+            description=f"Resume was shared with the team",
+            resource_type="resume",
+            resource_id=body.resume_id,
+        )
+        db.add(activity)
+
+        await db.commit()
+
+        return MessageResponse(
+            message=f"Resume has been shared with team '{team.name}'"
         )
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Failed to share resume: {e}")
+        await db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to share resume: {str(e)}",
@@ -504,6 +1030,7 @@ async def unshare_resume_from_team(
     team_id: int,
     resume_id: int,
     auth: AuthorizedAPIKey,
+    db: AsyncSession = Depends(get_db),
 ):
     """
     Remove a resume from a team's shared resumes.
@@ -513,15 +1040,70 @@ async def unshare_resume_from_team(
     Rate limit: 20 requests per minute per API key.
     """
     try:
-        # TODO: Implement database delete
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Team {team_id} or resume {resume_id} not found",
+        user_id = auth.user_id if hasattr(auth, "user_id") else 1
+
+        team_stmt = select(Team).where(Team.id == team_id)
+        result = await db.execute(team_stmt)
+        team = result.scalar_one_or_none()
+
+        if not team:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Team {team_id} not found",
+            )
+
+        member_stmt = select(TeamMember).where(
+            and_(
+                TeamMember.team_id == team_id,
+                TeamMember.user_id == user_id,
+            )
+        )
+        result = await db.execute(member_stmt)
+        member = result.scalar_one_or_none()
+
+        if not member or member.role not in ["admin", "owner"]:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Only team admins and owners can unshare resumes",
+            )
+
+        team_resume_stmt = select(TeamResume).where(
+            and_(
+                TeamResume.team_id == team_id,
+                TeamResume.resume_id == resume_id,
+            )
+        )
+        result = await db.execute(team_resume_stmt)
+        team_resume = result.scalar_one_or_none()
+
+        if not team_resume:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Resume {resume_id} is not shared with this team",
+            )
+
+        await db.delete(team_resume)
+
+        activity = TeamActivity(
+            team_id=team_id,
+            user_id=user_id,
+            action="resume_unshared",
+            description=f"Resume was unshared from the team",
+            resource_type="resume",
+            resource_id=resume_id,
+        )
+        db.add(activity)
+
+        await db.commit()
+
+        return MessageResponse(
+            message=f"Resume has been unshared from team '{team.name}'"
         )
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Failed to unshare resume: {e}")
+        await db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to unshare resume: {str(e)}",
@@ -736,6 +1318,7 @@ async def get_team_activity(
     auth: AuthorizedAPIKey,
     limit: int = 50,
     offset: int = 0,
+    db: AsyncSession = Depends(get_db),
 ):
     """
     Get recent team activity.
@@ -751,11 +1334,64 @@ async def get_team_activity(
     Rate limit: 30 requests per minute per API key.
     """
     try:
-        # TODO: Implement database query
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Team {team_id} not found",
+        user_id = auth.user_id if hasattr(auth, "user_id") else 1
+
+        team_stmt = select(Team).where(Team.id == team_id)
+        result = await db.execute(team_stmt)
+        team = result.scalar_one_or_none()
+
+        if not team:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Team {team_id} not found",
+            )
+
+        member_stmt = select(TeamMember).where(
+            and_(
+                TeamMember.team_id == team_id,
+                TeamMember.user_id == user_id,
+            )
         )
+        result = await db.execute(member_stmt)
+        member = result.scalar_one_or_none()
+
+        if not member:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You must be a team member to view team activity",
+            )
+
+        activity_stmt = (
+            select(TeamActivity)
+            .where(TeamActivity.team_id == team_id)
+            .options(selectinload(TeamActivity.user))
+            .order_by(desc(TeamActivity.created_at))
+            .limit(limit)
+            .offset(offset)
+        )
+
+        result = await db.execute(activity_stmt)
+        activities = result.scalars().all()
+
+        activity_responses = []
+        for activity in activities:
+            activity_responses.append(
+                TeamActivityResponse(
+                    id=activity.id,
+                    team_id=activity.team_id,
+                    user_id=activity.user_id,
+                    username=activity.user.username,
+                    action=activity.action,
+                    resource_type=activity.resource_type,
+                    resource_id=activity.resource_id,
+                    description=activity.description,
+                    created_at=activity.created_at.isoformat()
+                    if activity.created_at
+                    else datetime.utcnow().isoformat(),
+                )
+            )
+
+        return activity_responses
     except HTTPException:
         raise
     except Exception as e:
