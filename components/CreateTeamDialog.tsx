@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { CreateTeamRequest } from '../types';
 import { createTeam } from '../utils/api-client';
 import { showSuccessToast, showErrorToast } from '../utils/toast';
+import AccessibleDialog from './AccessibleDialog';
 
 interface CreateTeamDialogProps {
   isOpen: boolean;
@@ -12,6 +13,7 @@ interface CreateTeamDialogProps {
 
 /**
  * CreateTeamDialog component for creating new teams
+ * Accessible dialog for team creation with validation
  */
 const CreateTeamDialog: React.FC<CreateTeamDialogProps> = ({
   isOpen,
@@ -84,28 +86,53 @@ const CreateTeamDialog: React.FC<CreateTeamDialogProps> = ({
     }
   };
 
-  if (!isOpen) return null;
+  const footerContent = (
+    <div className="flex gap-3">
+      <button
+        onClick={handleClose}
+        disabled={isCreating}
+        className="flex-1 px-4 py-3 rounded-lg border border-slate-300 text-slate-700 font-bold hover:bg-slate-50 transition-colors disabled:opacity-50"
+      >
+        Cancel
+      </button>
+      <button
+        onClick={handleCreate}
+        disabled={isCreating || !!nameError || !name.trim()}
+        className="flex-1 px-4 py-3 rounded-lg bg-primary-600 text-white font-bold hover:bg-primary-700 transition-colors shadow-lg shadow-primary-600/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+      >
+        {isCreating ? (
+          <>
+            <span className="material-symbols-outlined animate-spin text-[18px]">
+              progress_activity
+            </span>
+            <span>Creating...</span>
+          </>
+        ) : (
+          <>
+            <span className="material-symbols-outlined text-[18px]">add</span>
+            <span>Create Team</span>
+          </>
+        )}
+      </button>
+    </div>
+  );
 
   return (
-    <div
-      className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
-      onClick={handleClose}
-      role="dialog"
-      aria-labelledby="create-team-dialog-title"
-      aria-modal="true"
+    <AccessibleDialog
+      isOpen={isOpen}
+      onClose={handleClose}
+      title="Create New Team"
+      headerId="create-team-dialog-title"
+      descriptionId="create-team-dialog-description"
+      footer={footerContent}
+      className="max-w-md"
     >
-      <div
-        className="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="p-6 border-b border-slate-200">
-          <h2 id="create-team-dialog-title" className="text-xl font-bold text-slate-900">
-            Create New Team
-          </h2>
-          <p className="text-sm text-slate-500 mt-1">Set up a new team for collaboration</p>
-        </div>
+      <div>
+        <p id="create-team-dialog-description" className="text-sm text-slate-500 mb-4">
+          Set up a new team for collaboration
+        </p>
 
-        <div className="p-6 space-y-4">
+        <div className="p-0 space-y-4">
           {/* Team Name */}
           <div className="space-y-2">
             <label htmlFor="team-name" className="text-sm font-bold text-slate-700">
@@ -175,37 +202,8 @@ const CreateTeamDialog: React.FC<CreateTeamDialogProps> = ({
             </div>
           </div>
         </div>
-
-        <div className="p-6 border-t border-slate-200 flex gap-3">
-          <button
-            onClick={handleClose}
-            disabled={isCreating}
-            className="flex-1 px-4 py-3 rounded-lg border border-slate-300 text-slate-700 font-bold hover:bg-slate-50 transition-colors disabled:opacity-50"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleCreate}
-            disabled={isCreating || !!nameError || !name.trim()}
-            className="flex-1 px-4 py-3 rounded-lg bg-primary-600 text-white font-bold hover:bg-primary-700 transition-colors shadow-lg shadow-primary-600/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-          >
-            {isCreating ? (
-              <>
-                <span className="material-symbols-outlined animate-spin text-[18px]">
-                  progress_activity
-                </span>
-                <span>Creating...</span>
-              </>
-            ) : (
-              <>
-                <span className="material-symbols-outlined text-[18px]">add</span>
-                <span>Create Team</span>
-              </>
-            )}
-          </button>
-        </div>
       </div>
-    </div>
+    </AccessibleDialog>
   );
 };
 

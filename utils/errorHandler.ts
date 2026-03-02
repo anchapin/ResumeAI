@@ -3,17 +3,15 @@
  * Provides centralized error handling, user-friendly messages, and error tracking
  */
 
-export enum ErrorType {
-  NETWORK = 'NETWORK_ERROR',
-  API = 'API_ERROR',
-  VALIDATION = 'VALIDATION_ERROR',
-  AUTH = 'AUTH_ERROR',
-  NOT_FOUND = 'NOT_FOUND_ERROR',
-  PERMISSION = 'PERMISSION_ERROR',
-  SERVER = 'SERVER_ERROR',
-  TIMEOUT = 'TIMEOUT_ERROR',
-  UNKNOWN = 'UNKNOWN_ERROR',
-}
+import {
+  getErrorMessageByType,
+  getErrorSuggestion,
+  isErrorRetryable,
+  ErrorType,
+} from './errorMessages';
+
+// Re-export ErrorType for convenience
+export { ErrorType };
 
 export interface ErrorContext {
   type: ErrorType;
@@ -95,10 +93,11 @@ class GlobalErrorHandlerService {
 
     // Handle network errors
     if (error instanceof TypeError && error.message.includes('fetch')) {
+      const messageMap = getErrorMessageByType(ErrorType.NETWORK);
       return {
         type: ErrorType.NETWORK,
         message: error.message,
-        userMessage: 'Unable to connect to the server. Please check your internet connection.',
+        userMessage: messageMap.userMessage,
         statusCode: 0,
         originalError: error,
         context: additionalContext,
@@ -110,96 +109,47 @@ class GlobalErrorHandlerService {
     // Handle API errors (with response)
     if (error.response) {
       const status = error.response.status;
+      let errorType = ErrorType.API;
+      let userMessage = 'An error occurred. Please try again.';
 
       switch (status) {
         case 400:
         case 422:
-          return {
-            type: ErrorType.VALIDATION,
-            message: error.message,
-            userMessage: 'Please check your input and try again.',
-            statusCode: status,
-            originalError: error,
-            context: additionalContext,
-            timestamp,
-            id,
-          };
-
+          errorType = ErrorType.VALIDATION;
+          break;
         case 401:
-          return {
-            type: ErrorType.AUTH,
-            message: error.message,
-            userMessage: 'Your session has expired. Please log in again.',
-            statusCode: status,
-            originalError: error,
-            context: additionalContext,
-            timestamp,
-            id,
-          };
-
+          errorType = ErrorType.AUTH;
+          break;
         case 403:
-          return {
-            type: ErrorType.PERMISSION,
-            message: error.message,
-            userMessage: 'You do not have permission to perform this action.',
-            statusCode: status,
-            originalError: error,
-            context: additionalContext,
-            timestamp,
-            id,
-          };
-
+          errorType = ErrorType.PERMISSION;
+          break;
         case 404:
-          return {
-            type: ErrorType.NOT_FOUND,
-            message: error.message,
-            userMessage: 'The requested item could not be found.',
-            statusCode: status,
-            originalError: error,
-            context: additionalContext,
-            timestamp,
-            id,
-          };
-
+          errorType = ErrorType.NOT_FOUND;
+          break;
         case 408:
         case 504:
-          return {
-            type: ErrorType.TIMEOUT,
-            message: error.message,
-            userMessage: 'The request took too long. Please try again.',
-            statusCode: status,
-            originalError: error,
-            context: additionalContext,
-            timestamp,
-            id,
-          };
-
+          errorType = ErrorType.TIMEOUT;
+          break;
         case 500:
         case 502:
         case 503:
-          return {
-            type: ErrorType.SERVER,
-            message: error.message,
-            userMessage: 'An error occurred on the server. Our team has been notified.',
-            statusCode: status,
-            originalError: error,
-            context: additionalContext,
-            timestamp,
-            id,
-          };
-
-        default:
-          return {
-            type: ErrorType.API,
-            message: error.message,
-            userMessage: 'An error occurred. Please try again.',
-            statusCode: status,
-            originalError: error,
-            context: additionalContext,
-            timestamp,
-            id,
-          };
+          errorType = ErrorType.SERVER;
+          break;
       }
+
+      const messageMap = getErrorMessageByType(errorType);
+      userMessage = messageMap.userMessage;
+
+      return {
+        type: errorType,
+        message: error.message,
+        userMessage,
+        statusCode: status,
+        originalError: error,
+        context: additionalContext,
+        timestamp,
+        id,
+      };
     }
 
     // Handle timeout errors (including AbortError from AbortController)
@@ -208,10 +158,11 @@ class GlobalErrorHandlerService {
       error.name === 'AbortError' ||
       error.message.includes('timeout')
     ) {
+      const messageMap = getErrorMessageByType(ErrorType.TIMEOUT);
       return {
         type: ErrorType.TIMEOUT,
         message: error.message,
-        userMessage: 'The request took too long. Please try again.',
+        userMessage: messageMap.userMessage,
         originalError: error,
         context: additionalContext,
         timestamp,
@@ -221,10 +172,11 @@ class GlobalErrorHandlerService {
 
     // Handle validation errors
     if (error.name === 'ValidationError') {
+      const messageMap = getErrorMessageByType(ErrorType.VALIDATION);
       return {
         type: ErrorType.VALIDATION,
         message: error.message,
-        userMessage: 'Please check your input and try again.',
+        userMessage: messageMap.userMessage,
         originalError: error,
         context: additionalContext,
         timestamp,
@@ -233,10 +185,11 @@ class GlobalErrorHandlerService {
     }
 
     // Default unknown error
+    const messageMap = getErrorMessageByType(ErrorType.UNKNOWN);
     return {
       type: ErrorType.UNKNOWN,
       message: error?.message || 'An unknown error occurred',
-      userMessage: 'An unexpected error occurred. Please try again or contact support.',
+      userMessage: messageMap.userMessage,
       originalError: error instanceof Error ? error : new Error(String(error)),
       context: additionalContext,
       timestamp,
