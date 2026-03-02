@@ -49,7 +49,7 @@ class TestHashedKeyVerification:
         mock_settings.master_api_key = None
         mock_settings.api_keys = [hashed_key]
 
-        client = TestClient(
+        TestClient(
             FastAPI(dependencies=[Depends(get_api_key)]),
         )
 
@@ -67,7 +67,6 @@ class TestHashedKeyVerification:
         mock_settings.api_keys = [hashed_key]
 
         # A different plaintext key should not match the hash
-        wrong_key = "wrong_key"
         # This would fail because wrong_key doesn't match the hash
         # The function should return 403 Forbidden
 
@@ -81,7 +80,6 @@ class TestHashedKeyVerification:
         mock_settings.master_api_key = None
         mock_settings.api_keys = [hashed_key]
 
-        wrong_key = "wrong_api_key"
         # Wrong key should not verify against the hash
 
     @patch("config.dependencies.settings")
@@ -174,12 +172,6 @@ class TestSecureKeyComparison:
         mock_settings.api_keys = [hashed]
 
         # These wrong keys should all fail in constant time
-        wrong_keys = [
-            "api_key_1234567890ac",  # Very similar
-            "api_key_1234567890",  # Shorter
-            "api_key_1234567890ab_",  # Longer
-            "wrong_key",  # Completely different
-        ]
 
         # All should fail with same timing
 

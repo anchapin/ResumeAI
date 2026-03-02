@@ -9,13 +9,11 @@ Tests verify that:
 """
 
 import pytest
-import asyncio
 import time
-from sqlalchemy import text, inspect, select
+from sqlalchemy import text, select
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 import os
-from typing import List, Dict, Any
 
 # Import models
 import sys
@@ -28,12 +26,6 @@ from database import (
     ResumeVersion,
     APIKey,
     User,
-    UsageAnalytics,
-    Subscription,
-    Invoice,
-    GitHubConnection,
-    GitHubOAuthState,
-    create_db_and_tables,
 )
 
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///./test_indexes.db")
@@ -523,7 +515,7 @@ class TestIndexIntegration:
         async with TestAsyncSession() as session:
             result = await session.execute(
                 select(Resume)
-                .where(Resume.is_public == True)
+                .where(Resume.is_public)
                 .order_by(Resume.created_at.desc())
             )
             resumes = result.scalars().all()

@@ -5,7 +5,7 @@ Endpoints for team management, sharing resumes, and collaboration features.
 """
 
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, and_, or_, desc
+from sqlalchemy import select, func, and_, desc
 from sqlalchemy.orm import selectinload
 from fastapi import APIRouter, HTTPException, Request, status, Depends
 from typing import List, Optional
@@ -129,12 +129,16 @@ async def create_team(
             owner_id=team.owner_id,
             member_count=member_count,
             resume_count=0,
-            created_at=team.created_at.isoformat()
-            if team.created_at
-            else datetime.utcnow().isoformat(),
-            updated_at=team.updated_at.isoformat()
-            if team.updated_at
-            else datetime.utcnow().isoformat(),
+            created_at=(
+                team.created_at.isoformat()
+                if team.created_at
+                else datetime.utcnow().isoformat()
+            ),
+            updated_at=(
+                team.updated_at.isoformat()
+                if team.updated_at
+                else datetime.utcnow().isoformat()
+            ),
         )
     except Exception as e:
         logger.error(f"Failed to create team: {e}")
@@ -204,12 +208,16 @@ async def list_teams(
                     owner_id=team.owner_id,
                     member_count=member_count,
                     resume_count=resume_count,
-                    created_at=team.created_at.isoformat()
-                    if team.created_at
-                    else datetime.utcnow().isoformat(),
-                    updated_at=team.updated_at.isoformat()
-                    if team.updated_at
-                    else datetime.utcnow().isoformat(),
+                    created_at=(
+                        team.created_at.isoformat()
+                        if team.created_at
+                        else datetime.utcnow().isoformat()
+                    ),
+                    updated_at=(
+                        team.updated_at.isoformat()
+                        if team.updated_at
+                        else datetime.utcnow().isoformat()
+                    ),
                 )
             )
 
@@ -249,7 +257,7 @@ async def get_team(
     Rate limit: 30 requests per minute per API key.
     """
     try:
-        user_id = auth.user_id if hasattr(auth, "user_id") else 1
+        auth.user_id if hasattr(auth, "user_id") else 1
 
         stmt = (
             select(Team)
@@ -274,9 +282,11 @@ async def get_team(
                     email=member.user.email,
                     username=member.user.username,
                     role=member.role,
-                    joined_at=member.joined_at.isoformat()
-                    if member.joined_at
-                    else datetime.utcnow().isoformat(),
+                    joined_at=(
+                        member.joined_at.isoformat()
+                        if member.joined_at
+                        else datetime.utcnow().isoformat()
+                    ),
                 )
             )
 
@@ -293,12 +303,16 @@ async def get_team(
             owner_id=team.owner_id,
             members=member_responses,
             resume_count=resume_count,
-            created_at=team.created_at.isoformat()
-            if team.created_at
-            else datetime.utcnow().isoformat(),
-            updated_at=team.updated_at.isoformat()
-            if team.updated_at
-            else datetime.utcnow().isoformat(),
+            created_at=(
+                team.created_at.isoformat()
+                if team.created_at
+                else datetime.utcnow().isoformat()
+            ),
+            updated_at=(
+                team.updated_at.isoformat()
+                if team.updated_at
+                else datetime.utcnow().isoformat()
+            ),
         )
     except HTTPException:
         raise
@@ -404,12 +418,16 @@ async def update_team(
             owner_id=team.owner_id,
             member_count=member_count,
             resume_count=resume_count,
-            created_at=team.created_at.isoformat()
-            if team.created_at
-            else datetime.utcnow().isoformat(),
-            updated_at=team.updated_at.isoformat()
-            if team.updated_at
-            else datetime.utcnow().isoformat(),
+            created_at=(
+                team.created_at.isoformat()
+                if team.created_at
+                else datetime.utcnow().isoformat()
+            ),
+            updated_at=(
+                team.updated_at.isoformat()
+                if team.updated_at
+                else datetime.utcnow().isoformat()
+            ),
         )
     except HTTPException:
         raise
@@ -602,9 +620,11 @@ async def invite_team_member(
             email=invited_user.email,
             username=invited_user.username,
             role=new_member.role,
-            joined_at=new_member.joined_at.isoformat()
-            if new_member.joined_at
-            else datetime.utcnow().isoformat(),
+            joined_at=(
+                new_member.joined_at.isoformat()
+                if new_member.joined_at
+                else datetime.utcnow().isoformat()
+            ),
         )
     except HTTPException:
         raise
@@ -644,7 +664,7 @@ async def list_team_members(
     Rate limit: 30 requests per minute per API key.
     """
     try:
-        user_id = auth.user_id if hasattr(auth, "user_id") else 1
+        auth.user_id if hasattr(auth, "user_id") else 1
 
         team_stmt = select(Team).where(Team.id == team_id)
         result = await db.execute(team_stmt)
@@ -672,9 +692,11 @@ async def list_team_members(
                     email=member.user.email,
                     username=member.user.username,
                     role=member.role,
-                    joined_at=member.joined_at.isoformat()
-                    if member.joined_at
-                    else datetime.utcnow().isoformat(),
+                    joined_at=(
+                        member.joined_at.isoformat()
+                        if member.joined_at
+                        else datetime.utcnow().isoformat()
+                    ),
                 )
             )
 
@@ -786,9 +808,11 @@ async def update_member_role(
             email=member.user.email,
             username=member.user.username,
             role=member.role,
-            joined_at=member.joined_at.isoformat()
-            if member.joined_at
-            else datetime.utcnow().isoformat(),
+            joined_at=(
+                member.joined_at.isoformat()
+                if member.joined_at
+                else datetime.utcnow().isoformat()
+            ),
         )
     except HTTPException:
         raise
@@ -990,7 +1014,7 @@ async def share_resume_with_team(
             team_id=team_id,
             user_id=user_id,
             action="resume_shared",
-            description=f"Resume was shared with the team",
+            description="Resume was shared with the team",
             resource_type="resume",
             resource_id=body.resume_id,
         )
@@ -1088,7 +1112,7 @@ async def unshare_resume_from_team(
             team_id=team_id,
             user_id=user_id,
             action="resume_unshared",
-            description=f"Resume was unshared from the team",
+            description="Resume was unshared from the team",
             resource_type="resume",
             resource_id=resume_id,
         )
@@ -1385,9 +1409,11 @@ async def get_team_activity(
                     resource_type=activity.resource_type,
                     resource_id=activity.resource_id,
                     description=activity.description,
-                    created_at=activity.created_at.isoformat()
-                    if activity.created_at
-                    else datetime.utcnow().isoformat(),
+                    created_at=(
+                        activity.created_at.isoformat()
+                        if activity.created_at
+                        else datetime.utcnow().isoformat()
+                    ),
                 )
             )
 

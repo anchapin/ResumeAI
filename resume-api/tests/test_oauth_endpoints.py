@@ -10,13 +10,11 @@ Tests all OAuth-related endpoints:
 
 import pytest
 import pytest_asyncio
-import os
 from datetime import datetime, timedelta, timezone
-from unittest.mock import patch, AsyncMock, MagicMock
+from unittest.mock import patch
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 from sqlalchemy import select
-from urllib.parse import urlparse, parse_qs
 
 from main import app
 from database import (
@@ -27,10 +25,8 @@ from database import (
     RefreshToken,
     get_async_session,
 )
-from config.dependencies import get_current_user
 from config.jwt_utils import create_access_token, create_refresh_token
 from config.security import hash_password, encrypt_token
-from lib.token_encryption import generate_encryption_key
 
 # ============================================================================
 # Fixtures
@@ -71,7 +67,7 @@ async def client(db_session):
 
     app.dependency_overrides[get_async_session] = override_get_async_session
 
-    from httpx import AsyncClient, ASGITransport
+    from httpx import ASGITransport
 
     transport = ASGITransport(app=app)
     async_client = AsyncClient(transport=transport, base_url="http://testserver")
