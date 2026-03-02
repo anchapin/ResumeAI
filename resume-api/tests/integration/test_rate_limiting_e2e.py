@@ -9,9 +9,7 @@ Tests cover:
 """
 
 import pytest
-import asyncio
 from httpx import AsyncClient
-from unittest.mock import patch
 
 
 class TestPDFGenerationRateLimit:
@@ -51,9 +49,7 @@ class TestPDFGenerationRateLimit:
 
         # Headers may contain rate limit info
         # Common patterns: x-ratelimit-limit, x-ratelimit-remaining, retry-after
-        rate_limit_headers = [
-            h for h in headers if "ratelimit" in h.lower() or "retry" in h.lower()
-        ]
+        [h for h in headers if "ratelimit" in h.lower() or "retry" in h.lower()]
         # At least one rate limit related header should be present
         # or headers are simply not exposed
 

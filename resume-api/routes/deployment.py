@@ -8,13 +8,11 @@ Provides endpoints for:
 - Deployment verification
 """
 
-from fastapi import APIRouter, Depends, HTTPException, status, Query
-from typing import Dict, Any
+from fastapi import APIRouter, Depends, HTTPException, Query
 from datetime import datetime
 
 from config import settings
 from config.dependencies import verify_api_key
-from config.errors import ErrorCode, create_error_response
 from lib.deployment import (
     feature_flag_manager,
     schema_validator,

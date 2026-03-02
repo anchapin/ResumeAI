@@ -104,7 +104,7 @@ class RateLimitTester:
 
     async def test_variants_exceed_limit(self, api_key: str) -> bool:
         """Test exceeding rate limit on variants endpoint."""
-        print(f"\n--- Testing variants endpoint rate limit (60 req/min) ---")
+        print("\n--- Testing variants endpoint rate limit (60 req/min) ---")
 
         # Send 65 requests (should exceed limit of 60)
         rate_limited = False
@@ -149,7 +149,7 @@ class RateLimitTester:
 
     async def test_multiple_api_keys(self) -> bool:
         """Test that rate limits are per API key."""
-        print(f"\n--- Testing multiple API keys (separate rate limits) ---")
+        print("\n--- Testing multiple API keys (separate rate limits) ---")
 
         # Send 15 requests with first API key (PDF limit is 10)
         first_key_success = 0
@@ -188,17 +188,17 @@ class RateLimitTester:
                     second_key_limited = True
 
         if first_key_limited and second_key_limited:
-            print(f"✓ Both API keys properly rate limited")
+            print("✓ Both API keys properly rate limited")
             print(f"  First key: {first_key_success} successful")
             print(f"  Second key: {second_key_success} successful")
             return True
         else:
-            print(f"✗ Rate limiting not working correctly for multiple API keys")
+            print("✗ Rate limiting not working correctly for multiple API keys")
             return False
 
     async def test_pdf_rate_limits(self, api_key: str) -> bool:
         """Test PDF endpoint rate limiting (10 req/min)."""
-        print(f"\n--- Testing PDF endpoint rate limit (10 req/min) ---")
+        print("\n--- Testing PDF endpoint rate limit (10 req/min) ---")
 
         success_count = 0
         rate_limited = False
@@ -222,7 +222,7 @@ class RateLimitTester:
             print(f"✓ PDF rate limit working: {success_count} successful before limit")
             return True
         else:
-            print(f"✗ PDF rate limit not working correctly")
+            print("✗ PDF rate limit not working correctly")
             return False
 
     async def run_all_tests(self):

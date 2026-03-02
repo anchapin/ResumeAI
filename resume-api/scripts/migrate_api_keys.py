@@ -106,7 +106,6 @@ def print_migration_results(results: dict) -> None:
         print(f'API_KEYS="{",".join(hashes)}"\n')
 
     if results.get("master_api_key"):
-        plaintext = None
         hashed = results["master_api_key"]
         print("MASTER_API_KEY:")
         print("-" * 70)
