@@ -1,7 +1,5 @@
 # Integration Tests Report - Issue #383
 
-<<<<<<< HEAD
-
 ## Overview
 
 Comprehensive integration test suite has been successfully created and deployed for the ResumeAI API. This report documents all integration tests, their coverage, and execution results.
@@ -345,7 +343,6 @@ The test utilities are extensible and reusable for future integration tests.
 **Test Suite Version:** 1.0.0
 **Maintainer:** ResumeAI Team
 **Status:** ✅ All tests passing
-=======
 
 ## Tests Created
 

@@ -1,5 +1,3 @@
-<<<<<<< HEAD
-
 # Frontend Global Error Handler Guide - Issue #384
 
 ## Overview
@@ -587,7 +585,6 @@ errorHandler.subscribe((error) => {
 **Version:** 1.0.0  
 **Last Updated:** February 26, 2026  
 **Status:** ✅ Production Ready
-=======
 
 # Frontend Global Error Handler - Issue #384
 
