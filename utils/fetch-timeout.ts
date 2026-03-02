@@ -55,16 +55,21 @@ export async function fetchWithTimeout(
   options: RequestInit = {},
   timeoutMs: number = 0,
 ): Promise<Response> {
+  const mergedOptions: RequestInit = {
+    ...options,
+    credentials: options.credentials || 'include',
+  };
+
   // If no timeout specified, just use regular fetch
   if (timeoutMs <= 0) {
-    return fetch(url, options);
+    return fetch(url, mergedOptions);
   }
 
   const controller = createTimeoutAbortController(timeoutMs);
 
   try {
     return await fetch(url, {
-      ...options,
+      ...mergedOptions,
       signal: controller.signal,
     });
   } finally {
