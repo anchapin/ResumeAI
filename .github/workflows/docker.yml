@@ -45,7 +45,7 @@ jobs:
       - name: Test Docker health check
         run: |
           # Start container in background
-          docker run -d -e JWT_SECRET=test-secret-for-ci-testing-32chars --name test-resume-api -p 8000:8000 resume-api:latest
+          docker run -d --name test-resume-api -p 8000:8000 -e JWT_SECRET=test-secret-for-ci-testing-32chars resume-api:latest
           # Wait for container to start
           sleep 5
           # Check health endpoint
