@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { SimpleResumeData } from '../types';
 import { loadResumeData, saveResumeData, StorageError } from '../utils/storage';
-import { TokenManager, sanitizeInput } from '../utils/security';
+import { sanitizeInput } from '../utils/security';
 
 export interface AuthUser {
   id: number;

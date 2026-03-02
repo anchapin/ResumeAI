@@ -82,12 +82,16 @@ export async function retryWithBackoff(
   config: RetryConfig = {},
 ): Promise<Response> {
   const mergedConfig = { ...DEFAULT_CONFIG, ...config };
+  const mergedOptions: RequestInit = {
+    ...options,
+    credentials: options.credentials || 'include',
+  };
   let lastError: Error | null = null;
   let lastResponse: Response | null = null;
 
   for (let attempt = 0; attempt <= mergedConfig.maxRetries; attempt++) {
     try {
-      const response = await fetch(url, options);
+      const response = await fetch(url, mergedOptions);
 
       // If status is OK or non-retryable error, return response
       if (response.ok || !isRetryableStatus(response.status)) {

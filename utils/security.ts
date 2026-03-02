@@ -57,82 +57,55 @@ const SECURITY_CONFIG = {
   },
 };
 
-// Token management utilities
+// Cookie management utilities
+const getCookie = (name: string): string | null => {
+  if (typeof document === 'undefined') return null;
+  const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+  return match ? decodeURIComponent(match[2]) : null;
+};
+
+const deleteCookie = (name: string): void => {
+  if (typeof document === 'undefined') return;
+  document.cookie = name + '=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Strict';
+};
+
+// Token management - now uses httpOnly cookies (browser handles automatically)
 const TokenManager = {
-  /**
-   * Store authentication token
-   * @param token - JWT token to store
-   */
-  setToken: (token: string): void => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(SECURITY_CONFIG.TOKEN_STORAGE_KEY, token);
-    }
+  setToken: (_token: string): void => {
+    // No-op: tokens are now stored in httpOnly cookies by the backend
+    // Browser automatically sends cookies with requests
   },
 
-  /**
-   * Get stored authentication token
-   * @returns Stored token or null if not found
-   */
   getToken: (): string | null => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem(SECURITY_CONFIG.TOKEN_STORAGE_KEY);
-    }
+    // Tokens are in httpOnly cookies, cannot be accessed via JavaScript
+    // The browser automatically sends them with requests
+    // We'll rely on 401 responses to detect token expiration
     return null;
   },
 
-  /**
-   * Remove stored authentication token
-   */
   removeToken: (): void => {
+    // No-op: cookies are cleared via the logout endpoint
+    // This just clears any residual localStorage state
     if (typeof window !== 'undefined') {
       localStorage.removeItem(SECURITY_CONFIG.TOKEN_STORAGE_KEY);
     }
   },
 
-  /**
-   * Check if token is expired
-   * @param token - JWT token to check
-   * @returns True if token is expired, false otherwise
-   */
-  isTokenExpired: (token: string): boolean => {
-    try {
-      // Split token to get payload
-      const parts = token.split('.');
-      if (parts.length !== 3) {
-        return true; // Invalid token format
-      }
-
-      // Decode payload (second part)
-      const payload = JSON.parse(atob(parts[1]));
-
-      // Check expiration
-      const currentTime = Math.floor(Date.now() / 1000);
-      return payload.exp && payload.exp < currentTime;
-    } catch (error) {
-      console.error('Error checking token expiration:', error);
-      return true; // Assume expired on error
-    }
+  isTokenExpired: (_token: string): boolean => {
+    // Cannot check token expiration since we can't read httpOnly cookies
+    // Rely on API responses to detect expired tokens
+    return false;
   },
 
-  /**
-   * Get token expiration time
-   * @param token - JWT token to check
-   * @returns Expiration timestamp or null if invalid
-   */
-  getTokenExpiration: (token: string): number | null => {
-    try {
-      const parts = token.split('.');
-      if (parts.length !== 3) {
-        return null;
-      }
-
-      const payload = JSON.parse(atob(parts[1]));
-      return payload.exp ? payload.exp * 1000 : null; // Convert to milliseconds
-    } catch (error) {
-      console.error('Error getting token expiration:', error);
-      return null;
-    }
+  getTokenExpiration: (_token: string): number | null => {
+    // Cannot read from httpOnly cookies
+    return null;
   },
+};
+
+// Get CSRF token from cookie
+const getCsrfToken = (): string | null => {
+  return getCookie('csrf_token');
 };
 
 // Security headers for API requests
@@ -145,11 +118,14 @@ const getSecurityHeaders = (): Record<string, string> => {
     'Sec-Fetch-Site': 'same-origin',
   };
 
-  // Add authorization header if token exists
-  const token = TokenManager.getToken();
-  if (token && !TokenManager.isTokenExpired(token)) {
-    headers.Authorization = `Bearer ${token}`;
+  // Add CSRF token from cookie for state-changing requests
+  const csrfToken = getCsrfToken();
+  if (csrfToken) {
+    headers['X-CSRF-Token'] = csrfToken;
   }
+
+  // Note: Authorization header is not needed when using httpOnly cookies
+  // The browser automatically sends cookies with requests
 
   return headers;
 };
@@ -159,26 +135,20 @@ const secureApiCall = async (url: string, options: RequestInit = {}): Promise<Re
   // Merge security headers with provided options
   const secureOptions: RequestInit = {
     ...options,
+    credentials: 'include', // Important: include cookies in cross-origin requests
     headers: {
       ...getSecurityHeaders(),
       ...options.headers,
     },
   };
 
-  // Add CSRF token if available (in a real app, you'd get this from a meta tag or cookie)
-  // const csrfToken = getCsrfToken();
-  // if (csrfToken) {
-  //   (secureOptions.headers as Record<string, string>)['X-CSRF-Token'] = csrfToken;
-  // }
-
   try {
     const response = await fetch(url, secureOptions);
 
     // Check for authentication errors
     if (response.status === 401) {
-      // Token might be expired, remove it
+      // Token might be expired, clear any residual state
       TokenManager.removeToken();
-      // In a real app, you might redirect to login
     }
 
     return response;
@@ -233,4 +203,5 @@ export {
   secureApiCall,
   sanitizeInput,
   validateFileUpload,
+  getCsrfToken,
 };

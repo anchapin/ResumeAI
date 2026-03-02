@@ -59,6 +59,7 @@ import {
 } from '../types';
 import { fetchWithTimeout, TIMEOUT_CONFIG } from './fetch-timeout';
 import { fetchWithRetry, RetryConfig } from './retryLogic';
+import { getCsrfToken } from './security';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
 
@@ -86,26 +87,13 @@ function getAPIKey(): string | null {
 export function getHeaders(): HeadersInit {
   const headers: HeadersInit = { 'Content-Type': 'application/json' };
 
-  // Try JWT token first (Issue 477 - Bearer token auth)
-  const token = localStorage.getItem('resume_ai_auth_token');
-  if (token) {
-    try {
-      // Check if token is expired
-      const parts = token.split('.');
-      if (parts.length === 3) {
-        const payload = JSON.parse(atob(parts[1]));
-        const currentTime = Math.floor(Date.now() / 1000);
-        if (!payload.exp || payload.exp >= currentTime) {
-          headers['Authorization'] = `Bearer ${token}`;
-          return headers;
-        }
-      }
-    } catch {
-      // Invalid token, fall through to API key
-    }
+  // Add CSRF token from cookie for state-changing requests
+  const csrfToken = getCsrfToken();
+  if (csrfToken) {
+    headers['X-CSRF-Token'] = csrfToken;
   }
 
-  // Fall back to API key authentication
+  // Fall back to API key authentication if needed
   const apiKey = getAPIKey();
   if (apiKey) headers['X-API-KEY'] = apiKey;
   return headers;
@@ -1485,7 +1473,9 @@ export async function createCheckoutSession(
     DEFAULT_RETRY_CONFIG,
   );
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ detail: 'Failed to create checkout session' }));
+    const error = await response
+      .json()
+      .catch(() => ({ detail: 'Failed to create checkout session' }));
     throw new Error(error.detail || 'Failed to create checkout session');
   }
   return response.json();
@@ -1504,13 +1494,17 @@ export async function createPortalSession(
     DEFAULT_RETRY_CONFIG,
   );
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ detail: 'Failed to create portal session' }));
+    const error = await response
+      .json()
+      .catch(() => ({ detail: 'Failed to create portal session' }));
     throw new Error(error.detail || 'Failed to create portal session');
   }
   return response.json();
 }
 
-export async function cancelSubscription(atPeriodEnd: boolean = true): Promise<{ success: boolean; status: string }> {
+export async function cancelSubscription(
+  atPeriodEnd: boolean = true,
+): Promise<{ success: boolean; status: string }> {
   const response = await fetchWithRetry(
     `${API_URL}/api/v1/billing/cancel?at_period_end=${atPeriodEnd}`,
     {
@@ -1542,7 +1536,9 @@ export async function resumeSubscription(): Promise<{ success: boolean; status: 
   return response.json();
 }
 
-export async function upgradeSubscription(newPlanName: string): Promise<{ success: boolean; status: string }> {
+export async function upgradeSubscription(
+  newPlanName: string,
+): Promise<{ success: boolean; status: string }> {
   const response = await fetchWithRetry(
     `${API_URL}/api/v1/billing/upgrade?new_plan_name=${newPlanName}`,
     {

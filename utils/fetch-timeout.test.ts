@@ -145,7 +145,7 @@ describe('fetch-timeout utility', () => {
 
       const response = await fetchWithTimeout('/api/test', {}, 0);
 
-      expect(fetchSpy).toHaveBeenCalledWith('/api/test', {});
+      expect(fetchSpy).toHaveBeenCalledWith('/api/test', { credentials: 'include' });
       expect(response).toBe(mockResponse);
     });
 

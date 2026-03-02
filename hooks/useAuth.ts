@@ -1,15 +1,12 @@
-import { useCallback } from 'react';
+import { useCallback, useRef } from 'react';
 import { useStore } from '../store/store';
-import { TokenManager } from '../utils/security';
+import { TokenManager, getCsrfToken } from '../utils/security';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
 
 function getAuthHeaders(): Record<string, string> {
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-  const token = TokenManager.getToken();
-  if (token && !TokenManager.isTokenExpired(token)) {
-    headers['Authorization'] = `Bearer ${token}`;
-  }
+  // CSRF token is now read from cookie in getSecurityHeaders
   return headers;
 }
 
@@ -22,10 +19,13 @@ export const useAuth = () => {
   const setAuthLoading = useStore((state) => state.setAuthLoading);
   const setAuthError = useStore((state) => state.setAuthError);
 
+  const refreshTokenRef = useRef<string | null>(null);
+
   const fetchCurrentUser = async () => {
     try {
       const response = await fetch(`${API_URL}/auth/me`, {
         headers: getAuthHeaders(),
+        credentials: 'include',
       });
       if (response.ok) {
         const userData = await response.json();
@@ -33,6 +33,7 @@ export const useAuth = () => {
         return userData;
       } else {
         TokenManager.removeToken();
+        refreshTokenRef.current = null;
         setUser(null);
       }
     } catch {
@@ -49,6 +50,7 @@ export const useAuth = () => {
         const response = await fetch(`${API_URL}/auth/login`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
           body: JSON.stringify({ email, password }),
         });
 
@@ -58,8 +60,8 @@ export const useAuth = () => {
         }
 
         const data = await response.json();
-        TokenManager.setToken(data.access_token);
-        localStorage.setItem('resumeai_refresh_token', data.refresh_token);
+        // Store refresh token in memory (not localStorage for security)
+        refreshTokenRef.current = data.refresh_token;
 
         const userData = await fetchCurrentUser();
         return userData;
@@ -82,6 +84,7 @@ export const useAuth = () => {
         const response = await fetch(`${API_URL}/auth/register`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
           body: JSON.stringify({
             email,
             username,
@@ -109,17 +112,16 @@ export const useAuth = () => {
 
   const logout = useCallback(async () => {
     try {
-      const refreshToken = localStorage.getItem('resumeai_refresh_token');
-      if (refreshToken) {
-        await fetch(`${API_URL}/auth/logout`, {
-          method: 'POST',
-          headers: getAuthHeaders(),
-          body: JSON.stringify({ refresh_token: refreshToken }),
-        }).catch(() => {});
-      }
+      // Use refresh token from memory to revoke it server-side
+      await fetch(`${API_URL}/auth/logout`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ refresh_token: refreshTokenRef.current || '' }),
+      }).catch(() => {});
     } finally {
       TokenManager.removeToken();
-      localStorage.removeItem('resumeai_refresh_token');
+      refreshTokenRef.current = null;
       setUser(null);
     }
   }, [setUser]);
