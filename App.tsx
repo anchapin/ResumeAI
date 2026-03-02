@@ -61,6 +61,7 @@ function App() {
   const loadResume = useStore((state) => state.loadResume);
   const saveStatus = useStore((state) => state.saveStatus);
   const setSaveStatus = useStore((state) => state.setSaveStatus);
+  const resumeError = useStore((state) => state.resumeError);
   const setResumeError = useStore((state) => state.setResumeError);
   const showShortcuts = useStore((state) => state.showShortcuts);
   const setShowShortcuts = useStore((state) => state.setShowShortcuts);
@@ -89,6 +90,16 @@ function App() {
       }
     });
   }, [showShortcuts, setShowShortcuts]);
+
+  // Auto-dismiss resumeError after 5 seconds
+  useEffect(() => {
+    if (resumeError) {
+      const timer = setTimeout(() => {
+        setResumeError(null);
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [resumeError, setResumeError]);
 
   // Load resume data from localStorage on mount and check security
   useEffect(() => {
@@ -215,6 +226,18 @@ function App() {
           <span className="text-sm font-semibold">{storageError}</span>
           <button
             onClick={() => setStorageError(null)}
+            className="ml-2 text-red-500 hover:text-red-700"
+          >
+            <span className="material-symbols-outlined text-[20px]">close</span>
+          </button>
+        </div>
+      )}
+      {resumeError && (
+        <div className="fixed top-20 right-4 z-50 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg shadow-lg flex items-center gap-2 animate-in slide-in-from-top-2 fade-in">
+          <span className="material-symbols-outlined text-red-500">error</span>
+          <span className="text-sm font-semibold">{resumeError}</span>
+          <button
+            onClick={() => setResumeError(null)}
             className="ml-2 text-red-500 hover:text-red-700"
           >
             <span className="material-symbols-outlined text-[20px]">close</span>

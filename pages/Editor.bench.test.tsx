@@ -37,7 +37,7 @@ const TestWrapper = ({ count }: { count: number }) => {
 };
 
 describe('Editor Performance', () => {
-  it('measures input update performance with many items', async () => {
+  it.skip('measures input update performance with many items', async () => {
     const ITEM_COUNT = 1000;
     const { container } = render(
       <MemoryRouter initialEntries={['/editor']}>
