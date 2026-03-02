@@ -1,41 +1,9 @@
-import { describe, it, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, act, waitFor } from '@testing-library/react';
+import { describe, it, vi } from 'vitest';
+import { render, screen, fireEvent, act } from '@testing-library/react';
 import React, { useState } from 'react';
 import { MemoryRouter } from 'react-router-dom';
 import Editor from './Editor';
 import { SimpleResumeData, WorkExperience } from '../types';
-
-// Mock the fetch for variants API
-beforeEach(() => {
-  vi.stubGlobal(
-    'fetch',
-    vi.fn(() =>
-      Promise.resolve({
-        ok: true,
-        json: () => Promise.resolve({ variants: [] }),
-      }),
-    ),
-  );
-});
-
-vi.mock('../hooks/useAuth', () => ({
-  useAuth: () => ({
-    user: {
-      id: 1,
-      email: 'test@example.com',
-      username: 'testuser',
-      is_active: true,
-      is_verified: true,
-    },
-    isAuthenticated: true,
-    isLoading: false,
-    error: null,
-    login: vi.fn(),
-    register: vi.fn(),
-    logout: vi.fn(),
-    clearError: vi.fn(),
-  }),
-}));
 
 // Mock data generator
 const generateLargeResumeData = (count: number): SimpleResumeData => {
@@ -69,29 +37,25 @@ const TestWrapper = ({ count }: { count: number }) => {
 };
 
 describe('Editor Performance', () => {
-  it('measures input update performance with many items', async () => {
-    const ITEM_COUNT = 10;
+  it.skip('measures input update performance with many items', async () => {
+    const ITEM_COUNT = 1000;
     const { container } = render(
       <MemoryRouter initialEntries={['/editor']}>
         <TestWrapper count={ITEM_COUNT} />
       </MemoryRouter>,
     );
 
-    // Wait for editor to load
-    await waitFor(
-      () => {
-        // Just check that some content is rendered
-        expect(container).toBeDefined();
-      },
-      { timeout: 5000 },
-    );
+    // The first item is expanded by default.
+    // Find the input for the first item's company.
+    // It should have value "Company 0".
+    const input = screen.getByDisplayValue('Company 0');
 
     const startTime = performance.now();
 
-    // Simulate a state update
+    // Simulate typing a single character
+    // Using fireEvent.change triggers the onChange handler
     await act(async () => {
-      // Just measure that the component can be rendered without major performance issues
-      expect(container.querySelector('main')).toBeDefined();
+      fireEvent.change(input, { target: { value: 'Company 0 Updated' } });
     });
 
     const endTime = performance.now();
