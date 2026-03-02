@@ -13,7 +13,6 @@ import {
 import { useStore } from '../store/store';
 import { TemplateSelector } from '../components/TemplateSelector';
 import { LinkedInImportDialog } from '../components/LinkedInImportDialog';
-import ExperienceItem from '../components/ExperienceItem';
 import ResumePreview from '../components/ResumePreview';
 import VersionHistory from '../components/VersionHistory';
 import CommentPanel from '../components/CommentPanel';
@@ -29,36 +28,6 @@ import { EditorTabs } from '../components/editor/EditorTabs';
 import { EditorActions } from '../components/editor/EditorActions';
 import { SaveVersionDialog } from '../components/editor/SaveVersionDialog';
 import { VersionHistoryDialog } from '../components/editor/VersionHistoryDialog';
-import EducationItem from '../components/editor/EducationItem';
-import ProjectItem from '../components/editor/ProjectItem';
-
-/** Navigation items for the editor header */
-const NAV_ITEMS = ['Dashboard', 'My Resumes', 'Templates', 'Settings'];
-/** Tab items for the editor content */
-const TAB_ITEMS = ['Contact Info', 'Summary', 'Experience', 'Skills', 'Education', 'Projects'];
-
-/**
- * Helper function to get a human-readable time difference
- * @param {Date} date - The date to compare against the current time
- * @returns {string} A human-readable time difference string
- */
-function getTimeSince(date: Date): string {
-  const now = new Date();
-  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-
-  if (diffInSeconds < 60) {
-    return 'just now';
-  } else if (diffInSeconds < 3600) {
-    const minutes = Math.floor(diffInSeconds / 60);
-    return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
-  } else if (diffInSeconds < 86400) {
-    const hours = Math.floor(diffInSeconds / 3600);
-    return `${hours} hour${hours > 1 ? 's' : ''} ago`;
-  } else {
-    const days = Math.floor(diffInSeconds / 86400);
-    return `${days} day${days > 1 ? 's' : ''} ago`;
-  }
-}
 
 /**
  * @component
