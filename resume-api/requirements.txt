@@ -1,5 +1,5 @@
 # FastAPI and Web Server
-fastapi==0.133.1
+fastapi==0.135.1
 uvicorn[standard]==0.41.0
 python-multipart==0.0.22
 
@@ -8,7 +8,7 @@ pydantic==2.12.5
 pydantic-settings==2.13.1
 
 # CORS Support
-python-dotenv==1.2.1
+python-dotenv==1.2.2
 
 # YAML Support (for resume data)
 PyYAML==6.0.3
@@ -48,7 +48,7 @@ python-jose[cryptography]==3.5.0
 cryptography>=42.0.0
 
 # Password Hashing
-bcrypt==4.2.0
+bcrypt==5.0.0
 passlib[bcrypt]==1.7.4
 
 # Structured Logging
