@@ -12,7 +12,7 @@ Comprehensive tests for:
 
 import pytest
 from datetime import datetime, timedelta
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import Mock, patch
 from monitoring.alerting import (
     Alert,
     AlertManager,
