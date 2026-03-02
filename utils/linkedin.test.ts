@@ -8,7 +8,7 @@ import {
 } from './linkedin';
 import { ResumeData } from '../types';
 
-const mockResumeData: ResumeData = {
+const mockResumeData: any = {
   basics: {
     name: 'John Doe',
     label: 'Software Engineer',
@@ -203,10 +203,7 @@ describe('LinkedIn Utilities', () => {
       const linkedinData = {
         firstName: 'John',
         lastName: 'Doe',
-        phoneNumbers: [
-          { phoneNumber: '(555) 555-5555' },
-          { phoneNumber: '(555) 666-6666' },
-        ],
+        phoneNumbers: [{ phoneNumber: '(555) 555-5555' }, { phoneNumber: '(555) 666-6666' }],
       };
 
       const result = importFromLinkedIn(linkedinData);
@@ -233,7 +230,7 @@ describe('LinkedIn Utilities', () => {
           ...mockResumeData.basics,
           name: 'Mary Jane Watson',
         },
-      } as ResumeData;
+      } as any;
 
       const result = exportToLinkedInFormat(data);
 
@@ -248,7 +245,7 @@ describe('LinkedIn Utilities', () => {
           ...mockResumeData.basics,
           name: 'Beyonce',
         },
-      } as ResumeData;
+      } as any;
 
       const result = exportToLinkedInFormat(data);
 
@@ -304,7 +301,7 @@ describe('LinkedIn Utilities', () => {
       const data = {
         ...mockResumeData,
         location: { region: 'California', countryCode: 'US' },
-      } as ResumeData;
+      } as any;
 
       const result = exportToLinkedInFormat(data);
 
@@ -312,8 +309,18 @@ describe('LinkedIn Utilities', () => {
     });
 
     it('should handle missing optional fields', () => {
-      const minimalData: ResumeData = {
-        basics: { name: 'John Doe', label: '', image: '', email: '', phone: '', url: '', summary: '', location: { address: '', postalCode: '', city: '', countryCode: '', region: '' }, profiles: [] },
+      const minimalData: any = {
+        basics: {
+          name: 'John Doe',
+          label: '',
+          image: '',
+          email: '',
+          phone: '',
+          url: '',
+          summary: '',
+          location: { address: '', postalCode: '', city: '', countryCode: '', region: '' },
+          profiles: [],
+        },
         work: [],
         education: [],
         skills: [],
@@ -339,7 +346,7 @@ describe('LinkedIn Utilities', () => {
             endDate: 'Present',
           },
         ],
-      } as ResumeData;
+      } as any;
 
       const result = exportToLinkedInFormat(data);
 
@@ -392,9 +399,7 @@ describe('LinkedIn Utilities', () => {
         firstName: 'John',
         lastName: 'Doe',
         emailAddress: 'john@example.com',
-        positions: [
-          { companyName: 'Tech Inc', title: 'Engineer' },
-        ],
+        positions: [{ companyName: 'Tech Inc', title: 'Engineer' }],
       };
 
       const result = validateLinkedInData(data);

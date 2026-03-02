@@ -6,6 +6,7 @@ import { BrowserRouter } from 'react-router-dom';
 import Workspace from '../../pages/Workspace';
 import { useStore } from '../../store/store';
 import * as api from '../../utils/api-client';
+import { useGeneratePackage } from '../../hooks/useGeneratePackage';
 
 // Mock hooks and utilities
 vi.mock('../../store/store');
@@ -14,7 +15,7 @@ vi.mock('../../hooks/useGeneratePackage', async () => {
   const actual = await vi.importActual('../../hooks/useGeneratePackage');
   return {
     ...actual,
-    useGeneratePackage: () => ({
+    useGeneratePackage: vi.fn(() => ({
       generatePackage: vi.fn(),
       generateCoverLetterRequest: vi.fn(),
       downloadPDF: vi.fn(),
@@ -24,7 +25,7 @@ vi.mock('../../hooks/useGeneratePackage', async () => {
       data: null,
       coverLetter: null,
       coverLetterLoading: false,
-    }),
+    })),
   };
 });
 vi.mock('../../hooks/useVariants', () => ({
@@ -62,7 +63,7 @@ const mockResumeData = {
 describe('Workspace Component', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    (useStore as any).mockImplementation((selector) =>
+    (useStore as any).mockImplementation((selector: any) =>
       selector({ resumeData: mockResumeData }),
     );
     (api.listResumeVersions as any).mockResolvedValue([]);
@@ -169,9 +170,7 @@ describe('Workspace Component', () => {
         </BrowserRouter>,
       );
 
-      const jobTitleInput = await screen.findByPlaceholderText(
-        'e.g. Senior Product Designer',
-      );
+      const jobTitleInput = await screen.findByPlaceholderText('e.g. Senior Product Designer');
       await user.type(jobTitleInput, 'Senior Developer');
 
       expect(jobTitleInput).toHaveValue('Senior Developer');
@@ -272,9 +271,7 @@ describe('Workspace Component', () => {
       );
 
       await waitFor(() => {
-        expect(
-          screen.getByText(/Input job description on the left/i),
-        ).toBeInTheDocument();
+        expect(screen.getByText(/Input job description on the left/i)).toBeInTheDocument();
       });
     });
   });
@@ -287,7 +284,9 @@ describe('Workspace Component', () => {
         </BrowserRouter>,
       );
 
-      const backButton = await screen.findByRole('button', { name: /arrow_back/i });
+      const backButton = await screen.findByRole('button', {
+        name: /Back to dashboard/i,
+      });
       expect(backButton).toBeInTheDocument();
     });
 
@@ -313,9 +312,7 @@ describe('Workspace Component', () => {
 
       await waitFor(() => {
         const buttons = screen.getAllByRole('button');
-        const settingsButton = buttons.find((btn) =>
-          btn.querySelector('[role="img"]'),
-        );
+        const settingsButton = buttons.find((btn) => btn.querySelector('[role="img"]'));
         expect(settingsButton).toBeDefined();
       });
     });
@@ -405,12 +402,25 @@ describe('Workspace Component', () => {
 
   describe('Error handling', () => {
     it('displays error message when provided', async () => {
-      vi.mocked(useStore).mockImplementation((selector) =>
-        selector({
-          resumeData: mockResumeData,
-          error: 'Test error message',
-        }),
-      );
+      vi.mocked(useGeneratePackage).mockReturnValueOnce({
+        generatePackage: vi.fn(),
+        generateCoverLetterRequest: vi.fn(),
+        downloadPDF: vi.fn(),
+        renderMarkdown: vi.fn(),
+        saveResume: vi.fn(),
+        saveDraft: vi.fn(),
+        loadDraft: vi.fn(),
+        clearSavedData: vi.fn(),
+        resetState: vi.fn(),
+        checkHealth: vi.fn(),
+        clearError: vi.fn(),
+        lastSaved: null,
+        loading: false,
+        error: 'Test error message',
+        data: null,
+        coverLetter: null,
+        coverLetterLoading: false,
+      } as any);
 
       render(
         <BrowserRouter>
@@ -435,7 +445,7 @@ describe('Workspace Component', () => {
       const companyLabel = await screen.findByText('Company Name');
       const companyInput = screen.getByPlaceholderText('e.g. Acme Corp');
 
-      expect(companyLabel).toHaveAttribute('htmlFor', 'company-name');
+      expect(companyLabel).toHaveAttribute('for', 'company-name');
       expect(companyInput).toHaveAttribute('id', 'company-name');
     });
 

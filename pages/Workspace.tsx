@@ -8,6 +8,7 @@ import { useVariants } from '../hooks/useVariants';
 import { showErrorToast, showSuccessToast } from '../utils/toast';
 import WorkspaceSkeleton from '../components/skeletons/WorkspaceSkeleton';
 import { getResume, listResumeVersions, listComments } from '../utils/api-client';
+import { Button, Input, Card } from '../components/ui';
 
 /** Available tab types for the workspace */
 type TabType = 'Resume' | 'Cover Letter' | 'Keywords' | 'Suggestions' | 'Adjust';
@@ -220,6 +221,10 @@ const Workspace: React.FC = () => {
 
   const renderPreviewContent = () => {
     // API data or edited data available
+    if (!data && !markdownPreview && activeTab !== 'Adjust') {
+      return null;
+    }
+
     switch (activeTab) {
       case 'Resume':
         return (
@@ -314,7 +319,7 @@ const Workspace: React.FC = () => {
                   </p>
                 </div>
                 {companyName && jobTitle && jobDescription && (
-                  <button
+                  <Button
                     onClick={() => {
                       generateCoverLetterRequest({
                         resume_data: localResumeData,
@@ -325,10 +330,11 @@ const Workspace: React.FC = () => {
                         showErrorToast('Failed to generate cover letter.');
                       });
                     }}
-                    className="mt-2 px-4 py-2 bg-primary-600 text-white rounded-lg font-bold text-sm hover:bg-primary-700"
+                    variant="primary"
+                    className="mt-2"
                   >
                     Generate Cover Letter
-                  </button>
+                  </Button>
                 )}
               </div>
             )}
@@ -372,46 +378,38 @@ const Workspace: React.FC = () => {
           <div className="w-full max-w-[800px] bg-white shadow-2xl rounded-sm p-12 min-h-[1000px] animate-in fade-in duration-500">
             <div className="flex items-center justify-between mb-8">
               <h2 className="text-2xl font-bold text-slate-900">Manual Adjustments</h2>
-              <button
+              <Button
                 onClick={handleRefreshMarkdown}
-                disabled={isRefreshingMarkdown}
-                className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg font-bold text-sm hover:bg-primary-700 disabled:opacity-50"
+                isLoading={isRefreshingMarkdown}
+                variant="primary"
               >
-                {isRefreshingMarkdown ? 'Refreshing...' : 'Refresh Preview'}
-              </button>
+                Refresh Preview
+              </Button>
             </div>
 
             <div className="space-y-8">
               <section className="space-y-4">
                 <h3 className="text-lg font-bold border-b pb-2">Basics</h3>
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-500 uppercase">Name</label>
-                    <input
-                      value={localResumeData.basics?.name || ''}
-                      onChange={(e) => updateBasics('name', e.target.value)}
-                      className="w-full p-2 border rounded focus:ring-2 focus:ring-primary-500 outline-none"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-500 uppercase">
-                      Tagline / Role
-                    </label>
-                    <input
-                      value={localResumeData.basics?.label || ''}
-                      onChange={(e) => updateBasics('label', e.target.value)}
-                      className="w-full p-2 border rounded focus:ring-2 focus:ring-primary-500 outline-none"
-                    />
-                  </div>
+                  <Input
+                    label="Name"
+                    value={localResumeData.basics?.name || ''}
+                    onChange={(e) => updateBasics('name', e.target.value)}
+                  />
+                  <Input
+                    label="Tagline / Role"
+                    value={localResumeData.basics?.label || ''}
+                    onChange={(e) => updateBasics('label', e.target.value)}
+                  />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-500 uppercase">
+                  <label className="text-sm font-semibold text-slate-700">
                     Professional Summary
                   </label>
                   <textarea
                     value={localResumeData.basics?.summary || ''}
                     onChange={(e) => updateBasics('summary', e.target.value)}
-                    className="w-full p-2 border rounded h-32 focus:ring-2 focus:ring-primary-500 outline-none"
+                    className="w-full p-2 border-2 border-slate-200 rounded-lg focus:border-primary-500 focus:ring-4 focus:ring-primary-100 outline-none transition-all h-32 text-sm"
                   />
                 </div>
               </section>
@@ -419,31 +417,23 @@ const Workspace: React.FC = () => {
               <section className="space-y-6">
                 <h3 className="text-lg font-bold border-b pb-2">Professional Experience</h3>
                 {(localResumeData.work || []).map((job, idx) => (
-                  <div key={idx} className="p-4 border rounded-xl bg-slate-50 space-y-4">
+                  <Card key={idx} padding="md" className="bg-slate-50 space-y-4">
                     <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-1">
-                        <label className="text-xs font-bold text-slate-500 uppercase">
-                          Company
-                        </label>
-                        <input
-                          value={job.company || ''}
-                          onChange={(e) => updateWork(idx, 'company', e.target.value)}
-                          className="w-full p-2 border rounded bg-white"
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <label className="text-xs font-bold text-slate-500 uppercase">Role</label>
-                        <input
-                          value={job.position || ''}
-                          onChange={(e) => updateWork(idx, 'position', e.target.value)}
-                          className="w-full p-2 border rounded bg-white"
-                        />
-                      </div>
+                      <Input
+                        label="Company"
+                        value={job.company || ''}
+                        onChange={(e) => updateWork(idx, 'company', e.target.value)}
+                        className="bg-white"
+                      />
+                      <Input
+                        label="Role"
+                        value={job.position || ''}
+                        onChange={(e) => updateWork(idx, 'position', e.target.value)}
+                        className="bg-white"
+                      />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-xs font-bold text-slate-500 uppercase">
-                        Bullet Points
-                      </label>
+                      <label className="text-sm font-semibold text-slate-700">Bullet Points</label>
                       {/* Handle both summary text block and highlights array */}
                       {job.highlights && job.highlights.length > 0 ? (
                         job.highlights.map((bullet, bIdx) => (
@@ -451,19 +441,19 @@ const Workspace: React.FC = () => {
                             key={bIdx}
                             value={bullet}
                             onChange={(e) => updateBullet(idx, bIdx, e.target.value)}
-                            className="w-full p-2 border rounded bg-white text-sm h-20"
+                            className="w-full p-2 border-2 border-slate-200 rounded-lg focus:border-primary-500 focus:ring-4 focus:ring-primary-100 outline-none transition-all text-sm h-20 bg-white"
                           />
                         ))
                       ) : (
                         <textarea
                           value={job.summary || ''}
                           onChange={(e) => updateWork(idx, 'summary', e.target.value)}
-                          className="w-full p-2 border rounded bg-white text-sm h-32"
+                          className="w-full p-2 border-2 border-slate-200 rounded-lg focus:border-primary-500 focus:ring-4 focus:ring-primary-100 outline-none transition-all text-sm h-32 bg-white"
                           placeholder="Enter job description or bullets..."
                         />
                       )}
                     </div>
-                  </div>
+                  </Card>
                 ))}
               </section>
             </div>
@@ -479,15 +469,26 @@ const Workspace: React.FC = () => {
       {/* Top Bar */}
       <header className="flex-none h-16 bg-white border-b border-slate-200 px-6 flex items-center justify-between z-20">
         <div className="flex items-center gap-4">
-          <button
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={() => navigate('/dashboard')}
-            className="text-primary-600 hover:bg-primary-50 p-2 rounded-lg transition-colors"
+            className="text-primary-600"
+            aria-label="Back to dashboard"
           >
-            <span className="material-symbols-outlined">arrow_back</span>
-          </button>
+            <span role="img" aria-hidden="true" className="material-symbols-outlined">
+              arrow_back
+            </span>
+          </Button>
           <div className="h-6 w-px bg-slate-200"></div>
           <div className="flex items-center gap-2">
-            <span className="material-symbols-outlined text-primary-600">auto_awesome</span>
+            <span
+              role="img"
+              aria-hidden="true"
+              className="material-symbols-outlined text-primary-600"
+            >
+              auto_awesome
+            </span>
             <h1 className="font-bold text-slate-800 text-lg">Tailored Resume Workspace</h1>
           </div>
         </div>
@@ -501,14 +502,24 @@ const Workspace: React.FC = () => {
             ) : (
               <>
                 <div className="flex items-center gap-2">
-                  <span className="material-symbols-outlined text-sm text-slate-500">history</span>
+                  <span
+                    role="img"
+                    aria-hidden="true"
+                    className="material-symbols-outlined text-sm text-slate-500"
+                  >
+                    history
+                  </span>
                   <span className="text-sm font-semibold text-slate-700">
                     {versionCount} versions
                   </span>
                 </div>
                 <div className="h-4 w-px bg-slate-300"></div>
                 <div className="flex items-center gap-2">
-                  <span className="material-symbols-outlined text-sm text-slate-500">
+                  <span
+                    role="img"
+                    aria-hidden="true"
+                    className="material-symbols-outlined text-sm text-slate-500"
+                  >
                     chat_bubble_outline
                   </span>
                   <span className="text-sm font-semibold text-slate-700">
@@ -519,7 +530,11 @@ const Workspace: React.FC = () => {
                   <>
                     <div className="h-4 w-px bg-slate-300"></div>
                     <div className="flex items-center gap-2">
-                      <span className="material-symbols-outlined text-sm text-slate-500">
+                      <span
+                        role="img"
+                        aria-hidden="true"
+                        className="material-symbols-outlined text-sm text-slate-500"
+                      >
                         update
                       </span>
                       <span className="text-sm font-semibold text-slate-500">
@@ -531,28 +546,30 @@ const Workspace: React.FC = () => {
               </>
             )}
           </div>
-          <button
+          <Button
             onClick={handleGenerate}
-            disabled={loading}
-            className="hidden sm:flex items-center gap-2 bg-primary-600 text-white px-4 py-2 rounded-lg font-bold text-sm hover:bg-primary-700 transition-all shadow-md shadow-primary-600/20 disabled:opacity-70 disabled:cursor-not-allowed"
-          >
-            {loading ? (
-              <>
-                <span className="material-symbols-outlined animate-spin text-[18px]">
-                  progress_activity
+            isLoading={loading}
+            variant="primary"
+            className="hidden sm:flex"
+            leftIcon={
+              !loading && (
+                <span
+                  role="img"
+                  aria-hidden="true"
+                  className="material-symbols-outlined text-[18px]"
+                >
+                  auto_awesome
                 </span>
-                <span>Tailoring...</span>
-              </>
-            ) : (
-              <>
-                <span className="material-symbols-outlined text-[18px]">auto_awesome</span>
-                <span>Generate Package</span>
-              </>
-            )}
-          </button>
-          <button className="size-10 flex items-center justify-center rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors">
-            <span className="material-symbols-outlined">settings</span>
-          </button>
+              )
+            }
+          >
+            {loading ? 'Tailoring...' : 'Generate Package'}
+          </Button>
+          <Button variant="secondary" size="icon" aria-label="Settings">
+            <span role="img" aria-hidden="true" className="material-symbols-outlined">
+              settings
+            </span>
+          </Button>
         </div>
       </header>
 
@@ -563,7 +580,11 @@ const Workspace: React.FC = () => {
           <div className="p-6 border-b border-slate-100">
             <nav className="flex items-center gap-2 mb-2 text-sm">
               <span className="text-slate-400 font-medium">Applications</span>
-              <span className="material-symbols-outlined text-slate-300 text-sm">
+              <span
+                role="img"
+                aria-hidden="true"
+                className="material-symbols-outlined text-slate-300 text-sm"
+              >
                 chevron_right
               </span>
               <span className="text-slate-800 font-bold">New Application</span>
@@ -574,38 +595,34 @@ const Workspace: React.FC = () => {
           <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-6">
             {(error || variantsError) && (
               <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm font-medium flex items-center gap-2">
-                <span className="material-symbols-outlined text-[20px]">error</span>
+                <span
+                  role="img"
+                  aria-hidden="true"
+                  className="material-symbols-outlined text-[20px]"
+                >
+                  error
+                </span>
                 {error || variantsError}
               </div>
             )}
 
-            <div className="space-y-2">
-              <label htmlFor="company-name" className="text-sm font-bold text-slate-700">
-                Company Name
-              </label>
-              <input
-                id="company-name"
-                type="text"
-                value={companyName}
-                onChange={(e) => setCompanyName(e.target.value)}
-                placeholder="e.g. Acme Corp"
-                className="w-full px-4 py-3 rounded-lg bg-slate-50 border border-slate-200 focus:bg-white focus:border-primary-500 focus:ring-2 focus:ring-primary-100 outline-none transition-all"
-              />
-            </div>
+            <Input
+              id="company-name"
+              label="Company Name"
+              type="text"
+              value={companyName}
+              onChange={(e) => setCompanyName(e.target.value)}
+              placeholder="e.g. Acme Corp"
+            />
 
-            <div className="space-y-2">
-              <label htmlFor="job-title" className="text-sm font-bold text-slate-700">
-                Job Title (Optional)
-              </label>
-              <input
-                id="job-title"
-                type="text"
-                value={jobTitle}
-                onChange={(e) => setJobTitle(e.target.value)}
-                placeholder="e.g. Senior Product Designer"
-                className="w-full px-4 py-3 rounded-lg bg-slate-50 border border-slate-200 focus:bg-white focus:border-primary-500 focus:ring-2 focus:ring-primary-100 outline-none transition-all"
-              />
-            </div>
+            <Input
+              id="job-title"
+              label="Job Title (Optional)"
+              type="text"
+              value={jobTitle}
+              onChange={(e) => setJobTitle(e.target.value)}
+              placeholder="e.g. Senior Product Designer"
+            />
 
             <div className="space-y-2">
               <label htmlFor="job-description" className="text-sm font-bold text-slate-700">
@@ -615,7 +632,7 @@ const Workspace: React.FC = () => {
                 id="job-description"
                 value={jobDescription}
                 onChange={(e) => setJobDescription(e.target.value)}
-                className="w-full min-h-[200px] px-4 py-3 rounded-lg bg-slate-50 border border-slate-200 focus:bg-white focus:border-primary-500 focus:ring-2 focus:ring-primary-100 outline-none transition-all resize-none"
+                className="w-full min-h-[200px] px-4 py-3 rounded-lg bg-slate-50 border-2 border-slate-200 focus:bg-white focus:border-primary-500 focus:ring-4 focus:ring-primary-100 outline-none transition-all resize-none text-sm"
                 placeholder="Copy and paste the full job posting..."
               ></textarea>
             </div>
@@ -634,7 +651,7 @@ const Workspace: React.FC = () => {
                     id="template-select"
                     aria-labelledby="template-label"
                     role="status"
-                    className="w-full px-4 py-3 rounded-lg bg-slate-50 border border-slate-200 flex items-center gap-2"
+                    className="w-full px-4 py-3 rounded-lg bg-slate-50 border-2 border-slate-200 flex items-center gap-2"
                   >
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-slate-400"></div>
                     <span className="text-slate-500">Loading templates...</span>
@@ -644,7 +661,7 @@ const Workspace: React.FC = () => {
                     id="template-select"
                     value={variant}
                     onChange={(e) => setVariant(e.target.value)}
-                    className="w-full appearance-none px-4 py-3 rounded-lg bg-slate-50 border border-slate-200 focus:bg-white focus:border-primary-500 outline-none cursor-pointer font-medium text-slate-700"
+                    className="w-full appearance-none px-4 py-3 rounded-lg bg-slate-50 border-2 border-slate-200 focus:bg-white focus:border-primary-500 outline-none cursor-pointer font-medium text-slate-700 text-sm"
                   >
                     {apiVariants.map((v) => (
                       <option key={v.name} value={v.name}>
@@ -654,14 +671,18 @@ const Workspace: React.FC = () => {
                   </select>
                 )}
                 {!variantsLoading && (
-                  <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                  <span
+                    role="img"
+                    aria-hidden="true"
+                    className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
+                  >
                     expand_more
                   </span>
                 )}
               </div>
               {variantsLoading && (
                 <p className="text-xs text-slate-500 flex items-center gap-1">
-                  <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-slate-400"></div>
+                  <span className="animate-spin rounded-full h-3 w-3 border-b-2 border-slate-400"></span>
                   Fetching available templates...
                 </p>
               )}
@@ -689,21 +710,42 @@ const Workspace: React.FC = () => {
               ))}
             </div>
             <div className="flex items-center gap-2 text-slate-500">
-              <button className="p-2 hover:bg-slate-100 rounded-lg">
-                <span className="material-symbols-outlined text-[20px]">zoom_out</span>
-              </button>
+              <Button variant="ghost" size="icon" aria-label="Zoom out">
+                <span
+                  role="img"
+                  aria-hidden="true"
+                  className="material-symbols-outlined text-[20px]"
+                >
+                  zoom_out
+                </span>
+              </Button>
               <span className="text-xs font-bold min-w-[3rem] text-center">100%</span>
-              <button className="p-2 hover:bg-slate-100 rounded-lg">
-                <span className="material-symbols-outlined text-[20px]">zoom_in</span>
-              </button>
+              <Button variant="ghost" size="icon" aria-label="Zoom in">
+                <span
+                  role="img"
+                  aria-hidden="true"
+                  className="material-symbols-outlined text-[20px]"
+                >
+                  zoom_in
+                </span>
+              </Button>
               <div className="h-4 w-px bg-slate-300 mx-2"></div>
-              <button
+              <Button
+                variant="ghost"
+                size="icon"
                 onClick={handleDownloadPDF}
-                className="p-2 hover:bg-slate-100 rounded-lg text-primary-600"
+                className="text-primary-600"
                 title="Download PDF"
+                aria-label="Download PDF"
               >
-                <span className="material-symbols-outlined text-[20px]">download</span>
-              </button>
+                <span
+                  role="img"
+                  aria-hidden="true"
+                  className="material-symbols-outlined text-[20px]"
+                >
+                  download
+                </span>
+              </Button>
             </div>
           </div>
 
@@ -712,7 +754,11 @@ const Workspace: React.FC = () => {
             {renderPreviewContent() || (
               <div className="flex flex-col items-center justify-center h-full text-center pb-20 opacity-60">
                 <div className="bg-white p-6 rounded-full shadow-lg mb-6">
-                  <span className="material-symbols-outlined text-5xl text-primary-300">
+                  <span
+                    role="img"
+                    aria-hidden="true"
+                    className="material-symbols-outlined text-5xl text-primary-300"
+                  >
                     auto_awesome
                   </span>
                 </div>

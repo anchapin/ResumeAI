@@ -36,7 +36,7 @@ describe('useAuth Hook', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     localStorage.clear();
-    (useStore as any).mockImplementation((selector) => selector(mockStoreState));
+    (useStore as any).mockImplementation((selector: any) => selector(mockStoreState));
     (global.fetch as any).mockClear();
   });
 
@@ -82,12 +82,8 @@ describe('useAuth Hook', () => {
       };
 
       (global.fetch as any)
-        .mockResolvedValueOnce(
-          new Response(JSON.stringify(mockTokens), { status: 200 }),
-        )
-        .mockResolvedValueOnce(
-          new Response(JSON.stringify(mockUser), { status: 200 }),
-        );
+        .mockResolvedValueOnce(new Response(JSON.stringify(mockTokens), { status: 200 }))
+        .mockResolvedValueOnce(new Response(JSON.stringify(mockUser), { status: 200 }));
 
       (TokenManager.getToken as any).mockReturnValue(mockTokens.access_token);
       (TokenManager.isTokenExpired as any).mockReturnValue(false);
@@ -156,7 +152,10 @@ describe('useAuth Hook', () => {
 
     it('sets loading state during login', async () => {
       (global.fetch as any).mockImplementationOnce(
-        () => new Promise((resolve) => setTimeout(() => resolve(new Response('{}', { status: 200 })), 100)),
+        () =>
+          new Promise((resolve) =>
+            setTimeout(() => resolve(new Response('{}', { status: 200 })), 100),
+          ),
       );
 
       const { result } = renderHook(() => useAuth());
@@ -377,7 +376,7 @@ describe('useAuth Hook', () => {
     });
 
     it('returns store state values', () => {
-      (useStore as any).mockImplementation((selector) =>
+      (useStore as any).mockImplementation((selector: any) =>
         selector({
           ...mockStoreState,
           user: { id: 1, email: 'test@example.com' },

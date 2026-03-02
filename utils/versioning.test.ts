@@ -7,35 +7,29 @@ import {
 } from './versioning';
 import { ResumeVersion } from '../types';
 
-const createMockVersion = (overrides: unknown = {}): ResumeVersion => ({
-  id: 'version-1',
-  resumeId: 'resume-1',
+const createMockVersion = (overrides: any = {}): ResumeVersion => ({
+  id: 1,
+  resumeId: 1,
   versionNumber: 1,
+  changeDescription: null,
   createdAt: new Date().toISOString(),
-  updatedAt: new Date().toISOString(),
   data: {
     basics: {
       name: 'John Doe',
       label: 'Engineer',
-      image: '',
       email: 'john@example.com',
       phone: '',
       url: '',
       summary: 'Summary',
-      location: { address: '', postalCode: '', city: '', countryCode: '', region: '' },
-      profiles: [],
     },
     work: [
       {
-        name: 'Company',
+        company: 'Company',
         position: 'Engineer',
         startDate: '2020-01-01',
         endDate: '',
         summary: '',
         highlights: [],
-        url: '',
-        location: '',
-        isWorkingHere: false,
       },
     ],
     education: [
@@ -45,13 +39,11 @@ const createMockVersion = (overrides: unknown = {}): ResumeVersion => ({
         area: 'CS',
         startDate: '2016-09-01',
         endDate: '2020-05-31',
-        score: '',
         courses: [],
       },
     ],
-    skills: [{ name: 'JavaScript', level: '', keywords: [] }],
+    skills: [{ name: 'JavaScript', keywords: [] }],
     projects: [],
-    certificates: [],
   },
   ...overrides,
 });
@@ -91,15 +83,12 @@ describe('Versioning Utilities', () => {
           ...createMockVersion().data,
           work: [
             {
-              name: 'New Company',
+              company: 'New Company',
               position: 'Senior Engineer',
               startDate: '2021-01-01',
               endDate: '',
               summary: '',
               highlights: [],
-              url: '',
-              location: '',
-              isWorkingHere: false,
             },
           ],
         },
@@ -122,7 +111,6 @@ describe('Versioning Utilities', () => {
               area: 'Computer Science',
               startDate: '2020-09-01',
               endDate: '2022-05-31',
-              score: '4.0',
               courses: [],
             },
           ],
@@ -140,8 +128,8 @@ describe('Versioning Utilities', () => {
         data: {
           ...createMockVersion().data,
           skills: [
-            { name: 'JavaScript', level: 'Expert', keywords: [] },
-            { name: 'React', level: 'Advanced', keywords: [] },
+            { name: 'JavaScript', keywords: [] },
+            { name: 'React', keywords: [] },
           ],
         },
       });
@@ -161,13 +149,10 @@ describe('Versioning Utilities', () => {
               name: 'Project X',
               description: 'Description',
               highlights: [],
-              keywords: [],
               startDate: '',
               endDate: '',
               url: '',
               roles: [],
-              entity: '',
-              type: '',
             },
           ],
         },
@@ -185,9 +170,7 @@ describe('Versioning Utilities', () => {
           ...createMockVersion().data,
           basics: { ...createMockVersion().data.basics, name: 'Jane' },
           work: [],
-          skills: [
-            { name: 'Python', level: '', keywords: [] },
-          ],
+          skills: [{ name: 'Python', keywords: [] }],
         },
       });
 

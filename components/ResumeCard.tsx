@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { ResumeMetadata } from '../types';
+import { Card, Button } from './ui';
 
 interface ResumeCardProps {
   resume: ResumeMetadata;
@@ -55,13 +56,7 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
   };
 
   return (
-    <div
-      className={`bg-white rounded-xl border-2 transition-all duration-200 ${
-        isSelected
-          ? 'border-primary-500 ring-4 ring-primary-100'
-          : 'border-slate-200 hover:border-primary-300 hover:shadow-lg'
-      }`}
-    >
+    <Card isSelected={isSelected} padding="none">
       <div className="p-5">
         {/* Header with checkbox and actions */}
         <div className="flex items-start justify-between mb-4">
@@ -86,72 +81,81 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
 
           {/* Action buttons */}
           <div className="flex items-center gap-1">
-            <button
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={onShare}
-              className="p-2 text-slate-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
               title="Share Resume"
               aria-label="Share Resume"
             >
               <span className="material-symbols-outlined text-[20px]">share</span>
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={onEdit}
-              className="p-2 text-slate-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
               title="Edit Resume"
               aria-label="Edit Resume"
             >
               <span className="material-symbols-outlined text-[20px]">edit</span>
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={onDuplicate}
-              className="p-2 text-slate-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
               title="Duplicate Resume"
               aria-label="Duplicate Resume"
             >
               <span className="material-symbols-outlined text-[20px]">content_copy</span>
-            </button>
+            </Button>
 
             {isDeleting ? (
               <div className="flex items-center bg-slate-50 rounded-lg p-0.5 border border-slate-200 animate-in fade-in zoom-in duration-200">
-                <button
+                <Button
                   ref={confirmBtnRef}
+                  variant="ghost"
+                  size="icon"
                   onClick={(e) => {
                     e.stopPropagation();
                     onDelete();
                     setIsDeleting(false);
                   }}
-                  className="p-1.5 text-red-600 hover:bg-red-50 rounded-md transition-colors"
+                  className="text-red-600 hover:bg-red-50 p-1.5"
                   aria-label="Confirm delete"
                   title="Confirm Delete"
                 >
                   <span className="material-symbols-outlined text-[18px] font-bold">check</span>
-                </button>
+                </Button>
                 <div className="w-px h-4 bg-slate-200 mx-0.5"></div>
-                <button
+                <Button
+                  variant="ghost"
+                  size="icon"
                   onClick={(e) => {
                     e.stopPropagation();
                     setIsDeleting(false);
                   }}
-                  className="p-1.5 text-slate-400 hover:bg-slate-100 rounded-md transition-colors"
+                  className="p-1.5"
                   aria-label="Cancel delete"
                   title="Cancel Delete"
                 >
                   <span className="material-symbols-outlined text-[18px]">close</span>
-                </button>
+                </Button>
               </div>
             ) : (
-              <button
+              <Button
                 ref={deleteBtnRef}
+                variant="ghost"
+                size="icon"
                 onClick={(e) => {
                   e.stopPropagation();
                   setIsDeleting(true);
                 }}
-                className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                className="hover:text-red-600 hover:bg-red-50"
                 title="Delete Resume"
                 aria-label="Delete Resume"
               >
                 <span className="material-symbols-outlined text-[20px]">delete</span>
-              </button>
+              </Button>
             )}
           </div>
         </div>
@@ -192,7 +196,7 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
           </div>
         </div>
       </div>
-    </div>
+    </Card>
   );
 };
 

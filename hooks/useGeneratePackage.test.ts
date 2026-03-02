@@ -112,7 +112,10 @@ describe('useGeneratePackage Hook', () => {
 
     it('sets loading state during generation', async () => {
       (global.fetch as any).mockImplementationOnce(
-        () => new Promise((resolve) => setTimeout(() => resolve(new Response('{}', { status: 200 })), 50)),
+        () =>
+          new Promise((resolve) =>
+            setTimeout(() => resolve(new Response('{}', { status: 200 })), 50),
+          ),
       );
 
       const { result } = renderHook(() => useGeneratePackage());
@@ -197,9 +200,7 @@ describe('useGeneratePackage Hook', () => {
   describe('downloadPDF', () => {
     it('downloads PDF successfully', async () => {
       const mockBlob = new Blob(['PDF content'], { type: 'application/pdf' });
-      (global.fetch as any).mockResolvedValueOnce(
-        new Response(mockBlob, { status: 200 }),
-      );
+      (global.fetch as any).mockResolvedValueOnce(new Response(mockBlob, { status: 200 }));
 
       // Mock DOM methods
       const mockLink = { href: '', download: '', click: vi.fn() };
@@ -374,7 +375,10 @@ describe('useGeneratePackage Hook', () => {
 
     it('sets loading state during cover letter generation', async () => {
       (global.fetch as any).mockImplementationOnce(
-        () => new Promise((resolve) => setTimeout(() => resolve(new Response('{}', { status: 200 })), 50)),
+        () =>
+          new Promise((resolve) =>
+            setTimeout(() => resolve(new Response('{}', { status: 200 })), 50),
+          ),
       );
 
       const { result } = renderHook(() => useGeneratePackage());
@@ -394,14 +398,17 @@ describe('useGeneratePackage Hook', () => {
 
     it('uses correct cover letter endpoint', async () => {
       (global.fetch as any).mockResolvedValueOnce(
-        new Response(JSON.stringify({
-          header: '',
-          introduction: '',
-          body: '',
-          closing: '',
-          full_text: '',
-          metadata: {},
-        }), { status: 200 }),
+        new Response(
+          JSON.stringify({
+            header: '',
+            introduction: '',
+            body: '',
+            closing: '',
+            full_text: '',
+            metadata: {},
+          }),
+          { status: 200 },
+        ),
       );
 
       const { result } = renderHook(() => useGeneratePackage());
@@ -649,7 +656,7 @@ describe('convertToResumeData', () => {
   it('preserves optional fields', () => {
     const result = convertToResumeData(mockSimpleResume);
 
-    expect(result.work[0]?.highlights).toBeDefined();
-    expect(result.projects[0]?.highlights).toBeDefined();
+    expect(result.work![0]?.highlights).toBeDefined();
+    expect(result.projects![0]?.highlights).toBeDefined();
   });
 });
