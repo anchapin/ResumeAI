@@ -18,7 +18,7 @@ export default defineConfig(({ mode }) => {
       globals: true,
       setupFiles: './vitest.setup.ts',
       include: ['**/*.test.{ts,tsx}'],
-      exclude: ['**/node_modules/**', '**/dist/**', '**/tests/e2e/**'],
+      exclude: ['**/node_modules/**', '**/dist/**', '**/tests/e2e/**', '**/*.spec.ts'],
       singleFork: true,
       testTimeout: 15000,
       coverage: {
