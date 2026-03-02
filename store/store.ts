@@ -28,6 +28,7 @@ interface AppState {
   resumeError: string | null;
   theme: Theme;
   showShortcuts: boolean;
+  globalLoading: boolean;
 }
 
 interface AppActions {
@@ -43,6 +44,7 @@ interface AppActions {
   toggleTheme: () => void;
   setShowShortcuts: (show: boolean) => void;
   toggleShortcuts: () => void;
+  setGlobalLoading: (isLoading: boolean) => void;
 }
 
 type AppStore = AppState & AppActions;
@@ -192,10 +194,12 @@ export const useStore = create<AppStore>()(
       resumeError: null,
       theme: 'light' as Theme,
       showShortcuts: false,
+      globalLoading: false,
       setUser: (user) => set({ user, isAuthenticated: !!user }),
       setAuthLoading: (isAuthLoading) => set({ isAuthLoading }),
       setAuthError: (authError) => set({ authError }),
       clearAuthError: () => set({ authError: null }),
+      setGlobalLoading: (globalLoading) => set({ globalLoading }),
       setResumeData: (data) =>
         set((state) => {
           const newData = typeof data === 'function' ? data(state.resumeData) : data;
