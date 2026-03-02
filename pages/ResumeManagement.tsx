@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import Sidebar from '../components/Sidebar';
 import ResumeCard from '../components/ResumeCard';
 import ShareDialog from '../components/ShareDialog';
+import ResumeManagementSkeleton from '../components/skeletons/ResumeManagementSkeleton';
 import { Route, ResumeMetadata, BulkOperationType, BulkOperationResult } from '../types';
 import { listResumes, bulkOperation } from '../utils/api-client';
 import { showErrorToast, showSuccessToast } from '../utils/toast';
@@ -337,12 +338,7 @@ const ResumeManagement: React.FC = () => {
         {/* Resume Grid */}
         <main className="flex-1 p-8 overflow-y-auto">
           {loading ? (
-            <div className="flex items-center justify-center h-64">
-              <div className="flex items-center gap-3">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
-                <span className="text-slate-600 font-medium">Loading resumes...</span>
-              </div>
-            </div>
+            <ResumeManagementSkeleton />
           ) : resumes.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-64 text-center">
               <div className="bg-primary-100 p-6 rounded-full mb-6">

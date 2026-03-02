@@ -1,0 +1,37 @@
+/* Skeleton loading animation styles */
+
+@keyframes shimmer {
+  0% {
+    background-position: -1200px 0;
+  }
+  100% {
+    background-position: 1200px 0;
+  }
+}
+
+.animate-shimmer {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 1200px 100%;
+  animation: shimmer 2s infinite;
+}
+
+/* Prevent content shift during skeleton to content transition */
+.skeleton-container {
+  min-height: inherit;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Smooth transition from skeleton to content */
+.fade-in {
+  animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}

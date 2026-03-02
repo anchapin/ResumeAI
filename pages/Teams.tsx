@@ -6,6 +6,7 @@ import TeamResumeLibrary from '../components/TeamResumeLibrary';
 import ActivityFeed from '../components/ActivityFeed';
 import InviteMemberDialog from '../components/InviteMemberDialog';
 import CreateTeamDialog from '../components/CreateTeamDialog';
+import TeamsSkeleton from '../components/skeletons/TeamsSkeleton';
 import {
   getTeams,
   getTeam,
@@ -263,13 +264,7 @@ const Teams: React.FC = () => {
             </div>
 
             {/* Loading State */}
-            {isLoadingTeams && (
-              <div className="flex items-center justify-center py-16">
-                <span className="material-symbols-outlined animate-spin text-primary-600 text-5xl">
-                  progress_activity
-                </span>
-              </div>
-            )}
+            {isLoadingTeams && <TeamsSkeleton />}
 
             {/* Empty State */}
             {!isLoadingTeams && teams.length === 0 && (

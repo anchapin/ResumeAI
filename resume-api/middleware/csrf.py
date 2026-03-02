@@ -19,8 +19,12 @@ CSRF_PROTECTED_METHODS = {"POST", "PUT", "DELETE", "PATCH"}
 
 # Paths that are exempt from CSRF protection
 CSRF_EXEMPT_PATHS = {
-    "/auth/login",
-    "/auth/register",
+    "/api/v1/auth/login",
+    "/api/v1/auth/register",
+    "/api/v1/auth/refresh",
+    "/api/v1/auth/logout",
+    "/api/v1/auth/github/callback",
+    "/api/v1/auth/linkedin/callback",
     "/health",
     "/health/detailed",
     "/health/oauth",
@@ -56,10 +60,7 @@ class CSRFMiddleware(BaseHTTPMiddleware):
 
         if not csrf_token or not session_token:
             logger.warning(
-                "csrf_validation_failed",
-                path=request.url.path,
-                reason="missing_token",
-                method=request.method,
+                f"csrf_validation_failed: missing_token at {request.url.path} ({request.method})"
             )
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
@@ -69,10 +70,7 @@ class CSRFMiddleware(BaseHTTPMiddleware):
         # Validate CSRF token
         if not secrets.compare_digest(csrf_token, session_token):
             logger.warning(
-                "csrf_validation_failed",
-                path=request.url.path,
-                reason="invalid_token",
-                method=request.method,
+                f"csrf_validation_failed: invalid_token at {request.url.path} ({request.method})"
             )
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,

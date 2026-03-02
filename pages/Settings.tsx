@@ -6,6 +6,7 @@ import { LinkedInSettings } from '../components/LinkedInSettings';
 import WebhookList from '../components/WebhookList';
 import WebhookForm from '../components/WebhookForm';
 import DeliveryLogs from '../components/DeliveryLogs';
+import SettingsSkeleton from '../components/skeletons/SettingsSkeleton';
 import { type Webhook } from '../utils/api-client';
 
 /** Mock usage data - in production this would come from the API */
@@ -516,13 +517,7 @@ const Settings: React.FC = () => {
           </div>
           <div className="p-6">
             {/* Loading State */}
-            {isLoadingKeys && (
-              <div className="flex items-center justify-center py-8">
-                <span className="material-symbols-outlined animate-spin text-primary-600 text-3xl">
-                  progress_activity
-                </span>
-              </div>
-            )}
+            {isLoadingKeys && <SettingsSkeleton />}
 
             {/* Error State */}
             {apiKeysError && !isLoadingKeys && (

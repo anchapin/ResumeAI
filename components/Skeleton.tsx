@@ -1,4 +1,5 @@
 import React from 'react';
+import './skeleton-styles.css';
 
 interface SkeletonProps {
   className?: string;
@@ -19,41 +20,40 @@ interface SkeletonProps {
  * @param {'pulse' | 'wave' | 'none'} props.animation - Animation type
  * @returns {JSX.Element} The rendered skeleton component
  */
-const Skeleton: React.FC<SkeletonProps> = ({
-  className = '',
-  width,
-  height,
-  variant = 'text',
-  animation = 'pulse',
-}) => {
-  const baseClasses = 'bg-slate-200';
+const Skeleton: React.FC<SkeletonProps> = React.memo(
+  ({ className = '', width, height, variant = 'text', animation = 'pulse' }) => {
+    const baseClasses = 'bg-slate-200';
 
-  const variantClasses = {
-    text: 'rounded',
-    circular: 'rounded-full',
-    rectangular: 'rounded-none',
-    rounded: 'rounded-lg',
-  };
+    const variantClasses = {
+      text: 'rounded',
+      circular: 'rounded-full',
+      rectangular: 'rounded-none',
+      rounded: 'rounded-lg',
+    };
 
-  const animationClasses = {
-    pulse: 'animate-pulse',
-    wave: 'animate-shimmer',
-    none: '',
-  };
+    const animationClasses = {
+      pulse: 'animate-pulse',
+      wave: 'animate-shimmer',
+      none: '',
+    };
 
-  const style: React.CSSProperties = {
-    width: width || undefined,
-    height: height || undefined,
-  };
+    const style: React.CSSProperties = {
+      width: width || undefined,
+      height: height || undefined,
+    };
 
-  return (
-    <div
-      className={`${baseClasses} ${variantClasses[variant]} ${animationClasses[animation]} ${className}`}
-      style={style}
-      role="status"
-      aria-label="Loading"
-    />
-  );
-};
+    return (
+      <div
+        className={`${baseClasses} ${variantClasses[variant]} ${animationClasses[animation]} ${className}`}
+        style={style}
+        role="status"
+        aria-label="Loading"
+        data-testid="skeleton"
+      />
+    );
+  },
+);
+
+Skeleton.displayName = 'Skeleton';
 
 export default Skeleton;

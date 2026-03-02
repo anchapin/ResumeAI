@@ -1,0 +1,445 @@
+{
+  "total_files": 100,
+  "files_with_tests": 13,
+  "files_without_tests": 87,
+  "current_coverage_estimate": "13.0%",
+  "target_coverage": "80%",
+  "gap_to_target": "67.0%",
+  "high_priority_count": 80,
+  "medium_priority_count": 5,
+  "low_priority_count": 2,
+  "coverage_gaps": [
+    {
+      "file": "components/ActivityFeed.tsx",
+      "priority": "high"
+    },
+    {
+      "file": "components/CommentPanel.tsx",
+      "priority": "high"
+    },
+    {
+      "file": "components/CreateTeamDialog.tsx",
+      "priority": "high"
+    },
+    {
+      "file": "components/DeliveryLogs.tsx",
+      "priority": "high"
+    },
+    {
+      "file": "components/ErrorBoundary.tsx",
+      "priority": "high"
+    },
+    {
+      "file": "components/ErrorDisplay.tsx",
+      "priority": "high"
+    },
+    {
+      "file": "components/ErrorTestPanel.tsx",
+      "priority": "high"
+    },
+    {
+      "file": "components/ExperienceItem.tsx",
+      "priority": "high"
+    },
+    {
+      "file": "components/GitHubSettings.tsx",
+      "priority": "high"
+    },
+    {
+      "file": "components/GitHubSyncDialog.tsx",
+      "priority": "high"
+    },
+    {
+      "file": "components/InviteMemberDialog.tsx",
+      "priority": "high"
+    },
+    {
+      "file": "components/KeyboardShortcutsHelp.tsx",
+      "priority": "high"
+    },
+    {
+      "file": "components/LinkedInImportDialog.tsx",
+      "priority": "high"
+    },
+    {
+      "file": "components/LinkedInSettings.tsx",
+      "priority": "high"
+    },
+    {
+      "file": "components/MemberList.tsx",
+      "priority": "high"
+    },
+    {
+      "file": "components/OfferCard.tsx",
+      "priority": "high"
+    },
+    {
+      "file": "components/OfferComparison.tsx",
+      "priority": "high"
+    },
+    {
+      "file": "components/PasswordStrengthMeter.tsx",
+      "priority": "high"
+    },
+    {
+      "file": "components/PrioritySliders.tsx",
+      "priority": "high"
+    },
+    {
+      "file": "components/ResumeCard.tsx",
+      "priority": "high"
+    },
+    {
+      "file": "components/ResumePreview.tsx",
+      "priority": "high"
+    },
+    {
+      "file": "components/ShareDialog.tsx",
+      "priority": "high"
+    },
+    {
+      "file": "components/Sidebar.tsx",
+      "priority": "high"
+    },
+    {
+      "file": "components/Skeleton.tsx",
+      "priority": "high"
+    },
+    {
+      "file": "components/SkipNavigation.tsx",
+      "priority": "high"
+    },
+    {
+      "file": "components/StatusBadge.tsx",
+      "priority": "high"
+    },
+    {
+      "file": "components/StorageWarning.tsx",
+      "priority": "high"
+    },
+    {
+      "file": "components/TeamCard.tsx",
+      "priority": "high"
+    },
+    {
+      "file": "components/TeamResumeLibrary.tsx",
+      "priority": "high"
+    },
+    {
+      "file": "components/TemplateCustomizer.tsx",
+      "priority": "high"
+    },
+    {
+      "file": "components/TemplateSelector.tsx",
+      "priority": "high"
+    },
+    {
+      "file": "components/VariantComparison.tsx",
+      "priority": "high"
+    },
+    {
+      "file": "components/VersionHistory.tsx",
+      "priority": "high"
+    },
+    {
+      "file": "components/WebhookForm.tsx",
+      "priority": "high"
+    },
+    {
+      "file": "components/WebhookList.tsx",
+      "priority": "high"
+    },
+    {
+      "file": "components/editor/ContactInfoSection.tsx",
+      "priority": "high"
+    },
+    {
+      "file": "components/editor/EditorActions.tsx",
+      "priority": "high"
+    },
+    {
+      "file": "components/editor/EditorHeader.tsx",
+      "priority": "high"
+    },
+    {
+      "file": "components/editor/EditorTabs.tsx",
+      "priority": "high"
+    },
+    {
+      "file": "components/editor/EducationItem.tsx",
+      "priority": "high"
+    },
+    {
+      "file": "components/editor/EducationSection.tsx",
+      "priority": "high"
+    },
+    {
+      "file": "components/editor/ExperienceItem.tsx",
+      "priority": "high"
+    },
+    {
+      "file": "components/editor/ExperienceSection.tsx",
+      "priority": "high"
+    },
+    {
+      "file": "components/editor/ProjectItem.tsx",
+      "priority": "high"
+    },
+    {
+      "file": "components/editor/ProjectsSection.tsx",
+      "priority": "high"
+    },
+    {
+      "file": "components/editor/SaveVersionDialog.tsx",
+      "priority": "high"
+    },
+    {
+      "file": "components/editor/SkillsSection.tsx",
+      "priority": "high"
+    },
+    {
+      "file": "components/editor/SummarySection.tsx",
+      "priority": "high"
+    },
+    {
+      "file": "components/editor/VersionHistoryDialog.tsx",
+      "priority": "high"
+    },
+    {
+      "file": "components/skeletons/DashboardSkeleton.tsx",
+      "priority": "high"
+    },
+    {
+      "file": "components/skeletons/EditorSkeleton.tsx",
+      "priority": "high"
+    },
+    {
+      "file": "components/skeletons/JobApplicationsSkeleton.tsx",
+      "priority": "high"
+    },
+    {
+      "file": "components/skeletons/SettingsSkeleton.tsx",
+      "priority": "high"
+    },
+    {
+      "file": "components/skeletons/TeamsSkeleton.tsx",
+      "priority": "high"
+    },
+    {
+      "file": "components/skeletons/WorkspaceSkeleton.tsx",
+      "priority": "high"
+    },
+    {
+      "file": "hooks/useAuth.ts",
+      "priority": "high"
+    },
+    {
+      "file": "hooks/useGeneratePackage.ts",
+      "priority": "high"
+    },
+    {
+      "file": "hooks/useTheme.ts",
+      "priority": "high"
+    },
+    {
+      "file": "hooks/useVariants.ts",
+      "priority": "high"
+    },
+    {
+      "file": "pages/Billing.tsx",
+      "priority": "high"
+    },
+    {
+      "file": "pages/Dashboard.tsx",
+      "priority": "high"
+    },
+    {
+      "file": "pages/Editor.tsx",
+      "priority": "high"
+    },
+    {
+      "file": "pages/InterviewPractice.tsx",
+      "priority": "high"
+    },
+    {
+      "file": "pages/Invoices.tsx",
+      "priority": "high"
+    },
+    {
+      "file": "pages/JobApplications.tsx",
+      "priority": "high"
+    },
+    {
+      "file": "pages/Login.tsx",
+      "priority": "high"
+    },
+    {
+      "file": "pages/NotFound.tsx",
+      "priority": "high"
+    },
+    {
+      "file": "pages/PaymentMethods.tsx",
+      "priority": "high"
+    },
+    {
+      "file": "pages/Plans.tsx",
+      "priority": "high"
+    },
+    {
+      "file": "pages/Register.tsx",
+      "priority": "high"
+    },
+    {
+      "file": "pages/ResumeManagement.tsx",
+      "priority": "high"
+    },
+    {
+      "file": "pages/SalaryResearch.tsx",
+      "priority": "high"
+    },
+    {
+      "file": "pages/Settings.tsx",
+      "priority": "high"
+    },
+    {
+      "file": "pages/Teams.tsx",
+      "priority": "high"
+    },
+    {
+      "file": "pages/Workspace.tsx",
+      "priority": "high"
+    },
+    {
+      "file": "utils/api-client.ts",
+      "priority": "high"
+    },
+    {
+      "file": "utils/import.ts",
+      "priority": "high"
+    },
+    {
+      "file": "utils/linkedin.ts",
+      "priority": "high"
+    },
+    {
+      "file": "utils/security.ts",
+      "priority": "high"
+    },
+    {
+      "file": "utils/versioning.ts",
+      "priority": "high"
+    },
+    {
+      "file": "src/hooks/useStorageQuota.ts",
+      "priority": "medium"
+    },
+    {
+      "file": "src/lib/accessibility.ts",
+      "priority": "medium"
+    },
+    {
+      "file": "src/lib/oauth.ts",
+      "priority": "medium"
+    },
+    {
+      "file": "utils/enhancements/ai-suggestions.ts",
+      "priority": "medium"
+    },
+    {
+      "file": "utils/enhancements/version-comparison.ts",
+      "priority": "medium"
+    },
+    {
+      "file": "components/editor/index.ts",
+      "priority": "low"
+    },
+    {
+      "file": "utils/enhancements/index.ts",
+      "priority": "low"
+    }
+  ],
+  "files_with_tests": [
+    "components/ErrorBoundary.tsx",
+    "components/ErrorDisplay.tsx",
+    "components/ExperienceItem.tsx",
+    "components/GitHubSettings.tsx",
+    "components/PasswordStrengthMeter.tsx",
+    "components/ResumeCard.tsx",
+    "components/Skeleton.tsx",
+    "components/SkipNavigation.tsx",
+    "components/StorageWarning.tsx",
+    "components/skeletons/DashboardSkeleton.tsx",
+    "components/skeletons/EditorSkeleton.tsx",
+    "components/skeletons/JobApplicationsSkeleton.tsx",
+    "components/skeletons/SettingsSkeleton.tsx",
+    "components/skeletons/TeamsSkeleton.tsx",
+    "components/skeletons/WorkspaceSkeleton.tsx",
+    "hooks/useFocus.ts",
+    "hooks/useFocusTrap.ts",
+    "hooks/useGlobalErrors.ts",
+    "pages/Editor.tsx",
+    "pages/JobApplications.tsx",
+    "pages/Settings.tsx",
+    "src/lib/storage.ts",
+    "store/store.ts",
+    "utils/errorHandler.ts",
+    "utils/export.ts",
+    "utils/fetch-timeout.ts",
+    "utils/logger.ts",
+    "utils/retryLogic.ts",
+    "utils/shortcuts.ts",
+    "utils/storage.ts",
+    "utils/toast.ts",
+    "utils/validation.ts"
+  ],
+  "next_steps": [
+    "Write tests for 87 untested files to reach 80% coverage",
+    "Prioritize testing hooks and utilities (high priority)",
+    "Add tests for editor components (critical functionality)",
+    "Test main pages (Dashboard, Editor, Settings)",
+    "Target: Need to test ~67 more files to reach 80%"
+  ],
+  "recommendations": {
+    "phase_1_critical": {
+      "description": "Test highest-impact files first (hooks + critical pages)",
+      "files": [
+        "hooks/useAuth.ts",
+        "hooks/useTheme.ts",
+        "hooks/useVariants.ts",
+        "pages/Login.tsx",
+        "pages/Dashboard.tsx",
+        "utils/api-client.ts",
+        "utils/security.ts"
+      ],
+      "estimated_coverage_gain": "15-20%"
+    },
+    "phase_2_components": {
+      "description": "Test main feature components",
+      "files": [
+        "components/Sidebar.tsx",
+        "components/ResumePreview.tsx",
+        "components/TemplateSelector.tsx",
+        "components/editor/*"
+      ],
+      "estimated_coverage_gain": "20-25%"
+    },
+    "phase_3_utilities": {
+      "description": "Test helper utilities and enhancements",
+      "files": [
+        "utils/validation.ts",
+        "utils/import.ts",
+        "utils/linkedin.ts",
+        "src/lib/oauth.ts"
+      ],
+      "estimated_coverage_gain": "15-20%"
+    },
+    "phase_4_dialogs": {
+      "description": "Test dialog components and lesser-used features",
+      "files": [
+        "components/*Dialog.tsx",
+        "components/*Settings.tsx"
+      ],
+      "estimated_coverage_gain": "15-20%"
+    }
+  }
+}
