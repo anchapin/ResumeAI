@@ -115,7 +115,9 @@ class Settings(BaseSettings):
     smtp_use_tls: bool = True  # Use TLS for SMTP
     frontend_url: str = "http://localhost:5173"  # Frontend URL for email links
 
-    # WebSocket Configuration
+    # Request Signing Configuration
+    request_signing_secret: Optional[str] = None
+    enable_request_signing: bool = True
     ws_heartbeat_interval: int = 30  # Send heartbeat ping every 30 seconds
     ws_connection_timeout: int = 30  # Close connection after 30s of inactivity
     ws_max_connections_per_user: int = (
