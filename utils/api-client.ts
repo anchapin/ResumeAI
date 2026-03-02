@@ -58,8 +58,15 @@ import {
   OfferComparison,
 } from '../types';
 import { fetchWithTimeout, TIMEOUT_CONFIG } from './fetch-timeout';
-import { fetchWithRetry, RetryConfig } from './retryLogic';
-import { getCsrfToken } from './security';
+import {
+  fetchWithRetry,
+  RetryConfig,
+  isRetryableStatus,
+  calculateBackoffDelay,
+  sleep,
+  RetryError,
+} from './retryLogic';
+import { signedFetch } from '../src/lib/requestSigning';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
 
@@ -80,6 +87,73 @@ const DEFAULT_RETRY_CONFIG: RetryConfig = {
   jitterFraction: 0.1,
 };
 
+// Signed fetch with retry logic for sensitive billing endpoints
+export async function signedFetchWithRetry(
+  endpoint: string,
+  options: RequestInit = {},
+  config: RetryConfig = {},
+): Promise<Response> {
+  const mergedConfig: Required<RetryConfig> = {
+    ...DEFAULT_RETRY_CONFIG,
+    ...config,
+  } as Required<RetryConfig>;
+  let lastError: Error | null = null;
+  let lastResponse: Response | null = null;
+
+  for (let attempt = 0; attempt <= mergedConfig.maxRetries; attempt++) {
+    try {
+      const response = await signedFetch(endpoint, options);
+
+      if (response.ok || !isRetryableStatus(response.status)) {
+        return response;
+      }
+
+      lastResponse = response;
+
+      if (attempt < mergedConfig.maxRetries) {
+        const delay = calculateBackoffDelay(attempt, mergedConfig);
+        console.warn(
+          `Retryable status ${response.status} for ${options.method || 'GET'} ${endpoint}. ` +
+            `Attempt ${attempt + 1}/${mergedConfig.maxRetries}, retrying in ${delay}ms`,
+        );
+        await sleep(delay);
+        continue;
+      }
+
+      const error = new Error(
+        `Failed after ${mergedConfig.maxRetries + 1} attempts: HTTP ${response.status}`,
+      ) as RetryError;
+      error.attemptCount = mergedConfig.maxRetries + 1;
+      error.statusCode = response.status;
+      throw error;
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+
+      if (attempt < mergedConfig.maxRetries) {
+        const delay = calculateBackoffDelay(attempt, mergedConfig);
+        console.warn(
+          `Network error for ${options.method || 'GET'} ${endpoint}: ${lastError.message}. ` +
+            `Attempt ${attempt + 1}/${mergedConfig.maxRetries}, retrying in ${delay}ms`,
+        );
+        await sleep(delay);
+        continue;
+      }
+
+      const error2 = new Error(
+        `Failed after ${mergedConfig.maxRetries + 1} attempts: ${lastError.message}`,
+      ) as RetryError;
+      error2.attemptCount = mergedConfig.maxRetries + 1;
+      error2.lastAttemptError = lastError;
+      throw error2;
+    }
+  }
+
+  const error = new Error(`Failed after ${mergedConfig.maxRetries + 1} attempts`) as RetryError;
+  error.attemptCount = mergedConfig.maxRetries + 1;
+  error.lastAttemptError = lastError || undefined;
+  throw error;
+}
+
 function getAPIKey(): string | null {
   return localStorage.getItem('RESUMEAI_API_KEY');
 }
@@ -87,13 +161,26 @@ function getAPIKey(): string | null {
 export function getHeaders(): HeadersInit {
   const headers: HeadersInit = { 'Content-Type': 'application/json' };
 
-  // Add CSRF token from cookie for state-changing requests
-  const csrfToken = getCsrfToken();
-  if (csrfToken) {
-    headers['X-CSRF-Token'] = csrfToken;
+  // Try JWT token first (Issue 477 - Bearer token auth)
+  const token = localStorage.getItem('resume_ai_auth_token');
+  if (token) {
+    try {
+      // Check if token is expired
+      const parts = token.split('.');
+      if (parts.length === 3) {
+        const payload = JSON.parse(atob(parts[1]));
+        const currentTime = Math.floor(Date.now() / 1000);
+        if (!payload.exp || payload.exp >= currentTime) {
+          headers['Authorization'] = `Bearer ${token}`;
+          return headers;
+        }
+      }
+    } catch {
+      // Invalid token, fall through to API key
+    }
   }
 
-  // Fall back to API key authentication if needed
+  // Fall back to API key authentication
   const apiKey = getAPIKey();
   if (apiKey) headers['X-API-KEY'] = apiKey;
   return headers;
@@ -1421,41 +1508,29 @@ export async function getTeamActivity(teamId: number | string, days = 30): Promi
 }
 
 export async function getBillingStatus(): Promise<{ enabled: boolean; message: string }> {
-  const response = await fetchWithRetry(
-    `${API_URL}/api/v1/billing/status`,
-    { headers: getHeaders() },
-    DEFAULT_RETRY_CONFIG,
-  );
+  const response = await signedFetchWithRetry('/api/v1/billing/status', { headers: getHeaders() });
   if (!response.ok) throw new Error('Failed to get billing status');
   return response.json();
 }
 
 export async function listBillingPlans(): Promise<BillingPlan[]> {
-  const response = await fetchWithRetry(
-    `${API_URL}/api/v1/billing/plans`,
-    { headers: getHeaders() },
-    DEFAULT_RETRY_CONFIG,
-  );
+  const response = await signedFetchWithRetry('/api/v1/billing/plans', { headers: getHeaders() });
   if (!response.ok) throw new Error('Failed to list plans');
   return response.json();
 }
 
 export async function getBillingPlan(planName: string): Promise<BillingPlan> {
-  const response = await fetchWithRetry(
-    `${API_URL}/api/v1/billing/plans/${planName}`,
-    { headers: getHeaders() },
-    DEFAULT_RETRY_CONFIG,
-  );
+  const response = await signedFetchWithRetry(`/api/v1/billing/plans/${planName}`, {
+    headers: getHeaders(),
+  });
   if (!response.ok) throw new Error('Failed to get plan');
   return response.json();
 }
 
 export async function getSubscription(): Promise<Subscription> {
-  const response = await fetchWithRetry(
-    `${API_URL}/api/v1/billing/subscription`,
-    { headers: getHeaders() },
-    DEFAULT_RETRY_CONFIG,
-  );
+  const response = await signedFetchWithRetry('/api/v1/billing/subscription', {
+    headers: getHeaders(),
+  });
   if (!response.ok) throw new Error('Failed to get subscription');
   return response.json();
 }
@@ -1463,15 +1538,11 @@ export async function getSubscription(): Promise<Subscription> {
 export async function createCheckoutSession(
   request: CheckoutSessionRequest,
 ): Promise<CheckoutSessionResponse> {
-  const response = await fetchWithRetry(
-    `${API_URL}/api/v1/billing/checkout`,
-    {
-      method: 'POST',
-      headers: { ...getHeaders(), 'Content-Type': 'application/json' },
-      body: JSON.stringify(request),
-    },
-    DEFAULT_RETRY_CONFIG,
-  );
+  const response = await signedFetchWithRetry('/api/v1/billing/checkout', {
+    method: 'POST',
+    headers: { ...getHeaders(), 'Content-Type': 'application/json' },
+    body: JSON.stringify(request),
+  });
   if (!response.ok) {
     const error = await response
       .json()
@@ -1484,15 +1555,11 @@ export async function createCheckoutSession(
 export async function createPortalSession(
   request: PortalSessionRequest,
 ): Promise<PortalSessionResponse> {
-  const response = await fetchWithRetry(
-    `${API_URL}/api/v1/billing/portal`,
-    {
-      method: 'POST',
-      headers: { ...getHeaders(), 'Content-Type': 'application/json' },
-      body: JSON.stringify(request),
-    },
-    DEFAULT_RETRY_CONFIG,
-  );
+  const response = await signedFetchWithRetry('/api/v1/billing/portal', {
+    method: 'POST',
+    headers: { ...getHeaders(), 'Content-Type': 'application/json' },
+    body: JSON.stringify(request),
+  });
   if (!response.ok) {
     const error = await response
       .json()
@@ -1505,13 +1572,12 @@ export async function createPortalSession(
 export async function cancelSubscription(
   atPeriodEnd: boolean = true,
 ): Promise<{ success: boolean; status: string }> {
-  const response = await fetchWithRetry(
-    `${API_URL}/api/v1/billing/cancel?at_period_end=${atPeriodEnd}`,
+  const response = await signedFetchWithRetry(
+    `/api/v1/billing/cancel?at_period_end=${atPeriodEnd}`,
     {
       method: 'POST',
       headers: { ...getHeaders(), 'Content-Type': 'application/json' },
     },
-    DEFAULT_RETRY_CONFIG,
   );
   if (!response.ok) {
     const error = await response.json().catch(() => ({ detail: 'Failed to cancel subscription' }));
@@ -1521,14 +1587,10 @@ export async function cancelSubscription(
 }
 
 export async function resumeSubscription(): Promise<{ success: boolean; status: string }> {
-  const response = await fetchWithRetry(
-    `${API_URL}/api/v1/billing/resume`,
-    {
-      method: 'POST',
-      headers: { ...getHeaders(), 'Content-Type': 'application/json' },
-    },
-    DEFAULT_RETRY_CONFIG,
-  );
+  const response = await signedFetchWithRetry('/api/v1/billing/resume', {
+    method: 'POST',
+    headers: { ...getHeaders(), 'Content-Type': 'application/json' },
+  });
   if (!response.ok) {
     const error = await response.json().catch(() => ({ detail: 'Failed to resume subscription' }));
     throw new Error(error.detail || 'Failed to resume subscription');
@@ -1539,13 +1601,12 @@ export async function resumeSubscription(): Promise<{ success: boolean; status: 
 export async function upgradeSubscription(
   newPlanName: string,
 ): Promise<{ success: boolean; status: string }> {
-  const response = await fetchWithRetry(
-    `${API_URL}/api/v1/billing/upgrade?new_plan_name=${newPlanName}`,
+  const response = await signedFetchWithRetry(
+    `/api/v1/billing/upgrade?new_plan_name=${newPlanName}`,
     {
       method: 'POST',
       headers: { ...getHeaders(), 'Content-Type': 'application/json' },
     },
-    DEFAULT_RETRY_CONFIG,
   );
   if (!response.ok) {
     const error = await response.json().catch(() => ({ detail: 'Failed to upgrade subscription' }));
@@ -1555,11 +1616,9 @@ export async function upgradeSubscription(
 }
 
 export async function listPaymentMethods(): Promise<PaymentMethod[]> {
-  const response = await fetchWithRetry(
-    `${API_URL}/api/v1/billing/payment-methods`,
-    { headers: getHeaders() },
-    DEFAULT_RETRY_CONFIG,
-  );
+  const response = await signedFetchWithRetry('/api/v1/billing/payment-methods', {
+    headers: getHeaders(),
+  });
   if (!response.ok) throw new Error('Failed to list payment methods');
   return response.json();
 }
@@ -1568,15 +1627,11 @@ export async function addPaymentMethod(
   paymentMethodId: string,
   setAsDefault: boolean = false,
 ): Promise<PaymentMethod> {
-  const response = await fetchWithRetry(
-    `${API_URL}/api/v1/billing/payment-methods`,
-    {
-      method: 'POST',
-      headers: { ...getHeaders(), 'Content-Type': 'application/json' },
-      body: JSON.stringify({ payment_method_id: paymentMethodId, set_as_default: setAsDefault }),
-    },
-    DEFAULT_RETRY_CONFIG,
-  );
+  const response = await signedFetchWithRetry('/api/v1/billing/payment-methods', {
+    method: 'POST',
+    headers: { ...getHeaders(), 'Content-Type': 'application/json' },
+    body: JSON.stringify({ payment_method_id: paymentMethodId, set_as_default: setAsDefault }),
+  });
   if (!response.ok) {
     const error = await response.json().catch(() => ({ detail: 'Failed to add payment method' }));
     throw new Error(error.detail || 'Failed to add payment method');
@@ -1585,41 +1640,32 @@ export async function addPaymentMethod(
 }
 
 export async function removePaymentMethod(paymentMethodId: number): Promise<{ success: boolean }> {
-  const response = await fetchWithRetry(
-    `${API_URL}/api/v1/billing/payment-methods/${paymentMethodId}`,
+  const response = await signedFetchWithRetry(
+    `/api/v1/billing/payment-methods/${paymentMethodId}`,
     { method: 'DELETE', headers: getHeaders() },
-    DEFAULT_RETRY_CONFIG,
   );
   if (!response.ok) throw new Error('Failed to remove payment method');
   return response.json();
 }
 
 export async function listInvoices(): Promise<Invoice[]> {
-  const response = await fetchWithRetry(
-    `${API_URL}/api/v1/billing/invoices`,
-    { headers: getHeaders() },
-    DEFAULT_RETRY_CONFIG,
-  );
+  const response = await signedFetchWithRetry('/api/v1/billing/invoices', {
+    headers: getHeaders(),
+  });
   if (!response.ok) throw new Error('Failed to list invoices');
   return response.json();
 }
 
 export async function getInvoice(invoiceId: number): Promise<Invoice> {
-  const response = await fetchWithRetry(
-    `${API_URL}/api/v1/billing/invoices/${invoiceId}`,
-    { headers: getHeaders() },
-    DEFAULT_RETRY_CONFIG,
-  );
+  const response = await signedFetchWithRetry(`/api/v1/billing/invoices/${invoiceId}`, {
+    headers: getHeaders(),
+  });
   if (!response.ok) throw new Error('Failed to get invoice');
   return response.json();
 }
 
 export async function getBillingUsage(): Promise<BillingUsage> {
-  const response = await fetchWithRetry(
-    `${API_URL}/api/v1/billing/usage`,
-    { headers: getHeaders() },
-    DEFAULT_RETRY_CONFIG,
-  );
+  const response = await signedFetchWithRetry('/api/v1/billing/usage', { headers: getHeaders() });
   if (!response.ok) throw new Error('Failed to get billing usage');
   return response.json();
 }
