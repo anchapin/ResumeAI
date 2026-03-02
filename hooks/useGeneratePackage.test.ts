@@ -5,6 +5,27 @@ import { SimpleResumeData, ResumeData } from '../types';
 
 global.fetch = vi.fn();
 
+const mockState = {
+  resumeData: {
+    name: 'John Doe',
+    email: 'john@example.com',
+    phone: '555-1234',
+    location: 'San Francisco, CA',
+    role: 'Senior Developer',
+    summary: 'Experienced software engineer',
+    skills: [],
+    experience: [],
+    education: [],
+    projects: [],
+  },
+  setResumeData: vi.fn(),
+  setGlobalLoading: vi.fn(),
+};
+
+vi.mock('../store/store', () => ({
+  useStore: vi.fn((selector) => (selector ? selector(mockState) : mockState)),
+}));
+
 vi.mock('../utils/api-client', () => ({
   getHeaders: () => ({ 'Content-Type': 'application/json' }),
 }));
@@ -90,9 +111,10 @@ describe('useGeneratePackage Hook', () => {
         suggestions: ['Add more metrics', 'Include technologies'],
       };
 
-      (global.fetch as any).mockResolvedValueOnce(
-        new Response(JSON.stringify(mockResponse), { status: 200 }),
-      );
+      (global.fetch as any).mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockResponse,
+      });
 
       const { result } = renderHook(() => useGeneratePackage());
 
@@ -162,9 +184,10 @@ describe('useGeneratePackage Hook', () => {
         keywords: [],
       };
 
-      (global.fetch as any).mockResolvedValueOnce(
-        new Response(JSON.stringify(mockResponse), { status: 200 }),
-      );
+      (global.fetch as any).mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockResponse,
+      });
 
       const { result } = renderHook(() => useGeneratePackage());
 

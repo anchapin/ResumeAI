@@ -60,7 +60,10 @@ const Login: React.FC<LoginProps> = ({ onLogin, error, isLoading }) => {
                 id="email"
                 type="email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  setLocalError(null);
+                }}
                 placeholder="you@example.com"
                 autoComplete="email"
                 className="w-full px-4 py-3 rounded-lg bg-slate-50 border border-slate-200 focus:bg-white focus:border-primary-500 focus:ring-2 focus:ring-primary-100 outline-none transition-all"
@@ -75,7 +78,10 @@ const Login: React.FC<LoginProps> = ({ onLogin, error, isLoading }) => {
                 id="password"
                 type="password"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  setLocalError(null);
+                }}
                 placeholder="••••••••"
                 autoComplete="current-password"
                 className="w-full px-4 py-3 rounded-lg bg-slate-50 border border-slate-200 focus:bg-white focus:border-primary-500 focus:ring-2 focus:ring-primary-100 outline-none transition-all"

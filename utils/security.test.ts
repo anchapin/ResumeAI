@@ -52,112 +52,37 @@ describe('Security Utilities', () => {
 
   describe('TokenManager', () => {
     describe('setToken', () => {
-      it('should store token in localStorage', () => {
+      it('should be a no-op (tokens handled by httpOnly cookies)', () => {
         const token = 'test-token-12345';
         TokenManager.setToken(token);
-        expect(localStorage.getItem(SECURITY_CONFIG.TOKEN_STORAGE_KEY)).toBe(token);
-      });
-
-      it('should overwrite existing token', () => {
-        TokenManager.setToken('old-token');
-        TokenManager.setToken('new-token');
-        expect(localStorage.getItem(SECURITY_CONFIG.TOKEN_STORAGE_KEY)).toBe('new-token');
+        expect(localStorage.getItem(SECURITY_CONFIG.TOKEN_STORAGE_KEY)).toBeNull();
       });
     });
 
     describe('getToken', () => {
-      it('should retrieve stored token', () => {
-        const token = 'test-token-12345';
-        localStorage.setItem(SECURITY_CONFIG.TOKEN_STORAGE_KEY, token);
-        expect(TokenManager.getToken()).toBe(token);
-      });
-
-      it('should return null when no token is stored', () => {
+      it('should always return null (tokens handled by httpOnly cookies)', () => {
+        localStorage.setItem(SECURITY_CONFIG.TOKEN_STORAGE_KEY, 'some-token');
         expect(TokenManager.getToken()).toBeNull();
       });
     });
 
     describe('removeToken', () => {
-      it('should remove token from localStorage', () => {
-        TokenManager.setToken('test-token');
-        TokenManager.removeToken();
-        expect(localStorage.getItem(SECURITY_CONFIG.TOKEN_STORAGE_KEY)).toBeNull();
-      });
-
-      it('should handle removal when no token exists', () => {
+      it('should clear residual state from localStorage', () => {
+        localStorage.setItem(SECURITY_CONFIG.TOKEN_STORAGE_KEY, 'test-token');
         TokenManager.removeToken();
         expect(localStorage.getItem(SECURITY_CONFIG.TOKEN_STORAGE_KEY)).toBeNull();
       });
     });
 
     describe('isTokenExpired', () => {
-      it('should return false for valid token with future expiration', () => {
-        const futureExp = Math.floor(Date.now() / 1000) + 3600; // 1 hour from now
-        const payload = { exp: futureExp, sub: 'user123' };
-        const encodedPayload = btoa(JSON.stringify(payload));
-        const token = `header.${encodedPayload}.signature`;
-
-        expect(TokenManager.isTokenExpired(token)).toBe(false);
-      });
-
-      it('should return true for expired token', () => {
-        const pastExp = Math.floor(Date.now() / 1000) - 3600; // 1 hour ago
-        const payload = { exp: pastExp, sub: 'user123' };
-        const encodedPayload = btoa(JSON.stringify(payload));
-        const token = `header.${encodedPayload}.signature`;
-
-        expect(TokenManager.isTokenExpired(token)).toBe(true);
-      });
-
-      it('should return true for malformed token', () => {
-        expect(TokenManager.isTokenExpired('invalid-token')).toBe(true);
-        expect(TokenManager.isTokenExpired('two.parts')).toBe(true);
-        expect(TokenManager.isTokenExpired('')).toBe(true);
-      });
-
-      it('should handle token without exp claim gracefully', () => {
-        const payload = { sub: 'user123' };
-        const encodedPayload = btoa(JSON.stringify(payload));
-        const token = `header.${encodedPayload}.signature`;
-
-        // Returns undefined (falsy) when exp is missing - treated as not expired in getSecurityHeaders
-        const result = TokenManager.isTokenExpired(token);
-        expect(!result).toBe(true); // undefined is falsy, so !undefined = true
-      });
-
-      it('should handle invalid base64 payload', () => {
-        const token = 'header.!!!invalid!!!.signature';
-        expect(TokenManager.isTokenExpired(token)).toBe(true);
+      it('should always return false (expiration handled by server via 401)', () => {
+        expect(TokenManager.isTokenExpired('any-token')).toBe(false);
       });
     });
 
     describe('getTokenExpiration', () => {
-      it('should return expiration time in milliseconds', () => {
-        const exp = Math.floor(Date.now() / 1000) + 3600;
-        const payload = { exp, sub: 'user123' };
-        const encodedPayload = btoa(JSON.stringify(payload));
-        const token = `header.${encodedPayload}.signature`;
-
-        const result = TokenManager.getTokenExpiration(token);
-        expect(result).toBe(exp * 1000);
-      });
-
-      it('should return null for malformed token', () => {
-        expect(TokenManager.getTokenExpiration('invalid-token')).toBeNull();
-        expect(TokenManager.getTokenExpiration('two.parts')).toBeNull();
-      });
-
-      it('should return null for token without exp claim', () => {
-        const payload = { sub: 'user123' };
-        const encodedPayload = btoa(JSON.stringify(payload));
-        const token = `header.${encodedPayload}.signature`;
-
-        expect(TokenManager.getTokenExpiration(token)).toBeNull();
-      });
-
-      it('should handle invalid base64 payload', () => {
-        const token = 'header.!!!invalid!!!.signature';
-        expect(TokenManager.getTokenExpiration(token)).toBeNull();
+      it('should always return null', () => {
+        expect(TokenManager.getTokenExpiration('any-token')).toBeNull();
       });
     });
   });
@@ -173,32 +98,8 @@ describe('Security Utilities', () => {
       expect(headers['Sec-Fetch-Site']).toBe('same-origin');
     });
 
-    it('should include Authorization header when valid token exists', () => {
-      const futureExp = Math.floor(Date.now() / 1000) + 3600;
-      const payload = { exp: futureExp, sub: 'user123' };
-      const encodedPayload = btoa(JSON.stringify(payload));
-      const token = `header.${encodedPayload}.signature`;
-
-      TokenManager.setToken(token);
+    it('should not include Authorization header (handled by httpOnly cookies)', () => {
       const headers = getSecurityHeaders();
-
-      expect(headers.Authorization).toBe(`Bearer ${token}`);
-    });
-
-    it('should not include Authorization header when no token exists', () => {
-      const headers = getSecurityHeaders();
-      expect(headers.Authorization).toBeUndefined();
-    });
-
-    it('should not include Authorization header when token is expired', () => {
-      const pastExp = Math.floor(Date.now() / 1000) - 3600;
-      const payload = { exp: pastExp, sub: 'user123' };
-      const encodedPayload = btoa(JSON.stringify(payload));
-      const token = `header.${encodedPayload}.signature`;
-
-      TokenManager.setToken(token);
-      const headers = getSecurityHeaders();
-
       expect(headers.Authorization).toBeUndefined();
     });
   });
@@ -209,9 +110,9 @@ describe('Security Utilities', () => {
     });
 
     it('should make fetch request with security headers', async () => {
-      const mockFetch = vi.spyOn(global, 'fetch').mockResolvedValue(
-        new Response('{"success": true}', { status: 200 })
-      );
+      const mockFetch = vi
+        .spyOn(global, 'fetch')
+        .mockResolvedValue(new Response('{"success": true}', { status: 200 }));
 
       await secureApiCall('https://api.example.com/test');
 
@@ -222,66 +123,33 @@ describe('Security Utilities', () => {
             'Content-Type': 'application/json',
             'X-Requested-With': 'XMLHttpRequest',
           }),
-        })
+        }),
       );
     });
 
-    it('should include authorization header when token exists', async () => {
-      const futureExp = Math.floor(Date.now() / 1000) + 3600;
-      const payload = { exp: futureExp, sub: 'user123' };
-      const encodedPayload = btoa(JSON.stringify(payload));
-      const token = `header.${encodedPayload}.signature`;
-
-      TokenManager.setToken(token);
-
-      const mockFetch = vi.spyOn(global, 'fetch').mockResolvedValue(
-        new Response('{}', { status: 200 })
-      );
+    it('should include credentials: include for cookies', async () => {
+      const mockFetch = vi
+        .spyOn(global, 'fetch')
+        .mockResolvedValue(new Response('{}', { status: 200 }));
 
       await secureApiCall('https://api.example.com/test');
 
       expect(mockFetch).toHaveBeenCalledWith(
         'https://api.example.com/test',
         expect.objectContaining({
-          headers: expect.objectContaining({
-            Authorization: `Bearer ${token}`,
-          }),
-        })
+          credentials: 'include',
+        }),
       );
     });
 
-    it('should remove token on 401 response', async () => {
-      TokenManager.setToken('test-token');
+    it('should call TokenManager.removeToken on 401 response', async () => {
+      const removeTokenSpy = vi.spyOn(TokenManager, 'removeToken');
 
-      vi.spyOn(global, 'fetch').mockResolvedValue(
-        new Response('Unauthorized', { status: 401 })
-      );
+      vi.spyOn(global, 'fetch').mockResolvedValue(new Response('Unauthorized', { status: 401 }));
 
       await secureApiCall('https://api.example.com/test');
 
-      expect(TokenManager.getToken()).toBeNull();
-    });
-
-    it('should merge provided headers with security headers', async () => {
-      const mockFetch = vi.spyOn(global, 'fetch').mockResolvedValue(
-        new Response('{}', { status: 200 })
-      );
-
-      await secureApiCall('https://api.example.com/test', {
-        method: 'POST',
-        headers: { 'Custom-Header': 'custom-value' },
-      });
-
-      expect(mockFetch).toHaveBeenCalledWith(
-        'https://api.example.com/test',
-        expect.objectContaining({
-          method: 'POST',
-          headers: expect.objectContaining({
-            'Content-Type': 'application/json',
-            'Custom-Header': 'custom-value',
-          }),
-        })
-      );
+      expect(removeTokenSpy).toHaveBeenCalled();
     });
 
     it('should handle fetch errors', async () => {

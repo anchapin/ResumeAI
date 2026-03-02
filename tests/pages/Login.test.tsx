@@ -18,11 +18,7 @@ describe('Login Component', () => {
   });
 
   const renderWithRouter = (component: React.ReactElement) => {
-    return render(
-      <BrowserRouter>
-        {component}
-      </BrowserRouter>,
-    );
+    return render(<BrowserRouter>{component}</BrowserRouter>);
   };
 
   describe('Rendering', () => {
@@ -137,7 +133,9 @@ describe('Login Component', () => {
       renderWithRouter(<Login {...defaultProps} error="Login failed" />);
 
       const errorContainer = screen.getByText('Login failed');
-      expect(errorContainer.parentElement?.querySelector('.material-symbols-outlined')).toBeInTheDocument();
+      expect(
+        errorContainer.parentElement?.querySelector('.material-symbols-outlined'),
+      ).toBeInTheDocument();
     });
 
     it('clears local error when form is submitted again', async () => {
@@ -253,17 +251,14 @@ describe('Login Component', () => {
       const user = userEvent.setup();
       const { container } = renderWithRouter(<Login {...defaultProps} />);
 
-      const form = container.querySelector('form');
-      const preventDefaultSpy = vi.fn();
-
-      if (form) {
-        form.addEventListener('submit', preventDefaultSpy);
-      }
+      const emailInput = screen.getByPlaceholderText('you@example.com');
+      const passwordInput = screen.getByPlaceholderText('••••••••');
+      await user.type(emailInput, 'test@example.com');
+      await user.type(passwordInput, 'password123');
 
       const submitButton = screen.getByRole('button', { name: /sign in/i });
       await user.click(submitButton);
 
-      // Form submission is prevented, which is handled by React's synthetic events
       expect(mockOnLogin).toHaveBeenCalled();
     });
   });
@@ -346,12 +341,14 @@ describe('Login Component', () => {
       renderWithRouter(<Login {...defaultProps} />);
 
       const emailInput = screen.getByPlaceholderText('you@example.com');
+      const passwordInput = screen.getByPlaceholderText('••••••••');
       await user.type(emailInput, 'test+tag@example.co.uk');
+      await user.type(passwordInput, 'password123');
 
       const submitButton = screen.getByRole('button', { name: /sign in/i });
       await user.click(submitButton);
 
-      expect(mockOnLogin).toHaveBeenCalledWith('test+tag@example.co.uk', expect.any(String));
+      expect(mockOnLogin).toHaveBeenCalledWith('test+tag@example.co.uk', 'password123');
     });
 
     it('handles long passwords', async () => {
