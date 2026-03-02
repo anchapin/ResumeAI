@@ -1,5 +1,6 @@
 import React from 'react';
 import { JobOffer } from '../types';
+import { Card } from './ui';
 
 interface OfferCardProps {
   offer: JobOffer;
@@ -45,12 +46,10 @@ export const OfferCard: React.FC<OfferCardProps> = ({
   const totalCompensation = offer.baseSalary + (offer.bonus || 0);
 
   return (
-    <div
-      className={`relative p-6 rounded-xl border-2 transition-all ${
-        isSelected
-          ? 'border-primary-500 bg-primary-50 ring-2 ring-primary-200'
-          : 'border-slate-200 hover:border-slate-300 bg-white'
-      } ${disabled ? 'opacity-50 pointer-events-none' : 'cursor-pointer'}`}
+    <Card
+      isSelected={isSelected}
+      padding="lg"
+      className={`${disabled ? 'opacity-50 pointer-events-none' : 'cursor-pointer'}`}
       onClick={() => onSelect && !disabled && onSelect(offer.id)}
     >
       {/* Selection Checkbox */}
@@ -238,7 +237,7 @@ export const OfferCard: React.FC<OfferCardProps> = ({
           </button>
         )}
       </div>
-    </div>
+    </Card>
   );
 };
 
