@@ -7,8 +7,8 @@ Includes rollback support and replica catchup monitoring.
 
 import asyncio
 import logging
-from typing import List, Optional, Callable, Any
-from datetime import datetime, timedelta
+from typing import List, Optional, Callable
+from datetime import datetime
 
 from sqlalchemy.ext.asyncio import AsyncEngine
 from sqlalchemy import text

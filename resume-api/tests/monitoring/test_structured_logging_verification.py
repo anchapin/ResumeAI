@@ -10,10 +10,7 @@ This test module verifies that:
 """
 
 import json
-import logging
 
-import pytest
-import structlog
 
 from monitoring import logging_config
 from config import settings

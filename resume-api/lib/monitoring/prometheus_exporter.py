@@ -19,8 +19,7 @@ from prometheus_client import (
     generate_latest,
 )
 from prometheus_client.multiprocess import MultiProcessCollector
-import os
-from typing import Optional, Dict, List
+from typing import Optional
 from dataclasses import dataclass
 from enum import Enum
 

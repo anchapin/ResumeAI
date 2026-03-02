@@ -6,7 +6,7 @@ Handles transient failures with exponential backoff and jitter
 import asyncio
 import logging
 import random
-from typing import Any, Callable, Optional, Set, TypeVar, Union
+from typing import Any, Callable, Optional, Set, TypeVar
 from functools import wraps
 from dataclasses import dataclass
 
