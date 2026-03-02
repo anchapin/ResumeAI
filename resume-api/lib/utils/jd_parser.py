@@ -8,6 +8,7 @@ ranges, and location information.
 
 import re
 from typing import Any, Dict, List, Optional, Tuple
+from collections import Counter
 from dataclasses import dataclass, field
 
 
@@ -43,6 +44,9 @@ class JobDescriptionParser:
 
     Extracts structured information from unstructured job description text.
     """
+
+    CAPITALIZED_PATTERN = re.compile(r"\b[A-Z][a-zA-Z]{2,}(?:\s+[A-Z][a-zA-Z]+)*\b")
+    WORD_PATTERN = re.compile(r"\b[a-z]{3,}\b")
 
     # Section headers that indicate different parts of a JD
     SECTION_HEADERS = {
@@ -282,7 +286,7 @@ class JobDescriptionParser:
     }
 
     # Common stop words for keyword extraction
-    STOP_WORDS = {
+    STOP_WORDS = frozenset({
         "the",
         "a",
         "an",
@@ -374,7 +378,7 @@ class JobDescriptionParser:
         "me",
         "us",
         "them",
-    }
+    })
 
     def __init__(self):
         """Initialize the job description parser."""
@@ -732,31 +736,28 @@ class JobDescriptionParser:
         full_text: str = "",
     ) -> List[str]:
         """Extract skills from relevant sections."""
-        skills = []
-        all_text = f"{skills_section} {requirements_section} {qualifications_section} {full_text}".lower()
+        all_text_lower = f"{skills_section} {requirements_section} {qualifications_section} {full_text}".lower()
 
+        skills_dict = {}
         for skill in self.TECH_SKILLS:
-            if skill in all_text:
-                skills.append(skill)
+            if skill in all_text_lower:
+                skills_dict[skill] = None
+
+        if len(skills_dict) >= 50:
+             return list(skills_dict.keys())[:50]
 
         # Also extract capitalized words that might be skills
-        capitalized = re.findall(
-            r"\b[A-Z][a-zA-Z]{2,}(?:\s+[A-Z][a-zA-Z]+)*\b",
-            skills_section + " " + requirements_section + " " + full_text,
-        )
+        section_text = f"{skills_section} {requirements_section} {full_text}"
 
-        skill_ignore = self.SKILL_IGNORE_WORDS
+        for word in self.CAPITALIZED_PATTERN.findall(section_text):
+            if len(word) > 2:
+                word_lower = word.lower()
+                if word_lower not in skills_dict and word_lower not in self.SKILL_IGNORE_WORDS:
+                    skills_dict[word_lower] = None
+                    if len(skills_dict) >= 50:
+                        break
 
-        for word in capitalized:
-            word_lower = word.lower()
-            if (
-                word_lower not in skills
-                and len(word) > 2
-                and word_lower not in skill_ignore
-            ):
-                skills.append(word_lower)
-
-        return list(dict.fromkeys(skills))[:50]  # Remove duplicates, limit to 50
+        return list(skills_dict.keys())[:50]
 
     def _extract_education_requirements(
         self, education_section: str, requirements_section: str
@@ -807,21 +808,9 @@ class JobDescriptionParser:
 
     def _extract_keywords(self, text: str) -> List[str]:
         """Extract important keywords from the JD."""
-        # Remove common stop words
-        stop_words = self.STOP_WORDS
-
-        # Extract words
-        words = re.findall(r"\b[a-zA-Z]{3,}\b", text.lower())
-
-        # Filter and count
-        word_count = {}
-        for word in words:
-            if word not in stop_words:
-                word_count[word] = word_count.get(word, 0) + 1
-
-        # Return top keywords by frequency
-        sorted_keywords = sorted(word_count.items(), key=lambda x: x[1], reverse=True)
-        return [kw for kw, count in sorted_keywords[:30]]
+        words = self.WORD_PATTERN.findall(text.lower())
+        word_count = Counter(word for word in words if word not in self.STOP_WORDS)
+        return [kw for kw, _ in word_count.most_common(30)]
 
 
 def parse_job_description(job_description: str) -> Dict[str, Any]:
