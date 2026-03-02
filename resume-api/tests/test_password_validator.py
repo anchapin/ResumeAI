@@ -1,4 +1,3 @@
-import pytest
 from lib.security.password_validator import (
     validate_password_strength,
     get_password_strength_score,

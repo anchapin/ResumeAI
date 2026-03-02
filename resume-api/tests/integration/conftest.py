@@ -11,9 +11,8 @@ Provides fixtures for:
 
 import pytest
 import pytest_asyncio
-from datetime import datetime, timedelta, timezone
-from unittest.mock import AsyncMock, MagicMock, patch
-import json
+from datetime import datetime, timezone
+from unittest.mock import AsyncMock, MagicMock
 
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 from httpx import AsyncClient, ASGITransport
@@ -23,12 +22,9 @@ from database import (
     Base,
     User,
     GitHubConnection,
-    GitHubOAuthState,
     APIKey,
     get_async_session,
 )
-from config.dependencies import get_current_user
-from config.jwt_utils import create_access_token
 from config.security import hash_password, encrypt_token
 
 # ============================================================================

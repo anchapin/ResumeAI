@@ -7,17 +7,15 @@ and connection management features.
 
 import sys
 from pathlib import Path
-import asyncio
-from unittest.mock import patch, AsyncMock
+from unittest.mock import patch
 import pytest
 from httpx import ASGITransport, AsyncClient
 
 sys.path.insert(0, str(Path("resume-api").absolute()))
 
 from main import app
-from database import User
 from config.jwt_utils import create_access_token
-from api.websocket import manager, ws_rate_limiter
+from api.websocket import ws_rate_limiter
 from config import settings
 
 
@@ -66,7 +64,7 @@ class TestWebSocketAuthentication:
             with pytest.raises(Exception):
                 async with client.websocket_connect(
                     "/ws/resumes/test-resume-1?token=invalid-token"
-                ) as websocket:
+                ):
                     pass
 
     @pytest.mark.asyncio
@@ -90,7 +88,7 @@ class TestWebSocketAuthentication:
             with pytest.raises(Exception):
                 async with client.websocket_connect(
                     f"/ws/resumes/test-resume-1?token={token}"
-                ) as websocket:
+                ):
                     pass
 
 
@@ -176,7 +174,7 @@ class TestWebSocketRateLimiting:
     @pytest.mark.asyncio
     async def test_websocket_rate_limit_enforced(self, test_user):
         """Test WebSocket rate limiting prevents rapid reconnections."""
-        token = create_access_token({"sub": str(test_user.id)})
+        create_access_token({"sub": str(test_user.id)})
         user_id = str(test_user.id)
 
         # Set low rate limit
@@ -195,7 +193,7 @@ class TestWebSocketRateLimiting:
     @pytest.mark.asyncio
     async def test_websocket_rate_limit_resets_after_minute(self, test_user):
         """Test WebSocket rate limit resets after time window."""
-        token = create_access_token({"sub": str(test_user.id)})
+        create_access_token({"sub": str(test_user.id)})
         user_id = str(test_user.id)
 
         with patch.object(settings, "ws_rate_limit_connections", "2/minute"):
@@ -223,7 +221,7 @@ class TestWebSocketConnectionLimit:
     async def test_websocket_max_connections_per_user(self, test_user):
         """Test WebSocket limits concurrent connections per user."""
         token = create_access_token({"sub": str(test_user.id)})
-        user_id = str(test_user.id)
+        str(test_user.id)
 
         # Set low connection limit
         with patch.object(settings, "ws_max_connections_per_user", 2):

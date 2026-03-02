@@ -9,14 +9,11 @@ Endpoints:
 - DELETE /v1/jobs/{job_id} - Cancel job
 """
 
-import os
 import sys
 from pathlib import Path
-from typing import Optional
 
-from fastapi import APIRouter, HTTPException, Request, status, Depends
+from fastapi import APIRouter, HTTPException, Request, status
 from fastapi.responses import FileResponse
-from pydantic import Field
 
 # Setup library path
 lib_path = Path(__file__).parent.parent

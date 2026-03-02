@@ -12,7 +12,6 @@ Tests cover:
 
 import pytest
 from httpx import AsyncClient
-from unittest.mock import patch, MagicMock
 
 
 class TestResumeTailoringBasic:
@@ -98,7 +97,7 @@ class TestResumeTailoringBasic:
         keywords = data["keywords"]
 
         # Verify relevant keywords are extracted
-        job_desc_lower = job_description_tech["description"].lower()
+        job_description_tech["description"].lower()
         # At least some keywords should relate to job description
         assert isinstance(keywords, list)
         assert len(keywords) > 0

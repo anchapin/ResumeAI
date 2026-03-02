@@ -6,7 +6,7 @@ Provides utilities for checking schema integrity and validating migrations.
 """
 
 import logging
-from typing import Dict, List, Tuple, Optional, Any
+from typing import Dict, List, Tuple, Any
 from datetime import datetime
 from dataclasses import dataclass
 import asyncio
@@ -187,7 +187,6 @@ class MigrationValidator:
     async def _get_existing_tables(self, db_session) -> Dict[str, List[str]]:
         """Get existing tables and their columns from database."""
         try:
-            from sqlalchemy import inspect
 
             # This would need real database connection
             # For now, return mock implementation
