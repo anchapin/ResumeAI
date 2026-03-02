@@ -188,25 +188,137 @@ class JobDescriptionParser:
         "data science",
     ]
 
-    STOP_WORDS = frozenset({
-        "the", "a", "an", "and", "or", "but", "in", "on", "at", "to", "for", "of",
-        "with", "by", "from", "as", "is", "was", "are", "were", "been", "be",
-        "have", "has", "had", "do", "does", "did", "will", "would", "could",
-        "should", "may", "might", "must", "shall", "can", "need", "this", "that",
-        "these", "those", "i", "you", "he", "she", "it", "we", "they", "what",
-        "which", "who", "whom", "whose", "where", "when", "why", "how", "all",
-        "each", "every", "both", "few", "more", "most", "other", "some", "such",
-        "no", "nor", "not", "only", "own", "same", "so", "than", "too", "very",
-        "just", "also", "now", "our", "your", "their", "its", "his", "her", "my",
-        "me", "us", "them",
-    })
+    STOP_WORDS = frozenset(
+        {
+            "the",
+            "a",
+            "an",
+            "and",
+            "or",
+            "but",
+            "in",
+            "on",
+            "at",
+            "to",
+            "for",
+            "of",
+            "with",
+            "by",
+            "from",
+            "as",
+            "is",
+            "was",
+            "are",
+            "were",
+            "been",
+            "be",
+            "have",
+            "has",
+            "had",
+            "do",
+            "does",
+            "did",
+            "will",
+            "would",
+            "could",
+            "should",
+            "may",
+            "might",
+            "must",
+            "shall",
+            "can",
+            "need",
+            "this",
+            "that",
+            "these",
+            "those",
+            "i",
+            "you",
+            "he",
+            "she",
+            "it",
+            "we",
+            "they",
+            "what",
+            "which",
+            "who",
+            "whom",
+            "whose",
+            "where",
+            "when",
+            "why",
+            "how",
+            "all",
+            "each",
+            "every",
+            "both",
+            "few",
+            "more",
+            "most",
+            "other",
+            "some",
+            "such",
+            "no",
+            "nor",
+            "not",
+            "only",
+            "own",
+            "same",
+            "so",
+            "than",
+            "too",
+            "very",
+            "just",
+            "also",
+            "now",
+            "our",
+            "your",
+            "their",
+            "its",
+            "his",
+            "her",
+            "my",
+            "me",
+            "us",
+            "them",
+        }
+    )
 
-    SKILL_IGNORE_WORDS = frozenset({
-        "the", "and", "for", "with", "from", "this", "that", "will", "have",
-        "has", "are", "been", "being", "more", "some", "other", "all", "new",
-        "use", "using", "work", "years", "experience", "knowledge", "skills",
-        "ability", "strong", "excellent", "plus", "must", "required",
-    })
+    SKILL_IGNORE_WORDS = frozenset(
+        {
+            "the",
+            "and",
+            "for",
+            "with",
+            "from",
+            "this",
+            "that",
+            "will",
+            "have",
+            "has",
+            "are",
+            "been",
+            "being",
+            "more",
+            "some",
+            "other",
+            "all",
+            "new",
+            "use",
+            "using",
+            "work",
+            "years",
+            "experience",
+            "knowledge",
+            "skills",
+            "ability",
+            "strong",
+            "excellent",
+            "plus",
+            "must",
+            "required",
+        }
+    )
 
     def parse(self, job_description: str) -> ParsedJobDescription:
         """Parse a job description into structured data."""
@@ -454,14 +566,17 @@ class JobDescriptionParser:
                 skills_dict[skill] = None
 
         if len(skills_dict) >= 50:
-             return list(skills_dict.keys())[:50]
+            return list(skills_dict.keys())[:50]
 
         section_text = f"{skills_section} {requirements_section}"
 
         for word in self.CAPITALIZED_PATTERN.findall(section_text):
             if len(word) > 2:
                 word_lower = word.lower()
-                if word_lower not in skills_dict and word_lower not in self.SKILL_IGNORE_WORDS:
+                if (
+                    word_lower not in skills_dict
+                    and word_lower not in self.SKILL_IGNORE_WORDS
+                ):
                     skills_dict[word_lower] = None
                     if len(skills_dict) >= 50:
                         break
