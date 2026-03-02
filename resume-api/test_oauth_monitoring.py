@@ -10,8 +10,6 @@ from datetime import datetime, timezone, timedelta
 from monitoring.oauth_monitor import (
     OAuthEvent,
     OAuthMonitor,
-    OAuthMetricsSnapshot,
-    oauth_monitor,
 )
 
 

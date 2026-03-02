@@ -105,7 +105,7 @@ class TestRequestSigningMiddleware:
         mock_response = MagicMock()
         call_next = AsyncMock(return_value=mock_response)
 
-        response = await middleware.dispatch(request, call_next)
+        await middleware.dispatch(request, call_next)
 
         call_next.assert_called_once()
 
