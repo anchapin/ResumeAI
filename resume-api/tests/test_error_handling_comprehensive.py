@@ -15,11 +15,8 @@ Tests cover:
 
 import pytest
 import json
-import asyncio
-from datetime import datetime, timedelta
-from unittest.mock import Mock, patch, AsyncMock
 from fastapi.testclient import TestClient
-from fastapi import HTTPException, status
+from fastapi import status
 from pathlib import Path
 import sys
 
@@ -29,13 +26,11 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from main import app
 from config.errors import (
     ErrorCode,
-    ErrorResponse,
     create_error_response,
     generate_request_id,
     get_status_code,
     get_error_message,
 )
-from middleware.error_handling import ErrorHandlingMiddleware
 
 
 @pytest.fixture
@@ -158,9 +153,7 @@ class TestErrorResponseFormat:
     def test_error_response_with_custom_message(self):
         """Test error response with custom message."""
         custom_msg = "Custom error message"
-        response = create_error_response(
-            ErrorCode.VALIDATION_ERROR, message=custom_msg
-        )
+        response = create_error_response(ErrorCode.VALIDATION_ERROR, message=custom_msg)
 
         assert response.message == custom_msg
 
@@ -285,9 +278,13 @@ class TestValidationErrors:
         from config.errors import FieldError
 
         field_errors = [
-            FieldError(field="email", message="Invalid email format", code="INVALID_FORMAT"),
+            FieldError(
+                field="email", message="Invalid email format", code="INVALID_FORMAT"
+            ),
             FieldError(field="age", message="Must be a number", code="INVALID_FORMAT"),
-            FieldError(field="name", message="Minimum 2 characters", code="VALIDATION_ERROR"),
+            FieldError(
+                field="name", message="Minimum 2 characters", code="VALIDATION_ERROR"
+            ),
         ]
 
         response = create_error_response(
@@ -303,18 +300,14 @@ class TestValidationErrors:
     @pytest.mark.api
     def test_missing_field_error_message(self):
         """Test missing field error with field name."""
-        response = create_error_response(
-            ErrorCode.MISSING_FIELD, field="email"
-        )
+        response = create_error_response(ErrorCode.MISSING_FIELD, field="email")
 
         assert "email" in response.message
 
     @pytest.mark.api
     def test_invalid_format_error_message(self):
         """Test invalid format error with field name."""
-        response = create_error_response(
-            ErrorCode.INVALID_FORMAT, field="phone_number"
-        )
+        response = create_error_response(ErrorCode.INVALID_FORMAT, field="phone_number")
 
         assert "phone_number" in response.message
 
@@ -652,7 +645,7 @@ class TestEdgeCases:
     @pytest.mark.api
     def test_special_characters_in_error_message(self):
         """Test special characters in error messages."""
-        special_message = 'Error with special chars: <>&"\''
+        special_message = "Error with special chars: <>&\"'"
         response = create_error_response(
             ErrorCode.VALIDATION_ERROR, message=special_message
         )

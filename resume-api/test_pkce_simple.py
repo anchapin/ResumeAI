@@ -27,7 +27,7 @@ def test_code_verifier_generation():
     for char in verifier:
         assert char in valid_chars, f"Invalid character in verifier: {char}"
 
-    print(f"  ✓ Generated 128-character verifier with valid characters")
+    print("  ✓ Generated 128-character verifier with valid characters")
     return verifier
 
 
@@ -62,7 +62,7 @@ def test_challenge_determinism(verifier):
 
     assert challenge1 == challenge2, "Same verifier should produce same challenge"
 
-    print(f"  ✓ Same verifier produces identical challenge")
+    print("  ✓ Same verifier produces identical challenge")
 
 
 def test_pkce_verification(verifier, challenge):
@@ -71,14 +71,14 @@ def test_pkce_verification(verifier, challenge):
 
     # Valid verification
     result = verify_pkce_challenge(verifier, challenge)
-    assert result is True, f"Valid verifier should verify against challenge"
-    print(f"  ✓ Valid verifier verifies successfully")
+    assert result is True, "Valid verifier should verify against challenge"
+    print("  ✓ Valid verifier verifies successfully")
 
     # Invalid verification
     wrong_verifier = verifier + "_modified"
     result = verify_pkce_challenge(wrong_verifier, challenge)
-    assert result is False, f"Invalid verifier should not verify"
-    print(f"  ✓ Invalid verifier fails verification")
+    assert result is False, "Invalid verifier should not verify"
+    print("  ✓ Invalid verifier fails verification")
 
 
 def test_multiple_flows():
@@ -106,7 +106,7 @@ def test_multiple_flows():
                 result = verify_pkce_challenge(verifier1, challenge2)
                 assert result is False, f"Verifier {i} should not verify challenge {j}"
 
-    print(f"  ✓ Generated 5 unique flows with proper isolation")
+    print("  ✓ Generated 5 unique flows with proper isolation")
 
 
 def test_attack_scenario():
@@ -132,7 +132,7 @@ def test_attack_scenario():
     result = verify_pkce_challenge(attacker_verifier, alice_challenge)
     assert result is False, "Attacker's verifier should not verify Alice's challenge"
 
-    print(f"  ✓ Code interception attack prevented (attacker verifier rejected)")
+    print("  ✓ Code interception attack prevented (attacker verifier rejected)")
 
 
 def main():

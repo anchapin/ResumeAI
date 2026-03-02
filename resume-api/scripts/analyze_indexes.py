@@ -13,10 +13,9 @@ Features:
 
 import asyncio
 import os
-import json
-from typing import List, Dict, Any, Optional
-from sqlalchemy import text, inspect
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
+from typing import List, Dict, Any
+from sqlalchemy import text
+from sqlalchemy.ext.asyncio import create_async_engine
 from tabulate import tabulate
 
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///./resumeai.db")
@@ -124,7 +123,7 @@ class IndexAnalyzer:
                     end = sql.rfind(")")
                     columns_str = sql[start:end]
                     columns = [col.strip() for col in columns_str.split(",")]
-                except:
+                except Exception:
                     columns = []
 
                 if table_name not in indexes:

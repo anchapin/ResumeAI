@@ -9,12 +9,9 @@ Validates:
 """
 
 import pytest
-import time
-from unittest.mock import Mock, patch, MagicMock
 from lib.monitoring.prometheus_exporter import (
     PrometheusExporter,
     MetricConfig,
-    init_exporter,
     get_exporter,
 )
 from middleware.metrics_middleware import (
@@ -262,7 +259,7 @@ class TestMetricsMiddleware:
     @pytest.mark.asyncio
     async def test_middleware_records_request(self):
         """Test middleware records HTTP request metrics."""
-        from fastapi import FastAPI, Response
+        from fastapi import FastAPI
 
         app = FastAPI()
         app.add_middleware(MetricsMiddleware)
@@ -302,8 +299,7 @@ class TestMetricsMiddleware:
     @pytest.mark.asyncio
     async def test_rate_limit_middleware(self):
         """Test rate limit metrics middleware."""
-        from fastapi import FastAPI, Response
-        from starlette.middleware.base import BaseHTTPMiddleware
+        from fastapi import FastAPI
 
         app = FastAPI()
         app.add_middleware(RateLimitMetricsMiddleware)
@@ -326,7 +322,6 @@ class TestMetricsIntegration:
     def test_exporter_multiprocess_config(self):
         """Test exporter with multiprocess configuration."""
         import tempfile
-        import os
 
         with tempfile.TemporaryDirectory() as tmpdir:
             config = MetricConfig(enable_multiprocess=True, multiprocess_dir=tmpdir)

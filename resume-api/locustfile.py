@@ -16,7 +16,6 @@ Usage:
 """
 
 import random
-import json
 from locust import HttpUser, TaskSet, task, between
 
 

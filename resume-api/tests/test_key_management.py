@@ -264,8 +264,6 @@ class TestBackwardCompatibility:
         plaintext_key = "rai_plaintext_key"
         hashed_key = hash_api_key("rai_hashed_key")
 
-        mixed_keys = [plaintext_key, hashed_key]
-
         assert is_hashed_key(plaintext_key) is False
         assert is_hashed_key(hashed_key) is True
 

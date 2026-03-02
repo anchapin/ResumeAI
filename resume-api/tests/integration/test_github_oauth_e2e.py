@@ -12,9 +12,7 @@ Tests cover:
 
 import pytest
 from httpx import AsyncClient
-from unittest.mock import AsyncMock, patch, MagicMock
-from datetime import datetime, timedelta, timezone
-from database import GitHubConnection, User
+from unittest.mock import AsyncMock, patch
 
 
 class TestGitHubOAuthInitiation:

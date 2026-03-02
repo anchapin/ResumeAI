@@ -6,11 +6,8 @@ Provides health check endpoints and startup validations for safe deployments.
 
 import logging
 import asyncio
-from typing import Dict, Any, Optional
+from typing import Dict, Any
 from datetime import datetime
-
-import httpx
-from fastapi import HTTPException, status
 
 logger = logging.getLogger(__name__)
 
@@ -63,7 +60,7 @@ class HealthChecker:
         from lib.utils.ai import get_ai_provider
 
         try:
-            provider = get_ai_provider()
+            get_ai_provider()
             # Quick test - would need provider-specific implementation
             return {
                 "status": "ok",
