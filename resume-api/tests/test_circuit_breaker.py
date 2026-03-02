@@ -14,7 +14,7 @@ import sys
 import pytest
 import time
 from pathlib import Path
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import Mock
 
 # Add resume-api to python path
 sys.path.insert(0, str(Path("resume-api").absolute()))

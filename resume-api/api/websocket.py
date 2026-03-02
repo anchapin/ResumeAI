@@ -337,9 +337,9 @@ async def handle_websocket_connection(
 
             # Update last_seen timestamp
             if connection_id in manager.connections:
-                manager.connections[connection_id]["last_seen"] = (
-                    datetime.utcnow().isoformat()
-                )
+                manager.connections[connection_id][
+                    "last_seen"
+                ] = datetime.utcnow().isoformat()
 
             message_type = message.get("type")
 
@@ -395,17 +395,17 @@ async def handle_websocket_connection(
             elif message_type == "ping":
                 # Respond to ping and update last_pong
                 if connection_id in manager.connections:
-                    manager.connections[connection_id]["last_pong"] = (
-                        datetime.utcnow().isoformat()
-                    )
+                    manager.connections[connection_id][
+                        "last_pong"
+                    ] = datetime.utcnow().isoformat()
                 await websocket.send_json({"type": "pong"})
 
             elif message_type == "pong":
                 # Update last_pong on pong response
                 if connection_id in manager.connections:
-                    manager.connections[connection_id]["last_pong"] = (
-                        datetime.utcnow().isoformat()
-                    )
+                    manager.connections[connection_id][
+                        "last_pong"
+                    ] = datetime.utcnow().isoformat()
 
             else:
                 # Unknown message type

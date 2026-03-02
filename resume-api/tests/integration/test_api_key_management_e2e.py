@@ -11,7 +11,7 @@ Tests cover:
 
 import pytest
 from httpx import AsyncClient
-from datetime import datetime, timedelta, timezone
+from datetime import datetime
 from database import APIKey
 
 

@@ -7,7 +7,7 @@ from missing configuration.
 
 import os
 import sys
-from typing import List, Set
+from typing import List
 
 
 class MissingSecretError(Exception):

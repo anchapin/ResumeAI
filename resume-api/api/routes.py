@@ -42,7 +42,6 @@ from lib.cli import (  # noqa: E402
 )
 from lib.utils.validators import (  # noqa: E402
     validate_resume_data,
-    escape_latex,
     validate_file_upload,
     validate_file_content,
 )

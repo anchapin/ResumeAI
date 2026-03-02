@@ -11,13 +11,11 @@ Tests cover:
 """
 
 import pytest
-import secrets
 from datetime import datetime, timezone, timedelta
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 from fastapi import HTTPException, status
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from database import User, GitHubOAuthState, GitHubConnection
+from database import GitHubOAuthState, GitHubConnection
 from routes.github import (
     generate_oauth_state,
     build_github_authorization_url,
@@ -309,7 +307,7 @@ class TestOAuthSecurityValidations:
         # Here we just verify that the function signature includes secret
         import inspect
 
-        sig = inspect.signature(exchange_code_for_token)
+        inspect.signature(exchange_code_for_token)
         # Function should use settings.github_client_secret internally
         assert "github_client_secret" in str(settings.__dict__)
 
