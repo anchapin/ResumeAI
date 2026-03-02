@@ -37,13 +37,23 @@ import StorageWarning from './components/StorageWarning';
 import SkipNavigation from './components/SkipNavigation';
 
 /**
- * Loading fallback for code-split chunks
+ * Loading fallback for code-split chunks - Uses skeleton instead of spinner
  */
 const PageLoader = () => (
-  <div className="flex items-center justify-center min-h-screen bg-[#f6f6f8]">
-    <div className="flex items-center gap-3">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
-      <span className="text-slate-600 font-medium">Loading page...</span>
+  <div className="flex-1 min-h-screen bg-[#f6f6f8] pl-72">
+    <header className="h-16 flex items-center justify-between px-8 bg-white/80 backdrop-blur-sm sticky top-0 z-10 border-b border-slate-200">
+      <div className="h-7 w-48 bg-slate-200 rounded animate-pulse"></div>
+      <div className="flex items-center gap-3">
+        <div className="h-10 w-10 bg-slate-200 rounded-full animate-pulse"></div>
+      </div>
+    </header>
+    <div className="p-8 space-y-6">
+      <div className="h-32 bg-slate-200 rounded-xl animate-pulse"></div>
+      <div className="space-y-4">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="h-16 bg-slate-200 rounded-lg animate-pulse"></div>
+        ))}
+      </div>
     </div>
   </div>
 );
@@ -63,6 +73,7 @@ function App() {
   const setSaveStatus = useStore((state) => state.setSaveStatus);
   const resumeError = useStore((state) => state.resumeError);
   const setResumeError = useStore((state) => state.setResumeError);
+  const resumeError = useStore((state) => state.resumeError);
   const showShortcuts = useStore((state) => state.showShortcuts);
   const setShowShortcuts = useStore((state) => state.setShowShortcuts);
   const theme = useStore((state) => state.theme);
@@ -119,9 +130,23 @@ function App() {
     });
   }, [loadResume]);
 
+  /**
+   * Helper function to get user-friendly error messages
+   */
   const getStorageErrorMessage = (): string => {
     return 'Failed to save data. Please try again.';
   };
+
+  // Auto-dismiss resumeError after 5 seconds
+  useEffect(() => {
+    if (!resumeError) return;
+
+    const timer = setTimeout(() => {
+      setResumeError(null);
+    }, 5000);
+
+    return () => clearTimeout(timer);
+  }, [resumeError, setResumeError]);
 
   // Save resume data to localStorage whenever it changes
   useEffect(() => {
@@ -152,9 +177,6 @@ function App() {
     return () => clearTimeout(handler);
   }, [resumeData, isLoaded, setSaveStatus]);
 
-  /**
-   * Helper function to get user-friendly error messages
-   */
   const handleLogin = async (email: string, password: string) => {
     clearAuthError();
     const result = await login(email, password);
@@ -220,13 +242,17 @@ function App() {
       <ErrorDisplay error={currentError} onDismiss={dismissError} />
 
       {showShortcuts && <KeyboardShortcutsHelp onClose={() => setShowShortcuts(false)} />}
-      {storageError && (
+      {(storageError || resumeError) && (
         <div className="fixed top-4 right-4 z-50 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg shadow-lg flex items-center gap-2 animate-in slide-in-from-top-2 fade-in">
           <span className="material-symbols-outlined text-red-500">error</span>
-          <span className="text-sm font-semibold">{storageError}</span>
+          <span className="text-sm font-semibold">{storageError || resumeError}</span>
           <button
-            onClick={() => setStorageError(null)}
+            onClick={() => {
+              setStorageError(null);
+              setResumeError(null);
+            }}
             className="ml-2 text-red-500 hover:text-red-700"
+            aria-label="close"
           >
             <span className="material-symbols-outlined text-[20px]">close</span>
           </button>
@@ -393,27 +419,6 @@ function App() {
             }
           />
           <Route
-            path="/bulk"
-            element={
-              isAuthenticated ? (
-                <Suspense fallback={<PageLoader />}>
-                  <div className="flex min-h-screen bg-[#f6f6f8]">
-                    <Sidebar
-                      currentRoute={getCurrentRouteFromPath()}
-                      onShowShortcuts={() => setShowShortcuts(true)}
-                      isAuthenticated={isAuthenticated}
-                      username={user?.username}
-                      onLogout={handleLogout}
-                    />
-                    <ResumeManagement />
-                  </div>
-                </Suspense>
-              ) : (
-                <Navigate to="/login" replace />
-              )
-            }
-          />
-          <Route
             path="/billing"
             element={
               isAuthenticated ? (
@@ -490,6 +495,27 @@ function App() {
                       onLogout={handleLogout}
                     />
                     <Invoices />
+                  </div>
+                </Suspense>
+              ) : (
+                <Navigate to="/login" replace />
+              )
+            }
+          />
+          <Route
+            path="/bulk"
+            element={
+              isAuthenticated ? (
+                <Suspense fallback={<PageLoader />}>
+                  <div className="flex min-h-screen bg-[#f6f6f8]">
+                    <Sidebar
+                      currentRoute={getCurrentRouteFromPath()}
+                      onShowShortcuts={() => setShowShortcuts(true)}
+                      isAuthenticated={isAuthenticated}
+                      username={user?.username}
+                      onLogout={handleLogout}
+                    />
+                    <ResumeManagement />
                   </div>
                 </Suspense>
               ) : (
