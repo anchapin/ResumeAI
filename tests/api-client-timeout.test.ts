@@ -75,7 +75,7 @@ describe('API Client with Timeout', () => {
   describe('generatePDF', () => {
     it('should use PDF_GENERATION timeout', async () => {
       const { fetchWithTimeout } = await import('../utils/fetch-timeout');
-      const mockResponse = new Response(new Blob(), { status: 200 });
+      const mockResponse = new Response('PDF Content', { status: 200 });
       vi.mocked(fetchWithTimeout).mockResolvedValueOnce(mockResponse);
 
       await generatePDF(mockResumeData, 'modern');

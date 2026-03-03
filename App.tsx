@@ -45,7 +45,7 @@ const Plans = lazy(() => import('./pages/Plans'));
 const PaymentMethods = lazy(() => import('./pages/PaymentMethods'));
 const Invoices = lazy(() => import('./pages/Invoices'));
 
-import { saveResumeData } from './utils/storage';
+import { saveResumeData, StorageError, getStorageErrorMessage } from './utils/storage';
 import ErrorBoundary from './components/ErrorBoundary';
 import ErrorDisplay from './components/ErrorDisplay';
 import { useAuth } from './hooks/useAuth';
@@ -106,7 +106,7 @@ function App() {
   // Sync store-level resumeError to global errorHandler
   useEffect(() => {
     if (resumeError) {
-      errorHandler.handleError(new Error(resumeError), { type: 'resume_loading' });
+      errorHandler.handleError(new Error(resumeError), { type: ErrorType.STORAGE });
       setResumeError(null);
     }
   }, [resumeError, setResumeError]);
@@ -114,7 +114,10 @@ function App() {
   // Load resume data from localStorage on mount and check security
   useEffect(() => {
     loadResume().catch((error) => {
-      errorHandler.handleError(error, { context: 'initial_load' });
+      errorHandler.handleError(error, {
+        context: 'initial_load',
+        type: error instanceof StorageError ? ErrorType.STORAGE : ErrorType.UNKNOWN,
+      });
     });
   }, [loadResume]);
 
@@ -124,9 +127,9 @@ function App() {
 
     setSaveStatus('saving');
 
-    const handler = setTimeout(() => {
+    const handler = setTimeout(async () => {
       try {
-        saveResumeData(resumeData);
+        await saveResumeData(resumeData);
         setSaveStatus('saved');
         if (import.meta.env.DEV) {
           console.log('Resume data saved to localStorage');
@@ -135,9 +138,12 @@ function App() {
         setTimeout(() => setSaveStatus('idle'), 3000);
       } catch (error) {
         setSaveStatus('error');
-        errorHandler.handleError(error, {
+        const storageError = error instanceof StorageError ? error : null;
+        const message = storageError ? getStorageErrorMessage(storageError) : 'Failed to save data';
+
+        errorHandler.handleError(new Error(message), {
           context: 'auto_save',
-          type: ErrorType.SERVER, // Storage errors are treated as server/local-server errors
+          type: ErrorType.STORAGE,
         });
 
         setTimeout(() => setSaveStatus('idle'), 5000);
@@ -194,7 +200,7 @@ function App() {
                 <Suspense fallback={<DashboardSkeleton />}>
                   <div className="flex min-h-screen bg-[#f6f6f8]">
                     <nav id="main-nav">
-                      <Sidebar />
+                      <Sidebar onShowShortcuts={setShowShortcuts} />
                     </nav>
                     <main id="main-content" tabIndex={-1}>
                       <Dashboard />
@@ -212,7 +218,7 @@ function App() {
               isAuthenticated ? (
                 <Suspense fallback={<JobApplicationsSkeleton />}>
                   <div className="flex min-h-screen bg-[#f6f6f8]">
-                    <Sidebar />
+                    <Sidebar onShowShortcuts={setShowShortcuts} />
                     <JobApplications />
                   </div>
                 </Suspense>
@@ -251,7 +257,7 @@ function App() {
               isAuthenticated ? (
                 <Suspense fallback={<PageLoader />}>
                   <div className="flex min-h-screen bg-[#f6f6f8]">
-                    <Sidebar />
+                    <Sidebar onShowShortcuts={setShowShortcuts} />
                     <SalaryResearch />
                   </div>
                 </Suspense>
@@ -278,7 +284,7 @@ function App() {
               isAuthenticated ? (
                 <Suspense fallback={<SettingsSkeleton />}>
                   <div className="flex min-h-screen bg-[#f6f6f8]">
-                    <Sidebar />
+                    <Sidebar onShowShortcuts={setShowShortcuts} />
                     <Settings />
                   </div>
                 </Suspense>
@@ -293,7 +299,7 @@ function App() {
               isAuthenticated ? (
                 <Suspense fallback={<PageLoader />}>
                   <div className="flex min-h-screen bg-[#f6f6f8]">
-                    <Sidebar />
+                    <Sidebar onShowShortcuts={setShowShortcuts} />
                     <Billing />
                   </div>
                 </Suspense>
@@ -308,7 +314,7 @@ function App() {
               isAuthenticated ? (
                 <Suspense fallback={<PageLoader />}>
                   <div className="flex min-h-screen bg-[#f6f6f8]">
-                    <Sidebar />
+                    <Sidebar onShowShortcuts={setShowShortcuts} />
                     <Plans />
                   </div>
                 </Suspense>
@@ -323,7 +329,7 @@ function App() {
               isAuthenticated ? (
                 <Suspense fallback={<PageLoader />}>
                   <div className="flex min-h-screen bg-[#f6f6f8]">
-                    <Sidebar />
+                    <Sidebar onShowShortcuts={setShowShortcuts} />
                     <PaymentMethods />
                   </div>
                 </Suspense>
@@ -338,7 +344,7 @@ function App() {
               isAuthenticated ? (
                 <Suspense fallback={<PageLoader />}>
                   <div className="flex min-h-screen bg-[#f6f6f8]">
-                    <Sidebar />
+                    <Sidebar onShowShortcuts={setShowShortcuts} />
                     <Invoices />
                   </div>
                 </Suspense>
@@ -353,7 +359,7 @@ function App() {
               isAuthenticated ? (
                 <Suspense fallback={<ResumeManagementSkeleton />}>
                   <div className="flex min-h-screen bg-[#f6f6f8]">
-                    <Sidebar />
+                    <Sidebar onShowShortcuts={setShowShortcuts} />
                     <ResumeManagement />
                   </div>
                 </Suspense>
