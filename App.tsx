@@ -1,20 +1,43 @@
 import React, { useEffect, lazy, Suspense } from 'react';
 import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
-import Dashboard from './pages/Dashboard';
+import { registerPrefetch, prefetch } from './utils/prefetch';
 
 // Lazy load page components for better code splitting
-const Editor = lazy(() => import('./pages/Editor'));
-const Workspace = lazy(() => import('./pages/Workspace'));
-const JobApplications = lazy(() => import('./pages/JobApplications'));
-const Settings = lazy(() => import('./pages/Settings'));
-const ResumeManagement = lazy(() => import('./pages/ResumeManagement'));
-const SalaryResearch = lazy(() =>
-  import('./pages/SalaryResearch').then((m) => ({ default: m.SalaryResearch })),
-);
-const InterviewPractice = lazy(() => import('./pages/InterviewPractice'));
-const Login = lazy(() => import('./pages/Login'));
-const Register = lazy(() => import('./pages/Register'));
+const dashboardImport = () => import('./pages/Dashboard');
+const editorImport = () => import('./pages/Editor');
+const workspaceImport = () => import('./pages/Workspace');
+const appsImport = () => import('./pages/JobApplications');
+const settingsImport = () => import('./pages/Settings');
+const bulkImport = () => import('./pages/ResumeManagement');
+const salaryImport = () =>
+  import('./pages/SalaryResearch').then((m) => ({ default: m.SalaryResearch }));
+const interviewImport = () => import('./pages/InterviewPractice');
+const loginImport = () => import('./pages/Login');
+const registerImport = () => import('./pages/Register');
+
+const Dashboard = lazy(dashboardImport);
+const Editor = lazy(editorImport);
+const Workspace = lazy(workspaceImport);
+const JobApplications = lazy(appsImport);
+const Settings = lazy(settingsImport);
+const ResumeManagement = lazy(bulkImport);
+const SalaryResearch = lazy(salaryImport);
+const InterviewPractice = lazy(interviewImport);
+const Login = lazy(loginImport);
+const Register = lazy(registerImport);
+
+// Register prefetches
+registerPrefetch('dashboard', dashboardImport);
+registerPrefetch('editor', editorImport);
+registerPrefetch('workspace', workspaceImport);
+registerPrefetch('applications', appsImport);
+registerPrefetch('settings', settingsImport);
+registerPrefetch('bulk', bulkImport);
+registerPrefetch('salary', salaryImport);
+registerPrefetch('interview', interviewImport);
+registerPrefetch('login', loginImport);
+registerPrefetch('register', registerImport);
 const NotFound = lazy(() => import('./pages/NotFound'));
 const Billing = lazy(() => import('./pages/Billing'));
 const Plans = lazy(() => import('./pages/Plans'));
@@ -289,20 +312,22 @@ function App() {
             path="/dashboard"
             element={
               isAuthenticated ? (
-                <div className="flex min-h-screen bg-[#f6f6f8]">
-                  <nav id="main-nav">
-                    <Sidebar
-                      currentRoute={getCurrentRouteFromPath()}
-                      onShowShortcuts={() => setShowShortcuts(true)}
-                      isAuthenticated={isAuthenticated}
-                      username={user?.username}
-                      onLogout={handleLogout}
-                    />
-                  </nav>
-                  <main id="main-content" tabIndex={-1}>
-                    <Dashboard />
-                  </main>
-                </div>
+                <Suspense fallback={<PageLoader />}>
+                  <div className="flex min-h-screen bg-[#f6f6f8]">
+                    <nav id="main-nav">
+                      <Sidebar
+                        currentRoute={getCurrentRouteFromPath()}
+                        onShowShortcuts={() => setShowShortcuts(true)}
+                        isAuthenticated={isAuthenticated}
+                        username={user?.username}
+                        onLogout={handleLogout}
+                      />
+                    </nav>
+                    <main id="main-content" tabIndex={-1}>
+                      <Dashboard />
+                    </main>
+                  </div>
+                </Suspense>
               ) : (
                 <Navigate to="/login" replace />
               )
