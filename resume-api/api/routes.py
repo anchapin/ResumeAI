@@ -63,7 +63,13 @@ TEMPLATES_DIR = LIB_DIR / "templates"
 router = APIRouter(prefix="", tags=["Resumes"])
 
 # Initialize managers
-variant_manager = VariantManager(str(TEMPLATES_DIR))
+_variant_manager = None
+
+def get_variant_manager():
+    global _variant_manager
+    if _variant_manager is None:
+        _variant_manager = VariantManager(str(TEMPLATES_DIR))
+    return _variant_manager
 
 
 @router.get("/health", tags=["Health"])
@@ -289,11 +295,9 @@ async def list_variants(
         if tags:
             tags_list = [t.strip() for t in tags.split(",") if t.strip()]
 
-        variant_manager = VariantManager()
-
         # Use filter if any filter params provided, otherwise get all with metadata
         if any([search, tags_list, category, industry, layout, color_theme]):
-            filtered_variants = variant_manager.filter_variants(
+            filtered_variants = get_variant_manager().filter_variants(
                 search=search,
                 tags=tags_list,
                 category=category,
@@ -303,10 +307,10 @@ async def list_variants(
             )
             variant_metadata = [VariantMetadata(**v) for v in filtered_variants]
         else:
-            variants = variant_manager.list_variants()
+            variants = get_variant_manager().list_variants()
             variant_metadata = []
             for variant in variants:
-                metadata = variant_manager.get_variant_metadata(variant)
+                metadata = get_variant_manager().get_variant_metadata(variant)
                 variant_metadata.append(VariantMetadata(**metadata))
 
         result = VariantsResponse(variants=variant_metadata)

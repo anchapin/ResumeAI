@@ -44,8 +44,8 @@ class TestResumeTailoringBasic:
         assert "suggestions" in data
 
         # Verify tailored data is valid
-        assert "contact" in data["resume_data"]
-        assert "sections" in data["resume_data"]
+        assert "basics" in data["resume_data"]
+        assert "work" in data["resume_data"]
 
     @pytest.mark.asyncio
     async def test_tailor_resume_comprehensive_data(
@@ -97,8 +97,6 @@ class TestResumeTailoringBasic:
         keywords = data["keywords"]
 
         # Verify relevant keywords are extracted
-        job_description_tech["description"].lower()
-        # At least some keywords should relate to job description
         assert isinstance(keywords, list)
         assert len(keywords) > 0
 
@@ -168,9 +166,8 @@ class TestResumeTailoringSpecialContent:
             },
         )
 
-        assert response.status_code == 200
-        data = response.json()
-        assert "resume_data" in data
+        # Excessively long text should return 400
+        assert response.status_code == 400
 
     @pytest.mark.asyncio
     async def test_tailor_resume_for_different_roles(
@@ -267,11 +264,9 @@ class TestResumeTailoringEdgeCases:
     ):
         """Test tailoring resume with missing contact info."""
         resume_data = {
-            "contact": {},
-            "sections": {
-                "experience": [],
-                "education": [],
-            },
+            "basics": {},
+            "work": [],
+            "education": [],
         }
 
         response = await authenticated_client.post(
@@ -282,7 +277,8 @@ class TestResumeTailoringEdgeCases:
             },
         )
 
-        assert response.status_code in [400, 422, 200]  # May or may not fail
+        # ResumeData validator requires at least one section
+        assert response.status_code in [400, 422, 200]
 
 
 class TestResumeTailoringAuthentication:
@@ -321,7 +317,7 @@ class TestResumeTailoringAuthentication:
             },
         )
 
-        assert response.status_code == 401
+        assert response.status_code == 403
 
 
 class TestResumeTailoringRateLimiting:

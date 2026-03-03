@@ -258,10 +258,12 @@ app.add_middleware(MonitoringMiddleware)
 app.add_middleware(SecurityHeadersMiddleware)
 
 # Add CSRF middleware
-app.add_middleware(CSRFMiddleware)
+if getattr(settings, "enable_csrf", True):
+    app.add_middleware(CSRFMiddleware)
 
 # Add request signing middleware
-app.add_middleware(RequestSigningMiddleware)
+if getattr(settings, "enable_request_signing", True):
+    app.add_middleware(RequestSigningMiddleware)
 
 # Configure CORS
 app.add_middleware(

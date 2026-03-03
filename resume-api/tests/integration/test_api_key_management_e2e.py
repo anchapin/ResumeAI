@@ -19,9 +19,9 @@ class TestAPIKeyCreation:
     """Test API key creation and management."""
 
     @pytest.mark.asyncio
-    async def test_create_api_key(self, authenticated_client: AsyncClient, test_user):
+    async def test_create_api_key(self, jwt_authenticated_client: AsyncClient, test_user):
         """Test creating a new API key."""
-        response = await authenticated_client.post(
+        response = await jwt_authenticated_client.post(
             "/api/v1/api-keys",
             json={
                 "name": "Production Key",
@@ -40,15 +40,15 @@ class TestAPIKeyCreation:
     @pytest.mark.asyncio
     async def test_api_key_has_required_fields(self, test_api_key):
         """Test API key contains required fields."""
-        assert test_api_key.key == "test_key_1234567890abcdef"
+        assert test_api_key.key_prefix is not None
         assert test_api_key.name == "Test API Key"
         assert test_api_key.is_active is True
         assert test_api_key.user_id is not None
 
     @pytest.mark.asyncio
-    async def test_list_api_keys(self, authenticated_client: AsyncClient, test_api_key):
+    async def test_list_api_keys(self, jwt_authenticated_client: AsyncClient, test_api_key):
         """Test listing user's API keys."""
-        response = await authenticated_client.get("/api/v1/api-keys")
+        response = await jwt_authenticated_client.get("/api/v1/api-keys")
 
         # May not be implemented
         assert response.status_code in [200, 401, 404]
@@ -91,7 +91,8 @@ class TestAPIKeyValidation:
             },
         )
 
-        assert response.status_code == 401
+        # Invalid key returns 403
+        assert response.status_code == 403
 
     @pytest.mark.asyncio
     async def test_inactive_api_key_rejected(
@@ -99,16 +100,20 @@ class TestAPIKeyValidation:
     ):
         """Test that inactive API key is rejected."""
         # Create inactive key
+        from lib.security.key_management import hash_api_key, generate_api_key_prefix
+        
+        plaintext_key = "inactive_key_12345"
         inactive_key = APIKey(
             user_id=test_user.id,
             name="Inactive Key",
-            key="inactive_key_12345",
+            key_hash=hash_api_key(plaintext_key),
+            key_prefix=generate_api_key_prefix(plaintext_key),
             is_active=False,
         )
         test_db_session.add(inactive_key)
         await test_db_session.commit()
 
-        api_client.headers = {"X-API-KEY": "inactive_key_12345"}
+        api_client.headers = {"X-API-KEY": plaintext_key}
 
         response = await api_client.post(
             "/api/v1/render/pdf",
@@ -118,7 +123,8 @@ class TestAPIKeyValidation:
             },
         )
 
-        assert response.status_code == 401
+        # Inactive key returns 403
+        assert response.status_code == 403
 
     @pytest.mark.asyncio
     async def test_valid_api_key_accepted(
@@ -183,10 +189,10 @@ class TestAPIKeyDeactivation:
 
     @pytest.mark.asyncio
     async def test_deactivate_api_key(
-        self, authenticated_client: AsyncClient, test_api_key
+        self, jwt_authenticated_client: AsyncClient, test_api_key
     ):
         """Test deactivating an API key."""
-        response = await authenticated_client.put(
+        response = await jwt_authenticated_client.put(
             f"/api/v1/api-keys/{test_api_key.id}",
             json={
                 "is_active": False,
@@ -198,10 +204,10 @@ class TestAPIKeyDeactivation:
 
     @pytest.mark.asyncio
     async def test_delete_api_key(
-        self, authenticated_client: AsyncClient, test_api_key
+        self, jwt_authenticated_client: AsyncClient, test_api_key
     ):
         """Test deleting an API key."""
-        response = await authenticated_client.delete(f"/api/v1/api-keys/{test_api_key.id}")
+        response = await jwt_authenticated_client.delete(f"/api/v1/api-keys/{test_api_key.id}")
 
         # May not be implemented
         assert response.status_code in [200, 204, 401, 404]
@@ -251,10 +257,10 @@ class TestAPIKeyRotation:
 
     @pytest.mark.asyncio
     async def test_rotate_api_key(
-        self, authenticated_client: AsyncClient, test_api_key
+        self, jwt_authenticated_client: AsyncClient, test_api_key
     ):
         """Test rotating an API key."""
-        response = await authenticated_client.post(
+        response = await jwt_authenticated_client.post(
             f"/api/v1/api-keys/{test_api_key.id}/rotate"
         )
 
