@@ -64,7 +64,7 @@ function isStorageAvailable(): boolean {
  * @param data - The resume data to save
  * @throws StorageError if saving fails
  */
-export function saveResumeData(data: SimpleResumeData): void {
+export async function saveResumeData(data: SimpleResumeData): Promise<void> {
   if (!isStorageAvailable()) {
     throw new StorageError(
       'localStorage is not available in this environment',
@@ -81,7 +81,7 @@ export function saveResumeData(data: SimpleResumeData): void {
       const quotaCheck = localStorage.getItem('__quota_check_needed__');
       if (quotaCheck === null) {
         // Only check quota on first save or periodically
-        StorageManager.setItem('master_profile', data, {
+        await StorageManager.setItem('master_profile', data, {
           compress: true,
           checkQuota: false, // We'll handle quota manually
         });
@@ -166,6 +166,24 @@ export function clearResumeData(): void {
     localStorage.removeItem(STORAGE_KEY);
   } catch (error) {
     throw new StorageError('Failed to clear resume data', StorageErrorType.UNKNOWN, error);
+  }
+}
+
+/**
+ * Gets a user-friendly error message for a StorageError
+ */
+export function getStorageErrorMessage(error: StorageError): string {
+  switch (error.type) {
+    case StorageErrorType.QUOTA_EXCEEDED:
+      return 'Storage full. Please clear some browser data.';
+    case StorageErrorType.PARSE_ERROR:
+      return 'Data corrupted. Using default resume.';
+    case StorageErrorType.ACCESS_DENIED:
+      return "Storage access denied. Changes won't be saved.";
+    case StorageErrorType.NOT_AVAILABLE:
+      return "Storage not available. Changes won't be saved.";
+    default:
+      return 'Failed to save data. Please try again.';
   }
 }
 

@@ -185,11 +185,12 @@ class GlobalErrorHandlerService {
     }
 
     // Default unknown error
-    const messageMap = getErrorMessageByType(ErrorType.UNKNOWN);
+    const errorType = additionalContext?.type || ErrorType.UNKNOWN;
+    const messageMap = getErrorMessageByType(errorType);
     return {
-      type: ErrorType.UNKNOWN,
+      type: errorType as ErrorType,
       message: error?.message || 'An unknown error occurred',
-      userMessage: messageMap.userMessage,
+      userMessage: error?.message || messageMap.userMessage,
       originalError: error instanceof Error ? error : new Error(String(error)),
       context: additionalContext,
       timestamp,

@@ -96,7 +96,7 @@ const Login: React.FC<LoginProps> = ({
             />
 
             <Button type="submit" isLoading={isLoading} className="w-full py-3 h-12">
-              Sign In
+              {isLoading ? 'Signing in...' : 'Sign In'}
             </Button>
           </form>
 

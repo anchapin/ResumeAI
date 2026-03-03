@@ -45,7 +45,7 @@ const Plans = lazy(() => import('./pages/Plans'));
 const PaymentMethods = lazy(() => import('./pages/PaymentMethods'));
 const Invoices = lazy(() => import('./pages/Invoices'));
 
-import { saveResumeData } from './utils/storage';
+import { saveResumeData, StorageError, getStorageErrorMessage } from './utils/storage';
 import ErrorBoundary from './components/ErrorBoundary';
 import ErrorDisplay from './components/ErrorDisplay';
 import { useAuth } from './hooks/useAuth';
@@ -59,28 +59,21 @@ import { DEFAULT_SHORTCUTS, registerShortcuts } from './utils/shortcuts';
 import StorageWarning from './components/StorageWarning';
 import SkipNavigation from './components/SkipNavigation';
 import OfflineIndicator from './components/OfflineIndicator';
+import { errorHandler, ErrorType } from './utils/errorHandler';
+
+// Skeleton components
+import AppSkeleton from './components/skeletons/AppSkeleton';
+import DashboardSkeleton from './components/skeletons/DashboardSkeleton';
+import EditorSkeleton from './components/skeletons/EditorSkeleton';
+import WorkspaceSkeleton from './components/skeletons/WorkspaceSkeleton';
+import JobApplicationsSkeleton from './components/skeletons/JobApplicationsSkeleton';
+import SettingsSkeleton from './components/skeletons/SettingsSkeleton';
+import ResumeManagementSkeleton from './components/skeletons/ResumeManagementSkeleton';
 
 /**
- * Loading fallback for code-split chunks - Uses skeleton instead of spinner
+ * Loading fallback for code-split chunks - Uses generic app shell skeleton
  */
-const PageLoader = () => (
-  <div className="flex-1 min-h-screen bg-[#f6f6f8] pl-72">
-    <header className="h-16 flex items-center justify-between px-8 bg-white/80 backdrop-blur-sm sticky top-0 z-10 border-b border-slate-200">
-      <div className="h-7 w-48 bg-slate-200 rounded animate-pulse"></div>
-      <div className="flex items-center gap-3">
-        <div className="h-10 w-10 bg-slate-200 rounded-full animate-pulse"></div>
-      </div>
-    </header>
-    <div className="p-8 space-y-6">
-      <div className="h-32 bg-slate-200 rounded-xl animate-pulse"></div>
-      <div className="space-y-4">
-        {[1, 2, 3].map((i) => (
-          <div key={i} className="h-16 bg-slate-200 rounded-lg animate-pulse"></div>
-        ))}
-      </div>
-    </div>
-  </div>
-);
+const PageLoader = () => <AppSkeleton />;
 
 /** Save status enum for tracking auto-save state */
 export type SaveStatus = 'idle' | 'saving' | 'saved' | 'error';
@@ -95,7 +88,6 @@ function App() {
   const showShortcuts = useStore((state) => state.showShortcuts);
   const setShowShortcuts = useStore((state) => state.setShowShortcuts);
   const globalLoading = useStore((state) => state.globalLoading);
-  const [storageError, setStorageError] = React.useState<string | null>(null);
 
   const { isAuthenticated } = useAuth();
 
@@ -111,31 +103,23 @@ function App() {
     });
   }, [showShortcuts, setShowShortcuts]);
 
-  // Auto-dismiss resumeError after 5 seconds
+  // Sync store-level resumeError to global errorHandler
   useEffect(() => {
     if (resumeError) {
-      const timer = setTimeout(() => {
-        setResumeError(null);
-      }, 5000);
-      return () => clearTimeout(timer);
+      errorHandler.handleError(new Error(resumeError), { type: ErrorType.STORAGE });
+      setResumeError(null);
     }
   }, [resumeError, setResumeError]);
 
   // Load resume data from localStorage on mount and check security
   useEffect(() => {
     loadResume().catch((error) => {
-      if (import.meta.env.DEV) {
-        console.error('Unexpected error loading resume data:', error);
-      }
+      errorHandler.handleError(error, {
+        context: 'initial_load',
+        type: error instanceof StorageError ? ErrorType.STORAGE : ErrorType.UNKNOWN,
+      });
     });
   }, [loadResume]);
-
-  /**
-   * Helper function to get user-friendly error messages
-   */
-  const getStorageErrorMessage = (): string => {
-    return 'Failed to save data. Please try again.';
-  };
 
   // Save resume data to localStorage whenever it changes
   useEffect(() => {
@@ -143,9 +127,9 @@ function App() {
 
     setSaveStatus('saving');
 
-    const handler = setTimeout(() => {
+    const handler = setTimeout(async () => {
       try {
-        saveResumeData(resumeData);
+        await saveResumeData(resumeData);
         setSaveStatus('saved');
         if (import.meta.env.DEV) {
           console.log('Resume data saved to localStorage');
@@ -154,10 +138,13 @@ function App() {
         setTimeout(() => setSaveStatus('idle'), 3000);
       } catch (error) {
         setSaveStatus('error');
-        const errorMessage = getStorageErrorMessage();
-        setStorageError(errorMessage);
+        const storageError = error instanceof StorageError ? error : null;
+        const message = storageError ? getStorageErrorMessage(storageError) : 'Failed to save data';
 
-        setTimeout(() => setStorageError(null), 5000);
+        errorHandler.handleError(new Error(message), {
+          context: 'auto_save',
+          type: ErrorType.STORAGE,
+        });
 
         setTimeout(() => setSaveStatus('idle'), 5000);
       }
@@ -180,35 +167,14 @@ function App() {
         </div>
       )}
 
-      {/* Global error display */}
+      {/* Global error display - handles all errors unified */}
       <ErrorDisplay error={currentError} onDismiss={dismissError} />
 
       {showShortcuts && <KeyboardShortcutsHelp onClose={() => setShowShortcuts(false)} />}
-      {(storageError || resumeError) && (
-        <div className="fixed top-4 right-4 z-50 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg shadow-lg flex items-center gap-2 animate-in slide-in-from-top-2 fade-in">
-          <span className="material-symbols-outlined text-red-500">error</span>
-          <span className="text-sm font-semibold">{storageError || resumeError}</span>
-          <button
-            onClick={() => {
-              setStorageError(null);
-              setResumeError(null);
-            }}
-            className="ml-2 text-red-500 hover:text-red-700"
-            aria-label="close"
-          >
-            <span className="material-symbols-outlined text-[20px]">close</span>
-          </button>
-        </div>
-      )}
       <StorageWarning />
       <OfflineIndicator />
       {!isLoaded ? (
-        <div className="min-h-screen flex items-center justify-center bg-[#f6f6f8]">
-          <div className="flex items-center gap-3">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
-            <span className="text-slate-600 font-medium">Loading...</span>
-          </div>
-        </div>
+        <AppSkeleton />
       ) : (
         <Routes>
           <Route
@@ -231,10 +197,10 @@ function App() {
             path="/dashboard"
             element={
               isAuthenticated ? (
-                <Suspense fallback={<PageLoader />}>
+                <Suspense fallback={<DashboardSkeleton />}>
                   <div className="flex min-h-screen bg-[#f6f6f8]">
                     <nav id="main-nav">
-                      <Sidebar />
+                      <Sidebar onShowShortcuts={setShowShortcuts} />
                     </nav>
                     <main id="main-content" tabIndex={-1}>
                       <Dashboard />
@@ -250,9 +216,9 @@ function App() {
             path="/applications"
             element={
               isAuthenticated ? (
-                <Suspense fallback={<PageLoader />}>
+                <Suspense fallback={<JobApplicationsSkeleton />}>
                   <div className="flex min-h-screen bg-[#f6f6f8]">
-                    <Sidebar />
+                    <Sidebar onShowShortcuts={setShowShortcuts} />
                     <JobApplications />
                   </div>
                 </Suspense>
@@ -265,7 +231,7 @@ function App() {
             path="/editor"
             element={
               isAuthenticated ? (
-                <Suspense fallback={<PageLoader />}>
+                <Suspense fallback={<EditorSkeleton />}>
                   <Editor />
                 </Suspense>
               ) : (
@@ -277,7 +243,7 @@ function App() {
             path="/workspace"
             element={
               isAuthenticated ? (
-                <Suspense fallback={<PageLoader />}>
+                <Suspense fallback={<WorkspaceSkeleton />}>
                   <Workspace />
                 </Suspense>
               ) : (
@@ -291,7 +257,7 @@ function App() {
               isAuthenticated ? (
                 <Suspense fallback={<PageLoader />}>
                   <div className="flex min-h-screen bg-[#f6f6f8]">
-                    <Sidebar />
+                    <Sidebar onShowShortcuts={setShowShortcuts} />
                     <SalaryResearch />
                   </div>
                 </Suspense>
@@ -316,9 +282,9 @@ function App() {
             path="/settings"
             element={
               isAuthenticated ? (
-                <Suspense fallback={<PageLoader />}>
+                <Suspense fallback={<SettingsSkeleton />}>
                   <div className="flex min-h-screen bg-[#f6f6f8]">
-                    <Sidebar />
+                    <Sidebar onShowShortcuts={setShowShortcuts} />
                     <Settings />
                   </div>
                 </Suspense>
@@ -333,7 +299,7 @@ function App() {
               isAuthenticated ? (
                 <Suspense fallback={<PageLoader />}>
                   <div className="flex min-h-screen bg-[#f6f6f8]">
-                    <Sidebar />
+                    <Sidebar onShowShortcuts={setShowShortcuts} />
                     <Billing />
                   </div>
                 </Suspense>
@@ -348,7 +314,7 @@ function App() {
               isAuthenticated ? (
                 <Suspense fallback={<PageLoader />}>
                   <div className="flex min-h-screen bg-[#f6f6f8]">
-                    <Sidebar />
+                    <Sidebar onShowShortcuts={setShowShortcuts} />
                     <Plans />
                   </div>
                 </Suspense>
@@ -363,7 +329,7 @@ function App() {
               isAuthenticated ? (
                 <Suspense fallback={<PageLoader />}>
                   <div className="flex min-h-screen bg-[#f6f6f8]">
-                    <Sidebar />
+                    <Sidebar onShowShortcuts={setShowShortcuts} />
                     <PaymentMethods />
                   </div>
                 </Suspense>
@@ -378,7 +344,7 @@ function App() {
               isAuthenticated ? (
                 <Suspense fallback={<PageLoader />}>
                   <div className="flex min-h-screen bg-[#f6f6f8]">
-                    <Sidebar />
+                    <Sidebar onShowShortcuts={setShowShortcuts} />
                     <Invoices />
                   </div>
                 </Suspense>
@@ -391,9 +357,9 @@ function App() {
             path="/bulk"
             element={
               isAuthenticated ? (
-                <Suspense fallback={<PageLoader />}>
+                <Suspense fallback={<ResumeManagementSkeleton />}>
                   <div className="flex min-h-screen bg-[#f6f6f8]">
-                    <Sidebar />
+                    <Sidebar onShowShortcuts={setShowShortcuts} />
                     <ResumeManagement />
                   </div>
                 </Suspense>
