@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Button, Card } from '../components/ui';
 import {
   BillingPlan,
   listBillingPlans,
@@ -71,12 +72,9 @@ const Plans: React.FC = () => {
       <div className="flex-1 min-h-screen bg-[#f6f6f8] pl-72 flex items-center justify-center">
         <div className="text-center">
           <p className="text-slate-500 mb-4">{error}</p>
-          <button
-            onClick={loadPlans}
-            className="px-4 py-2 rounded-lg bg-primary-600 text-white font-bold hover:bg-primary-700 transition-colors"
-          >
+          <Button onClick={loadPlans} variant="primary">
             Retry
-          </button>
+          </Button>
         </div>
       </div>
     );
@@ -100,13 +98,12 @@ const Plans: React.FC = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
           {plans.map((plan) => (
-            <div
+            <Card
               key={plan.id}
-              className={`bg-white rounded-2xl border ${
-                plan.is_popular
-                  ? 'border-primary-500 shadow-lg shadow-primary-500/10'
-                  : 'border-slate-200'
-              } overflow-hidden relative`}
+              isSelected={plan.is_popular}
+              isHoverable={false}
+              padding="none"
+              className="overflow-hidden relative border-slate-200"
             >
               {plan.is_popular && (
                 <div className="bg-primary-600 text-white text-xs font-bold uppercase tracking-wider py-2 text-center">
@@ -182,28 +179,16 @@ const Plans: React.FC = () => {
                     </li>
                   ))}
                 </ul>
-                <button
+                <Button
                   onClick={() => handleSelectPlan(plan)}
-                  disabled={processingPlan === plan.name}
-                  className={`w-full py-3 px-4 rounded-xl font-bold transition-all ${
-                    plan.is_popular
-                      ? 'bg-primary-600 text-white hover:bg-primary-700 shadow-lg shadow-primary-600/30'
-                      : 'bg-slate-100 text-slate-900 hover:bg-slate-200'
-                  } disabled:opacity-50 disabled:cursor-not-allowed`}
+                  isLoading={processingPlan === plan.name}
+                  variant={plan.is_popular ? 'primary' : 'secondary'}
+                  className="w-full py-3 px-4 rounded-xl font-bold"
                 >
-                  {processingPlan === plan.name ? (
-                    <span className="flex items-center justify-center gap-2">
-                      <span className="material-symbols-outlined animate-spin text-[20px]">
-                        progress_activity
-                      </span>
-                      Processing...
-                    </span>
-                  ) : (
-                    'Get Started'
-                  )}
-                </button>
+                  Get Started
+                </Button>
               </div>
-            </div>
+            </Card>
           ))}
         </div>
       </div>
