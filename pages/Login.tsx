@@ -2,9 +2,23 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 
-const Login: React.FC = () => {
+interface LoginProps {
+  onLogin?: (email: string, password: string) => Promise<boolean>;
+  error?: string | null;
+  isLoading?: boolean;
+}
+
+const Login: React.FC<LoginProps> = ({
+  onLogin: propLogin,
+  error: propError,
+  isLoading: propIsLoading,
+}) => {
   const navigate = useNavigate();
-  const { login, isLoading, error, clearError } = useAuth();
+  const { login: hookLogin, isLoading: hookIsLoading, error: hookError, clearError } = useAuth();
+
+  const login = propLogin || hookLogin;
+  const isLoading = propIsLoading !== undefined ? propIsLoading : hookIsLoading;
+  const error = propError !== undefined ? propError : hookError;
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
