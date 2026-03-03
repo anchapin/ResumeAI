@@ -52,6 +52,8 @@ from database import (
 )
 from config.dependencies import AuthorizedAPIKey
 from lib.utils.validators import validate_resume_data
+from lib.utils.cache import cached
+from lib.utils.cache_integration import CacheInvalidationHook
 
 router = APIRouter(prefix="/advanced", tags=["Advanced"])
 
@@ -195,6 +197,7 @@ async def list_resumes(
     response_model=ResumeResponse,
     tags=["Resumes"],
 )
+@cached("resume:profile")
 async def get_resume(
     resume_id: int,
     db: AsyncSession = Depends(get_db),
@@ -319,6 +322,9 @@ async def update_resume(
         await db.commit()
         await db.refresh(resume)
 
+        # Invalidate cache
+        await CacheInvalidationHook({"resume", f"resume:{resume_id}"}).invalidate()
+
         # Get current version (latest by version_number)
         current_version_result = await db.execute(
             select(ResumeVersion)
@@ -371,6 +377,9 @@ async def delete_resume(
 
         await db.delete(resume)
         await db.commit()
+
+        # Invalidate cache
+        await CacheInvalidationHook({"resume", f"resume:{resume_id}"}).invalidate()
 
         return None
     except HTTPException:
@@ -555,6 +564,9 @@ async def restore_resume_version(
 
         await db.commit()
         await db.refresh(resume)
+
+        # Invalidate cache
+        await CacheInvalidationHook({"resume", f"resume:{resume_id}"}).invalidate()
 
         # Get current version (latest by version_number)
         current_version_result = await db.execute(
@@ -1051,6 +1063,7 @@ async def bulk_operations(
     response_model=UserSettingsResponse,
     tags=["Settings"],
 )
+@cached(config_name="user:settings")
 async def get_user_settings(
     user_identifier: str,
     db: AsyncSession = Depends(get_db),
@@ -1127,6 +1140,9 @@ async def update_user_settings(
 
         await db.commit()
         await db.refresh(settings)
+
+        # Invalidate cache
+        await CacheInvalidationHook({"user", "settings", f"user:{user_identifier}"}).invalidate()
 
         return UserSettingsResponse(
             keyboard_shortcuts_enabled=settings.keyboard_shortcuts_enabled,
