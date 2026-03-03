@@ -16,6 +16,10 @@ from config import settings
 from config.dependencies import get_current_user_ws
 from database import User
 from lib.utils.cache import get_cache_manager
+from monitoring import logging_config
+
+# Get logger
+logger = logging_config.get_logger(__name__)
 
 
 class WebSocketRateLimiter:
@@ -126,20 +130,23 @@ class ConnectionManager:
                         continue
 
                     # Check token expiration
-                    if "expires_at" in conn_data:
+                    if "expires_at" in conn_data and conn_data["expires_at"]:
                         expires_at = datetime.fromtimestamp(conn_data["expires_at"])
                         if now > expires_at:
                             connections_to_close.append((connection_id, "token_expired"))
 
                 for connection_id, reason in connections_to_close:
+                    logger.warning(
+                        f"Closing connection {connection_id} due to {reason}"
+                    )
                     await self.close_connection(
                         connection_id, reason=reason
                     )
 
             except asyncio.CancelledError:
                 break
-            except Exception:
-                pass
+            except Exception as e:
+                logger.error(f"Error in _monitor_connections: {e}")
 
     async def close_connection(self, connection_id: str, reason: str = "normal"):
         """Close a WebSocket connection with reason."""
@@ -179,6 +186,7 @@ class ConnectionManager:
 
         # Check rate limit
         if not await ws_rate_limiter.can_connect(user_id):
+            logger.warning(f"Rate limit exceeded for user_id={user_id}")
             await websocket.close(code=4003, reason="Too many connection attempts")
             raise WebSocketDisconnect(code=4003, reason="Too many connection attempts")
 
@@ -190,6 +198,7 @@ class ConnectionManager:
             self.user_connections[user_id] = set()
 
         if len(self.user_connections[user_id]) >= settings.ws_max_connections_per_user:
+            logger.warning(f"Too many connections for user_id={user_id}")
             await websocket.close(code=4003, reason="Too many connections")
             raise WebSocketDisconnect(code=4003, reason="Too many connections")
 
@@ -366,12 +375,23 @@ async def handle_websocket_connection(
     connection_id = None
     heartbeat_task = None
 
+    logger.info(
+        f"Incoming WebSocket connection attempt. room_id={room_id}, user_id={user_id}"
+    )
+
     try:
         # Start monitoring if not already running
         await manager.start_monitoring()
 
         # Connect to room
-        connection_id = await manager.connect(websocket, room_id, user_id, expires_at=expires_at)
+        connection_id = await manager.connect(
+            websocket, room_id, user_id, expires_at=expires_at
+        )
+
+        logger.info(
+            f"WebSocket connection established. room_id={room_id}, "
+            f"user_id={user_id}, connection_id={connection_id}"
+        )
 
         # Start heartbeat task
         heartbeat_task = asyncio.create_task(_heartbeat_loop(websocket, connection_id))
@@ -463,7 +483,7 @@ async def handle_websocket_connection(
                 )
 
     except WebSocketDisconnect:
-        pass  # Normal disconnect
+        logger.info(f"WebSocket disconnected. connection_id={connection_id}")
     except json.JSONDecodeError:
         try:
             await websocket.send_json(
@@ -475,6 +495,7 @@ async def handle_websocket_connection(
         except Exception:
             pass
     except Exception as e:
+        logger.error(f"WebSocket error. connection_id={connection_id}, error={e}")
         try:
             await websocket.send_json(
                 {
