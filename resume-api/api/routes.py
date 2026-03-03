@@ -11,9 +11,11 @@ import zipfile
 import hashlib
 from pathlib import Path
 
-from fastapi import APIRouter, HTTPException, Request, Response, UploadFile, File, status
-
+from fastapi import APIRouter, HTTPException, Request, Response, UploadFile, File, status, WebSocket, Depends
 from lib.utils.cache import get_cache_manager, cached
+from api.websocket import handle_websocket_connection
+from config.dependencies import get_current_user_ws
+from database import User
 from pydantic import BaseModel, Field
 from typing import List
 
@@ -1795,3 +1797,27 @@ async def generate_cover_letter(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Cover letter generation failed: {str(e)}",
         )
+
+
+# Test websocket
+@router.websocket("/test_ws")
+async def test_ws(websocket: WebSocket):
+    await websocket.accept()
+    await websocket.send_text("hello")
+    await websocket.close()
+
+
+# WebSocket endpoint for real-time collaboration
+@router.websocket("/ws/resumes/{resume_id}")
+async def websocket_resume(
+    websocket: WebSocket,
+    resume_id: str,
+    current_user_info: tuple[User, float] = Depends(get_current_user_ws),
+):
+    """
+    WebSocket endpoint for real-time collaboration on resumes.
+    """
+    user, expires_at = current_user_info
+    await handle_websocket_connection(
+        websocket, resume_id, str(user.id), expires_at=expires_at
+    )

@@ -13,36 +13,63 @@ from typing import Dict, Optional
 from fastapi import WebSocket, WebSocketDisconnect
 from datetime import datetime, timedelta
 from config import settings
+from config.dependencies import get_current_user_ws
+from database import User
+from lib.utils.cache import get_cache_manager
 
 
 class WebSocketRateLimiter:
-    """Rate limiter for WebSocket connections."""
+    """Rate limiter for WebSocket connections using Redis."""
 
     def __init__(self):
-        # Track connection attempts per user_id/IP
-        self._attempts: Dict[str, list] = defaultdict(list)
+        # Fallback for when Redis is not available
+        self._local_attempts: Dict[str, list] = defaultdict(list)
 
-    def can_connect(self, identifier: str) -> bool:
+    async def can_connect(self, identifier: str) -> bool:
         """Check if identifier can create a new connection."""
-        now = datetime.utcnow()
-        minute_ago = now - timedelta(minutes=1)
-
-        # Clean old attempts
-        if identifier in self._attempts:
-            self._attempts[identifier] = [
-                t for t in self._attempts[identifier] if t > minute_ago
-            ]
-
-        # Check rate limit
+        cache_mgr = get_cache_manager()
+        
         # Parse rate limit like "10/minute"
         rate_limit_str = settings.ws_rate_limit_connections
-        max_attempts = int(rate_limit_str.split("/")[0])
+        limit_parts = rate_limit_str.split("/")
+        max_attempts = int(limit_parts[0])
+        window_seconds = 60  # default to 1 minute
+        if len(limit_parts) > 1:
+            if "minute" in limit_parts[1]: window_seconds = 60
+            elif "hour" in limit_parts[1]: window_seconds = 3600
+            elif "second" in limit_parts[1]: window_seconds = 1
 
-        return len(self._attempts[identifier]) < max_attempts
+        if cache_mgr.backend_type == "redis":
+            try:
+                # Use Redis INCR and EXPIRE for atomic rate limiting
+                key = f"ws_ratelimit:{identifier}"
+                redis = cache_mgr.backend.redis
+                
+                count = await redis.incr(key)
+                if count == 1:
+                    await redis.expire(key, window_seconds)
+                
+                return count <= max_attempts
+            except Exception:
+                # Fallback to local on Redis error
+                pass
 
-    def record_attempt(self, identifier: str):
-        """Record a connection attempt."""
-        self._attempts[identifier].append(datetime.utcnow())
+        # In-memory fallback
+        now = datetime.utcnow()
+        window_ago = now - timedelta(seconds=window_seconds)
+
+        if identifier in self._local_attempts:
+            self._local_attempts[identifier] = [
+                t for t in self._local_attempts[identifier] if t > window_ago
+            ]
+
+        return len(self._local_attempts[identifier]) < max_attempts
+
+    async def record_attempt(self, identifier: str):
+        """Record a connection attempt (handled by can_connect in Redis)."""
+        cache_mgr = get_cache_manager()
+        if cache_mgr.backend_type != "redis":
+            self._local_attempts[identifier].append(datetime.utcnow())
 
 
 # Global rate limiter
@@ -151,12 +178,12 @@ class ConnectionManager:
         now = datetime.utcnow().isoformat()
 
         # Check rate limit
-        if not ws_rate_limiter.can_connect(user_id):
+        if not await ws_rate_limiter.can_connect(user_id):
             await websocket.close(code=4003, reason="Too many connection attempts")
             raise WebSocketDisconnect(code=4003, reason="Too many connection attempts")
 
         # Record connection attempt
-        ws_rate_limiter.record_attempt(user_id)
+        await ws_rate_limiter.record_attempt(user_id)
 
         # Check connection limit per user
         if user_id not in self.user_connections:
@@ -325,7 +352,7 @@ manager = ConnectionManager()
 
 
 async def handle_websocket_connection(
-    websocket: WebSocket, room_id: str, user_id: str = None
+    websocket: WebSocket, room_id: str, user_id: str = None, expires_at: float = None
 ):
     """
     Handle a WebSocket connection for real-time collaboration.
@@ -334,6 +361,7 @@ async def handle_websocket_connection(
         websocket: The WebSocket connection
         room_id: The room/resume ID to join
         user_id: Optional user identifier
+        expires_at: Optional token expiration timestamp
     """
     connection_id = None
     heartbeat_task = None
@@ -343,7 +371,7 @@ async def handle_websocket_connection(
         await manager.start_monitoring()
 
         # Connect to room
-        connection_id = await manager.connect(websocket, room_id, user_id)
+        connection_id = await manager.connect(websocket, room_id, user_id, expires_at=expires_at)
 
         # Start heartbeat task
         heartbeat_task = asyncio.create_task(_heartbeat_loop(websocket, connection_id))
