@@ -3,6 +3,7 @@ import { BarChart, Bar, ResponsiveContainer, XAxis, Tooltip, Cell } from 'rechar
 import { JobApplication } from '../types';
 import StatusBadge from '../components/StatusBadge';
 import DashboardSkeleton from '../components/skeletons/DashboardSkeleton';
+import { Button, Card } from '../components/ui';
 import {
   getApplicationStats,
   getApplicationFunnel,
@@ -90,12 +91,9 @@ const Dashboard: React.FC = () => {
       <div className="flex-1 min-h-screen bg-[#f6f6f8] pl-72 flex items-center justify-center">
         <div className="text-center">
           <p className="text-slate-500 mb-4">{error}</p>
-          <button
-            onClick={loadDashboardData}
-            className="px-4 py-2 rounded-lg bg-primary-600 text-white font-bold hover:bg-primary-700 transition-colors"
-          >
+          <Button onClick={loadDashboardData} variant="primary">
             Retry
-          </button>
+          </Button>
         </div>
       </div>
     );
@@ -110,10 +108,10 @@ const Dashboard: React.FC = () => {
       <header className="h-16 flex items-center justify-between px-8 bg-white/80 backdrop-blur-sm sticky top-0 z-10 border-b border-slate-200">
         <h2 className="text-slate-800 font-bold text-xl">Job Search Overview</h2>
         <div className="flex items-center gap-4">
-          <button className="p-2 text-slate-400 hover:text-slate-600 transition-colors relative">
+          <Button variant="ghost" className="p-2 relative">
             <span className="material-symbols-outlined">notifications</span>
             <div className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></div>
-          </button>
+          </Button>
           <div
             className="w-9 h-9 rounded-full bg-slate-200 bg-cover bg-center border border-slate-200 shadow-sm"
             style={{ backgroundImage: 'url("https://picsum.photos/100/100")' }}
@@ -124,7 +122,7 @@ const Dashboard: React.FC = () => {
       <div className="p-8 max-w-[1200px] mx-auto space-y-8">
         {/* Stats Row */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm flex flex-col gap-3 transition-transform hover:-translate-y-1 duration-300">
+          <Card className="flex flex-col gap-3 transition-transform hover:-translate-y-1 duration-300">
             <div className="flex justify-between items-start">
               <p className="text-slate-500 text-sm font-semibold">Applications Sent</p>
               <div className="p-2 bg-primary-50 rounded-lg text-primary-600">
@@ -140,9 +138,9 @@ const Dashboard: React.FC = () => {
                 Last 30 days
               </p>
             </div>
-          </div>
+          </Card>
 
-          <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm flex flex-col gap-3 transition-transform hover:-translate-y-1 duration-300">
+          <Card className="flex flex-col gap-3 transition-transform hover:-translate-y-1 duration-300">
             <div className="flex justify-between items-start">
               <p className="text-slate-500 text-sm font-semibold">Interview Rate</p>
               <div className="p-2 bg-green-50 rounded-lg text-green-600">
@@ -158,9 +156,9 @@ const Dashboard: React.FC = () => {
                 Based on interviews
               </p>
             </div>
-          </div>
+          </Card>
 
-          <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm flex flex-col gap-3 transition-transform hover:-translate-y-1 duration-300">
+          <Card className="flex flex-col gap-3 transition-transform hover:-translate-y-1 duration-300">
             <div className="flex justify-between items-start">
               <p className="text-slate-500 text-sm font-semibold">Pending Responses</p>
               <div className="p-2 bg-amber-50 rounded-lg text-amber-600">
@@ -173,18 +171,22 @@ const Dashboard: React.FC = () => {
                 Applications awaiting response
               </p>
             </div>
-          </div>
+          </Card>
         </div>
 
         {/* Recent Applications */}
         <div className="space-y-4">
           <div className="flex items-center justify-between px-1">
             <h3 className="text-slate-900 text-xl font-bold tracking-tight">Recent Applications</h3>
-            <button className="text-primary-600 text-sm font-bold hover:text-primary-700 hover:underline">
+            <Button variant="ghost" size="sm" className="font-bold hover:underline">
               View all
-            </button>
+            </Button>
           </div>
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+          <Card
+            padding="none"
+            isHoverable={false}
+            className="overflow-hidden border-2 border-slate-200"
+          >
             {recentApps.length === 0 ? (
               <div className="text-center py-12">
                 <p className="text-slate-500 mb-2">No applications yet</p>
@@ -240,7 +242,7 @@ const Dashboard: React.FC = () => {
                 </tbody>
               </table>
             )}
-          </div>
+          </Card>
         </div>
 
         {/* Funnel Chart */}
@@ -248,7 +250,7 @@ const Dashboard: React.FC = () => {
           <h3 className="text-slate-900 text-xl font-bold tracking-tight px-1">
             Application Funnel
           </h3>
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-8">
+          <Card className="p-8 border-2 border-slate-200">
             {funnelData.length === 0 ? (
               <div className="text-center py-12">
                 <p className="text-slate-500 mb-2">No data available</p>
@@ -312,7 +314,7 @@ const Dashboard: React.FC = () => {
                 </div>
               </>
             )}
-          </div>
+          </Card>
         </div>
       </div>
     </div>

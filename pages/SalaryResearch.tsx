@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Route } from '../types';
+import { Button, Card } from '../components/ui';
 import {
   researchSalary,
   createOffer,
@@ -257,43 +258,34 @@ export const SalaryResearch: React.FC = () => {
       <div className="p-8 max-w-[1400px] mx-auto space-y-6">
         {/* Tabs */}
         <div className="flex gap-2 bg-white p-1 rounded-xl border border-slate-200 w-fit">
-          <button
+          <Button
             onClick={() => setActiveTab('research')}
-            className={`px-4 py-2 rounded-lg font-medium text-sm transition-all ${
-              activeTab === 'research'
-                ? 'bg-primary-600 text-white shadow-lg'
-                : 'text-slate-600 hover:bg-slate-50'
-            }`}
+            variant={activeTab === 'research' ? 'primary' : 'ghost'}
+            className="text-sm"
           >
             Research
-          </button>
-          <button
+          </Button>
+          <Button
             onClick={() => setActiveTab('offers')}
-            className={`px-4 py-2 rounded-lg font-medium text-sm transition-all ${
-              activeTab === 'offers'
-                ? 'bg-primary-600 text-white shadow-lg'
-                : 'text-slate-600 hover:bg-slate-50'
-            }`}
+            variant={activeTab === 'offers' ? 'primary' : 'ghost'}
+            className="text-sm"
           >
             Offers ({offers.length})
-          </button>
-          <button
+          </Button>
+          <Button
             onClick={() => setActiveTab('comparison')}
-            className={`px-4 py-2 rounded-lg font-medium text-sm transition-all ${
-              activeTab === 'comparison'
-                ? 'bg-primary-600 text-white shadow-lg'
-                : 'text-slate-600 hover:bg-slate-50'
-            }`}
+            variant={activeTab === 'comparison' ? 'primary' : 'ghost'}
+            className="text-sm"
           >
             Comparison
-          </button>
+          </Button>
         </div>
 
         {/* Research Tab */}
         {activeTab === 'research' && (
           <div className="space-y-6">
             {/* Research Form */}
-            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+            <Card className="p-6">
               <h3 className="text-lg font-bold text-slate-900 mb-4">Research Salary</h3>
               <form onSubmit={handleResearch} className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
@@ -357,25 +349,16 @@ export const SalaryResearch: React.FC = () => {
                 </div>
 
                 <div className="md:col-span-2">
-                  <button
-                    type="submit"
-                    disabled={isResearching}
-                    className="w-full px-4 py-3 rounded-lg bg-primary-600 text-white font-bold hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                  >
-                    {isResearching && (
-                      <span className="material-symbols-outlined animate-spin">
-                        progress_activity
-                      </span>
-                    )}
-                    {isResearching ? 'Researching...' : 'Research Salary'}
-                  </button>
+                  <Button type="submit" isLoading={isResearching} className="w-full py-3">
+                    Research Salary
+                  </Button>
                 </div>
               </form>
-            </div>
+            </Card>
 
             {/* Research Results */}
             {researchResult && (
-              <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+              <Card className="p-6">
                 <h3 className="text-lg font-bold text-slate-900 mb-4">Research Results</h3>
 
                 {/* Salary Range */}
@@ -479,7 +462,7 @@ export const SalaryResearch: React.FC = () => {
                     </ul>
                   </div>
                 )}
-              </div>
+              </Card>
             )}
           </div>
         )}
@@ -490,40 +473,34 @@ export const SalaryResearch: React.FC = () => {
             {/* Actions Bar */}
             <div className="flex items-center justify-between">
               <p className="text-sm text-slate-600">{offers.length} offers tracked</p>
-              <button
+              <Button
                 onClick={() => {
                   setShowOfferForm(true);
                   setEditingOffer(null);
                 }}
-                className="px-4 py-2 rounded-lg bg-primary-600 text-white font-bold text-sm hover:bg-primary-700 transition-colors flex items-center gap-2"
+                icon={<span className="material-symbols-outlined text-[18px]">add</span>}
               >
-                <span className="material-symbols-outlined text-[18px]">add</span>
                 Add Offer
-              </button>
+              </Button>
             </div>
 
             {/* Comparison Bar */}
             {offers.length >= 2 && (
-              <div className="bg-white rounded-xl border border-slate-200 p-4 flex items-center justify-between">
+              <Card className="p-4 flex items-center justify-between border border-slate-200">
                 <div>
                   <p className="font-bold text-slate-900">Compare Offers</p>
                   <p className="text-sm text-slate-500">
                     {selectedOfferIds.length} of {offers.length} selected
                   </p>
                 </div>
-                <button
+                <Button
                   onClick={handleCompare}
-                  disabled={selectedOfferIds.length < 2 || isComparing}
-                  className="px-4 py-2 rounded-lg bg-primary-600 text-white font-bold text-sm hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                  disabled={selectedOfferIds.length < 2}
+                  isLoading={isComparing}
                 >
-                  {isComparing && (
-                    <span className="material-symbols-outlined animate-spin text-[18px]">
-                      progress_activity
-                    </span>
-                  )}
                   Compare
-                </button>
-              </div>
+                </Button>
+              </Card>
             )}
 
             {/* Offers Grid */}
@@ -534,7 +511,7 @@ export const SalaryResearch: React.FC = () => {
                 </span>
               </div>
             ) : offers.length === 0 ? (
-              <div className="text-center py-12 bg-white rounded-2xl border border-slate-200">
+              <Card className="text-center py-12">
                 <span className="material-symbols-outlined text-slate-300 text-6xl mb-4">
                   work_off
                 </span>
@@ -542,13 +519,8 @@ export const SalaryResearch: React.FC = () => {
                 <p className="text-sm text-slate-400 mb-4">
                   Add your first job offer to start tracking
                 </p>
-                <button
-                  onClick={() => setShowOfferForm(true)}
-                  className="px-4 py-2 rounded-lg bg-primary-600 text-white font-bold text-sm hover:bg-primary-700 transition-colors"
-                >
-                  Add First Offer
-                </button>
-              </div>
+                <Button onClick={() => setShowOfferForm(true)}>Add First Offer</Button>
+              </Card>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {offers.map((offer) => (
@@ -583,7 +555,7 @@ export const SalaryResearch: React.FC = () => {
                 <OfferComparison comparison={comparisonResult} onExport={handleExportComparison} />
 
                 {/* Priority Adjustment */}
-                <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+                <Card className="p-6">
                   <h3 className="text-lg font-bold text-slate-900 mb-4">Adjust Priorities</h3>
                   <PrioritySliders
                     priorities={priorities}
@@ -591,23 +563,14 @@ export const SalaryResearch: React.FC = () => {
                     disabled={isComparing}
                   />
                   <div className="flex justify-end mt-4">
-                    <button
-                      onClick={handleCompare}
-                      disabled={isComparing}
-                      className="px-4 py-2 rounded-lg bg-primary-600 text-white font-bold text-sm hover:bg-primary-700 transition-colors disabled:opacity-50 flex items-center gap-2"
-                    >
-                      {isComparing && (
-                        <span className="material-symbols-outlined animate-spin text-[18px]">
-                          progress_activity
-                        </span>
-                      )}
+                    <Button onClick={handleCompare} isLoading={isComparing}>
                       Re-compare
-                    </button>
+                    </Button>
                   </div>
-                </div>
+                </Card>
               </>
             ) : (
-              <div className="text-center py-12 bg-white rounded-2xl border border-slate-200">
+              <Card className="text-center py-12">
                 <span className="material-symbols-outlined text-slate-300 text-6xl mb-4">
                   compare_arrows
                 </span>
@@ -615,13 +578,8 @@ export const SalaryResearch: React.FC = () => {
                 <p className="text-sm text-slate-400 mb-4">
                   Select at least 2 offers to compare them
                 </p>
-                <button
-                  onClick={() => setActiveTab('offers')}
-                  className="px-4 py-2 rounded-lg bg-primary-600 text-white font-bold text-sm hover:bg-primary-700 transition-colors"
-                >
-                  Go to Offers
-                </button>
-              </div>
+                <Button onClick={() => setActiveTab('offers')}>Go to Offers</Button>
+              </Card>
             )}
           </div>
         )}
@@ -630,20 +588,23 @@ export const SalaryResearch: React.FC = () => {
       {/* Offer Form Modal */}
       {showOfferForm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+          <Card
+            className="max-w-2xl w-full max-h-[90vh] overflow-y-auto p-0 border-0 shadow-xl"
+            isHoverable={false}
+          >
             <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
               <h3 className="text-lg font-bold text-slate-900">
                 {editingOffer ? 'Edit Offer' : 'Add New Offer'}
               </h3>
-              <button
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={() => {
                   setShowOfferForm(false);
                   setEditingOffer(null);
                 }}
-                className="p-2 text-slate-400 hover:text-slate-600 transition-colors"
-              >
-                <span className="material-symbols-outlined">close</span>
-              </button>
+                icon={<span className="material-symbols-outlined">close</span>}
+              />
             </div>
 
             <form
@@ -817,31 +778,22 @@ export const SalaryResearch: React.FC = () => {
               </div>
 
               <div className="flex items-center gap-3 pt-4">
-                <button
-                  type="button"
+                <Button
+                  variant="outline"
                   onClick={() => {
                     setShowOfferForm(false);
                     setEditingOffer(null);
                   }}
-                  className="flex-1 px-4 py-2 rounded-lg border border-slate-300 text-slate-700 font-bold hover:bg-slate-50 transition-colors"
+                  className="flex-1"
                 >
                   Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={isSavingOffer}
-                  className="flex-1 px-4 py-2 rounded-lg bg-primary-600 text-white font-bold hover:bg-primary-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-                >
-                  {isSavingOffer && (
-                    <span className="material-symbols-outlined animate-spin text-[18px]">
-                      progress_activity
-                    </span>
-                  )}
+                </Button>
+                <Button type="submit" isLoading={isSavingOffer} className="flex-1">
                   {editingOffer ? 'Update Offer' : 'Add Offer'}
-                </button>
+                </Button>
               </div>
             </form>
-          </div>
+          </Card>
         </div>
       )}
     </div>
