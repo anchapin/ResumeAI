@@ -58,8 +58,8 @@ export const useAuth = () => {
 
         const userData = await fetchCurrentUser();
         return userData;
-      } catch (err: any) {
-        const message = err.message || 'Login failed';
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Login failed';
         setAuthError(message);
         throw err;
       } finally {
@@ -87,8 +87,8 @@ export const useAuth = () => {
         }
 
         return await response.json();
-      } catch (err: any) {
-        const message = err.message || 'Registration failed';
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Registration failed';
         setAuthError(message);
         throw err;
       } finally {

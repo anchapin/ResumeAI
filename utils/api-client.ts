@@ -427,7 +427,7 @@ export async function createResume(
   title: string,
   data: ResumeData,
   tags: string[] = [],
-): Promise<any> {
+): Promise<ResumeMetadata> {
   const response = await fetchWithRetry(
     `${API_URL}/api/v1/resumes`,
     { method: 'POST', headers: getHeaders(), body: JSON.stringify({ title, data, tags }) },
@@ -457,7 +457,7 @@ export async function listResumes(filters?: {
   return response.json();
 }
 
-export async function getResume(resumeId: number): Promise<any> {
+export async function getResume(resumeId: number): Promise<ResumeMetadata & { data: ResumeData }> {
   const response = await fetchWithRetry(
     `${API_URL}/api/v1/resumes/${resumeId}`,
     { headers: getHeaders() },
@@ -470,7 +470,7 @@ export async function getResume(resumeId: number): Promise<any> {
 export async function updateResume(
   resumeId: number,
   updates: { title?: string; data?: ResumeData; tags?: string[]; changeDescription?: string },
-): Promise<any> {
+): Promise<ResumeMetadata> {
   const response = await fetchWithRetry(
     `${API_URL}/api/v1/resumes/${resumeId}`,
     { method: 'PUT', headers: getHeaders(), body: JSON.stringify(updates) },
@@ -512,7 +512,10 @@ export async function getResumeVersion(
   return response.json();
 }
 
-export async function restoreResumeVersion(resumeId: number, versionId: number): Promise<any> {
+export async function restoreResumeVersion(
+  resumeId: number,
+  versionId: number,
+): Promise<ResumeVersion> {
   const response = await fetchWithRetry(
     `${API_URL}/api/v1/resumes/${resumeId}/versions/${versionId}/restore`,
     { method: 'POST', headers: getHeaders() },
@@ -582,7 +585,10 @@ export async function shareResume(
   return response.json();
 }
 
-export async function accessSharedResume(shareToken: string, password?: string): Promise<any> {
+export async function accessSharedResume(
+  shareToken: string,
+  password?: string,
+): Promise<ResumeMetadata & { data: ResumeData }> {
   const params = new URLSearchParams();
   if (password) params.append('password', password);
   const response = await fetchWithRetry(
@@ -1363,7 +1369,7 @@ export async function getUpcomingEvents(days = 7): Promise<UpcomingEvent[]> {
 }
 
 // Team management functions (stubs for unblocking CI)
-export async function getTeams(): Promise<any[]> {
+export async function getTeams(): Promise<Team[]> {
   const response = await fetchWithRetry(
     `${API_URL}/api/v1/teams`,
     { headers: getHeaders() },
@@ -1373,7 +1379,7 @@ export async function getTeams(): Promise<any[]> {
   return response.json();
 }
 
-export async function getTeam(teamId: number | string): Promise<any> {
+export async function getTeam(teamId: number | string): Promise<Team> {
   const response = await fetchWithRetry(
     `${API_URL}/api/v1/teams/${teamId}`,
     { headers: getHeaders() },
@@ -1383,7 +1389,7 @@ export async function getTeam(teamId: number | string): Promise<any> {
   return response.json();
 }
 
-export async function createTeam(params: any): Promise<any> {
+export async function createTeam(params: CreateTeamRequest): Promise<Team> {
   const response = await fetchWithRetry(
     `${API_URL}/api/v1/teams`,
     {
@@ -1397,7 +1403,10 @@ export async function createTeam(params: any): Promise<any> {
   return response.json();
 }
 
-export async function updateTeam(teamId: number | string, params: any): Promise<any> {
+export async function updateTeam(
+  teamId: number | string,
+  params: Partial<CreateTeamRequest>,
+): Promise<Team> {
   const response = await fetchWithRetry(
     `${API_URL}/api/v1/teams/${teamId}`,
     {
@@ -1420,7 +1429,7 @@ export async function deleteTeam(teamId: number | string): Promise<void> {
   if (!response.ok) throw new Error('Failed to delete team');
 }
 
-export async function getTeamMembers(teamId: number | string): Promise<any[]> {
+export async function getTeamMembers(teamId: number | string): Promise<TeamMember[]> {
   const response = await fetchWithRetry(
     `${API_URL}/api/v1/teams/${teamId}/members`,
     { headers: getHeaders() },
@@ -1430,7 +1439,10 @@ export async function getTeamMembers(teamId: number | string): Promise<any[]> {
   return response.json();
 }
 
-export async function inviteMember(teamId: number | string, params: any): Promise<any> {
+export async function inviteMember(
+  teamId: number | string,
+  params: InviteMemberRequest,
+): Promise<TeamMember> {
   const response = await fetchWithRetry(
     `${API_URL}/api/v1/teams/${teamId}/members/invite`,
     {
@@ -1448,7 +1460,7 @@ export async function updateMemberRole(
   teamId: number | string,
   memberId: string,
   role: MemberRole,
-): Promise<any> {
+): Promise<TeamMember> {
   const response = await fetchWithRetry(
     `${API_URL}/api/v1/teams/${teamId}/members/${memberId}`,
     {
@@ -1471,7 +1483,10 @@ export async function removeMember(teamId: number | string, memberId: string): P
   if (!response.ok) throw new Error('Failed to remove member');
 }
 
-export async function shareResumeWithTeam(resumeId: number, teamId: number | string): Promise<any> {
+export async function shareResumeWithTeam(
+  resumeId: number,
+  teamId: number | string,
+): Promise<TeamResume> {
   const response = await fetchWithRetry(
     `${API_URL}/api/v1/resumes/${resumeId}/share`,
     {
@@ -1497,7 +1512,7 @@ export async function unshareResumeFromTeam(
   if (!response.ok) throw new Error('Failed to unshare resume from team');
 }
 
-export async function getTeamActivity(teamId: number | string, days = 30): Promise<any[]> {
+export async function getTeamActivity(teamId: number | string, days = 30): Promise<TeamActivity[]> {
   const response = await fetchWithRetry(
     `${API_URL}/api/v1/teams/${teamId}/activity?days=${days}`,
     { headers: getHeaders() },
