@@ -130,7 +130,7 @@ test.describe('PDF Generation Flow', () => {
     await page.goto('/editor');
     await page.waitForLoadState('networkidle');
 
-    await page.route('**/api/pdf', (route) => route.abort());
+    await page.route('**/api/v1/render/pdf', (route) => route.abort());
 
     await page.click('button:has-text("Download PDF"), button:has-text("Export PDF")');
 
