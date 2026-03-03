@@ -1,6 +1,7 @@
 import React, { useCallback } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Route } from '../types';
+import { prefetch } from '../utils/prefetch';
 import { useStore } from '../store/store';
 import { useAuth } from '../hooks/useAuth';
 
@@ -86,6 +87,7 @@ const Sidebar: React.FC<SidebarProps> = React.memo(() => {
               <Link
                 key={item.id}
                 to={item.path}
+                onMouseEnter={() => prefetch(item.id)}
                 aria-current={isActive ? 'page' : undefined}
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 ${
                   isActive
@@ -111,6 +113,7 @@ const Sidebar: React.FC<SidebarProps> = React.memo(() => {
         <button
           type="button"
           onClick={() => navigate('/workspace')}
+          onMouseEnter={() => prefetch('workspace')}
           data-testid="nav-workspace"
           className="flex w-full items-center justify-center gap-2 rounded-xl h-12 bg-primary-600 text-white text-sm font-bold shadow-lg shadow-primary-600/30 hover:bg-primary-700 hover:shadow-primary-600/40 transition-all transform active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary-600"
         >
