@@ -13,7 +13,7 @@ from pathlib import Path
 
 from fastapi import APIRouter, HTTPException, Request, Response, UploadFile, File, status
 
-from lib.utils.cache import get_cache_manager
+from lib.utils.cache import get_cache_manager, cached
 from pydantic import BaseModel, Field
 from typing import List
 
@@ -160,6 +160,7 @@ async def render_pdf(request: Request, body: ResumeRequest, auth: AuthorizedAPIK
     tags=["Tailoring"],
 )
 @rate_limit(settings.rate_limit_tailor)
+@cached("tailoring:result")
 async def tailor_resume(
     request: Request,
     body: TailorRequest,
@@ -170,19 +171,6 @@ async def tailor_resume(
     Tailor a resume to match a job description.
     """
     try:
-        # Cache logic
-        cache_mgr = get_cache_manager()
-        # Generate hash of inputs for cache key
-        input_data = f"{body.job_description}:{body.resume_data.model_dump_json()}"
-        input_hash = hashlib.md5(input_data.encode()).hexdigest()
-        cache_key = cache_mgr.generate_key("tailoring:result", input_hash=input_hash)
-
-        # Try cache
-        cached_result = await cache_mgr.get(cache_key)
-        if cached_result:
-            response.headers["X-Cache"] = "HIT"
-            return TailoredResumeResponse(**cached_result)
-
         # Convert Pydantic model to dict
         resume_dict = body.resume_data.model_dump(exclude_none=True)
 
@@ -231,10 +219,6 @@ async def tailor_resume(
             resume_data=tailored_data, keywords=keywords, suggestions=suggestions
         )
 
-        # Store in cache
-        await cache_mgr.set(cache_key, result.model_dump(), config_name="tailoring:result")
-        
-        response.headers["X-Cache"] = "MISS"
         return result
 
     except ValueError as e:
@@ -257,6 +241,7 @@ async def tailor_resume(
     tags=["Variants"],
 )
 @rate_limit(settings.rate_limit_variants)
+@cached("resume:variants")
 async def list_variants(
     request: Request,
     response: Response,
@@ -271,25 +256,6 @@ async def list_variants(
     List or filter resume template variants.
     """
     try:
-        # Cache logic
-        cache_mgr = get_cache_manager()
-        cache_key = cache_mgr.generate_key(
-            "resume:variants",
-            search=search,
-            tags=tags,
-            category=category,
-            industry=industry,
-            layout=layout,
-            color_theme=color_theme,
-        )
-
-        # Try to get from cache
-        cached_result = await cache_mgr.get(cache_key)
-        if cached_result:
-            response.headers["X-Cache"] = "HIT"
-            response.headers["Cache-Control"] = "public, max-age=300"
-            return VariantsResponse(**cached_result)
-
         # Parse tags from comma-separated string
         tags_list = None
         if tags:
@@ -314,11 +280,6 @@ async def list_variants(
                 variant_metadata.append(VariantMetadata(**metadata))
 
         result = VariantsResponse(variants=variant_metadata)
-        
-        # Store in cache
-        await cache_mgr.set(cache_key, result.model_dump(), config_name="resume:variants")
-        
-        response.headers["X-Cache"] = "MISS"
         return result
 
     except Exception as e:

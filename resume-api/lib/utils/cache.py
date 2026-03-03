@@ -270,7 +270,7 @@ class RedisCache(CacheBackendInterface):
         Initialize Redis cache
 
         Args:
-            redis_client: aioredis client instance
+            redis_client: redis.asyncio client instance
         """
         self.redis = redis_client
         self.hits = 0
@@ -581,3 +581,90 @@ async def initialize_cache(
     manager = CacheManager(backend=backend, redis_client=redis_client)
     set_cache_manager(manager)
     return manager
+
+
+from functools import wraps
+from fastapi import Response
+
+
+def cached(
+    config_name: str,
+    key_prefix: Optional[str] = None,
+    ttl: Optional[int] = None,
+    tags: Optional[Set[str]] = None,
+):
+    """
+    FastAPI route decorator for caching
+
+    Args:
+        config_name: Name of the cache config to use
+        key_prefix: Override default prefix
+        ttl: Override default TTL
+        tags: Additional tags for invalidation
+    """
+
+    def decorator(func: Callable):
+        @wraps(func)
+        async def wrapper(*args, **kwargs):
+            cache_mgr = get_cache_manager()
+            # Find Response object in kwargs to set headers
+            response = None
+            filtered_kwargs = {}
+            for k, v in kwargs.items():
+                if isinstance(v, Response):
+                    response = v
+                elif not isinstance(v, Request) and not str(type(v)).endswith("AuthorizedAPIKey'>"):
+                    filtered_kwargs[k] = v
+
+            # Generate cache key using only serializable kwargs
+            prefix = key_prefix or (
+                cache_mgr.configs[config_name].key_prefix
+                if config_name in cache_mgr.configs
+                else func.__name__
+            )
+            cache_key = cache_mgr.generate_key(prefix, *args, **filtered_kwargs)
+
+            # Try to get from cache
+            cached_value = await cache_mgr.get(cache_key)
+
+            if cached_value is not None:
+                if response:
+                    response.headers["X-Cache"] = "HIT"
+                    current_ttl = (
+                        ttl
+                        or cache_mgr.configs[config_name].ttl_seconds
+                        if config_name in cache_mgr.configs
+                        else 300
+                    )
+                    response.headers["Cache-Control"] = f"public, max-age={str(current_ttl)}"
+                return cached_value
+
+            # Execute function
+            result = await func(*args, **kwargs)
+            if asyncio.iscoroutine(result):
+                result = await result
+
+            # Save to cache
+            if result is not None:
+                # Handle Pydantic models
+                serializable_result = result
+                if hasattr(result, "model_dump"):
+                    serializable_result = result.model_dump()
+                elif hasattr(result, "dict"):
+                    serializable_result = result.dict()
+
+                await cache_mgr.set(
+                    cache_key,
+                    serializable_result,
+                    ttl_seconds=ttl,
+                    config_name=config_name,
+                    tags=tags,
+                )
+                if response:
+                    response.headers["X-Cache"] = "MISS"
+
+            return result
+
+        return wrapper
+
+    return decorator

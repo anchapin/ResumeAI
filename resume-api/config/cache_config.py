@@ -55,18 +55,19 @@ class RedisConnectionPool:
             True if connected, False if using fallback
         """
         try:
-            import aioredis
+            import redis.asyncio as redis
         except ImportError:
-            logger.warning("aioredis not installed, using in-memory cache")
+            logger.warning("redis package not installed, using in-memory cache")
             return False
 
         try:
             # Create connection pool
-            self.redis_client = await aioredis.create_redis_pool(
+            self.redis_client = redis.from_url(
                 f"redis://{self.host}:{self.port}/{self.db}",
-                maxsize=self.max_connections,
-                timeout=self.socket_timeout,
-                encoding="utf-8",
+                max_connections=self.max_connections,
+                socket_timeout=self.socket_timeout,
+                socket_connect_timeout=self.socket_connect_timeout,
+                decode_responses=True,
             )
 
             # Verify connection
@@ -80,7 +81,7 @@ class RedisConnectionPool:
             return True
 
         except ImportError:
-            logger.warning("aioredis not installed, using in-memory cache")
+            logger.warning("redis package not installed, using in-memory cache")
             return False
         except Exception as e:
             logger.warning(
@@ -117,8 +118,7 @@ class RedisConnectionPool:
                 pass
 
         if self.redis_client:
-            self.redis_client.close()
-            await self.redis_client.wait_closed()
+            await self.redis_client.aclose()
             logger.info("Disconnected from Redis")
 
     @asynccontextmanager
