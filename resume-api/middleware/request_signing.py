@@ -19,6 +19,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 
 from config import settings
 from monitoring import logging_config
+from lib.utils.cache import get_cache_manager, CacheBackend
 
 logger = logging_config.get_logger(__name__)
 
@@ -59,20 +60,45 @@ SIGNATURE_EXEMPT_PATHS = {
 
 
 class NonceCache:
+    """
+    Cache for nonces to prevent replay attacks.
+    Uses Redis if available, otherwise falls back to in-memory set.
+    """
     def __init__(self, max_size: int = NONCE_CACHE_SIZE):
-        self._cache: Set[str] = set()
+        self._local_cache: Set[str] = set()
         self._max_size = max_size
 
-    def add(self, nonce: str) -> bool:
-        if nonce in self._cache:
+    async def add(self, nonce: str) -> bool:
+        """
+        Add nonce to cache. Returns True if added (new), False if exists.
+        """
+        cache_mgr = get_cache_manager()
+        
+        if cache_mgr.backend_type == CacheBackend.REDIS:
+            try:
+                key = f"nonce:{nonce}"
+                redis = cache_mgr.backend.redis
+                # Set with NX=True (set if not exists) and EX (expiry)
+                result = await redis.set(
+                    key, "1", ex=REQUEST_SIGNATURE_EXPIRY_SECONDS, nx=True
+                )
+                return result is True or result == "OK"
+            except Exception as e:
+                logger.warning(f"Redis nonce cache error: {e}. Falling back to memory.")
+        
+        # In-memory fallback
+        if nonce in self._local_cache:
             return False
-        self._cache.add(nonce)
-        if len(self._cache) > self._max_size:
-            self._cache.clear()
+        
+        self._local_cache.add(nonce)
+        if len(self._local_cache) > self._max_size:
+            # Simple eviction: clear everything if max size exceeded
+            self._local_cache.clear()
         return True
 
     def clear(self):
-        self._cache.clear()
+        """Clear the local cache."""
+        self._local_cache.clear()
 
 
 nonce_cache = NonceCache()
@@ -96,16 +122,12 @@ def compute_signature(
 
 
 def get_client_secret(request: Request) -> Optional[str]:
-    api_key = request.headers.get("X-API-Key")
-    if api_key:
-        return f"apikey:{api_key}"
-
-    auth_header = request.headers.get("Authorization")
-    if auth_header and auth_header.startswith("Bearer "):
-        token = auth_header[7:]
-        return f"token:{token[:32]}"
-
-    return None
+    """
+    Get the secret key for a client.
+    Currently uses a global secret, but could be extended for per-client secrets.
+    """
+    # Extended per-client secret logic could go here
+    return settings.request_signing_secret
 
 
 class RequestSigningMiddleware(BaseHTTPMiddleware):
@@ -132,7 +154,12 @@ class RequestSigningMiddleware(BaseHTTPMiddleware):
         if path in SIGNATURE_EXEMPT_PATHS:
             return await call_next(request)
 
-        if path.startswith(f"{settings.api_v1_prefix}/auth/") or path.startswith(f"{settings.api_v1_prefix}/billing/"):
+        # Apply to state-changing methods or specifically listed paths
+        is_protected_method = request.method in SIGNATURE_PROTECTED_METHODS
+        is_required_path = path in SIGNATURE_REQUIRED_PATHS
+        is_auth_billing_path = path.startswith(f"{settings.api_v1_prefix}/auth/") or path.startswith(f"{settings.api_v1_prefix}/billing/")
+
+        if is_required_path or (is_protected_method and is_auth_billing_path):
             return await self._process_signed_request(request, call_next)
 
         return await call_next(request)
@@ -141,9 +168,6 @@ class RequestSigningMiddleware(BaseHTTPMiddleware):
         self, request: Request, call_next: Callable
     ) -> Response:
         method = request.method
-
-        if method not in SIGNATURE_PROTECTED_METHODS:
-            return await call_next(request)
 
         timestamp = request.headers.get(TIMESTAMP_HEADER)
         nonce = request.headers.get(NONCE_HEADER)
@@ -190,7 +214,8 @@ class RequestSigningMiddleware(BaseHTTPMiddleware):
                 detail="Request timestamp expired. Please generate a new signature.",
             )
 
-        if not nonce_cache.add(nonce):
+        # Check nonce (Replay attack protection)
+        if not await nonce_cache.add(nonce):
             logger.warning(
                 "request_signing_failed",
                 path=request.url.path,
@@ -203,11 +228,12 @@ class RequestSigningMiddleware(BaseHTTPMiddleware):
                 detail="Nonce has already been used",
             )
 
+        # Get request body for signature verification
         body = b""
         if method in {"POST", "PUT", "PATCH", "DELETE"}:
+            # Be careful with request.body() as it consumes the stream
+            # BaseHTTPMiddleware handles this by making request.body() repeatable
             body = await request.body()
-            if isinstance(body, str):
-                body = body.encode()
 
         computed_signature = compute_signature(
             secret_key=self._secret_key,
