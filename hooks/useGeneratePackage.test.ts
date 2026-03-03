@@ -5,27 +5,6 @@ import { SimpleResumeData, ResumeData } from '../types';
 
 global.fetch = vi.fn();
 
-const mockState = {
-  resumeData: {
-    name: 'John Doe',
-    email: 'john@example.com',
-    phone: '555-1234',
-    location: 'San Francisco, CA',
-    role: 'Senior Developer',
-    summary: 'Experienced software engineer',
-    skills: [],
-    experience: [],
-    education: [],
-    projects: [],
-  },
-  setResumeData: vi.fn(),
-  setGlobalLoading: vi.fn(),
-};
-
-vi.mock('../store/store', () => ({
-  useStore: vi.fn((selector) => (selector ? selector(mockState) : mockState)),
-}));
-
 vi.mock('../utils/api-client', () => ({
   getHeaders: () => ({ 'Content-Type': 'application/json' }),
 }));
@@ -111,10 +90,9 @@ describe('useGeneratePackage Hook', () => {
         suggestions: ['Add more metrics', 'Include technologies'],
       };
 
-      (global.fetch as any).mockResolvedValueOnce({
-        ok: true,
-        json: async () => mockResponse,
-      });
+      (global.fetch as any).mockResolvedValueOnce(
+        new Response(JSON.stringify(mockResponse), { status: 200 }),
+      );
 
       const { result } = renderHook(() => useGeneratePackage());
 
@@ -127,7 +105,9 @@ describe('useGeneratePackage Hook', () => {
         });
       });
 
-      expect(result.current.data).toEqual(mockResponse);
+      await waitFor(() => {
+        expect(result.current.data).toEqual(mockResponse);
+      });
       expect(result.current.error).toBeNull();
       expect(result.current.loading).toBe(false);
     });
@@ -143,7 +123,7 @@ describe('useGeneratePackage Hook', () => {
       const { result } = renderHook(() => useGeneratePackage());
 
       const promise = act(async () => {
-        result.current.generatePackage({
+        await result.current.generatePackage({
           resume_data: convertToResumeData(mockSimpleResume),
           job_description: 'Job desc',
         });
@@ -184,10 +164,9 @@ describe('useGeneratePackage Hook', () => {
         keywords: [],
       };
 
-      (global.fetch as any).mockResolvedValueOnce({
-        ok: true,
-        json: async () => mockResponse,
-      });
+      (global.fetch as any).mockResolvedValueOnce(
+        new Response(JSON.stringify(mockResponse), { status: 200 }),
+      );
 
       const { result } = renderHook(() => useGeneratePackage());
 
@@ -222,13 +201,18 @@ describe('useGeneratePackage Hook', () => {
 
   describe('downloadPDF', () => {
     it('downloads PDF successfully', async () => {
-      const mockBlob = new Blob(['PDF content'], { type: 'application/pdf' });
-      (global.fetch as any).mockResolvedValueOnce(new Response(mockBlob, { status: 200 }));
+      (global.fetch as any).mockResolvedValueOnce(new Response('PDF content', { status: 200 }));
 
       // Mock DOM methods
-      const mockLink = { href: '', download: '', click: vi.fn() };
+      const mockLink = document.createElement('a');
+      mockLink.click = vi.fn();
       const originalCreateElement = document.createElement;
-      vi.spyOn(document, 'createElement').mockReturnValue(mockLink as any);
+      const createElementSpy = vi.spyOn(document, 'createElement').mockImplementation((tagName) => {
+        if (tagName === 'a') return mockLink;
+        return originalCreateElement.call(document, tagName);
+      });
+      // Actually, just mock it for this test and restore
+      createElementSpy.mockReturnValueOnce(mockLink as any);
 
       const { result } = renderHook(() => useGeneratePackage());
 
@@ -241,6 +225,7 @@ describe('useGeneratePackage Hook', () => {
 
       expect(mockLink.click).toHaveBeenCalled();
       expect(result.current.error).toBeNull();
+      createElementSpy.mockRestore();
     });
 
     it('handles PDF download errors', async () => {
@@ -265,10 +250,11 @@ describe('useGeneratePackage Hook', () => {
     });
 
     it('uses correct PDF endpoint', async () => {
-      const mockBlob = new Blob(['PDF'], { type: 'application/pdf' });
-      (global.fetch as any).mockResolvedValueOnce(new Response(mockBlob, { status: 200 }));
+      (global.fetch as any).mockResolvedValueOnce(new Response('PDF', { status: 200 }));
 
-      vi.spyOn(document, 'createElement').mockReturnValue({ click: vi.fn() } as any);
+      const mockLink = document.createElement('a');
+      mockLink.click = vi.fn();
+      const createElementSpy = vi.spyOn(document, 'createElement').mockReturnValue(mockLink as any);
 
       const { result } = renderHook(() => useGeneratePackage());
 
@@ -281,6 +267,7 @@ describe('useGeneratePackage Hook', () => {
 
       const url = (global.fetch as any).mock.calls[0][0];
       expect(url).toContain('/api/v1/render/pdf');
+      createElementSpy.mockRestore();
     });
   });
 
@@ -407,7 +394,7 @@ describe('useGeneratePackage Hook', () => {
       const { result } = renderHook(() => useGeneratePackage());
 
       const promise = act(async () => {
-        result.current.generateCoverLetterRequest({
+        await result.current.generateCoverLetterRequest({
           resume_data: convertToResumeData(mockSimpleResume),
           job_description: 'Job desc',
           company_name: 'TechCorp',

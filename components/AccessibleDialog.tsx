@@ -21,6 +21,8 @@ export interface DialogProps {
   headerId?: string;
   /** Optional custom ID for description element */
   descriptionId?: string;
+  /** Optional data-testid for testing */
+  'data-testid'?: string;
 }
 
 /**
@@ -65,6 +67,7 @@ const AccessibleDialog: React.FC<DialogProps> = ({
   className = '',
   headerId = 'dialog-title',
   descriptionId,
+  'data-testid': dataTestId,
 }) => {
   // Use focus trap hook for Tab key navigation and focus management
   const { ref: dialogContentRef } = useFocusTrap<HTMLDivElement>({
@@ -130,6 +133,7 @@ const AccessibleDialog: React.FC<DialogProps> = ({
       className={`fixed inset-0 bg-black/50 flex items-center justify-center z-50 ${className}`}
       onClick={handleBackdropClick}
       aria-hidden="false"
+      data-testid={dataTestId}
     >
       <div
         ref={dialogContentRef}
@@ -174,10 +178,7 @@ const AccessibleDialog: React.FC<DialogProps> = ({
 
         {/* Dialog Content */}
         <div className="px-6 py-4">
-          <div
-            {...(descriptionId && { id: descriptionId })}
-            className="text-slate-700"
-          >
+          <div {...(descriptionId && { id: descriptionId })} className="text-slate-700">
             {children}
           </div>
         </div>

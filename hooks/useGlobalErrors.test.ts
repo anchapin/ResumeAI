@@ -27,7 +27,7 @@ describe('useGlobalErrors Hook', () => {
     const { result } = renderHook(() => useGlobalErrors());
 
     act(() => {
-      errorHandler.handleError(new Error('Test error'));
+      errorHandler.handleError(new Error('Test error'), { type: ErrorType.SERVER });
     });
 
     expect(result.current.currentError).toBeDefined();
@@ -101,7 +101,7 @@ describe('useGlobalErrors Hook', () => {
       errorHandler.handleError(error);
     });
 
-    expect(result.current.currentError?.type).toBe(ErrorType.VALIDATION);
+    expect(result.current.errorHistory[0]?.type).toBe(ErrorType.VALIDATION);
   });
 
   it('should handle auth errors', async () => {
@@ -115,7 +115,7 @@ describe('useGlobalErrors Hook', () => {
       errorHandler.handleError(error);
     });
 
-    expect(result.current.currentError?.type).toBe(ErrorType.AUTH);
+    expect(result.current.errorHistory[0]?.type).toBe(ErrorType.AUTH);
   });
 
   it('should handle permission errors', async () => {
@@ -129,7 +129,7 @@ describe('useGlobalErrors Hook', () => {
       errorHandler.handleError(error);
     });
 
-    expect(result.current.currentError?.type).toBe(ErrorType.PERMISSION);
+    expect(result.current.errorHistory[0]?.type).toBe(ErrorType.PERMISSION);
   });
 
   it('should handle not found errors', async () => {
@@ -143,7 +143,7 @@ describe('useGlobalErrors Hook', () => {
       errorHandler.handleError(error);
     });
 
-    expect(result.current.currentError?.type).toBe(ErrorType.NOT_FOUND);
+    expect(result.current.errorHistory[0]?.type).toBe(ErrorType.NOT_FOUND);
   });
 
   it('should handle server errors', async () => {
@@ -171,7 +171,7 @@ describe('useGlobalErrors Hook', () => {
       errorHandler.handleError(error);
     });
 
-    expect(result.current.currentError?.type).toBe(ErrorType.TIMEOUT);
+    expect(result.current.errorHistory[0]?.type).toBe(ErrorType.TIMEOUT);
   });
 
   it('should unsubscribe on unmount', () => {
