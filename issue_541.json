@@ -1,0 +1,5 @@
+{
+  "body": "## Problem\nCallback dependencies cause unnecessary re-renders in `pages/Editor.tsx:346-455`.\n\n## Impact\n- Performance issues\n- Stale closures\n\n## Tasks\n- [ ] Audit all useCallback in Editor.tsx\n- [ ] Fix dependency arrays\n- [ ] Use functional updates where appropriate\n- [ ] Test component behavior\n- [ ] Profile performance improvement\n",
+  "number": 541,
+  "title": "[P4-Perf-2] Fix Memoization Issues"
+}

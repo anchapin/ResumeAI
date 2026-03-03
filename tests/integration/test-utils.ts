@@ -55,7 +55,7 @@ export async function cleanupTestAPI(context: TestContext): Promise<void> {
   // Clear any test data
   await context.apiClient.listResumes().then((res) => {
     if (res.data?.length) {
-      res.data.forEach((resume) => {
+      res.data.forEach((resume: any) => {
         context.apiClient.deleteResume(resume.id);
       });
     }
@@ -97,7 +97,7 @@ function createMockAPIClient(): MockAPIClient {
       return { status: 200, data: resume };
     },
 
-    async updateResume(id: string, resume: Partial<Resume>) {
+    async updateResume(id: string, resume: Partial<ResumeData>) {
       if (!storage.has(id)) {
         return { status: 404, error: 'Resume not found' };
       }
@@ -390,6 +390,7 @@ function createMockAPIClient(): MockAPIClient {
  */
 export function createMockResume(title: string, overrides?: any): Partial<ResumeData> {
   return {
+    title,
     basics: {
       name: 'Test User',
       email: 'test@example.com',

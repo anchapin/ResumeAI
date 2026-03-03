@@ -7,7 +7,7 @@ This file is kept for backward compatibility.
 
 from fastapi import APIRouter
 
-router = APIRouter(prefix="/api/v1/resumes", tags=["Resumes"])
+router = APIRouter(prefix="/resumes", tags=["Resumes"])
 
 
 @router.get("/resumes/health")

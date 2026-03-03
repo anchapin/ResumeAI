@@ -1,0 +1,5 @@
+{
+  "body": "## Problem\nOnly React local state + localStorage, no centralized state management.\n\n## Impact\n- Prop drilling issues\n- Inconsistent data across components\n- Hard to scale\n\n## Tasks\n- [ ] Install zustand package\n- [ ] Define global state interface\n- [ ] Create store with actions\n- [ ] Migrate auth, resume data, theme state\n- [ ] Remove prop drilling\n- [ ] Test state updates\n",
+  "number": 534,
+  "title": "[A3-Arch-3] Add State Management Solution"
+}

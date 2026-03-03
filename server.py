@@ -218,7 +218,7 @@ class PackageResponse(BaseModel):
 
 
 class V1RenderPdfRequest(BaseModel):
-    """Request model for POST /v1/render/pdf"""
+    """Request model for POST /api/v1/render/pdf"""
 
     resume_data: Dict[str, Any]
     variant: str = "base"
@@ -232,14 +232,14 @@ class V1RenderPdfRequest(BaseModel):
 
 
 class V1TailorRequest(BaseModel):
-    """Request model for POST /v1/tailor"""
+    """Request model for POST /api/v1/tailor"""
 
     resume_data: Dict[str, Any]
     job_description: str
 
 
 class V1VariantsResponse(BaseModel):
-    """Response model for GET /v1/variants"""
+    """Response model for GET /api/v1/variants"""
 
     variants: List[str]
 
@@ -247,7 +247,7 @@ class V1VariantsResponse(BaseModel):
 # --- Endpoints ---
 
 
-@app.get("/")
+@app.get("/api/v1/")
 async def health_check():
     return {
         "status": "ok",
@@ -256,7 +256,7 @@ async def health_check():
     }
 
 
-@app.post("/generate/preview")
+@app.post("/api/v1/generate/preview")
 async def generate_preview(request: GeneratePreviewRequest):
     """
     Generates a generic preview of the resume based on the data provided.
@@ -272,7 +272,7 @@ async def generate_preview(request: GeneratePreviewRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.post("/generate/pdf")
+@app.post("/api/v1/generate/pdf")
 async def generate_pdf(request: GeneratePreviewRequest):
     """
     Returns a PDF stream of the resume.
@@ -285,7 +285,7 @@ async def generate_pdf(request: GeneratePreviewRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.post("/generate/package", response_model=PackageResponse)
+@app.post("/api/v1/generate/package", response_model=PackageResponse)
 async def generate_package(request: GeneratePackageRequest):
     """
     Generates a full application package including tailored resume and cover letter.
@@ -486,7 +486,7 @@ def json_resume_to_cli_yaml(json_resume: Dict[str, Any]) -> Dict[str, Any]:
     return cli_data
 
 
-@app.post("/v1/render/pdf")
+@app.post("/api/v1/render/pdf")
 async def v1_render_pdf(request: V1RenderPdfRequest):
     """
     Generate a real PDF from resume data using resume-cli.
@@ -545,7 +545,7 @@ async def v1_render_pdf(request: V1RenderPdfRequest):
         raise HTTPException(status_code=500, detail=f"PDF generation failed: {str(e)}")
 
 
-@app.post("/v1/render/markdown")
+@app.post("/api/v1/render/markdown")
 async def v1_render_markdown(request: V1RenderPdfRequest):
     """
     Generate a markdown preview from resume data using resume-cli.
@@ -603,7 +603,7 @@ async def v1_render_markdown(request: V1RenderPdfRequest):
         )
 
 
-@app.post("/v1/tailor", response_model=Dict[str, Any])
+@app.post("/api/v1/tailor", response_model=Dict[str, Any])
 async def v1_tailor(request: V1TailorRequest):
     """
     Tailor resume data and provide a markdown preview.
@@ -675,7 +675,7 @@ async def v1_tailor(request: V1TailorRequest):
         )
 
 
-@app.get("/v1/variants", response_model=Dict[str, Any])
+@app.get("/api/v1/variants", response_model=Dict[str, Any])
 async def v1_variants():
     """
     Get list of available resume templates/variants.
@@ -723,7 +723,7 @@ async def v1_variants():
         )
 
 
-@app.post("/v1/import/linkedin-file")
+@app.post("/api/v1/import/linkedin-file")
 async def import_linkedin_file(files: List[UploadFile] = File(...)):
     """
     Import resume from LinkedIn exported file (JSON, ZIP, or CSV).

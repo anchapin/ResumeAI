@@ -484,7 +484,7 @@ class TestAuthRefreshEndpoint:
         await db_session.commit()
 
         response = await client.post(
-            "/auth/refresh",
+            "/api/v1/auth/refresh",
             json={"refresh_token": refresh_token},
         )
 
@@ -511,7 +511,7 @@ class TestAuthRefreshEndpoint:
         await db_session.commit()
 
         response = await client.post(
-            "/auth/refresh",
+            "/api/v1/auth/refresh",
             json={"refresh_token": refresh_token},
         )
 
@@ -536,7 +536,7 @@ class TestAuthRefreshEndpoint:
         await db_session.commit()
 
         response = await client.post(
-            "/auth/refresh",
+            "/api/v1/auth/refresh",
             json={"refresh_token": refresh_token},
         )
 
@@ -562,7 +562,7 @@ class TestAuthRefreshEndpoint:
         await db_session.commit()
 
         response = await client.post(
-            "/auth/refresh",
+            "/api/v1/auth/refresh",
             json={"refresh_token": refresh_token},
         )
 
@@ -598,7 +598,7 @@ class TestAuthLogoutEndpoint:
 
         # Logout
         response = await client.post(
-            "/auth/logout",
+            "/api/v1/auth/logout",
             json={"refresh_token": refresh_token},
         )
         assert response.status_code == 200
@@ -614,7 +614,7 @@ class TestAuthLogoutEndpoint:
     async def test_logout_nonexistent_token(self, client):
         """Test logout with nonexistent token."""
         response = await client.post(
-            "/auth/logout",
+            "/api/v1/auth/logout",
             json={"refresh_token": "nonexistent_token_xyz"},
         )
         # Should succeed (idempotent)
@@ -639,14 +639,14 @@ class TestAuthLogoutEndpoint:
 
         # First logout
         response1 = await client.post(
-            "/auth/logout",
+            "/api/v1/auth/logout",
             json={"refresh_token": refresh_token},
         )
         assert response1.status_code == 200
 
         # Second logout with same token
         response2 = await client.post(
-            "/auth/logout",
+            "/api/v1/auth/logout",
             json={"refresh_token": refresh_token},
         )
         assert response2.status_code == 200
@@ -663,7 +663,7 @@ class TestAuthMeEndpoint:
     @pytest.mark.asyncio
     async def test_me_returns_user_info(self, authenticated_client, test_user):
         """Test /auth/me returns current user info."""
-        response = await authenticated_client.get("/auth/me")
+        response = await authenticated_client.get("/api/v1/auth/me")
 
         assert response.status_code == 200
         data = response.json()
@@ -674,14 +674,14 @@ class TestAuthMeEndpoint:
     @pytest.mark.asyncio
     async def test_me_requires_authentication(self, client):
         """Test that /auth/me requires authentication."""
-        response = await client.get("/auth/me")
+        response = await client.get("/api/v1/auth/me")
         assert response.status_code == 401
 
     @pytest.mark.asyncio
     async def test_me_with_invalid_token(self, client):
         """Test /auth/me with invalid token."""
         client.headers = {"Authorization": "Bearer invalid_token"}
-        response = await client.get("/auth/me")
+        response = await client.get("/api/v1/auth/me")
         assert response.status_code == 401
 
 
@@ -696,7 +696,7 @@ class TestAuthHealthEndpoint:
     @pytest.mark.asyncio
     async def test_health_check(self, client):
         """Test auth health check endpoint."""
-        response = await client.get("/auth/health")
+        response = await client.get("/api/v1/auth/health")
 
         assert response.status_code == 200
         data = response.json()

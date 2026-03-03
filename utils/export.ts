@@ -34,7 +34,7 @@ export async function exportToPDF(
   const apiKey = localStorage.getItem('RESUMEAI_API_KEY');
 
   try {
-    const response = await fetch(`${API_URL}/v1/render/pdf`, {
+    const response = await fetch(`${API_URL}/api/v1/render/pdf`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

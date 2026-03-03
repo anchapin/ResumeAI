@@ -19,7 +19,7 @@ async def test_record_request():
     """Test recording a request."""
     # This should not raise an error
     await record_request(
-        endpoint="/v1/render/pdf",
+        endpoint="/api/v1/render/pdf",
         method="POST",
         status_code=200,
         user_id="test-user",
@@ -34,7 +34,7 @@ async def test_record_endpoint_usage():
     """Test recording endpoint usage."""
     # This should not raise an error
     await record_endpoint_usage(
-        endpoint="/v1/tailor",
+        endpoint="/api/v1/tailor",
         user_id="test-user",
         success=True,
     )
@@ -47,7 +47,7 @@ async def test_record_user_engagement():
     await record_user_engagement(
         user_id="test-user",
         action="pdf_generated",
-        endpoint="/v1/render/pdf",
+        endpoint="/api/v1/render/pdf",
         metadata={"variant": "modern"},
     )
 
@@ -57,7 +57,7 @@ async def test_record_error():
     """Test recording an error."""
     # This should not raise an error
     await record_error(
-        endpoint="/v1/render/pdf",
+        endpoint="/api/v1/render/pdf",
         error_type="ValueError",
         error_message="Invalid resume data",
         user_id="test-user",

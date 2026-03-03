@@ -84,7 +84,7 @@ Comprehensive health checks ensure service readiness before accepting traffic.
 
 ```bash
 # Single health check
-curl http://localhost:8000/health
+curl http://localhost:8000/api/v1/health
 
 # Response indicates readiness
 {
@@ -131,7 +131,7 @@ curl http://localhost:8000/v1/health/detailed
 
    ```bash
    for i in {1..30}; do
-     STATUS=$(curl -s http://localhost:8000/health | jq -r '.status')
+     STATUS=$(curl -s http://localhost:8000/api/v1/health | jq -r '.status')
      if [ "$STATUS" = "healthy" ]; then
        echo "Service healthy"
        break
@@ -337,7 +337,7 @@ Procedures to verify successful deployment.
 
 ```bash
 # 1. Health check (must pass)
-curl http://localhost:8000/health
+curl http://localhost:8000/api/v1/health
 
 # 2. Endpoint availability (sample critical endpoints)
 curl -H "X-API-KEY: $MASTER_API_KEY" http://localhost:8000/v1/health/detailed

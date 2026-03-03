@@ -13,6 +13,8 @@ from starlette.status import HTTP_504_GATEWAY_TIMEOUT
 
 from monitoring import logging_config
 
+from config import settings
+
 logger = logging_config.get_logger(__name__)
 
 # Default timeout in seconds (30s)
@@ -20,8 +22,8 @@ DEFAULT_REQUEST_TIMEOUT = 30
 
 # Endpoints that should have longer timeouts (PDF generation, etc.)
 EXTENDED_TIMEOUT_ENDPOINTS = {
-    "/v1/render/pdf": 60,  # PDF generation needs more time
-    "/v1/tailor": 45,  # AI tailoring needs more time
+    f"{settings.api_v1_prefix}/render/pdf": 60,  # PDF generation needs more time
+    f"{settings.api_v1_prefix}/tailor": 45,  # AI tailoring needs more time
 }
 
 

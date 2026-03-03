@@ -296,7 +296,7 @@ docker run --rm resume-api:test python -c "import sys; print('SUCCESS')"
 ### Health Check Test
 
 ```bash
-docker run -p 8000:8000 --health-cmd='python -c "import httpx; httpx.get(\"http://localhost:8000/health\").raise_for_status()"' resume-api:test
+docker run -p 8000:8000 --health-cmd='python -c "import httpx; httpx.get(\"http://localhost:8000/api/v1/health\").raise_for_status()"' resume-api:test
 ```
 
 **Expected**: Health check passes (exit code 0)

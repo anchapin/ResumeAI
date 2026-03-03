@@ -53,7 +53,7 @@ from database import (
 from config.dependencies import AuthorizedAPIKey
 from lib.utils.validators import validate_resume_data
 
-router = APIRouter(prefix="/api/v1/advanced", tags=["Advanced"])
+router = APIRouter(prefix="/advanced", tags=["Advanced"])
 
 
 # ============ Resume CRUD with Versioning ============

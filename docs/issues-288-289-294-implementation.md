@@ -282,10 +282,10 @@ curl http://localhost:8000/metrics | grep oauth_
 
 ```bash
 # Check OAuth health
-curl http://localhost:8000/health/oauth
+curl http://localhost:8000/api/v1/health/oauth
 
 # Check detailed health
-curl http://localhost:8000/health/detailed
+curl http://localhost:8000/api/v1/health/detailed
 ```
 
 ### 4. Test Alerts

@@ -52,7 +52,7 @@ else
     # Wait for backend to be ready
     echo -e "${YELLOW}Waiting for backend to be ready...${NC}"
     for i in {1..30}; do
-        if curl -s http://localhost:8000/health > /dev/null 2>&1; then
+        if curl -s http://localhost:8000/api/v1/health > /dev/null 2>&1; then
             echo -e "${GREEN}✓ Backend is ready${NC}"
             break
         fi

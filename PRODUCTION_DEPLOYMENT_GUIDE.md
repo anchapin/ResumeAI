@@ -524,7 +524,7 @@ services:
       - postgres
       - redis
     healthcheck:
-      test: ['CMD', 'curl', '-f', 'http://localhost:8000/health']
+      test: ['CMD', 'curl', '-f', 'http://localhost:8000/api/v1/health']
       interval: 30s
       timeout: 10s
       retries: 3

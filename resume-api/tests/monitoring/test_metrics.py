@@ -65,7 +65,7 @@ def test_increment_http_errors():
 def test_increment_rate_limit_exceeded():
     """Test incrementing rate limit exceeded counter."""
     # This should not raise an error
-    increment_rate_limit_exceeded("/v1/render/pdf")
+    increment_rate_limit_exceeded("/api/v1/render/pdf")
 
 
 def test_increment_pdfs_generated():

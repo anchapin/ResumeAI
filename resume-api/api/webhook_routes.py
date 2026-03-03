@@ -14,7 +14,7 @@ from config import settings
 from monitoring import logging_config
 
 logger = logging_config.get_logger(__name__)
-router = APIRouter(prefix="/api/v1/webhooks", tags=["Webhooks"])
+router = APIRouter(prefix="/webhooks", tags=["Webhooks"])
 
 
 def rate_limit(limit_value: str):
@@ -65,7 +65,7 @@ class WebhookDeliveryResponse(BaseModel):
     created_at: str
 
 
-@router.post("/v1/webhooks", response_model=WebhookResponse, tags=["Webhooks"])
+@router.post("", response_model=WebhookResponse, tags=["Webhooks"])
 @rate_limit("10/minute")
 async def create_webhook(request: Request, body: WebhookCreate, auth: AuthorizedAPIKey):
     """Create a new webhook endpoint."""
@@ -79,7 +79,7 @@ async def create_webhook(request: Request, body: WebhookCreate, auth: Authorized
     )
 
 
-@router.get("/v1/webhooks", response_model=List[WebhookResponse], tags=["Webhooks"])
+@router.get("", response_model=List[WebhookResponse], tags=["Webhooks"])
 @rate_limit("30/minute")
 async def list_webhooks(request: Request, auth: AuthorizedAPIKey):
     """List all webhooks."""
@@ -87,7 +87,7 @@ async def list_webhooks(request: Request, auth: AuthorizedAPIKey):
 
 
 @router.get(
-    "/v1/webhooks/{webhook_id}", response_model=WebhookResponse, tags=["Webhooks"]
+    "/{webhook_id}", response_model=WebhookResponse, tags=["Webhooks"]
 )
 @rate_limit("30/minute")
 async def get_webhook(request: Request, webhook_id: int, auth: AuthorizedAPIKey):
@@ -96,7 +96,7 @@ async def get_webhook(request: Request, webhook_id: int, auth: AuthorizedAPIKey)
 
 
 @router.put(
-    "/v1/webhooks/{webhook_id}", response_model=WebhookResponse, tags=["Webhooks"]
+    "/{webhook_id}", response_model=WebhookResponse, tags=["Webhooks"]
 )
 @rate_limit("10/minute")
 async def update_webhook(
@@ -106,14 +106,14 @@ async def update_webhook(
     raise HTTPException(status_code=404, detail=f"Webhook {webhook_id} not found")
 
 
-@router.delete("/v1/webhooks/{webhook_id}", tags=["Webhooks"])
+@router.delete("/{webhook_id}", tags=["Webhooks"])
 @rate_limit("10/minute")
 async def delete_webhook(request: Request, webhook_id: int, auth: AuthorizedAPIKey):
     """Delete a webhook."""
     raise HTTPException(status_code=404, detail=f"Webhook {webhook_id} not found")
 
 
-@router.post("/v1/webhooks/{webhook_id}/test", tags=["Webhooks"])
+@router.post("/{webhook_id}/test", tags=["Webhooks"])
 @rate_limit("5/minute")
 async def test_webhook(request: Request, webhook_id: int, auth: AuthorizedAPIKey):
     """Test a webhook by sending a ping event."""
@@ -121,7 +121,7 @@ async def test_webhook(request: Request, webhook_id: int, auth: AuthorizedAPIKey
 
 
 @router.get(
-    "/v1/webhooks/{webhook_id}/deliveries",
+    "/{webhook_id}/deliveries",
     response_model=List[WebhookDeliveryResponse],
     tags=["Webhooks"],
 )
@@ -134,7 +134,7 @@ async def list_webhook_deliveries(
 
 
 @router.post(
-    "/v1/webhooks/{webhook_id}/deliveries/{delivery_id}/retry", tags=["Webhooks"]
+    "/{webhook_id}/deliveries/{delivery_id}/retry", tags=["Webhooks"]
 )
 @rate_limit("10/minute")
 async def retry_webhook_delivery(

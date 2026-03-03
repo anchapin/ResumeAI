@@ -96,7 +96,7 @@ async function fetchAPIKeys(): Promise<APIKeyInfo[]> {
     throw new Error('Not authenticated');
   }
 
-  const response = await fetch(`${API_URL}/api-keys`, {
+  const response = await fetch(`${API_URL}/api/v1/api-keys`, {
     headers: {
       Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json',
@@ -129,7 +129,7 @@ async function createAPIKey(params: {
     throw new Error('Not authenticated');
   }
 
-  const response = await fetch(`${API_URL}/api-keys`, {
+  const response = await fetch(`${API_URL}/api/v1/api-keys`, {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${token}`,
@@ -155,7 +155,7 @@ async function revokeAPIKey(keyId: number): Promise<void> {
     throw new Error('Not authenticated');
   }
 
-  const response = await fetch(`${API_URL}/api-keys/${keyId}`, {
+  const response = await fetch(`${API_URL}/api/v1/api-keys/${keyId}`, {
     method: 'DELETE',
     headers: {
       Authorization: `Bearer ${token}`,

@@ -170,7 +170,7 @@ Failure Analysis:
    ./scripts/run-load-test.sh http://localhost:8000 5m
 
    # Terminal 2: Monitor API
-   watch -n 1 'curl -s http://localhost:8000/health | jq'
+   watch -n 1 'curl -s http://localhost:8000/api/v1/health | jq'
 
    # Terminal 3: System metrics
    top -b | head -20
@@ -290,7 +290,7 @@ jobs:
 
 ```bash
 # Test connectivity
-curl -v http://localhost:8000/health
+curl -v http://localhost:8000/api/v1/health
 
 # Check logs
 tail -f app.log

@@ -193,7 +193,7 @@ export const useGeneratePackage = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(`${API_URL}/v1/tailor`, {
+      const response = await fetch(`${API_URL}/api/v1/tailor`, {
         method: 'POST',
         headers: getHeaders(),
         body: JSON.stringify(requestBody),
@@ -225,7 +225,7 @@ export const useGeneratePackage = () => {
    */
   const downloadPDF = async (requestBody: RenderPDFRequest) => {
     try {
-      const response = await fetch(`${API_URL}/v1/render/pdf`, {
+      const response = await fetch(`${API_URL}/api/v1/render/pdf`, {
         method: 'POST',
         headers: getHeaders(),
         body: JSON.stringify(requestBody),
@@ -257,7 +257,7 @@ export const useGeneratePackage = () => {
    */
   const renderMarkdown = async (requestBody: RenderPDFRequest): Promise<string> => {
     try {
-      const response = await fetch(`${API_URL}/v1/render/markdown`, {
+      const response = await fetch(`${API_URL}/api/v1/render/markdown`, {
         method: 'POST',
         headers: getHeaders(),
         body: JSON.stringify(requestBody),
@@ -289,7 +289,7 @@ export const useGeneratePackage = () => {
     setCoverLetterLoading(true);
     setError(null);
     try {
-      const response = await fetch(`${API_URL}/v1/cover-letter`, {
+      const response = await fetch(`${API_URL}/api/v1/cover-letter`, {
         method: 'POST',
         headers: getHeaders(),
         body: JSON.stringify({
@@ -323,7 +323,7 @@ export const useGeneratePackage = () => {
    */
   const testConnection = useCallback(async (): Promise<boolean> => {
     try {
-      const response = await fetch(`${API_URL}/health`, {
+      const response = await fetch(`${API_URL}/api/v1/health`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',

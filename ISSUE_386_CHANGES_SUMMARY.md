@@ -142,7 +142,7 @@ import { fetchWithTimeout, TIMEOUT_CONFIG } from './fetch-timeout';
 
 // PDF generation with 15s timeout
 export async function generatePDF(resumeData: ResumeDataForAPI, variant: string = 'modern'): Promise<Blob> {
-  const response = await fetchWithTimeout(`${API_URL}/v1/render/pdf`, {
+  const response = await fetchWithTimeout(`${API_URL}/api/v1/render/pdf`, {
     method: 'POST',
     headers: { ...getHeaders(), 'Content-Type': 'application/json' },
     body: JSON.stringify({ resume_data: resumeData, variant }),
@@ -152,7 +152,7 @@ export async function generatePDF(resumeData: ResumeDataForAPI, variant: string 
 
 // AI tailoring with 15s timeout
 export async function tailorResume(resumeData: ResumeDataForAPI, jobDescription: string, ...): Promise<TailoredResumeResponse> {
-  const response = await fetchWithTimeout(`${API_URL}/v1/tailor`, {
+  const response = await fetchWithTimeout(`${API_URL}/api/v1/tailor`, {
     method: 'POST',
     headers: { ...getHeaders(), 'Content-Type': 'application/json' },
     body: JSON.stringify({ resume_data: resumeData, job_description: jobDescription, ... }),
@@ -162,7 +162,7 @@ export async function tailorResume(resumeData: ResumeDataForAPI, jobDescription:
 
 // Variants with 10s timeout
 export async function getVariants(filters?: { search?: string; category?: string; tags?: string[] }): Promise<VariantMetadata[]> {
-  const response = await fetchWithTimeout(`${API_URL}/v1/variants?${params}`, { headers: getHeaders() }, TIMEOUT_CONFIG.STANDARD);
+  const response = await fetchWithTimeout(`${API_URL}/api/v1/variants?${params}`, { headers: getHeaders() }, TIMEOUT_CONFIG.STANDARD);
   // ... rest of function
 }
 ```

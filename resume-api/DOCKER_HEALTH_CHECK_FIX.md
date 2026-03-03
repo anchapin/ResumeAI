@@ -14,7 +14,7 @@ The Docker health check command in the ResumeAI project was malformed and wouldn
 
 ```yaml
 healthcheck:
-  test: ['CMD', 'python', '-c', "import httpx; httpx.get('http://localhost:8000/health')"]
+  test: ['CMD', 'python', '-c', "import httpx; httpx.get('http://localhost:8000/api/v1/health')"]
 ```
 
 **After:**
@@ -26,7 +26,7 @@ healthcheck:
       'CMD',
       'python',
       '-c',
-      "import httpx; r = httpx.get('http://localhost:8000/health'); r.raise_for_status(); exit(0 if r.json().get('status') == 'healthy' else 1)",
+      "import httpx; r = httpx.get('http://localhost:8000/api/v1/health'); r.raise_for_status(); exit(0 if r.json().get('status') == 'healthy' else 1)",
     ]
   interval: 30s
   timeout: 10s
@@ -42,14 +42,14 @@ healthcheck:
 
 ```
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD python -c "import httpx; httpx.get('http://localhost:8000/health', timeout=10).raise_for_status() or exit(1)" || exit 1
+    CMD python -c "import httpx; httpx.get('http://localhost:8000/api/v1/health', timeout=10).raise_for_status() or exit(1)" || exit 1
 ```
 
 **After:**
 
 ```
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD python -c "import httpx; r = httpx.get('http://localhost:8000/health', timeout=10); r.raise_for_status(); exit(0 if r.json().get('status') == 'healthy' else 1)"
+    CMD python -c "import httpx; r = httpx.get('http://localhost:8000/api/v1/health', timeout=10); r.raise_for_status(); exit(0 if r.json().get('status') == 'healthy' else 1)"
 ```
 
 ## Improvements Made

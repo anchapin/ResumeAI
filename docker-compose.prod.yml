@@ -21,7 +21,7 @@ services:
       - MASTER_API_KEY=${MASTER_API_KEY}
       - REQUIRE_API_KEY=true
     healthcheck:
-      test: ["CMD", "python", "-c", "import httpx; httpx.get('http://localhost:8000/health', timeout=10).raise_for_status()"]
+      test: ["CMD", "python", "-c", "import httpx; httpx.get('http://localhost:8000/api/v1/health', timeout=10).raise_for_status()"]
       interval: 30s
       timeout: 10s
       retries: 3

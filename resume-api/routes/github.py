@@ -28,7 +28,7 @@ from api.models import GitHubStatusResponse
 # Get logger
 logger = logging_config.get_logger(__name__)
 
-router = APIRouter(prefix="/api/v1/github", tags=["GitHub"])
+router = APIRouter(prefix="/github", tags=["GitHub"])
 
 
 def generate_oauth_state() -> str:
@@ -317,7 +317,12 @@ async def github_oauth_callback(
                 },
             )
 
-        if datetime.now(timezone.utc) > oauth_state.expires_at:
+        # Handle potential timezone naive datetime from SQLite
+        expires_at = oauth_state.expires_at
+        if expires_at.tzinfo is None:
+            expires_at = expires_at.replace(tzinfo=timezone.utc)
+
+        if datetime.now(timezone.utc) > expires_at:
             logger.warning("github_oauth_expired_state", state=state)
             await db.delete(oauth_state)
             await db.commit()

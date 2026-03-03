@@ -190,11 +190,11 @@ class TestErrorResponseFormat:
         """Test error response includes request path and method."""
         response = create_error_response(
             ErrorCode.VALIDATION_ERROR,
-            path="/v1/render/pdf",
+            path="/api/v1/render/pdf",
             method="POST",
         )
 
-        assert response.path == "/v1/render/pdf"
+        assert response.path == "/api/v1/render/pdf"
         assert response.method == "POST"
 
 
@@ -208,7 +208,7 @@ class TestTokenExpiration:
     def test_expired_token_401(self, client):
         """Test request with expired token returns 401."""
         headers = {"Authorization": "Bearer expired.token.here"}
-        response = client.get("/v1/resumes", headers=headers)
+        response = client.get("/api/v1/resumes", headers=headers)
 
         assert response.status_code in [401, 422]  # May fail on validation first
 
@@ -260,7 +260,7 @@ class TestValidationErrors:
     def test_missing_required_field_error(self, client):
         """Test missing required field error."""
         payload = {"variant": "professional"}  # Missing resume_data
-        response = client.post("/v1/render/pdf", json=payload)
+        response = client.post("/api/v1/render/pdf", json=payload)
 
         assert response.status_code == 422
 
@@ -268,7 +268,7 @@ class TestValidationErrors:
     def test_invalid_type_error(self, client):
         """Test invalid type error."""
         payload = {"resume_data": "not an object", "variant": "professional"}
-        response = client.post("/v1/render/pdf", json=payload)
+        response = client.post("/api/v1/render/pdf", json=payload)
 
         assert response.status_code == 422
 
@@ -314,14 +314,14 @@ class TestValidationErrors:
     @pytest.mark.api
     def test_empty_payload_validation(self, client):
         """Test validation of empty payload."""
-        response = client.post("/v1/render/pdf", json={})
+        response = client.post("/api/v1/render/pdf", json={})
         assert response.status_code == 422
 
     @pytest.mark.api
     def test_null_field_validation(self, client):
         """Test validation of null fields."""
         payload = {"resume_data": None, "variant": "professional"}
-        response = client.post("/v1/render/pdf", json=payload)
+        response = client.post("/api/v1/render/pdf", json=payload)
         assert response.status_code == 422
 
 
@@ -512,8 +512,8 @@ class TestConcurrentErrorHandling:
         # Invalid request
         payload_invalid = {"variant": "professional"}  # Missing resume_data
 
-        response_valid = client.post("/v1/render/pdf", json=payload_valid)
-        response_invalid = client.post("/v1/render/pdf", json=payload_invalid)
+        response_valid = client.post("/api/v1/render/pdf", json=payload_valid)
+        response_invalid = client.post("/api/v1/render/pdf", json=payload_invalid)
 
         assert response_valid.status_code == 200
         assert response_invalid.status_code == 422
@@ -524,7 +524,7 @@ class TestConcurrentErrorHandling:
         request_ids = set()
 
         for _ in range(5):
-            response = client.post("/v1/render/pdf", json={})
+            response = client.post("/api/v1/render/pdf", json={})
             # Try to extract request ID from response headers or body
             request_id = response.headers.get("X-Request-ID")
             if request_id:
@@ -542,7 +542,7 @@ class TestConcurrentErrorHandling:
             {"resume_data": None},  # Null value
         ]
 
-        responses = [client.post("/v1/render/pdf", json=p) for p in payloads]
+        responses = [client.post("/api/v1/render/pdf", json=p) for p in payloads]
 
         # All should be errors
         assert all(r.status_code >= 400 for r in responses)
@@ -560,7 +560,7 @@ class TestRequestTracking:
     @pytest.mark.api
     def test_request_id_in_error_response(self, client):
         """Test error response includes request ID."""
-        response = client.post("/v1/render/pdf", json={})
+        response = client.post("/api/v1/render/pdf", json={})
         request_id = response.headers.get("X-Request-ID")
 
         assert request_id is not None
@@ -592,12 +592,12 @@ class TestErrorRecovery:
     def test_api_functional_after_error(self, client, valid_resume):
         """Test API continues working after error."""
         # Send invalid request
-        response1 = client.post("/v1/render/pdf", json={})
+        response1 = client.post("/api/v1/render/pdf", json={})
         assert response1.status_code == 422
 
         # Send valid request - should work
         payload = {"resume_data": valid_resume, "variant": "professional"}
-        response2 = client.post("/v1/render/pdf", json=payload)
+        response2 = client.post("/api/v1/render/pdf", json=payload)
         assert response2.status_code == 200
 
     @pytest.mark.api
@@ -605,8 +605,8 @@ class TestErrorRecovery:
         """Test health endpoint works after errors."""
         # Generate errors
         for _ in range(3):
-            client.post("/v1/render/pdf", json={})
-            client.get("/v1/nonexistent")
+            client.post("/api/v1/render/pdf", json={})
+            client.get("/api/v1/nonexistent")
 
         # Health check should still work
         response = client.get("/health")
@@ -618,9 +618,9 @@ class TestErrorRecovery:
         payload = {"resume_data": valid_resume, "variant": "professional"}
 
         # First attempt
-        response1 = client.post("/v1/render/pdf", json=payload)
+        response1 = client.post("/api/v1/render/pdf", json=payload)
         # Second attempt (should both work or handle consistently)
-        response2 = client.post("/v1/render/pdf", json=payload)
+        response2 = client.post("/api/v1/render/pdf", json=payload)
 
         assert response1.status_code in [200, 202]
         assert response2.status_code in [200, 202]
@@ -752,7 +752,7 @@ class TestErrorHandlingIntegration:
     @pytest.mark.integration
     def test_complete_error_flow(self, client):
         """Test complete error flow from request to response."""
-        response = client.post("/v1/render/pdf", json={})
+        response = client.post("/api/v1/render/pdf", json={})
 
         assert response.status_code == 422
         data = response.json()
@@ -766,7 +766,7 @@ class TestErrorHandlingIntegration:
         # Test multiple endpoints with invalid requests
         invalid_payload = {}
 
-        response1 = client.post("/v1/render/pdf", json=invalid_payload)
+        response1 = client.post("/api/v1/render/pdf", json=invalid_payload)
 
         # Both should have consistent error format
         assert response1.status_code >= 400
@@ -775,7 +775,7 @@ class TestErrorHandlingIntegration:
     @pytest.mark.integration
     def test_error_handler_middleware_activation(self, client):
         """Test error handler middleware is active."""
-        response = client.get("/v1/nonexistent-endpoint")
+        response = client.get("/api/v1/nonexistent-endpoint")
 
         assert response.status_code == 404
         # Response should contain data

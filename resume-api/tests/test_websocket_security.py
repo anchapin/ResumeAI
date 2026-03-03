@@ -31,7 +31,7 @@ class TestWebSocketAuthentication:
         ) as client:
             # Try to connect without token
             with pytest.raises(Exception):
-                await client.websocket_connect("/ws/resumes/test-resume-1")
+                await client.websocket_connect("/api/v1/ws/resumes/test-resume-1")
 
     @pytest.mark.asyncio
     async def test_websocket_with_valid_token(self, test_user):
@@ -46,7 +46,7 @@ class TestWebSocketAuthentication:
             # Connect with valid token
             with patch.object(settings, "ws_rate_limit_connections", "10/minute"):
                 async with client.websocket_connect(
-                    f"/ws/resumes/test-resume-1?token={token}"
+                    f"/api/v1/ws/resumes/test-resume-1?token={token}"
                 ) as websocket:
                     # Should receive room_state message
                     data = await websocket.receive_json()
@@ -63,7 +63,7 @@ class TestWebSocketAuthentication:
             # Try to connect with invalid token
             with pytest.raises(Exception):
                 async with client.websocket_connect(
-                    "/ws/resumes/test-resume-1?token=invalid-token"
+                    "/api/v1/ws/resumes/test-resume-1?token=invalid-token"
                 ):
                     pass
 
@@ -87,7 +87,7 @@ class TestWebSocketAuthentication:
             # Try to connect with expired token
             with pytest.raises(Exception):
                 async with client.websocket_connect(
-                    f"/ws/resumes/test-resume-1?token={token}"
+                    f"/api/v1/ws/resumes/test-resume-1?token={token}"
                 ):
                     pass
 
@@ -107,7 +107,7 @@ class TestWebSocketHeartbeat:
             with patch.object(settings, "ws_rate_limit_connections", "10/minute"):
                 with patch.object(settings, "ws_heartbeat_interval", 2):
                     async with client.websocket_connect(
-                        f"/ws/resumes/test-resume-1?token={token}"
+                        f"/api/v1/ws/resumes/test-resume-1?token={token}"
                     ) as websocket:
                         # Send ping
                         await websocket.send_json({"type": "ping"})
@@ -128,7 +128,7 @@ class TestWebSocketHeartbeat:
             with patch.object(settings, "ws_rate_limit_connections", "10/minute"):
                 with patch.object(settings, "ws_heartbeat_interval", 2):
                     async with client.websocket_connect(
-                        f"/ws/resumes/test-resume-1?token={token}"
+                        f"/api/v1/ws/resumes/test-resume-1?token={token}"
                     ) as websocket:
                         # Skip room_state
                         await websocket.receive_json()
@@ -157,7 +157,7 @@ class TestWebSocketTimeout:
                 with patch.object(settings, "ws_heartbeat_interval", 2):
                     with patch.object(settings, "ws_connection_timeout", 3):
                         async with client.websocket_connect(
-                            f"/ws/resumes/test-resume-1?token={token}"
+                            f"/api/v1/ws/resumes/test-resume-1?token={token}"
                         ) as websocket:
                             # Skip room_state
                             await websocket.receive_json()
@@ -232,20 +232,20 @@ class TestWebSocketConnectionLimit:
                 ) as client:
                     # Create first connection
                     ws1 = await client.websocket_connect(
-                        f"/ws/resumes/resume-1?token={token}"
+                        f"/api/v1/ws/resumes/resume-1?token={token}"
                     )
                     await ws1.receive_json()  # Skip room_state
 
                     # Create second connection
                     ws2 = await client.websocket_connect(
-                        f"/ws/resumes/resume-2?token={token}"
+                        f"/api/v1/ws/resumes/resume-2?token={token}"
                     )
                     await ws2.receive_json()  # Skip room_state
 
                     # Third connection should be rejected
                     with pytest.raises(Exception):
                         await client.websocket_connect(
-                            f"/ws/resumes/resume-3?token={token}"
+                            f"/api/v1/ws/resumes/resume-3?token={token}"
                         )
 
                     # Cleanup
@@ -267,7 +267,7 @@ class TestWebSocketMessages:
         ) as client:
             with patch.object(settings, "ws_rate_limit_connections", "10/minute"):
                 async with client.websocket_connect(
-                    f"/ws/resumes/test-resume-1?token={token}"
+                    f"/api/v1/ws/resumes/test-resume-1?token={token}"
                 ) as websocket:
                     # Skip room_state
                     await websocket.receive_json()
@@ -296,7 +296,7 @@ class TestWebSocketMessages:
         ) as client:
             with patch.object(settings, "ws_rate_limit_connections", "10/minute"):
                 async with client.websocket_connect(
-                    f"/ws/resumes/test-resume-1?token={token}"
+                    f"/api/v1/ws/resumes/test-resume-1?token={token}"
                 ) as websocket:
                     # Skip room_state
                     await websocket.receive_json()
@@ -325,7 +325,7 @@ class TestWebSocketMessages:
         ) as client:
             with patch.object(settings, "ws_rate_limit_connections", "10/minute"):
                 async with client.websocket_connect(
-                    f"/ws/resumes/test-resume-1?token={token}"
+                    f"/api/v1/ws/resumes/test-resume-1?token={token}"
                 ) as websocket:
                     # Skip room_state
                     await websocket.receive_json()
@@ -349,7 +349,7 @@ class TestWebSocketMessages:
         ) as client:
             with patch.object(settings, "ws_rate_limit_connections", "10/minute"):
                 async with client.websocket_connect(
-                    f"/ws/resumes/test-resume-1?token={token}"
+                    f"/api/v1/ws/resumes/test-resume-1?token={token}"
                 ) as websocket:
                     # Skip room_state
                     await websocket.receive_json()
@@ -377,7 +377,7 @@ class TestWebSocketPresence:
         ) as client:
             with patch.object(settings, "ws_rate_limit_connections", "10/minute"):
                 async with client.websocket_connect(
-                    f"/ws/resumes/test-resume-1?token={token}"
+                    f"/api/v1/ws/resumes/test-resume-1?token={token}"
                 ) as websocket:
                     # Receive room_state which includes users list
                     data = await websocket.receive_json()
@@ -396,13 +396,13 @@ class TestWebSocketPresence:
         ) as client:
             with patch.object(settings, "ws_rate_limit_connections", "10/minute"):
                 async with client.websocket_connect(
-                    f"/ws/resumes/test-resume-1?token={token1}"
+                    f"/api/v1/ws/resumes/test-resume-1?token={token1}"
                 ) as ws1:
                     await ws1.receive_json()  # Skip room_state
 
                     # Create another connection (simulating another user with same token for testing)
                     async with client.websocket_connect(
-                        f"/ws/resumes/test-resume-1?token={token1}"
+                        f"/api/v1/ws/resumes/test-resume-1?token={token1}"
                     ) as ws2:
                         await ws2.receive_json()  # Skip room_state
 

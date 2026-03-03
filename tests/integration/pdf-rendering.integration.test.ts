@@ -71,8 +71,9 @@ describe.skip('PDF Rendering Integration Tests', () => {
       const response = await context.apiClient.downloadPDF(generated.data.id);
 
       expect(response.status).toBe(200);
-      expect(response.headers['content-type']).toContain('application/pdf');
-      expect(response.headers['content-disposition']).toContain('attachment');
+      expect(response.headers).toBeDefined();
+      expect(response.headers!['content-type']).toContain('application/pdf');
+      expect(response.headers!['content-disposition']).toContain('attachment');
     });
   });
 
