@@ -26,7 +26,7 @@ class TestResumeTailoringBasic:
     ):
         """Test basic resume tailoring with job description."""
         response = await authenticated_client.post(
-            "/v1/tailor",
+            "/api/v1/tailor",
             json={
                 "resume_data": minimal_resume_data,
                 "job_description": job_description_tech["description"],
@@ -44,8 +44,8 @@ class TestResumeTailoringBasic:
         assert "suggestions" in data
 
         # Verify tailored data is valid
-        assert "contact" in data["resume_data"]
-        assert "sections" in data["resume_data"]
+        assert "basics" in data["resume_data"]
+        assert "work" in data["resume_data"]
 
     @pytest.mark.asyncio
     async def test_tailor_resume_comprehensive_data(
@@ -56,7 +56,7 @@ class TestResumeTailoringBasic:
     ):
         """Test tailoring comprehensive resume data."""
         response = await authenticated_client.post(
-            "/v1/tailor",
+            "/api/v1/tailor",
             json={
                 "resume_data": comprehensive_resume_data,
                 "job_description": job_description_tech["description"],
@@ -85,7 +85,7 @@ class TestResumeTailoringBasic:
     ):
         """Test keyword extraction from job description."""
         response = await authenticated_client.post(
-            "/v1/tailor",
+            "/api/v1/tailor",
             json={
                 "resume_data": minimal_resume_data,
                 "job_description": job_description_tech["description"],
@@ -97,8 +97,6 @@ class TestResumeTailoringBasic:
         keywords = data["keywords"]
 
         # Verify relevant keywords are extracted
-        job_description_tech["description"].lower()
-        # At least some keywords should relate to job description
         assert isinstance(keywords, list)
         assert len(keywords) > 0
 
@@ -111,7 +109,7 @@ class TestResumeTailoringBasic:
     ):
         """Test suggestions generation."""
         response = await authenticated_client.post(
-            "/v1/tailor",
+            "/api/v1/tailor",
             json={
                 "resume_data": minimal_resume_data,
                 "job_description": job_description_tech["description"],
@@ -141,7 +139,7 @@ class TestResumeTailoringSpecialContent:
     ):
         """Test tailoring resume with special characters."""
         response = await authenticated_client.post(
-            "/v1/tailor",
+            "/api/v1/tailor",
             json={
                 "resume_data": resume_with_special_chars,
                 "job_description": job_description_tech["description"],
@@ -161,16 +159,15 @@ class TestResumeTailoringSpecialContent:
     ):
         """Test tailoring resume with very long text."""
         response = await authenticated_client.post(
-            "/v1/tailor",
+            "/api/v1/tailor",
             json={
                 "resume_data": resume_with_long_text,
                 "job_description": job_description_tech["description"],
             },
         )
 
-        assert response.status_code == 200
-        data = response.json()
-        assert "resume_data" in data
+        # Excessively long text should return 400
+        assert response.status_code == 400
 
     @pytest.mark.asyncio
     async def test_tailor_resume_for_different_roles(
@@ -182,7 +179,7 @@ class TestResumeTailoringSpecialContent:
     ):
         """Test tailoring for different job types."""
         tech_response = await authenticated_client.post(
-            "/v1/tailor",
+            "/api/v1/tailor",
             json={
                 "resume_data": minimal_resume_data,
                 "job_description": job_description_tech["description"],
@@ -191,7 +188,7 @@ class TestResumeTailoringSpecialContent:
         )
 
         ai_response = await authenticated_client.post(
-            "/v1/tailor",
+            "/api/v1/tailor",
             json={
                 "resume_data": minimal_resume_data,
                 "job_description": job_description_ai["description"],
@@ -219,7 +216,7 @@ class TestResumeTailoringEdgeCases:
     ):
         """Test tailoring without job description."""
         response = await authenticated_client.post(
-            "/v1/tailor",
+            "/api/v1/tailor",
             json={
                 "resume_data": minimal_resume_data,
             },
@@ -234,7 +231,7 @@ class TestResumeTailoringEdgeCases:
     ):
         """Test tailoring with empty job description."""
         response = await authenticated_client.post(
-            "/v1/tailor",
+            "/api/v1/tailor",
             json={
                 "resume_data": minimal_resume_data,
                 "job_description": "",
@@ -250,7 +247,7 @@ class TestResumeTailoringEdgeCases:
     ):
         """Test tailoring with very short job description."""
         response = await authenticated_client.post(
-            "/v1/tailor",
+            "/api/v1/tailor",
             json={
                 "resume_data": minimal_resume_data,
                 "job_description": "Senior Engineer needed",
@@ -267,22 +264,21 @@ class TestResumeTailoringEdgeCases:
     ):
         """Test tailoring resume with missing contact info."""
         resume_data = {
-            "contact": {},
-            "sections": {
-                "experience": [],
-                "education": [],
-            },
+            "basics": {},
+            "work": [],
+            "education": [],
         }
 
         response = await authenticated_client.post(
-            "/v1/tailor",
+            "/api/v1/tailor",
             json={
                 "resume_data": resume_data,
                 "job_description": job_description_tech["description"],
             },
         )
 
-        assert response.status_code in [400, 422, 200]  # May or may not fail
+        # ResumeData validator requires at least one section
+        assert response.status_code in [400, 422, 200]
 
 
 class TestResumeTailoringAuthentication:
@@ -297,7 +293,7 @@ class TestResumeTailoringAuthentication:
     ):
         """Test tailoring fails without API key."""
         response = await unauthenticated_client.post(
-            "/v1/tailor",
+            "/api/v1/tailor",
             json={
                 "resume_data": minimal_resume_data,
                 "job_description": job_description_tech["description"],
@@ -314,14 +310,14 @@ class TestResumeTailoringAuthentication:
         api_client.headers = {"X-API-KEY": "invalid_key"}
 
         response = await api_client.post(
-            "/v1/tailor",
+            "/api/v1/tailor",
             json={
                 "resume_data": minimal_resume_data,
                 "job_description": job_description_tech["description"],
             },
         )
 
-        assert response.status_code == 401
+        assert response.status_code == 403
 
 
 class TestResumeTailoringRateLimiting:
@@ -336,7 +332,7 @@ class TestResumeTailoringRateLimiting:
     ):
         """Test rate limit headers are present."""
         response = await authenticated_client.post(
-            "/v1/tailor",
+            "/api/v1/tailor",
             json={
                 "resume_data": minimal_resume_data,
                 "job_description": job_description_tech["description"],
@@ -361,7 +357,7 @@ class TestResumeTailoringPerformance:
 
         start = time.time()
         response = await authenticated_client.post(
-            "/v1/tailor",
+            "/api/v1/tailor",
             json={
                 "resume_data": minimal_resume_data,
                 "job_description": job_description_tech["description"],

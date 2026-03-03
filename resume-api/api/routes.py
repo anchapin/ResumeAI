@@ -8,10 +8,12 @@ import os
 import re
 import sys
 import zipfile
+import hashlib
 from pathlib import Path
 
-from fastapi import APIRouter, HTTPException, Request, UploadFile, File, status
-from fastapi.responses import Response
+from fastapi import APIRouter, HTTPException, Request, Response, UploadFile, File, status
+
+from lib.utils.cache import get_cache_manager
 from pydantic import BaseModel, Field
 from typing import List
 
@@ -58,10 +60,16 @@ logger = logging_config.get_logger(__name__)
 LIB_DIR = Path(__file__).parent.parent
 TEMPLATES_DIR = LIB_DIR / "templates"
 
-router = APIRouter(prefix="/api/v1", tags=["Resumes"])
+router = APIRouter(prefix="", tags=["Resumes"])
 
 # Initialize managers
-variant_manager = VariantManager(str(TEMPLATES_DIR))
+_variant_manager = None
+
+def get_variant_manager():
+    global _variant_manager
+    if _variant_manager is None:
+        _variant_manager = VariantManager(str(TEMPLATES_DIR))
+    return _variant_manager
 
 
 @router.get("/health", tags=["Health"])
@@ -71,7 +79,7 @@ async def health_check():
 
 
 @router.post(
-    "/v1/render/pdf",
+    "/render/pdf",
     response_class=Response,
     responses={
         200: {"content": {"application/pdf": {}}, "description": "PDF resume file"},
@@ -140,7 +148,7 @@ async def render_pdf(request: Request, body: ResumeRequest, auth: AuthorizedAPIK
 
 
 @router.post(
-    "/v1/tailor",
+    "/tailor",
     response_model=TailoredResumeResponse,
     responses={
         400: {"model": ErrorResponse},
@@ -152,23 +160,29 @@ async def render_pdf(request: Request, body: ResumeRequest, auth: AuthorizedAPIK
     tags=["Tailoring"],
 )
 @rate_limit(settings.rate_limit_tailor)
-async def tailor_resume(request: Request, body: TailorRequest, auth: AuthorizedAPIKey):
+async def tailor_resume(
+    request: Request,
+    body: TailorRequest,
+    auth: AuthorizedAPIKey,
+    response: Response,
+):
     """
     Tailor a resume to match a job description.
-
-    Requires API key authentication via X-API-KEY header.
-
-    Rate limit: 30 requests per minute per API key.
-
-    Args:
-        request: FastAPI Request object
-        body: TailorRequest containing resume_data and job_description
-        auth: API key authentication info
-
-    Returns:
-        TailoredResumeResponse with modified resume data
     """
     try:
+        # Cache logic
+        cache_mgr = get_cache_manager()
+        # Generate hash of inputs for cache key
+        input_data = f"{body.job_description}:{body.resume_data.model_dump_json()}"
+        input_hash = hashlib.md5(input_data.encode()).hexdigest()
+        cache_key = cache_mgr.generate_key("tailoring:result", input_hash=input_hash)
+
+        # Try cache
+        cached_result = await cache_mgr.get(cache_key)
+        if cached_result:
+            response.headers["X-Cache"] = "HIT"
+            return TailoredResumeResponse(**cached_result)
+
         # Convert Pydantic model to dict
         resume_dict = body.resume_data.model_dump(exclude_none=True)
 
@@ -213,9 +227,15 @@ async def tailor_resume(request: Request, body: TailorRequest, auth: AuthorizedA
         # Convert back to Pydantic model
         tailored_data = ResumeData(**tailored_dict)
 
-        return TailoredResumeResponse(
+        result = TailoredResumeResponse(
             resume_data=tailored_data, keywords=keywords, suggestions=suggestions
         )
+
+        # Store in cache
+        await cache_mgr.set(cache_key, result.model_dump(), config_name="tailoring:result")
+        
+        response.headers["X-Cache"] = "MISS"
+        return result
 
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
@@ -227,7 +247,7 @@ async def tailor_resume(request: Request, body: TailorRequest, auth: AuthorizedA
 
 
 @router.get(
-    "/v1/variants",
+    "/variants",
     response_model=VariantsResponse,
     responses={
         200: {"description": "List of variants"},
@@ -239,6 +259,7 @@ async def tailor_resume(request: Request, body: TailorRequest, auth: AuthorizedA
 @rate_limit(settings.rate_limit_variants)
 async def list_variants(
     request: Request,
+    response: Response,
     search: str = None,
     tags: str = None,
     category: str = None,
@@ -248,21 +269,27 @@ async def list_variants(
 ):
     """
     List or filter resume template variants.
-
-    Rate limit: 60 requests per minute per API key.
-
-    Query Parameters:
-    - search: Search query for name/description
-    - tags: Comma-separated list of tags (e.g., "modern,professional")
-    - category: Template category (e.g., "technical", "creative")
-    - industry: Industry filter (e.g., "technology", "finance")
-    - layout: Layout type ("single-column", "double-column")
-    - color_theme: Color theme
-
-    Returns:
-        VariantsResponse with list of available (or filtered) variants
     """
     try:
+        # Cache logic
+        cache_mgr = get_cache_manager()
+        cache_key = cache_mgr.generate_key(
+            "resume:variants",
+            search=search,
+            tags=tags,
+            category=category,
+            industry=industry,
+            layout=layout,
+            color_theme=color_theme,
+        )
+
+        # Try to get from cache
+        cached_result = await cache_mgr.get(cache_key)
+        if cached_result:
+            response.headers["X-Cache"] = "HIT"
+            response.headers["Cache-Control"] = "public, max-age=300"
+            return VariantsResponse(**cached_result)
+
         # Parse tags from comma-separated string
         tags_list = None
         if tags:
@@ -270,7 +297,7 @@ async def list_variants(
 
         # Use filter if any filter params provided, otherwise get all with metadata
         if any([search, tags_list, category, industry, layout, color_theme]):
-            filtered_variants = variant_manager.filter_variants(
+            filtered_variants = get_variant_manager().filter_variants(
                 search=search,
                 tags=tags_list,
                 category=category,
@@ -280,13 +307,19 @@ async def list_variants(
             )
             variant_metadata = [VariantMetadata(**v) for v in filtered_variants]
         else:
-            variants = variant_manager.list_variants()
+            variants = get_variant_manager().list_variants()
             variant_metadata = []
             for variant in variants:
-                metadata = variant_manager.get_variant_metadata(variant)
+                metadata = get_variant_manager().get_variant_metadata(variant)
                 variant_metadata.append(VariantMetadata(**metadata))
 
-        return VariantsResponse(variants=variant_metadata)
+        result = VariantsResponse(variants=variant_metadata)
+        
+        # Store in cache
+        await cache_mgr.set(cache_key, result.model_dump(), config_name="resume:variants")
+        
+        response.headers["X-Cache"] = "MISS"
+        return result
 
     except Exception as e:
         raise HTTPException(
@@ -304,9 +337,9 @@ async def root():
         "description": "API for generating and tailoring professional resumes",
         "endpoints": {
             "health": "/health",
-            "render_pdf": "/v1/render/pdf",
-            "tailor": "/v1/tailor",
-            "variants": "/v1/variants",
+            "render_pdf": "/render/pdf",
+            "tailor": "/tailor",
+            "variants": "/variants",
             "docs": "/docs",
         },
     }
@@ -475,7 +508,7 @@ def create_docx_from_resume(resume_data: dict) -> bytes:
 
 
 @router.post(
-    "/v1/export/docx",
+    "/export/docx",
     response_class=Response,
     responses={
         200: {
@@ -768,7 +801,7 @@ def extract_dates(text: str) -> tuple:
 
 
 @router.post(
-    "/v1/import/pdf",
+    "/import/pdf",
     response_model=ResumeData,
     responses={
         200: {"model": ResumeData, "description": "Imported resume data"},
@@ -872,7 +905,7 @@ def extract_text_from_docx(file_bytes: bytes) -> str:
 
 
 @router.post(
-    "/v1/import/docx",
+    "/import/docx",
     response_model=ResumeData,
     responses={
         200: {"model": ResumeData, "description": "Imported resume data"},
@@ -1084,7 +1117,7 @@ def parse_linkedin_to_resume(profile_data: dict) -> dict:
 
 
 @router.post(
-    "/v1/import/linkedin",
+    "/import/linkedin",
     response_model=ResumeData,
     responses={
         200: {"model": ResumeData, "description": "Imported resume data"},
@@ -1152,7 +1185,7 @@ async def import_linkedin(
 
 
 @router.post(
-    "/v1/import/linkedin-file",
+    "/import/linkedin-file",
     response_model=ResumeData,
     responses={
         200: {"model": ResumeData, "description": "Imported resume data"},
@@ -1741,7 +1774,7 @@ class CoverLetterResponse(BaseModel):
 
 
 @router.post(
-    "/v1/cover-letter",
+    "/cover-letter",
     response_model=CoverLetterResponse,
     responses={
         400: {"model": ErrorResponse},

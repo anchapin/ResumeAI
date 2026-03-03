@@ -21,21 +21,16 @@ class TestValidationErrors:
     async def test_missing_required_field_contact_name(
         self, authenticated_client: AsyncClient
     ):
-        """Test error when contact name is missing."""
+        """Test error when resume data is empty."""
         response = await authenticated_client.post(
-            "/v1/render/pdf",
+            "/api/v1/render/pdf",
             json={
-                "resume_data": {
-                    "contact": {
-                        "email": "test@example.com",
-                    },
-                    "sections": {},
-                },
+                "resume_data": {},
                 "variant": "modern",
             },
         )
 
-        assert response.status_code == 400 or response.status_code == 422
+        assert response.status_code == 422
 
     @pytest.mark.asyncio
     async def test_invalid_email_format(
@@ -43,17 +38,17 @@ class TestValidationErrors:
     ):
         """Test error with invalid email format."""
         resume_data = minimal_resume_data.copy()
-        resume_data["contact"]["email"] = "not-an-email"
+        resume_data["basics"]["email"] = "not-an-email"
 
         response = await authenticated_client.post(
-            "/v1/render/pdf",
+            "/api/v1/render/pdf",
             json={
                 "resume_data": resume_data,
                 "variant": "modern",
             },
         )
 
-        assert response.status_code == 400
+        assert response.status_code == 422
 
     @pytest.mark.asyncio
     async def test_invalid_phone_format(
@@ -61,10 +56,10 @@ class TestValidationErrors:
     ):
         """Test error with invalid phone format."""
         resume_data = minimal_resume_data.copy()
-        resume_data["contact"]["phone"] = "not-a-phone"
+        resume_data["basics"]["phone"] = "not-a-phone"
 
         response = await authenticated_client.post(
-            "/v1/render/pdf",
+            "/api/v1/render/pdf",
             json={
                 "resume_data": resume_data,
                 "variant": "modern",
@@ -72,7 +67,7 @@ class TestValidationErrors:
         )
 
         # May or may not validate phone strictly
-        assert response.status_code in [200, 400]
+        assert response.status_code in [200, 422]
 
     @pytest.mark.asyncio
     async def test_invalid_url_format(
@@ -80,10 +75,10 @@ class TestValidationErrors:
     ):
         """Test error with invalid URL format."""
         resume_data = minimal_resume_data.copy()
-        resume_data["contact"]["website"] = "not a url"
+        resume_data["basics"]["url"] = "not a url"
 
         response = await authenticated_client.post(
-            "/v1/render/pdf",
+            "/api/v1/render/pdf",
             json={
                 "resume_data": resume_data,
                 "variant": "modern",
@@ -91,7 +86,7 @@ class TestValidationErrors:
         )
 
         # May or may not validate URLs strictly
-        assert response.status_code in [200, 400]
+        assert response.status_code in [200, 422]
 
 
 class TestMissingRequiredFields:
@@ -101,13 +96,13 @@ class TestMissingRequiredFields:
     async def test_pdf_missing_resume_data(self, authenticated_client: AsyncClient):
         """Test PDF endpoint with missing resume_data."""
         response = await authenticated_client.post(
-            "/v1/render/pdf",
+            "/api/v1/render/pdf",
             json={
                 "variant": "modern",
             },
         )
 
-        assert response.status_code in [400, 422]
+        assert response.status_code == 422
 
     @pytest.mark.asyncio
     async def test_pdf_missing_variant(
@@ -115,14 +110,14 @@ class TestMissingRequiredFields:
     ):
         """Test PDF endpoint with missing variant."""
         response = await authenticated_client.post(
-            "/v1/render/pdf",
+            "/api/v1/render/pdf",
             json={
                 "resume_data": minimal_resume_data,
             },
         )
 
         # Variant may have default
-        assert response.status_code in [200, 400, 422]
+        assert response.status_code in [200, 422]
 
     @pytest.mark.asyncio
     async def test_tailor_missing_resume_data(
@@ -130,13 +125,13 @@ class TestMissingRequiredFields:
     ):
         """Test tailor endpoint with missing resume_data."""
         response = await authenticated_client.post(
-            "/v1/tailor",
+            "/api/v1/tailor",
             json={
                 "job_description": job_description_tech["description"],
             },
         )
 
-        assert response.status_code in [400, 422]
+        assert response.status_code == 422
 
     @pytest.mark.asyncio
     async def test_tailor_missing_job_description(
@@ -144,13 +139,13 @@ class TestMissingRequiredFields:
     ):
         """Test tailor endpoint with missing job description."""
         response = await authenticated_client.post(
-            "/v1/tailor",
+            "/api/v1/tailor",
             json={
                 "resume_data": minimal_resume_data,
             },
         )
 
-        assert response.status_code in [400, 422]
+        assert response.status_code == 422
 
 
 class TestInvalidDataTypes:
@@ -160,14 +155,14 @@ class TestInvalidDataTypes:
     async def test_resume_data_not_dict(self, authenticated_client: AsyncClient):
         """Test error when resume_data is not a dict."""
         response = await authenticated_client.post(
-            "/v1/render/pdf",
+            "/api/v1/render/pdf",
             json={
                 "resume_data": "not a dict",
                 "variant": "modern",
             },
         )
 
-        assert response.status_code in [400, 422]
+        assert response.status_code == 422
 
     @pytest.mark.asyncio
     async def test_variant_not_string(
@@ -175,14 +170,14 @@ class TestInvalidDataTypes:
     ):
         """Test error when variant is not a string."""
         response = await authenticated_client.post(
-            "/v1/render/pdf",
+            "/api/v1/render/pdf",
             json={
                 "resume_data": minimal_resume_data,
                 "variant": 123,
             },
         )
 
-        assert response.status_code in [400, 422]
+        assert response.status_code == 422
 
     @pytest.mark.asyncio
     async def test_contact_name_not_string(
@@ -190,17 +185,17 @@ class TestInvalidDataTypes:
     ):
         """Test error when contact name is not a string."""
         resume_data = minimal_resume_data.copy()
-        resume_data["contact"]["name"] = 123
+        resume_data["basics"]["name"] = 123
 
         response = await authenticated_client.post(
-            "/v1/render/pdf",
+            "/api/v1/render/pdf",
             json={
                 "resume_data": resume_data,
                 "variant": "modern",
             },
         )
 
-        assert response.status_code in [400, 422]
+        assert response.status_code == 422
 
 
 class TestContentLimitations:
@@ -212,52 +207,45 @@ class TestContentLimitations:
         very_long_text = "x" * 50000  # 50KB of text
 
         resume_data = {
-            "contact": {
+            "basics": {
                 "name": "Test User",
                 "email": "test@example.com",
-            },
-            "sections": {
                 "summary": very_long_text,
-                "experience": [],
-                "education": [],
             },
         }
 
         response = await authenticated_client.post(
-            "/v1/render/pdf",
+            "/api/v1/render/pdf",
             json={
                 "resume_data": resume_data,
                 "variant": "modern",
             },
         )
 
-        # Should either process or reject with reasonable error
-        assert response.status_code in [200, 400, 413]
+        # Should be rejected by length validator or payload size limit
+        assert response.status_code in [400, 413, 422]
 
     @pytest.mark.asyncio
     async def test_many_experience_entries(self, authenticated_client: AsyncClient):
         """Test handling of many experience entries."""
         resume_data = {
-            "contact": {
+            "basics": {
                 "name": "Test User",
                 "email": "test@example.com",
             },
-            "sections": {
-                "experience": [
-                    {
-                        "company": f"Company {i}",
-                        "position": "Engineer",
-                        "start_date": "2020-01-01",
-                        "end_date": "2021-01-01",
-                    }
-                    for i in range(100)
-                ],
-                "education": [],
-            },
+            "work": [
+                {
+                    "company": f"Company {i}",
+                    "position": "Engineer",
+                    "startDate": "2020-01-01",
+                    "endDate": "2021-01-01",
+                }
+                for i in range(100)
+            ],
         }
 
         response = await authenticated_client.post(
-            "/v1/render/pdf",
+            "/api/v1/render/pdf",
             json={
                 "resume_data": resume_data,
                 "variant": "modern",
@@ -265,7 +253,7 @@ class TestContentLimitations:
         )
 
         # Should handle or gracefully reject
-        assert response.status_code in [200, 400]
+        assert response.status_code in [200, 422]
 
 
 class TestAuthenticationErrors:
@@ -277,7 +265,7 @@ class TestAuthenticationErrors:
     ):
         """Test error when API key header is missing."""
         response = await unauthenticated_client.post(
-            "/v1/render/pdf",
+            "/api/v1/render/pdf",
             json={
                 "resume_data": minimal_resume_data,
                 "variant": "modern",
@@ -286,7 +274,7 @@ class TestAuthenticationErrors:
 
         assert response.status_code == 401
         data = response.json()
-        assert "detail" in data
+        assert "error_code" in data or "detail" in data
 
     @pytest.mark.asyncio
     async def test_malformed_api_key(
@@ -296,7 +284,7 @@ class TestAuthenticationErrors:
         api_client.headers = {"X-API-KEY": ""}
 
         response = await api_client.post(
-            "/v1/render/pdf",
+            "/api/v1/render/pdf",
             json={
                 "resume_data": minimal_resume_data,
                 "variant": "modern",
@@ -311,14 +299,14 @@ class TestAuthenticationErrors:
         api_client.headers = {"X-API-KEY": "wrong_key_xyz_123"}
 
         response = await api_client.post(
-            "/v1/render/pdf",
+            "/api/v1/render/pdf",
             json={
                 "resume_data": minimal_resume_data,
                 "variant": "modern",
             },
         )
 
-        assert response.status_code == 401
+        assert response.status_code == 403
 
 
 class TestErrorResponseFormat:
@@ -330,11 +318,10 @@ class TestErrorResponseFormat:
     ):
         """Test that error response contains detail field."""
         response = await authenticated_client.post(
-            "/v1/render/pdf",
+            "/api/v1/render/pdf",
             json={
                 "resume_data": {
-                    "contact": {},
-                    "sections": {},
+                    "basics": {},
                 },
                 "variant": "modern",
             },
@@ -342,8 +329,8 @@ class TestErrorResponseFormat:
 
         if response.status_code != 200:
             data = response.json()
-            # Should have error detail
-            assert "detail" in data or "error" in data
+            # Should have error detail or error_code
+            assert "detail" in data or "error_code" in data
 
     @pytest.mark.asyncio
     async def test_validation_error_response_format(
@@ -351,22 +338,23 @@ class TestErrorResponseFormat:
     ):
         """Test validation error response format."""
         response = await authenticated_client.post(
-            "/v1/render/pdf",
+            "/api/v1/render/pdf",
             json={
                 "resume_data": "not a dict",
                 "variant": "modern",
             },
         )
 
-        assert response.status_code in [400, 422]
+        assert response.status_code == 422
         data = response.json()
         assert isinstance(data, dict)
+        assert "error_code" in data or "detail" in data
 
     @pytest.mark.asyncio
     async def test_error_includes_http_status(self, authenticated_client: AsyncClient):
         """Test that error response has proper HTTP status."""
         response = await authenticated_client.post(
-            "/v1/render/pdf",
+            "/api/v1/render/pdf",
             json={},
         )
 
@@ -381,21 +369,20 @@ class TestEdgeCaseErrors:
     async def test_null_values_in_data(self, authenticated_client: AsyncClient):
         """Test handling of null values in data."""
         response = await authenticated_client.post(
-            "/v1/render/pdf",
+            "/api/v1/render/pdf",
             json={
                 "resume_data": {
-                    "contact": {
+                    "basics": {
                         "name": None,
                         "email": "test@example.com",
                     },
-                    "sections": {},
                 },
                 "variant": "modern",
             },
         )
 
         # Should error or handle gracefully
-        assert response.status_code in [200, 400, 422]
+        assert response.status_code in [200, 422]
 
     @pytest.mark.asyncio
     async def test_empty_sections(
@@ -403,10 +390,11 @@ class TestEdgeCaseErrors:
     ):
         """Test handling of empty sections."""
         resume_data = minimal_resume_data.copy()
-        resume_data["sections"] = {}
+        resume_data["work"] = []
+        resume_data["education"] = []
 
         response = await authenticated_client.post(
-            "/v1/render/pdf",
+            "/api/v1/render/pdf",
             json={
                 "resume_data": resume_data,
                 "variant": "modern",
@@ -422,18 +410,18 @@ class TestEdgeCaseErrors:
         # This is a JSON parsing edge case
         # Most JSON parsers handle this by keeping last value
         response = await authenticated_client.post(
-            "/v1/render/pdf",
+            "/api/v1/render/pdf",
             json={
                 "resume_data": {
-                    "contact": {
+                    "basics": {
                         "name": "First Name",
+                        "name": "Last Name",
                         "email": "test@example.com",
                     },
-                    "sections": {},
                 },
                 "variant": "modern",
             },
         )
 
         # Should handle without crashing
-        assert response.status_code in [200, 400, 422]
+        assert response.status_code in [200, 422]

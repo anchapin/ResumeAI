@@ -28,7 +28,7 @@ from monitoring import logging_config
 # Configure logging
 logger = logging_config.get_logger(__name__)
 
-router = APIRouter(prefix="/api/v1/interview", tags=["interview"])
+router = APIRouter(prefix="/interviews", tags=["interview"])
 
 # In-memory storage for demo (replace with database in production)
 _sessions: Dict[str, InterviewSession] = {}

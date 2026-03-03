@@ -76,7 +76,7 @@ async def test_timeout_middleware_with_extended_timeout():
     # Add timeout middleware with default 1 second timeout
     app.add_middleware(TimeoutMiddleware, timeout_seconds=1)
 
-    @app.post("/v1/render/pdf")
+    @app.post("/api/v1/render/pdf")
     async def render_pdf():
         """PDF endpoint with extended timeout."""
         # Sleep for 2 seconds, should complete because PDF endpoint has 60s timeout
@@ -84,7 +84,7 @@ async def test_timeout_middleware_with_extended_timeout():
         return {"status": "ok"}
 
     client = TestClient(app)
-    response = client.post("/v1/render/pdf")
+    response = client.post("/api/v1/render/pdf")
 
     # Should succeed due to extended timeout for PDF endpoint
     assert response.status_code == 200

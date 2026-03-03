@@ -20,8 +20,8 @@ HEALTHY=true
 
 # Check Backend
 echo -e "${BLUE}Backend Service:${NC}"
-if curl -s http://localhost:8000/health > /dev/null 2>&1; then
-    HEALTH_RESPONSE=$(curl -s http://localhost:8000/health)
+if curl -s http://localhost:8000/api/v1/health > /dev/null 2>&1; then
+    HEALTH_RESPONSE=$(curl -s http://localhost:8000/api/v1/health)
     echo -e "  ${GREEN}✓ Running${NC}"
     echo -e "    Response: $HEALTH_RESPONSE"
     

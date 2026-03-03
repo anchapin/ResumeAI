@@ -92,13 +92,21 @@ class ConnectionManager:
                 connections_to_close = []
 
                 for connection_id, conn_data in list(self.connections.items()):
+                    # Check inactivity timeout
                     last_pong = datetime.fromisoformat(conn_data["last_pong"])
                     if now - last_pong > timeout_threshold:
-                        connections_to_close.append(connection_id)
+                        connections_to_close.append((connection_id, "inactivity_timeout"))
+                        continue
 
-                for connection_id in connections_to_close:
+                    # Check token expiration
+                    if "expires_at" in conn_data:
+                        expires_at = datetime.fromtimestamp(conn_data["expires_at"])
+                        if now > expires_at:
+                            connections_to_close.append((connection_id, "token_expired"))
+
+                for connection_id, reason in connections_to_close:
                     await self.close_connection(
-                        connection_id, reason="inactivity_timeout"
+                        connection_id, reason=reason
                     )
 
             except asyncio.CancelledError:
@@ -119,8 +127,17 @@ class ConnectionManager:
 
         if websocket:
             try:
+                # Use specific close codes for better client-side handling
+                close_code = 1000  # Normal
+                if reason == "inactivity_timeout":
+                    close_code = 4001
+                elif reason == "token_expired":
+                    close_code = 4002
+                elif reason == "rate_limited":
+                    close_code = 4003
+
                 await websocket.close(
-                    code=1000 if reason == "normal" else 1001,
+                    code=close_code,
                     reason=f"Connection closed: {reason}",
                 )
             except Exception:
@@ -128,15 +145,15 @@ class ConnectionManager:
 
         self.disconnect(connection_id)
 
-    async def connect(self, websocket: WebSocket, room_id: str, user_id: str = None):
+    async def connect(self, websocket: WebSocket, room_id: str, user_id: str = None, expires_at: float = None):
         """Add a new WebSocket connection to a room."""
         user_id = user_id or f"user_{str(uuid.uuid4())[:8]}"
         now = datetime.utcnow().isoformat()
 
         # Check rate limit
         if not ws_rate_limiter.can_connect(user_id):
-            await websocket.close(code=1008, reason="Too many connection attempts")
-            raise WebSocketDisconnect(code=1008, reason="Too many connection attempts")
+            await websocket.close(code=4003, reason="Too many connection attempts")
+            raise WebSocketDisconnect(code=4003, reason="Too many connection attempts")
 
         # Record connection attempt
         ws_rate_limiter.record_attempt(user_id)
@@ -146,8 +163,8 @@ class ConnectionManager:
             self.user_connections[user_id] = set()
 
         if len(self.user_connections[user_id]) >= settings.ws_max_connections_per_user:
-            await websocket.close(code=1008, reason="Too many connections")
-            raise WebSocketDisconnect(code=1008, reason="Too many connections")
+            await websocket.close(code=4003, reason="Too many connections")
+            raise WebSocketDisconnect(code=4003, reason="Too many connections")
 
         await websocket.accept()
 
@@ -171,6 +188,7 @@ class ConnectionManager:
             "last_seen": now,
             "connected_at": now,
             "last_pong": now,
+            "expires_at": expires_at,
         }
 
         # Notify others in room about new user

@@ -25,7 +25,7 @@ export const useAuth = () => {
 
   const fetchCurrentUser = async () => {
     try {
-      const response = await api.get('/auth/me');
+      const response = await api.get('/api/v1/auth/me');
       if (response.ok) {
         const userData = await response.json();
         setUser(userData);
@@ -45,7 +45,7 @@ export const useAuth = () => {
       setAuthError(null);
       setAuthLoading(true);
       try {
-        const response = await api.post('/auth/login', { email, password });
+        const response = await api.post('/api/v1/auth/login', { email, password });
 
         if (!response.ok) {
           const errData = await response.json().catch(() => ({}));
@@ -74,7 +74,7 @@ export const useAuth = () => {
       setAuthError(null);
       setAuthLoading(true);
       try {
-        const response = await api.post('/auth/register', {
+        const response = await api.post('/api/v1/auth/register', {
           email,
           username,
           password,
@@ -102,7 +102,7 @@ export const useAuth = () => {
     try {
       const refreshToken = localStorage.getItem('resumeai_refresh_token');
       if (refreshToken) {
-        await api.post('/auth/logout', { refresh_token: refreshToken }).catch(() => {});
+        await api.post('/api/v1/auth/logout', { refresh_token: refreshToken }).catch(() => {});
       }
     } finally {
       TokenManager.removeToken();

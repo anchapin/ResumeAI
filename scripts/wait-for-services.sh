@@ -18,7 +18,7 @@ echo -e "${BLUE}Waiting for services to be ready...${NC}\n"
 echo -e "${YELLOW}Waiting for backend...${NC}"
 max_attempts=60
 attempt=0
-while ! curl -s http://localhost:8000/health > /dev/null 2>&1; do
+while ! curl -s http://localhost:8000/api/v1/health > /dev/null 2>&1; do
     attempt=$((attempt + 1))
     if [ $attempt -ge $max_attempts ]; then
         echo -e "${RED}✗ Backend failed to start${NC}"

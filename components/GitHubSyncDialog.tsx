@@ -55,7 +55,7 @@ async function fetchGitHubConnectionStatus(): Promise<GitHubConnectionStatus> {
     throw new Error('Not authenticated');
   }
 
-  const response = await fetch(`${API_URL}/github/status`, {
+  const response = await fetch(`${API_URL}/api/v1/github/status`, {
     headers: {
       Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json',
@@ -84,7 +84,7 @@ async function getGitHubConnectUrl(
     throw new Error('Not authenticated');
   }
 
-  let url = `${API_URL}/github/connect`;
+  let url = `${API_URL}/api/v1/github/connect`;
   if (redirectUri) {
     url += `?redirect_uri=${encodeURIComponent(redirectUri)}`;
   }
@@ -115,7 +115,7 @@ async function fetchGitHubRepositories(): Promise<GitHubRepository[]> {
     throw new Error('Not authenticated');
   }
 
-  const response = await fetch(`${API_URL}/github/repositories`, {
+  const response = await fetch(`${API_URL}/api/v1/github/repositories`, {
     headers: {
       Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json',

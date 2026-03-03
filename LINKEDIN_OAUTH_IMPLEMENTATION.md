@@ -56,7 +56,7 @@ Added complete OAuth 2.0 flow with three new endpoints:
   }
   ```
 
-##### **GET `/api/linkedin/profile`**
+##### **GET `/api/v1/linkedin/profile`**
 
 - Retrieves the currently authenticated user's LinkedIn profile
 - Requires valid LinkedIn access token

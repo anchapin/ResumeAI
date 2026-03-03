@@ -125,7 +125,7 @@ class TestRenderPDfEndpoint:
     ):
         """Test successful PDF generation with valid data."""
         response = client.post(
-            "/v1/render/pdf",
+            "/api/v1/render/pdf",
             json={"resume_data": sample_resume_data, "variant": "base"},
             headers={"X-API-KEY": valid_api_key},
         )
@@ -135,7 +135,7 @@ class TestRenderPDfEndpoint:
     def test_render_pdf_with_default_variant(self, sample_resume_data, valid_api_key):
         """Test PDF generation with default variant when none specified."""
         response = client.post(
-            "/v1/render/pdf",
+            "/api/v1/render/pdf",
             json={
                 "resume_data": sample_resume_data
                 # variant not specified, should default to "base"
@@ -153,7 +153,7 @@ class TestRenderPDfEndpoint:
 
         for variant in variants:
             response = client.post(
-                "/v1/render/pdf",
+                "/api/v1/render/pdf",
                 json={"resume_data": sample_resume_data, "variant": variant},
                 headers={"X-API-KEY": valid_api_key},
             )
@@ -163,7 +163,7 @@ class TestRenderPDfEndpoint:
     def test_render_pdf_missing_api_key(self, sample_resume_data):
         """Test PDF generation fails without API key."""
         response = client.post(
-            "/v1/render/pdf",
+            "/api/v1/render/pdf",
             json={"resume_data": sample_resume_data, "variant": "base"},
             # No API key provided
         )
@@ -172,7 +172,7 @@ class TestRenderPDfEndpoint:
     def test_render_pdf_invalid_api_key(self, sample_resume_data):
         """Test PDF generation fails with invalid API key."""
         response = client.post(
-            "/v1/render/pdf",
+            "/api/v1/render/pdf",
             json={"resume_data": sample_resume_data, "variant": "base"},
             headers={"X-API-KEY": "invalid-key"},
         )
@@ -181,7 +181,7 @@ class TestRenderPDfEndpoint:
     def test_render_pdf_invalid_data(self, valid_api_key):
         """Test PDF generation fails with invalid resume data."""
         response = client.post(
-            "/v1/render/pdf",
+            "/api/v1/render/pdf",
             json={"resume_data": {}, "variant": "base"},  # Empty resume data
             headers={"X-API-KEY": valid_api_key},
         )
@@ -191,7 +191,7 @@ class TestRenderPDfEndpoint:
     def test_render_pdf_invalid_variant(self, sample_resume_data, valid_api_key):
         """Test PDF generation with invalid variant."""
         response = client.post(
-            "/v1/render/pdf",
+            "/api/v1/render/pdf",
             json={"resume_data": sample_resume_data, "variant": "nonexistent-variant"},
             headers={"X-API-KEY": valid_api_key},
         )
@@ -207,7 +207,7 @@ class TestTailorEndpoint:
         job_description = "We are looking for a Senior Software Engineer with experience in Python, React, and AWS."
 
         response = client.post(
-            "/v1/tailor",
+            "/api/v1/tailor",
             json={
                 "resume_data": sample_resume_data,
                 "job_description": job_description,
@@ -229,7 +229,7 @@ class TestTailorEndpoint:
         job_description = "Looking for experienced Python developer."
 
         response = client.post(
-            "/v1/tailor",
+            "/api/v1/tailor",
             json={
                 "resume_data": sample_resume_data,
                 "job_description": job_description,
@@ -243,7 +243,7 @@ class TestTailorEndpoint:
     def test_tailor_missing_required_fields(self, valid_api_key):
         """Test tailoring fails without required fields."""
         response = client.post(
-            "/v1/tailor",
+            "/api/v1/tailor",
             json={
                 "job_description": "Some job description"
                 # Missing resume_data
@@ -257,7 +257,7 @@ class TestTailorEndpoint:
         job_description = "We are looking for a Senior Software Engineer."
 
         response = client.post(
-            "/v1/tailor",
+            "/api/v1/tailor",
             json={
                 "resume_data": sample_resume_data,
                 "job_description": job_description,
@@ -271,7 +271,7 @@ class TestTailorEndpoint:
         job_description = "We are looking for a Senior Software Engineer."
 
         response = client.post(
-            "/v1/tailor",
+            "/api/v1/tailor",
             json={
                 "resume_data": sample_resume_data,
                 "job_description": job_description,
@@ -283,7 +283,7 @@ class TestTailorEndpoint:
     def test_tailor_empty_job_description(self, sample_resume_data, valid_api_key):
         """Test tailoring with empty job description."""
         response = client.post(
-            "/v1/tailor",
+            "/api/v1/tailor",
             json={
                 "resume_data": sample_resume_data,
                 "job_description": "",  # Empty job description
@@ -299,7 +299,7 @@ class TestVariantsEndpoint:
 
     def test_variants_success(self):
         """Test successful retrieval of variants."""
-        response = client.get("/v1/variants")
+        response = client.get("/api/v1/variants")
         assert response.status_code == 200
         assert response.headers["content-type"] == "application/json"
 
@@ -317,11 +317,11 @@ class TestVariantsEndpoint:
 
     def test_variants_with_api_key_not_required(self):
         """Test that variants endpoint doesn't require API key."""
-        response = client.get("/v1/variants")
+        response = client.get("/api/v1/variants")
         assert response.status_code == 200
 
         # Try with an API key too, should still work
-        response_with_key = client.get("/v1/variants", headers={"X-API-KEY": "any-key"})
+        response_with_key = client.get("/api/v1/variants", headers={"X-API-KEY": "any-key"})
         assert response_with_key.status_code == 200
 
 
@@ -332,7 +332,7 @@ class TestAuthenticationAndAuthorization:
         """Test that valid API key allows access to protected endpoints."""
         # Test with render endpoint
         response = client.post(
-            "/v1/render/pdf",
+            "/api/v1/render/pdf",
             json={"resume_data": sample_resume_data, "variant": "base"},
             headers={"X-API-KEY": valid_api_key},
         )
@@ -341,7 +341,7 @@ class TestAuthenticationAndAuthorization:
     def test_invalid_api_key_rejected(self, sample_resume_data):
         """Test that invalid API key is rejected."""
         response = client.post(
-            "/v1/render/pdf",
+            "/api/v1/render/pdf",
             json={"resume_data": sample_resume_data, "variant": "base"},
             headers={"X-API-KEY": "invalid-key"},
         )
@@ -350,7 +350,7 @@ class TestAuthenticationAndAuthorization:
     def test_no_api_key_rejected(self, sample_resume_data):
         """Test that missing API key is rejected for protected endpoints."""
         response = client.post(
-            "/v1/render/pdf",
+            "/api/v1/render/pdf",
             json={"resume_data": sample_resume_data, "variant": "base"},
             # No API key provided
         )
@@ -363,7 +363,7 @@ class TestAuthenticationAndAuthorization:
         assert response.status_code == 200
 
         # Variants endpoint should be accessible
-        response = client.get("/v1/variants")
+        response = client.get("/api/v1/variants")
         assert response.status_code == 200
 
 
@@ -389,7 +389,7 @@ class TestDataValidation:
     def test_invalid_json_format(self, valid_api_key):
         """Test that invalid JSON format returns appropriate error."""
         response = client.post(
-            "/v1/render/pdf",
+            "/api/v1/render/pdf",
             content="invalid json {",
             headers={"X-API-KEY": valid_api_key},
         )
@@ -399,7 +399,7 @@ class TestDataValidation:
         """Test handling of missing required fields in resume data."""
         # Send minimal data that might be missing required fields
         response = client.post(
-            "/v1/render/pdf",
+            "/api/v1/render/pdf",
             json={"resume_data": {}, "variant": "base"},  # Empty resume data
             headers={"X-API-KEY": valid_api_key},
         )
@@ -409,7 +409,7 @@ class TestDataValidation:
     def test_extra_unexpected_fields_ignored(self, sample_resume_data, valid_api_key):
         """Test that extra unexpected fields in request are ignored."""
         response = client.post(
-            "/v1/render/pdf",
+            "/api/v1/render/pdf",
             json={
                 "resume_data": sample_resume_data,
                 "variant": "base",

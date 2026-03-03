@@ -4,9 +4,11 @@ Job Description Parsing API Routes.
 Endpoints for parsing job descriptions, matching skills, and checking ATS compatibility.
 """
 
-from fastapi import APIRouter, HTTPException, Request, status
+from fastapi import APIRouter, HTTPException, Request, Response, status
 from typing import Any, Dict, List
+import hashlib
 
+from lib.utils.cache import get_cache_manager
 from .models import (
     JDAnalysisRequest,
     JDAnalysisResponse,
@@ -35,7 +37,7 @@ from lib.utils import (
 
 logger = logging_config.get_logger(__name__)
 
-router = APIRouter(prefix="/api/v1/jd", tags=["Job Description"])
+router = APIRouter(prefix="/jd", tags=["Job Description"])
 
 
 def rate_limit(limit_value: str):
@@ -47,7 +49,7 @@ def rate_limit(limit_value: str):
 
 
 @router.post(
-    "/v1/jd/analyze",
+    "/analyze",
     response_model=JDAnalysisResponse,
     responses={
         400: {"model": ErrorResponse},
@@ -63,26 +65,23 @@ async def analyze_job_description(
     request: Request,
     body: JDAnalysisRequest,
     auth: AuthorizedAPIKey,
+    response: Response,
 ):
     """
     Analyze a job description and extract structured information.
-
-    Extracts job title, company, location, salary, requirements,
-    qualifications, responsibilities, skills, and more.
-
-    Requires API key authentication via X-API-KEY header.
-
-    Rate limit: 30 requests per minute per API key.
-
-    Args:
-        request: FastAPI Request object
-        body: JDAnalysisRequest with job description text
-        auth: API key authentication info
-
-    Returns:
-        JDAnalysisResponse with parsed job description data
     """
     try:
+        # Cache logic
+        cache_mgr = get_cache_manager()
+        jd_hash = hashlib.md5(body.job_description.encode()).hexdigest()
+        cache_key = cache_mgr.generate_key("jd:analysis", jd_hash=jd_hash)
+
+        # Try cache
+        cached_result = await cache_mgr.get(cache_key)
+        if cached_result:
+            response.headers["X-Cache"] = "HIT"
+            return JDAnalysisResponse(**cached_result)
+
         # Parse the job description
         parsed = parse_job_description(body.job_description)
 
@@ -96,7 +95,7 @@ async def analyze_job_description(
                 period=parsed["salary"].get("period", "yearly"),
             )
 
-        return JDAnalysisResponse(
+        result = JDAnalysisResponse(
             title=parsed.get("title"),
             company=parsed.get("company"),
             location=parsed.get("location"),
@@ -113,6 +112,12 @@ async def analyze_job_description(
             keywords=parsed.get("keywords", []),
         )
 
+        # Store in cache
+        await cache_mgr.set(cache_key, result.model_dump(), config_name="jd:analysis")
+        
+        response.headers["X-Cache"] = "MISS"
+        return result
+
     except Exception as e:
         logger.error(f"JD analysis failed: {e}")
         raise HTTPException(
@@ -122,7 +127,7 @@ async def analyze_job_description(
 
 
 @router.post(
-    "/v1/jd/skills-match",
+    "/skills-match",
     response_model=SkillsMatchResponse,
     responses={
         400: {"model": ErrorResponse},
@@ -199,7 +204,7 @@ async def match_skills(
 
 # New endpoint for AI‑powered skill‑gap analysis
 @router.post(
-    "/v1/jd/skill-gap",
+    "/skill-gap",
     response_model=SkillGapResponse,
     responses={
         400: {"model": ErrorResponse},
@@ -252,7 +257,7 @@ async def skill_gap_analysis(
 
 
 @router.post(
-    "/v1/jd/ats-check",
+    "/ats-check",
     response_model=ATSCheckResponse,
     responses={
         400: {"model": ErrorResponse},
@@ -328,7 +333,7 @@ async def check_ats_compatibility(
 
 
 @router.post(
-    "/v1/jd/insights",
+    "/insights",
     response_model=JDInsightsResponse,
     responses={
         400: {"model": ErrorResponse},

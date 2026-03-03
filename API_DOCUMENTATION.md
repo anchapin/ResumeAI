@@ -317,7 +317,7 @@ const resumeData = {
   /* your resume data */
 };
 
-fetch('https://api.resumeai.app/v1/render/pdf', {
+fetch('https://api.resumeai.app/api/v1/render/pdf', {
   method: 'POST',
   headers: {
     'X-API-KEY': apiKey,
@@ -348,7 +348,7 @@ api_key = 'YOUR_API_KEY'
 resume_data = { # your resume data }
 
 response = requests.post(
-    'https://api.resumeai.app/v1/tailor',
+    'https://api.resumeai.app/api/v1/tailor',
     headers={'X-API-KEY': api_key},
     json={
         'resume_data': resume_data,
@@ -392,7 +392,7 @@ resume_data = {
 }
 
 response = requests.post(
-    'https://api.resumeai.app/v1/cover-letter',
+    'https://api.resumeai.app/api/v1/cover-letter',
     headers={'X-API-KEY': api_key},
     json={
         'resume_data': resume_data,

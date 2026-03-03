@@ -291,7 +291,7 @@ class TestLinkedInImportEndpoint:
         from main import app
 
         routes = [route.path for route in app.routes]
-        assert "/v1/import/linkedin-file" in routes
+        assert "/api/v1/import/linkedin-file" in routes
 
 
 if __name__ == "__main__":

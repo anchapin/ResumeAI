@@ -41,7 +41,7 @@ from database import (
 
 logger = logging_config.get_logger(__name__)
 
-router = APIRouter(prefix="/api/v1/teams", tags=["Teams"])
+router = APIRouter(prefix="/teams", tags=["Teams"])
 
 
 def rate_limit(limit_value: str):

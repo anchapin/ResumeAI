@@ -120,7 +120,7 @@ services:
     networks:
       - resumeai
     healthcheck:
-      test: ['CMD', 'curl', '-f', 'http://localhost:8000/health']
+      test: ['CMD', 'curl', '-f', 'http://localhost:8000/api/v1/health']
       interval: 10s
       timeout: 5s
       retries: 3
@@ -137,7 +137,7 @@ services:
     networks:
       - resumeai
     healthcheck:
-      test: ['CMD', 'curl', '-f', 'http://localhost:8000/health']
+      test: ['CMD', 'curl', '-f', 'http://localhost:8000/api/v1/health']
       interval: 10s
       timeout: 5s
       retries: 3
@@ -428,7 +428,7 @@ requests = 0
 
 while time.time() - start_time < 300:  # Monitor for 5 minutes
     try:
-        response = urllib.request.urlopen('http://localhost:8000/health', timeout=5)
+        response = urllib.request.urlopen('http://localhost:8000/api/v1/health', timeout=5)
         requests += 1
     except:
         errors += 1

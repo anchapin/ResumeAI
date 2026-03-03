@@ -43,7 +43,7 @@ function InterviewPractice() {
         difficulty,
       };
 
-      const response = await fetch(`${API_BASE_URL}/v1/interview/generate-questions`, {
+      const response = await fetch(`${API_BASE_URL}/api/v1/interviews/generate-questions`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -91,7 +91,7 @@ function InterviewPractice() {
       setLoading(true);
       const question = currentSession.questions[currentQuestionIndex];
 
-      const response = await fetch(`${API_BASE_URL}/v1/interview/submit-answer`, {
+      const response = await fetch(`${API_BASE_URL}/api/v1/interviews/submit-answer`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -161,12 +161,15 @@ function InterviewPractice() {
 
     try {
       setLoading(true);
-      await fetch(`${API_BASE_URL}/v1/interview/session/${currentSession.sessionId}/complete`, {
-        method: 'POST',
-        headers: {
-          'X-API-KEY': localStorage.getItem('RESUMEAI_API_KEY') || '',
+      await fetch(
+        `${API_BASE_URL}/api/v1/interviews/session/${currentSession.sessionId}/complete`,
+        {
+          method: 'POST',
+          headers: {
+            'X-API-KEY': localStorage.getItem('RESUMEAI_API_KEY') || '',
+          },
         },
-      });
+      );
 
       // Update session status
       setCurrentSession((prev) => (prev ? { ...prev, status: 'completed' } : null));
@@ -181,7 +184,7 @@ function InterviewPractice() {
 
   const loadSessionHistory = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/v1/interview/history`, {
+      const response = await fetch(`${API_BASE_URL}/api/v1/interviews/history`, {
         headers: {
           'X-API-KEY': localStorage.getItem('RESUMEAI_API_KEY') || '',
         },

@@ -157,7 +157,7 @@ class TestAPIKeyInvalidAlert:
             severity="warning",
             message="Repeated 401 Unauthorized responses detected",
             details={
-                "endpoint": "/v1/render/pdf",
+                "endpoint": "/api/v1/render/pdf",
                 "rate_per_second": 2.5,
                 "threshold": 1,
             },

@@ -333,7 +333,7 @@ class TestTokenManagement:
 
         # Request new access token
         response = await client.post(
-            "/auth/refresh",
+            "/api/v1/auth/refresh",
             json={"refresh_token": refresh_token},
         )
 
@@ -364,7 +364,7 @@ class TestTokenManagement:
 
         # Try to refresh
         response = await client.post(
-            "/auth/refresh",
+            "/api/v1/auth/refresh",
             json={"refresh_token": refresh_token},
         )
 
@@ -392,7 +392,7 @@ class TestTokenManagement:
 
         # Logout to revoke
         response = await client.post(
-            "/auth/logout",
+            "/api/v1/auth/logout",
             json={"refresh_token": refresh_token},
         )
 
@@ -400,7 +400,7 @@ class TestTokenManagement:
 
         # Try to use revoked token
         response = await client.post(
-            "/auth/refresh",
+            "/api/v1/auth/refresh",
             json={"refresh_token": refresh_token},
         )
 
@@ -464,7 +464,7 @@ class TestTokenManagement:
 
         # Try to access user2's data with user1's token
         client.headers = {"Authorization": f"Bearer {access_token}"}
-        response = await client.get("/auth/me")
+        response = await client.get("/api/v1/auth/me")
 
         # Should get user1 info, not user2
         assert response.status_code == 200
@@ -533,14 +533,14 @@ class TestOAuthErrorHandling:
     async def test_malformed_token(self, client):
         """Test that malformed tokens are rejected."""
         client.headers = {"Authorization": "Bearer malformed.token.xyz"}
-        response = await client.get("/auth/me")
+        response = await client.get("/api/v1/auth/me")
         assert response.status_code == 401
 
     @pytest.mark.asyncio
     async def test_missing_authorization_header(self, client):
         """Test that missing auth header returns 401."""
         client.headers = {}
-        response = await client.get("/auth/me")
+        response = await client.get("/api/v1/auth/me")
         assert response.status_code == 401
 
     @pytest.mark.asyncio
@@ -550,7 +550,7 @@ class TestOAuthErrorHandling:
         refresh_token = create_refresh_token(token_data)
 
         client.headers = {"Authorization": f"Bearer {refresh_token}"}
-        response = await client.get("/auth/me")
+        response = await client.get("/api/v1/auth/me")
         assert response.status_code == 401
 
     @pytest.mark.asyncio
@@ -570,7 +570,7 @@ class TestOAuthErrorHandling:
         access_token = create_access_token(token_data)
 
         client.headers = {"Authorization": f"Bearer {access_token}"}
-        response = await client.get("/auth/me")
+        response = await client.get("/api/v1/auth/me")
         assert response.status_code == 403
 
     @pytest.mark.asyncio
@@ -580,7 +580,7 @@ class TestOAuthErrorHandling:
         access_token = create_access_token(token_data)
 
         client.headers = {"Authorization": f"Bearer {access_token}"}
-        response = await client.get("/auth/me")
+        response = await client.get("/api/v1/auth/me")
         assert response.status_code == 404
 
 
@@ -615,7 +615,7 @@ class TestConcurrentRequests:
         # Make concurrent refresh requests
         async def make_request():
             return await client.post(
-                "/auth/refresh",
+                "/api/v1/auth/refresh",
                 json={"refresh_token": refresh_token},
             )
 
@@ -693,7 +693,7 @@ class TestRateLimiting:
         # Note: Rate limiting might be disabled in test mode
         # Just verify endpoint works normally
         response = await client.post(
-            "/auth/refresh",
+            "/api/v1/auth/refresh",
             json={"refresh_token": refresh_token},
         )
         assert response.status_code == 200
@@ -713,7 +713,7 @@ class TestSessionManagement:
     ):
         """Test updating user profile."""
         response = await authenticated_client.put(
-            "/auth/me",
+            "/api/v1/auth/me",
             json={
                 "full_name": "Updated Name",
                 "username": "newusername",
@@ -728,7 +728,7 @@ class TestSessionManagement:
     async def test_password_change(self, authenticated_client, test_user, db_session):
         """Test changing user password."""
         response = await authenticated_client.post(
-            "/auth/change-password",
+            "/api/v1/auth/change-password",
             json={
                 "current_password": "password123",
                 "new_password": "newpassword456",
@@ -765,14 +765,14 @@ class TestSessionManagement:
 
         # Logout
         response = await client.post(
-            "/auth/logout",
+            "/api/v1/auth/logout",
             json={"refresh_token": refresh_token},
         )
         assert response.status_code == 200
 
         # Token should be revoked - can't refresh
         response = await client.post(
-            "/auth/refresh",
+            "/api/v1/auth/refresh",
             json={"refresh_token": refresh_token},
         )
         assert response.status_code == 401
@@ -789,7 +789,7 @@ class TestAPIAuthentication:
     @pytest.mark.asyncio
     async def test_protected_endpoint_requires_auth(self, client):
         """Test that protected endpoints require authentication."""
-        response = await client.get("/auth/me")
+        response = await client.get("/api/v1/auth/me")
         assert response.status_code == 401
 
     @pytest.mark.asyncio
@@ -799,7 +799,7 @@ class TestAPIAuthentication:
         access_token = create_access_token(token_data)
 
         client.headers = {"Authorization": f"Bearer {access_token}"}
-        response = await client.get("/auth/me")
+        response = await client.get("/api/v1/auth/me")
 
         assert response.status_code == 200
         assert response.json()["id"] == test_user.id
@@ -812,10 +812,10 @@ class TestAPIAuthentication:
 
         # Test with proper Bearer prefix
         client.headers = {"Authorization": f"Bearer {access_token}"}
-        response = await client.get("/auth/me")
+        response = await client.get("/api/v1/auth/me")
         assert response.status_code == 200
 
         # Test with improper format
         client.headers = {"Authorization": f"Basic {access_token}"}
-        response = await client.get("/auth/me")
+        response = await client.get("/api/v1/auth/me")
         assert response.status_code == 401

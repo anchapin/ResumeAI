@@ -398,7 +398,7 @@ curl -X POST http://localhost:8000/v1/deployment/database/migration-ready \
 ```bash
 # Generate some traffic and measure response times
 for i in {1..100}; do
-  curl -s -o /dev/null -w "%{time_total}" http://localhost:8000/health
+  curl -s -o /dev/null -w "%{time_total}" http://localhost:8000/api/v1/health
   echo " seconds"
 done | sort -n | tail -10
 

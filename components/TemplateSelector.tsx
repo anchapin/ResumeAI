@@ -41,7 +41,7 @@ export const TemplateSelector: React.FC<TemplateSelectorProps> = ({
     try {
       setLoading(true);
       const apiUrl = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
-      const response = await fetch(`${apiUrl}/v1/templates`);
+      const response = await fetch(`${apiUrl}/api/v1/variants`);
       if (!response.ok) {
         throw new Error('Failed to fetch templates');
       }

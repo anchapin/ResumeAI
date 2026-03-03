@@ -124,7 +124,7 @@ Before deploying to production, test the OAuth flow:
 4. **Check Health Endpoint**
 
    ```bash
-   curl http://localhost:8000/health/oauth
+   curl http://localhost:8000/api/v1/health/oauth
    ```
 
    Expected response:

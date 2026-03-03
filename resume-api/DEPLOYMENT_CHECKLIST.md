@@ -178,7 +178,7 @@ This checklist ensures all safeguards are in place before, during, and after eac
 
 - [ ] Service started successfully
 - [ ] Application logs show no critical errors
-- [ ] Health check endpoint responding: `curl http://localhost:8000/health`
+- [ ] Health check endpoint responding: `curl http://localhost:8000/api/v1/health`
 - [ ] Database connection established
 - [ ] All required microservices started
 - [ ] Feature flags initialized correctly

@@ -18,7 +18,7 @@ class TestVariantListing:
     @pytest.mark.asyncio
     async def test_list_all_variants(self, api_client: AsyncClient):
         """Test listing all available resume variants."""
-        response = await api_client.get("/v1/variants")
+        response = await api_client.get("/api/v1/variants")
 
         assert response.status_code == 200
         data = response.json()
@@ -37,7 +37,7 @@ class TestVariantListing:
     @pytest.mark.asyncio
     async def test_variant_has_required_fields(self, api_client: AsyncClient):
         """Test that each variant has required metadata."""
-        response = await api_client.get("/v1/variants")
+        response = await api_client.get("/api/v1/variants")
 
         assert response.status_code == 200
         data = response.json()
@@ -55,7 +55,7 @@ class TestVariantListing:
     @pytest.mark.asyncio
     async def test_variant_metadata(self, api_client: AsyncClient):
         """Test variant metadata is complete."""
-        response = await api_client.get("/v1/variants")
+        response = await api_client.get("/api/v1/variants")
 
         assert response.status_code == 200
         data = response.json()
@@ -78,7 +78,7 @@ class TestVariantFiltering:
     async def test_filter_variants_by_search(self, api_client: AsyncClient):
         """Test filtering variants by search term."""
         response = await api_client.get(
-            "/v1/variants",
+            "/api/v1/variants",
             params={"search": "modern"},
         )
 
@@ -92,7 +92,7 @@ class TestVariantFiltering:
     async def test_filter_variants_by_category(self, api_client: AsyncClient):
         """Test filtering variants by category."""
         response = await api_client.get(
-            "/v1/variants",
+            "/api/v1/variants",
             params={"category": "technical"},
         )
 
@@ -106,7 +106,7 @@ class TestVariantFiltering:
     async def test_filter_variants_by_layout(self, api_client: AsyncClient):
         """Test filtering variants by layout."""
         response = await api_client.get(
-            "/v1/variants",
+            "/api/v1/variants",
             params={"layout": "single-column"},
         )
 
@@ -116,7 +116,7 @@ class TestVariantFiltering:
     async def test_filter_variants_by_color_theme(self, api_client: AsyncClient):
         """Test filtering variants by color theme."""
         response = await api_client.get(
-            "/v1/variants",
+            "/api/v1/variants",
             params={"color_theme": "blue"},
         )
 
@@ -126,7 +126,7 @@ class TestVariantFiltering:
     async def test_filter_variants_by_tags(self, api_client: AsyncClient):
         """Test filtering variants by tags."""
         response = await api_client.get(
-            "/v1/variants",
+            "/api/v1/variants",
             params={"tags": "modern,professional"},
         )
 
@@ -136,7 +136,7 @@ class TestVariantFiltering:
     async def test_combine_multiple_filters(self, api_client: AsyncClient):
         """Test combining multiple filters."""
         response = await api_client.get(
-            "/v1/variants",
+            "/api/v1/variants",
             params={
                 "search": "modern",
                 "category": "technical",
@@ -156,7 +156,7 @@ class TestVariantInPDFGeneration:
     ):
         """Test generating PDF with specific variant."""
         response = await authenticated_client.post(
-            "/v1/render/pdf",
+            "/api/v1/render/pdf",
             json={
                 "resume_data": minimal_resume_data,
                 "variant": "modern",
@@ -172,7 +172,7 @@ class TestVariantInPDFGeneration:
     ):
         """Test handling of invalid variant name."""
         response = await authenticated_client.post(
-            "/v1/render/pdf",
+            "/api/v1/render/pdf",
             json={
                 "resume_data": minimal_resume_data,
                 "variant": "nonexistent_variant_xyz",
@@ -191,7 +191,7 @@ class TestVariantInPDFGeneration:
 
         for variant in variants:
             response = await authenticated_client.post(
-                "/v1/render/pdf",
+                "/api/v1/render/pdf",
                 json={
                     "resume_data": minimal_resume_data,
                     "variant": variant,
@@ -208,7 +208,7 @@ class TestVariantMetadata:
     @pytest.mark.asyncio
     async def test_variant_description(self, api_client: AsyncClient):
         """Test that variants have descriptions."""
-        response = await api_client.get("/v1/variants")
+        response = await api_client.get("/api/v1/variants")
 
         assert response.status_code == 200
         data = response.json()
@@ -227,7 +227,7 @@ class TestVariantMetadata:
     @pytest.mark.asyncio
     async def test_variant_preview_info(self, api_client: AsyncClient):
         """Test that variant metadata includes preview information."""
-        response = await api_client.get("/v1/variants")
+        response = await api_client.get("/api/v1/variants")
 
         assert response.status_code == 200
         data = response.json()
@@ -243,7 +243,7 @@ class TestVariantMetadata:
     @pytest.mark.asyncio
     async def test_variant_categorization(self, api_client: AsyncClient):
         """Test that variants are properly categorized."""
-        response = await api_client.get("/v1/variants")
+        response = await api_client.get("/api/v1/variants")
 
         assert response.status_code == 200
         data = response.json()
@@ -271,7 +271,7 @@ class TestVariantPerformance:
         import time
 
         start = time.time()
-        response = await api_client.get("/v1/variants")
+        response = await api_client.get("/api/v1/variants")
         elapsed = time.time() - start
 
         assert response.status_code == 200
@@ -284,7 +284,7 @@ class TestVariantPerformance:
 
         start = time.time()
         response = await api_client.get(
-            "/v1/variants",
+            "/api/v1/variants",
             params={"search": "modern"},
         )
         elapsed = time.time() - start
@@ -301,7 +301,7 @@ class TestVariantAvailability:
         self, unauthenticated_client: AsyncClient
     ):
         """Test that variant listing doesn't require authentication."""
-        response = await unauthenticated_client.get("/v1/variants")
+        response = await unauthenticated_client.get("/api/v1/variants")
 
         # Variants listing should be public
         assert response.status_code == 200
@@ -309,7 +309,7 @@ class TestVariantAvailability:
     @pytest.mark.asyncio
     async def test_default_variant_exists(self, api_client: AsyncClient):
         """Test that a default variant is available."""
-        response = await api_client.get("/v1/variants")
+        response = await api_client.get("/api/v1/variants")
 
         assert response.status_code == 200
         data = response.json()
