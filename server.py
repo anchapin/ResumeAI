@@ -6,10 +6,10 @@ import tempfile
 import subprocess
 import hashlib
 from pathlib import Path
-from typing import List, Optional, Dict, Any, Union
+from typing import List, Optional, Dict, Any
 from async_lru import alru_cache
 from fastapi import FastAPI, HTTPException, Response, UploadFile, File
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 from fastapi.middleware.cors import CORSMiddleware
 import yaml
 import redis.asyncio as redis
@@ -18,6 +18,7 @@ import redis.asyncio as redis
 
 REDIS_URL = os.environ.get("REDIS_URL")
 redis_client: Optional[redis.Redis] = None
+
 
 async def init_redis():
     global redis_client
@@ -30,6 +31,7 @@ async def init_redis():
             print(f"Failed to connect to Redis: {e}")
             redis_client = None
 
+
 async def get_cached_data(key: str) -> Optional[Any]:
     if redis_client:
         try:
@@ -39,6 +41,7 @@ async def get_cached_data(key: str) -> Optional[Any]:
             print(f"Redis get error: {e}")
     return None
 
+
 async def set_cached_data(key: str, data: Any, ttl: int = 3600):
     if redis_client:
         try:
@@ -46,10 +49,12 @@ async def set_cached_data(key: str, data: Any, ttl: int = 3600):
         except Exception as e:
             print(f"Redis set error: {e}")
 
+
 def generate_cache_key(prefix: str, *args, **kwargs) -> str:
     content = json.dumps({"args": args, "kwargs": kwargs}, sort_keys=True)
     hash_val = hashlib.md5(content.encode()).hexdigest()
     return f"{prefix}:{hash_val}"
+
 
 # Initialize Generators (Mocks for local API, but v1 uses resume-cli)
 class MockTemplateGenerator:
@@ -60,7 +65,9 @@ class MockTemplateGenerator:
         return b"%PDF-1.4... (Mock PDF Data)"
 
     def _format_experience(self, experience: List) -> str:
-        return "\n".join([f"- {item.get('company')}: {item.get('role')}" for item in experience])
+        return "\n".join(
+            [f"- {item.get('company')}: {item.get('role')}" for item in experience]
+        )
 
 
 # ... (rest of mocks)
@@ -125,9 +132,11 @@ cover_letter_generator = MockCoverLetterGenerator()
 
 app = FastAPI(title="ResumeAI API")
 
+
 @app.on_event("startup")
 async def startup_event():
     await init_redis()
+
 
 # Allow CORS for local development
 # Note: allow_credentials=True is invalid with allow_origins=["*"] in strict CORS specs.
@@ -175,6 +184,13 @@ class GeneratePreviewRequest(BaseModel):
     job_description: str = ""
     variant: str = "standard"
 
+    @field_validator("variant")
+    @classmethod
+    def validate_variant(cls, v: str) -> str:
+        if not re.match(r"^[a-zA-Z0-9_-]+$", v):
+            raise ValueError("Invalid variant name")
+        return v
+
 
 class GeneratePackageRequest(BaseModel):
     resume: ResumeData
@@ -183,6 +199,13 @@ class GeneratePackageRequest(BaseModel):
     variant: str
     include_cover_letter: bool = True
     use_ai_judge: bool = False
+
+    @field_validator("variant")
+    @classmethod
+    def validate_variant(cls, v: str) -> str:
+        if not re.match(r"^[a-zA-Z0-9_-]+$", v):
+            raise ValueError("Invalid variant name")
+        return v
 
 
 class PackageResponse(BaseModel):
@@ -199,6 +222,13 @@ class V1RenderPdfRequest(BaseModel):
 
     resume_data: Dict[str, Any]
     variant: str = "base"
+
+    @field_validator("variant")
+    @classmethod
+    def validate_variant(cls, v: str) -> str:
+        if not re.match(r"^[a-zA-Z0-9_-]+$", v):
+            raise ValueError("Invalid variant name")
+        return v
 
 
 class V1TailorRequest(BaseModel):
@@ -219,7 +249,11 @@ class V1VariantsResponse(BaseModel):
 
 @app.get("/")
 async def health_check():
-    return {"status": "ok", "service": "ResumeAI API", "cache": "connected" if redis_client else "disconnected"}
+    return {
+        "status": "ok",
+        "service": "ResumeAI API",
+        "cache": "connected" if redis_client else "disconnected",
+    }
 
 
 @app.post("/generate/preview")
@@ -680,7 +714,7 @@ async def v1_variants():
         ]
 
         result = {"variants": variants}
-        await set_cached_data(cache_key, result, ttl=86400) # Cache for 24 hours
+        await set_cached_data(cache_key, result, ttl=86400)  # Cache for 24 hours
         return result
 
     except Exception as e:
@@ -695,7 +729,6 @@ async def import_linkedin_file(files: List[UploadFile] = File(...)):
     Import resume from LinkedIn exported file (JSON, ZIP, or CSV).
     """
     import io
-    import csv
     import zipfile
 
     print(f"DEBUG: LinkedIn Import started with {len(files)} files")
