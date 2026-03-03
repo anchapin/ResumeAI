@@ -120,13 +120,11 @@ class TestWebSocketHeartbeat:
                     websocket.send_json({"type": "pong"})
 
 
-class TestWebSocketTimeout:
-    """Test WebSocket connection timeout."""
-
-    def test_websocket_inactivity_timeout(self, test_user, test_client):
+    @pytest.mark.asyncio
+    async def test_websocket_inactivity_timeout(self, test_user, test_client):
         """Test WebSocket closes after inactivity."""
         token = create_access_token({"sub": str(test_user.id)})
-
+    
         with patch.object(settings, "ws_rate_limit_connections", "10/minute"):
             with patch.object(settings, "ws_heartbeat_interval", 2):
                 with patch.object(settings, "ws_connection_timeout", 3):
@@ -135,11 +133,11 @@ class TestWebSocketTimeout:
                     ) as websocket:
                         # Skip room_state
                         websocket.receive_json()
-
+    
                         # Wait for timeout to occur
-                        import time
-                        time.sleep(5)
-
+                        import asyncio
+                        await asyncio.sleep(5)
+    
                         # Should receive close or error
                         with pytest.raises(Exception):
                             websocket.receive_json()
