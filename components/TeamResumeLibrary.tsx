@@ -2,6 +2,7 @@ import React, { useState, useCallback } from 'react';
 import { TeamResume, ResumeMetadata } from '../types';
 import { shareResumeWithTeam, unshareResumeFromTeam, listResumes } from '../utils/api-client';
 import { showSuccessToast, showErrorToast } from '../utils/toast';
+import AccessibleDialog from './AccessibleDialog';
 
 interface TeamResumeLibraryProps {
   sharedResumes: TeamResume[];
@@ -174,120 +175,102 @@ const TeamResumeLibrary: React.FC<TeamResumeLibraryProps> = ({
       </div>
 
       {/* Share Dialog */}
-      {isShareDialogOpen && (
-        <div
-          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
-          onClick={handleCloseShareDialog}
-          role="dialog"
-          aria-modal="true"
-        >
-          <div
-            className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full mx-4 max-h-[90vh] flex flex-col"
-            onClick={(e) => e.stopPropagation()}
+      <AccessibleDialog
+        isOpen={isShareDialogOpen}
+        onClose={handleCloseShareDialog}
+        title="Share Resume with Team"
+        className="max-w-2xl"
+        footer={
+          <button
+            onClick={handleCloseShareDialog}
+            className="w-full py-2.5 text-sm font-bold text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
           >
-            <div className="flex items-center justify-between p-6 border-b border-slate-200">
-              <h2 className="text-xl font-bold text-slate-900">Share Resume with Team</h2>
-              <button
-                onClick={handleCloseShareDialog}
-                className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
-              >
-                <span className="material-symbols-outlined">close</span>
-              </button>
+            Cancel
+          </button>
+        }
+      >
+        <div className="flex-1 overflow-auto pr-2">
+          {isLoadingResumes ? (
+            <div className="flex items-center justify-center py-8">
+              <span className="material-symbols-outlined animate-spin text-primary-600 text-4xl">
+                progress_activity
+              </span>
             </div>
+          ) : userResumes.length === 0 ? (
+            <div className="text-center py-8">
+              <span className="material-symbols-outlined text-slate-300 text-6xl mb-4">
+                description
+              </span>
+              <p className="text-slate-500 font-medium mb-2">No resumes found</p>
+              <p className="text-slate-400 text-sm">
+                Create some resumes first to share them with your team
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {userResumes.map((resume) => {
+                const isShared = sharedResumes.some((sr) => sr.resumeId === String(resume.id));
 
-            <div className="flex-1 overflow-auto p-6">
-              {isLoadingResumes ? (
-                <div className="flex items-center justify-center py-8">
-                  <span className="material-symbols-outlined animate-spin text-primary-600 text-4xl">
-                    progress_activity
-                  </span>
-                </div>
-              ) : userResumes.length === 0 ? (
-                <div className="text-center py-8">
-                  <span className="material-symbols-outlined text-slate-300 text-6xl mb-4">
-                    description
-                  </span>
-                  <p className="text-slate-500 font-medium mb-2">No resumes found</p>
-                  <p className="text-slate-400 text-sm">
-                    Create some resumes first to share them with your team
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  {userResumes.map((resume) => {
-                    const isShared = sharedResumes.some((sr) => sr.resumeId === String(resume.id));
-
-                    return (
-                      <div
-                        key={resume.id}
-                        className={`flex items-center justify-between p-4 rounded-xl border transition-colors ${
-                          isShared
-                            ? 'bg-slate-50 border-slate-200 opacity-50 cursor-not-allowed'
-                            : 'bg-white border-slate-200 hover:border-primary-300 cursor-pointer'
-                        }`}
-                        onClick={() => !isShared && handleShareResume(resume.id)}
-                      >
-                        <div className="flex items-center gap-4">
-                          <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
-                            <span className="material-symbols-outlined text-slate-500 text-[24px]">
-                              description
-                            </span>
-                          </div>
-                          <div>
-                            <h4 className="font-bold text-slate-900">{resume.title}</h4>
-                            {resume.tags && resume.tags.length > 0 && (
-                              <div className="flex items-center gap-1 mt-1">
-                                {resume.tags.slice(0, 3).map((tag) => (
-                                  <span
-                                    key={tag}
-                                    className="px-2 py-0.5 bg-slate-100 text-slate-600 text-xs rounded-full"
-                                  >
-                                    {tag}
-                                  </span>
-                                ))}
-                                {resume.tags.length > 3 && (
-                                  <span className="text-xs text-slate-400">
-                                    +{resume.tags.length - 3} more
-                                  </span>
-                                )}
-                              </div>
+                return (
+                  <div
+                    key={resume.id}
+                    className={`flex items-center justify-between p-4 rounded-xl border transition-colors ${
+                      isShared
+                        ? 'bg-slate-50 border-slate-200 opacity-50 cursor-not-allowed'
+                        : 'bg-white border-slate-200 hover:border-primary-300 cursor-pointer'
+                    }`}
+                    onClick={() => !isShared && handleShareResume(resume.id)}
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                        <span className="material-symbols-outlined text-slate-500 text-[24px]">
+                          description
+                        </span>
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-slate-900">{resume.title}</h4>
+                        {resume.tags && resume.tags.length > 0 && (
+                          <div className="flex items-center gap-1 mt-1">
+                            {resume.tags.slice(0, 3).map((tag) => (
+                              <span
+                                key={tag}
+                                className="px-2 py-0.5 bg-slate-100 text-slate-600 text-xs rounded-full"
+                              >
+                                {tag}
+                              </span>
+                            ))}
+                            {resume.tags.length > 3 && (
+                              <span className="text-xs text-slate-400">
+                                +{resume.tags.length - 3} more
+                              </span>
                             )}
                           </div>
-                        </div>
-
-                        <div className="flex items-center gap-2">
-                          {isShared ? (
-                            <span className="px-3 py-1.5 bg-slate-200 text-slate-600 text-sm font-medium rounded-lg">
-                              Shared
-                            </span>
-                          ) : sharingResumeId === resume.id ? (
-                            <span className="material-symbols-outlined animate-spin text-primary-600">
-                              progress_activity
-                            </span>
-                          ) : (
-                            <span className="material-symbols-outlined text-slate-400 text-[20px]">
-                              arrow_forward
-                            </span>
-                          )}
-                        </div>
+                        )}
                       </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
+                    </div>
 
-            <div className="p-6 border-t border-slate-200">
-              <button
-                onClick={handleCloseShareDialog}
-                className="w-full py-2.5 text-sm font-bold text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
-              >
-                Cancel
-              </button>
+                    <div className="flex items-center gap-2">
+                      {isShared ? (
+                        <span className="px-3 py-1.5 bg-slate-200 text-slate-600 text-sm font-medium rounded-lg">
+                          Shared
+                        </span>
+                      ) : sharingResumeId === resume.id ? (
+                        <span className="material-symbols-outlined animate-spin text-primary-600">
+                          progress_activity
+                        </span>
+                      ) : (
+                        <span className="material-symbols-outlined text-slate-400 text-[20px]">
+                          arrow_forward
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-          </div>
+          )}
         </div>
-      )}
+      </AccessibleDialog>
     </>
   );
 };
