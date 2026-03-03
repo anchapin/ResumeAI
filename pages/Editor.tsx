@@ -78,6 +78,12 @@ const Editor: React.FC = () => {
   // Drag and drop state for section reordering
   const [draggedItemId, setDraggedItemId] = useState<string | null>(null);
   const [dragOverItemId, setDragOverItemId] = useState<string | null>(null);
+  const draggedItemIdRef = useRef<string | null>(null);
+
+  // Update draggedItemIdRef when state changes
+  useEffect(() => {
+    draggedItemIdRef.current = draggedItemId;
+  }, [draggedItemId]);
 
   // Versioning state
   const [showVersionHistory, setShowVersionHistory] = useState<boolean>(false);
@@ -142,18 +148,20 @@ const Editor: React.FC = () => {
   const canRedo = historyIndex < history.length - 1;
 
   const undo = useCallback(() => {
-    if (!canUndo) return;
-    const newIndex = historyIndex - 1;
+    const { history: h, index } = historyRef.current;
+    if (index <= 0) return;
+    const newIndex = index - 1;
     setHistoryIndex(newIndex);
-    setResumeData(history[newIndex]);
-  }, [history, historyIndex, setResumeData, canUndo]);
+    setResumeData(h[newIndex]);
+  }, [setResumeData]);
 
   const redo = useCallback(() => {
-    if (!canRedo) return;
-    const newIndex = historyIndex + 1;
+    const { history: h, index } = historyRef.current;
+    if (index >= h.length - 1) return;
+    const newIndex = index + 1;
     setHistoryIndex(newIndex);
-    setResumeData(history[newIndex]);
-  }, [history, historyIndex, setResumeData, canRedo]);
+    setResumeData(h[newIndex]);
+  }, [setResumeData]);
 
   // Fetch variants on mount
   useEffect(() => {
@@ -175,7 +183,8 @@ const Editor: React.FC = () => {
     setIsGeneratingPDF(true);
     setPdfError(null);
     try {
-      const pdfBlob = await generatePDF(convertToAPIData(resumeData), selectedVariant);
+      const currentData = resumeDataRef.current;
+      const pdfBlob = await generatePDF(convertToAPIData(currentData), selectedVariant);
       const url = URL.createObjectURL(pdfBlob);
       const link = document.createElement('a');
       link.href = url;
@@ -190,7 +199,7 @@ const Editor: React.FC = () => {
     } finally {
       setIsGeneratingPDF(false);
     }
-  }, [resumeData, selectedVariant]);
+  }, [selectedVariant]);
 
   const handleTemplateChange = useCallback((template: string) => {
     setSelectedVariant(template);
@@ -206,8 +215,9 @@ const Editor: React.FC = () => {
 
     try {
       setSavingVersion(true);
+      const currentData = resumeDataRef.current;
       await updateResume(currentResumeId, {
-        data: convertToAPIData(resumeData),
+        data: convertToAPIData(currentData),
         changeDescription: versionDescription.trim(),
       });
       showSuccessToast('Version saved successfully!');
@@ -219,14 +229,15 @@ const Editor: React.FC = () => {
     } finally {
       setSavingVersion(false);
     }
-  }, [currentResumeId, resumeData, versionDescription]);
+  }, [currentResumeId, versionDescription]);
 
   // Handle Restore Version
   const handleRestoreVersion = useCallback(
     async (version: any) => {
       try {
+        const currentData = resumeDataRef.current;
         trackedUpdate({
-          ...resumeData,
+          ...currentData,
           ...version.data,
         });
         showSuccessToast('Version restored successfully!');
@@ -235,19 +246,20 @@ const Editor: React.FC = () => {
         showErrorToast('Failed to restore version. Please try again.');
       }
     },
-    [trackedUpdate, resumeData],
+    [trackedUpdate],
   );
 
   // Handle Save Profile
   const handleSaveProfile = useCallback(async () => {
     try {
-      localStorage.setItem('resume_draft', JSON.stringify(resumeData));
+      const currentData = resumeDataRef.current;
+      localStorage.setItem('resume_draft', JSON.stringify(currentData));
       alert('Profile saved successfully!');
     } catch (err) {
       console.error('Save failed:', err);
       alert('Failed to save profile. Please try again.');
     }
-  }, [resumeData]);
+  }, []);
 
   // Handle LinkedIn Import
   const handleLinkedInImport = useCallback(
@@ -471,11 +483,12 @@ const Editor: React.FC = () => {
 
   const handleDrop = useCallback(
     (targetId: string) => {
-      if (!draggedItemId || draggedItemId === targetId) return;
+      const draggedId = draggedItemIdRef.current;
+      if (!draggedId || draggedId === targetId) return;
 
       const currentData = resumeDataRef.current;
       const items = [...currentData.experience];
-      const draggedIndex = items.findIndex((item) => item.id === draggedItemId);
+      const draggedIndex = items.findIndex((item) => item.id === draggedId);
       const targetIndex = items.findIndex((item) => item.id === targetId);
 
       if (draggedIndex !== -1 && targetIndex !== -1) {
@@ -487,7 +500,7 @@ const Editor: React.FC = () => {
       setDraggedItemId(null);
       setDragOverItemId(null);
     },
-    [draggedItemId, trackedUpdate],
+    [trackedUpdate],
   );
 
   const handleDeleteEducation = useCallback(
