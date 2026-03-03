@@ -243,7 +243,7 @@ async def tailor_resume(
     tags=["Variants"],
 )
 @rate_limit(settings.rate_limit_variants)
-@cached("resume:variants")
+@cached(config_name="resume:variants")
 async def list_variants(
     request: Request,
     response: Response,
@@ -1801,9 +1801,16 @@ async def generate_cover_letter(
 
 # Test websocket
 @router.websocket("/test_ws")
-async def test_ws(websocket: WebSocket):
+async def test_ws(
+    websocket: WebSocket,
+    current_user_info: tuple[User, float] = Depends(get_current_user_ws),
+):
+    """
+    Unprotected test websocket secured with JWT.
+    """
+    user, expires_at = current_user_info
     await websocket.accept()
-    await websocket.send_text("hello")
+    await websocket.send_text(f"hello {user.email}")
     await websocket.close()
 
 
