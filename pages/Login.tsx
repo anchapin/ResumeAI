@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import { Button, Input } from '../components/ui';
 
 interface LoginProps {
   onLogin?: (email: string, password: string) => Promise<boolean>;
@@ -68,58 +69,35 @@ const Login: React.FC<LoginProps> = ({
           )}
 
           <form onSubmit={handleSubmit} className="space-y-5">
-            <div className="space-y-2">
-              <label htmlFor="email" className="text-sm font-bold text-slate-700">
-                Email
-              </label>
-              <input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => {
-                  setEmail(e.target.value);
-                  setLocalError(null);
-                }}
-                placeholder="you@example.com"
-                autoComplete="email"
-                className="w-full px-4 py-3 rounded-lg bg-slate-50 border border-slate-200 focus:bg-white focus:border-primary-500 focus:ring-2 focus:ring-primary-100 outline-none transition-all"
-              />
-            </div>
+            <Input
+              id="email"
+              type="email"
+              label="Email"
+              value={email}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                setLocalError(null);
+              }}
+              placeholder="you@example.com"
+              autoComplete="email"
+            />
 
-            <div className="space-y-2">
-              <label htmlFor="password" className="text-sm font-bold text-slate-700">
-                Password
-              </label>
-              <input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => {
-                  setPassword(e.target.value);
-                  setLocalError(null);
-                }}
-                placeholder="••••••••"
-                autoComplete="current-password"
-                className="w-full px-4 py-3 rounded-lg bg-slate-50 border border-slate-200 focus:bg-white focus:border-primary-500 focus:ring-2 focus:ring-primary-100 outline-none transition-all"
-              />
-            </div>
+            <Input
+              id="password"
+              type="password"
+              label="Password"
+              value={password}
+              onChange={(e) => {
+                setPassword(e.target.value);
+                setLocalError(null);
+              }}
+              placeholder="••••••••"
+              autoComplete="current-password"
+            />
 
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full py-3 bg-primary-600 text-white rounded-lg font-bold text-sm hover:bg-primary-700 transition-all shadow-md shadow-primary-600/20 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-            >
-              {isLoading ? (
-                <>
-                  <span className="material-symbols-outlined animate-spin text-[18px]">
-                    progress_activity
-                  </span>
-                  Signing in...
-                </>
-              ) : (
-                'Sign In'
-              )}
-            </button>
+            <Button type="submit" isLoading={isLoading} className="w-full py-3 h-12">
+              Sign In
+            </Button>
           </form>
 
           <div className="mt-6 text-center">
