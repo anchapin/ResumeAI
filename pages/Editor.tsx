@@ -74,6 +74,12 @@ const Editor = () => {
   // Drag and drop state for section reordering
   const [draggedItemId, setDraggedItemId] = useState<string | null>(null);
   const [dragOverItemId, setDragOverItemId] = useState<string | null>(null);
+  const draggedItemIdRef = useRef<string | null>(null);
+
+  // Update draggedItemIdRef when state changes
+  useEffect(() => {
+    draggedItemIdRef.current = draggedItemId;
+  }, [draggedItemId]);
 
   // Versioning state
   const [showVersionHistory, setShowVersionHistory] = useState<boolean>(false);
@@ -185,7 +191,7 @@ const Editor = () => {
     } finally {
       setIsGeneratingPDF(false);
     }
-  }, [selectedVariant, convertToAPIData]);
+  }, [selectedVariant]);
 
   // Handle saving current resume as a new version
   const handleSaveVersion = useCallback(async () => {
@@ -210,7 +216,7 @@ const Editor = () => {
     } finally {
       setSavingVersion(false);
     }
-  }, [currentResumeId, versionDescription, convertToAPIData]);
+  }, [currentResumeId, versionDescription]);
 
   // Handle Restore Version
   const handleRestoreVersion = useCallback(
@@ -464,11 +470,12 @@ const Editor = () => {
 
   const handleDrop = useCallback(
     (targetId: string) => {
-      if (!draggedItemId || draggedItemId === targetId) return;
+      const draggedId = draggedItemIdRef.current;
+      if (!draggedId || draggedId === targetId) return;
 
       const currentData = resumeDataRef.current;
       const items = [...currentData.experience];
-      const draggedIndex = items.findIndex((item) => item.id === draggedItemId);
+      const draggedIndex = items.findIndex((item) => item.id === draggedId);
       const targetIndex = items.findIndex((item) => item.id === targetId);
 
       if (draggedIndex !== -1 && targetIndex !== -1) {
@@ -480,7 +487,7 @@ const Editor = () => {
       setDraggedItemId(null);
       setDragOverItemId(null);
     },
-    [draggedItemId, trackedUpdate],
+    [trackedUpdate],
   );
 
   const handleDeleteEducation = useCallback(
@@ -672,6 +679,8 @@ const Editor = () => {
   };
 
   const saveStatus = useStore((state) => state.saveStatus);
+  const canUndo = historyIndex > 0;
+  const canRedo = historyIndex < history.length - 1;
 
   return (
     <div className="min-h-screen bg-[#f6f6f8] flex flex-col">
