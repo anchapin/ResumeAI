@@ -59,6 +59,7 @@ import { DEFAULT_SHORTCUTS, registerShortcuts } from './utils/shortcuts';
 import StorageWarning from './components/StorageWarning';
 import SkipNavigation from './components/SkipNavigation';
 import OfflineIndicator from './components/OfflineIndicator';
+import { errorHandler, ErrorType } from './utils/errorHandler';
 
 /**
  * Loading fallback for code-split chunks - Uses skeleton instead of spinner
@@ -95,7 +96,6 @@ function App() {
   const showShortcuts = useStore((state) => state.showShortcuts);
   const setShowShortcuts = useStore((state) => state.setShowShortcuts);
   const globalLoading = useStore((state) => state.globalLoading);
-  const [storageError, setStorageError] = React.useState<string | null>(null);
 
   const { isAuthenticated } = useAuth();
 
@@ -111,31 +111,20 @@ function App() {
     });
   }, [showShortcuts, setShowShortcuts]);
 
-  // Auto-dismiss resumeError after 5 seconds
+  // Sync store-level resumeError to global errorHandler
   useEffect(() => {
     if (resumeError) {
-      const timer = setTimeout(() => {
-        setResumeError(null);
-      }, 5000);
-      return () => clearTimeout(timer);
+      errorHandler.handleError(new Error(resumeError), { type: 'resume_loading' });
+      setResumeError(null);
     }
   }, [resumeError, setResumeError]);
 
   // Load resume data from localStorage on mount and check security
   useEffect(() => {
     loadResume().catch((error) => {
-      if (import.meta.env.DEV) {
-        console.error('Unexpected error loading resume data:', error);
-      }
+      errorHandler.handleError(error, { context: 'initial_load' });
     });
   }, [loadResume]);
-
-  /**
-   * Helper function to get user-friendly error messages
-   */
-  const getStorageErrorMessage = (): string => {
-    return 'Failed to save data. Please try again.';
-  };
 
   // Save resume data to localStorage whenever it changes
   useEffect(() => {
@@ -154,10 +143,10 @@ function App() {
         setTimeout(() => setSaveStatus('idle'), 3000);
       } catch (error) {
         setSaveStatus('error');
-        const errorMessage = getStorageErrorMessage();
-        setStorageError(errorMessage);
-
-        setTimeout(() => setStorageError(null), 5000);
+        errorHandler.handleError(error, {
+          context: 'auto_save',
+          type: ErrorType.SERVER, // Storage errors are treated as server/local-server errors
+        });
 
         setTimeout(() => setSaveStatus('idle'), 5000);
       }
@@ -180,26 +169,10 @@ function App() {
         </div>
       )}
 
-      {/* Global error display */}
+      {/* Global error display - handles all errors unified */}
       <ErrorDisplay error={currentError} onDismiss={dismissError} />
 
       {showShortcuts && <KeyboardShortcutsHelp onClose={() => setShowShortcuts(false)} />}
-      {(storageError || resumeError) && (
-        <div className="fixed top-4 right-4 z-50 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg shadow-lg flex items-center gap-2 animate-in slide-in-from-top-2 fade-in">
-          <span className="material-symbols-outlined text-red-500">error</span>
-          <span className="text-sm font-semibold">{storageError || resumeError}</span>
-          <button
-            onClick={() => {
-              setStorageError(null);
-              setResumeError(null);
-            }}
-            className="ml-2 text-red-500 hover:text-red-700"
-            aria-label="close"
-          >
-            <span className="material-symbols-outlined text-[20px]">close</span>
-          </button>
-        </div>
-      )}
       <StorageWarning />
       <OfflineIndicator />
       {!isLoaded ? (
