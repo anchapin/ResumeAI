@@ -64,18 +64,16 @@ describe('Storage Utilities', () => {
     expect(hasData).toBe(false);
   });
 
-  it('should save resume data', () => {
-    expect(() => {
-      saveResumeData(testResumeData);
-    }).not.toThrow();
+  it('should save resume data', async () => {
+    await expect(saveResumeData(testResumeData)).resolves.not.toThrow();
 
     const hasDataAfterSave = hasSavedResumeData();
     expect(hasDataAfterSave).toBe(true);
   });
 
-  it('should load saved resume data', () => {
+  it('should load saved resume data', async () => {
     // Save data first
-    saveResumeData(testResumeData);
+    await saveResumeData(testResumeData);
 
     // Then load it
     const loadedData = loadResumeData();
@@ -100,13 +98,13 @@ describe('Storage Utilities', () => {
     expect(loadedData).toBeNull();
   });
 
-  it('should handle data updates correctly', () => {
+  it('should handle data updates correctly', async () => {
     // Save initial data
-    saveResumeData(testResumeData);
+    await saveResumeData(testResumeData);
 
     // Update and save new data
     const updatedData = { ...testResumeData, name: 'Updated User' };
-    saveResumeData(updatedData);
+    await saveResumeData(updatedData);
 
     // Load and verify update
     const reloadedData = loadResumeData();
@@ -114,20 +112,20 @@ describe('Storage Utilities', () => {
     expect(reloadedData?.email).toBe(testResumeData.email); // Should remain unchanged
   });
 
-  it('should return correct data size', () => {
+  it('should return correct data size', async () => {
     // Initially should be 0
     const initialSize = getStoredDataSize();
     expect(initialSize).toBe(0);
 
     // After saving, should be > 0
-    saveResumeData(testResumeData);
+    await saveResumeData(testResumeData);
     const sizeAfterSave = getStoredDataSize();
     expect(sizeAfterSave).toBeGreaterThan(0);
   });
 
-  it('should clear data completely', () => {
+  it('should clear data completely', async () => {
     // Save data
-    saveResumeData(testResumeData);
+    await saveResumeData(testResumeData);
     expect(hasSavedResumeData()).toBe(true);
 
     // Clear data
@@ -139,42 +137,17 @@ describe('Storage Utilities', () => {
     expect(loadedData).toBeNull();
   });
 
-  it('should handle storage quota exceeded errors gracefully', () => {
-    const mockSetItem = vi.spyOn(localStorage, 'setItem');
-    const mockGetItem = vi.spyOn(localStorage, 'getItem');
-    const mockRemoveItem = vi.spyOn(localStorage, 'removeItem');
-
-    mockSetItem.mockImplementation((key: string) => {
+  it('should handle storage quota exceeded errors gracefully', async () => {
+    const mockSetItem = vi.spyOn(Storage.prototype, 'setItem').mockImplementation((key) => {
       if (key !== '__storage_test__') {
-        const error = new DOMException('QuotaExceededError', 'QuotaExceededError');
-        (error as any).name = 'QuotaExceededError';
+        const error = new Error('QuotaExceededError');
+        error.name = 'QuotaExceededError';
         throw error;
       }
     });
 
-    mockGetItem.mockImplementation((key: string) => {
-      if (key === '__quota_check_needed__') {
-        return 'checked';
-      }
-      if (key === '__storage_test__') {
-        return null;
-      }
-      return null;
-    });
-
-    mockRemoveItem.mockImplementation((key: string) => {
-      if (key !== '__storage_test__') {
-        return;
-      }
-    });
-
-    const serialized = JSON.stringify(testResumeData);
-    expect(() => localStorage.setItem('test_key', serialized)).toThrow();
-
-    expect(() => saveResumeData(testResumeData)).toThrow(StorageError);
+    await expect(saveResumeData(testResumeData)).rejects.toThrow(StorageError);
 
     mockSetItem.mockRestore();
-    mockGetItem.mockRestore();
-    mockRemoveItem.mockRestore();
   });
 });
