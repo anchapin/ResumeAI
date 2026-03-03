@@ -5,6 +5,7 @@ import {
   retryWebhookDelivery,
   type WebhookDelivery,
 } from '../utils/api-client';
+import AccessibleDialog from './AccessibleDialog';
 
 interface DeliveryLogsProps {
   webhookId: number;
@@ -242,75 +243,68 @@ const DeliveryLogs: React.FC<DeliveryLogsProps> = ({ webhookId, onClose }) => {
       </div>
 
       {/* Payload Modal */}
-      {showPayload && selectedDelivery && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-xl max-w-2xl w-full max-h-[80vh] overflow-hidden">
-            <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
-              <h3 className="text-lg font-bold text-slate-900">Delivery Payload</h3>
-              <button
-                onClick={() => {
-                  setShowPayload(false);
-                  setSelectedDelivery(null);
-                }}
-                className="p-2 text-slate-400 hover:text-slate-600 transition-colors"
-              >
-                <span className="material-symbols-outlined">close</span>
-              </button>
+      <AccessibleDialog
+        isOpen={showPayload && !!selectedDelivery}
+        onClose={() => {
+          setShowPayload(false);
+          setSelectedDelivery(null);
+        }}
+        title="Delivery Payload"
+        className="max-w-2xl"
+      >
+        {selectedDelivery && (
+          <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
+            {/* Event Type */}
+            <div className="space-y-2">
+              <h4 className="text-sm font-bold text-slate-700">Event Type</h4>
+              <code className="px-3 py-1.5 bg-slate-100 rounded-lg text-sm text-slate-900">
+                {selectedDelivery.event_type}
+              </code>
             </div>
 
-            <div className="p-6 space-y-4 overflow-y-auto max-h-[60vh]">
-              {/* Event Type */}
+            {/* Status */}
+            <div className="space-y-2">
+              <h4 className="text-sm font-bold text-slate-700">Status</h4>
+              {getStatusBadge(selectedDelivery.status)}
+            </div>
+
+            {/* Response */}
+            {selectedDelivery.response_status && (
               <div className="space-y-2">
-                <h4 className="text-sm font-bold text-slate-700">Event Type</h4>
-                <code className="px-3 py-1.5 bg-slate-100 rounded-lg text-sm text-slate-900">
-                  {selectedDelivery.event_type}
+                <h4 className="text-sm font-bold text-slate-700">Response Status</h4>
+                <code
+                  className={`px-3 py-1.5 rounded-lg text-sm ${
+                    selectedDelivery.response_status >= 200 &&
+                    selectedDelivery.response_status < 300
+                      ? 'bg-green-100 text-green-900'
+                      : 'bg-red-100 text-red-900'
+                  }`}
+                >
+                  {selectedDelivery.response_status}
                 </code>
               </div>
+            )}
 
-              {/* Status */}
+            {/* Response Body */}
+            {selectedDelivery.response_body && (
               <div className="space-y-2">
-                <h4 className="text-sm font-bold text-slate-700">Status</h4>
-                {getStatusBadge(selectedDelivery.status)}
-              </div>
-
-              {/* Response */}
-              {selectedDelivery.response_status && (
-                <div className="space-y-2">
-                  <h4 className="text-sm font-bold text-slate-700">Response Status</h4>
-                  <code
-                    className={`px-3 py-1.5 rounded-lg text-sm ${
-                      selectedDelivery.response_status >= 200 &&
-                      selectedDelivery.response_status < 300
-                        ? 'bg-green-100 text-green-900'
-                        : 'bg-red-100 text-red-900'
-                    }`}
-                  >
-                    {selectedDelivery.response_status}
-                  </code>
-                </div>
-              )}
-
-              {/* Response Body */}
-              {selectedDelivery.response_body && (
-                <div className="space-y-2">
-                  <h4 className="text-sm font-bold text-slate-700">Response Body</h4>
-                  <pre className="px-3 py-2.5 bg-slate-100 rounded-lg text-xs text-slate-900 overflow-x-auto">
-                    {selectedDelivery.response_body}
-                  </pre>
-                </div>
-              )}
-
-              {/* Payload */}
-              <div className="space-y-2">
-                <h4 className="text-sm font-bold text-slate-700">Payload</h4>
-                <pre className="px-3 py-2.5 bg-slate-100 rounded-lg text-xs text-slate-900 overflow-x-auto max-h-40 overflow-y-auto">
-                  {JSON.stringify(selectedDelivery.payload, null, 2)}
+                <h4 className="text-sm font-bold text-slate-700">Response Body</h4>
+                <pre className="px-3 py-2.5 bg-slate-100 rounded-lg text-xs text-slate-900 overflow-x-auto">
+                  {selectedDelivery.response_body}
                 </pre>
               </div>
+            )}
+
+            {/* Payload */}
+            <div className="space-y-2">
+              <h4 className="text-sm font-bold text-slate-700">Payload</h4>
+              <pre className="px-3 py-2.5 bg-slate-100 rounded-lg text-xs text-slate-900 overflow-x-auto max-h-40 overflow-y-auto">
+                {JSON.stringify(selectedDelivery.payload, null, 2)}
+              </pre>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </AccessibleDialog>
     </div>
   );
 };

@@ -323,6 +323,12 @@ async def endpoint_popularity(hours: int = 24, limit: int = 10):
 # Include base routes with version prefix
 app.include_router(base_router, prefix=settings.api_v1_prefix)
 
+@app.websocket("/debug_ws")
+async def debug_ws(websocket: WebSocket):
+    await websocket.accept()
+    await websocket.send_text("debug")
+    await websocket.close()
+
 # Include API routes
 app.include_router(router, prefix=settings.api_v1_prefix)
 app.include_router(interview_router, prefix=settings.api_v1_prefix)
@@ -340,35 +346,6 @@ app.include_router(team_router, prefix=settings.api_v1_prefix)
 app.include_router(analytics_router, prefix=settings.api_v1_prefix)
 app.include_router(webhook_router, prefix=settings.api_v1_prefix)
 app.include_router(deployment_router, prefix=settings.api_v1_prefix)
-
-
-# WebSocket endpoint for real-time collaboration
-@app.websocket(f"{settings.api_v1_prefix}/ws/resumes/{{resume_id}}")
-async def websocket_resume(
-    websocket: WebSocket,
-    resume_id: str,
-    current_user_info: tuple[User, float] = Depends(get_current_user_ws),
-):
-    """
-    WebSocket endpoint for real-time collaboration on resumes.
-
-    Connect to collaborate on a specific resume:
-    ws://host/api/v1/ws/resumes/{resume_id}?token=jwt_token
-
-    Requires authentication via JWT token in query parameter.
-
-    Features:
-    - JWT authentication (at connection time)
-    - Token expiration monitoring (disconnects on expiry)
-    - Heartbeat/ping-pong mechanism
-    - Connection timeout (30s inactivity)
-    - Rate limiting on new connections
-    - Max 5 concurrent connections per user
-    """
-    user, expires_at = current_user_info
-    await handle_websocket_connection(
-        websocket, resume_id, str(user.id), expires_at=expires_at
-    )
 
 
 if __name__ == "__main__":
