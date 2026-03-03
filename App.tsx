@@ -1,7 +1,7 @@
 import React, { useEffect, lazy, Suspense } from 'react';
-import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
-import { registerPrefetch, prefetch } from './utils/prefetch';
+import { registerPrefetch } from './utils/prefetch';
 
 // Lazy load page components for better code splitting
 const dashboardImport = () => import('./pages/Dashboard');
@@ -38,16 +38,16 @@ registerPrefetch('salary', salaryImport);
 registerPrefetch('interview', interviewImport);
 registerPrefetch('login', loginImport);
 registerPrefetch('register', registerImport);
+
 const NotFound = lazy(() => import('./pages/NotFound'));
 const Billing = lazy(() => import('./pages/Billing'));
 const Plans = lazy(() => import('./pages/Plans'));
 const PaymentMethods = lazy(() => import('./pages/PaymentMethods'));
 const Invoices = lazy(() => import('./pages/Invoices'));
-import { Route as RouteEnum, SimpleResumeData } from './types';
+
 import { saveResumeData } from './utils/storage';
 import ErrorBoundary from './components/ErrorBoundary';
 import ErrorDisplay from './components/ErrorDisplay';
-import { TokenManager } from './utils/security';
 import { useAuth } from './hooks/useAuth';
 import { useGlobalErrors } from './hooks/useGlobalErrors';
 import { useStore } from './store/store';
@@ -85,33 +85,18 @@ const PageLoader = () => (
 export type SaveStatus = 'idle' | 'saving' | 'saved' | 'error';
 
 function App() {
-  const navigate = useNavigate();
-  const location = useLocation();
-
   const resumeData = useStore((state) => state.resumeData);
-  const setResumeData = useStore((state) => state.setResumeData);
   const isLoaded = useStore((state) => state.isResumeLoaded);
   const loadResume = useStore((state) => state.loadResume);
-  const saveStatus = useStore((state) => state.saveStatus);
   const setSaveStatus = useStore((state) => state.setSaveStatus);
   const setResumeError = useStore((state) => state.setResumeError);
   const resumeError = useStore((state) => state.resumeError);
   const showShortcuts = useStore((state) => state.showShortcuts);
   const setShowShortcuts = useStore((state) => state.setShowShortcuts);
   const globalLoading = useStore((state) => state.globalLoading);
-  const theme = useStore((state) => state.theme);
   const [storageError, setStorageError] = React.useState<string | null>(null);
 
-  const {
-    user,
-    isAuthenticated,
-    isLoading: authLoading,
-    error: authError,
-    login,
-    register,
-    logout,
-    clearError: clearAuthError,
-  } = useAuth();
+  const { isAuthenticated } = useAuth();
 
   // Setup global error handling
   const { currentError, dismissError } = useGlobalErrors();
@@ -151,17 +136,6 @@ function App() {
     return 'Failed to save data. Please try again.';
   };
 
-  // Auto-dismiss resumeError after 5 seconds
-  useEffect(() => {
-    if (!resumeError) return;
-
-    const timer = setTimeout(() => {
-      setResumeError(null);
-    }, 5000);
-
-    return () => clearTimeout(timer);
-  }, [resumeError, setResumeError]);
-
   // Save resume data to localStorage whenever it changes
   useEffect(() => {
     if (!isLoaded) return;
@@ -190,63 +164,6 @@ function App() {
 
     return () => clearTimeout(handler);
   }, [resumeData, isLoaded, setSaveStatus]);
-
-  const handleLogin = async (email: string, password: string) => {
-    clearAuthError();
-    const result = await login(email, password);
-    if (result) {
-      navigate('/dashboard');
-    }
-    return result;
-  };
-
-  const handleRegister = async (
-    email: string,
-    username: string,
-    password: string,
-    fullName?: string,
-  ) => {
-    clearAuthError();
-    return register(email, username, password, fullName);
-  };
-
-  const handleLogout = async () => {
-    await logout();
-    navigate('/login');
-  };
-
-  const getCurrentRouteFromPath = (): RouteEnum => {
-    const path = location.pathname;
-    switch (path) {
-      case '/dashboard':
-        return RouteEnum.DASHBOARD;
-      case '/applications':
-        return RouteEnum.APPLICATIONS;
-      case '/editor':
-        return RouteEnum.EDITOR;
-      case '/workspace':
-        return RouteEnum.WORKSPACE;
-      case '/salary-research':
-        return RouteEnum.SALARY_RESEARCH;
-      case '/interview-practice':
-        return RouteEnum.INTERVIEW_PRACTICE;
-      case '/settings':
-        return RouteEnum.SETTINGS;
-      case '/bulk':
-        return RouteEnum.BULK;
-      case '/login':
-        return RouteEnum.LOGIN;
-      case '/register':
-        return RouteEnum.REGISTER;
-      case '/billing':
-      case '/billing/plans':
-      case '/billing/payment-methods':
-      case '/billing/invoices':
-        return RouteEnum.BILLING;
-      default:
-        return RouteEnum.DASHBOARD;
-    }
-  };
 
   return (
     <ErrorBoundary>
@@ -296,7 +213,7 @@ function App() {
             path="/login"
             element={
               <Suspense fallback={<PageLoader />}>
-                <Login onLogin={handleLogin} error={authError} isLoading={authLoading} />
+                <Login />
               </Suspense>
             }
           />
@@ -304,7 +221,7 @@ function App() {
             path="/register"
             element={
               <Suspense fallback={<PageLoader />}>
-                <Register onRegister={handleRegister} error={authError} isLoading={authLoading} />
+                <Register />
               </Suspense>
             }
           />
@@ -315,13 +232,7 @@ function App() {
                 <Suspense fallback={<PageLoader />}>
                   <div className="flex min-h-screen bg-[#f6f6f8]">
                     <nav id="main-nav">
-                      <Sidebar
-                        currentRoute={getCurrentRouteFromPath()}
-                        onShowShortcuts={() => setShowShortcuts(true)}
-                        isAuthenticated={isAuthenticated}
-                        username={user?.username}
-                        onLogout={handleLogout}
-                      />
+                      <Sidebar />
                     </nav>
                     <main id="main-content" tabIndex={-1}>
                       <Dashboard />
@@ -339,13 +250,7 @@ function App() {
               isAuthenticated ? (
                 <Suspense fallback={<PageLoader />}>
                   <div className="flex min-h-screen bg-[#f6f6f8]">
-                    <Sidebar
-                      currentRoute={getCurrentRouteFromPath()}
-                      onShowShortcuts={() => setShowShortcuts(true)}
-                      isAuthenticated={isAuthenticated}
-                      username={user?.username}
-                      onLogout={handleLogout}
-                    />
+                    <Sidebar />
                     <JobApplications />
                   </div>
                 </Suspense>
@@ -384,13 +289,7 @@ function App() {
               isAuthenticated ? (
                 <Suspense fallback={<PageLoader />}>
                   <div className="flex min-h-screen bg-[#f6f6f8]">
-                    <Sidebar
-                      currentRoute={getCurrentRouteFromPath()}
-                      onShowShortcuts={() => setShowShortcuts(true)}
-                      isAuthenticated={isAuthenticated}
-                      username={user?.username}
-                      onLogout={handleLogout}
-                    />
+                    <Sidebar />
                     <SalaryResearch />
                   </div>
                 </Suspense>
@@ -417,13 +316,7 @@ function App() {
               isAuthenticated ? (
                 <Suspense fallback={<PageLoader />}>
                   <div className="flex min-h-screen bg-[#f6f6f8]">
-                    <Sidebar
-                      currentRoute={getCurrentRouteFromPath()}
-                      onShowShortcuts={() => setShowShortcuts(true)}
-                      isAuthenticated={isAuthenticated}
-                      username={user?.username}
-                      onLogout={handleLogout}
-                    />
+                    <Sidebar />
                     <Settings />
                   </div>
                 </Suspense>
@@ -438,13 +331,7 @@ function App() {
               isAuthenticated ? (
                 <Suspense fallback={<PageLoader />}>
                   <div className="flex min-h-screen bg-[#f6f6f8]">
-                    <Sidebar
-                      currentRoute={getCurrentRouteFromPath()}
-                      onShowShortcuts={() => setShowShortcuts(true)}
-                      isAuthenticated={isAuthenticated}
-                      username={user?.username}
-                      onLogout={handleLogout}
-                    />
+                    <Sidebar />
                     <Billing />
                   </div>
                 </Suspense>
@@ -459,13 +346,7 @@ function App() {
               isAuthenticated ? (
                 <Suspense fallback={<PageLoader />}>
                   <div className="flex min-h-screen bg-[#f6f6f8]">
-                    <Sidebar
-                      currentRoute={getCurrentRouteFromPath()}
-                      onShowShortcuts={() => setShowShortcuts(true)}
-                      isAuthenticated={isAuthenticated}
-                      username={user?.username}
-                      onLogout={handleLogout}
-                    />
+                    <Sidebar />
                     <Plans />
                   </div>
                 </Suspense>
@@ -480,13 +361,7 @@ function App() {
               isAuthenticated ? (
                 <Suspense fallback={<PageLoader />}>
                   <div className="flex min-h-screen bg-[#f6f6f8]">
-                    <Sidebar
-                      currentRoute={getCurrentRouteFromPath()}
-                      onShowShortcuts={() => setShowShortcuts(true)}
-                      isAuthenticated={isAuthenticated}
-                      username={user?.username}
-                      onLogout={handleLogout}
-                    />
+                    <Sidebar />
                     <PaymentMethods />
                   </div>
                 </Suspense>
@@ -501,13 +376,7 @@ function App() {
               isAuthenticated ? (
                 <Suspense fallback={<PageLoader />}>
                   <div className="flex min-h-screen bg-[#f6f6f8]">
-                    <Sidebar
-                      currentRoute={getCurrentRouteFromPath()}
-                      onShowShortcuts={() => setShowShortcuts(true)}
-                      isAuthenticated={isAuthenticated}
-                      username={user?.username}
-                      onLogout={handleLogout}
-                    />
+                    <Sidebar />
                     <Invoices />
                   </div>
                 </Suspense>
@@ -522,13 +391,7 @@ function App() {
               isAuthenticated ? (
                 <Suspense fallback={<PageLoader />}>
                   <div className="flex min-h-screen bg-[#f6f6f8]">
-                    <Sidebar
-                      currentRoute={getCurrentRouteFromPath()}
-                      onShowShortcuts={() => setShowShortcuts(true)}
-                      isAuthenticated={isAuthenticated}
-                      username={user?.username}
-                      onLogout={handleLogout}
-                    />
+                    <Sidebar />
                     <ResumeManagement />
                   </div>
                 </Suspense>
