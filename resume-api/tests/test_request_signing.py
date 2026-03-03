@@ -49,23 +49,26 @@ class TestComputeSignature:
 
 
 class TestNonceCache:
-    def test_nonce_cache_add_returns_true_for_new_nonce(self):
+    @pytest.mark.asyncio
+    async def test_nonce_cache_add_returns_true_for_new_nonce(self):
         cache = NonceCache()
-        result = cache.add("unique-nonce-123")
+        result = await cache.add("unique-nonce-123")
         assert result is True
 
-    def test_nonce_cache_add_returns_false_for_duplicate_nonce(self):
+    @pytest.mark.asyncio
+    async def test_nonce_cache_add_returns_false_for_duplicate_nonce(self):
         cache = NonceCache()
-        cache.add("unique-nonce-123")
-        result = cache.add("unique-nonce-123")
+        await cache.add("unique-nonce-123")
+        result = await cache.add("unique-nonce-123")
         assert result is False
 
-    def test_nonce_cache_clear(self):
+    @pytest.mark.asyncio
+    async def test_nonce_cache_clear(self):
         cache = NonceCache()
-        cache.add("nonce-1")
-        cache.add("nonce-2")
+        await cache.add("nonce-1")
+        await cache.add("nonce-2")
         cache.clear()
-        assert cache.add("nonce-1") is True
+        assert await cache.add("nonce-1") is True
 
 
 class TestRequestSigningMiddleware:
@@ -176,6 +179,7 @@ class TestRequestSigningMiddleware:
         request.body = AsyncMock(return_value=body)
 
         mock_response = MagicMock()
+        mock_response.headers = {}
         call_next = AsyncMock(return_value=mock_response)
 
         response = await middleware._process_signed_request(request, call_next)
