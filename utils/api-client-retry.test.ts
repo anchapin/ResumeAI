@@ -139,7 +139,7 @@ describe('API Client - Retry Logic Integration', () => {
         .mockResolvedValueOnce(
           new Response(JSON.stringify({ detail: 'Gateway Timeout' }), { status: 504 }),
         )
-        .mockResolvedValueOnce(new Response('', { status: 204 }));
+        .mockResolvedValueOnce(new Response(null, { status: 204 }));
 
       await deleteResume(1);
 
@@ -151,7 +151,7 @@ describe('API Client - Retry Logic Integration', () => {
         .mockResolvedValueOnce(
           new Response(JSON.stringify({ detail: 'Request Timeout' }), { status: 408 }),
         )
-        .mockResolvedValueOnce(new Response('', { status: 204 }));
+        .mockResolvedValueOnce(new Response(null, { status: 204 }));
 
       await deleteResume(2);
 

@@ -26,6 +26,7 @@ const KeyboardShortcutsHelp: React.FC<KeyboardShortcutsHelpProps> = ({ onClose }
     <AccessibleDialog
       isOpen={true}
       onClose={onClose}
+      data-testid="shortcuts-modal"
       title={
         <div className="flex items-center gap-2">
           <span className="material-symbols-outlined text-primary-600">keyboard</span>

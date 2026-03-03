@@ -1,7 +1,12 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { SimpleResumeData } from '../types';
-import { loadResumeData, saveResumeData, StorageError } from '../utils/storage';
+import {
+  loadResumeData,
+  saveResumeData,
+  StorageError,
+  getStorageErrorMessage,
+} from '../utils/storage';
 import { TokenManager, sanitizeInput } from '../utils/security';
 
 export interface AuthUser {
@@ -224,7 +229,7 @@ export const useStore = create<AppStore>()(
           }
         } catch (error) {
           if (error instanceof StorageError) {
-            const errorMessage = getErrorMessage(error);
+            const errorMessage = getStorageErrorMessage(error);
             set({ resumeError: errorMessage, isResumeLoaded: true });
           }
         }
@@ -244,21 +249,6 @@ export const useStore = create<AppStore>()(
     },
   ),
 );
-
-function getErrorMessage(error: StorageError): string {
-  switch (error.type) {
-    case 'QUOTA_EXCEEDED':
-      return 'Storage full. Please clear some browser data.';
-    case 'PARSE_ERROR':
-      return 'Data corrupted. Using default resume.';
-    case 'ACCESS_DENIED':
-      return "Storage access denied. Changes won't be saved.";
-    case 'NOT_AVAILABLE':
-      return "Storage not available. Changes won't be saved.";
-    default:
-      return 'Failed to save data. Please try again.';
-  }
-}
 
 export const selectAuthUser = (state: AppStore) => state.user;
 export const selectIsAuthenticated = (state: AppStore) => state.isAuthenticated;

@@ -21,7 +21,9 @@ export const ErrorDisplay: React.FC<ErrorDisplayProps> = ({
   showDetails = false,
 }) => {
   const [isVisible, setIsVisible] = useState(false);
-  const [showExpandedDetails, setShowExpandedDetails] = useState(showDetails);
+  const [showExpandedDetails, setShowExpandedDetails] = useState(
+    showDetails || process.env.NODE_ENV === 'development',
+  );
   const [isReporting, setIsReporting] = useState(false);
   const [copied, setCopied] = useState(false);
 
@@ -34,7 +36,7 @@ export const ErrorDisplay: React.FC<ErrorDisplayProps> = ({
   useEffect(() => {
     if (error) {
       setIsVisible(true);
-      setShowExpandedDetails(showDetails);
+      setShowExpandedDetails(showDetails || process.env.NODE_ENV === 'development');
 
       // Auto-dismiss after timeout (longer if there are actions to take)
       if (autoDismissTime > 0) {
@@ -133,6 +135,7 @@ export const ErrorDisplay: React.FC<ErrorDisplayProps> = ({
         if (onRetry) {
           actions.push({ label: 'Retry', action: 'retry', icon: 'refresh' });
         }
+        actions.push({ label: 'Report Issue', action: 'report', icon: 'bug_report' });
         actions.push({ label: 'Support', action: 'support', icon: 'contact_support' });
         break;
     }

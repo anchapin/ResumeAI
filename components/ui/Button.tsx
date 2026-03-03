@@ -47,17 +47,14 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
 
     return (
       <button ref={ref} className={combinedClassName} disabled={disabled || isLoading} {...props}>
-        {isLoading ? (
+        {isLoading && (
           <span className="material-symbols-outlined animate-spin text-[20px]">
             progress_activity
           </span>
-        ) : (
-          <>
-            {leftIcon && <span className="flex-shrink-0">{leftIcon}</span>}
-            {children}
-            {rightIcon && <span className="flex-shrink-0">{rightIcon}</span>}
-          </>
         )}
+        {!isLoading && leftIcon && <span className="flex-shrink-0">{leftIcon}</span>}
+        {children}
+        {!isLoading && rightIcon && <span className="flex-shrink-0">{rightIcon}</span>}
       </button>
     );
   },

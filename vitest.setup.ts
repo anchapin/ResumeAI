@@ -18,3 +18,20 @@ Object.defineProperty(window, 'matchMedia', {
     dispatchEvent: vi.fn(),
   })),
 });
+
+// Polyfill DataTransfer for tests
+if (typeof DataTransfer === 'undefined') {
+  class DataTransfer {
+    items = {
+      add: vi.fn(),
+      clear: vi.fn(),
+      remove: vi.fn(),
+    };
+    files = [];
+    setData = vi.fn();
+    getData = vi.fn();
+    clearData = vi.fn();
+    types = [];
+  }
+  (global as any).DataTransfer = DataTransfer;
+}

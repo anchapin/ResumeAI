@@ -3,7 +3,11 @@ import { useState, useCallback, useEffect } from 'react';
 import { ResumeData, SimpleResumeData } from '../types';
 
 // Get API URL from environment variable
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const API_URL =
+  (typeof import.meta !== 'undefined' &&
+    typeof import.meta.env !== 'undefined' &&
+    import.meta.env.VITE_API_URL) ||
+  'http://localhost:8000';
 
 // Local storage keys
 const RESUME_STORAGE_KEY = 'resumeai_resume_data';
