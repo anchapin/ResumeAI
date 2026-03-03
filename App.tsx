@@ -61,27 +61,19 @@ import SkipNavigation from './components/SkipNavigation';
 import OfflineIndicator from './components/OfflineIndicator';
 import { errorHandler, ErrorType } from './utils/errorHandler';
 
+// Skeleton components
+import AppSkeleton from './components/skeletons/AppSkeleton';
+import DashboardSkeleton from './components/skeletons/DashboardSkeleton';
+import EditorSkeleton from './components/skeletons/EditorSkeleton';
+import WorkspaceSkeleton from './components/skeletons/WorkspaceSkeleton';
+import JobApplicationsSkeleton from './components/skeletons/JobApplicationsSkeleton';
+import SettingsSkeleton from './components/skeletons/SettingsSkeleton';
+import ResumeManagementSkeleton from './components/skeletons/ResumeManagementSkeleton';
+
 /**
- * Loading fallback for code-split chunks - Uses skeleton instead of spinner
+ * Loading fallback for code-split chunks - Uses generic app shell skeleton
  */
-const PageLoader = () => (
-  <div className="flex-1 min-h-screen bg-[#f6f6f8] pl-72">
-    <header className="h-16 flex items-center justify-between px-8 bg-white/80 backdrop-blur-sm sticky top-0 z-10 border-b border-slate-200">
-      <div className="h-7 w-48 bg-slate-200 rounded animate-pulse"></div>
-      <div className="flex items-center gap-3">
-        <div className="h-10 w-10 bg-slate-200 rounded-full animate-pulse"></div>
-      </div>
-    </header>
-    <div className="p-8 space-y-6">
-      <div className="h-32 bg-slate-200 rounded-xl animate-pulse"></div>
-      <div className="space-y-4">
-        {[1, 2, 3].map((i) => (
-          <div key={i} className="h-16 bg-slate-200 rounded-lg animate-pulse"></div>
-        ))}
-      </div>
-    </div>
-  </div>
-);
+const PageLoader = () => <AppSkeleton />;
 
 /** Save status enum for tracking auto-save state */
 export type SaveStatus = 'idle' | 'saving' | 'saved' | 'error';
@@ -176,12 +168,7 @@ function App() {
       <StorageWarning />
       <OfflineIndicator />
       {!isLoaded ? (
-        <div className="min-h-screen flex items-center justify-center bg-[#f6f6f8]">
-          <div className="flex items-center gap-3">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
-            <span className="text-slate-600 font-medium">Loading...</span>
-          </div>
-        </div>
+        <AppSkeleton />
       ) : (
         <Routes>
           <Route
@@ -204,7 +191,7 @@ function App() {
             path="/dashboard"
             element={
               isAuthenticated ? (
-                <Suspense fallback={<PageLoader />}>
+                <Suspense fallback={<DashboardSkeleton />}>
                   <div className="flex min-h-screen bg-[#f6f6f8]">
                     <nav id="main-nav">
                       <Sidebar />
@@ -223,7 +210,7 @@ function App() {
             path="/applications"
             element={
               isAuthenticated ? (
-                <Suspense fallback={<PageLoader />}>
+                <Suspense fallback={<JobApplicationsSkeleton />}>
                   <div className="flex min-h-screen bg-[#f6f6f8]">
                     <Sidebar />
                     <JobApplications />
@@ -238,7 +225,7 @@ function App() {
             path="/editor"
             element={
               isAuthenticated ? (
-                <Suspense fallback={<PageLoader />}>
+                <Suspense fallback={<EditorSkeleton />}>
                   <Editor />
                 </Suspense>
               ) : (
@@ -250,7 +237,7 @@ function App() {
             path="/workspace"
             element={
               isAuthenticated ? (
-                <Suspense fallback={<PageLoader />}>
+                <Suspense fallback={<WorkspaceSkeleton />}>
                   <Workspace />
                 </Suspense>
               ) : (
@@ -289,7 +276,7 @@ function App() {
             path="/settings"
             element={
               isAuthenticated ? (
-                <Suspense fallback={<PageLoader />}>
+                <Suspense fallback={<SettingsSkeleton />}>
                   <div className="flex min-h-screen bg-[#f6f6f8]">
                     <Sidebar />
                     <Settings />
@@ -364,7 +351,7 @@ function App() {
             path="/bulk"
             element={
               isAuthenticated ? (
-                <Suspense fallback={<PageLoader />}>
+                <Suspense fallback={<ResumeManagementSkeleton />}>
                   <div className="flex min-h-screen bg-[#f6f6f8]">
                     <Sidebar />
                     <ResumeManagement />

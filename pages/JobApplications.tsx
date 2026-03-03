@@ -3,6 +3,7 @@ import { JobApplication, SimpleResumeData, ATSReport } from '../types';
 import StatusBadge from '../components/StatusBadge';
 import JobApplicationsSkeleton from '../components/skeletons/JobApplicationsSkeleton';
 import AccessibleDialog from '../components/AccessibleDialog';
+import { useStore } from '../store/store';
 import {
   convertToAPIData,
   tailorResume,
@@ -100,6 +101,9 @@ const calculateStats = (apps: TrackedJobApplication[], apiStats?: ApplicationSta
  * @returns {JSX.Element} The rendered job applications page component
  */
 const JobApplications: React.FC = () => {
+  // Global loading state
+  const setGlobalLoading = useStore((state) => state.setGlobalLoading);
+
   // Applications state
   const [applications, setApplications] = useState<TrackedJobApplication[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -207,6 +211,7 @@ const JobApplications: React.FC = () => {
     }
 
     setIsTailoring(true);
+    setGlobalLoading(true);
     setTailorError(null);
 
     try {
@@ -223,8 +228,9 @@ const JobApplications: React.FC = () => {
       setTailorError(err instanceof Error ? err.message : 'Failed to tailor resume');
     } finally {
       setIsTailoring(false);
+      setGlobalLoading(false);
     }
-  }, [jobDescription, companyName, jobTitle]);
+  }, [jobDescription, companyName, jobTitle, setGlobalLoading]);
 
   // Reset modal
   const handleCloseModal = () => {
@@ -244,6 +250,7 @@ const JobApplications: React.FC = () => {
     }
 
     setIsCheckingATS(true);
+    setGlobalLoading(true);
     setAtsError(null);
 
     try {
@@ -255,8 +262,9 @@ const JobApplications: React.FC = () => {
       setAtsError(err instanceof Error ? err.message : 'Failed to check ATS score');
     } finally {
       setIsCheckingATS(false);
+      setGlobalLoading(false);
     }
-  }, [jobDescription]);
+  }, [jobDescription, setGlobalLoading]);
 
   // Reset ATS modal
   const handleCloseATSModal = () => {
