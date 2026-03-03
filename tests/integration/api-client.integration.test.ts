@@ -18,7 +18,7 @@ describe.skip('API Client Integration Tests', () => {
       const mockResume = createMockResume('Create Test');
       const response = await context.apiClient.createResume(mockResume);
 
-      expect(response.id).toBeDefined();
+      expect(response.data.id).toBeDefined();
       expect(response.status).toBe(201);
       expect(response.data.title).toBe('Create Test');
     });

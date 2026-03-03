@@ -22,7 +22,7 @@ class TestPDFGenerationRateLimit:
         """Test that PDF endpoint enforces rate limits."""
         # Make one request to verify endpoint works
         response = await authenticated_client.post(
-            "/v1/render/pdf",
+            "/api/v1/render/pdf",
             json={
                 "resume_data": minimal_resume_data,
                 "variant": "modern",
@@ -37,7 +37,7 @@ class TestPDFGenerationRateLimit:
     ):
         """Test that rate limit info is in response headers."""
         response = await authenticated_client.post(
-            "/v1/render/pdf",
+            "/api/v1/render/pdf",
             json={
                 "resume_data": minimal_resume_data,
                 "variant": "modern",
@@ -66,7 +66,7 @@ class TestTailoringRateLimit:
     ):
         """Test that tailor endpoint has rate limits."""
         response = await authenticated_client.post(
-            "/v1/tailor",
+            "/api/v1/tailor",
             json={
                 "resume_data": minimal_resume_data,
                 "job_description": job_description_tech["description"],
@@ -86,7 +86,7 @@ class TestTailoringRateLimit:
         # Tailor is typically allowed more frequently than PDF
         # This test verifies the configuration exists
         response = await authenticated_client.post(
-            "/v1/tailor",
+            "/api/v1/tailor",
             json={
                 "resume_data": minimal_resume_data,
                 "job_description": job_description_tech["description"],
@@ -102,7 +102,7 @@ class TestVariantsRateLimit:
     @pytest.mark.asyncio
     async def test_variants_endpoint_rate_limit(self, api_client: AsyncClient):
         """Test that variants endpoint has rate limits."""
-        response = await api_client.get("/v1/variants")
+        response = await api_client.get("/api/v1/variants")
 
         assert response.status_code == 200
 
@@ -110,7 +110,7 @@ class TestVariantsRateLimit:
     async def test_variants_higher_limit_than_generation(self, api_client: AsyncClient):
         """Test that variants endpoint may have higher limit."""
         # Variants listing is typically less expensive than generation
-        response = await api_client.get("/v1/variants")
+        response = await api_client.get("/api/v1/variants")
 
         assert response.status_code == 200
 
@@ -149,7 +149,7 @@ class TestDifferentRateLimitScopings:
         """Test that rate limit is per API key, not global."""
         # Different API keys should have independent limits
         response = await authenticated_client.post(
-            "/v1/render/pdf",
+            "/api/v1/render/pdf",
             json={
                 "resume_data": minimal_resume_data,
                 "variant": "modern",
@@ -165,7 +165,7 @@ class TestDifferentRateLimitScopings:
         """Test that rate limit is per user."""
         # Each user should have their own rate limit bucket
         response = await authenticated_client.post(
-            "/v1/render/pdf",
+            "/api/v1/render/pdf",
             json={
                 "resume_data": minimal_resume_data,
                 "variant": "modern",
@@ -181,7 +181,7 @@ class TestDifferentRateLimitScopings:
         """Test that rate limit is not global across all users."""
         # One user hitting limit shouldn't affect others
         response = await authenticated_client.post(
-            "/v1/render/pdf",
+            "/api/v1/render/pdf",
             json={
                 "resume_data": minimal_resume_data,
                 "variant": "modern",
@@ -211,7 +211,7 @@ class TestRateLimitBehavior:
 
         for _ in range(3):
             response = await authenticated_client.post(
-                "/v1/render/pdf",
+                "/api/v1/render/pdf",
                 json={
                     "resume_data": minimal_resume_data,
                     "variant": "modern",
@@ -233,7 +233,7 @@ class TestRateLimitBehavior:
         # In real testing, we'd wait for the time window
         # For unit tests, just verify the concept works
         response = await authenticated_client.post(
-            "/v1/render/pdf",
+            "/api/v1/render/pdf",
             json={
                 "resume_data": minimal_resume_data,
                 "variant": "modern",
@@ -274,7 +274,7 @@ class TestRateLimitConsistency:
         """Test that same endpoint has consistent rate limit."""
         # Same endpoint should enforce same limit regardless of data
         response1 = await authenticated_client.post(
-            "/v1/render/pdf",
+            "/api/v1/render/pdf",
             json={
                 "resume_data": minimal_resume_data,
                 "variant": "modern",
@@ -282,7 +282,7 @@ class TestRateLimitConsistency:
         )
 
         response2 = await authenticated_client.post(
-            "/v1/render/pdf",
+            "/api/v1/render/pdf",
             json={
                 "resume_data": minimal_resume_data,
                 "variant": "classic",

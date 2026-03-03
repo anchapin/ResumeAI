@@ -1,13 +1,12 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { SimpleResumeData, WorkExperience, EducationEntry, ProjectEntry } from '../types';
+import { SimpleResumeData, WorkExperience, EducationEntry, ProjectEntry, Comment } from '../types';
 import {
   convertToAPIData,
   generatePDF,
   getVariants,
-  getResume,
-  updateResume,
   listComments,
+  updateResume,
 } from '../utils/api-client';
 import { useStore } from '../store/store';
 import { LinkedInImportDialog } from '../components/LinkedInImportDialog';
@@ -25,8 +24,6 @@ import { EditorTabs } from '../components/editor/EditorTabs';
 
 /** Navigation items for the editor header */
 const NAV_ITEMS = ['Dashboard', 'My Resumes', 'Templates', 'Settings'];
-/** Tab items for the editor content */
-const TAB_ITEMS = ['Contact Info', 'Summary', 'Experience', 'Skills', 'Education', 'Projects'];
 
 /**
  * Helper function to get a human-readable time difference
@@ -54,20 +51,19 @@ function getTimeSince(date: Date): string {
 /**
  * @component
  * @description Editor page component for editing resume data
- * @returns {JSX.Element} The rendered editor page component
  */
-const Editor: React.FC = () => {
+const Editor = () => {
   const navigate = useNavigate();
+
+  // Store state
   const resumeData = useStore((state) => state.resumeData);
   const setResumeData = useStore((state) => state.setResumeData);
-  const saveStatus = useStore((state) => state.saveStatus);
+
   const [activeTab, setActiveTab] = useState<string>('Experience');
 
   // PDF generation state
   const [selectedVariant, setSelectedVariant] = useState<string>('modern');
   const [isGeneratingPDF, setIsGeneratingPDF] = useState<boolean>(false);
-  const [pdfError, setPdfError] = useState<string | null>(null);
-  const [showTemplateSelector, setShowTemplateSelector] = useState<boolean>(false);
 
   // LinkedIn import state
   const [showLinkedInImport, setShowLinkedInImport] = useState<boolean>(false);
@@ -83,7 +79,7 @@ const Editor: React.FC = () => {
   const [showVersionHistory, setShowVersionHistory] = useState<boolean>(false);
   const [showSaveVersionDialog, setShowSaveVersionDialog] = useState<boolean>(false);
   const [versionDescription, setVersionDescription] = useState<string>('');
-  const [currentResumeId, setCurrentResumeId] = useState<number>(1); // Mock resume ID - in real app, this would come from props or context
+  const [currentResumeId] = useState<number>(1); // Mock resume ID - in real app, this would come from props or context
   const [savingVersion, setSavingVersion] = useState<boolean>(false);
 
   // Comments state
@@ -138,22 +134,21 @@ const Editor: React.FC = () => {
     [setResumeData, addToHistory],
   );
 
-  const canUndo = historyIndex > 0;
-  const canRedo = historyIndex < history.length - 1;
-
   const undo = useCallback(() => {
-    if (!canUndo) return;
-    const newIndex = historyIndex - 1;
+    const { history: currentHistory, index: currentIndex } = historyRef.current;
+    if (currentIndex <= 0) return;
+    const newIndex = currentIndex - 1;
     setHistoryIndex(newIndex);
-    setResumeData(history[newIndex]);
-  }, [history, historyIndex, setResumeData, canUndo]);
+    setResumeData(currentHistory[newIndex]);
+  }, [setResumeData]);
 
   const redo = useCallback(() => {
-    if (!canRedo) return;
-    const newIndex = historyIndex + 1;
+    const { history: currentHistory, index: currentIndex } = historyRef.current;
+    if (currentIndex >= currentHistory.length - 1) return;
+    const newIndex = currentIndex + 1;
     setHistoryIndex(newIndex);
-    setResumeData(history[newIndex]);
-  }, [history, historyIndex, setResumeData, canRedo]);
+    setResumeData(currentHistory[newIndex]);
+  }, [setResumeData]);
 
   // Fetch variants on mount
   useEffect(() => {
@@ -173,9 +168,9 @@ const Editor: React.FC = () => {
   // Handle PDF generation
   const handleGeneratePDF = useCallback(async () => {
     setIsGeneratingPDF(true);
-    setPdfError(null);
     try {
-      const pdfBlob = await generatePDF(convertToAPIData(resumeData), selectedVariant);
+      const currentData = resumeDataRef.current;
+      const pdfBlob = await generatePDF(convertToAPIData(currentData), selectedVariant);
       const url = URL.createObjectURL(pdfBlob);
       const link = document.createElement('a');
       link.href = url;
@@ -186,18 +181,13 @@ const Editor: React.FC = () => {
       URL.revokeObjectURL(url);
     } catch (err) {
       console.error('PDF generation failed:', err);
-      setPdfError(err instanceof Error ? err.message : 'Failed to generate PDF');
+      showErrorToast(err instanceof Error ? err.message : 'Failed to generate PDF');
     } finally {
       setIsGeneratingPDF(false);
     }
-  }, [resumeData, selectedVariant]);
+  }, [selectedVariant, convertToAPIData]);
 
-  const handleTemplateChange = useCallback((template: string) => {
-    setSelectedVariant(template);
-    setShowTemplateSelector(false);
-  }, []);
-
-  // Handle Save Version
+  // Handle saving current resume as a new version
   const handleSaveVersion = useCallback(async () => {
     if (!versionDescription.trim()) {
       showErrorToast('Please enter a version description');
@@ -206,8 +196,9 @@ const Editor: React.FC = () => {
 
     try {
       setSavingVersion(true);
+      const currentData = resumeDataRef.current;
       await updateResume(currentResumeId, {
-        data: convertToAPIData(resumeData),
+        data: convertToAPIData(currentData),
         changeDescription: versionDescription.trim(),
       });
       showSuccessToast('Version saved successfully!');
@@ -219,14 +210,15 @@ const Editor: React.FC = () => {
     } finally {
       setSavingVersion(false);
     }
-  }, [currentResumeId, resumeData, versionDescription]);
+  }, [currentResumeId, versionDescription, convertToAPIData]);
 
   // Handle Restore Version
   const handleRestoreVersion = useCallback(
     async (version: any) => {
       try {
+        const currentData = resumeDataRef.current;
         trackedUpdate({
-          ...resumeData,
+          ...currentData,
           ...version.data,
         });
         showSuccessToast('Version restored successfully!');
@@ -235,19 +227,20 @@ const Editor: React.FC = () => {
         showErrorToast('Failed to restore version. Please try again.');
       }
     },
-    [trackedUpdate, resumeData],
+    [trackedUpdate],
   );
 
   // Handle Save Profile
   const handleSaveProfile = useCallback(async () => {
     try {
-      localStorage.setItem('resume_draft', JSON.stringify(resumeData));
+      const currentData = resumeDataRef.current;
+      localStorage.setItem('resume_draft', JSON.stringify(currentData));
       alert('Profile saved successfully!');
     } catch (err) {
       console.error('Save failed:', err);
       alert('Failed to save profile. Please try again.');
     }
-  }, [resumeData]);
+  }, []);
 
   // Handle LinkedIn Import
   const handleLinkedInImport = useCallback(
@@ -322,7 +315,7 @@ const Editor: React.FC = () => {
     const loadCommentCount = async () => {
       try {
         const comments = await listComments(currentResumeId);
-        const unresolvedCount = comments.filter((c: any) => !c.isResolved).length;
+        const unresolvedCount = (comments as Comment[]).filter((c) => !c.isResolved).length;
         setUnresolvedCommentCount(unresolvedCount);
       } catch (err) {
         console.error('Failed to load comments:', err);
@@ -385,7 +378,7 @@ const Editor: React.FC = () => {
   }, []);
 
   const updateExperience = useCallback(
-    (id: string, field: keyof WorkExperience, value: any) => {
+    <K extends keyof WorkExperience>(id: string, field: K, value: WorkExperience[K]) => {
       const prev = resumeDataRef.current;
       trackedUpdate({
         ...prev,
@@ -506,7 +499,7 @@ const Editor: React.FC = () => {
   }, []);
 
   const updateEducation = useCallback(
-    (id: string, field: keyof EducationEntry, value: any) => {
+    <K extends keyof EducationEntry>(id: string, field: K, value: EducationEntry[K]) => {
       const prev = resumeDataRef.current;
       trackedUpdate({
         ...prev,
@@ -555,7 +548,7 @@ const Editor: React.FC = () => {
   }, []);
 
   const updateProject = useCallback(
-    (id: string, field: keyof ProjectEntry, value: any) => {
+    <K extends keyof ProjectEntry>(id: string, field: K, value: ProjectEntry[K]) => {
       const prev = resumeDataRef.current;
       trackedUpdate({
         ...prev,
@@ -589,6 +582,11 @@ const Editor: React.FC = () => {
     setExpandedProjId(newId);
   }, [trackedUpdate]);
 
+  const handleShowLinkedInImport = useCallback(() => setShowLinkedInImport(true), []);
+  const handleShowCommentPanel = useCallback(() => setShowCommentPanel(true), []);
+  const handleShowVersionHistory = useCallback(() => setShowVersionHistory(true), []);
+  const handleShowSaveVersionDialog = useCallback(() => setShowSaveVersionDialog(true), []);
+
   const renderContent = () => {
     switch (activeTab) {
       case 'Contact Info':
@@ -596,8 +594,8 @@ const Editor: React.FC = () => {
           <ContactInfoSection
             resumeData={resumeData}
             onUpdate={updateContact}
-            onShowLinkedInImport={() => setShowLinkedInImport(true)}
-            onShowCommentPanel={() => setShowCommentPanel(true)}
+            onShowLinkedInImport={handleShowLinkedInImport}
+            onShowCommentPanel={handleShowCommentPanel}
             unresolvedCommentCount={unresolvedCommentCount}
           />
         );
@@ -607,7 +605,7 @@ const Editor: React.FC = () => {
           <SummarySection
             summary={resumeData.summary}
             onUpdate={updateSummary}
-            onShowCommentPanel={() => setShowCommentPanel(true)}
+            onShowCommentPanel={handleShowCommentPanel}
           />
         );
 
@@ -628,7 +626,7 @@ const Editor: React.FC = () => {
             onDrop={handleDrop}
             draggedItemId={draggedItemId}
             dragOverItemId={dragOverItemId}
-            onShowCommentPanel={() => setShowCommentPanel(true)}
+            onShowCommentPanel={handleShowCommentPanel}
           />
         );
 
@@ -638,7 +636,7 @@ const Editor: React.FC = () => {
             skills={resumeData.skills}
             onAddSkill={addSkill}
             onRemoveSkill={removeSkill}
-            onShowCommentPanel={() => setShowCommentPanel(true)}
+            onShowCommentPanel={handleShowCommentPanel}
           />
         );
 
@@ -651,7 +649,7 @@ const Editor: React.FC = () => {
             onDelete={handleDeleteEducation}
             onUpdate={updateEducation}
             onAdd={addEducation}
-            onShowCommentPanel={() => setShowCommentPanel(true)}
+            onShowCommentPanel={handleShowCommentPanel}
           />
         );
 
@@ -664,7 +662,7 @@ const Editor: React.FC = () => {
             onDelete={handleDeleteProject}
             onUpdate={updateProject}
             onAdd={addProject}
-            onShowCommentPanel={() => setShowCommentPanel(true)}
+            onShowCommentPanel={handleShowCommentPanel}
           />
         );
 
@@ -672,6 +670,8 @@ const Editor: React.FC = () => {
         return null;
     }
   };
+
+  const saveStatus = useStore((state) => state.saveStatus);
 
   return (
     <div className="min-h-screen bg-[#f6f6f8] flex flex-col">
@@ -781,7 +781,7 @@ const Editor: React.FC = () => {
               </button>
               {/* Comments Button */}
               <button
-                onClick={() => setShowCommentPanel(true)}
+                onClick={handleShowCommentPanel}
                 className="flex items-center gap-2 px-4 h-10 rounded-lg border border-slate-300 bg-white text-slate-700 font-bold text-sm hover:bg-slate-50 transition-colors shadow-sm relative"
                 title="View comments"
               >
@@ -795,7 +795,7 @@ const Editor: React.FC = () => {
               </button>
               {/* View History Button */}
               <button
-                onClick={() => setShowVersionHistory(true)}
+                onClick={handleShowVersionHistory}
                 className="flex items-center gap-2 px-4 h-10 rounded-lg border border-slate-300 bg-white text-slate-700 font-bold text-sm hover:bg-slate-50 transition-colors shadow-sm"
                 title="View version history"
               >
@@ -804,7 +804,7 @@ const Editor: React.FC = () => {
               </button>
               {/* Save Version Button */}
               <button
-                onClick={() => setShowSaveVersionDialog(true)}
+                onClick={handleShowSaveVersionDialog}
                 className="flex items-center gap-2 px-4 h-10 rounded-lg border border-slate-300 bg-white text-slate-700 font-bold text-sm hover:bg-slate-50 transition-colors shadow-sm"
                 title="Save as new version"
               >
@@ -890,7 +890,7 @@ const Editor: React.FC = () => {
       {/* Version History Dialog */}
       {showVersionHistory && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-max-2xl max-h-[80vh] overflow-hidden flex flex-col">
             <div className="flex items-center justify-between p-6 border-b border-slate-200">
               <div className="flex items-center gap-3">
                 <span className="material-symbols-outlined text-primary-600 text-2xl">history</span>

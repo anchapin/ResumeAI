@@ -26,7 +26,7 @@ class TestResumeTailoringBasic:
     ):
         """Test basic resume tailoring with job description."""
         response = await authenticated_client.post(
-            "/v1/tailor",
+            "/api/v1/tailor",
             json={
                 "resume_data": minimal_resume_data,
                 "job_description": job_description_tech["description"],
@@ -56,7 +56,7 @@ class TestResumeTailoringBasic:
     ):
         """Test tailoring comprehensive resume data."""
         response = await authenticated_client.post(
-            "/v1/tailor",
+            "/api/v1/tailor",
             json={
                 "resume_data": comprehensive_resume_data,
                 "job_description": job_description_tech["description"],
@@ -85,7 +85,7 @@ class TestResumeTailoringBasic:
     ):
         """Test keyword extraction from job description."""
         response = await authenticated_client.post(
-            "/v1/tailor",
+            "/api/v1/tailor",
             json={
                 "resume_data": minimal_resume_data,
                 "job_description": job_description_tech["description"],
@@ -111,7 +111,7 @@ class TestResumeTailoringBasic:
     ):
         """Test suggestions generation."""
         response = await authenticated_client.post(
-            "/v1/tailor",
+            "/api/v1/tailor",
             json={
                 "resume_data": minimal_resume_data,
                 "job_description": job_description_tech["description"],
@@ -141,7 +141,7 @@ class TestResumeTailoringSpecialContent:
     ):
         """Test tailoring resume with special characters."""
         response = await authenticated_client.post(
-            "/v1/tailor",
+            "/api/v1/tailor",
             json={
                 "resume_data": resume_with_special_chars,
                 "job_description": job_description_tech["description"],
@@ -161,7 +161,7 @@ class TestResumeTailoringSpecialContent:
     ):
         """Test tailoring resume with very long text."""
         response = await authenticated_client.post(
-            "/v1/tailor",
+            "/api/v1/tailor",
             json={
                 "resume_data": resume_with_long_text,
                 "job_description": job_description_tech["description"],
@@ -182,7 +182,7 @@ class TestResumeTailoringSpecialContent:
     ):
         """Test tailoring for different job types."""
         tech_response = await authenticated_client.post(
-            "/v1/tailor",
+            "/api/v1/tailor",
             json={
                 "resume_data": minimal_resume_data,
                 "job_description": job_description_tech["description"],
@@ -191,7 +191,7 @@ class TestResumeTailoringSpecialContent:
         )
 
         ai_response = await authenticated_client.post(
-            "/v1/tailor",
+            "/api/v1/tailor",
             json={
                 "resume_data": minimal_resume_data,
                 "job_description": job_description_ai["description"],
@@ -219,7 +219,7 @@ class TestResumeTailoringEdgeCases:
     ):
         """Test tailoring without job description."""
         response = await authenticated_client.post(
-            "/v1/tailor",
+            "/api/v1/tailor",
             json={
                 "resume_data": minimal_resume_data,
             },
@@ -234,7 +234,7 @@ class TestResumeTailoringEdgeCases:
     ):
         """Test tailoring with empty job description."""
         response = await authenticated_client.post(
-            "/v1/tailor",
+            "/api/v1/tailor",
             json={
                 "resume_data": minimal_resume_data,
                 "job_description": "",
@@ -250,7 +250,7 @@ class TestResumeTailoringEdgeCases:
     ):
         """Test tailoring with very short job description."""
         response = await authenticated_client.post(
-            "/v1/tailor",
+            "/api/v1/tailor",
             json={
                 "resume_data": minimal_resume_data,
                 "job_description": "Senior Engineer needed",
@@ -275,7 +275,7 @@ class TestResumeTailoringEdgeCases:
         }
 
         response = await authenticated_client.post(
-            "/v1/tailor",
+            "/api/v1/tailor",
             json={
                 "resume_data": resume_data,
                 "job_description": job_description_tech["description"],
@@ -297,7 +297,7 @@ class TestResumeTailoringAuthentication:
     ):
         """Test tailoring fails without API key."""
         response = await unauthenticated_client.post(
-            "/v1/tailor",
+            "/api/v1/tailor",
             json={
                 "resume_data": minimal_resume_data,
                 "job_description": job_description_tech["description"],
@@ -314,7 +314,7 @@ class TestResumeTailoringAuthentication:
         api_client.headers = {"X-API-KEY": "invalid_key"}
 
         response = await api_client.post(
-            "/v1/tailor",
+            "/api/v1/tailor",
             json={
                 "resume_data": minimal_resume_data,
                 "job_description": job_description_tech["description"],
@@ -336,7 +336,7 @@ class TestResumeTailoringRateLimiting:
     ):
         """Test rate limit headers are present."""
         response = await authenticated_client.post(
-            "/v1/tailor",
+            "/api/v1/tailor",
             json={
                 "resume_data": minimal_resume_data,
                 "job_description": job_description_tech["description"],
@@ -361,7 +361,7 @@ class TestResumeTailoringPerformance:
 
         start = time.time()
         response = await authenticated_client.post(
-            "/v1/tailor",
+            "/api/v1/tailor",
             json={
                 "resume_data": minimal_resume_data,
                 "job_description": job_description_tech["description"],

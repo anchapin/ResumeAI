@@ -10,7 +10,7 @@ import sys
 def test_health_check():
     """Test the health check endpoint"""
     try:
-        response = httpx.get("http://localhost:8000/health", timeout=10)
+        response = httpx.get("http://localhost:8000/api/v1/health", timeout=10)
         response.raise_for_status()
 
         # Check if the response contains the expected status
@@ -32,7 +32,7 @@ def simulate_health_check_logic():
     try:
         import httpx
 
-        r = httpx.get("http://localhost:8000/health", timeout=10)
+        r = httpx.get("http://localhost:8000/api/v1/health", timeout=10)
         r.raise_for_status()
         exit_code = 0 if r.json().get("status") == "healthy" else 1
 

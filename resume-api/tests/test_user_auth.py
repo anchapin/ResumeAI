@@ -98,7 +98,7 @@ async def test_user():
 async def auth_tokens(client, test_user):
     """Get auth tokens for test user."""
     response = await client.post(
-        "/auth/login",
+        "/api/v1/auth/login",
         json={"email": "test@example.com", "password": "testpassword123"},
     )
     return response.json()
@@ -116,11 +116,11 @@ class TestUserRegistration:
     async def test_register_success(self, client):
         """Test successful user registration."""
         response = await client.post(
-            "/auth/register",
+            "/api/v1/auth/register",
             json={
                 "email": "newuser@example.com",
                 "username": "newuser",
-                "password": "securepassword123",
+                "password": "Securepassword123!",
                 "full_name": "New User",
             },
         )
@@ -135,11 +135,11 @@ class TestUserRegistration:
     async def test_register_duplicate_email(self, client, test_user):
         """Test registration with existing email."""
         response = await client.post(
-            "/auth/register",
+            "/api/v1/auth/register",
             json={
                 "email": "test@example.com",
                 "username": "differentuser",
-                "password": "securepassword123",
+                "password": "Securepassword123!",
             },
         )
         assert response.status_code == 409
@@ -148,11 +148,11 @@ class TestUserRegistration:
     async def test_register_duplicate_username(self, client, test_user):
         """Test registration with existing username."""
         response = await client.post(
-            "/auth/register",
+            "/api/v1/auth/register",
             json={
                 "email": "different@example.com",
                 "username": "testuser",
-                "password": "securepassword123",
+                "password": "Securepassword123!",
             },
         )
         assert response.status_code == 409
@@ -161,11 +161,11 @@ class TestUserRegistration:
     async def test_register_invalid_email(self, client):
         """Test registration with invalid email format."""
         response = await client.post(
-            "/auth/register",
+            "/api/v1/auth/register",
             json={
                 "email": "invalid-email",
                 "username": "newuser",
-                "password": "securepassword123",
+                "password": "Securepassword123!",
             },
         )
         assert response.status_code == 422
@@ -173,7 +173,7 @@ class TestUserRegistration:
     async def test_register_short_password(self, client):
         """Test registration with password too short."""
         response = await client.post(
-            "/auth/register",
+            "/api/v1/auth/register",
             json={
                 "email": "newuser@example.com",
                 "username": "newuser",
@@ -185,11 +185,11 @@ class TestUserRegistration:
     async def test_register_invalid_username(self, client):
         """Test registration with invalid username characters."""
         response = await client.post(
-            "/auth/register",
+            "/api/v1/auth/register",
             json={
                 "email": "newuser@example.com",
                 "username": "invalid@user",
-                "password": "securepassword123",
+                "password": "Securepassword123!",
             },
         )
         assert response.status_code == 422
@@ -197,11 +197,11 @@ class TestUserRegistration:
     async def test_register_short_username(self, client):
         """Test registration with username too short."""
         response = await client.post(
-            "/auth/register",
+            "/api/v1/auth/register",
             json={
                 "email": "newuser@example.com",
                 "username": "ab",
-                "password": "securepassword123",
+                "password": "Securepassword123!",
             },
         )
         assert response.status_code == 422
@@ -209,11 +209,11 @@ class TestUserRegistration:
     async def test_register_email_case_insensitive(self, client, test_user):
         """Test that email is case-insensitive."""
         response = await client.post(
-            "/auth/register",
+            "/api/v1/auth/register",
             json={
                 "email": "TEST@EXAMPLE.COM",
                 "username": "newuser",
-                "password": "securepassword123",
+                "password": "Securepassword123!",
             },
         )
         assert response.status_code == 409  # Should fail as duplicate
@@ -231,7 +231,7 @@ class TestUserLogin:
     async def test_login_success(self, client, test_user):
         """Test successful login."""
         response = await client.post(
-            "/auth/login",
+            "/api/v1/auth/login",
             json={"email": "test@example.com", "password": "testpassword123"},
         )
         assert response.status_code == 200
@@ -252,7 +252,7 @@ class TestUserLogin:
     async def test_login_invalid_email(self, client):
         """Test login with non-existent email."""
         response = await client.post(
-            "/auth/login",
+            "/api/v1/auth/login",
             json={"email": "nonexistent@example.com", "password": "testpassword123"},
         )
         assert response.status_code == 401
@@ -261,7 +261,7 @@ class TestUserLogin:
     async def test_login_wrong_password(self, client, test_user):
         """Test login with wrong password."""
         response = await client.post(
-            "/auth/login",
+            "/api/v1/auth/login",
             json={"email": "test@example.com", "password": "wrongpassword"},
         )
         assert response.status_code == 401
@@ -280,7 +280,7 @@ class TestUserLogin:
             await session.commit()
 
         response = await client.post(
-            "/auth/login",
+            "/api/v1/auth/login",
             json={"email": "disabled@example.com", "password": "testpassword123"},
         )
         assert response.status_code == 403
@@ -289,7 +289,7 @@ class TestUserLogin:
     async def test_login_email_case_insensitive(self, client, test_user):
         """Test that login email is case-insensitive."""
         response = await client.post(
-            "/auth/login",
+            "/api/v1/auth/login",
             json={"email": "TEST@EXAMPLE.COM", "password": "testpassword123"},
         )
         assert response.status_code == 200
@@ -307,7 +307,7 @@ class TestTokenRefresh:
     async def test_refresh_token_success(self, client, auth_tokens):
         """Test successful token refresh."""
         response = await client.post(
-            "/auth/refresh",
+            "/api/v1/auth/refresh",
             json={"refresh_token": auth_tokens["refresh_token"]},
         )
         assert response.status_code == 200
@@ -322,7 +322,7 @@ class TestTokenRefresh:
     async def test_refresh_invalid_token(self, client):
         """Test refresh with invalid token."""
         response = await client.post(
-            "/auth/refresh",
+            "/api/v1/auth/refresh",
             json={"refresh_token": "invalid_token"},
         )
         assert response.status_code == 401
@@ -340,7 +340,7 @@ class TestUserLogout:
     async def test_logout_success(self, client, auth_tokens):
         """Test successful logout."""
         response = await client.post(
-            "/auth/logout",
+            "/api/v1/auth/logout",
             json={"refresh_token": auth_tokens["refresh_token"]},
         )
         assert response.status_code == 200
@@ -348,7 +348,7 @@ class TestUserLogout:
 
         # Verify token is now invalid
         response = await client.post(
-            "/auth/refresh",
+            "/api/v1/auth/refresh",
             json={"refresh_token": auth_tokens["refresh_token"]},
         )
         assert response.status_code == 401
@@ -356,7 +356,7 @@ class TestUserLogout:
     async def test_logout_invalid_token(self, client):
         """Test logout with invalid token."""
         response = await client.post(
-            "/auth/logout",
+            "/api/v1/auth/logout",
             json={"refresh_token": "invalid_token"},
         )
         assert response.status_code == 200  # Still returns success for security
@@ -374,7 +374,7 @@ class TestGetCurrentUser:
     async def test_get_current_user_success(self, client, auth_tokens):
         """Test getting current user info."""
         headers = {"Authorization": f"Bearer {auth_tokens['access_token']}"}
-        response = await client.get("/auth/me", headers=headers)
+        response = await client.get("/api/v1/auth/me", headers=headers)
         assert response.status_code == 200
         data = response.json()
         assert data["email"] == "test@example.com"
@@ -383,13 +383,13 @@ class TestGetCurrentUser:
 
     async def test_get_current_user_no_token(self, client):
         """Test getting current user without token."""
-        response = await client.get("/auth/me")
+        response = await client.get("/api/v1/auth/me")
         assert response.status_code == 401
 
     async def test_get_current_user_invalid_token(self, client):
         """Test getting current user with invalid token."""
         headers = {"Authorization": "Bearer invalid_token"}
-        response = await client.get("/auth/me", headers=headers)
+        response = await client.get("/api/v1/auth/me", headers=headers)
         assert response.status_code == 401
 
 
@@ -406,7 +406,7 @@ class TestUpdateUserProfile:
         """Test successful profile update."""
         headers = {"Authorization": f"Bearer {auth_tokens['access_token']}"}
         response = await client.put(
-            "/auth/me",
+            "/api/v1/auth/me",
             headers=headers,
             json={"full_name": "Updated Name", "username": "updateduser"},
         )
@@ -429,7 +429,7 @@ class TestUpdateUserProfile:
 
         headers = {"Authorization": f"Bearer {auth_tokens['access_token']}"}
         response = await client.put(
-            "/auth/me",
+            "/api/v1/auth/me",
             headers=headers,
             json={"username": "otheruser"},
         )
@@ -439,7 +439,7 @@ class TestUpdateUserProfile:
     async def test_update_profile_no_token(self, client):
         """Test update without token."""
         response = await client.put(
-            "/auth/me",
+            "/api/v1/auth/me",
             json={"full_name": "Updated Name"},
         )
         assert response.status_code == 401
@@ -458,7 +458,7 @@ class TestChangePassword:
         """Test successful password change."""
         headers = {"Authorization": f"Bearer {auth_tokens['access_token']}"}
         response = await client.post(
-            "/auth/change-password",
+            "/api/v1/auth/change-password",
             headers=headers,
             json={
                 "current_password": "testpassword123",
@@ -470,7 +470,7 @@ class TestChangePassword:
 
         # Verify new password works
         response = await client.post(
-            "/auth/login",
+            "/api/v1/auth/login",
             json={"email": "test@example.com", "password": "newpassword456"},
         )
         assert response.status_code == 200
@@ -479,7 +479,7 @@ class TestChangePassword:
         """Test change password with wrong current password."""
         headers = {"Authorization": f"Bearer {auth_tokens['access_token']}"}
         response = await client.post(
-            "/auth/change-password",
+            "/api/v1/auth/change-password",
             headers=headers,
             json={
                 "current_password": "wrongpassword",
@@ -493,7 +493,7 @@ class TestChangePassword:
         """Test change password with short new password."""
         headers = {"Authorization": f"Bearer {auth_tokens['access_token']}"}
         response = await client.post(
-            "/auth/change-password",
+            "/api/v1/auth/change-password",
             headers=headers,
             json={
                 "current_password": "testpassword123",
@@ -505,7 +505,7 @@ class TestChangePassword:
     async def test_change_password_no_token(self, client):
         """Test change password without token."""
         response = await client.post(
-            "/auth/change-password",
+            "/api/v1/auth/change-password",
             json={
                 "current_password": "testpassword123",
                 "new_password": "newpassword456",
@@ -525,7 +525,7 @@ class TestAuthHealth:
 
     async def test_auth_health(self, client):
         """Test auth health endpoint."""
-        response = await client.get("/auth/health")
+        response = await client.get("/api/v1/auth/health")
         assert response.status_code == 200
         data = response.json()
         assert data["status"] == "healthy"
@@ -568,5 +568,5 @@ class TestSecurity:
 
     async def test_protected_endpoint_requires_auth(self, client):
         """Test that protected endpoints require authentication."""
-        response = await client.get("/auth/me")
+        response = await client.get("/api/v1/auth/me")
         assert response.status_code == 401

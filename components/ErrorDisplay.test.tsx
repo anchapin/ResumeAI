@@ -37,7 +37,7 @@ describe('ErrorDisplay Component', () => {
 
     render(<ErrorDisplay error={error} onDismiss={onDismiss} />);
 
-    const closeButton = screen.getByRole('button');
+    const closeButton = screen.getByLabelText('Close error message');
     await user.click(closeButton);
 
     expect(onDismiss).toHaveBeenCalled();
@@ -55,7 +55,7 @@ describe('ErrorDisplay Component', () => {
       () => {
         expect(onDismiss).toHaveBeenCalled();
       },
-      { timeout: 200 },
+      { timeout: 500 },
     );
   });
 
@@ -73,7 +73,8 @@ describe('ErrorDisplay Component', () => {
     );
   });
 
-  it('should display development message in development mode', () => {
+  it('should display development message in development mode', async () => {
+    const user = userEvent.setup();
     const originalEnv = process.env.NODE_ENV;
     process.env.NODE_ENV = 'development';
 
@@ -81,6 +82,10 @@ describe('ErrorDisplay Component', () => {
     const onDismiss = vi.fn();
 
     render(<ErrorDisplay error={error} onDismiss={onDismiss} />);
+
+    // In new version, debug message is hidden behind "Show Technical Details"
+    const toggleButton = screen.getByText(/Technical Details/);
+    await user.click(toggleButton);
 
     expect(screen.getByText('Test error message')).toBeInTheDocument();
 

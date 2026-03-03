@@ -12,7 +12,7 @@ Before (without PKCE):
 
 ```typescript
 async function initiateGitHubOAuth() {
-  const response = await fetch(`${API_URL}/github/connect`, {
+  const response = await fetch(`${API_URL}/api/v1/github/connect`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   const data = await response.json();
@@ -27,7 +27,7 @@ import { setupPKCE } from '@/lib/oauth';
 
 async function initiateGitHubOAuth() {
   // Get authorization URL from backend (includes PKCE parameters)
-  const response = await fetch(`${API_URL}/github/connect`, {
+  const response = await fetch(`${API_URL}/api/v1/github/connect`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   const data = await response.json();

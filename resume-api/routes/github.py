@@ -28,7 +28,7 @@ from api.models import GitHubStatusResponse
 # Get logger
 logger = logging_config.get_logger(__name__)
 
-router = APIRouter(prefix="/api/v1/github", tags=["GitHub"])
+router = APIRouter(prefix="/github", tags=["GitHub"])
 
 
 def generate_oauth_state() -> str:

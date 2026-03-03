@@ -1,0 +1,5 @@
+{
+  "body": "## Problem\nOnly vendor-based splitting, no route-based splitting in `vite.config.ts:54-67`.\n\n## Impact\n- Large initial bundle\n- Slow first load\n\n## Tasks\n- [ ] Audit bundle size\n- [ ] Identify large routes\n- [ ] Implement lazy loading\n- [ ] Add loading fallbacks\n- [ ] Measure improvement\n",
+  "number": 560,
+  "title": "[M8-Maint-3] Implement Route-Based Code Splitting"
+}

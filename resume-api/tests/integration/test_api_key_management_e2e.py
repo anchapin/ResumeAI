@@ -22,7 +22,7 @@ class TestAPIKeyCreation:
     async def test_create_api_key(self, authenticated_client: AsyncClient, test_user):
         """Test creating a new API key."""
         response = await authenticated_client.post(
-            "/v1/api-keys",
+            "/api/v1/api-keys",
             json={
                 "name": "Production Key",
                 "description": "For production use",
@@ -48,7 +48,7 @@ class TestAPIKeyCreation:
     @pytest.mark.asyncio
     async def test_list_api_keys(self, authenticated_client: AsyncClient, test_api_key):
         """Test listing user's API keys."""
-        response = await authenticated_client.get("/v1/api-keys")
+        response = await authenticated_client.get("/api/v1/api-keys")
 
         # May not be implemented
         assert response.status_code in [200, 401, 404]
@@ -67,7 +67,7 @@ class TestAPIKeyValidation:
     ):
         """Test that protected endpoints require API key."""
         response = await unauthenticated_client.post(
-            "/v1/render/pdf",
+            "/api/v1/render/pdf",
             json={
                 "resume_data": minimal_resume_data,
                 "variant": "modern",
@@ -84,7 +84,7 @@ class TestAPIKeyValidation:
         api_client.headers = {"X-API-KEY": "invalid_key_xyz"}
 
         response = await api_client.post(
-            "/v1/render/pdf",
+            "/api/v1/render/pdf",
             json={
                 "resume_data": minimal_resume_data,
                 "variant": "modern",
@@ -111,7 +111,7 @@ class TestAPIKeyValidation:
         api_client.headers = {"X-API-KEY": "inactive_key_12345"}
 
         response = await api_client.post(
-            "/v1/render/pdf",
+            "/api/v1/render/pdf",
             json={
                 "resume_data": minimal_resume_data,
                 "variant": "modern",
@@ -126,7 +126,7 @@ class TestAPIKeyValidation:
     ):
         """Test that valid API key is accepted."""
         response = await authenticated_client.post(
-            "/v1/render/pdf",
+            "/api/v1/render/pdf",
             json={
                 "resume_data": minimal_resume_data,
                 "variant": "modern",
@@ -148,7 +148,7 @@ class TestAPIKeyRateLimiting:
         responses = []
         for _ in range(3):
             response = await authenticated_client.post(
-                "/v1/render/pdf",
+                "/api/v1/render/pdf",
                 json={
                     "resume_data": minimal_resume_data,
                     "variant": "modern",
@@ -165,7 +165,7 @@ class TestAPIKeyRateLimiting:
     ):
         """Test that rate limit headers are included in responses."""
         response = await authenticated_client.post(
-            "/v1/render/pdf",
+            "/api/v1/render/pdf",
             json={
                 "resume_data": minimal_resume_data,
                 "variant": "modern",
@@ -187,7 +187,7 @@ class TestAPIKeyDeactivation:
     ):
         """Test deactivating an API key."""
         response = await authenticated_client.put(
-            f"/v1/api-keys/{test_api_key.id}",
+            f"/api/v1/api-keys/{test_api_key.id}",
             json={
                 "is_active": False,
             },
@@ -201,7 +201,7 @@ class TestAPIKeyDeactivation:
         self, authenticated_client: AsyncClient, test_api_key
     ):
         """Test deleting an API key."""
-        response = await authenticated_client.delete(f"/v1/api-keys/{test_api_key.id}")
+        response = await authenticated_client.delete(f"/api/v1/api-keys/{test_api_key.id}")
 
         # May not be implemented
         assert response.status_code in [200, 204, 401, 404]
@@ -223,7 +223,7 @@ class TestAPIKeyMetadata:
         """Test that API key tracks last usage time."""
         # Make a request with the API key
         await authenticated_client.post(
-            "/v1/render/pdf",
+            "/api/v1/render/pdf",
             json={
                 "resume_data": minimal_resume_data,
                 "variant": "modern",
@@ -255,7 +255,7 @@ class TestAPIKeyRotation:
     ):
         """Test rotating an API key."""
         response = await authenticated_client.post(
-            f"/v1/api-keys/{test_api_key.id}/rotate"
+            f"/api/v1/api-keys/{test_api_key.id}/rotate"
         )
 
         # May not be implemented

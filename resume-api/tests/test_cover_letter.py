@@ -124,7 +124,7 @@ class TestCoverLetterEndpoint:
         # Note: When no API key is provided, the endpoint may return 400 (validation error)
         # before auth check due to empty resume validation, or 401/403 for auth failure
         response = client.post(
-            "/v1/cover-letter",
+            "/api/v1/cover-letter",
             json={
                 "resume_data": sample_resume_data,
                 "job_description": sample_job_description,
@@ -167,7 +167,7 @@ class TestCoverLetterEndpoint:
             mock_generator_class.return_value = mock_instance
 
             response = client.post(
-                "/v1/cover-letter",
+                "/api/v1/cover-letter",
                 json={
                     "resume_data": sample_resume_data,
                     "job_description": sample_job_description,
@@ -198,7 +198,7 @@ class TestCoverLetterEndpoint:
     ):
         """Test that missing job description returns validation error."""
         response = client.post(
-            "/v1/cover-letter",
+            "/api/v1/cover-letter",
             json={
                 "resume_data": sample_resume_data,
                 # Missing job_description
@@ -214,7 +214,7 @@ class TestCoverLetterEndpoint:
     ):
         """Test that missing company name returns validation error."""
         response = client.post(
-            "/v1/cover-letter",
+            "/api/v1/cover-letter",
             json={
                 "resume_data": sample_resume_data,
                 "job_description": sample_job_description,
@@ -230,7 +230,7 @@ class TestCoverLetterEndpoint:
     ):
         """Test that missing job title returns validation error."""
         response = client.post(
-            "/v1/cover-letter",
+            "/api/v1/cover-letter",
             json={
                 "resume_data": sample_resume_data,
                 "job_description": sample_job_description,
@@ -246,7 +246,7 @@ class TestCoverLetterEndpoint:
     ):
         """Test that empty resume data returns validation error."""
         response = client.post(
-            "/v1/cover-letter",
+            "/api/v1/cover-letter",
             json={
                 "resume_data": {},  # Empty resume
                 "job_description": sample_job_description,
@@ -263,7 +263,7 @@ class TestCoverLetterEndpoint:
     ):
         """Test that very short job description returns validation error."""
         response = client.post(
-            "/v1/cover-letter",
+            "/api/v1/cover-letter",
             json={
                 "resume_data": sample_resume_data,
                 "job_description": "short",  # Less than 10 chars
@@ -293,7 +293,7 @@ class TestCoverLetterEndpoint:
             mock_generator_class.return_value = mock_instance
 
             response = client.post(
-                "/v1/cover-letter",
+                "/api/v1/cover-letter",
                 json={
                     "resume_data": sample_resume_data,
                     "job_description": sample_job_description,
@@ -327,7 +327,7 @@ class TestCoverLetterEndpoint:
             mock_generator_class.return_value = mock_instance
 
             response = client.post(
-                "/v1/cover-letter",
+                "/api/v1/cover-letter",
                 json={
                     "resume_data": sample_resume_data,
                     "job_description": sample_job_description,
@@ -354,7 +354,7 @@ class TestCoverLetterEndpoint:
             mock_generator_class.return_value = mock_instance
 
             response = client.post(
-                "/v1/cover-letter",
+                "/api/v1/cover-letter",
                 json={
                     "resume_data": sample_resume_data,
                     "job_description": sample_job_description,
@@ -380,7 +380,7 @@ class TestCoverLetterEndpoint:
             mock_generator_class.return_value = mock_instance
 
             response = client.post(
-                "/v1/cover-letter",
+                "/api/v1/cover-letter",
                 json={
                     "resume_data": sample_resume_data,
                     "job_description": sample_job_description,
@@ -414,7 +414,7 @@ class TestCoverLetterEndpoint:
             mock_generator_class.return_value = mock_instance
 
             response = client.post(
-                "/v1/cover-letter",
+                "/api/v1/cover-letter",
                 json={
                     "resume_data": sample_resume_data,
                     "job_description": sample_job_description,

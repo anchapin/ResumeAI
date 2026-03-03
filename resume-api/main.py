@@ -6,7 +6,7 @@ FastAPI service for generating and tailoring professional resumes.
 
 import asyncio
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, Request, Response, status, Depends, WebSocket
+from fastapi import FastAPI, Request, Response, status, Depends, WebSocket, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
@@ -14,6 +14,7 @@ from prometheus_fastapi_instrumentator import Instrumentator
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from api import router
+from api.interview_routes import router as interview_router
 from api.websocket import handle_websocket_connection
 from config import settings
 from config.errors import create_error_response, ErrorCode
@@ -276,85 +277,96 @@ app.add_middleware(
 )
 
 
+# Create a router for base endpoints to allow prefixing
+base_router = APIRouter()
+
 # Health check endpoints
-@app.get("/health", tags=["Health"])
+@base_router.get("/health", tags=["Health"])
 async def health_check():
     """Basic health check endpoint."""
     return {"status": "healthy", "version": settings.app_version}
 
 
-@app.get("/health/detailed", tags=["Health"])
+@base_router.get("/health/detailed", tags=["Health"])
 async def health_check_detailed():
     """Detailed health check with all components."""
     return await health.get_health_status(detailed=True)
 
 
-@app.get("/health/oauth", tags=["Health"])
+@base_router.get("/health/oauth", tags=["Health"])
 async def oauth_health_check():
     """OAuth integration health check endpoint."""
     return await health.health_checker.check_oauth_health()
 
 
-@app.get("/health/ready", tags=["Health"])
+@base_router.get("/health/ready", tags=["Health"])
 async def readiness_check():
     """Readiness check for orchestration systems."""
     return await health.get_readiness_status()
 
 
 # Analytics endpoints
-@app.get("/analytics/summary", tags=["Analytics"])
+@base_router.get("/analytics/summary", tags=["Analytics"])
 async def analytics_summary(hours: int = 24):
     """Get analytics summary for the specified time period."""
     return await analytics.get_analytics_summary(hours=hours)
 
 
-@app.get("/analytics/endpoints", tags=["Analytics"])
+@base_router.get("/analytics/endpoints", tags=["Analytics"])
 async def endpoint_popularity(hours: int = 24, limit: int = 10):
     """Get most popular endpoints."""
     return await analytics.get_endpoint_popularity(hours=hours, limit=limit)
 
 
+# Include base routes with version prefix
+app.include_router(base_router, prefix=settings.api_v1_prefix)
+
 # Include API routes
-app.include_router(router)
+app.include_router(router, prefix=settings.api_v1_prefix)
+app.include_router(interview_router, prefix=settings.api_v1_prefix)
 
 # Include new feature routes
-app.include_router(interviews_router)
-app.include_router(salary_router)
-app.include_router(linkedin_router)
-app.include_router(billing_router)
-app.include_router(auth_router)
-app.include_router(github_router)
-app.include_router(jd_router)
-app.include_router(api_key_router)
-app.include_router(team_router)
-app.include_router(analytics_router)
-app.include_router(webhook_router)
-app.include_router(deployment_router)
+app.include_router(interviews_router, prefix=settings.api_v1_prefix)
+app.include_router(salary_router, prefix=settings.api_v1_prefix)
+app.include_router(linkedin_router, prefix=settings.api_v1_prefix)
+app.include_router(billing_router, prefix=settings.api_v1_prefix)
+app.include_router(auth_router, prefix=settings.api_v1_prefix)
+app.include_router(github_router, prefix=settings.api_v1_prefix)
+app.include_router(jd_router, prefix=settings.api_v1_prefix)
+app.include_router(api_key_router, prefix=settings.api_v1_prefix)
+app.include_router(team_router, prefix=settings.api_v1_prefix)
+app.include_router(analytics_router, prefix=settings.api_v1_prefix)
+app.include_router(webhook_router, prefix=settings.api_v1_prefix)
+app.include_router(deployment_router, prefix=settings.api_v1_prefix)
 
 
 # WebSocket endpoint for real-time collaboration
-@app.websocket("/ws/resumes/{resume_id}")
+@app.websocket(f"{settings.api_v1_prefix}/ws/resumes/{{resume_id}}")
 async def websocket_resume(
     websocket: WebSocket,
     resume_id: str,
-    current_user: User = Depends(get_current_user_ws),
+    current_user_info: tuple[User, float] = Depends(get_current_user_ws),
 ):
     """
     WebSocket endpoint for real-time collaboration on resumes.
 
     Connect to collaborate on a specific resume:
-    ws://host/ws/resumes/{resume_id}?token=jwt_token
+    ws://host/api/v1/ws/resumes/{resume_id}?token=jwt_token
 
     Requires authentication via JWT token in query parameter.
 
     Features:
-    - JWT authentication
+    - JWT authentication (at connection time)
+    - Token expiration monitoring (disconnects on expiry)
     - Heartbeat/ping-pong mechanism
     - Connection timeout (30s inactivity)
     - Rate limiting on new connections
     - Max 5 concurrent connections per user
     """
-    await handle_websocket_connection(websocket, resume_id, str(current_user.id))
+    user, expires_at = current_user_info
+    await handle_websocket_connection(
+        websocket, resume_id, str(user.id), expires_at=expires_at
+    )
 
 
 if __name__ == "__main__":

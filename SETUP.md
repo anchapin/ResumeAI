@@ -198,7 +198,7 @@ docker-compose up
 make health
 
 # Check specific services
-curl http://localhost:8000/health      # Backend
+curl http://localhost:8000/api/v1/health      # Backend
 curl http://localhost:3000              # Frontend
 curl http://localhost:8000/docs         # API documentation
 ```
@@ -430,7 +430,7 @@ If the frontend can't reach the backend:
 1. **Verify backend is running**:
 
    ```bash
-   curl http://localhost:8000/health
+   curl http://localhost:8000/api/v1/health
    ```
 
 2. **Check VITE_API_URL in .env.local**:

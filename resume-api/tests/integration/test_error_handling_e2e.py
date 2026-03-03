@@ -23,7 +23,7 @@ class TestValidationErrors:
     ):
         """Test error when contact name is missing."""
         response = await authenticated_client.post(
-            "/v1/render/pdf",
+            "/api/v1/render/pdf",
             json={
                 "resume_data": {
                     "contact": {
@@ -46,7 +46,7 @@ class TestValidationErrors:
         resume_data["contact"]["email"] = "not-an-email"
 
         response = await authenticated_client.post(
-            "/v1/render/pdf",
+            "/api/v1/render/pdf",
             json={
                 "resume_data": resume_data,
                 "variant": "modern",
@@ -64,7 +64,7 @@ class TestValidationErrors:
         resume_data["contact"]["phone"] = "not-a-phone"
 
         response = await authenticated_client.post(
-            "/v1/render/pdf",
+            "/api/v1/render/pdf",
             json={
                 "resume_data": resume_data,
                 "variant": "modern",
@@ -83,7 +83,7 @@ class TestValidationErrors:
         resume_data["contact"]["website"] = "not a url"
 
         response = await authenticated_client.post(
-            "/v1/render/pdf",
+            "/api/v1/render/pdf",
             json={
                 "resume_data": resume_data,
                 "variant": "modern",
@@ -101,7 +101,7 @@ class TestMissingRequiredFields:
     async def test_pdf_missing_resume_data(self, authenticated_client: AsyncClient):
         """Test PDF endpoint with missing resume_data."""
         response = await authenticated_client.post(
-            "/v1/render/pdf",
+            "/api/v1/render/pdf",
             json={
                 "variant": "modern",
             },
@@ -115,7 +115,7 @@ class TestMissingRequiredFields:
     ):
         """Test PDF endpoint with missing variant."""
         response = await authenticated_client.post(
-            "/v1/render/pdf",
+            "/api/v1/render/pdf",
             json={
                 "resume_data": minimal_resume_data,
             },
@@ -130,7 +130,7 @@ class TestMissingRequiredFields:
     ):
         """Test tailor endpoint with missing resume_data."""
         response = await authenticated_client.post(
-            "/v1/tailor",
+            "/api/v1/tailor",
             json={
                 "job_description": job_description_tech["description"],
             },
@@ -144,7 +144,7 @@ class TestMissingRequiredFields:
     ):
         """Test tailor endpoint with missing job description."""
         response = await authenticated_client.post(
-            "/v1/tailor",
+            "/api/v1/tailor",
             json={
                 "resume_data": minimal_resume_data,
             },
@@ -160,7 +160,7 @@ class TestInvalidDataTypes:
     async def test_resume_data_not_dict(self, authenticated_client: AsyncClient):
         """Test error when resume_data is not a dict."""
         response = await authenticated_client.post(
-            "/v1/render/pdf",
+            "/api/v1/render/pdf",
             json={
                 "resume_data": "not a dict",
                 "variant": "modern",
@@ -175,7 +175,7 @@ class TestInvalidDataTypes:
     ):
         """Test error when variant is not a string."""
         response = await authenticated_client.post(
-            "/v1/render/pdf",
+            "/api/v1/render/pdf",
             json={
                 "resume_data": minimal_resume_data,
                 "variant": 123,
@@ -193,7 +193,7 @@ class TestInvalidDataTypes:
         resume_data["contact"]["name"] = 123
 
         response = await authenticated_client.post(
-            "/v1/render/pdf",
+            "/api/v1/render/pdf",
             json={
                 "resume_data": resume_data,
                 "variant": "modern",
@@ -224,7 +224,7 @@ class TestContentLimitations:
         }
 
         response = await authenticated_client.post(
-            "/v1/render/pdf",
+            "/api/v1/render/pdf",
             json={
                 "resume_data": resume_data,
                 "variant": "modern",
@@ -257,7 +257,7 @@ class TestContentLimitations:
         }
 
         response = await authenticated_client.post(
-            "/v1/render/pdf",
+            "/api/v1/render/pdf",
             json={
                 "resume_data": resume_data,
                 "variant": "modern",
@@ -277,7 +277,7 @@ class TestAuthenticationErrors:
     ):
         """Test error when API key header is missing."""
         response = await unauthenticated_client.post(
-            "/v1/render/pdf",
+            "/api/v1/render/pdf",
             json={
                 "resume_data": minimal_resume_data,
                 "variant": "modern",
@@ -296,7 +296,7 @@ class TestAuthenticationErrors:
         api_client.headers = {"X-API-KEY": ""}
 
         response = await api_client.post(
-            "/v1/render/pdf",
+            "/api/v1/render/pdf",
             json={
                 "resume_data": minimal_resume_data,
                 "variant": "modern",
@@ -311,7 +311,7 @@ class TestAuthenticationErrors:
         api_client.headers = {"X-API-KEY": "wrong_key_xyz_123"}
 
         response = await api_client.post(
-            "/v1/render/pdf",
+            "/api/v1/render/pdf",
             json={
                 "resume_data": minimal_resume_data,
                 "variant": "modern",
@@ -330,7 +330,7 @@ class TestErrorResponseFormat:
     ):
         """Test that error response contains detail field."""
         response = await authenticated_client.post(
-            "/v1/render/pdf",
+            "/api/v1/render/pdf",
             json={
                 "resume_data": {
                     "contact": {},
@@ -351,7 +351,7 @@ class TestErrorResponseFormat:
     ):
         """Test validation error response format."""
         response = await authenticated_client.post(
-            "/v1/render/pdf",
+            "/api/v1/render/pdf",
             json={
                 "resume_data": "not a dict",
                 "variant": "modern",
@@ -366,7 +366,7 @@ class TestErrorResponseFormat:
     async def test_error_includes_http_status(self, authenticated_client: AsyncClient):
         """Test that error response has proper HTTP status."""
         response = await authenticated_client.post(
-            "/v1/render/pdf",
+            "/api/v1/render/pdf",
             json={},
         )
 
@@ -381,7 +381,7 @@ class TestEdgeCaseErrors:
     async def test_null_values_in_data(self, authenticated_client: AsyncClient):
         """Test handling of null values in data."""
         response = await authenticated_client.post(
-            "/v1/render/pdf",
+            "/api/v1/render/pdf",
             json={
                 "resume_data": {
                     "contact": {
@@ -406,7 +406,7 @@ class TestEdgeCaseErrors:
         resume_data["sections"] = {}
 
         response = await authenticated_client.post(
-            "/v1/render/pdf",
+            "/api/v1/render/pdf",
             json={
                 "resume_data": resume_data,
                 "variant": "modern",
@@ -422,7 +422,7 @@ class TestEdgeCaseErrors:
         # This is a JSON parsing edge case
         # Most JSON parsers handle this by keeping last value
         response = await authenticated_client.post(
-            "/v1/render/pdf",
+            "/api/v1/render/pdf",
             json={
                 "resume_data": {
                     "contact": {

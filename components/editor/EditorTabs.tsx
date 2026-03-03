@@ -7,7 +7,7 @@ interface EditorTabsProps {
 
 const TAB_ITEMS = ['Contact Info', 'Summary', 'Experience', 'Skills', 'Education', 'Projects'];
 
-export const EditorTabs: React.FC<EditorTabsProps> = ({ activeTab, onTabChange }) => {
+export const EditorTabs = React.memo<EditorTabsProps>(({ activeTab, onTabChange }) => {
   return (
     <div className="border-b border-slate-200 mb-8 overflow-x-auto">
       <div className="flex gap-8">
@@ -30,4 +30,4 @@ export const EditorTabs: React.FC<EditorTabsProps> = ({ activeTab, onTabChange }
       </div>
     </div>
   );
-};
+});

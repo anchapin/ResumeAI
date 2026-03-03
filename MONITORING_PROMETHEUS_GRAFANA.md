@@ -542,7 +542,7 @@ receivers:
 
 **Solutions:**
 
-1. Check Resume API is running: `curl http://localhost:8000/health`
+1. Check Resume API is running: `curl http://localhost:8000/api/v1/health`
 2. Verify metrics endpoint: `curl http://localhost:8000/metrics`
 3. Check Prometheus logs: `docker-compose logs prometheus`
 4. Verify prometheus.yml syntax: `promtool check config prometheus.yml`

@@ -1,0 +1,5 @@
+{
+  "body": "## Problem\nInconsistent API paths: `/v1/render/pdf`, `/auth/login`, `/api/linkedin/profile`.\n\n## Impact\n- Confusing for API consumers\n- Hard to version properly\n\n## Tasks\n- [ ] Define versioning strategy\n- [ ] Update all backend route prefixes to `/api/v1/`\n- [ ] Update frontend API client\n- [ ] Add version deprecation policy\n- [ ] Update OpenAPI docs\n",
+  "number": 535,
+  "title": "[A3-Arch-4] Standardize API Versioning"
+}

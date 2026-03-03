@@ -148,7 +148,7 @@ describe('Import Utilities', () => {
       await importFromPDF(mockFile);
 
       expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining('/v1/import/pdf'),
+        expect.stringContaining('/api/v1/import/pdf'),
         expect.objectContaining({
           method: 'POST',
           headers: expect.objectContaining({ 'X-API-KEY': 'test-api-key' }),
@@ -199,7 +199,7 @@ describe('Import Utilities', () => {
       await importFromWord(mockFile);
 
       expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining('/v1/import/docx'),
+        expect.stringContaining('/api/v1/import/docx'),
         expect.objectContaining({
           method: 'POST',
           headers: expect.objectContaining({ 'X-API-KEY': 'test-api-key' }),
@@ -227,7 +227,7 @@ describe('Import Utilities', () => {
       const result = await importFromLinkedInUrl('https://linkedin.com/in/johndoe');
 
       expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining('/v1/import/linkedin'),
+        expect.stringContaining('/api/v1/import/linkedin'),
         expect.objectContaining({
           method: 'POST',
           body: JSON.stringify({ url: 'https://linkedin.com/in/johndoe' }),
@@ -271,7 +271,7 @@ describe('Import Utilities', () => {
       const result = await importFromLinkedInFile(mockFile);
 
       expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining('/v1/import/linkedin-file'),
+        expect.stringContaining('/api/v1/import/linkedin-file'),
         expect.objectContaining({ method: 'POST' }),
       );
       expect(result).toEqual(mockResumeData);
@@ -335,7 +335,7 @@ describe('Import Utilities', () => {
       const result = await importFromLinkedIn('https://linkedin.com/in/johndoe');
 
       expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining('/v1/import/linkedin'),
+        expect.stringContaining('/api/v1/import/linkedin'),
         expect.any(Object),
       );
       expect(result).toEqual(mockResumeData);

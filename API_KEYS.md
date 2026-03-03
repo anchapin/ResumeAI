@@ -23,7 +23,7 @@ ResumeAI implements **bcrypt-based API key hashing** to securely store API keys 
 
 3. **Use plaintext in requests:**
    ```bash
-   curl -X GET "http://localhost:8000/health" \
+   curl -X GET "http://localhost:8000/api/v1/health" \
      -H "X-API-KEY: rai_your_test_key_here"
    ```
 

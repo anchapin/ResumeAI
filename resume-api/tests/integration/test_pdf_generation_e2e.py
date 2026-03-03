@@ -23,7 +23,7 @@ class TestPDFGenerationBasic:
     ):
         """Test PDF generation with minimal resume data."""
         response = await authenticated_client.post(
-            "/v1/render/pdf",
+            "/api/v1/render/pdf",
             json={
                 "resume_data": minimal_resume_data,
                 "variant": "modern",
@@ -41,7 +41,7 @@ class TestPDFGenerationBasic:
     ):
         """Test PDF generation with comprehensive resume data."""
         response = await authenticated_client.post(
-            "/v1/render/pdf",
+            "/api/v1/render/pdf",
             json={
                 "resume_data": comprehensive_resume_data,
                 "variant": "modern",
@@ -61,7 +61,7 @@ class TestPDFGenerationBasic:
 
         for variant in variants:
             response = await authenticated_client.post(
-                "/v1/render/pdf",
+                "/api/v1/render/pdf",
                 json={
                     "resume_data": minimal_resume_data,
                     "variant": variant,
@@ -81,7 +81,7 @@ class TestPDFGenerationEdgeCases:
     ):
         """Test PDF generation with special characters and Unicode."""
         response = await authenticated_client.post(
-            "/v1/render/pdf",
+            "/api/v1/render/pdf",
             json={
                 "resume_data": resume_with_special_chars,
                 "variant": "modern",
@@ -99,7 +99,7 @@ class TestPDFGenerationEdgeCases:
     ):
         """Test PDF generation with very long text content."""
         response = await authenticated_client.post(
-            "/v1/render/pdf",
+            "/api/v1/render/pdf",
             json={
                 "resume_data": resume_with_long_text,
                 "variant": "modern",
@@ -118,7 +118,7 @@ class TestPDFGenerationEdgeCases:
         resume_data["contact"].pop("name", None)
 
         response = await authenticated_client.post(
-            "/v1/render/pdf",
+            "/api/v1/render/pdf",
             json={
                 "resume_data": resume_data,
                 "variant": "modern",
@@ -143,7 +143,7 @@ class TestPDFGenerationEdgeCases:
         }
 
         response = await authenticated_client.post(
-            "/v1/render/pdf",
+            "/api/v1/render/pdf",
             json={
                 "resume_data": resume_data,
                 "variant": "modern",
@@ -162,7 +162,7 @@ class TestPDFGenerationEdgeCases:
         resume_data["contact"]["email"] = "not-an-email"
 
         response = await authenticated_client.post(
-            "/v1/render/pdf",
+            "/api/v1/render/pdf",
             json={
                 "resume_data": resume_data,
                 "variant": "modern",
@@ -181,7 +181,7 @@ class TestPDFGenerationAuthentication:
     ):
         """Test PDF generation fails without API key."""
         response = await unauthenticated_client.post(
-            "/v1/render/pdf",
+            "/api/v1/render/pdf",
             json={
                 "resume_data": minimal_resume_data,
                 "variant": "modern",
@@ -199,7 +199,7 @@ class TestPDFGenerationAuthentication:
         api_client.headers = {"X-API-KEY": "invalid_key_12345"}
 
         response = await api_client.post(
-            "/v1/render/pdf",
+            "/api/v1/render/pdf",
             json={
                 "resume_data": minimal_resume_data,
                 "variant": "modern",
@@ -218,7 +218,7 @@ class TestPDFGenerationRateLimiting:
     ):
         """Test rate limit headers are present."""
         response = await authenticated_client.post(
-            "/v1/render/pdf",
+            "/api/v1/render/pdf",
             json={
                 "resume_data": minimal_resume_data,
                 "variant": "modern",
@@ -245,7 +245,7 @@ class TestPDFGenerationPerformance:
 
         start = time.time()
         response = await authenticated_client.post(
-            "/v1/render/pdf",
+            "/api/v1/render/pdf",
             json={
                 "resume_data": minimal_resume_data,
                 "variant": "modern",
@@ -265,7 +265,7 @@ class TestPDFGenerationPerformance:
 
         async def generate_pdf():
             return await authenticated_client.post(
-                "/v1/render/pdf",
+                "/api/v1/render/pdf",
                 json={
                     "resume_data": minimal_resume_data,
                     "variant": "modern",

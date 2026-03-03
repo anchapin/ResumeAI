@@ -155,7 +155,7 @@ DEBUG=false
 - **Python Path:** `PYTHONPATH=/app:/usr/local/lib/python3.11/site-packages`
 - **Working Directory:** `/app`
 - **Exposed Port:** 8000
-- **Health Check:** `python -c "import httpx; httpx.get('http://localhost:8000/health', timeout=10).raise_for_status() or exit(1)"`
+- **Health Check:** `python -c "import httpx; httpx.get('http://localhost:8000/api/v1/health', timeout=10).raise_for_status() or exit(1)"`
 - **Non-root User:** `appuser` (UID 1000)
 
 ## Testing

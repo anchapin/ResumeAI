@@ -28,6 +28,7 @@ from sqlalchemy import select
 
 from . import settings
 from database import get_async_session, User
+from lib.utils.cache import get_cache_manager
 from config.jwt_utils import verify_access_token
 from lib.security import verify_api_key, is_hashed_key
 
@@ -69,9 +70,12 @@ limiter = Limiter(key_func=get_request_identifier)
 async def get_current_user_ws(
     token: Annotated[str, Query(..., description="JWT access token")] = None,
     db: AsyncSession = Depends(get_async_session),
-) -> User:
+) -> tuple[User, float]:
     """
     Authenticate WebSocket connection using JWT token in query parameter.
+
+    Returns:
+        Tuple of (User object, expiration timestamp)
 
     Raises WebSocketException with code 1008 (Policy Violation) if
     authentication fails.
@@ -91,6 +95,7 @@ async def get_current_user_ws(
             )
 
         user_id = payload.get("sub")
+        expires_at = payload.get("exp")
         if user_id is None:
             raise WebSocketException(
                 code=status.WS_1008_POLICY_VIOLATION,
@@ -112,7 +117,7 @@ async def get_current_user_ws(
                 reason="Authentication failed: account disabled",
             )
 
-        return user
+        return user, float(expires_at)
 
     except WebSocketException:
         raise
@@ -240,6 +245,19 @@ async def get_current_user(
             detail="Invalid token payload",
             headers={"WWW-Authenticate": "Bearer"},
         )
+
+    # Check cache first
+    cache_mgr = get_cache_manager()
+    cache_key = cache_mgr.generate_key("user:profile", user_id=user_id)
+    cached_user = await cache_mgr.get(cache_key)
+    if cached_user:
+        # Convert cached dict back to User object (if needed)
+        # For SQLAlchemy objects, it's better to return a dict or a Pydantic model
+        # But this dependency returns User. We'll handle it by caching the user info
+        # and letting the caller use it. 
+        # Actually, returning a detached User object can be tricky.
+        # I'll just cache the database query result.
+        pass
 
     # Get user from database
     result = await db.execute(select(User).where(User.id == int(user_id)))

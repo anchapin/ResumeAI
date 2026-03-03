@@ -58,10 +58,10 @@ class ResumeAIUser(HttpUser):
         }
 
         self.client.post(
-            "/v1/tailor",
+            "/api/v1/tailor",
             json=payload,
             headers=self.headers,
-            name="/v1/tailor",
+            name="/api/v1/tailor",
             timeout=10,
         )
 
@@ -101,10 +101,10 @@ class ResumeAIUser(HttpUser):
         }
 
         self.client.post(
-            "/v1/render/pdf",
+            "/api/v1/render/pdf",
             json=payload,
             headers=self.headers,
-            name="/v1/render/pdf",
+            name="/api/v1/render/pdf",
             timeout=15,
         )
 
@@ -131,10 +131,10 @@ class ResumeAIUser(HttpUser):
         }
 
         self.client.post(
-            "/v1/variants",
+            "/api/v1/variants",
             json=payload,
             headers=self.headers,
-            name="/v1/variants",
+            name="/api/v1/variants",
             timeout=10,
         )
 

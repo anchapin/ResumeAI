@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ErrorContext, ErrorType } from '../utils/errorHandler';
+import { getErrorMessageByType, getErrorSuggestion } from '../utils/errorMessages';
 
 interface ErrorDisplayProps {
   error: ErrorContext | null;
@@ -22,6 +23,7 @@ export const ErrorDisplay: React.FC<ErrorDisplayProps> = ({
   const [isVisible, setIsVisible] = useState(false);
   const [showExpandedDetails, setShowExpandedDetails] = useState(showDetails);
   const [isReporting, setIsReporting] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const handleDismiss = () => {
     setIsVisible(false);
@@ -50,6 +52,9 @@ export const ErrorDisplay: React.FC<ErrorDisplayProps> = ({
   if (!error || !isVisible) {
     return null;
   }
+
+  const errorInfo = getErrorMessageByType(error.type);
+  const suggestion = getErrorSuggestion(error.type, error.statusCode);
 
   const getIcon = (type: ErrorType) => {
     switch (type) {
@@ -128,7 +133,7 @@ export const ErrorDisplay: React.FC<ErrorDisplayProps> = ({
         if (onRetry) {
           actions.push({ label: 'Retry', action: 'retry', icon: 'refresh' });
         }
-        actions.push({ label: 'Report Issue', action: 'report', icon: 'bug_report' });
+        actions.push({ label: 'Support', action: 'support', icon: 'contact_support' });
         break;
     }
 
@@ -150,6 +155,17 @@ export const ErrorDisplay: React.FC<ErrorDisplayProps> = ({
       case 'report':
         await reportError();
         break;
+      case 'support':
+        window.open('https://support.resumeai.com', '_blank');
+        break;
+    }
+  };
+
+  const copyErrorId = async () => {
+    if (navigator.clipboard) {
+      await navigator.clipboard.writeText(error.id);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
     }
   };
 
@@ -168,7 +184,6 @@ ${error.context ? `\nContext: ${JSON.stringify(error.context, null, 2)}` : ''}
 
       if (navigator.clipboard) {
         await navigator.clipboard.writeText(errorReport);
-        // Show toast or update message
         console.log('Error report copied to clipboard');
       }
     } catch (err) {
@@ -214,21 +229,59 @@ ${error.context ? `\nContext: ${JSON.stringify(error.context, null, 2)}` : ''}
         <span className={`material-symbols-outlined ${iconColor} flex-shrink-0 mt-0.5`}>
           {getIcon(error.type)}
         </span>
-        <div className="flex-1">
-          <h3 className="font-semibold text-sm mb-1">{title}</h3>
-          <p className="text-sm">{error.userMessage}</p>
+        <div className="flex-1 overflow-hidden">
+          <div className="flex justify-between items-center mb-1">
+            <h3 className="font-semibold text-sm">{title}</h3>
+            <span className="text-[10px] opacity-60 font-mono flex items-center gap-1">
+              ID: {error.id.split('_').pop()?.substring(0, 8)}
+              <button
+                onClick={copyErrorId}
+                className="hover:opacity-100 opacity-50 transition-opacity"
+                title="Copy Error ID"
+              >
+                <span className="material-symbols-outlined text-[12px]">
+                  {copied ? 'check' : 'content_copy'}
+                </span>
+              </button>
+            </span>
+          </div>
 
-          {/* Expanded Details Section */}
-          {showExpandedDetails && error.context && (
-            <div className="mt-2 pt-2 border-t border-current opacity-70">
-              <p className="text-xs font-mono">
-                {JSON.stringify(error.context, null, 2)}
-              </p>
-            </div>
+          <p className="text-sm leading-tight">{error.userMessage}</p>
+
+          {suggestion && (
+            <p className="text-xs mt-1.5 font-medium opacity-90 italic">💡 {suggestion}</p>
           )}
 
-          {process.env.NODE_ENV === 'development' && (
-            <p className="text-xs opacity-70 mt-1 font-mono">{error.message}</p>
+          {/* Expanded Details Section */}
+          {(error.context || process.env.NODE_ENV === 'development') && (
+            <div className="mt-2">
+              <button
+                onClick={() => setShowExpandedDetails(!showExpandedDetails)}
+                className="text-[10px] font-semibold uppercase tracking-wider opacity-60 hover:opacity-100 flex items-center gap-0.5"
+              >
+                {showExpandedDetails ? 'Hide' : 'Show'} Technical Details
+                <span className="material-symbols-outlined text-[14px]">
+                  {showExpandedDetails ? 'expand_less' : 'expand_more'}
+                </span>
+              </button>
+
+              {showExpandedDetails && (
+                <div className="mt-2 p-2 bg-black/5 rounded text-[10px] font-mono overflow-auto max-h-32 whitespace-pre-wrap">
+                  {error.context && (
+                    <div className="mb-2">
+                      <div className="font-bold opacity-50 uppercase mb-0.5">Context:</div>
+                      {JSON.stringify(error.context, null, 2)}
+                    </div>
+                  )}
+                  {process.env.NODE_ENV === 'development' && (
+                    <div>
+                      <div className="font-bold opacity-50 uppercase mb-0.5">Debug Message:</div>
+                      {error.message}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           )}
 
           {/* Action Buttons */}
@@ -239,7 +292,7 @@ ${error.context ? `\nContext: ${JSON.stringify(error.context, null, 2)}` : ''}
                   key={btn.action}
                   onClick={() => handleAction(btn.action)}
                   disabled={isReporting && btn.action === 'report'}
-                  className={`text-xs px-3 py-1 rounded font-medium transition-all ${
+                  className={`text-xs px-3 py-1 rounded font-medium transition-all shadow-sm ${
                     severity === 'critical'
                       ? 'bg-red-600 text-white hover:bg-red-700 disabled:bg-red-400'
                       : severity === 'error'
@@ -249,9 +302,7 @@ ${error.context ? `\nContext: ${JSON.stringify(error.context, null, 2)}` : ''}
                   aria-label={btn.label}
                 >
                   <span className="flex items-center gap-1">
-                    <span className="material-symbols-outlined text-[16px]">
-                      {btn.icon}
-                    </span>
+                    <span className="material-symbols-outlined text-[16px]">{btn.icon}</span>
                     {btn.label}
                   </span>
                 </button>
@@ -261,7 +312,7 @@ ${error.context ? `\nContext: ${JSON.stringify(error.context, null, 2)}` : ''}
         </div>
         <button
           onClick={handleDismiss}
-          className={`flex-shrink-0 hover:opacity-70 transition-opacity`}
+          className={`flex-shrink-0 hover:opacity-70 transition-opacity p-0.5`}
           aria-label="Close error message"
         >
           <span className="material-symbols-outlined text-[20px]">close</span>

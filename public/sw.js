@@ -34,7 +34,7 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
 
   // API calls - Network-First
-  if (url.pathname.startsWith('/v1/') || url.pathname.startsWith('/generate/')) {
+  if (url.pathname.startsWith('/api/v1/') || url.pathname.startsWith('/generate/')) {
     event.respondWith(
       fetch(event.request)
         .then((response) => {

@@ -18,6 +18,7 @@ class Settings(BaseSettings):
     # API Configuration
     app_name: str = "Resume API"
     app_version: str = "1.0.0"
+    api_v1_prefix: str = "/api/v1"
     debug: bool = False
 
     # Server Configuration
@@ -118,6 +119,7 @@ class Settings(BaseSettings):
     # Request Signing Configuration
     request_signing_secret: Optional[str] = None
     enable_request_signing: bool = True
+    enable_csrf: bool = True
     ws_heartbeat_interval: int = 30  # Send heartbeat ping every 30 seconds
     ws_connection_timeout: int = 30  # Close connection after 30s of inactivity
     ws_max_connections_per_user: int = (

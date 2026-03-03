@@ -259,7 +259,7 @@ class TestImportDocxEndpoint:
             )
         }
 
-        response = client.post("/v1/import/docx", files=files)
+        response = client.post("/api/v1/import/docx", files=files)
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
@@ -278,7 +278,7 @@ class TestImportDocxEndpoint:
             )
         }
 
-        response = client.post("/v1/import/docx", files=files)
+        response = client.post("/api/v1/import/docx", files=files)
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
@@ -291,7 +291,7 @@ class TestImportDocxEndpoint:
         # Try to upload a text file
         files = {"file": ("resume.txt", b"Plain text content", "text/plain")}
 
-        response = client.post("/v1/import/docx", files=files)
+        response = client.post("/api/v1/import/docx", files=files)
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert "Invalid file type" in response.json()["detail"]
@@ -307,7 +307,7 @@ class TestImportDocxEndpoint:
             )
         }
 
-        response = client.post("/v1/import/docx", files=files)
+        response = client.post("/api/v1/import/docx", files=files)
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert "Invalid or corrupted DOCX" in response.json()["detail"]
@@ -324,7 +324,7 @@ class TestImportDocxEndpoint:
             )
         }
 
-        response = client.post("/v1/import/docx", files=files)
+        response = client.post("/api/v1/import/docx", files=files)
 
         # Should return 400 or 500 depending on when the size check happens
         assert response.status_code in [
@@ -345,7 +345,7 @@ class TestImportDocxEndpoint:
             )
         }
 
-        response = client.post("/v1/import/docx", files=files)
+        response = client.post("/api/v1/import/docx", files=files)
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
@@ -375,7 +375,7 @@ class TestImportDocxEndpoint:
             )
         }
 
-        response = client.post("/v1/import/docx", files=files)
+        response = client.post("/api/v1/import/docx", files=files)
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert "No text content found" in response.json()["detail"]
@@ -397,7 +397,7 @@ class TestImportDocxWithAuthentication:
 
         # In test mode, API key requirement is disabled
         # This test verifies the endpoint works with an API key header present
-        response = client.post("/v1/import/docx", files=files, headers=headers)
+        response = client.post("/api/v1/import/docx", files=files, headers=headers)
 
         # Should succeed in test mode (auth disabled)
         assert response.status_code == status.HTTP_200_OK
@@ -414,7 +414,7 @@ class TestImportDocxWithAuthentication:
             )
         }
 
-        response = client.post("/v1/import/docx", files=files)
+        response = client.post("/api/v1/import/docx", files=files)
 
         # In test mode, auth is disabled
         assert response.status_code == status.HTTP_200_OK
@@ -442,7 +442,7 @@ class TestImportDocxEdgeCases:
             )
         }
 
-        response = client.post("/v1/import/docx", files=files)
+        response = client.post("/api/v1/import/docx", files=files)
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
@@ -467,7 +467,7 @@ class TestImportDocxEdgeCases:
             )
         }
 
-        response = client.post("/v1/import/docx", files=files)
+        response = client.post("/api/v1/import/docx", files=files)
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
@@ -497,7 +497,7 @@ class TestImportDocxEdgeCases:
             )
         }
 
-        response = client.post("/v1/import/docx", files=files)
+        response = client.post("/api/v1/import/docx", files=files)
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
@@ -517,7 +517,7 @@ class TestDocxContentTypeVariations:
             )
         }
 
-        response = client.post("/v1/import/docx", files=files)
+        response = client.post("/api/v1/import/docx", files=files)
 
         # Should succeed with alternate content type
         assert response.status_code == status.HTTP_200_OK

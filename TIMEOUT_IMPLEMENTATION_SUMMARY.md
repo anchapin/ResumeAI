@@ -219,7 +219,7 @@ python -m pytest tests/test_timeout_middleware.py -v
 ### Backend: Manual Testing
 
 1. Start API: `cd resume-api && PORT=8000 python main.py`
-2. Test endpoint: `curl http://localhost:8000/health` (should respond quickly)
+2. Test endpoint: `curl http://localhost:8000/api/v1/health` (should respond quickly)
 3. Create test endpoint that sleeps > 30s to trigger timeout
 
 ## Integration with Error System

@@ -37,7 +37,7 @@ from .models import (
 
 logger = logging_config.get_logger(__name__)
 
-router = APIRouter(prefix="/api/v1", tags=["PDF"])
+router = APIRouter(prefix="", tags=["PDF"])
 
 # Global queue and worker - will be set by app startup
 _job_queue = None
