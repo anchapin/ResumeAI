@@ -14,6 +14,7 @@ export enum ErrorType {
   PERMISSION = 'PERMISSION_ERROR',
   SERVER = 'SERVER_ERROR',
   TIMEOUT = 'TIMEOUT_ERROR',
+  STORAGE = 'STORAGE_ERROR',
   UNKNOWN = 'UNKNOWN_ERROR',
 }
 
@@ -29,7 +30,7 @@ export const ERROR_MESSAGES: Record<ErrorType, ErrorMessageMap> = {
   [ErrorType.NETWORK]: {
     title: 'Connection Error',
     userMessage: 'Unable to connect to the server. Please check your internet connection.',
-    suggestion: 'Try refreshing the page or check if you\'re connected to the internet.',
+    suggestion: "Try refreshing the page or check if you're connected to the internet.",
     icon: 'wifi_off',
     severity: 'critical',
   },
@@ -82,6 +83,13 @@ export const ERROR_MESSAGES: Record<ErrorType, ErrorMessageMap> = {
     icon: 'schedule',
     severity: 'warning',
   },
+  [ErrorType.STORAGE]: {
+    title: 'Storage Error',
+    userMessage: 'An error occurred while saving your data locally.',
+    suggestion: 'Try clearing some browser space or check your browser settings.',
+    icon: 'storage',
+    severity: 'critical',
+  },
   [ErrorType.UNKNOWN]: {
     title: 'Unknown Error',
     userMessage: 'An unexpected error occurred. Please try again or contact support.',
@@ -131,7 +139,7 @@ export function getErrorSuggestion(type: ErrorType, statusCode?: number): string
     case 504:
       return 'The server took too long to respond. Please try again.';
     case 429:
-      return 'You\'ve made too many requests. Please wait a moment before trying again.';
+      return "You've made too many requests. Please wait a moment before trying again.";
     case 500:
     case 502:
     case 503:
@@ -146,11 +154,7 @@ export function getErrorSuggestion(type: ErrorType, statusCode?: number): string
  */
 export function isErrorRetryable(type: ErrorType, statusCode?: number): boolean {
   // Retryable error types
-  const retryableTypes = [
-    ErrorType.NETWORK,
-    ErrorType.TIMEOUT,
-    ErrorType.SERVER,
-  ];
+  const retryableTypes = [ErrorType.NETWORK, ErrorType.TIMEOUT, ErrorType.SERVER];
 
   if (retryableTypes.includes(type)) {
     return true;
@@ -165,11 +169,7 @@ export function isErrorRetryable(type: ErrorType, statusCode?: number): boolean 
  * Check if error requires user action
  */
 export function doesErrorRequireAction(type: ErrorType): boolean {
-  return [
-    ErrorType.AUTH,
-    ErrorType.PERMISSION,
-    ErrorType.VALIDATION,
-  ].includes(type);
+  return [ErrorType.AUTH, ErrorType.PERMISSION, ErrorType.VALIDATION].includes(type);
 }
 
 /**

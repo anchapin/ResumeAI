@@ -288,6 +288,17 @@ describe('Accessibility Tests - WCAG 2.1', () => {
         'tabpanel',
         'menuitem',
         'menu',
+        'status',
+        'list',
+        'listitem',
+        'presentation',
+        'none',
+        'search',
+        'combobox',
+        'option',
+        'progressbar',
+        'timer',
+        'tooltip',
       ];
 
       elementsWithRole.forEach((element) => {

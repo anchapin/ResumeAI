@@ -104,6 +104,12 @@ vi.mock('../hooks/useTheme', () => ({
 }));
 
 vi.mock('react-toastify', () => ({
+  toast: {
+    error: vi.fn(),
+    warning: vi.fn(),
+    success: vi.fn(),
+    info: vi.fn(),
+  },
   ToastContainer: () => <div data-testid="toast-container" />,
 }));
 
@@ -555,7 +561,7 @@ describe('App Component', () => {
         ).toBeInTheDocument();
       });
 
-      const closeButton = screen.getByRole('button', { name: 'close' });
+      const closeButton = screen.getByRole('button', { name: /close/i });
       await user.click(closeButton);
 
       await waitFor(() => {
@@ -1097,7 +1103,7 @@ describe('App Component', () => {
       const errorMessage = await screen.findByText('Storage full. Please clear some browser data.');
       expect(errorMessage).toBeInTheDocument();
 
-      const closeButton = screen.getByRole('button', { name: 'close' });
+      const closeButton = screen.getByRole('button', { name: /close/i });
       await user.click(closeButton);
 
       await waitFor(() => {
