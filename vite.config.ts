@@ -57,17 +57,17 @@ export default defineConfig(({ mode }) => {
           theme_color: '#4f46e5',
           icons: [
             {
-              src: 'pwa-192x192.png',
+              src: 'icon-192.png',
               sizes: '192x192',
               type: 'image/png',
             },
             {
-              src: 'pwa-512x512.png',
+              src: 'icon-512.png',
               sizes: '512x512',
               type: 'image/png',
             },
             {
-              src: 'pwa-512x512.png',
+              src: 'icon-512.png',
               sizes: '512x512',
               type: 'image/png',
               purpose: 'any maskable',
@@ -75,12 +75,25 @@ export default defineConfig(({ mode }) => {
           ],
         },
         workbox: {
+          globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
           runtimeCaching: [
+            {
+              urlPattern: /^https:\/\/api\.resumeai\.com\/api\/v1\/(resumes|settings|variants).*/i,
+              handler: 'NetworkFirst',
+              options: {
+                cacheName: 'api-data-cache',
+                expiration: {
+                  maxEntries: 50,
+                  maxAgeSeconds: 60 * 60 * 12, // 12 hours
+                },
+                networkTimeoutSeconds: 5,
+              },
+            },
             {
               urlPattern: /^https:\/\/api\.resumeai\.com\/api\/.*/i,
               handler: 'NetworkFirst',
               options: {
-                cacheName: 'api-cache',
+                cacheName: 'api-general-cache',
                 expiration: {
                   maxEntries: 100,
                   maxAgeSeconds: 60 * 60 * 24, // 24 hours
@@ -90,6 +103,28 @@ export default defineConfig(({ mode }) => {
                   options: {
                     maxRetentionTime: 60 * 24, // 24 hours
                   },
+                },
+              },
+            },
+            {
+              urlPattern: /\.(?:png|jpg|jpeg|svg|gif)$/,
+              handler: 'CacheFirst',
+              options: {
+                cacheName: 'image-cache',
+                expiration: {
+                  maxEntries: 60,
+                  maxAgeSeconds: 30 * 24 * 60 * 60, // 30 days
+                },
+              },
+            },
+            {
+              urlPattern: /^https:\/\/fonts\.(?:googleapis|gstatic)\.com\/.*/i,
+              handler: 'StaleWhileRevalidate',
+              options: {
+                cacheName: 'google-fonts',
+                expiration: {
+                  maxEntries: 10,
+                  maxAgeSeconds: 60 * 60 * 24 * 365, // 1 year
                 },
               },
             },
