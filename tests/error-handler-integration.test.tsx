@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import React, { useEffect, useState } from 'react';
-import { errorHandler, ErrorType, type ErrorContext } from '@/utils/errorHandler';
+import { errorHandler, ErrorType, type ErrorContext } from '../utils/errorHandler';
 
-describe.skip('Error Handler Integration Tests', () => {
+describe('Error Handler Integration Tests', () => {
   beforeEach(() => {
     errorHandler.clearErrorHistory();
   });
