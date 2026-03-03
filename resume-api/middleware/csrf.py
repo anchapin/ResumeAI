@@ -12,6 +12,8 @@ from typing import Callable
 from fastapi import Request, Response, HTTPException, status
 from starlette.middleware.base import BaseHTTPMiddleware
 
+from config import settings
+
 logger = logging.getLogger(__name__)
 
 # Methods that require CSRF protection
@@ -19,16 +21,16 @@ CSRF_PROTECTED_METHODS = {"POST", "PUT", "DELETE", "PATCH"}
 
 # Paths that are exempt from CSRF protection
 CSRF_EXEMPT_PATHS = {
-    "/api/v1/auth/login",
-    "/api/v1/auth/register",
-    "/api/v1/auth/refresh",
-    "/api/v1/auth/logout",
-    "/api/v1/auth/github/callback",
-    "/api/v1/auth/linkedin/callback",
-    "/health",
-    "/health/detailed",
-    "/health/oauth",
-    "/health/ready",
+    f"{settings.api_v1_prefix}/auth/login",
+    f"{settings.api_v1_prefix}/auth/register",
+    f"{settings.api_v1_prefix}/auth/refresh",
+    f"{settings.api_v1_prefix}/auth/logout",
+    f"{settings.api_v1_prefix}/github/callback",
+    f"{settings.api_v1_prefix}/linkedin/oauth/callback",
+    f"{settings.api_v1_prefix}/health",
+    f"{settings.api_v1_prefix}/health/detailed",
+    f"{settings.api_v1_prefix}/health/oauth",
+    f"{settings.api_v1_prefix}/health/ready",
 }
 
 # CSRF token header name
@@ -41,8 +43,8 @@ class CSRFMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
         """Process request and validate CSRF token for protected methods"""
 
-        # Skip CSRF validation for exempt paths
-        if request.url.path in CSRF_EXEMPT_PATHS:
+        # Skip CSRF validation if disabled or for exempt paths
+        if not settings.enable_csrf or request.url.path in CSRF_EXEMPT_PATHS:
             return await call_next(request)
 
         # Skip CSRF validation for safe methods

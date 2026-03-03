@@ -1,0 +1,5 @@
+{
+  "body": "## Problem\nNo end-to-end tests, only unit tests exist.\n\n## Impact\n- Integration issues undetected\n- User flows untested\n\n## Tasks\n- [ ] Install Playwright\n- [ ] Create E2E test structure\n- [ ] Write critical user flow tests (registration, create resume, generate PDF)\n- [ ] Set up CI for E2E tests\n- [ ] Configure test reporting\n",
+  "number": 545,
+  "title": "[T5-Test-2] Add E2E Tests with Playwright"
+}

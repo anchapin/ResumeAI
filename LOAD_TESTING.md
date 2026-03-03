@@ -168,7 +168,7 @@ For authenticated endpoints, add token retrieval:
 ```python
 def on_start(self):
     # Login and store token
-    r = self.client.post("/api/auth/login", json={...})
+    r = self.client.post("/api/v1/auth/login", json={...})
     self.auth_token = r.json()["token"]
 ```
 

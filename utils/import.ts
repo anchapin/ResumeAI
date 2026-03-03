@@ -39,7 +39,7 @@ export async function importFromPDF(file: File): Promise<ResumeData> {
     const formData = new FormData();
     formData.append('file', file);
 
-    const response = await fetch(`${API_URL}/v1/import/pdf`, {
+    const response = await fetch(`${API_URL}/api/v1/import/pdf`, {
       method: 'POST',
       headers: {
         ...(apiKey && { 'X-API-KEY': apiKey }),
@@ -72,7 +72,7 @@ export async function importFromWord(file: File): Promise<ResumeData> {
     const formData = new FormData();
     formData.append('file', file);
 
-    const response = await fetch(`${API_URL}/v1/import/docx`, {
+    const response = await fetch(`${API_URL}/api/v1/import/docx`, {
       method: 'POST',
       headers: {
         ...(apiKey && { 'X-API-KEY': apiKey }),
@@ -102,7 +102,7 @@ export async function importFromLinkedInUrl(linkedinUrl: string): Promise<Resume
   const apiKey = localStorage.getItem('RESUMEAI_API_KEY');
 
   try {
-    const response = await fetch(`${API_URL}/v1/import/linkedin`, {
+    const response = await fetch(`${API_URL}/api/v1/import/linkedin`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -144,7 +144,7 @@ export async function importFromLinkedInFile(files: File | File[] | FileList): P
       });
     }
 
-    const response = await fetch(`${API_URL}/v1/import/linkedin-file`, {
+    const response = await fetch(`${API_URL}/api/v1/import/linkedin-file`, {
       method: 'POST',
       headers: {
         ...(apiKey && { 'X-API-KEY': apiKey }),

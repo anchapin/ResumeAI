@@ -103,7 +103,7 @@ class TestPrometheusExporter:
         # Record a request
         exporter.record_http_request(
             method="POST",
-            endpoint="/v1/render/pdf",
+            endpoint="/api/v1/render/pdf",
             status_code=200,
             duration=0.45,
             request_size=5000,
@@ -123,7 +123,7 @@ class TestPrometheusExporter:
 
         exporter.record_http_request(
             method="POST",
-            endpoint="/v1/render/pdf",
+            endpoint="/api/v1/render/pdf",
             status_code=500,
             duration=0.1,
             error_type="ServerError",

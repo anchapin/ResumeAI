@@ -49,7 +49,7 @@ jobs:
           # Wait for container to start
           sleep 5
           # Check health endpoint
-          docker exec test-resume-api curl -f http://localhost:8000/health || true
+          docker exec test-resume-api curl -f http://localhost:8000/api/v1/health || true
           # Cleanup
           docker stop test-resume-api || true
 

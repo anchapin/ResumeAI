@@ -26,7 +26,7 @@ export const useVariants = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(`${API_URL}/v1/variants`, {
+      const response = await fetch(`${API_URL}/api/v1/variants`, {
         method: 'GET',
         headers: getHeaders(),
       });

@@ -164,7 +164,7 @@ Compare against [LOAD_TEST_BASELINE_METRICS.md](./LOAD_TEST_BASELINE_METRICS.md)
 
 ```bash
 # Verify API is running
-curl http://localhost:8000/health
+curl http://localhost:8000/api/v1/health
 
 # Check port
 netstat -tuln | grep 8000

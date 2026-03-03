@@ -109,7 +109,7 @@ class TestImportPdfEndpoint:
                 )
             }
 
-            response = client.post("/v1/import/pdf", files=files)
+            response = client.post("/api/v1/import/pdf", files=files)
 
             assert response.status_code == status.HTTP_200_OK
             data = response.json()
@@ -127,7 +127,7 @@ class TestImportPdfEndpoint:
             )
         }
 
-        response = client.post("/v1/import/pdf", files=files)
+        response = client.post("/api/v1/import/pdf", files=files)
 
         # Should return 400 or 500 depending on environment/test client behavior
         assert response.status_code in [

@@ -113,7 +113,7 @@ export async function generatePDF(
   variant: string = 'modern',
 ): Promise<Blob> {
   const response = await fetchWithRetry(
-    `${API_URL}/v1/render/pdf`,
+    `${API_URL}/api/v1/render/pdf`,
     {
       method: 'POST',
       headers: { ...getHeaders(), 'Content-Type': 'application/json' },

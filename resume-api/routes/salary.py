@@ -12,7 +12,7 @@ from typing import List, Optional, Dict, Any
 
 from lib.salary import SalaryResearcher, OfferComparison
 
-router = APIRouter(prefix="/api/v1/salary", tags=["salary"])
+router = APIRouter(prefix="/salary", tags=["salary"])
 
 
 # Request/Response Models

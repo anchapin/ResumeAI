@@ -97,7 +97,7 @@ curl -X GET http://localhost:8000/v1/health/features \
   -H "X-API-KEY: $MASTER_API_KEY"
 
 # Verify health
-curl http://localhost:8000/health
+curl http://localhost:8000/api/v1/health
 
 # Test affected endpoint (should now use fallback)
 curl -X GET http://localhost:8000/v1/old-endpoint \
@@ -188,7 +188,7 @@ docker run -d \
   --name resume-api-rollback \
   --env-file .env \
   -p 8000:8000 \
-  --health-cmd='curl -f http://localhost:8000/health || exit 1' \
+  --health-cmd='curl -f http://localhost:8000/api/v1/health || exit 1' \
   --health-interval=10s \
   --health-timeout=5s \
   --health-retries=3 \
@@ -210,7 +210,7 @@ docker run -d \
 sleep 5
 
 # Check health status
-curl http://localhost:8000/health
+curl http://localhost:8000/api/v1/health
 
 # Verify version matches
 curl http://localhost:8000/v1/version
@@ -362,7 +362,7 @@ docker restart resume-api
 
 # Verify health
 sleep 5
-curl http://localhost:8000/health
+curl http://localhost:8000/api/v1/health
 ```
 
 #### Step 8: Post-Restore Validation
@@ -592,7 +592,7 @@ tar czf postmortem_$(date +%s).tar.gz incidents/
 
 After any rollback, verify:
 
-- [ ] Health check passing: `curl http://localhost:8000/health`
+- [ ] Health check passing: `curl http://localhost:8000/api/v1/health`
 - [ ] Database connected and responsive
 - [ ] Feature flags in expected state
 - [ ] Error rate < 0.1%

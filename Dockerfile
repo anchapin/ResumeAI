@@ -102,7 +102,7 @@ EXPOSE 8000
 # Health check - validate API and frontend are responding
 # Using curl instead of Python for smaller footprint
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:8000/health || exit 1
+    CMD curl -f http://localhost:8000/api/v1/health || exit 1
 
 # Start FastAPI application (serves frontend static files)
 # Change to resume-api directory and run from there to ensure proper module resolution

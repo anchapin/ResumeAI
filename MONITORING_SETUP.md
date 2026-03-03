@@ -366,7 +366,7 @@ PAGERDUTY_API_KEY=...
 ### Endpoints
 
 - Metrics: `http://localhost:8001/metrics` (Prometheus)
-- Health: `http://localhost:8000/health`
+- Health: `http://localhost:8000/api/v1/health`
 - Ready: `http://localhost:8000/ready`
 
 ## Testing Alerts

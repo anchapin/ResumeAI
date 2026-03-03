@@ -87,7 +87,7 @@ describe('useVariants Hook', () => {
 
       await waitFor(() => {
         expect(global.fetch).toHaveBeenCalledWith(
-          expect.stringContaining('/v1/variants'),
+          expect.stringContaining('/api/v1/variants'),
           expect.any(Object),
         );
       });

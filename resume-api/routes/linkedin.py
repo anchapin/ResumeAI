@@ -34,7 +34,7 @@ LINKEDIN_SKILLS_URL = "https://api.linkedin.com/v2/me?fields=id,firstName,lastNa
 LINKEDIN_EXPERIENCE_URL = "https://api.linkedin.com/v2/me/experience"
 LINKEDIN_EDUCATION_URL = "https://api.linkedin.com/v2/me/education"
 
-router = APIRouter(prefix="/api/v1/linkedin", tags=["linkedin"])
+router = APIRouter(prefix="/linkedin", tags=["linkedin"])
 
 # Store OAuth state temporarily (in production, use Redis or database)
 _oauth_states = {}

@@ -27,7 +27,7 @@ groups:
       # Issue #402: PDF generation slow alert (p95 > 5s)
       - alert: PDFGenerationSlow
         expr: |
-          histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{endpoint="/v1/render/pdf"}[5m])) > 5
+          histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{endpoint="/api/v1/render/pdf"}[5m])) > 5
         for: 5m
         labels:
           severity: warning
@@ -95,9 +95,9 @@ groups:
         expr: |
           (sum(rate(pdfs_generated_total[5m])) by (job)) > 0
           and
-          (sum(rate(http_errors_total{endpoint="/v1/render/pdf", status_code="500"}[5m])) by (job))
+          (sum(rate(http_errors_total{endpoint="/api/v1/render/pdf", status_code="500"}[5m])) by (job))
           /
-          (sum(rate(http_requests_total{endpoint="/v1/render/pdf"}[5m])) by (job)) > 0.1
+          (sum(rate(http_requests_total{endpoint="/api/v1/render/pdf"}[5m])) by (job)) > 0.1
         for: 5m
         labels:
           severity: critical
@@ -112,9 +112,9 @@ groups:
       # Low resume tailor success rate
       - alert: LowResumeTailorSuccessRate
         expr: |
-          (sum(rate(http_errors_total{endpoint="/v1/tailor", status_code="500"}[5m])) by (job))
+          (sum(rate(http_errors_total{endpoint="/api/v1/tailor", status_code="500"}[5m])) by (job))
           /
-          (sum(rate(http_requests_total{endpoint="/v1/tailor"}[5m])) by (job)) > 0.05
+          (sum(rate(http_requests_total{endpoint="/api/v1/tailor"}[5m])) by (job)) > 0.05
         for: 5m
         labels:
           severity: critical

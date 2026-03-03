@@ -67,10 +67,10 @@ async def test_render_pdf_concurrency():
             # Send 2 concurrent requests
             # We use gather to send them effectively at the same time
             task1 = asyncio.create_task(
-                ac.post("/v1/render/pdf", json=payload, headers=headers)
+                ac.post("/api/v1/render/pdf", json=payload, headers=headers)
             )
             task2 = asyncio.create_task(
-                ac.post("/v1/render/pdf", json=payload, headers=headers)
+                ac.post("/api/v1/render/pdf", json=payload, headers=headers)
             )
 
             responses = await asyncio.gather(task1, task2)

@@ -93,7 +93,7 @@ async def test_timing_attack_mitigation(client):
         mock_verify.return_value = False
 
         response = await client.post(
-            "/auth/login",
+            "/api/v1/auth/login",
             json={"email": "nonexistent@example.com", "password": "anypassword"},
         )
 

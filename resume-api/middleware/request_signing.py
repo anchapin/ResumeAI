@@ -33,24 +33,24 @@ NONCE_CACHE_SIZE = 10000
 SIGNATURE_PROTECTED_METHODS = {"POST", "PUT", "DELETE", "PATCH"}
 
 SIGNATURE_REQUIRED_PATHS = {
-    "/api/v1/auth/login",
-    "/api/v1/auth/register",
-    "/api/v1/auth/refresh",
-    "/api/v1/auth/logout",
-    "/api/v1/auth/change-password",
-    "/api/v1/billing/checkout",
-    "/api/v1/billing/portal",
-    "/api/v1/billing/cancel",
-    "/api/v1/billing/resume",
-    "/api/v1/billing/upgrade",
-    "/api/v1/billing/payment-methods",
+    f"{settings.api_v1_prefix}/auth/login",
+    f"{settings.api_v1_prefix}/auth/register",
+    f"{settings.api_v1_prefix}/auth/refresh",
+    f"{settings.api_v1_prefix}/auth/logout",
+    f"{settings.api_v1_prefix}/auth/change-password",
+    f"{settings.api_v1_prefix}/billing/checkout",
+    f"{settings.api_v1_prefix}/billing/portal",
+    f"{settings.api_v1_prefix}/billing/cancel",
+    f"{settings.api_v1_prefix}/billing/resume",
+    f"{settings.api_v1_prefix}/billing/upgrade",
+    f"{settings.api_v1_prefix}/billing/payment-methods",
 }
 
 SIGNATURE_EXEMPT_PATHS = {
-    "/health",
-    "/health/detailed",
-    "/health/oauth",
-    "/health/ready",
+    f"{settings.api_v1_prefix}/health",
+    f"{settings.api_v1_prefix}/health/detailed",
+    f"{settings.api_v1_prefix}/health/oauth",
+    f"{settings.api_v1_prefix}/health/ready",
     "/docs",
     "/redoc",
     "/openapi.json",
@@ -124,7 +124,7 @@ class RequestSigningMiddleware(BaseHTTPMiddleware):
         )
 
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
-        if not self._require_signatures:
+        if not self._require_signatures or not settings.enable_request_signing:
             return await call_next(request)
 
         path = request.url.path
@@ -132,7 +132,7 @@ class RequestSigningMiddleware(BaseHTTPMiddleware):
         if path in SIGNATURE_EXEMPT_PATHS:
             return await call_next(request)
 
-        if path.startswith("/api/v1/auth/") or path.startswith("/api/v1/billing/"):
+        if path.startswith(f"{settings.api_v1_prefix}/auth/") or path.startswith(f"{settings.api_v1_prefix}/billing/"):
             return await self._process_signed_request(request, call_next)
 
         return await call_next(request)

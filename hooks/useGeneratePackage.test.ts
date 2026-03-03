@@ -216,7 +216,7 @@ describe('useGeneratePackage Hook', () => {
       });
 
       const url = (global.fetch as any).mock.calls[0][0];
-      expect(url).toContain('/v1/tailor');
+      expect(url).toContain('/api/v1/tailor');
     });
   });
 
@@ -280,7 +280,7 @@ describe('useGeneratePackage Hook', () => {
       });
 
       const url = (global.fetch as any).mock.calls[0][0];
-      expect(url).toContain('/v1/render/pdf');
+      expect(url).toContain('/api/v1/render/pdf');
     });
   });
 
@@ -338,7 +338,7 @@ describe('useGeneratePackage Hook', () => {
       });
 
       const url = (global.fetch as any).mock.calls[0][0];
-      expect(url).toContain('/v1/render/markdown');
+      expect(url).toContain('/api/v1/render/markdown');
     });
   });
 
@@ -446,7 +446,7 @@ describe('useGeneratePackage Hook', () => {
       });
 
       const url = (global.fetch as any).mock.calls[0][0];
-      expect(url).toContain('/v1/cover-letter');
+      expect(url).toContain('/api/v1/cover-letter');
     });
   });
 

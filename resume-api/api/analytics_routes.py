@@ -12,7 +12,7 @@ from config import settings
 from monitoring import logging_config
 
 logger = logging_config.get_logger(__name__)
-router = APIRouter(prefix="/api/v1/analytics", tags=["Analytics"])
+router = APIRouter(prefix="/analytics", tags=["Analytics"])
 
 
 def rate_limit(limit_value: str):
@@ -79,7 +79,7 @@ class ApplicationStatsResponse(BaseModel):
 
 
 @router.post(
-    "/v1/applications",
+    "",
     response_model=JobApplicationResponse,
     tags=["Application Tracking"],
 )
@@ -106,7 +106,7 @@ async def create_application(
 
 
 @router.get(
-    "/v1/applications",
+    "",
     response_model=List[JobApplicationResponse],
     tags=["Application Tracking"],
 )
@@ -122,7 +122,7 @@ async def list_applications(
 
 
 @router.get(
-    "/v1/applications/{application_id}",
+    "/{application_id}",
     response_model=JobApplicationResponse,
     tags=["Application Tracking"],
 )
@@ -136,7 +136,7 @@ async def get_application(
 
 
 @router.put(
-    "/v1/applications/{application_id}",
+    "/{application_id}",
     response_model=JobApplicationResponse,
     tags=["Application Tracking"],
 )
@@ -152,7 +152,7 @@ async def update_application(
     )
 
 
-@router.delete("/v1/applications/{application_id}", tags=["Application Tracking"])
+@router.delete("/{application_id}", tags=["Application Tracking"])
 @rate_limit("30/minute")
 async def delete_application(
     request: Request, application_id: int, auth: AuthorizedAPIKey
@@ -163,7 +163,7 @@ async def delete_application(
 
 
 @router.get(
-    "/v1/applications/analytics/stats",
+    "/stats",
     response_model=ApplicationStatsResponse,
     tags=["Application Analytics"],
 )
@@ -180,7 +180,7 @@ async def get_application_stats(
     )
 
 
-@router.get("/v1/applications/analytics/funnel", tags=["Application Analytics"])
+@router.get("/funnel", tags=["Application Analytics"])
 @rate_limit("30/minute")
 async def get_application_funnel(
     request: Request, auth: AuthorizedAPIKey, days: int = 30
@@ -188,7 +188,7 @@ async def get_application_funnel(
     return {"stages": [], "total_applications": 0}
 
 
-@router.get("/v1/applications/analytics/timeline", tags=["Application Analytics"])
+@router.get("/timeline", tags=["Application Analytics"])
 @rate_limit("30/minute")
 async def get_application_timeline(
     request: Request, auth: AuthorizedAPIKey, days: int = 30
@@ -196,7 +196,7 @@ async def get_application_timeline(
     return {"timeline": []}
 
 
-@router.get("/v1/applications/analytics/upcoming", tags=["Application Analytics"])
+@router.get("/upcoming", tags=["Application Analytics"])
 @rate_limit("30/minute")
 async def get_upcoming_events(request: Request, auth: AuthorizedAPIKey, days: int = 7):
     return {"events": []}

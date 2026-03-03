@@ -75,7 +75,7 @@ describe('Variants Caching (Issue #540)', () => {
 
       expect(fetchWithTimeout).toHaveBeenCalledTimes(1);
       expect(fetchWithTimeout).toHaveBeenCalledWith(
-        expect.stringContaining('/v1/variants'),
+        expect.stringContaining('/api/v1/variants'),
         expect.objectContaining({ headers: expect.any(Object) }),
         10000,
       );

@@ -73,7 +73,9 @@ describe.skip('Error Handler Integration Tests', () => {
     it('should work with error boundary pattern', () => {
       const errors: ErrorContext[] = [];
 
-      class TestErrorBoundary extends React.Component {
+      class TestErrorBoundary extends React.Component<any, any> {
+        private unsubscribe?: () => void;
+
         componentDidMount() {
           this.unsubscribe = errorHandler.subscribe((error) => {
             errors.push(error);
@@ -90,7 +92,7 @@ describe.skip('Error Handler Integration Tests', () => {
       }
 
       // Simulate mount and error
-      const instance = new TestErrorBoundary();
+      const instance = new TestErrorBoundary({});
       (instance as any).componentDidMount();
 
       errorHandler.handleError(new Error('Boundary error'));

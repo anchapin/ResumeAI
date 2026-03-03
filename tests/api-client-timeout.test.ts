@@ -81,7 +81,7 @@ describe('API Client with Timeout', () => {
       await generatePDF(mockResumeData, 'modern');
 
       expect(fetchWithTimeout).toHaveBeenCalledWith(
-        expect.stringContaining('/v1/render/pdf'),
+        expect.stringContaining('/api/v1/render/pdf'),
         expect.objectContaining({
           method: 'POST',
           headers: expect.objectContaining({ 'Content-Type': 'application/json' }),
@@ -125,7 +125,7 @@ describe('API Client with Timeout', () => {
       await tailorResume(mockResumeData, 'Job Description');
 
       expect(fetchWithTimeout).toHaveBeenCalledWith(
-        expect.stringContaining('/v1/tailor'),
+        expect.stringContaining('/api/v1/tailor'),
         expect.objectContaining({ method: 'POST' }),
         15000, // AI_OPERATION timeout
       );
@@ -165,7 +165,7 @@ describe('API Client with Timeout', () => {
       await getVariants();
 
       expect(fetchWithTimeout).toHaveBeenCalledWith(
-        expect.stringContaining('/v1/variants'),
+        expect.stringContaining('/api/v1/variants'),
         expect.objectContaining({ headers: expect.any(Object) }),
         10000, // STANDARD timeout
       );
@@ -189,7 +189,7 @@ describe('API Client with Timeout', () => {
       await checkATSScore(mockResumeData, 'Job Description');
 
       expect(fetchWithTimeout).toHaveBeenCalledWith(
-        expect.stringContaining('/v1/ats/check'),
+        expect.stringContaining('/api/v1/ats/check'),
         expect.objectContaining({ method: 'POST' }),
         15000, // AI_OPERATION timeout
       );

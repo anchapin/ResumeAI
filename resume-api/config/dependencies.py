@@ -7,134 +7,83 @@ authentication.
 
 import os
 import secrets
-from typing import Annotated, Optional
+from datetime import datetime, timezone
+from typing import Annotated, Optional, List, Dict, Any
 
 from fastapi import (
     Header,
     HTTPException,
     status,
     Depends,
+    Request,
     Query,
-    WebSocketException,
 )
-from fastapi.requests import Request
-from fastapi.responses import JSONResponse
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from slowapi import Limiter
-from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
 from . import settings
-from database import get_async_session, User
+from database import get_async_session, User, APIKey
 from config.jwt_utils import verify_access_token
 from lib.security import verify_api_key, is_hashed_key
+from monitoring import logging_config
+
+# Get logger
+logger = logging_config.get_logger(__name__)
 
 # Secret key for JWT tokens - should be set in environment variables
 SECRET_KEY = settings.jwt_secret
 ALGORITHM = settings.jwt_algorithm
 ACCESS_TOKEN_EXPIRE_MINUTES = settings.jwt_access_token_expire_minutes
 
-# Database configuration
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./resumeai.db")
-
-# Other configurations
-DEBUG = settings.debug
-
-# Application settings
-APP_NAME = settings.app_name
-APP_VERSION = settings.app_version
-
-# Security scheme for JWT authentication
-security = HTTPBearer(auto_error=False)
+security = HTTPBearer()
 
 
-def get_request_identifier(request):
-    """Get identifier for rate limiting."""
+def get_request_identifier(request: Request) -> str:
+    """Get identifier for rate limiting (API key or IP address)."""
     api_key = request.headers.get("X-API-KEY")
     if api_key:
         return api_key
     return get_remote_address(request)
 
 
+# Initialize rate limiter
 limiter = Limiter(key_func=get_request_identifier)
 
 
-# =============================================================================
-# WebSocket Authentication
-# =============================================================================
+async def rate_limit_exceeded_handler(request: Request, exc: RateLimitExceeded):
+    """Handle rate limit exceeded errors."""
+    from config.errors import create_error_response, ErrorCode
+    from fastapi.responses import JSONResponse
+
+    error_response = create_error_response(
+        error_code=ErrorCode.RATE_LIMITED,
+        message=f"Rate limit exceeded: {exc.detail}",
+        path=str(request.url.path),
+        method=request.method,
+    )
+
+    return JSONResponse(
+        status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+        content=error_response.model_dump(exclude_none=True),
+    )
 
 
-async def get_current_user_ws(
-    token: Annotated[str, Query(..., description="JWT access token")] = None,
+async def get_api_key(
+    request: Request,
+    x_api_key: str = Header(None),
     db: AsyncSession = Depends(get_async_session),
-) -> User:
-    """
-    Authenticate WebSocket connection using JWT token in query parameter.
-
-    Raises WebSocketException with code 1008 (Policy Violation) if
-    authentication fails.
-    """
-    if not token:
-        raise WebSocketException(
-            code=status.WS_1008_POLICY_VIOLATION,
-            reason="Authentication required: missing token",
-        )
-
-    try:
-        payload = verify_access_token(token)
-        if payload is None:
-            raise WebSocketException(
-                code=status.WS_1008_POLICY_VIOLATION,
-                reason="Authentication failed: invalid token",
-            )
-
-        user_id = payload.get("sub")
-        if user_id is None:
-            raise WebSocketException(
-                code=status.WS_1008_POLICY_VIOLATION,
-                reason="Authentication failed: invalid token payload",
-            )
-
-        result = await db.execute(select(User).where(User.id == int(user_id)))
-        user = result.scalar_one_or_none()
-
-        if user is None:
-            raise WebSocketException(
-                code=status.WS_1008_POLICY_VIOLATION,
-                reason="Authentication failed: user not found",
-            )
-
-        if not user.is_active:
-            raise WebSocketException(
-                code=status.WS_1008_POLICY_VIOLATION,
-                reason="Authentication failed: account disabled",
-            )
-
-        return user
-
-    except WebSocketException:
-        raise
-    except Exception:
-        raise WebSocketException(
-            code=status.WS_1008_POLICY_VIOLATION,
-            reason="Authentication failed: server error",
-        )
-
-
-# =============================================================================
-# API Key Authentication
-# =============================================================================
-
-
-async def get_api_key(x_api_key: str = Header(None)) -> str:
+) -> str:
     """
     Validate API key from X-API-KEY header.
 
-    Supports both plaintext and hashed API key verification. If keys are hashed
-    (start with $2b$, $2a$, or $2y$), uses bcrypt verification. Otherwise,
-    uses constant-time string comparison for backward compatibility.
+    Supports:
+    1. Master API key (from environment)
+    2. Static API keys (from environment)
+    3. User-specific API keys (from database)
 
     Returns the API key if valid, or "anonymous" if authentication is disabled.
     """
@@ -146,28 +95,70 @@ async def get_api_key(x_api_key: str = Header(None)) -> str:
             detail="API key is required",
         )
 
-    # Check master API key (plaintext comparison)
+    # 1. Check master API key (plaintext comparison)
     if settings.master_api_key:
         if is_hashed_key(settings.master_api_key):
-            # Master key is hashed
             if verify_api_key(x_api_key, settings.master_api_key):
                 return x_api_key
         else:
-            # Master key is plaintext (backward compatibility)
             if secrets.compare_digest(x_api_key, settings.master_api_key):
                 return x_api_key
 
-    # Check user API keys
+    # 2. Check static user API keys from environment
     if settings.api_keys:
         for key_hash in settings.api_keys:
             if is_hashed_key(key_hash):
-                # Key is hashed - use bcrypt verification
                 if verify_api_key(x_api_key, key_hash):
                     return x_api_key
             else:
-                # Key is plaintext (backward compatibility)
                 if secrets.compare_digest(x_api_key, key_hash):
                     return x_api_key
+
+    # 3. Check database for user API keys
+    try:
+        from lib.security.key_management import verify_api_key, generate_api_key_prefix
+
+        key_prefix = generate_api_key_prefix(x_api_key)
+        result = await db.execute(
+            select(APIKey).where(
+                APIKey.key_prefix == key_prefix,
+                APIKey.is_active.is_(True),
+                APIKey.is_revoked.is_(False),
+            )
+        )
+        db_keys = result.scalars().all()
+
+        for db_key in db_keys:
+            if verify_api_key(x_api_key, db_key.key_hash):
+                # Check expiration
+                if db_key.expires_at:
+                    # Handle potential timezone naive datetime from SQLite
+                    expires_at = db_key.expires_at
+                    if expires_at.tzinfo is None:
+                        expires_at = expires_at.replace(tzinfo=timezone.utc)
+
+                    if datetime.now(timezone.utc) > expires_at:
+                        raise HTTPException(
+                            status_code=status.HTTP_403_FORBIDDEN,
+                            detail="API key has expired",
+                        )
+
+                # Update usage stats (try to, but don't fail if DB commit fails)
+                try:
+                    db_key.last_request_at = datetime.now(timezone.utc)
+                    db_key.total_requests += 1
+                    db_key.requests_today += 1
+                    await db.commit()
+                except Exception as e:
+                    await db.rollback()
+                    logger.warning(f"Failed to update API key usage stats: {e}")
+
+                return x_api_key
+    except Exception as e:
+        # Log error but continue to raise 403 if key not found
+        if isinstance(e, HTTPException):
+            raise
+        logger.error(f"Error verifying API key in database: {e}")
 
     raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid API key")
 
@@ -175,109 +166,14 @@ async def get_api_key(x_api_key: str = Header(None)) -> str:
 AuthorizedAPIKey = Annotated[str, Depends(get_api_key)]
 
 
-# =============================================================================
-# JWT Token Authentication
-# =============================================================================
-
-
 async def get_current_user(
-    request: Request,
-    credentials: Annotated[Optional[HTTPAuthorizationCredentials], Depends(security)],
     db: Annotated[AsyncSession, Depends(get_async_session)],
+    credentials: HTTPAuthorizationCredentials = Depends(security),
 ) -> User:
     """
-    Get current authenticated user from JWT token.
+    Get current user from JWT access token.
 
-    This dependency extracts JWT token from Authorization header or httpOnly cookie,
-    validates it, and returns corresponding User object.
-
-    **Priority:**
-    1. Authorization header (Bearer token)
-    2. access_token cookie (httpOnly cookie for XSS protection)
-
-    Usage:
-        @router.get("/protected")
-        async def protected_route(
-            current_user: User = Depends(get_current_user)
-        ):
-            return {"user": current_user}
-
-    Raises:
-        HTTPException: 401 if token is missing, invalid, or expired
-        HTTPException: 404 if user not found
-    """
-    token = None
-
-    # Try to get token from Authorization header first
-    if credentials is not None:
-        token = credentials.credentials
-    else:
-        # Fallback to httpOnly cookie
-        token = request.cookies.get("access_token")
-
-    # Handle missing token
-    if token is None:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Not authenticated",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-
-    # Verify access token
-    payload = verify_access_token(token)
-    if payload is None:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid or expired token",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-
-    # Get user ID from token
-    user_id = payload.get("sub")
-    if user_id is None:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid token payload",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-
-    # Get user from database
-    result = await db.execute(select(User).where(User.id == int(user_id)))
-    user = result.scalar_one_or_none()
-
-    if user is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found",
-        )
-
-    if not user.is_active:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="User account is disabled",
-        )
-
-    return user
-
-
-# Type alias for authenticated user dependency
-CurrentUser = Annotated[User, Depends(get_current_user)]
-
-
-# =============================================================================
-# Optional JWT Authentication
-# =============================================================================
-
-
-async def get_current_user_optional(
-    credentials: Annotated[Optional[HTTPAuthorizationCredentials], Depends(security)],
-    db: Annotated[AsyncSession, Depends(get_async_session)],
-) -> Optional[User]:
-    """
-    Get the current user if authenticated, otherwise return None.
-
-    This is useful for endpoints that work for both authenticated and
-    anonymous users, but provide additional features for authenticated users.
+    Validates token and retrieves user from database.
     """
     if credentials is None:
         return None
@@ -293,59 +189,65 @@ async def get_current_user_optional(
         if user_id is None:
             return None
 
+        # Retrieve user from database
         result = await db.execute(select(User).where(User.id == int(user_id)))
         user = result.scalar_one_or_none()
 
-        if user and user.is_active:
-            return user
+        if user is None:
+            return None
 
-    except Exception:
-        pass
+        if not user.is_active:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="User account is disabled",
+            )
 
-    return None
-
-
-CurrentUserOptional = Annotated[Optional[User], Depends(get_current_user_optional)]
-
-
-# =============================================================================
-# Rate Limit Handler
-# =============================================================================
+        return user
+    except Exception as e:
+        logger.error(f"Error retrieving current user: {e}")
+        return None
 
 
-async def rate_limit_exceeded_handler(
-    request: Request, exc: RateLimitExceeded
-) -> JSONResponse:
-    """Handle rate limit exceeded errors with unified error response."""
-    from config.errors import create_error_response, ErrorCode
-
-    error_response = create_error_response(
-        error_code=ErrorCode.RATE_LIMITED,
-        message="Rate limit exceeded. Please retry after a short delay.",
-        path=str(request.url.path),
-        method=request.method,
-        details={"retry_after_seconds": 60},
-    )
-
-    response = JSONResponse(
-        status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-        content=error_response.model_dump(exclude_none=True),
-    )
-    response.headers["Retry-After"] = "60"
-    return response
+CurrentUser = Annotated[User, Depends(get_current_user)]
 
 
-# =============================================================================
-# Rate Limit Decorator
-# =============================================================================
+async def get_current_user_ws(
+    token: Annotated[str, Query(..., description="JWT access token")] = None,
+    db: AsyncSession = Depends(get_async_session),
+) -> tuple[User, float]:
+    """
+    Authenticate WebSocket connection using JWT token in query parameter.
+
+    Returns a tuple of (User, expires_at_timestamp).
+    """
+    if not token:
+        raise HTTPException(status_code=1008, detail="Token missing")
+
+    payload = verify_access_token(token)
+    if not payload:
+        raise HTTPException(status_code=1008, detail="Invalid token")
+
+    user_id = payload.get("sub")
+    exp = payload.get("exp")
+
+    if not user_id:
+        raise HTTPException(status_code=1008, detail="Invalid payload")
+
+    result = await db.execute(select(User).where(User.id == int(user_id)))
+    user = result.scalar_one_or_none()
+
+    if not user:
+        raise HTTPException(status_code=1008, detail="User not found")
+
+    return user, float(exp)
 
 
 def rate_limit(limit_value: str):
     """
-    Decorator that applies rate limiting only when enabled.
+    Apply rate limiting to a route.
 
     Args:
-        limit_value: Rate limit string (e.g., "10/minute")
+        limit_value: Rate limit string (e.g., "5/minute")
 
     Returns:
         Decorator function or identity if disabled

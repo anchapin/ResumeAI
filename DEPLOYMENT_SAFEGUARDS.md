@@ -51,7 +51,7 @@ This document describes safety mechanisms for production deployments to prevent 
 Lightweight health check for load balancers and monitoring.
 
 ```bash
-curl http://localhost:8000/health
+curl http://localhost:8000/api/v1/health
 {
   "status": "healthy",
   "timestamp": "2024-02-26T12:00:00Z"
@@ -63,7 +63,7 @@ curl http://localhost:8000/health
 Detailed readiness check - used to verify all dependencies are up.
 
 ```bash
-curl http://localhost:8000/health/ready
+curl http://localhost:8000/api/v1/health/ready
 {
   "ready": true,
   "status": "healthy",
@@ -81,7 +81,7 @@ curl http://localhost:8000/health/ready
 
 ```yaml
 healthcheck:
-  test: ['CMD', 'curl', '-f', 'http://localhost:8000/health']
+  test: ['CMD', 'curl', '-f', 'http://localhost:8000/api/v1/health']
   interval: 30s
   timeout: 10s
   retries: 3
@@ -434,7 +434,7 @@ alerts:
 
 ```bash
 # Health check
-curl http://localhost:8000/health
+curl http://localhost:8000/api/v1/health
 
 # API endpoint test
 curl -H "X-API-KEY: $API_KEY" http://localhost:8000/v1/health
