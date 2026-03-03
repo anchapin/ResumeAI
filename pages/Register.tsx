@@ -4,19 +4,11 @@ import {
   PasswordStrengthMeter,
   calculatePasswordStrength,
 } from '../components/PasswordStrengthMeter';
+import { useAuth } from '../hooks/useAuth';
 
-interface RegisterProps {
-  onRegister: (
-    email: string,
-    username: string,
-    password: string,
-    fullName?: string,
-  ) => Promise<any>;
-  error: string | null;
-  isLoading: boolean;
-}
+const Register: React.FC = () => {
+  const { register, isLoading, error, clearError } = useAuth();
 
-const Register: React.FC<RegisterProps> = ({ onRegister, error, isLoading }) => {
   const [email, setEmail] = useState('');
   const [username, setUsername] = useState('');
   const [fullName, setFullName] = useState('');
@@ -28,6 +20,7 @@ const Register: React.FC<RegisterProps> = ({ onRegister, error, isLoading }) => 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLocalError(null);
+    clearError();
 
     if (!email || !username || !password) {
       setLocalError('Please fill in all required fields.');
@@ -46,10 +39,10 @@ const Register: React.FC<RegisterProps> = ({ onRegister, error, isLoading }) => 
     }
 
     try {
-      await onRegister(email, username, password, fullName || undefined);
+      await register(email, username, password, fullName || undefined);
       setSuccess(true);
     } catch {
-      // Error handled by parent hook
+      // Error handled by hook
     }
   };
 

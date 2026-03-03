@@ -1,13 +1,11 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../hooks/useAuth';
 
-interface LoginProps {
-  onLogin: (email: string, password: string) => Promise<any>;
-  error: string | null;
-  isLoading: boolean;
-}
+const Login: React.FC = () => {
+  const navigate = useNavigate();
+  const { login, isLoading, error, clearError } = useAuth();
 
-const Login: React.FC<LoginProps> = ({ onLogin, error, isLoading }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [localError, setLocalError] = useState<string | null>(null);
@@ -15,6 +13,7 @@ const Login: React.FC<LoginProps> = ({ onLogin, error, isLoading }) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLocalError(null);
+    clearError();
 
     if (!email || !password) {
       setLocalError('Please enter your email and password.');
@@ -22,9 +21,12 @@ const Login: React.FC<LoginProps> = ({ onLogin, error, isLoading }) => {
     }
 
     try {
-      await onLogin(email, password);
+      const result = await login(email, password);
+      if (result) {
+        navigate('/dashboard');
+      }
     } catch {
-      // Error handled by parent hook
+      // Error handled by hook
     }
   };
 
