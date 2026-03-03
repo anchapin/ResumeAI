@@ -58,6 +58,7 @@ import KeyboardShortcutsHelp from './components/KeyboardShortcutsHelp';
 import { DEFAULT_SHORTCUTS, registerShortcuts } from './utils/shortcuts';
 import StorageWarning from './components/StorageWarning';
 import SkipNavigation from './components/SkipNavigation';
+import OfflineIndicator from './components/OfflineIndicator';
 
 /**
  * Loading fallback for code-split chunks - Uses skeleton instead of spinner
@@ -200,6 +201,7 @@ function App() {
         </div>
       )}
       <StorageWarning />
+      <OfflineIndicator />
       {!isLoaded ? (
         <div className="min-h-screen flex items-center justify-center bg-[#f6f6f8]">
           <div className="flex items-center gap-3">
