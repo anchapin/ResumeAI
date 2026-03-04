@@ -1,0 +1,149 @@
+# Default values for resume-api
+# This is the default values file for the Helm chart
+
+replicaCount: 1
+
+image:
+  repository: ghcr.io/anchapin/resumeai-api
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion
+  tag: "latest"
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+podAnnotations: {}
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  fsGroup: 1000
+
+securityContext:
+  capabilities:
+    drop:
+    - ALL
+  readOnlyRootFilesystem: false
+  allowPrivilegeEscalation: false
+
+service:
+  type: ClusterIP
+  port: 8000
+  targetPort: 8000
+
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+  hosts:
+    - host: api.resumeai.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: resumeapi-tls
+      hosts:
+        - api.resumeai.com
+
+# Resource limits and requests
+resources:
+  limits:
+    cpu: 2000m
+    memory: 2Gi
+  requests:
+    cpu: 500m
+    memory: 512Mi
+
+# Autoscaling configuration
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 80
+
+# Node selector for pod scheduling
+nodeSelector: {}
+
+# Tolerations for pod scheduling
+tolerations: []
+
+# Affinity rules for pod scheduling
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+              - key: app
+                operator: In
+                values:
+                  - resume-api
+          topologyKey: kubernetes.io/hostname
+
+# Liveness and readiness probes
+livenessProbe:
+  httpGet:
+    path: /api/v1/health
+    port: 8000
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+readinessProbe:
+  httpGet:
+    path: /api/v1/health
+    port: 8000
+  initialDelaySeconds: 10
+  periodSeconds: 5
+  timeoutSeconds: 3
+  failureThreshold: 3
+
+# Environment variables
+env:
+  # Required - set via secret
+  # MASTER_API_KEY: ""
+  # OPENAI_API_KEY: ""
+  
+  # Optional with defaults
+  AI_PROVIDER: "openai"
+  AI_MODEL: "gpt-4o"
+  REQUIRE_API_KEY: "true"
+  DEBUG: "false"
+
+# Persistent storage for uploads
+persistence:
+  enabled: true
+  storageClass: "gp3"
+  accessMode: ReadWriteOnce
+  size: 10Gi
+
+# Database configuration
+database:
+  host: "postgres.default.svc.cluster.local"
+  port: 5432
+  name: "resumeai"
+  # Use secret for password
+  # user: "resumeai"
+  # password: ""  # Use secret
+
+# Redis configuration for caching/sessions
+redis:
+  enabled: true
+  host: "redis.default.svc.cluster.local"
+  port: 6379
+  # Use secret for password
+  # password: ""  # Use secret

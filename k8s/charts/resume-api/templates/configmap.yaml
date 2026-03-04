@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "resume-api.fullname" . }}-config
+  labels:
+    {{- include "resume-api.labels" . | nindent 4 }}
+data:
+  {{- range $key, $value := .Values.env }}
+  {{ $key }}: {{ $value | quote }}
+  {{- end }}
+  AI_PROVIDER: {{ .Values.env.AI_PROVIDER | default "openai" | quote }}
+  AI_MODEL: {{ .Values.env.AI_MODEL | default "gpt-4o" | quote }}
+  REQUIRE_API_KEY: {{ .Values.env.REQUIRE_API_KEY | default "true" | quote }}
+  DEBUG: {{ .Values.env.DEBUG | default "false" | quote }}
