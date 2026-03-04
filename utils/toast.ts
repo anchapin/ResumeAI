@@ -10,11 +10,15 @@ const defaultOptions: ToastOptions = {
   draggable: true,
   progress: undefined,
 };
-
 /**
  * Custom toast utility functions for consistent notifications across the app
  */
 
+/**
+ * Display a success toast notification
+ * @param message - The message to display
+ * @param options - Optional toast options
+ */
 export const showSuccessToast = (message: string, options?: ToastOptions) => {
   toast.success(message, {
     ...defaultOptions,
@@ -22,6 +26,11 @@ export const showSuccessToast = (message: string, options?: ToastOptions) => {
   });
 };
 
+/**
+ * Display an error toast notification
+ * @param message - The message to display
+ * @param options - Optional toast options
+ */
 export const showErrorToast = (message: string, options?: ToastOptions) => {
   toast.error(message, {
     ...defaultOptions,
@@ -29,6 +38,11 @@ export const showErrorToast = (message: string, options?: ToastOptions) => {
   });
 };
 
+/**
+ * Display an info toast notification
+ * @param message - The message to display
+ * @param options - Optional toast options
+ */
 export const showInfoToast = (message: string, options?: ToastOptions) => {
   toast.info(message, {
     ...defaultOptions,
@@ -36,6 +50,11 @@ export const showInfoToast = (message: string, options?: ToastOptions) => {
   });
 };
 
+/**
+ * Display a warning toast notification
+ * @param message - The message to display
+ * @param options - Optional toast options
+ */
 export const showWarningToast = (message: string, options?: ToastOptions) => {
   toast.warn(message, {
     ...defaultOptions,
@@ -43,6 +62,12 @@ export const showWarningToast = (message: string, options?: ToastOptions) => {
   });
 };
 
+/**
+ * Display a toast notification with specified type
+ * @param message - The message to display
+ * @param type - The type of toast (success, error, info, warning)
+ * @param options - Optional toast options
+ */
 export const showToast = (
   message: string,
   type: 'success' | 'error' | 'info' | 'warning' = 'info',
