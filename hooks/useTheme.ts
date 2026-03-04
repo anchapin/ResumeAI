@@ -2,8 +2,16 @@ import { useEffect } from 'react';
 import { useStore } from '../store/store';
 import { Theme } from '../store/store';
 
+/**
+ * LocalStorage key for persisting theme preference
+ */
 const THEME_STORAGE_KEY = 'resumeai_theme';
 
+/**
+ * Custom hook for managing application theme (light/dark mode).
+ * Handles theme persistence, system preference detection, and toggling.
+ * @returns Object containing theme state and control methods
+ */
 export function useTheme() {
   const theme = useStore((state) => state.theme);
   const setTheme = useStore((state) => state.setTheme);

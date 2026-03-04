@@ -3,8 +3,16 @@ import { useStore } from '../store/store';
 import { TokenManager } from '../utils/security';
 import { api } from '../src/lib/requestSigning';
 
+/**
+ * Default API URL for the ResumeAI backend
+ */
 const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
 
+/**
+ * Generates authentication headers for API requests.
+ * Includes Content-Type and Authorization header if valid token exists.
+ * @returns Record containing HTTP headers
+ */
 function getAuthHeaders(): Record<string, string> {
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
   const token = TokenManager.getToken();
@@ -14,6 +22,11 @@ function getAuthHeaders(): Record<string, string> {
   return headers;
 }
 
+/**
+ * Custom hook for authentication operations.
+ * Provides login, register, logout, and user state management.
+ * @returns Object containing user, auth state, and auth methods
+ */
 export const useAuth = () => {
   const user = useStore((state) => state.user);
   const isAuthenticated = useStore((state) => state.isAuthenticated);

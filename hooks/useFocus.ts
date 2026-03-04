@@ -1,11 +1,23 @@
 import { useRef, useCallback, useEffect } from 'react';
 
+/**
+ * Options for useFocus hook
+ */
 interface UseFocusOptions {
+  /** Automatically focus the element on mount */
   autoFocus?: boolean;
+  /** Restore focus when element unmounts */
   returnFocus?: boolean;
+  /** Whether to restore focus on unmount (default: true) */
   restoreFocusOnUnmount?: boolean;
 }
 
+/**
+ * Custom hook for managing focus on an element.
+ * Provides methods to set, save, restore, and blur focus.
+ * @param options - Configuration options for focus behavior
+ * @returns Object containing ref and focus control methods
+ */
 export function useFocus(options: UseFocusOptions = {}) {
   const { autoFocus = false, returnFocus = false, restoreFocusOnUnmount = true } = options;
   const previousActiveElement = useRef<HTMLElement | null>(null);
