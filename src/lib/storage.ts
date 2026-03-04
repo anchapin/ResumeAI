@@ -102,19 +102,30 @@ export async function checkQuotaAvailable(sizeNeeded: number): Promise<{
   };
 }
 
+// Cache storage availability check result to avoid redundant I/O operations
+let isStorageAvailableCache: boolean | null = null;
+
 /**
  * Check if storage is available
  */
 function isStorageAvailable(): boolean {
+  // Return cached result if available
+  if (isStorageAvailableCache !== null) {
+    return isStorageAvailableCache;
+  }
+
   try {
     if (typeof window === 'undefined' || typeof localStorage === 'undefined') {
+      isStorageAvailableCache = false;
       return false;
     }
     const testKey = '__storage_test__';
     localStorage.setItem(testKey, 'test');
     localStorage.removeItem(testKey);
+    isStorageAvailableCache = true;
     return true;
   } catch {
+    isStorageAvailableCache = false;
     return false;
   }
 }
