@@ -1,0 +1,13 @@
+apiVersion: v2
+name: resume-api
+description: A Helm chart for ResumeAI API service
+type: application
+version: 1.0.0
+appVersion: "1.0"
+keywords:
+  - resume
+  - api
+  - fastapi
+maintainers:
+  - name: ResumeAI Team
+    email: team@resumeai.com
