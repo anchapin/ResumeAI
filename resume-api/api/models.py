@@ -871,7 +871,9 @@ class VariantMetadata(BaseModel):
     output_formats: List[str] = Field(
         ..., max_length=10, description="Supported output formats"
     )
-    category: Optional[str] = Field(None, max_length=50, description="Template category")
+    category: Optional[str] = Field(
+        None, max_length=50, description="Template category"
+    )
     layout: Optional[str] = Field(None, max_length=50, description="Layout type")
     color_theme: Optional[str] = Field(None, max_length=50, description="Color theme")
     tags: Optional[List[str]] = Field(None, description="Template tags")

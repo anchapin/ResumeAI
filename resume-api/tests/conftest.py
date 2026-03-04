@@ -78,6 +78,7 @@ async def async_client(test_db_session):
 
     # Disable request signing for tests
     from config import settings
+
     settings.enable_request_signing = False
 
     transport = ASGITransport(app=app)

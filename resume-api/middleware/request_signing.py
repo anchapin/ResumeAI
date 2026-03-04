@@ -64,6 +64,7 @@ class NonceCache:
     Cache for nonces to prevent replay attacks.
     Uses Redis if available, otherwise falls back to in-memory set.
     """
+
     def __init__(self, max_size: int = NONCE_CACHE_SIZE):
         self._local_cache: Set[str] = set()
         self._max_size = max_size
@@ -73,7 +74,7 @@ class NonceCache:
         Add nonce to cache. Returns True if added (new), False if exists.
         """
         cache_mgr = get_cache_manager()
-        
+
         if cache_mgr.backend_type == CacheBackend.REDIS:
             try:
                 key = f"nonce:{nonce}"
@@ -85,11 +86,11 @@ class NonceCache:
                 return result is True or result == "OK"
             except Exception as e:
                 logger.warning(f"Redis nonce cache error: {e}. Falling back to memory.")
-        
+
         # In-memory fallback
         if nonce in self._local_cache:
             return False
-        
+
         self._local_cache.add(nonce)
         if len(self._local_cache) > self._max_size:
             # Simple eviction: clear everything if max size exceeded
@@ -157,7 +158,9 @@ class RequestSigningMiddleware(BaseHTTPMiddleware):
         # Apply to state-changing methods or specifically listed paths
         is_protected_method = request.method in SIGNATURE_PROTECTED_METHODS
         is_required_path = path in SIGNATURE_REQUIRED_PATHS
-        is_auth_billing_path = path.startswith(f"{settings.api_v1_prefix}/auth/") or path.startswith(f"{settings.api_v1_prefix}/billing/")
+        is_auth_billing_path = path.startswith(
+            f"{settings.api_v1_prefix}/auth/"
+        ) or path.startswith(f"{settings.api_v1_prefix}/billing/")
 
         if is_required_path or (is_protected_method and is_auth_billing_path):
             return await self._process_signed_request(request, call_next)

@@ -58,18 +58,22 @@ class TestGitHubOAuthCallback:
 
     @pytest.mark.asyncio
     async def test_callback_with_authorization_code(
-        self, jwt_authenticated_client: AsyncClient, mock_github_token_response, test_db_session, test_user
+        self,
+        jwt_authenticated_client: AsyncClient,
+        mock_github_token_response,
+        test_db_session,
+        test_user,
     ):
         """Test OAuth callback with valid authorization code."""
         # Create a valid state in DB first
         from database import GitHubOAuthState
         from datetime import datetime, timezone, timedelta
-        
+
         state = "test_state_xyz"
         oauth_state = GitHubOAuthState(
             state=state,
             user_id=test_user.id,
-            expires_at=datetime.now(timezone.utc) + timedelta(minutes=10)
+            expires_at=datetime.now(timezone.utc) + timedelta(minutes=10),
         )
         test_db_session.add(oauth_state)
         await test_db_session.commit()
@@ -81,7 +85,11 @@ class TestGitHubOAuthCallback:
             mock_post.return_value = mock_resp
 
             with patch("routes.github.fetch_github_user") as mock_fetch:
-                mock_fetch.return_value = {"id": 12345, "login": "testuser", "name": "Test User"}
+                mock_fetch.return_value = {
+                    "id": 12345,
+                    "login": "testuser",
+                    "name": "Test User",
+                }
 
                 response = await jwt_authenticated_client.get(
                     "/api/v1/github/callback",
@@ -197,7 +205,9 @@ class TestGitHubConnectionManagement:
         assert data["username"] == "testgithubuser"
 
     @pytest.mark.asyncio
-    async def test_disconnect_github(self, jwt_authenticated_client: AsyncClient, github_connection):
+    async def test_disconnect_github(
+        self, jwt_authenticated_client: AsyncClient, github_connection
+    ):
         """Test disconnecting GitHub account."""
         response = await jwt_authenticated_client.delete("/api/v1/github/disconnect")
 

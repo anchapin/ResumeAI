@@ -114,7 +114,7 @@ async def analyze_job_description(
 
         # Store in cache
         await cache_mgr.set(cache_key, result.model_dump(), config_name="jd:analysis")
-        
+
         response.headers["X-Cache"] = "MISS"
         return result
 

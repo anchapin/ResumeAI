@@ -67,8 +67,11 @@ class TestWebSocketAuthentication:
     def test_websocket_with_expired_token(self, test_user, test_client):
         """Test WebSocket connection with expired token."""
         from datetime import timedelta
+
         # Create expired token
-        token = create_access_token({"sub": str(test_user.id)}, expires_delta=timedelta(minutes=-10))
+        token = create_access_token(
+            {"sub": str(test_user.id)}, expires_delta=timedelta(minutes=-10)
+        )
 
         # Try to connect with expired token
         with pytest.raises(Exception):
@@ -119,12 +122,11 @@ class TestWebSocketHeartbeat:
                     # Respond with pong
                     websocket.send_json({"type": "pong"})
 
-
     @pytest.mark.asyncio
     async def test_websocket_inactivity_timeout(self, test_user, test_client):
         """Test WebSocket closes after inactivity."""
         token = create_access_token({"sub": str(test_user.id)})
-    
+
         with patch.object(settings, "ws_rate_limit_connections", "10/minute"):
             with patch.object(settings, "ws_heartbeat_interval", 2):
                 with patch.object(settings, "ws_connection_timeout", 3):
@@ -133,11 +135,12 @@ class TestWebSocketHeartbeat:
                     ) as websocket:
                         # Skip room_state
                         websocket.receive_json()
-    
+
                         # Wait for timeout to occur
                         import asyncio
+
                         await asyncio.sleep(5)
-    
+
                         # Should receive close or error
                         with pytest.raises(Exception):
                             websocket.receive_json()

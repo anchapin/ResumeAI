@@ -40,7 +40,10 @@ class TestEndpointRateLimiting:
 
     @pytest.mark.asyncio
     async def test_tailor_endpoint_rate_limit(
-        self, authenticated_client: AsyncClient, minimal_resume_data, job_description_tech
+        self,
+        authenticated_client: AsyncClient,
+        minimal_resume_data,
+        job_description_tech,
     ):
         """Test rate limiting on tailoring."""
         response = await authenticated_client.post(
@@ -64,9 +67,7 @@ class TestVariantsRateLimit:
         assert response.status_code == 200
 
     @pytest.mark.asyncio
-    async def test_variants_higher_limit_than_generation(
-        self, api_client: AsyncClient
-    ):
+    async def test_variants_higher_limit_than_generation(self, api_client: AsyncClient):
         """Test that variants endpoint has higher limits than generation."""
         # Make multiple requests
         responses = []
@@ -120,9 +121,7 @@ class TestConcurrencyRateLimiting:
     """Test rate limiting with concurrent requests."""
 
     @pytest.mark.asyncio
-    async def test_concurrent_requests_handled(
-        self, api_client: AsyncClient
-    ):
+    async def test_concurrent_requests_handled(self, api_client: AsyncClient):
         """Test handling of many concurrent requests."""
 
         async def make_request():

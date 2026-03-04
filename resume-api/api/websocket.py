@@ -32,27 +32,30 @@ class WebSocketRateLimiter:
     async def can_connect(self, identifier: str) -> bool:
         """Check if identifier can create a new connection."""
         cache_mgr = get_cache_manager()
-        
+
         # Parse rate limit like "10/minute"
         rate_limit_str = settings.ws_rate_limit_connections
         limit_parts = rate_limit_str.split("/")
         max_attempts = int(limit_parts[0])
         window_seconds = 60  # default to 1 minute
         if len(limit_parts) > 1:
-            if "minute" in limit_parts[1]: window_seconds = 60
-            elif "hour" in limit_parts[1]: window_seconds = 3600
-            elif "second" in limit_parts[1]: window_seconds = 1
+            if "minute" in limit_parts[1]:
+                window_seconds = 60
+            elif "hour" in limit_parts[1]:
+                window_seconds = 3600
+            elif "second" in limit_parts[1]:
+                window_seconds = 1
 
         if cache_mgr.backend_type == "redis":
             try:
                 # Use Redis INCR and EXPIRE for atomic rate limiting
                 key = f"ws_ratelimit:{identifier}"
                 redis = cache_mgr.backend.redis
-                
+
                 count = await redis.incr(key)
                 if count == 1:
                     await redis.expire(key, window_seconds)
-                
+
                 return count <= max_attempts
             except Exception:
                 # Fallback to local on Redis error
@@ -126,22 +129,24 @@ class ConnectionManager:
                     # Check inactivity timeout
                     last_pong = datetime.fromisoformat(conn_data["last_pong"])
                     if now - last_pong > timeout_threshold:
-                        connections_to_close.append((connection_id, "inactivity_timeout"))
+                        connections_to_close.append(
+                            (connection_id, "inactivity_timeout")
+                        )
                         continue
 
                     # Check token expiration
                     if "expires_at" in conn_data and conn_data["expires_at"]:
                         expires_at = datetime.fromtimestamp(conn_data["expires_at"])
                         if now > expires_at:
-                            connections_to_close.append((connection_id, "token_expired"))
+                            connections_to_close.append(
+                                (connection_id, "token_expired")
+                            )
 
                 for connection_id, reason in connections_to_close:
                     logger.warning(
                         f"Closing connection {connection_id} due to {reason}"
                     )
-                    await self.close_connection(
-                        connection_id, reason=reason
-                    )
+                    await self.close_connection(connection_id, reason=reason)
 
             except asyncio.CancelledError:
                 break
@@ -179,7 +184,13 @@ class ConnectionManager:
 
         self.disconnect(connection_id)
 
-    async def connect(self, websocket: WebSocket, room_id: str, user_id: str = None, expires_at: float = None):
+    async def connect(
+        self,
+        websocket: WebSocket,
+        room_id: str,
+        user_id: str = None,
+        expires_at: float = None,
+    ):
         """Add a new WebSocket connection to a room."""
         user_id = user_id or f"user_{str(uuid.uuid4())[:8]}"
         now = datetime.utcnow().isoformat()

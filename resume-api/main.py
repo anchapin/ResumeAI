@@ -282,6 +282,7 @@ app.add_middleware(
 # Create a router for base endpoints to allow prefixing
 base_router = APIRouter()
 
+
 # Health check endpoints
 @base_router.get("/health", tags=["Health"])
 async def health_check():
@@ -323,11 +324,13 @@ async def endpoint_popularity(hours: int = 24, limit: int = 10):
 # Include base routes with version prefix
 app.include_router(base_router, prefix=settings.api_v1_prefix)
 
+
 @app.websocket("/debug_ws")
 async def debug_ws(websocket: WebSocket):
     await websocket.accept()
     await websocket.send_text("debug")
     await websocket.close()
+
 
 # Include API routes
 app.include_router(router, prefix=settings.api_v1_prefix)

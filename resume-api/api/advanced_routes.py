@@ -1142,7 +1142,9 @@ async def update_user_settings(
         await db.refresh(settings)
 
         # Invalidate cache
-        await CacheInvalidationHook({"user", "settings", f"user:{user_identifier}"}).invalidate()
+        await CacheInvalidationHook(
+            {"user", "settings", f"user:{user_identifier}"}
+        ).invalidate()
 
         return UserSettingsResponse(
             keyboard_shortcuts_enabled=settings.keyboard_shortcuts_enabled,
