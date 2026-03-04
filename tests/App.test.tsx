@@ -1088,7 +1088,7 @@ describe('App Component', () => {
   });
 
   describe('Error Display and Dismissal', () => {
-    it.skip('should allow manual error dismissal', async () => {
+    it('should allow manual error dismissal', async () => {
       const user = userEvent.setup();
 
       vi.spyOn(StorageModule, 'loadResumeData').mockImplementation(() => {

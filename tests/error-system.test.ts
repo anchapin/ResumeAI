@@ -34,7 +34,7 @@ describe('Error System Integration', () => {
     expect(toast.error).not.toHaveBeenCalled();
   });
 
-  it.skip('should route warning errors to toast and NOT currentError', async () => {
+  it('should route warning errors to toast and NOT currentError', async () => {
     const { result } = renderHook(() => useGlobalErrors());
 
     act(() => {

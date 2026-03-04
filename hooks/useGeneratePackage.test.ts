@@ -54,7 +54,7 @@ const mockSimpleResume: SimpleResumeData = {
   ],
 };
 
-describe.skip('useGeneratePackage Hook', () => {
+describe('useGeneratePackage Hook', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     localStorage.clear();

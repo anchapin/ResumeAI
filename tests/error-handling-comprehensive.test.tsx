@@ -20,7 +20,7 @@ import {
   withErrorHandling,
 } from '../utils/errorHandler';
 
-describe.skip('Comprehensive Error Handling - Frontend', () => {
+describe('Comprehensive Error Handling - Frontend', () => {
   beforeEach(() => {
     errorHandler.clearErrorHistory();
     vi.clearAllMocks();
