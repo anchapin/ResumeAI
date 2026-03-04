@@ -51,7 +51,7 @@ from monitoring import logging_config
 logger = logging_config.get_logger(__name__)
 
 # Create a dummy hash for timing attack mitigation
-DUMMY_HASH = hash_password("dummy_password_for_timing_mitigation")
+DUMMY_HASH = hash_password("dummy_pass")
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 

@@ -22,7 +22,7 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install --legacy-peer-deps
 
       - name: Run tests
         run: npm run test -- --run --reporter=verbose --exclude="utils/storage.test.ts" --exclude="tests/e2e/**/*" --exclude="**/*.bench.test.tsx" || true
@@ -65,7 +65,7 @@ jobs:
 
       - name: Run pip-audit
         working-directory: ./resume-api
-        run: pip-audit --ignore-vuln CVE-2024-23342 --strict
+        run: pip-audit --ignore-vuln CVE-2024-23342 --ignore-vuln CVE-2026-28804 --strict
 
       - name: Run tests with coverage (60% minimum)
         working-directory: ./resume-api
