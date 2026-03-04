@@ -23,6 +23,7 @@ const NAV_ITEMS = [
     path: '/salary-research',
   },
   { id: Route.BILLING, label: 'Billing', icon: 'credit_card', path: '/billing' },
+  { id: Route.WEBHOOKS, label: 'Webhooks', icon: 'webhook', path: '/webhooks' },
   { id: Route.SETTINGS, label: 'Settings', icon: 'settings', path: '/settings' },
 ] as const;
 

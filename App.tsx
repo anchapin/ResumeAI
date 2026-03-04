@@ -44,6 +44,7 @@ const Billing = lazy(() => import('./pages/Billing'));
 const Plans = lazy(() => import('./pages/Plans'));
 const PaymentMethods = lazy(() => import('./pages/PaymentMethods'));
 const Invoices = lazy(() => import('./pages/Invoices'));
+const Webhooks = lazy(() => import('./pages/Webhooks'));
 
 import { saveResumeData, StorageError, getStorageErrorMessage } from './utils/storage';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -346,6 +347,21 @@ function App() {
                   <div className="flex min-h-screen bg-[#f6f6f8]">
                     <Sidebar onShowShortcuts={setShowShortcuts} />
                     <Invoices />
+                  </div>
+                </Suspense>
+              ) : (
+                <Navigate to="/login" replace />
+              )
+            }
+          />
+          <Route
+            path="/webhooks"
+            element={
+              isAuthenticated ? (
+                <Suspense fallback={<PageLoader />}>
+                  <div className="flex min-h-screen bg-[#f6f6f8]">
+                    <Sidebar onShowShortcuts={setShowShortcuts} />
+                    <Webhooks />
                   </div>
                 </Suspense>
               ) : (

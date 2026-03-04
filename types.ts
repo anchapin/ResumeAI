@@ -155,6 +155,7 @@ export enum Route {
   SALARY_RESEARCH = 'salary-research',
   INTERVIEW_PRACTICE = 'interview-practice',
   BILLING = 'billing',
+  WEBHOOKS = 'webhooks',
 }
 
 // Advanced Features Types
