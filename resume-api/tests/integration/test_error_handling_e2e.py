@@ -414,7 +414,6 @@ class TestEdgeCaseErrors:
             json={
                 "resume_data": {
                     "basics": {
-                        "name": "First Name",
                         "name": "Last Name",
                         "email": "test@example.com",
                     },
