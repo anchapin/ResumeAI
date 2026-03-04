@@ -1,5 +1,5 @@
 import { beforeAll, afterAll, afterEach, beforeEach } from 'vitest';
-import { setupWorker, waitFor } from 'msw/browser';
+import { setupWorker } from 'msw/browser';
 import { worker, resetMockData, preloadResumes } from './handlers';
 
 // Singleton worker instance
