@@ -40,7 +40,7 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install --legacy-peer-deps
 
       - name: Run tests
         run: npm run test -- --run --reporter=verbose --exclude="utils/storage.test.ts" --exclude="tests/e2e/**/*" --exclude="**/*.bench.test.tsx" --exclude="tests/e2e/**/*" --exclude="**/*.bench.test.tsx"
@@ -88,7 +88,7 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install --legacy-peer-deps
 
       - name: Build production bundle
         run: npm run build
