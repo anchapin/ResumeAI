@@ -466,7 +466,7 @@ describe('App Component', () => {
 
       await waitFor(() => {
         expect(
-          screen.getByText('Storage full. Please clear some browser data.'),
+          screen.getByText('An error occurred while saving your data locally.'),
         ).toBeInTheDocument();
       });
     });
@@ -486,7 +486,9 @@ describe('App Component', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByText('Data corrupted. Using default resume.')).toBeInTheDocument();
+        expect(
+          screen.getByText('An error occurred while saving your data locally.'),
+        ).toBeInTheDocument();
       });
     });
 
@@ -506,7 +508,7 @@ describe('App Component', () => {
 
       await waitFor(() => {
         expect(
-          screen.getByText("Storage access denied. Changes won't be saved."),
+          screen.getByText('An error occurred while saving your data locally.'),
         ).toBeInTheDocument();
       });
     });
@@ -526,13 +528,15 @@ describe('App Component', () => {
       );
 
       // Wait for error to appear
-      expect(screen.getByText('Storage full. Please clear some browser data.')).toBeInTheDocument();
+      expect(
+        screen.getByText('An error occurred while saving your data locally.'),
+      ).toBeInTheDocument();
 
       // Wait for auto-dismiss (5 seconds + buffer for slower systems)
       await waitFor(
         () => {
           expect(
-            screen.queryByText('Storage full. Please clear some browser data.'),
+            screen.queryByText('An error occurred while saving your data locally.'),
           ).not.toBeInTheDocument();
         },
         { timeout: 7000 },
@@ -557,7 +561,7 @@ describe('App Component', () => {
 
       await waitFor(() => {
         expect(
-          screen.getByText('Storage full. Please clear some browser data.'),
+          screen.getByText('An error occurred while saving your data locally.'),
         ).toBeInTheDocument();
       });
 
@@ -566,7 +570,7 @@ describe('App Component', () => {
 
       await waitFor(() => {
         expect(
-          screen.queryByText('Storage full. Please clear some browser data.'),
+          screen.queryByText('An error occurred while saving your data locally.'),
         ).not.toBeInTheDocument();
       });
     });
@@ -1129,7 +1133,7 @@ describe('App Component', () => {
 
       await waitFor(() => {
         expect(
-          screen.getByText("Storage not available. Changes won't be saved."),
+          screen.getByText('An error occurred while saving your data locally.'),
         ).toBeInTheDocument();
       });
     });
@@ -1146,7 +1150,9 @@ describe('App Component', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByText('Failed to save data. Please try again.')).toBeInTheDocument();
+        expect(
+          screen.getByText('An error occurred while saving your data locally.'),
+        ).toBeInTheDocument();
       });
     });
   });

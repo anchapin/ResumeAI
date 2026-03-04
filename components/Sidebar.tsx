@@ -156,8 +156,11 @@ const Sidebar: React.FC<SidebarProps> = React.memo(
                   onClick={handleLogout}
                   className="text-slate-400 hover:text-red-500 transition-colors"
                   title="Sign out"
+                  aria-label="Sign out"
                 >
-                  <span className="material-symbols-outlined text-[20px]">logout</span>
+                  <span className="material-symbols-outlined text-[20px]" aria-hidden="true">
+                    logout
+                  </span>
                 </button>
               </div>
             ) : (
