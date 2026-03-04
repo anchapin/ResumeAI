@@ -1,0 +1,46 @@
+{
+  "common": {
+    "appName": "ResumeAI",
+    "loading": "Chargement...",
+    "error": "Une erreur est survenue",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "create": "Créer",
+    "search": "Rechercher",
+    "settings": "Paramètres"
+  },
+  "nav": {
+    "dashboard": "Tableau de bord",
+    "editor": "Éditeur",
+    "workspace": "Espace de travail",
+    "settings": "Paramètres"
+  },
+  "dashboard": {
+    "title": "Tableau de bord",
+    "welcome": "Bienvenue sur ResumeAI",
+    "createResume": "Créer un nouveau CV",
+    "recentResumes": "CV récents",
+    "noResumes": "Aucun CV pour le moment. Créez votre premier !"
+  },
+  "editor": {
+    "title": "Éditeur de CV",
+    "preview": "Aperçu",
+    "download": "Télécharger PDF",
+    "export": "Exporter",
+    "personalInfo": "Informations personnelles",
+    "summary": "Résumé professionnel",
+    "experience": "Expérience professionnelle",
+    "education": "Formation",
+    "skills": "Compétences",
+    "certifications": "Certifications"
+  },
+  "settings": {
+    "title": "Paramètres",
+    "language": "Langue",
+    "theme": "Thème",
+    "apiKey": "Clé API",
+    "account": "Compte"
+  }
+}

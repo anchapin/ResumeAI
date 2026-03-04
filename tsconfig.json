@@ -5,6 +5,7 @@
     "useDefineForClassFields": false,
     "module": "ESNext",
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "resolveJsonModule": true,
     "skipLibCheck": true,
     "types": ["node", "vitest/globals"],
     "moduleResolution": "bundler",

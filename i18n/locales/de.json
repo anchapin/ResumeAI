@@ -1,0 +1,46 @@
+{
+  "common": {
+    "appName": "ResumeAI",
+    "loading": "Laden...",
+    "error": "Ein Fehler ist aufgetreten",
+    "save": "Speichern",
+    "cancel": "Abbrechen",
+    "delete": "Löschen",
+    "edit": "Bearbeiten",
+    "create": "Erstellen",
+    "search": "Suchen",
+    "settings": "Einstellungen"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "editor": "Editor",
+    "workspace": "Arbeitsbereich",
+    "settings": "Einstellungen"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "welcome": "Willkommen bei ResumeAI",
+    "createResume": "Neuen Lebenslauf erstellen",
+    "recentResumes": "Aktuelle Lebensläufe",
+    "noResumes": "Noch keine Lebensläufe. Erstellen Sie Ihren ersten!"
+  },
+  "editor": {
+    "title": "Lebenslauf-Editor",
+    "preview": "Vorschau",
+    "download": "PDF herunterladen",
+    "export": "Exportieren",
+    "personalInfo": "Persönliche Informationen",
+    "summary": "Professionelles Profil",
+    "experience": "Berufserfahrung",
+    "education": "Ausbildung",
+    "skills": "Fähigkeiten",
+    "certifications": "Zertifizierungen"
+  },
+  "settings": {
+    "title": "Einstellungen",
+    "language": "Sprache",
+    "theme": "Design",
+    "apiKey": "API-Schlüssel",
+    "account": "Konto"
+  }
+}
