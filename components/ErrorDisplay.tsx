@@ -3,15 +3,21 @@ import { ErrorContext, ErrorType } from '../utils/errorHandler';
 import { getErrorMessageByType, getErrorSuggestion } from '../utils/errorMessages';
 
 interface ErrorDisplayProps {
+  /** The error context to display */
   error: ErrorContext | null;
+  /** Callback when error is dismissed */
   onDismiss: () => void;
+  /** Optional callback for retry action */
   onRetry?: () => void;
+  /** Time in ms before auto-dismiss (0 to disable) */
   autoDismissTime?: number;
+  /** Whether to show technical details by default */
   showDetails?: boolean;
 }
 
 /**
- * Component to display user-friendly error messages with actionable buttons
+ * Component to display user-friendly error messages with actionable buttons.
+ * Implements WCAG 2.1 accessibility guidelines with proper ARIA attributes.
  */
 export const ErrorDisplay: React.FC<ErrorDisplayProps> = ({
   error,
