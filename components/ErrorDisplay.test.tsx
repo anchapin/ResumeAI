@@ -73,8 +73,7 @@ describe('ErrorDisplay Component', () => {
     );
   });
 
-  it.skip('should display development message in development mode', async () => {
-    const user = userEvent.setup();
+  it('should display development message in development mode', async () => {
     const originalEnv = process.env.NODE_ENV;
     process.env.NODE_ENV = 'development';
 
@@ -82,10 +81,6 @@ describe('ErrorDisplay Component', () => {
     const onDismiss = vi.fn();
 
     render(<ErrorDisplay error={error} onDismiss={onDismiss} />);
-
-    // In new version, debug message is hidden behind "Show Technical Details"
-    const toggleButton = screen.getByText(/Technical Details/);
-    await user.click(toggleButton);
 
     expect(screen.getByText('Test error message')).toBeInTheDocument();
 
