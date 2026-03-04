@@ -478,7 +478,7 @@ export const SalaryResearch: React.FC = () => {
                   setShowOfferForm(true);
                   setEditingOffer(null);
                 }}
-                icon={<span className="material-symbols-outlined text-[18px]">add</span>}
+                leftIcon={<span className="material-symbols-outlined text-[18px]">add</span>}
               >
                 Add Offer
               </Button>
@@ -603,7 +603,7 @@ export const SalaryResearch: React.FC = () => {
                   setShowOfferForm(false);
                   setEditingOffer(null);
                 }}
-                icon={<span className="material-symbols-outlined">close</span>}
+                rightIcon={<span className="material-symbols-outlined">close</span>}
               />
             </div>
 

@@ -375,7 +375,7 @@ describe('App Component', () => {
     it('should debounce saves to avoid rapid updates', async () => {
       const saveResumeDataSpy = vi
         .spyOn(StorageModule, 'saveResumeData')
-        .mockImplementation(() => {});
+        .mockImplementation(() => Promise.resolve());
 
       render(
         <MemoryRouter initialEntries={['/dashboard']}>
@@ -397,7 +397,7 @@ describe('App Component', () => {
     it('should not save before initial load is complete', async () => {
       const saveResumeDataSpy = vi
         .spyOn(StorageModule, 'saveResumeData')
-        .mockImplementation(() => {});
+        .mockImplementation(() => Promise.resolve());
 
       vi.spyOn(StorageModule, 'loadResumeData').mockImplementation((): any => {
         return new Promise((resolve) => setTimeout(() => resolve(null), 100));
