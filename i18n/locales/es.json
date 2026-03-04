@@ -1,0 +1,46 @@
+{
+  "common": {
+    "appName": "ResumeAI",
+    "loading": "Cargando...",
+    "error": "Ocurrió un error",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "create": "Crear",
+    "search": "Buscar",
+    "settings": "Configuración"
+  },
+  "nav": {
+    "dashboard": "Panel",
+    "editor": "Editor",
+    "workspace": "Espacio de trabajo",
+    "settings": "Configuración"
+  },
+  "dashboard": {
+    "title": "Panel",
+    "welcome": "Bienvenido a ResumeAI",
+    "createResume": "Crear nuevo currículum",
+    "recentResumes": "Currículums recientes",
+    "noResumes": "Aún no hay currículums. ¡Crea el primero!"
+  },
+  "editor": {
+    "title": "Editor de currículum",
+    "preview": "Vista previa",
+    "download": "Descargar PDF",
+    "export": "Exportar",
+    "personalInfo": "Información personal",
+    "summary": "Resumen profesional",
+    "experience": "Experiencia laboral",
+    "education": "Educación",
+    "skills": "Habilidades",
+    "certifications": "Certificaciones"
+  },
+  "settings": {
+    "title": "Configuración",
+    "language": "Idioma",
+    "theme": "Tema",
+    "apiKey": "Clave API",
+    "account": "Cuenta"
+  }
+}

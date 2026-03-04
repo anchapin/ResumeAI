@@ -2,6 +2,7 @@ import React, { useEffect, lazy, Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
 import { registerPrefetch } from './utils/prefetch';
+import './i18n';
 
 // Lazy load page components for better code splitting
 const dashboardImport = () => import('./pages/Dashboard');
