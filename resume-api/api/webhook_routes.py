@@ -86,18 +86,14 @@ async def list_webhooks(request: Request, auth: AuthorizedAPIKey):
     return []
 
 
-@router.get(
-    "/{webhook_id}", response_model=WebhookResponse, tags=["Webhooks"]
-)
+@router.get("/{webhook_id}", response_model=WebhookResponse, tags=["Webhooks"])
 @rate_limit("30/minute")
 async def get_webhook(request: Request, webhook_id: int, auth: AuthorizedAPIKey):
     """Get webhook details."""
     raise HTTPException(status_code=404, detail=f"Webhook {webhook_id} not found")
 
 
-@router.put(
-    "/{webhook_id}", response_model=WebhookResponse, tags=["Webhooks"]
-)
+@router.put("/{webhook_id}", response_model=WebhookResponse, tags=["Webhooks"])
 @rate_limit("10/minute")
 async def update_webhook(
     request: Request, webhook_id: int, body: WebhookUpdate, auth: AuthorizedAPIKey
@@ -133,9 +129,7 @@ async def list_webhook_deliveries(
     raise HTTPException(status_code=404, detail=f"Webhook {webhook_id} not found")
 
 
-@router.post(
-    "/{webhook_id}/deliveries/{delivery_id}/retry", tags=["Webhooks"]
-)
+@router.post("/{webhook_id}/deliveries/{delivery_id}/retry", tags=["Webhooks"])
 @rate_limit("10/minute")
 async def retry_webhook_delivery(
     request: Request, webhook_id: int, delivery_id: int, auth: AuthorizedAPIKey

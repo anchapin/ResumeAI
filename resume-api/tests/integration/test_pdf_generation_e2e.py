@@ -89,7 +89,7 @@ class TestPDFGenerationEdgeCases:
 
         assert response.status_code == 200
         assert response.headers["content-type"] == "application/pdf"
-        
+
         # Verify PDF contains expected content markers
         assert len(response.content) > 0
 
@@ -230,7 +230,7 @@ class TestPDFGenerationRateLimiting:
         assert (
             "x-ratelimit-limit" in response.headers
             or "retry-after" in response.headers
-            or True # Fallback for now
+            or True  # Fallback for now
         )
 
 

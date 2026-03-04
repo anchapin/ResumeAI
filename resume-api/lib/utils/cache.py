@@ -584,7 +584,7 @@ async def initialize_cache(
 
 
 from functools import wraps
-from fastapi import Response
+from fastapi import Request, Response
 
 
 def cached(
@@ -613,7 +613,9 @@ def cached(
             for k, v in kwargs.items():
                 if isinstance(v, Response):
                     response = v
-                elif not isinstance(v, Request) and not str(type(v)).endswith("AuthorizedAPIKey'>"):
+                elif not isinstance(v, Request) and not str(type(v)).endswith(
+                    "AuthorizedAPIKey'>"
+                ):
                     filtered_kwargs[k] = v
 
             # Generate cache key using only serializable kwargs
@@ -631,12 +633,13 @@ def cached(
                 if response:
                     response.headers["X-Cache"] = "HIT"
                     current_ttl = (
-                        ttl
-                        or cache_mgr.configs[config_name].ttl_seconds
+                        ttl or cache_mgr.configs[config_name].ttl_seconds
                         if config_name in cache_mgr.configs
                         else 300
                     )
-                    response.headers["Cache-Control"] = f"public, max-age={str(current_ttl)}"
+                    response.headers["Cache-Control"] = (
+                        f"public, max-age={str(current_ttl)}"
+                    )
                 return cached_value
 
             # Execute function

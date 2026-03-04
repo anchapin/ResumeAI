@@ -19,7 +19,9 @@ class TestAPIKeyCreation:
     """Test API key creation and management."""
 
     @pytest.mark.asyncio
-    async def test_create_api_key(self, jwt_authenticated_client: AsyncClient, test_user):
+    async def test_create_api_key(
+        self, jwt_authenticated_client: AsyncClient, test_user
+    ):
         """Test creating a new API key."""
         response = await jwt_authenticated_client.post(
             "/api/v1/api-keys",
@@ -46,7 +48,9 @@ class TestAPIKeyCreation:
         assert test_api_key.user_id is not None
 
     @pytest.mark.asyncio
-    async def test_list_api_keys(self, jwt_authenticated_client: AsyncClient, test_api_key):
+    async def test_list_api_keys(
+        self, jwt_authenticated_client: AsyncClient, test_api_key
+    ):
         """Test listing user's API keys."""
         response = await jwt_authenticated_client.get("/api/v1/api-keys")
 
@@ -101,7 +105,7 @@ class TestAPIKeyValidation:
         """Test that inactive API key is rejected."""
         # Create inactive key
         from lib.security.key_management import hash_api_key, generate_api_key_prefix
-        
+
         plaintext_key = "inactive_key_12345"
         inactive_key = APIKey(
             user_id=test_user.id,
@@ -207,7 +211,9 @@ class TestAPIKeyDeactivation:
         self, jwt_authenticated_client: AsyncClient, test_api_key
     ):
         """Test deleting an API key."""
-        response = await jwt_authenticated_client.delete(f"/api/v1/api-keys/{test_api_key.id}")
+        response = await jwt_authenticated_client.delete(
+            f"/api/v1/api-keys/{test_api_key.id}"
+        )
 
         # May not be implemented
         assert response.status_code in [200, 204, 401, 404]

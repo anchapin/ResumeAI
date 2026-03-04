@@ -1,5 +1,9 @@
 import { ResumeData } from '@/types';
 
+// MSW-based test utilities
+// Uses MSW handlers defined in tests/mocks/handlers.ts
+// Ensure MSW is started in test setup (via tests/mocks/msw-setup.ts)
+
 export interface TestContext {
   apiClient: MockAPIClient;
   baseURL: string;

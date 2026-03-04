@@ -79,6 +79,7 @@ async def api_client(test_db_session, test_db_session_maker):
 
     # Disable security middleware for tests
     from config import settings
+
     settings.enable_csrf = False
     settings.enable_request_signing = False
 
@@ -106,8 +107,7 @@ async def jwt_authenticated_client(api_client, test_user):
     from datetime import timedelta
 
     access_token = create_access_token(
-        data={"sub": str(test_user.id)},
-        expires_delta=timedelta(minutes=30)
+        data={"sub": str(test_user.id)}, expires_delta=timedelta(minutes=30)
     )
     api_client.headers["Authorization"] = f"Bearer {access_token}"
     return api_client
@@ -146,7 +146,7 @@ async def test_user(test_db_session):
 async def test_api_key(test_db_session, test_user):
     """Create a test API key."""
     from lib.security.key_management import hash_api_key, generate_api_key_prefix
-    
+
     plaintext_key = "test_key_1234567890abcdef"
     api_key = APIKey(
         user_id=test_user.id,
@@ -329,7 +329,10 @@ def resume_with_special_chars():
             }
         ],
         "skills": [
-            {"name": "Languages", "keywords": ["Python", "Golang", "C++", "TypeScript", "中文"]},
+            {
+                "name": "Languages",
+                "keywords": ["Python", "Golang", "C++", "TypeScript", "中文"],
+            },
             {"name": "Frameworks", "keywords": ["FastAPI", "Django", "Spring Boot"]},
         ],
     }

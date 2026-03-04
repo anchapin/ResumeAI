@@ -5,6 +5,10 @@ import { expect } from 'vitest';
 
 expect.extend(toHaveNoViolations);
 
+// Note: MSW requires browser environment (window, Worker)
+// For browser tests, import tests/mocks/msw-setup.ts which handles this properly
+// This setup file handles Node.js test environment (server-side rendering tests)
+
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
   value: vi.fn().mockImplementation((query) => ({

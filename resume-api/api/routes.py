@@ -11,7 +11,17 @@ import zipfile
 import hashlib
 from pathlib import Path
 
-from fastapi import APIRouter, HTTPException, Request, Response, UploadFile, File, status, WebSocket, Depends
+from fastapi import (
+    APIRouter,
+    HTTPException,
+    Request,
+    Response,
+    UploadFile,
+    File,
+    status,
+    WebSocket,
+    Depends,
+)
 from lib.utils.cache import get_cache_manager, cached
 from api.websocket import handle_websocket_connection
 from config.dependencies import get_current_user_ws
@@ -66,6 +76,7 @@ router = APIRouter(prefix="", tags=["Resumes"])
 
 # Initialize managers
 _variant_manager = None
+
 
 def get_variant_manager():
     global _variant_manager
