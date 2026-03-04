@@ -1,10 +1,21 @@
 import { useRef, useCallback, useEffect } from 'react';
 
+/**
+ * Options for useFocusTrap hook
+ */
 interface UseFocusTrapOptions {
+  /** Whether the focus trap is active (default: true) */
   isActive?: boolean;
+  /** Whether to return focus to previous element on deactivation (default: true) */
   returnFocusOnDeactivate?: boolean;
 }
 
+/**
+ * Custom hook for trapping focus within a container element.
+ * Useful for modals, dialogs, and other overlays where focus should be contained.
+ * @param options - Configuration options for focus trap behavior
+ * @returns Object containing ref and activation/deactivation methods
+ */
 export function useFocusTrap<T extends HTMLElement = HTMLElement>(
   options: UseFocusTrapOptions = {},
 ) {
