@@ -409,14 +409,14 @@ class TestEdgeCaseErrors:
         """Test handling of duplicate field names."""
         # This is a JSON parsing edge case
         # Most JSON parsers handle this by keeping last value
+        basics = {"email": "test@example.com"}
+        basics["name"] = "First Name"
+        basics["name"] = "Last Name"
         response = await authenticated_client.post(
             "/api/v1/render/pdf",
             json={
                 "resume_data": {
-                    "basics": {
-                        "name": "Last Name",
-                        "email": "test@example.com",
-                    },
+                    "basics": basics,
                 },
                 "variant": "modern",
             },
