@@ -91,6 +91,20 @@ class GlobalErrorHandlerService {
     const id = this.generateErrorId();
     const timestamp = Date.now();
 
+    if (additionalContext?.type) {
+      const errorType = additionalContext.type as ErrorType;
+      const messageMap = getErrorMessageByType(errorType);
+      return {
+        type: errorType,
+        message: error?.message || messageMap.userMessage,
+        userMessage: messageMap.userMessage,
+        originalError: error instanceof Error ? error : new Error(String(error)),
+        context: additionalContext,
+        timestamp,
+        id,
+      };
+    }
+
     // Handle network errors
     if (error instanceof TypeError && error.message.includes('fetch')) {
       const messageMap = getErrorMessageByType(ErrorType.NETWORK);

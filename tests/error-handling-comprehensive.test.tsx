@@ -18,7 +18,7 @@ import {
   createValidationError,
   createTimeoutError,
   withErrorHandling,
-} from '@/utils/errorHandler';
+} from '../utils/errorHandler';
 
 describe('Comprehensive Error Handling - Frontend', () => {
   beforeEach(() => {
