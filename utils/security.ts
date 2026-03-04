@@ -104,11 +104,19 @@ const TokenManager = {
 };
 
 // Get CSRF token from cookie
+/**
+ * Get CSRF token from cookie for request verification
+ * @returns CSRF token string or null if not available
+ */
 const getCsrfToken = (): string | null => {
   return getCookie('csrf_token');
 };
 
 // Security headers for API requests
+/**
+ * Get security headers for API requests
+ * @returns Record of header name to value mappings
+ */
 const getSecurityHeaders = (): Record<string, string> => {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
@@ -131,6 +139,12 @@ const getSecurityHeaders = (): Record<string, string> => {
 };
 
 // API request wrapper with security measures
+/**
+ * Make a secure API call with automatic CSRF token and security headers
+ * @param url - The API endpoint URL
+ * @param options - Fetch options
+ * @returns Promise<Response> - The fetch response
+ */
 const secureApiCall = async (url: string, options: RequestInit = {}): Promise<Response> => {
   // Merge security headers with provided options
   const secureOptions: RequestInit = {
@@ -159,6 +173,11 @@ const secureApiCall = async (url: string, options: RequestInit = {}): Promise<Re
 };
 
 // Input sanitization utilities
+/**
+ * Sanitize user input to prevent XSS attacks
+ * @param input - Raw user input to sanitize
+ * @returns Sanitized string safe for display/storage
+ */
 const sanitizeInput = (input: string): string => {
   if (typeof input !== 'string') {
     return input;
@@ -176,6 +195,11 @@ const sanitizeInput = (input: string): string => {
 };
 
 // Validate file upload
+/**
+ * Validate a file for upload based on size and type restrictions
+ * @param file - The file to validate
+ * @returns Object with isValid boolean and optional error message
+ */
 const validateFileUpload = (file: File): { isValid: boolean; error?: string } => {
   // Check file size
   if (file.size > SECURITY_CONFIG.MAX_FILE_SIZE) {

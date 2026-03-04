@@ -1,3 +1,11 @@
+/**
+ * Feature flags for ResumeAI application
+ * @packageDocumentation
+ */
+
+/**
+ * Available feature flags in the application
+ */
 export enum Feature {
   AI_TAILORING = 'ai-tailoring',
   PDF_EXPORT = 'pdf-export',
@@ -7,10 +15,16 @@ export enum Feature {
   ADVANCED_ANALYTICS = 'advanced-analytics',
 }
 
+/**
+ * Configuration object for feature flags
+ */
 export interface FeatureFlagConfig {
   [key: string]: boolean;
 }
 
+/**
+ * Default feature flag configuration
+ */
 export const DEFAULT_FLAGS: FeatureFlagConfig = {
   [Feature.AI_TAILORING]: true,
   [Feature.PDF_EXPORT]: true,
@@ -19,9 +33,16 @@ export const DEFAULT_FLAGS: FeatureFlagConfig = {
   [Feature.TEAM_COLLABORATION]: false, // Beta
   [Feature.ADVANCED_ANALYTICS]: false, // Upcoming
 };
-
 /**
- * Loads flags from environment variables or localStorage for development/overrides
+ * Loads flags from environment variables or localStorage for development/overrides.
+ *
+ * @returns Feature flag configuration object
+ *
+ * @example
+ * const flags = getFeatureFlags();
+ * if (flags[Feature.AI_TAILORING]) {
+ *   // AI tailoring is enabled
+ * }
  */
 export const getFeatureFlags = (): FeatureFlagConfig => {
   const flags = { ...DEFAULT_FLAGS };

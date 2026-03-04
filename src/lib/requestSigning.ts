@@ -1,7 +1,24 @@
+/**
+ * Request signing utilities for API security
+ * Implements HMAC-SHA256 request signing with timestamp and nonce
+ * @packageDocumentation
+ */
+
 const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
 
 const SIGNATURE_SECRET = import.meta.env.VITE_REQUEST_SIGNING_SECRET || '';
 
+/**
+ * Computes HMAC-SHA256 signature for request signing
+ *
+ * @param secretKey - The secret key for signing
+ * @param method - HTTP method (GET, POST, etc.)
+ * @param path - Request path
+ * @param timestamp - Unix timestamp
+ * @param nonce - Unique nonce value
+ * @param body - Request body (optional)
+ * @returns Promise<string> - Hex-encoded signature
+ */
 async function computeSignature(
   secretKey: string,
   method: string,
@@ -24,6 +41,11 @@ async function computeSignature(
     });
 }
 
+/**
+ * Generates a cryptographically secure random nonce
+ *
+ * @returns A 32-character hex-encoded nonce
+ */
 function generateNonce(): string {
   const array = new Uint8Array(16);
   crypto.getRandomValues(array);
@@ -32,10 +54,31 @@ function generateNonce(): string {
     .join('');
 }
 
+/**
+ * Gets current Unix timestamp in seconds
+ *
+ * @returns Unix timestamp as string
+ */
 function getTimestamp(): string {
   return Math.floor(Date.now() / 1000).toString();
 }
 
+/**
+ * Makes a signed fetch request with HMAC-SHA256 signature
+ *
+ * Adds X-Timestamp, X-Nonce, and X-Signature headers for request verification.
+ * Also includes Authorization and X-CSRF-Token headers when available.
+ *
+ * @param endpoint - API endpoint path
+ * @param options - Fetch options (method, headers, body, etc.)
+ * @returns Promise<Response> - Fetch response
+ *
+ * @example
+ * const response = await signedFetch('/api/resumes', {
+ *   method: 'POST',
+ *   body: JSON.stringify({ title: 'My Resume' })
+ * });
+ */
 export async function signedFetch(endpoint: string, options: RequestInit = {}): Promise<Response> {
   if (!SIGNATURE_SECRET) {
     return fetch(`${API_URL}${endpoint}`, options);
@@ -88,6 +131,19 @@ export async function signedFetch(endpoint: string, options: RequestInit = {}): 
   });
 }
 
+/**
+ * Typed API client with signedFetch
+ *
+ * Provides convenience methods for common HTTP operations with automatic signing.
+ *
+ * @example
+ * // GET request
+ * const resumes = await api.get('/api/resumes');
+ *
+ * @example
+ * // POST request
+ * const newResume = await api.post('/api/resumes', { title: 'My Resume' });
+ */
 export const api = {
   get: (endpoint: string, options?: RequestInit) =>
     signedFetch(endpoint, { ...options, method: 'GET' }),

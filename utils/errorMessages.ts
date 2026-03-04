@@ -98,16 +98,18 @@ export const ERROR_MESSAGES: Record<ErrorType, ErrorMessageMap> = {
     severity: 'error',
   },
 };
-
 /**
  * Get error message details by type
+ * @param type - The error type
+ * @returns Error message mapping with title, userMessage, suggestion, icon, and severity
  */
 export function getErrorMessageByType(type: ErrorType): ErrorMessageMap {
   return ERROR_MESSAGES[type] || ERROR_MESSAGES[ErrorType.UNKNOWN];
 }
-
 /**
  * Format validation errors for display
+ * @param errors - Record of field names to error message arrays
+ * @returns Formatted error string with field names and messages
  */
 export function formatValidationErrors(errors: Record<string, string[]>): string {
   const errorList = Object.entries(errors)
@@ -115,9 +117,11 @@ export function formatValidationErrors(errors: Record<string, string[]>): string
     .join('\n');
   return errorList;
 }
-
 /**
  * Get contextual suggestion based on error type and code
+ * @param type - The error type
+ * @param statusCode - Optional HTTP status code
+ * @returns Suggestion message for the user
  */
 export function getErrorSuggestion(type: ErrorType, statusCode?: number): string {
   const baseMessage = ERROR_MESSAGES[type];
@@ -148,9 +152,11 @@ export function getErrorSuggestion(type: ErrorType, statusCode?: number): string
       return baseMessage.suggestion || 'An unexpected error occurred.';
   }
 }
-
 /**
  * Check if error is retryable
+ * @param type - The error type
+ * @param statusCode - Optional HTTP status code
+ * @returns True if the error can be retried
  */
 export function isErrorRetryable(type: ErrorType, statusCode?: number): boolean {
   // Retryable error types
@@ -164,16 +170,18 @@ export function isErrorRetryable(type: ErrorType, statusCode?: number): boolean 
   const retryableStatuses = [408, 429, 500, 502, 503, 504];
   return retryableStatuses.includes(statusCode || 0);
 }
-
 /**
  * Check if error requires user action
+ * @param type - The error type
+ * @returns True if user needs to take action
  */
 export function doesErrorRequireAction(type: ErrorType): boolean {
   return [ErrorType.AUTH, ErrorType.PERMISSION, ErrorType.VALIDATION].includes(type);
 }
-
 /**
  * Get context-specific action label
+ * @param type - The error type
+ * @returns Label for the action button, or null if no action needed
  */
 export function getActionLabel(type: ErrorType): string | null {
   switch (type) {

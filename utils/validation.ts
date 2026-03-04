@@ -29,6 +29,14 @@ interface JobApplicationData {
 }
 
 // Input validation functions
+/**
+ * Validates and sanitizes input based on type and options
+ * @param input - The input to validate
+ * @param type - The type of input (string, number, email, array, object)
+ * @param options - Validation options specific to the type
+ * @returns The validated/sanitized input
+ * @throws Error if validation fails
+ */
 const validateInput = (
   input: unknown,
   type: string = 'string',
@@ -146,6 +154,11 @@ const validateInput = (
 };
 
 // Sanitize string input to prevent injection attacks
+/**
+ * Sanitizes a string by removing potentially dangerous characters and patterns
+ * @param str - The string to sanitize
+ * @returns The sanitized string, or original input if not a string
+ */
 const sanitizeString = (str: unknown): string | unknown => {
   if (typeof str !== 'string') {
     return str;
@@ -169,6 +182,12 @@ const sanitizeString = (str: unknown): string | unknown => {
 };
 
 // Validate string against a pattern
+/**
+ * Validates a string against an optional pattern
+ * @param str - The string to validate
+ * @param pattern - Optional regex pattern or pattern string
+ * @returns True if valid or no pattern provided
+ */
 const isValidString = (str: string, pattern?: string | RegExp | null): boolean => {
   if (!pattern) return true;
 
@@ -180,6 +199,12 @@ const isValidString = (str: string, pattern?: string | RegExp | null): boolean =
 };
 
 // Validate resume data structure
+/**
+ * Validates resume data structure and field values
+ * @param resumeData - The resume data to validate
+ * @returns True if validation passes
+ * @throws Error if validation fails
+ */
 const validateResumeData = (resumeData: Record<string, unknown> | null): boolean => {
   if (!resumeData) {
     throw new Error('Resume data is required');
@@ -285,6 +310,12 @@ const validateResumeData = (resumeData: Record<string, unknown> | null): boolean
 };
 
 // Validate job application data
+/**
+ * Validates job application data structure and field values
+ * @param jobData - The job application data to validate
+ * @returns True if validation passes
+ * @throws Error if validation fails
+ */
 const validateJobApplicationData = (jobData: JobApplicationData | null): boolean => {
   if (!jobData) {
     throw new Error('Job application data is required');
