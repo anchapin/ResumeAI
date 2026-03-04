@@ -3,63 +3,11 @@ import { render, screen } from '@testing-library/react';
 import React from 'react';
 import { MemoryRouter } from 'react-router-dom';
 import Editor from './Editor';
-import { SimpleResumeData } from '../types';
+import { mockResumeData, createMockResume, emptyResumeData } from '../__mocks__/resume';
+import type { SimpleResumeData } from '../types';
 
 const renderWithRouter = (component: React.ReactElement) => {
   return render(<MemoryRouter initialEntries={['/editor']}>{component}</MemoryRouter>);
-};
-
-// Mock data for testing
-const mockResumeData: SimpleResumeData = {
-  name: 'John Doe',
-  email: 'john@example.com',
-  phone: '555-123-4567',
-  location: 'San Francisco, CA',
-  role: 'Software Engineer',
-  summary: 'Experienced software engineer with 5+ years of experience.',
-  skills: ['JavaScript', 'TypeScript', 'React', 'Node.js'],
-  experience: [
-    {
-      id: '1',
-      company: 'Tech Corp',
-      role: 'Senior Developer',
-      startDate: '2020-01',
-      endDate: 'Present',
-      current: true,
-      description: 'Led development of key features.',
-      tags: ['React', 'TypeScript'],
-    },
-    {
-      id: '2',
-      company: 'Startup Inc',
-      role: 'Developer',
-      startDate: '2018-01',
-      endDate: '2019-12',
-      current: false,
-      description: 'Built customer-facing features.',
-      tags: ['JavaScript', 'Node.js'],
-    },
-  ],
-  education: [
-    {
-      id: '1',
-      institution: 'University of Tech',
-      area: 'Computer Science',
-      studyType: 'Bachelor of Science',
-      startDate: '2014-09',
-      endDate: '2018-05',
-    },
-  ],
-  projects: [
-    {
-      id: '1',
-      name: 'Awesome App',
-      description: 'A web application for task management.',
-      startDate: '2021-01',
-      endDate: '2021-06',
-      highlights: ['Built with React', 'Used Node.js backend'],
-    },
-  ],
 };
 
 describe('Editor Component', () => {
