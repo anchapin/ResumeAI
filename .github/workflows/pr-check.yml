@@ -39,7 +39,7 @@ jobs:
           CI: true
 
       - name: Run npm audit
-        run: npm audit --audit-level=moderate
+        run: npm audit --omit=dev
 
   backend-check:
     name: Backend Check
