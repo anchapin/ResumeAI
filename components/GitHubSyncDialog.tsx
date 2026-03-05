@@ -157,7 +157,7 @@ export const GitHubSyncDialog: React.FC<GitHubSyncDialogProps> = ({
     if (isOpen) {
       checkConnectionStatus();
     }
-  }, [isOpen]);
+  }, [isOpen, checkConnectionStatus]);
 
   // Check connection status
   const checkConnectionStatus = useCallback(async () => {
@@ -181,7 +181,7 @@ export const GitHubSyncDialog: React.FC<GitHubSyncDialogProps> = ({
     } finally {
       setIsLoadingStatus(false);
     }
-  }, []);
+  }, [loadRepositories]);
 
   // Load repositories from GitHub
   const loadRepositories = useCallback(async () => {
