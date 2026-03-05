@@ -8,7 +8,6 @@ import os
 import re
 import sys
 import zipfile
-import hashlib
 from pathlib import Path
 
 from fastapi import (
@@ -22,7 +21,7 @@ from fastapi import (
     WebSocket,
     Depends,
 )
-from lib.utils.cache import get_cache_manager, cached
+from lib.utils.cache import cached
 from api.websocket import handle_websocket_connection
 from config.dependencies import get_current_user_ws
 from database import User
