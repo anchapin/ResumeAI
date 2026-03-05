@@ -36,7 +36,7 @@ export const useAuth = () => {
   const setAuthLoading = useStore((state) => state.setAuthLoading);
   const setAuthError = useStore((state) => state.setAuthError);
 
-  const fetchCurrentUser = async () => {
+  const fetchCurrentUser = useCallback(async () => {
     try {
       const response = await api.get('/api/v1/auth/me');
       if (response.ok) {
@@ -51,7 +51,7 @@ export const useAuth = () => {
       setUser(null);
     }
     return null;
-  };
+  }, [setUser]);
 
   const login = useCallback(
     async (email: string, password: string) => {
@@ -79,7 +79,7 @@ export const useAuth = () => {
         setAuthLoading(false);
       }
     },
-    [setAuthError, setAuthLoading],
+    [fetchCurrentUser, setAuthError, setAuthLoading],
   );
 
   const register = useCallback(
