@@ -6,7 +6,7 @@ Applicant Tracking Systems and provide recommendations for improvement.
 """
 
 import re
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 from dataclasses import dataclass, field
 
 
@@ -457,13 +457,13 @@ class ATSCompatibilityChecker:
         text_parts = []
 
         basics = resume_data.get("basics", {})
-        for field in ["name", "summary", "headline"]:
-            if basics.get(field):
-                text_parts.append(str(basics[field]))
+        for field_name in ["name", "summary", "headline"]:
+            if basics.get(field_name):
+                text_parts.append(str(basics[field_name]))
 
-        for field in ["work", "experience"]:
-            if field in resume_data and isinstance(resume_data[field], list):
-                for exp in resume_data[field]:
+        for field_name in ["work", "experience"]:
+            if field_name in resume_data and isinstance(resume_data[field_name], list):
+                for exp in resume_data[field_name]:
                     if isinstance(exp, dict):
                         for key in [
                             "position",

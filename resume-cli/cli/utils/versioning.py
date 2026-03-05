@@ -45,7 +45,7 @@ class ResumeVersionManager:
         """
         # Read current resume content
         with open(self.yaml_path, "r", encoding="utf-8") as f:
-            content = f.read()
+            f.read()
 
         # Get version number
         version_number = self._get_next_version_number()
