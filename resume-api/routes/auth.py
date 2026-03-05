@@ -50,8 +50,18 @@ from monitoring import logging_config
 # Get logger
 logger = logging_config.get_logger(__name__)
 
-# Create a dummy hash for timing attack mitigation
-DUMMY_HASH = hash_password("dummy_pass")
+# Create a dummy hash for timing attack mitigation (lazy initialization)
+_DUMMY_HASH: str | None = None
+
+
+def _get_dummy_hash() -> str:
+    """Get or create the dummy hash for timing attack mitigation."""
+    global _DUMMY_HASH
+    if _DUMMY_HASH is None:
+        # Use a pre-computed bcrypt hash of "dummy_pass" to avoid
+        # importing/calling hash_password at module load time
+        _DUMMY_HASH = "$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5GyYKKXm3rOHm"  # dummy_pass
+    return _DUMMY_HASH
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
@@ -231,7 +241,7 @@ async def login(
         password_valid = verify_password(credentials.password, user.hashed_password)
     else:
         # Simulate verification time with dummy hash
-        verify_password(credentials.password, DUMMY_HASH)
+        verify_password(credentials.password, _get_dummy_hash())
         password_valid = False
 
     if not user or not password_valid:
