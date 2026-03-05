@@ -15,7 +15,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 
 from api import router
 from api.interview_routes import router as interview_router
-from api.websocket import handle_websocket_connection
+from api.feature_flag_routes import router as feature_flag_router
 from config import settings
 from config.errors import create_error_response, ErrorCode
 from config.dependencies import (
@@ -349,6 +349,7 @@ app.include_router(team_router, prefix=settings.api_v1_prefix)
 app.include_router(analytics_router, prefix=settings.api_v1_prefix)
 app.include_router(webhook_router, prefix=settings.api_v1_prefix)
 app.include_router(deployment_router, prefix=settings.api_v1_prefix)
+app.include_router(feature_flag_router, prefix=settings.api_v1_prefix)
 
 
 if __name__ == "__main__":
