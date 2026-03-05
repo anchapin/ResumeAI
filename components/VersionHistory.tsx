@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { ResumeVersion } from '../types';
 import { listResumeVersions, restoreResumeVersion } from '../utils/api-client';
 import { getVersionTimeAgo, formatVersionNumber } from '../utils/versioning';
@@ -19,9 +19,9 @@ const VersionHistory: React.FC<VersionHistoryProps> = ({ resumeId, onRestore }) 
 
   useEffect(() => {
     loadVersions();
-  }, [resumeId]);
+  }, [resumeId, loadVersions]);
 
-  const loadVersions = async () => {
+  const loadVersions = useCallback(async () => {
     try {
       setLoading(true);
       const data = await listResumeVersions(resumeId);
@@ -32,7 +32,7 @@ const VersionHistory: React.FC<VersionHistoryProps> = ({ resumeId, onRestore }) 
     } finally {
       setLoading(false);
     }
-  };
+  }, [resumeId]);
 
   const handleRestore = async (version: ResumeVersion) => {
     if (
