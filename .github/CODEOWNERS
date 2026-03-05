@@ -1,0 +1,35 @@
+# Code Owners for ResumeAI
+# 
+# This file defines who owns different parts of the codebase.
+# Changes to these files will require review from the designated owners.
+# See: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Default reviewers for all changes (if no more specific rule matches)
+# Using a team or group placeholder - replace with actual GitHub team/username
+* @anchapin/core-team
+
+# Frontend code owners (React/TypeScript)
+# Components, pages, stores, and frontend utilities
+src/ @anchapin/frontend-team
+components/ @anchapin/frontend-team
+pages/ @anchapin/frontend-team
+store/ @anchapin/frontend-team
+contexts/ @anchapin/frontend-team
+
+# Backend code owners (Python/FastAPI)
+# API routes, models, and backend utilities
+resume-api/ @anchapin/backend-team
+
+# Infrastructure and DevOps
+.github/workflows/ @anchapin/devops-team
+.github/scripts/ @anchapin/devops-team
+k8s/ @anchapin/devops-team
+Dockerfile @anchapin/devops-team
+docker-compose*.yml @anchapin/devops-team
+
+# Security-sensitive files
+# Changes to these require security team review
+.env* @anchapin/security-team
+*.key @anchapin/security-team
+SECRETS_MANAGEMENT* @anchapin/security-team
+SECURITY* @anchapin/security-team
