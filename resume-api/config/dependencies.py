@@ -5,10 +5,9 @@ Provides authentication dependencies for both API key and JWT token-based
 authentication.
 """
 
-import os
 import secrets
 from datetime import datetime, timezone
-from typing import Annotated, Optional, List, Dict, Any
+from typing import Annotated
 
 from fastapi import (
     Header,
