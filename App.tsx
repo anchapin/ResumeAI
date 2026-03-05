@@ -133,9 +133,6 @@ function App() {
       try {
         await saveResumeData(resumeData);
         setSaveStatus('saved');
-        if (import.meta.env.DEV) {
-          console.log('Resume data saved to localStorage');
-        }
 
         setTimeout(() => setSaveStatus('idle'), 3000);
       } catch (error) {

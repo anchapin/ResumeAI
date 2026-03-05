@@ -21,9 +21,6 @@ export async function prefetch(name: string) {
   if (prefetchMap[name]) {
     try {
       await prefetchMap[name]();
-      if (import.meta.env.DEV) {
-        console.log(`Prefetched component: ${name}`);
-      }
     } catch (error) {
       console.error(`Failed to prefetch component: ${name}`, error);
     }

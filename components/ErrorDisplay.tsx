@@ -193,7 +193,6 @@ ${error.context ? `\nContext: ${JSON.stringify(error.context, null, 2)}` : ''}
 
       if (navigator.clipboard) {
         await navigator.clipboard.writeText(errorReport);
-        console.log('Error report copied to clipboard');
       }
     } catch (err) {
       console.error('Failed to copy error report:', err);

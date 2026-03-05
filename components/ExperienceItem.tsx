@@ -55,11 +55,11 @@ interface ExperienceItemProps {
  *     tags: ['React', 'TypeScript']
  *   }}
  *   isExpanded={true}
- *   onToggleExpand={(id) => console.log(`Toggled ${id}`)}
- *   onDelete={(id) => console.log(`Deleted ${id}`)}
- *   onUpdate={(id, field, value) => console.log(`Updated ${id}.${field} to ${value}`)}
- *   onAddTag={(id, tag) => console.log(`Added tag ${tag} to ${id}`)}
- *   onRemoveTag={(id, tag) => console.log(`Removed tag ${tag} from ${id}`)}
+ *   onToggleExpand={(id) => doSomething(id)}
+ *   onDelete={(id) => doSomething(id)}
+ *   onUpdate={(id, field, value) => doSomething(id, field, value)}
+ *   onAddTag={(id, tag) => doSomething(id, tag)}
+ *   onRemoveTag={(id, tag) => doSomething(id, tag)}
  * />
  * ```
  */
