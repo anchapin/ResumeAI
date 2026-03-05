@@ -13,8 +13,6 @@ from typing import Dict, Optional
 from fastapi import WebSocket, WebSocketDisconnect
 from datetime import datetime, timedelta
 from config import settings
-from config.dependencies import get_current_user_ws
-from database import User
 from lib.utils.cache import get_cache_manager
 from monitoring import logging_config
 
