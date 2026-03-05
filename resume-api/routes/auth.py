@@ -63,6 +63,7 @@ def _get_dummy_hash() -> str:
         _DUMMY_HASH = "$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5GyYKKXm3rOHm"  # dummy_pass
     return _DUMMY_HASH
 
+
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 
