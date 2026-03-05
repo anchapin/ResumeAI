@@ -18,7 +18,7 @@ class HealthCheck:
         try:
             from database import engine
             import sqlalchemy
-            
+
             start_time = time.time()
             async with engine.connect() as conn:
                 await conn.execute(sqlalchemy.text("SELECT 1"))
@@ -32,18 +32,26 @@ class HealthCheck:
         """Check Redis connectivity."""
         try:
             from lib.utils.cache import get_cache_manager
-            
+
             cache_mgr = get_cache_manager()
-            
+
             # Check if Redis backend is being used
             if cache_mgr.backend_type == "memory":
-                return {"healthy": True, "backend": "memory", "note": "Using in-memory fallback"}
-            
+                return {
+                    "healthy": True,
+                    "backend": "memory",
+                    "note": "Using in-memory fallback",
+                }
+
             start_time = time.time()
             redis_client = cache_mgr.backend.redis
             await redis_client.ping()
             duration_ms = (time.time() - start_time) * 1000
-            return {"healthy": True, "backend": "redis", "duration_ms": round(duration_ms, 2)}
+            return {
+                "healthy": True,
+                "backend": "redis",
+                "duration_ms": round(duration_ms, 2),
+            }
         except Exception as e:
             logger.error("redis_health_check_error", error=str(e))
             return {"healthy": False, "error": str(e)}
@@ -170,7 +178,7 @@ async def get_readiness_status():
     redis = await health_checker.check_redis()
     ready = db["healthy"] and redis["healthy"]
     return {
-        "ready": ready, 
+        "ready": ready,
         "timestamp": datetime.utcnow().isoformat(),
         "database": db["healthy"],
         "redis": redis["healthy"],

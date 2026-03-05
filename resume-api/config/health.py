@@ -51,7 +51,7 @@ class HealthChecker:
             from lib.utils.cache import get_cache_manager
 
             cache_mgr = get_cache_manager()
-            
+
             # Check if Redis backend is being used
             if cache_mgr.backend_type == "memory":
                 return {
@@ -62,11 +62,11 @@ class HealthChecker:
                 }
 
             start_time = time.time()
-            
+
             # Execute Redis PING to check connectivity
             redis_client = cache_mgr.backend.redis
             await redis_client.ping()
-            
+
             response_time_ms = (time.time() - start_time) * 1000
 
             return {
