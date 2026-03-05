@@ -314,7 +314,6 @@ class ReplicaLoadTester:
 
         try:
             # Try to get replica status (which uses replicas for reads)
-            start = time.time()
             response = await self.client.get(f"{self.api_url}/health/replicas")
             metric.end_time = time.time()
 
@@ -341,7 +340,6 @@ class ReplicaLoadTester:
         try:
             # This would execute a write operation (always goes to primary)
             # For now, simulate with a health check endpoint
-            start = time.time()
             response = await self.client.post(
                 f"{self.api_url}/health/check", json={"query": "write"}
             )

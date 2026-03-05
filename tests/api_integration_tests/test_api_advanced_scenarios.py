@@ -271,7 +271,7 @@ class TestDataIntegrity:
         assert response1.status_code == 200
         assert response2.status_code == 200
         # Data structure should be consistent
-        assert type(response1.json()) == type(response2.json())
+        assert type(response1.json()) is type(response2.json())
 
 
 class TestResponseConsistency:
