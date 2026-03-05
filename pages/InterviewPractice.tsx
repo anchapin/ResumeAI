@@ -209,10 +209,7 @@ function InterviewPractice() {
 
   return (
     <div className="flex min-h-screen bg-[#f6f6f8]">
-      <Sidebar
-        currentRoute={Route.INTERVIEW_PRACTICE}
-        onShowShortcuts={() => console.log('Show shortcuts')}
-      />
+      <Sidebar currentRoute={Route.INTERVIEW_PRACTICE} onShowShortcuts={() => {}} />
       <main className="flex-1 overflow-auto">
         <div className="max-w-4xl mx-auto p-6">
           {/* Header */}
