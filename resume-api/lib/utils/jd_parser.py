@@ -382,6 +382,22 @@ class JobDescriptionParser:
         }
     )
 
+    # Pre-compile section headers pattern for O(N) extraction
+    _HEADER_TO_SECTION = {}
+    _ALL_HEADERS = []
+    for _section_name, _headers in SECTION_HEADERS.items():
+        for _header in _headers:
+            _HEADER_TO_SECTION[_header] = _section_name
+            _ALL_HEADERS.append(re.escape(_header))
+
+    # Sort headers by length descending so longer headers match first (e.g. "nice to have" before "have")
+    _ALL_HEADERS.sort(key=len, reverse=True)
+
+    # Combine all headers into one regex: (?:^|\n)\s*(header1|header2)\s*[:\-]?\s*(?:\n|)
+    COMBINED_SECTION_PATTERN = re.compile(
+        rf"(?:^|\n)\s*({'|'.join(_ALL_HEADERS)})\s*[:\-]?\s*(?:\n|)", re.IGNORECASE
+    )
+
     def __init__(self):
         """Initialize the job description parser."""
         pass
@@ -463,24 +479,17 @@ class JobDescriptionParser:
         sections = {}
         text_lower = text.lower()
 
-        # Find section boundaries - improved pattern to handle various formats
+        # Find section boundaries using pre-compiled O(N) regex
         section_positions = []
-        for section_name, headers in self.SECTION_HEADERS.items():
-            for header in headers:
-                # Look for header followed by colon, newline, or bullet points
-                patterns = [
-                    rf"(?:^|\n)\s*{re.escape(header)}\s*[:\-]?\s*\n",  # Header with newline
-                    rf"(?:^|\n)\s*{re.escape(header)}\s*[:\-]?\s*",  # Header without newline
-                ]
-                for pattern in patterns:
-                    match = re.search(pattern, text_lower)
-                    if (
-                        match
-                        and (match.start(), section_name, header)
-                        not in section_positions
-                    ):
-                        section_positions.append((match.start(), section_name, header))
-                        break
+        found_headers = set()
+
+        for match in self.COMBINED_SECTION_PATTERN.finditer(text_lower):
+            header = match.group(1).lower()
+            section_name = self._HEADER_TO_SECTION.get(header)
+
+            if section_name and header not in found_headers:
+                section_positions.append((match.start(), section_name, header))
+                found_headers.add(header)
 
         # Sort by position
         section_positions.sort(key=lambda x: x[0])
