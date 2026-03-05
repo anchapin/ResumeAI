@@ -275,6 +275,22 @@ async def get_team(
                 detail=f"Team {team_id} not found",
             )
 
+        # Check if user is a member of the team
+        member_stmt = select(TeamMember).where(
+            and_(
+                TeamMember.team_id == team_id,
+                TeamMember.user_id == user_id,
+            )
+        )
+        result = await db.execute(member_stmt)
+        member = result.scalar_one_or_none()
+
+        if not member:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You must be a team member to view team details",
+            )
+
         member_responses = []
         for member in team.members:
             member_responses.append(
@@ -675,6 +691,22 @@ async def list_team_members(
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Team {team_id} not found",
+            )
+
+        # Check if current user is a member of the team
+        member_check_stmt = select(TeamMember).where(
+            and_(
+                TeamMember.team_id == team_id,
+                TeamMember.user_id == user_id,
+            )
+        )
+        result = await db.execute(member_check_stmt)
+        current_member = result.scalar_one_or_none()
+
+        if not current_member:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You must be a team member to view team members",
             )
 
         member_stmt = (
