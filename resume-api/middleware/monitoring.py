@@ -5,6 +5,7 @@ Monitoring middleware for request tracking, logging, and metrics collection.
 import time
 import uuid
 from contextlib import asynccontextmanager
+import structlog
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import Response
@@ -39,6 +40,10 @@ class MonitoringMiddleware(BaseHTTPMiddleware):
             api_key = request.headers.get("X-API-KEY", None)
             user_id = self._get_user_id(api_key) if api_key else None
 
+            # Bind user_id to context for all subsequent logs in this request
+            if user_id:
+                structlog.contextvars.bind_contextvars(user_id=user_id)
+
             # Log request start
             logger.info(
                 "request_started",
@@ -46,6 +51,7 @@ class MonitoringMiddleware(BaseHTTPMiddleware):
                 path=request.url.path,
                 query_params=self._sanitize_query_params(request.query_params),
                 user_agent=request.headers.get("user-agent", ""),
+                user_id=user_id,
             )
 
             # Start timer
@@ -87,6 +93,7 @@ class MonitoringMiddleware(BaseHTTPMiddleware):
                     path=request.url.path,
                     status_code=response.status_code,
                     duration_ms=duration_ms,
+                    user_id=user_id,
                 )
 
                 # Record analytics
@@ -117,6 +124,7 @@ class MonitoringMiddleware(BaseHTTPMiddleware):
                     method=request.method,
                     path=request.url.path,
                     duration_ms=duration_ms,
+                    user_id=user_id,
                 )
 
                 # Record error metrics
