@@ -159,49 +159,52 @@ const JobApplications: React.FC = () => {
   const stats = useMemo(() => calculateStats(applications), [applications]);
 
   // Sample resume data for tailoring (would come from App context in real app)
-  const sampleResumeData: SimpleResumeData = {
-    name: 'Alex Rivera',
-    email: 'alex.rivera@example.com',
-    phone: '+1 (555) 012-3456',
-    location: 'San Francisco, CA',
-    role: 'Senior Product Designer',
-    summary:
-      'Passionate and detail-oriented Senior Product Designer with 8+ years of experience creating user-centered digital experiences.',
-    skills: [
-      'Figma',
-      'Sketch',
-      'User Research',
-      'Prototyping',
-      'Design Systems',
-      'React',
-      'TypeScript',
-    ],
-    experience: [
-      {
-        id: '1',
-        company: 'TechCorp Solutions',
-        role: 'Senior Software Engineer',
-        startDate: 'Jan 2020',
-        endDate: 'Present',
-        current: true,
-        description:
-          'Led the migration of legacy monolithic architecture to microservices using AWS and Node.js, improving system scalability by 40%.',
-        tags: ['AWS', 'Microservices'],
-      },
-    ],
-    education: [
-      {
-        id: '1',
-        institution: 'Stanford University',
-        area: 'Computer Science',
-        studyType: 'Bachelor of Science',
-        startDate: '2013',
-        endDate: '2017',
-        courses: ['Data Structures', 'Algorithms'],
-      },
-    ],
-    projects: [],
-  };
+  const sampleResumeData = useMemo<SimpleResumeData>(
+    () => ({
+      name: 'Alex Rivera',
+      email: 'alex.rivera@example.com',
+      phone: '+1 (555) 012-3456',
+      location: 'San Francisco, CA',
+      role: 'Senior Product Designer',
+      summary:
+        'Passionate and detail-oriented Senior Product Designer with 8+ years of experience creating user-centered digital experiences.',
+      skills: [
+        'Figma',
+        'Sketch',
+        'User Research',
+        'Prototyping',
+        'Design Systems',
+        'React',
+        'TypeScript',
+      ],
+      experience: [
+        {
+          id: '1',
+          company: 'TechCorp Solutions',
+          role: 'Senior Software Engineer',
+          startDate: 'Jan 2020',
+          endDate: 'Present',
+          current: true,
+          description:
+            'Led the migration of legacy monolithic architecture to microservices using AWS and Node.js, improving system scalability by 40%.',
+          tags: ['AWS', 'Microservices'],
+        },
+      ],
+      education: [
+        {
+          id: '1',
+          institution: 'Stanford University',
+          area: 'Computer Science',
+          studyType: 'Bachelor of Science',
+          startDate: '2013',
+          endDate: '2017',
+          courses: ['Data Structures', 'Algorithms'],
+        },
+      ],
+      projects: [],
+    }),
+    [],
+  );
 
   // Handle resume tailoring
   const handleTailorResume = useCallback(async () => {
@@ -230,7 +233,7 @@ const JobApplications: React.FC = () => {
       setIsTailoring(false);
       setGlobalLoading(false);
     }
-  }, [jobDescription, companyName, jobTitle, setGlobalLoading]);
+  }, [sampleResumeData, jobDescription, companyName, jobTitle, setGlobalLoading]);
 
   // Reset modal
   const handleCloseModal = () => {
@@ -264,7 +267,7 @@ const JobApplications: React.FC = () => {
       setIsCheckingATS(false);
       setGlobalLoading(false);
     }
-  }, [jobDescription, setGlobalLoading]);
+  }, [sampleResumeData, jobDescription, setGlobalLoading]);
 
   // Reset ATS modal
   const handleCloseATSModal = () => {

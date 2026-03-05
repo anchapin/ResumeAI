@@ -48,14 +48,14 @@ const Teams: React.FC = () => {
   // Load teams on mount
   useEffect(() => {
     loadTeams();
-  }, []);
+  }, [loadTeams]);
 
   // Load team details when selected
   useEffect(() => {
     if (selectedTeam && view === 'detail') {
       loadTeamDetails(selectedTeam.id);
     }
-  }, [selectedTeam, view]);
+  }, [selectedTeam, view, loadTeamDetails]);
 
   const loadTeams = useCallback(async () => {
     setIsLoadingTeams(true);
