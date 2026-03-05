@@ -344,7 +344,8 @@ const Settings: React.FC = () => {
       setIsCopied(true);
       toast.success('API key copied to clipboard');
       setTimeout(() => setIsCopied(false), 2000);
-    } catch {
+    } catch (err) {
+      console.error('Failed to copy to clipboard:', err);
       toast.error('Failed to copy to clipboard');
     }
   };

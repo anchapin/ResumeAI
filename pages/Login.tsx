@@ -40,8 +40,8 @@ const Login: React.FC<LoginProps> = ({
       if (result) {
         navigate('/dashboard');
       }
-    } catch {
-      // Error handled by hook
+    } catch (err) {
+      console.error('Login failed:', err);
     }
   };
 

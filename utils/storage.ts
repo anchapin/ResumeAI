@@ -198,7 +198,8 @@ export function hasSavedResumeData(): boolean {
 
   try {
     return localStorage.getItem(STORAGE_KEY) !== null;
-  } catch {
+  } catch (err) {
+    console.error('Error checking stored data exists:', err);
     return false;
   }
 }
@@ -215,7 +216,8 @@ export function getStoredDataSize(): number {
   try {
     const serialized = localStorage.getItem(STORAGE_KEY);
     return serialized ? new Blob([serialized]).size : 0;
-  } catch {
+  } catch (err) {
+    console.error('Error getting stored data size:', err);
     return 0;
   }
 }
