@@ -89,7 +89,7 @@ export async function fetchWithTimeout(
  *   await fetchWithTimeout(url, {}, 5000);
  * } catch (error) {
  *   if (isTimeoutError(error)) {
- *     console.log('Request timed out');
+ *     // Handle timeout error
  *   }
  * }
  */

@@ -98,7 +98,6 @@ export const ErrorTestPanel: React.FC = () => {
 
   const clearHistory = () => {
     errorHandler.clearErrorHistory();
-    console.log('Error history cleared');
   };
 
   const showHistory = () => {
