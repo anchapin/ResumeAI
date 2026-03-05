@@ -60,7 +60,9 @@ def _get_dummy_hash() -> str:
     if _DUMMY_HASH is None:
         # Use a pre-computed bcrypt hash of "dummy_pass" to avoid
         # importing/calling hash_password at module load time
-        _DUMMY_HASH = "$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5GyYKKXm3rOHm"  # dummy_pass
+        _DUMMY_HASH = (
+            "$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5GyYKKXm3rOHm"  # dummy_pass
+        )
     return _DUMMY_HASH
 
 
