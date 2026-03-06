@@ -46,7 +46,11 @@ class Settings(BaseSettings):
     )
 
     # CORS Configuration
-    cors_origins: list[str] = ["*"]
+    # Allowed origins for CORS - should be configured via environment variable
+    # In production, specify exact origins (e.g., "https://resumeai.com")
+    # For local development, use "http://localhost:5173" or other local ports
+    cors_origins: Optional[list[str]] = None
+    cors_allow_credentials: bool = True  # Set to False in production if not needed
 
     # JWT Configuration
     # JWT secret must be provided via environment variable
@@ -188,6 +192,25 @@ class Settings(BaseSettings):
         if isinstance(v, list):
             return v
         return [key.strip() for key in str(v).split(",") if key.strip()]
+
+    @field_validator("cors_origins", mode="before")
+    @classmethod
+    def parse_cors_origins(cls, v: Union[str, list, None]) -> Optional[list[str]]:
+        """
+        Parse CORS origins from string or list.
+        
+        SECURITY: This validator prevents using "*" (allow all) with credentials enabled.
+        It ensures that if credentials are needed, specific origins must be provided.
+        """
+        if v is None:
+            return ["http://localhost:5173", "http://localhost:3000", "http://127.0.0.1:5173", "http://127.0.0.1:3000"]
+        if isinstance(v, str):
+            if v.strip() == "*":
+                # Security: Don't allow wildcard with credentials
+                # Return default local origins instead
+                return ["http://localhost:5173", "http://localhost:3000", "http://127.0.0.1:5173", "http://127.0.0.1:3000"]
+            return [origin.strip() for origin in v.split(",") if origin.strip()]
+        return v
 
     model_config = SettingsConfigDict(env_file=".env", case_sensitive=False)
 
