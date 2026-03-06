@@ -20,7 +20,7 @@ interface TemplateCustomizerProps {
   };
   availableSchemes?: ColorScheme[];
   availableFonts?: string[];
-  onCustomizationChange: (key: string, value: any) => void;
+  onCustomizationChange: (key: string, value: string | number | boolean | undefined) => void;
   onApply?: () => void;
 }
 

@@ -1,6 +1,13 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { SimpleResumeData, WorkExperience, EducationEntry, ProjectEntry, Comment } from '../types';
+import {
+  SimpleResumeData,
+  WorkExperience,
+  EducationEntry,
+  ProjectEntry,
+  Comment,
+  ResumeVersion,
+} from '../types';
 import {
   convertToAPIData,
   generatePDF,
@@ -220,13 +227,53 @@ const Editor = () => {
 
   // Handle Restore Version
   const handleRestoreVersion = useCallback(
-    async (version: any) => {
+    async (version: ResumeVersion) => {
       try {
         const currentData = resumeDataRef.current;
-        trackedUpdate({
-          ...currentData,
-          ...version.data,
-        });
+        // Create merged data with version data taking precedence
+        const mergedData: SimpleResumeData = {
+          name:
+            ((version.data.basics as Record<string, unknown>)?.name as string) || currentData.name,
+          email:
+            ((version.data.basics as Record<string, unknown>)?.email as string) ||
+            currentData.email,
+          phone:
+            ((version.data.basics as Record<string, unknown>)?.phone as string) ||
+            currentData.phone,
+          location:
+            ((version.data.basics as Record<string, unknown>)?.location as string) ||
+            currentData.location,
+          role:
+            ((version.data.basics as Record<string, unknown>)?.label as string) || currentData.role,
+          summary:
+            ((version.data.basics as Record<string, unknown>)?.summary as string) ||
+            currentData.summary,
+          skills:
+            (version.data.skills as Array<Record<string, unknown>>)?.map((s) => s.name as string) ||
+            currentData.skills,
+          experience:
+            ((version.data.work as Array<Record<string, unknown>>)?.map((w) => ({
+              id: (w.id as string) || crypto.randomUUID(),
+              company: w.company as string,
+              role: w.title as string,
+              startDate: (w.startDate as string) || '',
+              endDate: (w.endDate as string) || '',
+              current: (w.current as boolean) || false,
+              description: w.description as string,
+              tags: (w.highlights as string[]) || [],
+            })) as WorkExperience[]) || currentData.experience,
+          education:
+            ((version.data.education as Array<Record<string, unknown>>)?.map((e) => ({
+              id: (e.id as string) || crypto.randomUUID(),
+              institution: e.institution as string,
+              area: e.studyType as string,
+              studyType: e.degree as string,
+              startDate: (e.startDate as string) || '',
+              endDate: (e.endDate as string) || '',
+            })) as EducationEntry[]) || currentData.education,
+          projects: currentData.projects,
+        };
+        trackedUpdate(mergedData);
         showSuccessToast('Version restored successfully!');
       } catch (err) {
         console.error('Failed to restore version:', err);

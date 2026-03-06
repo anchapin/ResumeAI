@@ -47,6 +47,22 @@ export interface Suggestion {
   action?: string;
 }
 
+// Resume data structure for AI suggestions
+export interface AIRecommendationData {
+  basics?: {
+    email?: string;
+    phone?: string;
+    summary?: string;
+  };
+  work?: Array<{
+    summary?: string;
+    highlights?: string[];
+  }>;
+  education?: unknown[];
+  skills?: string[];
+  [key: string]: unknown;
+}
+
 /**
  * Extract keywords from job description
  */
@@ -164,7 +180,7 @@ export function analyzeSkillsGap(
 /**
  * Calculate ATS (Applicant Tracking System) compatibility score
  */
-export function calculateATSScore(resumeData: any): number {
+export function calculateATSScore(resumeData: AIRecommendationData): number {
   let score = 0;
   const maxScore = 100;
 
@@ -178,15 +194,16 @@ export function calculateATSScore(resumeData: any): number {
   if (resumeData.basics?.phone) score += 10;
 
   // Check for work experience details (20 points)
-  if (resumeData.work?.length > 0) {
+  if (resumeData.work && resumeData.work.length > 0) {
     const hasDetails = resumeData.work.every(
-      (job: any) => job.summary || job.highlights?.length > 0,
+      (job: { summary?: string; highlights?: string[] }) =>
+        job.summary || (job.highlights && job.highlights.length > 0),
     );
     if (hasDetails) score += 20;
   }
 
   // Check for skills section (10 points)
-  if (resumeData.skills?.length > 0) score += 10;
+  if (resumeData.skills && resumeData.skills.length > 0) score += 10;
 
   return Math.min(score, maxScore);
 }
@@ -194,7 +211,10 @@ export function calculateATSScore(resumeData: any): number {
 /**
  * Generate improvement suggestions based on job description
  */
-export function generateSuggestions(resumeData: any, jobDescription: string): Suggestion[] {
+export function generateSuggestions(
+  resumeData: AIRecommendationData,
+  jobDescription: string,
+): Suggestion[] {
   const suggestions: Suggestion[] = [];
 
   // Extract job keywords
@@ -228,7 +248,7 @@ export function generateSuggestions(resumeData: any, jobDescription: string): Su
   }
 
   // Check for quantifiable achievements
-  const hasQuantifiedAchievements = resumeData.work?.some((job: any) =>
+  const hasQuantifiedAchievements = resumeData.work?.some((job: { highlights?: string[] }) =>
     job.highlights?.some((h: string) => /\d+/.test(h)),
   );
 
@@ -252,11 +272,11 @@ export function generateSuggestions(resumeData: any, jobDescription: string): Su
 /**
  * Get formatting suggestions for better readability
  */
-export function getFormattingSuggestions(resumeData: any): Suggestion[] {
+export function getFormattingSuggestions(resumeData: AIRecommendationData): Suggestion[] {
   const suggestions: Suggestion[] = [];
 
   // Check summary length
-  if (resumeData.basics?.summary?.length > 200) {
+  if (resumeData.basics?.summary && resumeData.basics.summary.length > 200) {
     suggestions.push({
       category: 'formatting',
       priority: 'low',
@@ -267,7 +287,10 @@ export function getFormattingSuggestions(resumeData: any): Suggestion[] {
 
   // Check bullet points
   const totalBullets =
-    resumeData.work?.reduce((sum: number, job: any) => sum + (job.highlights?.length || 0), 0) || 0;
+    resumeData.work?.reduce(
+      (sum: number, job: { highlights?: string[] }) => sum + (job.highlights?.length || 0),
+      0,
+    ) || 0;
 
   if (totalBullets < 5) {
     suggestions.push({

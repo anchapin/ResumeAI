@@ -3,7 +3,34 @@
  * Uses axe-core for automated accessibility scanning
  */
 
-let axeCore: any;
+interface AxeCore {
+  run: (options?: object) => Promise<AxeResults>;
+}
+
+interface AxeResults {
+  violations: AxeViolation[];
+  passes: AxePass[];
+}
+
+interface AxeViolation {
+  id: string;
+  impact: string | null;
+  description: string;
+  nodes: AxeNode[];
+  helpUrl: string;
+}
+
+interface AxePass {
+  id: string;
+  impact: null | string;
+}
+
+interface AxeNode {
+  html: string;
+  failureSummary: string | null;
+}
+
+let axeCore: AxeCore | null = null;
 
 // Lazy load axe-core in browser environment
 if (typeof window !== 'undefined') {
@@ -60,11 +87,11 @@ export async function runAccessibilityScan(options?: {
     const results = await axeCore.run(options || {});
 
     return {
-      violations: results.violations.map((v: any) => ({
+      violations: results.violations.map((v: AxeViolation) => ({
         id: v.id,
         impact: v.impact as 'critical' | 'serious' | 'moderate' | 'minor',
         description: v.description,
-        nodes: v.nodes.map((n: any) => ({
+        nodes: v.nodes.map((n: AxeNode) => ({
           html: n.html,
           failureSummary: n.failureSummary || '',
         })),

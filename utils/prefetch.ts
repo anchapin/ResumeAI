@@ -1,15 +1,20 @@
 /**
+ * Generic type for any module/component
+ */
+type AnyModule = unknown;
+
+/**
  * Utility for prefetching lazy-loaded components
  */
 
-const prefetchMap: Record<string, () => Promise<any>> = {};
+const prefetchMap: Record<string, () => Promise<AnyModule>> = {};
 
 /**
  * Register a component for prefetching
  * @param name Unique name for the component
  * @param importFn The dynamic import function
  */
-export function registerPrefetch(name: string, importFn: () => Promise<any>) {
+export function registerPrefetch(name: string, importFn: () => Promise<AnyModule>) {
   prefetchMap[name] = importFn;
 }
 

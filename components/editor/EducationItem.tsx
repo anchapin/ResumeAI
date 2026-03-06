@@ -6,7 +6,11 @@ interface EducationItemProps {
   isExpanded: boolean;
   onToggleExpand: (id: string) => void;
   onDelete: (id: string) => void;
-  onUpdate: (id: string, field: keyof EducationEntry, value: any) => void;
+  onUpdate: (
+    id: string,
+    field: keyof EducationEntry,
+    value: EducationEntry[keyof EducationEntry],
+  ) => void;
 }
 
 /**

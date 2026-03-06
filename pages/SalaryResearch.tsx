@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Route } from '../types';
+import { Route, JobOfferFormData } from '../types';
 import { Button, Card } from '../components/ui';
 import {
   researchSalary,
@@ -70,7 +70,7 @@ export const SalaryResearch: React.FC = () => {
 
   // Form modal state
   const [showOfferForm, setShowOfferForm] = useState(false);
-  const [offerForm, setOfferForm] = useState<Partial<JobOffer>>({
+  const [offerForm, setOfferForm] = useState<JobOfferFormData>({
     companyName: '',
     jobTitle: '',
     location: '',
@@ -336,7 +336,7 @@ export const SalaryResearch: React.FC = () => {
                     onChange={(e) =>
                       setResearchRequest({
                         ...researchRequest,
-                        experienceLevel: e.target.value as any,
+                        experienceLevel: e.target.value as 'entry' | 'mid' | 'senior' | 'executive',
                       })
                     }
                     className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none bg-white"

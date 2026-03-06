@@ -364,6 +364,13 @@ export interface SalaryInsight {
   importance: 'high' | 'medium' | 'low';
 }
 
+// Raw insight from API before transformation
+export interface RawSalaryInsight {
+  title?: string;
+  description?: string;
+  importance?: string;
+}
+
 export interface SalaryResearchResponse {
   jobTitle: string;
   location: string;
@@ -378,6 +385,77 @@ export interface SalaryResearchResponse {
     location: string;
   };
   recommendations: string[];
+}
+
+// Input for creating an offer (used by API)
+export interface RawOffer {
+  id?: number;
+  company?: string;
+  title?: string;
+  base_salary?: number;
+  signing_bonus?: number;
+  equity?: {
+    type: string;
+    value: number;
+    vesting: string;
+  };
+  location?: string;
+  work_life_balance?: number;
+  growth?: number;
+  benefits?: string[];
+  culture?: number;
+  totalScore?: number;
+  breakdown?: {
+    salary?: number;
+    growth?: number;
+    work_life_balance?: number;
+    benefits?: number;
+    culture?: number;
+  };
+  reasoning?: string;
+  pros?: string[];
+  cons?: string[];
+}
+
+export interface JobOfferFormData {
+  companyName?: string;
+  jobTitle?: string;
+  location?: string;
+  baseSalary?: number;
+  bonus?: number;
+  currency?: string;
+  equity?: {
+    type: string;
+    value: number;
+    vesting: string;
+  };
+  benefits?: string[];
+  growthPotential?: number;
+  workLifeBalance?: number;
+  cultureScore?: number;
+  startDate?: string;
+  status?: 'pending' | 'accepted' | 'rejected' | 'negotiating';
+  notes?: string;
+}
+
+export interface JobOfferInput {
+  companyName: string;
+  jobTitle: string;
+  location?: string;
+  baseSalary?: number;
+  bonus?: number;
+  equity?: {
+    type: string;
+    value: number;
+    vesting: string;
+  };
+  benefits?: string[];
+  growthPotential?: number;
+  workLifeBalance?: number;
+  cultureScore?: number;
+  startDate?: string;
+  status?: 'pending' | 'accepted' | 'rejected' | 'negotiating';
+  notes?: string;
 }
 
 export interface JobOffer {
@@ -650,4 +728,163 @@ export interface PortalSessionRequest {
 
 export interface PortalSessionResponse {
   url: string;
+}
+
+// Error Handler Types
+export interface ErrorContextData {
+  [key: string]: unknown;
+}
+
+// Generic value type for form field updates
+export type FormFieldValue = string | number | boolean | string[] | undefined;
+
+// LinkedIn Import Data Types
+export interface LinkedInImportData {
+  firstName?: string;
+  lastName?: string;
+  fullName?: string;
+  profileUrl?: string;
+  headline?: string;
+  summary?: string;
+  about?: string;
+  email?: string;
+  emailAddress?: string;
+  phone?: string;
+  phoneNumbers?: Array<{ phoneNumber?: string }>;
+  location?: string | { city?: string; region?: string; countryCode?: string; name?: string };
+  locationName?: string;
+  city?: string;
+  name?: string;
+  title?: string;
+  role?: string;
+  bio?: string;
+  experience?: LinkedInExperienceInput[];
+  positions?: LinkedInExperienceInput[];
+  education?: LinkedInEducationInput[];
+  educations?: LinkedInEducationInput[];
+  skills?: LinkedInSkillInput[];
+  languages?: LinkedInLanguageInput[];
+  certifications?: LinkedInCertificationInput[];
+  projects?: LinkedInProjectInput[];
+}
+
+export interface LinkedInExperienceInput {
+  company?: string;
+  companyName?: string;
+  title?: string;
+  role?: string;
+  startDate?: string;
+  endDate?: string;
+  description?: string;
+  current?: boolean;
+  location?: string;
+  locationName?: string;
+  timePeriod?: {
+    startDate?: { month?: number; year?: number };
+    endDate?: { month?: number; year?: number };
+  };
+  // Minimal format fields
+  position?: string;
+  summary?: string;
+  details?: string;
+  start_date?: string;
+  end_date?: string;
+  from?: string;
+  to?: string;
+}
+
+export interface LinkedInEducationInput {
+  institution?: string;
+  schoolName?: string;
+  degree?: string;
+  degreeName?: string;
+  field?: string;
+  fieldOfStudy?: string;
+  area?: string;
+  startDate?: string;
+  endDate?: string;
+  activities?: string;
+  timePeriod?: {
+    startDate?: { year?: number };
+    endDate?: { year?: number };
+  };
+  // Minimal format fields
+  school?: string;
+  university?: string;
+  major?: string;
+  field_of_study?: string;
+  studyType?: string;
+  degree_type?: string;
+  start_date?: string;
+  end_date?: string;
+  from?: string;
+  to?: string;
+}
+
+export interface LinkedInSkillInput {
+  name?: string;
+  skill?: string;
+  title?: string;
+}
+
+export interface LinkedInLanguageInput {
+  name?: string;
+  language?: string;
+  proficiency?: string;
+}
+
+export interface LinkedInCertificationInput {
+  name?: string;
+  certificationName?: string;
+  authority?: string;
+  issuer?: string;
+  organization?: string;
+  date?: string;
+  timePeriod?: {
+    startDate?: { month?: number; year?: number };
+    endDate?: { month?: number; year?: number };
+  };
+  displaySource?: string;
+}
+
+export interface LinkedInProjectInput {
+  name?: string;
+  description?: string;
+  url?: string;
+}
+
+// Version comparison types
+export interface VersionComparisonLocation {
+  address?: string;
+  postalCode?: string;
+  city?: string;
+  countryCode?: string;
+  region?: string;
+}
+
+export interface VersionComparisonProfile {
+  network?: string;
+  username?: string;
+  url?: string;
+}
+
+export interface VersionComparisonData {
+  location?: VersionComparisonLocation;
+  profiles?: VersionComparisonProfile[];
+}
+
+// AI Suggestions types
+export interface JobDescription {
+  summary?: string;
+  highlights?: string[];
+}
+
+export interface ATSScoreResult {
+  score: number;
+  breakdown: {
+    format: number;
+    keywords: number;
+    structure: number;
+    content: number;
+  };
 }

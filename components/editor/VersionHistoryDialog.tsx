@@ -1,10 +1,11 @@
 import React from 'react';
 import VersionHistory from '../VersionHistory';
+import { ResumeVersion } from '../../types';
 
 interface VersionHistoryDialogProps {
   isOpen: boolean;
   resumeId: number;
-  onRestore: (version: any) => void;
+  onRestore: (version: ResumeVersion) => void;
   onClose: () => void;
 }
 

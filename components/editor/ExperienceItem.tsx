@@ -6,7 +6,11 @@ interface ExperienceItemProps {
   isExpanded: boolean;
   onToggleExpand: (id: string) => void;
   onDelete: (id: string) => void;
-  onUpdate: (id: string, field: keyof WorkExperience, value: any) => void;
+  onUpdate: (
+    id: string,
+    field: keyof WorkExperience,
+    value: WorkExperience[keyof WorkExperience],
+  ) => void;
   onAddTag: (id: string, tag: string) => void;
   onRemoveTag: (id: string, tag: string) => void;
 }

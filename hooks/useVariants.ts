@@ -38,8 +38,8 @@ export const useVariants = () => {
 
       const result: VariantsResponse = await response.json();
       setVariants(result.variants);
-    } catch (err: any) {
-      const message = err.message || 'Failed to connect to backend';
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to connect to backend';
       setError(message);
       // Fallback to default variant if API fails
       setVariants([
