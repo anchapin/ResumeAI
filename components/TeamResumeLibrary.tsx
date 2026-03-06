@@ -159,13 +159,14 @@ const TeamResumeLibrary: React.FC<TeamResumeLibraryProps> = ({
                   disabled={unsharingResumeId === sharedResume.id}
                   className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   title="Unshare from team"
+                  aria-label="Unshare from team"
                 >
                   {unsharingResumeId === sharedResume.id ? (
-                    <span className="material-symbols-outlined animate-spin text-[18px]">
+                    <span className="material-symbols-outlined animate-spin text-[18px]" aria-hidden="true">
                       progress_activity
                     </span>
                   ) : (
-                    <span className="material-symbols-outlined text-[18px]">link_off</span>
+                    <span className="material-symbols-outlined text-[18px]" aria-hidden="true">link_off</span>
                   )}
                 </button>
               </div>
