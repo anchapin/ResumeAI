@@ -198,17 +198,27 @@ class Settings(BaseSettings):
     def parse_cors_origins(cls, v: Union[str, list, None]) -> Optional[list[str]]:
         """
         Parse CORS origins from string or list.
-        
+
         SECURITY: This validator prevents using "*" (allow all) with credentials enabled.
         It ensures that if credentials are needed, specific origins must be provided.
         """
         if v is None:
-            return ["http://localhost:5173", "http://localhost:3000", "http://127.0.0.1:5173", "http://127.0.0.1:3000"]
+            return [
+                "http://localhost:5173",
+                "http://localhost:3000",
+                "http://127.0.0.1:5173",
+                "http://127.0.0.1:3000",
+            ]
         if isinstance(v, str):
             if v.strip() == "*":
                 # Security: Don't allow wildcard with credentials
                 # Return default local origins instead
-                return ["http://localhost:5173", "http://localhost:3000", "http://127.0.0.1:5173", "http://127.0.0.1:3000"]
+                return [
+                    "http://localhost:5173",
+                    "http://localhost:3000",
+                    "http://127.0.0.1:5173",
+                    "http://127.0.0.1:3000",
+                ]
             return [origin.strip() for origin in v.split(",") if origin.strip()]
         return v
 
