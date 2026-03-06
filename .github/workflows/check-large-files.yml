@@ -1,0 +1,30 @@
+name: "Check Large Files"
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  check-large-files:
+    name: Check for large files
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Check for files over 10MB
+        run: |
+          # Find files larger than 10MB
+          large_files=$(find . -type f -size +10M ! -path './node_modules/*' ! -path './.git/*')
+          
+          if [ -n "$large_files" ]; then
+            echo "Found files over 10MB:"
+            echo "$large_files"
+            echo ""
+            echo "::warning::Large files detected. Consider using Git LFS or removing these files."
+          else
+            echo "No files over 10MB found."
+          fi

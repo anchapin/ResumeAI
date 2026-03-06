@@ -1,0 +1,46 @@
+{
+  "name": "ResumeAI Development",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:20",
+  "features": {
+    "ghcr.io/devcontainers/features/github-cli:1": {}
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "ms-playwright.playwright",
+        "bradlc.vscode-tailwindcss"
+      ],
+      "settings": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+          "source.fixAll.eslint": "explicit"
+        },
+        "eslint.validate": [
+          "javascript",
+          "javascriptreact",
+          "typescript",
+          "typescriptreact"
+        ],
+        "tailwindCSS.experimental.classRegex": [
+          ["cva\\(([^)]*)\\)", "[\"'`]([^\"'`]*).*?[\"'`]"],
+          ["cn\\(([^)]*)\\)", "[\"'`]([^\"'`]*).*?[\"'`]"]
+        ]
+      }
+    }
+  },
+  "postCreateCommand": "npm install && cd resume-api && pip install -r requirements.txt",
+  "portsAttributes": {
+    "5173": {
+      "label": "Vite Dev Server",
+      "onAutoForward": "notify"
+    },
+    "8000": {
+      "label": "FastAPI Backend",
+      "onAutoForward": "notify"
+    }
+  },
+  "remoteUser": "node"
+}

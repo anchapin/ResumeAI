@@ -1,4 +1,13 @@
 #!/bin/sh
 . "$(dirname "$0")/_/husky.sh"
 
+# Check for large files before committing
+echo "Checking for large files..."
+large_files=$(find . -type f -size +10M ! -path './node_modules/*' ! -path './.git/*' 2>/dev/null)
+if [ -n "$large_files" ]; then
+  echo "WARNING: Found files over 10MB:"
+  echo "$large_files"
+  echo "Consider using Git LFS or removing these files before committing."
+fi
+
 npx lint-staged
