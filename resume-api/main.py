@@ -268,17 +268,18 @@ if getattr(settings, "enable_csrf", True):
 if getattr(settings, "enable_request_signing", True):
     app.add_middleware(RequestSigningMiddleware)
 
-# Configure CORS
+# Configure CORS with restrictive settings
+# SECURITY: CORS_ORIGINS must be set in production environment
+# By default, only local development origins are allowed
+# Using settings.cors_allow_credentials to control credentials separately
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins,
-    allow_credentials=True,
-    allow_methods=["*"],
+    allow_credentials=settings.cors_allow_credentials,
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
-    # Add additional security for CORS
-    allow_origin_regex=(
-        settings.cors_origin_regex if hasattr(settings, "cors_origin_regex") else None
-    ),
+    # Add additional security for CORS - require explicit origin match
+    allow_origin_regex=None,  # Disable regex matching for stricter security
 )
 
 
