@@ -23,6 +23,7 @@ from config.dependencies import (
 )
 from config.validation import startup_validation
 from database import create_db_and_tables
+from config.cache_config import initialize_cache
 from middleware.monitoring import MonitoringMiddleware
 from middleware.error_handling import ErrorHandlingMiddleware
 from middleware.timeout import TimeoutMiddleware
@@ -159,6 +160,10 @@ async def lifespan(app: FastAPI):
     # Initialize database tables
     await create_db_and_tables()
     logger.info("Database initialized")
+
+    # Initialize cache manager (Redis or in-memory fallback)
+    await initialize_cache()
+    logger.info("Cache manager initialized")
 
     # Set up Sentry error tracking
     setup_sentry()

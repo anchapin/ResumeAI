@@ -29,12 +29,7 @@ const ResumeManagement: React.FC = () => {
   const [operationResult, setOperationResult] = useState<BulkOperationResult | null>(null);
   const [pendingOperation, setPendingOperation] = useState<BulkOperationType | null>(null);
 
-  // Load resumes on mount
-  useEffect(() => {
-    loadResumes();
-  }, [searchTerm, filterTag]);
-
-  const loadResumes = async () => {
+  const loadResumes = useCallback(async () => {
     setLoading(true);
     try {
       const data = await listResumes({
@@ -48,7 +43,12 @@ const ResumeManagement: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [searchTerm, filterTag]);
+
+  // Load resumes on mount
+  useEffect(() => {
+    loadResumes();
+  }, [loadResumes]);
 
   // Selection handlers
   const toggleSelection = (id: number) => {

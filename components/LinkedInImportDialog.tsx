@@ -4,9 +4,7 @@ import { importFromLinkedInFile } from '../utils/import';
 import {
   connectLinkedIn,
   handleLinkedInCallback,
-  importLinkedInProfile,
   fetchGitHubRepositories,
-  disconnectLinkedIn,
 } from '../utils/api-client';
 import { showSuccessToast, showErrorToast } from '../utils/toast';
 
@@ -65,7 +63,6 @@ export const LinkedInImportDialog: React.FC<LinkedInImportDialogProps> = ({
   const [linkedInProfile, setLinkedInProfile] = useState<LinkedInProfile | null>(null);
   const [githubRepos, setGithubRepos] = useState<GitHubRepository[]>([]);
   const [selectedRepoIds, setSelectedRepoIds] = useState<number[]>([]);
-  const [oauthWindow, setOauthWindow] = useState<Window | null>(null);
 
   // Form states for editing imported data
   const [editedName, setEditedName] = useState('');
@@ -75,6 +72,21 @@ export const LinkedInImportDialog: React.FC<LinkedInImportDialogProps> = ({
   const [editedRole, setEditedRole] = useState('');
   const [editedSummary, setEditedSummary] = useState('');
   const [editedSkills, setEditedSkills] = useState<string[]>([]);
+
+  // Reset state when dialog closes
+  useEffect(() => {
+    if (!isOpen) {
+      setCurrentStep('upload');
+      setImportMethod(null);
+      setLinkedInConnected(false);
+      setLinkedInProfile(null);
+      setGithubRepos([]);
+      setSelectedRepoIds([]);
+      setIsImporting(false);
+    }
+  }, [isOpen]);
+
+  if (!isOpen) return null;
 
   const getStepIndex = () => STEPS.findIndex((s) => s.id === currentStep);
 
@@ -150,12 +162,6 @@ export const LinkedInImportDialog: React.FC<LinkedInImportDialogProps> = ({
       // Extract skills from profile
       const skills = profile.skills || [];
       setEditedSkills(Array.isArray(skills) ? skills : []);
-
-      // Extract experience
-      const experience = profile.experience || profile.positions || [];
-
-      // Extract education
-      const education = profile.education || profile.educations || [];
 
       setCurrentStep('import');
       showSuccessToast('LinkedIn profile imported successfully!');
@@ -246,19 +252,6 @@ export const LinkedInImportDialog: React.FC<LinkedInImportDialogProps> = ({
     setCurrentStep('complete');
     setIsImporting(false);
   };
-
-  // Reset state when dialog closes
-  useEffect(() => {
-    if (!isOpen) {
-      setCurrentStep('upload');
-      setImportMethod(null);
-      setLinkedInConnected(false);
-      setLinkedInProfile(null);
-      setGithubRepos([]);
-      setSelectedRepoIds([]);
-      setIsImporting(false);
-    }
-  }, [isOpen]);
 
   // File import handlers (existing functionality)
   const handleFileSelect = async (files: File | FileList) => {
