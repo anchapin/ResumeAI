@@ -76,8 +76,6 @@ export const LinkedInImportDialog: React.FC<LinkedInImportDialogProps> = ({
   const [editedSummary, setEditedSummary] = useState('');
   const [editedSkills, setEditedSkills] = useState<string[]>([]);
 
-  if (!isOpen) return null;
-
   const getStepIndex = () => STEPS.findIndex((s) => s.id === currentStep);
 
   // Handle OAuth flow
@@ -393,6 +391,9 @@ export const LinkedInImportDialog: React.FC<LinkedInImportDialogProps> = ({
     e.stopPropagation();
     folderInputRef.current?.click();
   };
+
+  // Conditional render - must be after all hooks
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 animate-in fade-in duration-200">
