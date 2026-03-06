@@ -14,7 +14,7 @@ import React from 'react';
  * <StatusBadge status="Offer" />
  * ```
  */
-const StatusBadge = ({ status }: { status: string }) => {
+const StatusBadge = React.memo<{ status: string }>(({ status }) => {
   let colorClass = '';
   switch (status) {
     case 'Applied':
@@ -37,11 +37,12 @@ const StatusBadge = ({ status }: { status: string }) => {
     <span
       data-testid="status-badge"
       data-status={status}
+      aria-label={`Status: ${status}`}
       className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold ${colorClass}`}
     >
       {status}
     </span>
   );
-};
+});
 
 export default StatusBadge;
