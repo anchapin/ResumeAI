@@ -791,8 +791,6 @@ async def get_team_member(
         )
 
 
-
-
 @router.put(
     "/v1/teams/{team_id}/members/{user_id}",
     response_model=TeamMemberResponse,

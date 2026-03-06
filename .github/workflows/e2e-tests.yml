@@ -47,7 +47,7 @@ jobs:
           CI: true
 
       - name: Upload Playwright Report
-        if: always()
+        if: always() && !env.ACT
         uses: actions/upload-artifact@v4
         with:
           name: playwright-report
@@ -55,7 +55,7 @@ jobs:
           retention-days: 7
 
       - name: Upload test results
-        if: always()
+        if: always() && !env.ACT
         uses: actions/upload-artifact@v4
         with:
           name: playwright-test-results
@@ -63,7 +63,7 @@ jobs:
           retention-days: 7
 
       - name: Upload screenshots
-        if: failure()
+        if: failure() && !env.ACT
         uses: actions/upload-artifact@v4
         with:
           name: playwright-screenshots
@@ -71,7 +71,7 @@ jobs:
           retention-days: 7
 
       - name: Upload videos
-        if: failure()
+        if: failure() && !env.ACT
         uses: actions/upload-artifact@v4
         with:
           name: playwright-videos
@@ -79,7 +79,7 @@ jobs:
           retention-days: 7
 
       - name: Upload traces
-        if: failure()
+        if: failure() && !env.ACT
         uses: actions/upload-artifact@v4
         with:
           name: playwright-traces
