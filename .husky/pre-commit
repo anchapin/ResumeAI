@@ -1,4 +1,17 @@
 #!/bin/sh
 . "$(dirname "$0")/_/husky.sh"
 
+# Check for large files (> 1MB)
+LARGE_FILES=$(git diff --cached --name-only --diff-filter=ACM | xargs -I{} du -k {} 2>/dev/null | awk '$1 > 1024 {print $2}')
+if [ -n "$LARGE_FILES" ]; then
+  echo "❌ Error: The following files exceed 1MB:"
+  echo "$LARGE_FILES"
+  echo ""
+  echo "Please either:"
+  echo "  1. Remove large files from the commit"
+  echo "  2. Add them to .gitignore"
+  echo "  3. Use Git LFS for binary assets: https://git-lfs.github.com"
+  exit 1
+fi
+
 npx lint-staged
