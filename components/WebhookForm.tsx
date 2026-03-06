@@ -72,7 +72,8 @@ const WebhookForm: React.FC<WebhookFormProps> = ({ webhook, onSuccess, onCancel 
     } else {
       try {
         new URL(url);
-      } catch {
+      } catch (err) {
+        console.error('Invalid URL validation:', err);
         newErrors.url = 'Please enter a valid URL';
       }
     }

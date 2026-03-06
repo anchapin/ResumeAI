@@ -1,5 +1,6 @@
 """Health check module for monitoring system health."""
 
+import time
 from datetime import datetime
 
 from config import settings
@@ -13,7 +14,47 @@ class HealthCheck:
     """Health check manager."""
 
     async def check_database(self):
-        return {"healthy": True, "duration_ms": 10.0}
+        """Check database connectivity."""
+        try:
+            from database import engine
+            import sqlalchemy
+
+            start_time = time.time()
+            async with engine.connect() as conn:
+                await conn.execute(sqlalchemy.text("SELECT 1"))
+            duration_ms = (time.time() - start_time) * 1000
+            return {"healthy": True, "duration_ms": round(duration_ms, 2)}
+        except Exception as e:
+            logger.error("database_health_check_error", error=str(e))
+            return {"healthy": False, "error": str(e)}
+
+    async def check_redis(self):
+        """Check Redis connectivity."""
+        try:
+            from lib.utils.cache import get_cache_manager
+
+            cache_mgr = get_cache_manager()
+
+            # Check if Redis backend is being used
+            if cache_mgr.backend_type == "memory":
+                return {
+                    "healthy": True,
+                    "backend": "memory",
+                    "note": "Using in-memory fallback",
+                }
+
+            start_time = time.time()
+            redis_client = cache_mgr.backend.redis
+            await redis_client.ping()
+            duration_ms = (time.time() - start_time) * 1000
+            return {
+                "healthy": True,
+                "backend": "redis",
+                "duration_ms": round(duration_ms, 2),
+            }
+        except Exception as e:
+            logger.error("redis_health_check_error", error=str(e))
+            return {"healthy": False, "error": str(e)}
 
     async def check_ai_provider(self):
         return {"healthy": True, "provider": settings.ai_provider, "duration_ms": 0.5}
@@ -81,6 +122,7 @@ class HealthCheck:
 
     async def check_all(self):
         db = await self.check_database()
+        redis = await self.check_redis()
         ai = await self.check_ai_provider()
         disk = await self.check_disk_space()
         memory = await self.check_memory_usage()
@@ -88,6 +130,7 @@ class HealthCheck:
         overall = all(
             [
                 db["healthy"],
+                redis["healthy"],
                 ai["healthy"],
                 disk["healthy"],
                 memory["healthy"],
@@ -99,6 +142,7 @@ class HealthCheck:
             "timestamp": datetime.utcnow().isoformat(),
             "checks": {
                 "database": db["healthy"],
+                "redis": redis["healthy"],
                 "ai_provider": ai["healthy"],
                 "disk_space": disk["healthy"],
                 "memory_usage": memory["healthy"],
@@ -106,6 +150,7 @@ class HealthCheck:
             },
             "details": {
                 "database": db,
+                "redis": redis,
                 "ai_provider": ai,
                 "disk_space": disk,
                 "memory_usage": memory,
@@ -130,4 +175,11 @@ async def get_health_status(detailed=False):
 
 async def get_readiness_status():
     db = await health_checker.check_database()
-    return {"ready": db["healthy"], "timestamp": datetime.utcnow().isoformat()}
+    redis = await health_checker.check_redis()
+    ready = db["healthy"] and redis["healthy"]
+    return {
+        "ready": ready,
+        "timestamp": datetime.utcnow().isoformat(),
+        "database": db["healthy"],
+        "redis": redis["healthy"],
+    }

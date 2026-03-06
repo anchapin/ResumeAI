@@ -41,8 +41,8 @@ const Register: React.FC = () => {
     try {
       await register(email, username, password, fullName || undefined);
       setSuccess(true);
-    } catch {
-      // Error handled by hook
+    } catch (err) {
+      console.error('Registration failed:', err);
     }
   };
 

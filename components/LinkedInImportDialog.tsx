@@ -385,6 +385,9 @@ export const LinkedInImportDialog: React.FC<LinkedInImportDialogProps> = ({
     folderInputRef.current?.click();
   };
 
+  // Conditional render - must be after all hooks
+  if (!isOpen) return null;
+
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 animate-in fade-in duration-200">
       <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full mx-4 animate-in zoom-in-95 duration-200">

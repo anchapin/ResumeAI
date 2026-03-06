@@ -10,7 +10,8 @@ if (typeof window !== 'undefined') {
   try {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     axeCore = require('axe-core');
-  } catch {
+  } catch (err) {
+    console.error('Failed to load axe-core:', err);
     // axe-core not available
   }
 }

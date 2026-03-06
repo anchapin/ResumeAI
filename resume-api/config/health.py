@@ -6,6 +6,7 @@ Provides health check endpoints and startup validations for safe deployments.
 
 import logging
 import asyncio
+import time
 from typing import Dict, Any
 from datetime import datetime
 
@@ -19,11 +20,20 @@ class HealthChecker:
     async def check_database() -> Dict[str, Any]:
         """Check database connectivity and status."""
         try:
-            # TODO: Implement when database is added
-            # For now, assume healthy
+            from database import engine
+            import sqlalchemy
+
+            start_time = time.time()
+
+            # Execute a simple query to check database connectivity
+            async with engine.connect() as conn:
+                await conn.execute(sqlalchemy.text("SELECT 1"))
+
+            response_time_ms = (time.time() - start_time) * 1000
+
             return {
                 "status": "ok",
-                "response_time": 0.0,
+                "response_time_ms": round(response_time_ms, 2),
                 "timestamp": datetime.utcnow().isoformat(),
             }
         except Exception as e:
@@ -38,11 +48,31 @@ class HealthChecker:
     async def check_redis() -> Dict[str, Any]:
         """Check Redis cache connectivity."""
         try:
-            # TODO: Implement when Redis is added
-            # For now, assume healthy
+            from lib.utils.cache import get_cache_manager
+
+            cache_mgr = get_cache_manager()
+
+            # Check if Redis backend is being used
+            if cache_mgr.backend_type == "memory":
+                return {
+                    "status": "ok",
+                    "backend": "memory",
+                    "note": "Redis not available, using in-memory fallback",
+                    "timestamp": datetime.utcnow().isoformat(),
+                }
+
+            start_time = time.time()
+
+            # Execute Redis PING to check connectivity
+            redis_client = cache_mgr.backend.redis
+            await redis_client.ping()
+
+            response_time_ms = (time.time() - start_time) * 1000
+
             return {
                 "status": "ok",
-                "response_time": 0.0,
+                "backend": "redis",
+                "response_time_ms": round(response_time_ms, 2),
                 "timestamp": datetime.utcnow().isoformat(),
             }
         except Exception as e:

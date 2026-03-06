@@ -47,7 +47,8 @@ export const useAuth = () => {
         TokenManager.removeToken();
         setUser(null);
       }
-    } catch {
+    } catch (err) {
+      console.error('Failed to fetch current user:', err);
       setUser(null);
     }
     return null;
@@ -79,7 +80,7 @@ export const useAuth = () => {
         setAuthLoading(false);
       }
     },
-    [fetchCurrentUser, setAuthError, setAuthLoading],
+    [setAuthError, setAuthLoading, fetchCurrentUser],
   );
 
   const register = useCallback(
