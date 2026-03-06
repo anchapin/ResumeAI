@@ -1,4 +1,4 @@
-import React, { useEffect, lazy, Suspense } from 'react';
+import React, { useEffect, useRef, lazy, Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
 import { registerPrefetch } from './utils/prefetch';
@@ -124,12 +124,13 @@ function App() {
   }, [loadResume]);
 
   // Save resume data to localStorage whenever it changes
+  // Use refs to properly track timeouts for cleanup
+  const innerTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   useEffect(() => {
     if (!isLoaded) return;
 
     setSaveStatus('saving');
-
-    let innerTimeout: ReturnType<typeof setTimeout> | null = null;
 
     const handler = setTimeout(async () => {
       try {
@@ -139,7 +140,7 @@ function App() {
           console.log('Resume data saved to localStorage');
         }
 
-        innerTimeout = setTimeout(() => setSaveStatus('idle'), 3000);
+        innerTimeoutRef.current = setTimeout(() => setSaveStatus('idle'), 3000);
       } catch (error) {
         setSaveStatus('error');
         const storageError = error instanceof StorageError ? error : null;
@@ -150,14 +151,14 @@ function App() {
           type: ErrorType.STORAGE,
         });
 
-        innerTimeout = setTimeout(() => setSaveStatus('idle'), 5000);
+        innerTimeoutRef.current = setTimeout(() => setSaveStatus('idle'), 5000);
       }
     }, 1000);
 
     return () => {
       clearTimeout(handler);
-      if (innerTimeout) {
-        clearTimeout(innerTimeout);
+      if (innerTimeoutRef.current) {
+        clearTimeout(innerTimeoutRef.current);
       }
     };
   }, [resumeData, isLoaded, setSaveStatus]);

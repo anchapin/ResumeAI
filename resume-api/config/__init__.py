@@ -7,7 +7,7 @@ import secrets
 from pathlib import Path
 from typing import Optional, Union
 
-from pydantic import Field, ValidationInfo, field_validator
+from pydantic import Field, ValidationInfo, field_validator, model_validator
 from pydantic_settings import BaseSettings
 from pydantic_settings import SettingsConfigDict
 
@@ -45,7 +45,6 @@ class Settings(BaseSettings):
         None  # List of API keys (parsed from comma-separated env)
     )
 
-    # CORS Configuration
     # Allowed origins for CORS - should be configured via environment variable
     # In production, specify exact origins (e.g., "https://resumeai.com")
     # For local development, use "http://localhost:5173" or other local ports
