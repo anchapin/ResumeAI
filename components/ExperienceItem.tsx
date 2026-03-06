@@ -22,7 +22,11 @@ interface ExperienceItemProps {
   /** Callback to delete the experience */
   onDelete: (id: string) => void;
   /** Callback to update a field in the experience */
-  onUpdate: (id: string, field: keyof WorkExperience, value: any) => void;
+  onUpdate: (
+    id: string,
+    field: keyof WorkExperience,
+    value: WorkExperience[keyof WorkExperience],
+  ) => void;
   /** Callback to add a tag to the experience */
   onAddTag: (id: string, tag: string) => void;
   /** Callback to remove a tag from the experience */

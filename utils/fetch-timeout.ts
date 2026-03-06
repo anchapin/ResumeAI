@@ -3,6 +3,11 @@
  * Provides a mechanism to abort fetch requests after a specified duration.
  */
 
+// Extended AbortController interface with timeout tracking
+interface AbortControllerWithTimeout extends AbortController {
+  __timeoutId?: ReturnType<typeof setTimeout>;
+}
+
 /**
  * Creates an AbortController with a timeout.
  *
@@ -13,15 +18,15 @@
  * const controller = createTimeoutAbortController(5000);
  * const response = await fetch(url, { signal: controller.signal });
  */
-export function createTimeoutAbortController(timeoutMs: number): AbortController {
-  const controller = new AbortController();
+export function createTimeoutAbortController(timeoutMs: number): AbortControllerWithTimeout {
+  const controller = new AbortController() as AbortControllerWithTimeout;
 
   const timeoutId = setTimeout(() => {
     controller.abort();
   }, timeoutMs);
 
   // Store timeout ID on controller for potential cleanup
-  (controller as any).__timeoutId = timeoutId;
+  controller.__timeoutId = timeoutId;
 
   return controller;
 }
@@ -32,10 +37,11 @@ export function createTimeoutAbortController(timeoutMs: number): AbortController
  * @param controller - The AbortController to clean up
  */
 export function clearTimeoutAbortController(controller: AbortController): void {
-  const timeoutId = (controller as any).__timeoutId;
+  const extendedController = controller as AbortControllerWithTimeout;
+  const timeoutId = extendedController.__timeoutId;
   if (timeoutId !== undefined) {
     clearTimeout(timeoutId);
-    delete (controller as any).__timeoutId;
+    delete extendedController.__timeoutId;
   }
 }
 
@@ -93,14 +99,20 @@ export async function fetchWithTimeout(
  *   }
  * }
  */
-export function isTimeoutError(error: any): boolean {
+export function isTimeoutError(error: unknown): boolean {
   if (error instanceof DOMException && error.name === 'AbortError') {
     return true;
   }
-  if (error?.name === 'TimeoutError') {
+  if (error && typeof error === 'object' && 'name' in error && error.name === 'TimeoutError') {
     return true;
   }
-  if (error?.message?.includes('timeout') || error?.message?.includes('Timeout')) {
+  if (
+    error &&
+    typeof error === 'object' &&
+    'message' in error &&
+    typeof error.message === 'string' &&
+    (error.message.includes('timeout') || error.message.includes('Timeout'))
+  ) {
     return true;
   }
   return false;

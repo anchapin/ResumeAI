@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
-import { SimpleResumeData, ResumeMetadata } from '../types';
+import { SimpleResumeData, ResumeMetadata, ResumeVersion, Comment } from '../types';
 import { useStore } from '../store/store';
 import { useGeneratePackage, convertToResumeData } from '../hooks/useGeneratePackage';
 import { useVariants } from '../hooks/useVariants';
@@ -83,8 +83,8 @@ const Workspace: React.FC = () => {
 
         // Set last updated based on the most recent version or comment
         const allDates = [
-          ...versions.map((v: any) => new Date(v.createdAt)),
-          ...comments.map((c: any) => new Date(c.createdAt)),
+          ...versions.map((v: ResumeVersion) => new Date(v.createdAt)),
+          ...comments.map((c: Comment) => new Date(c.createdAt)),
         ];
         if (allDates.length > 0) {
           const latest = new Date(Math.max(...allDates.map((d) => d.getTime())));
@@ -201,7 +201,7 @@ const Workspace: React.FC = () => {
     }));
   };
 
-  const updateWork = (index: number, field: string, value: any) => {
+  const updateWork = (index: number, field: string, value: string | string[]) => {
     setLocalResumeData((prev) => {
       const newWork = [...(prev.work || [])];
       newWork[index] = { ...newWork[index], [field]: value };

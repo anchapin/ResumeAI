@@ -96,7 +96,8 @@ const WebhookForm: React.FC<WebhookFormProps> = ({ webhook, onSuccess, onCancel 
 
     setIsSubmitting(true);
     try {
-      const params: WebhookCreateParams | WebhookUpdateParams = {
+      // Base params common to both create and update
+      const baseParams = {
         url: url.trim(),
         description: description.trim() || undefined,
         events: selectedEvents,
@@ -104,12 +105,10 @@ const WebhookForm: React.FC<WebhookFormProps> = ({ webhook, onSuccess, onCancel 
       };
 
       // Only include secret if it's provided (for new webhooks or when updating secret)
-      if (secret.trim()) {
-        (params as any).secret = secret.trim();
-      }
+      const params = secret.trim() ? { ...baseParams, secret: secret.trim() } : baseParams;
 
       if (webhook) {
-        await updateWebhook(webhook.id, params);
+        await updateWebhook(webhook.id, params as WebhookUpdateParams);
         toast.success('Webhook updated successfully');
       } else {
         await createWebhook(params as WebhookCreateParams);

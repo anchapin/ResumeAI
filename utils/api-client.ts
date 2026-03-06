@@ -51,7 +51,12 @@ import {
   GitHubRepository,
   SalaryResearchRequest,
   SalaryResearchResponse,
+  SalaryInsight,
+  RawSalaryInsight,
   JobOffer,
+  JobOfferInput,
+  JobOfferFormData,
+  RawOffer,
   ComparisonPriority,
   MemberRole,
   Team,
@@ -1007,7 +1012,7 @@ export async function researchSalary(
       education: 'Bachelor',
     },
     insights:
-      data.insights?.key_insights?.map((insight: any) => ({
+      data.insights?.key_insights?.map((insight: RawSalaryInsight) => ({
         title: insight.title || 'Insight',
         description: insight.description || '',
         importance: insight.importance || 'medium',
@@ -1016,7 +1021,7 @@ export async function researchSalary(
   };
 }
 
-export async function createOffer(offer: any): Promise<JobOffer> {
+export async function createOffer(offer: JobOfferInput): Promise<JobOffer> {
   const response = await fetchWithRetry(
     `${API_URL}/api/v1/salary/offers`,
     {
@@ -1047,12 +1052,14 @@ export async function createOffer(offer: any): Promise<JobOffer> {
   return {
     ...offer,
     id: Date.now(),
+    currency: 'USD',
+    status: 'pending',
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
-  };
+  } as JobOffer;
 }
 
-export async function updateOffer(id: number, offer: any): Promise<JobOffer> {
+export async function updateOffer(id: number, offer: JobOfferFormData): Promise<JobOffer> {
   return { ...offer, id, updatedAt: new Date().toISOString() } as JobOffer;
 }
 
@@ -1097,7 +1104,7 @@ export async function compareOffers(
   const data = await response.json();
   return {
     offers:
-      data.offers?.map((o: any) => ({
+      data.offers?.map((o: RawOffer) => ({
         ...o,
         id: o.id || 0,
         companyName: o.company || '',
@@ -1112,7 +1119,7 @@ export async function compareOffers(
       })) || [],
     priorities: priorities || { salary: 1, growth: 1, workLifeBalance: 1, culture: 1, benefits: 1 },
     scores:
-      data.offers?.map((o: any, idx: number) => ({
+      data.offers?.map((o: RawOffer, idx: number) => ({
         offerId: o.id || idx,
         totalScore: o.totalScore || 0,
         breakdown: {

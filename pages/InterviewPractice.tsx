@@ -1,6 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import Sidebar from '../components/Sidebar';
-import { InterviewQuestion, InterviewSession, GenerateQuestionsRequest, Route } from '../types';
+import {
+  InterviewQuestion,
+  InterviewSession,
+  InterviewFeedback,
+  GenerateQuestionsRequest,
+  Route,
+} from '../types';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
 
@@ -25,7 +31,7 @@ function InterviewPractice() {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [currentAnswer, setCurrentAnswer] = useState('');
   const [isRecording, setIsRecording] = useState(false);
-  const [feedback, setFeedback] = useState<any>(null);
+  const [feedback, setFeedback] = useState<InterviewFeedback | null>(null);
   const [showFeedback, setShowFeedback] = useState(false);
 
   // History state
@@ -109,7 +115,19 @@ function InterviewPractice() {
       }
 
       const data = await response.json();
-      setFeedback(data.feedback);
+
+      // Transform API response from snake_case to camelCase
+      const transformedFeedback: InterviewFeedback = {
+        id: data.feedback.id,
+        answerId: data.feedback.answer_id,
+        score: data.feedback.score,
+        strengths: data.feedback.strengths,
+        improvements: data.feedback.improvements,
+        summary: data.feedback.summary,
+        suggestedAnswer: data.feedback.suggested_answer,
+      };
+
+      setFeedback(transformedFeedback);
       setShowFeedback(true);
 
       // Update session progress
@@ -458,10 +476,10 @@ function InterviewPractice() {
                     </div>
                   )}
 
-                  {feedback.suggested_answer && (
+                  {feedback.suggestedAnswer && (
                     <div className="bg-slate-50 p-4 rounded-lg">
                       <p className="text-sm font-semibold text-slate-700 mb-2">Suggested Answer</p>
-                      <p className="text-sm text-slate-600">{feedback.suggested_answer}</p>
+                      <p className="text-sm text-slate-600">{feedback.suggestedAnswer}</p>
                     </div>
                   )}
                 </div>

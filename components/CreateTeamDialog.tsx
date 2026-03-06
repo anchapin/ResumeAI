@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { CreateTeamRequest } from '../types';
+import { CreateTeamRequest, Team } from '../types';
 import { createTeam } from '../utils/api-client';
 import { showSuccessToast, showErrorToast } from '../utils/toast';
 import AccessibleDialog from './AccessibleDialog';
@@ -7,8 +7,7 @@ import AccessibleDialog from './AccessibleDialog';
 interface CreateTeamDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  onCreateSuccess?: (team: any) => void;
+  onCreateSuccess?: (team: Team) => void;
 }
 
 /**

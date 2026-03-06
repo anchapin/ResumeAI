@@ -7,7 +7,11 @@ interface ProjectsSectionProps {
   expandedProjId: string | null;
   onToggleExpand: (id: string) => void;
   onDelete: (id: string) => void;
-  onUpdate: (id: string, field: keyof ProjectEntry, value: any) => void;
+  onUpdate: (
+    id: string,
+    field: keyof ProjectEntry,
+    value: ProjectEntry[keyof ProjectEntry],
+  ) => void;
   onAdd: () => void;
   onShowCommentPanel: () => void;
 }

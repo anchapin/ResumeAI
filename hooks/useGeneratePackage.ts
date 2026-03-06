@@ -215,8 +215,8 @@ export const useGeneratePackage = () => {
       await saveResume(result.resume_data);
 
       return result;
-    } catch (err: any) {
-      const message = err.message || 'Failed to connect to backend';
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to connect to backend';
       setError(message);
       throw err;
     } finally {
@@ -249,8 +249,8 @@ export const useGeneratePackage = () => {
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
-    } catch (err: any) {
-      const message = err.message || 'Failed to download PDF';
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to download PDF';
       setError(message);
       throw err;
     }
@@ -274,8 +274,8 @@ export const useGeneratePackage = () => {
 
       const result = await response.json();
       return result.markdown;
-    } catch (err: any) {
-      const message = err.message || 'Failed to render markdown';
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to render markdown';
       throw new Error(message);
     }
   };
@@ -313,8 +313,8 @@ export const useGeneratePackage = () => {
       const result: CoverLetterData = await response.json();
       setCoverLetter(result);
       return result;
-    } catch (err: any) {
-      const message = err.message || 'Failed to generate cover letter';
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to generate cover letter';
       setError(message);
       throw err;
     } finally {

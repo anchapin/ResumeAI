@@ -10,7 +10,21 @@
  * - Manual JSON format with common field names
  */
 
-import { ResumeData, Skill, WorkItem, EducationItem, Location, Profile } from '../types';
+import {
+  ResumeData,
+  Skill,
+  WorkItem,
+  EducationItem,
+  Location,
+  Profile,
+  LinkedInImportData,
+  LinkedInExperienceInput,
+  LinkedInEducationInput,
+  LinkedInSkillInput,
+  LinkedInLanguageInput,
+  LinkedInCertificationInput,
+  LinkedInProjectInput,
+} from '../types';
 
 /**
  * LinkedIn field mappings to internal resume format
@@ -48,7 +62,9 @@ export const LINKEDIN_FIELD_MAPPINGS = {
 /**
  * Detect the format of LinkedIn export data
  */
-function detectLinkedInFormat(data: any): 'standard' | 'scraper' | 'minimal' | 'unknown' {
+function detectLinkedInFormat(
+  data: LinkedInImportData,
+): 'standard' | 'scraper' | 'minimal' | 'unknown' {
   if (data.firstName !== undefined || data.lastName !== undefined) {
     return 'standard';
   }
@@ -66,7 +82,7 @@ function detectLinkedInFormat(data: any): 'standard' | 'scraper' | 'minimal' | '
  * @param linkedinData - Raw LinkedIn export data
  * @returns ResumeData compatible object
  */
-export function importFromLinkedIn(linkedinData: any): Partial<ResumeData> {
+export function importFromLinkedIn(linkedinData: LinkedInImportData): Partial<ResumeData> {
   const format = detectLinkedInFormat(linkedinData);
 
   if (format === 'scraper') {
@@ -81,7 +97,7 @@ export function importFromLinkedIn(linkedinData: any): Partial<ResumeData> {
 /**
  * Import standard LinkedIn export format
  */
-function importFromLinkedInStandardFormat(linkedinData: any): Partial<ResumeData> {
+function importFromLinkedInStandardFormat(linkedinData: LinkedInImportData): Partial<ResumeData> {
   const result: Partial<ResumeData> = {};
 
   // Extract name
@@ -160,7 +176,7 @@ function importFromLinkedInStandardFormat(linkedinData: any): Partial<ResumeData
 /**
  * Import LinkedIn scraper API format
  */
-function importFromLinkedInScraperFormat(linkedinData: any): Partial<ResumeData> {
+function importFromLinkedInScraperFormat(linkedinData: LinkedInImportData): Partial<ResumeData> {
   const result: Partial<ResumeData> = {};
 
   // Extract name
@@ -229,7 +245,7 @@ function importFromLinkedInScraperFormat(linkedinData: any): Partial<ResumeData>
 /**
  * Import minimal/custom LinkedIn format
  */
-function importFromLinkedInMinimalFormat(linkedinData: any): Partial<ResumeData> {
+function importFromLinkedInMinimalFormat(linkedinData: LinkedInImportData): Partial<ResumeData> {
   const result: Partial<ResumeData> = {};
 
   // Extract name
@@ -264,9 +280,17 @@ function importFromLinkedInMinimalFormat(linkedinData: any): Partial<ResumeData>
   }
 
   // Extract location
-  const location = linkedinData.location || linkedinData.city;
+  const location = linkedinData.location;
   if (location) {
-    result.location = { city: location };
+    if (typeof location === 'string') {
+      result.location = { city: location };
+    } else if (location.city || location.name) {
+      result.location = {
+        city: location.city,
+        region: location.region,
+        countryCode: location.countryCode,
+      };
+    }
   }
 
   // Extract experience
@@ -290,7 +314,7 @@ function importFromLinkedInMinimalFormat(linkedinData: any): Partial<ResumeData>
 /**
  * Parse LinkedIn positions to work experience format
  */
-function parseLinkedInPositions(positions: any[]): WorkItem[] {
+function parseLinkedInPositions(positions: LinkedInExperienceInput[]): WorkItem[] {
   if (!Array.isArray(positions)) return [];
 
   return positions.map((pos) => ({
@@ -305,7 +329,7 @@ function parseLinkedInPositions(positions: any[]): WorkItem[] {
 /**
  * Parse LinkedIn education to education format
  */
-function parseLinkedInEducation(educations: any[]): EducationItem[] {
+function parseLinkedInEducation(educations: LinkedInEducationInput[]): EducationItem[] {
   if (!Array.isArray(educations)) return [];
 
   return educations.map((edu) => ({
@@ -320,7 +344,7 @@ function parseLinkedInEducation(educations: any[]): EducationItem[] {
 /**
  * Parse LinkedIn skills to skills format
  */
-function parseLinkedInSkills(skills: any[]): Skill[] {
+function parseLinkedInSkills(skills: LinkedInSkillInput[]): Skill[] {
   if (!Array.isArray(skills)) return [];
 
   return skills
@@ -331,7 +355,7 @@ function parseLinkedInSkills(skills: any[]): Skill[] {
 /**
  * Parse LinkedIn languages
  */
-function parseLinkedInLanguages(languages: any[]): Record<string, unknown>[] {
+function parseLinkedInLanguages(languages: LinkedInLanguageInput[]): Record<string, unknown>[] {
   if (!Array.isArray(languages)) return [];
 
   return languages.map((lang) => ({
@@ -343,7 +367,9 @@ function parseLinkedInLanguages(languages: any[]): Record<string, unknown>[] {
 /**
  * Parse LinkedIn certifications
  */
-function parseLinkedInCertifications(certifications: any[]): Record<string, unknown>[] {
+function parseLinkedInCertifications(
+  certifications: LinkedInCertificationInput[],
+): Record<string, unknown>[] {
   if (!Array.isArray(certifications)) return [];
 
   return certifications.map((cert) => ({
@@ -358,7 +384,7 @@ function parseLinkedInCertifications(certifications: any[]): Record<string, unkn
 /**
  * Parse LinkedIn projects
  */
-function parseLinkedInProjects(projects: any[]): Record<string, unknown>[] {
+function parseLinkedInProjects(projects: LinkedInProjectInput[]): Record<string, unknown>[] {
   if (!Array.isArray(projects)) return [];
 
   return projects.map((proj) => ({
@@ -371,7 +397,7 @@ function parseLinkedInProjects(projects: any[]): Record<string, unknown>[] {
 /**
  * Parse LinkedIn date to YYYY-MM format
  */
-function parseLinkedInDate(dateObj: { month?: number; year?: number }): string {
+function parseLinkedInDate(dateObj?: { month?: number; year?: number }): string {
   if (!dateObj) return '';
   if (dateObj.month && dateObj.year) {
     return `${dateObj.year}-${String(dateObj.month).padStart(2, '0')}`;
@@ -385,7 +411,7 @@ function parseLinkedInDate(dateObj: { month?: number; year?: number }): string {
 /**
  * Parse scraper API experience format
  */
-function parseScraperExperience(experience: any[]): WorkItem[] {
+function parseScraperExperience(experience: LinkedInExperienceInput[]): WorkItem[] {
   if (!Array.isArray(experience)) return [];
 
   return experience.map((exp) => ({
@@ -403,7 +429,7 @@ function parseScraperExperience(experience: any[]): WorkItem[] {
 /**
  * Parse scraper API education format
  */
-function parseScraperEducation(education: any[]): EducationItem[] {
+function parseScraperEducation(education: LinkedInEducationInput[]): EducationItem[] {
   if (!Array.isArray(education)) return [];
 
   return education.map((edu) => ({
@@ -418,7 +444,7 @@ function parseScraperEducation(education: any[]): EducationItem[] {
 /**
  * Parse scraper API skills format
  */
-function parseScraperSkills(skills: any[]): Skill[] {
+function parseScraperSkills(skills: LinkedInSkillInput[]): Skill[] {
   if (!Array.isArray(skills)) return [];
 
   return skills
@@ -433,7 +459,7 @@ function parseScraperSkills(skills: any[]): Skill[] {
 /**
  * Parse minimal format experience
  */
-function parseMinimalExperience(experience: any[]): WorkItem[] {
+function parseMinimalExperience(experience: LinkedInExperienceInput[]): WorkItem[] {
   if (!Array.isArray(experience)) return [];
 
   return experience.map((exp) => ({
@@ -454,7 +480,7 @@ function parseMinimalExperience(experience: any[]): WorkItem[] {
 /**
  * Parse minimal format education
  */
-function parseMinimalEducation(education: any[]): EducationItem[] {
+function parseMinimalEducation(education: LinkedInEducationInput[]): EducationItem[] {
   if (!Array.isArray(education)) return [];
 
   return education.map((edu) => ({
@@ -469,7 +495,7 @@ function parseMinimalEducation(education: any[]): EducationItem[] {
 /**
  * Parse minimal format skills
  */
-function parseMinimalSkills(skills: any[]): Skill[] {
+function parseMinimalSkills(skills: LinkedInSkillInput[]): Skill[] {
   if (!Array.isArray(skills)) return [];
 
   return skills
@@ -675,7 +701,7 @@ export function downloadLinkedInProfile(resumeData: ResumeData): void {
 /**
  * Validate LinkedIn import data
  */
-export function validateLinkedInData(data: any): {
+export function validateLinkedInData(data: LinkedInImportData): {
   valid: boolean;
   errors: string[];
   warnings: string[];

@@ -3,12 +3,23 @@
  * Provides centralized error handling, user-friendly messages, and error tracking
  */
 
+import { ErrorContextData } from '../types';
 import {
   getErrorMessageByType,
   getErrorSuggestion,
   isErrorRetryable,
   ErrorType,
 } from './errorMessages';
+
+// Custom error interfaces for better type safety
+export interface ValidationError extends Error {
+  name: 'ValidationError';
+  errors?: Record<string, string[]>;
+}
+
+export interface TimeoutError extends Error {
+  name: 'TimeoutError';
+}
 
 // Re-export ErrorType for convenience
 export { ErrorType };
@@ -19,7 +30,7 @@ export interface ErrorContext {
   userMessage: string;
   statusCode?: number;
   originalError?: Error;
-  context?: Record<string, any>;
+  context?: Record<string, unknown>;
   timestamp: number;
   id: string;
 }
@@ -66,7 +77,7 @@ class GlobalErrorHandlerService {
   /**
    * Handle and process errors
    */
-  handleError(error: any, context?: Record<string, any>): ErrorContext {
+  handleError(error: unknown, context?: Record<string, unknown>): ErrorContext {
     const errorContext = this.parseError(error, context);
 
     // Add to history
@@ -87,16 +98,17 @@ class GlobalErrorHandlerService {
   /**
    * Parse error into standardized context
    */
-  private parseError(error: any, additionalContext?: Record<string, any>): ErrorContext {
+  private parseError(error: unknown, additionalContext?: Record<string, unknown>): ErrorContext {
     const id = this.generateErrorId();
     const timestamp = Date.now();
 
     if (additionalContext?.type) {
       const errorType = additionalContext.type as ErrorType;
       const messageMap = getErrorMessageByType(errorType);
+      const errorMessage = error instanceof Error ? error.message : String(error || '');
       return {
         type: errorType,
-        message: error?.message || messageMap.userMessage,
+        message: errorMessage || messageMap.userMessage,
         userMessage: messageMap.userMessage,
         originalError: error instanceof Error ? error : new Error(String(error)),
         context: additionalContext,
@@ -121,8 +133,10 @@ class GlobalErrorHandlerService {
     }
 
     // Handle API errors (with response)
-    if (error.response) {
-      const status = error.response.status;
+    if (error && typeof error === 'object' && 'response' in error) {
+      const err = error as Record<string, unknown>;
+      const response = err.response as Record<string, unknown> | undefined;
+      const status = response?.status as number | undefined;
       let errorType = ErrorType.API;
       let userMessage = 'An error occurred. Please try again.';
 
@@ -154,12 +168,13 @@ class GlobalErrorHandlerService {
       const messageMap = getErrorMessageByType(errorType);
       userMessage = messageMap.userMessage;
 
+      const errorMessage = error instanceof Error ? error.message : String(err.message || '');
       return {
         type: errorType,
-        message: error.message,
+        message: errorMessage,
         userMessage,
         statusCode: status,
-        originalError: error,
+        originalError: error instanceof Error ? error : new Error(String(error)),
         context: additionalContext,
         timestamp,
         id,
@@ -167,17 +182,15 @@ class GlobalErrorHandlerService {
     }
 
     // Handle timeout errors (including AbortError from AbortController)
-    if (
-      error.name === 'TimeoutError' ||
-      error.name === 'AbortError' ||
-      error.message.includes('timeout')
-    ) {
+    const errName = error instanceof Error ? error.name : '';
+    const errMessage = error instanceof Error ? error.message : String(error || '');
+    if (errName === 'TimeoutError' || errName === 'AbortError' || errMessage.includes('timeout')) {
       const messageMap = getErrorMessageByType(ErrorType.TIMEOUT);
       return {
         type: ErrorType.TIMEOUT,
-        message: error.message,
+        message: errMessage,
         userMessage: messageMap.userMessage,
-        originalError: error,
+        originalError: error instanceof Error ? error : new Error(String(error)),
         context: additionalContext,
         timestamp,
         id,
@@ -185,13 +198,13 @@ class GlobalErrorHandlerService {
     }
 
     // Handle validation errors
-    if (error.name === 'ValidationError') {
+    if (errName === 'ValidationError') {
       const messageMap = getErrorMessageByType(ErrorType.VALIDATION);
       return {
         type: ErrorType.VALIDATION,
-        message: error.message,
+        message: errMessage,
         userMessage: messageMap.userMessage,
-        originalError: error,
+        originalError: error instanceof Error ? error : new Error(String(error)),
         context: additionalContext,
         timestamp,
         id,
@@ -199,12 +212,12 @@ class GlobalErrorHandlerService {
     }
 
     // Default unknown error
-    const errorType = additionalContext?.type || ErrorType.UNKNOWN;
+    const errorType = (additionalContext?.type as ErrorType) || ErrorType.UNKNOWN;
     const messageMap = getErrorMessageByType(errorType);
     return {
       type: errorType as ErrorType,
-      message: error?.message || 'An unknown error occurred',
-      userMessage: error?.message || messageMap.userMessage,
+      message: error instanceof Error ? error.message : 'An unknown error occurred',
+      userMessage: error instanceof Error ? error.message : messageMap.userMessage,
       originalError: error instanceof Error ? error : new Error(String(error)),
       context: additionalContext,
       timestamp,
@@ -286,7 +299,7 @@ export const errorHandler = GlobalErrorHandlerService.initialize();
  */
 export async function withErrorHandling<T>(
   operation: () => Promise<T>,
-  context?: Record<string, any>,
+  context?: Record<string, unknown>,
 ): Promise<T | null> {
   try {
     return await operation();
@@ -299,18 +312,21 @@ export async function withErrorHandling<T>(
 /**
  * Helper function to create validation error
  */
-export function createValidationError(message: string, errors?: Record<string, string[]>): Error {
-  const error = new Error(message);
-  (error as any).name = 'ValidationError';
-  (error as any).errors = errors;
+export function createValidationError(
+  message: string,
+  errors?: Record<string, string[]>,
+): ValidationError {
+  const error = new Error(message) as ValidationError;
+  error.name = 'ValidationError';
+  error.errors = errors;
   return error;
 }
 
 /**
  * Helper function to create timeout error
  */
-export function createTimeoutError(ms: number): Error {
-  const error = new Error(`Operation timed out after ${ms}ms`);
-  (error as any).name = 'TimeoutError';
+export function createTimeoutError(ms: number): TimeoutError {
+  const error = new Error(`Operation timed out after ${ms}ms`) as TimeoutError;
+  error.name = 'TimeoutError';
   return error;
 }

@@ -23,10 +23,28 @@ export interface LoggerConfig {
  * Console-like interface for mocking
  */
 export interface ConsoleLike {
-  debug: (...args: any[]) => void;
-  info: (...args: any[]) => void;
-  warn: (...args: any[]) => void;
-  error: (...args: any[]) => void;
+  debug: (...args: unknown[]) => void;
+  info: (...args: unknown[]) => void;
+  warn: (...args: unknown[]) => void;
+  error: (...args: unknown[]) => void;
+}
+
+/**
+ * Vite import.meta.env type augmentation
+ */
+interface ViteImportMetaEnv {
+  MODE: string;
+  [key: string]: string | undefined;
+}
+
+interface ViteImportMeta {
+  env: ViteImportMetaEnv;
+}
+
+declare global {
+  interface Window {
+    importMeta?: ViteImportMeta;
+  }
 }
 
 /**
@@ -71,8 +89,8 @@ function getEnvironment(): 'development' | 'production' | 'test' {
   // For browser environments
   if (typeof window !== 'undefined') {
     // Check for Vite environment variables
-    if ((window as any).importMeta?.env?.MODE) {
-      const mode = (window as any).importMeta.env.MODE.toLowerCase();
+    if (window.importMeta?.env?.MODE) {
+      const mode = window.importMeta.env.MODE.toLowerCase();
       if (mode.includes('prod')) return 'production';
       if (mode.includes('test')) return 'test';
       return 'development';
@@ -144,7 +162,7 @@ export class Logger {
   /**
    * Format log message with timestamp and prefix
    */
-  private formatMessage(level: LogLevel, message: any[]): string {
+  private formatMessage(level: LogLevel, message: unknown[]): string {
     let formattedMessage = '';
 
     if (this.config.timestamp) {
@@ -168,7 +186,7 @@ export class Logger {
   /**
    * Log debug message
    */
-  public debug(...message: any[]): void {
+  public debug(...message: unknown[]): void {
     if (this.isLoggable(LogLevel.DEBUG)) {
       this.consoleImpl.debug(this.formatMessage(LogLevel.DEBUG, message));
     }
@@ -177,7 +195,7 @@ export class Logger {
   /**
    * Log info message
    */
-  public info(...message: any[]): void {
+  public info(...message: unknown[]): void {
     if (this.isLoggable(LogLevel.INFO)) {
       this.consoleImpl.info(this.formatMessage(LogLevel.INFO, message));
     }
@@ -186,7 +204,7 @@ export class Logger {
   /**
    * Log warning message
    */
-  public warn(...message: any[]): void {
+  public warn(...message: unknown[]): void {
     if (this.isLoggable(LogLevel.WARN)) {
       this.consoleImpl.warn(this.formatMessage(LogLevel.WARN, message));
     }
@@ -195,7 +213,7 @@ export class Logger {
   /**
    * Log error message
    */
-  public error(...message: any[]): void {
+  public error(...message: unknown[]): void {
     if (this.isLoggable(LogLevel.ERROR)) {
       this.consoleImpl.error(this.formatMessage(LogLevel.ERROR, message));
     }

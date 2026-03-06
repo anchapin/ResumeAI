@@ -24,14 +24,28 @@ export interface ResumeData {
     email?: string;
     phone?: string;
     summary?: string;
-    location?: any;
-    profiles?: any[];
+    location?: string | LocationObject;
+    profiles?: Profile[];
   };
   work?: WorkExperience[];
   education?: Education[];
   skills?: Skill[];
   projects?: Project[];
   awards?: Award[];
+}
+
+export interface LocationObject {
+  address?: string;
+  city?: string;
+  region?: string;
+  postalCode?: string;
+  countryCode?: string;
+}
+
+export interface Profile {
+  network?: string;
+  username?: string;
+  url?: string;
 }
 
 export interface WorkExperience {
@@ -78,8 +92,8 @@ export interface Award {
 
 export interface DiffResult {
   field: string;
-  oldValue: any;
-  newValue: any;
+  oldValue: unknown;
+  newValue: unknown;
   changeType: 'added' | 'removed' | 'modified';
 }
 
@@ -161,8 +175,8 @@ export function compareVersions(
  * Compare two objects and return differences
  */
 function compareObjects(
-  oldObj: Record<string, any>,
-  newObj: Record<string, any>,
+  oldObj: Record<string, unknown>,
+  newObj: Record<string, unknown>,
   prefix: string,
 ): DiffResult[] {
   const differences: DiffResult[] = [];
