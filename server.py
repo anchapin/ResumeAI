@@ -746,7 +746,7 @@ async def import_linkedin_file(files: List[UploadFile] = File(...)):
                 try:
                     json_data = json.loads(content.decode("utf-8"))
                     print("DEBUG: Found valid JSON data")
-                except:
+                except json.JSONDecodeError:
                     print(f"DEBUG: Failed to parse JSON from {file.filename}")
             elif file.filename.endswith(".zip"):
                 print("DEBUG: Processing ZIP file")
@@ -891,7 +891,7 @@ def _process_linkedin_csvs(csv_files):
 
         try:
             return list(csv.DictReader(io.StringIO(content)))
-        except:
+        except csv.Error:
             return []
 
     # Map filenames to keys
