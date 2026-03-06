@@ -9,6 +9,7 @@ import DeliveryLogs from '../components/DeliveryLogs';
 import SettingsSkeleton from '../components/skeletons/SettingsSkeleton';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 import { type Webhook } from '../utils/api-client';
+import { secureApiCall } from '../utils/security';
 
 /** Mock usage data - in production this would come from the API */
 interface UsageData {
@@ -82,24 +83,12 @@ const currentUsageStats = {
 const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
 
 /**
- * Get JWT token from localStorage
- */
-function getAuthToken(): string | null {
-  return localStorage.getItem('resumeai_access_token');
-}
-
-/**
  * Fetch API keys from backend
+ * Uses httpOnly cookies via secureApiCall
  */
 async function fetchAPIKeys(): Promise<APIKeyInfo[]> {
-  const token = getAuthToken();
-  if (!token) {
-    throw new Error('Not authenticated');
-  }
-
-  const response = await fetch(`${API_URL}/api/v1/api-keys`, {
+  const response = await secureApiCall(`${API_URL}/api/v1/api-keys`, {
     headers: {
-      Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json',
     },
   });
@@ -117,6 +106,7 @@ async function fetchAPIKeys(): Promise<APIKeyInfo[]> {
 
 /**
  * Create a new API key
+ * Uses httpOnly cookies via secureApiCall
  */
 async function createAPIKey(params: {
   name: string;
@@ -125,15 +115,9 @@ async function createAPIKey(params: {
   rate_limit_daily?: number;
   expires_in_days?: number;
 }): Promise<APIKeyCreateResponse> {
-  const token = getAuthToken();
-  if (!token) {
-    throw new Error('Not authenticated');
-  }
-
-  const response = await fetch(`${API_URL}/api/v1/api-keys`, {
+  const response = await secureApiCall(`${API_URL}/api/v1/api-keys`, {
     method: 'POST',
     headers: {
-      Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify(params),
@@ -149,18 +133,11 @@ async function createAPIKey(params: {
 
 /**
  * Revoke an API key
+ * Uses httpOnly cookies via secureApiCall
  */
 async function revokeAPIKey(keyId: number): Promise<void> {
-  const token = getAuthToken();
-  if (!token) {
-    throw new Error('Not authenticated');
-  }
-
-  const response = await fetch(`${API_URL}/api/v1/api-keys/${keyId}`, {
+  const response = await secureApiCall(`${API_URL}/api/v1/api-keys/${keyId}`, {
     method: 'DELETE',
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
   });
 
   if (!response.ok) {

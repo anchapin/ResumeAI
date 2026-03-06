@@ -16,6 +16,8 @@ describe('ProjectsSection', () => {
       name: 'Resume Builder',
       description: 'A modern resume builder with AI-powered features',
       url: 'https://github.com/user/resume-builder',
+      startDate: '2023-01',
+      endDate: '2023-06',
       tags: ['React', 'TypeScript', 'AI'],
     },
     {
@@ -23,6 +25,8 @@ describe('ProjectsSection', () => {
       name: 'E-commerce Platform',
       description: 'Full-stack e-commerce solution with payment integration',
       url: 'https://github.com/user/ecommerce',
+      startDate: '2022-09',
+      endDate: '2023-01',
       tags: ['Node.js', 'PostgreSQL', 'Stripe'],
     },
   ];

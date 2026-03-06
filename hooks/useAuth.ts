@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import { useStore } from '../store/store';
-import { TokenManager } from '../utils/security';
+import { TokenManager, setCookie, deleteCookie, getCookie } from '../utils/security';
 import { api } from '../src/lib/requestSigning';
 
 /**
@@ -68,7 +68,7 @@ export const useAuth = () => {
 
         const data = await response.json();
         TokenManager.setToken(data.access_token);
-        localStorage.setItem('resumeai_refresh_token', data.refresh_token);
+        setCookie('refresh_token', data.refresh_token, 30); // 30 days for refresh token
 
         const userData = await fetchCurrentUser();
         return userData;
@@ -114,13 +114,13 @@ export const useAuth = () => {
 
   const logout = useCallback(async () => {
     try {
-      const refreshToken = localStorage.getItem('resumeai_refresh_token');
+      const refreshToken = getCookie('refresh_token');
       if (refreshToken) {
         await api.post('/api/v1/auth/logout', { refresh_token: refreshToken }).catch(() => {});
       }
     } finally {
       TokenManager.removeToken();
-      localStorage.removeItem('resumeai_refresh_token');
+      deleteCookie('refresh_token');
       setUser(null);
     }
   }, [setUser]);

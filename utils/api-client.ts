@@ -2,6 +2,8 @@
  * API client for advanced features
  */
 
+import { getCookie } from './security';
+
 export type {
   ResumeMetadata,
   ResumeVersion,
@@ -173,8 +175,8 @@ function getAPIKey(): string | null {
 export function getHeaders(): HeadersInit {
   const headers: HeadersInit = { 'Content-Type': 'application/json' };
 
-  // Try JWT token first (Issue 477 - Bearer token auth)
-  const token = localStorage.getItem('resume_ai_auth_token');
+  // Try JWT token from httpOnly cookie first (Issue 477 - Bearer token auth)
+  const token = getCookie('access_token');
   if (token) {
     try {
       // Check if token is expired

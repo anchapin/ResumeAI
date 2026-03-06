@@ -45,18 +45,7 @@ const Teams: React.FC = () => {
   // Mock current user ID - in a real app, this would come from authentication
   const currentUserId = '1';
 
-  // Load teams on mount
-  useEffect(() => {
-    loadTeams();
-  }, [loadTeams]);
-
-  // Load team details when selected
-  useEffect(() => {
-    if (selectedTeam && view === 'detail') {
-      loadTeamDetails(selectedTeam.id);
-    }
-  }, [selectedTeam, view, loadTeamDetails]);
-
+  // Load teams on mount - must be defined before useEffect that uses it
   const loadTeams = useCallback(async () => {
     setIsLoadingTeams(true);
     try {
@@ -71,6 +60,7 @@ const Teams: React.FC = () => {
     }
   }, []);
 
+  // Load team details - must be defined before useEffect that uses it
   const loadTeamDetails = useCallback(async (teamId: number) => {
     setIsLoadingTeam(true);
     setIsLoadingMembers(true);
@@ -104,6 +94,18 @@ const Teams: React.FC = () => {
       setIsLoadingActivities(false);
     }
   }, []);
+
+  // Load teams on mount
+  useEffect(() => {
+    loadTeams();
+  }, [loadTeams]);
+
+  // Load team details when selected
+  useEffect(() => {
+    if (selectedTeam && view === 'detail') {
+      loadTeamDetails(selectedTeam.id);
+    }
+  }, [selectedTeam, view, loadTeamDetails]);
 
   const handleSelectTeam = (team: Team) => {
     setSelectedTeam(team);

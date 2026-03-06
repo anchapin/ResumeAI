@@ -64,6 +64,12 @@ const getCookie = (name: string): string | null => {
   return match ? decodeURIComponent(match[2]) : null;
 };
 
+const setCookie = (name: string, value: string, days: number = 7): void => {
+  if (typeof document === 'undefined') return;
+  const expires = new Date(Date.now() + days * 864e5).toUTCString();
+  document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires}; path=/; SameSite=Strict`;
+};
+
 const deleteCookie = (name: string): void => {
   if (typeof document === 'undefined') return;
   document.cookie = name + '=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Strict';
@@ -102,6 +108,21 @@ const TokenManager = {
     return null;
   },
 };
+
+/**
+ * Get JWT access token from cookie first, fallback to localStorage
+ * This provides backward compatibility while transitioning to httpOnly cookies
+ */
+function getAuthToken(): string | null {
+  // First try to get from cookie (httpOnly - more secure)
+  const cookieToken = getCookie('access_token');
+  if (cookieToken) {
+    return cookieToken;
+  }
+
+  // Fallback to localStorage for backward compatibility
+  return localStorage.getItem('resumeai_access_token');
+}
 
 // Get CSRF token from cookie
 /**
@@ -228,4 +249,8 @@ export {
   sanitizeInput,
   validateFileUpload,
   getCsrfToken,
+  getCookie,
+  setCookie,
+  deleteCookie,
+  getAuthToken,
 };
