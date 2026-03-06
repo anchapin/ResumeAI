@@ -6,7 +6,7 @@ import {
   downloadLinkedInProfile,
   validateLinkedInData,
 } from './linkedin';
-import { ResumeData } from '../types';
+import { LinkedInImportData, ResumeData } from '../types';
 
 const mockResumeData: any = {
   basics: {
@@ -138,7 +138,7 @@ describe('LinkedIn Utilities', () => {
     });
 
     it('should parse positions/work experience', () => {
-      const linkedinData = {
+      const linkedinData: LinkedInImportData = {
         firstName: 'John',
         lastName: 'Doe',
         positions: [
@@ -146,8 +146,8 @@ describe('LinkedIn Utilities', () => {
             companyName: 'Tech Inc',
             title: 'Software Engineer',
             description: 'Built applications',
-            startDate: { year: 2020, month: 1 },
-            endDate: { year: 2023, month: 12 },
+            startDate: '2020-01',
+            endDate: '2023-12',
           },
         ],
       };
@@ -160,7 +160,7 @@ describe('LinkedIn Utilities', () => {
     });
 
     it('should parse education', () => {
-      const linkedinData = {
+      const linkedinData: LinkedInImportData = {
         firstName: 'John',
         lastName: 'Doe',
         educations: [
@@ -168,8 +168,8 @@ describe('LinkedIn Utilities', () => {
             schoolName: 'MIT',
             degreeName: 'Bachelor',
             fieldOfStudy: 'Computer Science',
-            startDate: { year: 2016 },
-            endDate: { year: 2020 },
+            startDate: '2016',
+            endDate: '2020',
           },
         ],
       };
@@ -410,7 +410,7 @@ describe('LinkedIn Utilities', () => {
     });
 
     it('should error on null data', () => {
-      const result = validateLinkedInData(null);
+      const result = validateLinkedInData(null as unknown as LinkedInImportData);
 
       expect(result.valid).toBe(false);
       expect(result.errors).toContain('No data provided');
