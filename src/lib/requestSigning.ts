@@ -4,6 +4,8 @@
  * @packageDocumentation
  */
 
+import { getCookie } from '../../utils/security';
+
 const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
 
 const SIGNATURE_SECRET = import.meta.env.VITE_REQUEST_SIGNING_SECRET || '';
@@ -113,12 +115,16 @@ export async function signedFetch(endpoint: string, options: RequestInit = {}): 
     headers['Content-Type'] = headers['Content-Type'] || 'application/json';
   }
 
-  const token = localStorage.getItem('access_token');
+  // Get access token from httpOnly cookie (set by backend on login)
+  // Note: With httpOnly cookies, the browser automatically sends the token
+  // However, for signedFetch we may still need it for the signature calculation
+  const token = getCookie('access_token');
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  const csrfToken = localStorage.getItem('csrf_token');
+  // Get CSRF token from cookie for state-changing requests
+  const csrfToken = getCookie('csrf_token');
   if (csrfToken) {
     headers['X-CSRF-Token'] = csrfToken;
   }

@@ -129,6 +129,8 @@ function App() {
 
     setSaveStatus('saving');
 
+    let innerTimeout: ReturnType<typeof setTimeout> | null = null;
+
     const handler = setTimeout(async () => {
       try {
         await saveResumeData(resumeData);
@@ -137,7 +139,7 @@ function App() {
           console.log('Resume data saved to localStorage');
         }
 
-        setTimeout(() => setSaveStatus('idle'), 3000);
+        innerTimeout = setTimeout(() => setSaveStatus('idle'), 3000);
       } catch (error) {
         setSaveStatus('error');
         const storageError = error instanceof StorageError ? error : null;
@@ -148,11 +150,16 @@ function App() {
           type: ErrorType.STORAGE,
         });
 
-        setTimeout(() => setSaveStatus('idle'), 5000);
+        innerTimeout = setTimeout(() => setSaveStatus('idle'), 5000);
       }
     }, 1000);
 
-    return () => clearTimeout(handler);
+    return () => {
+      clearTimeout(handler);
+      if (innerTimeout) {
+        clearTimeout(innerTimeout);
+      }
+    };
   }, [resumeData, isLoaded, setSaveStatus]);
 
   return (

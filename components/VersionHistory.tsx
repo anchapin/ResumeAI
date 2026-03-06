@@ -17,10 +17,6 @@ const VersionHistory: React.FC<VersionHistoryProps> = ({ resumeId, onRestore }) 
   const [loading, setLoading] = useState(true);
   const [restoring, setRestoring] = useState<number | null>(null);
 
-  useEffect(() => {
-    loadVersions();
-  }, [resumeId, loadVersions]);
-
   const loadVersions = useCallback(async () => {
     try {
       setLoading(true);
@@ -33,6 +29,10 @@ const VersionHistory: React.FC<VersionHistoryProps> = ({ resumeId, onRestore }) 
       setLoading(false);
     }
   }, [resumeId]);
+
+  useEffect(() => {
+    loadVersions();
+  }, [resumeId, loadVersions]);
 
   const handleRestore = async (version: ResumeVersion) => {
     if (

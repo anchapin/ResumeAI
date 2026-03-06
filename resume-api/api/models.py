@@ -1742,6 +1742,21 @@ class TeamMemberRole(str):
     VIEWER = "viewer"
 
 
+class TeamMemberUpdate(BaseModel):
+    """Request model for updating a team member's role."""
+
+    role: TeamMemberRole = Field(..., description="Team member role")
+
+    @field_validator("role")
+    @classmethod
+    def validate_role(cls, v: str) -> str:
+        """Validate team member role."""
+        valid_roles = [TeamMemberRole.OWNER, TeamMemberRole.ADMIN, TeamMemberRole.EDITOR, TeamMemberRole.VIEWER]
+        if v not in valid_roles:
+            raise ValueError(f"Invalid role. Must be one of: {', '.join(valid_roles)}")
+        return v
+
+
 class TeamCreate(BaseModel):
     """Request model for creating a team."""
 

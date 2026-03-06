@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { toast } from 'react-toastify';
+import { secureApiCall, getAuthToken } from '../utils/security';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
 
@@ -43,25 +44,13 @@ export function useGitHubConnection() {
 }
 
 /**
- * Get JWT token from localStorage
- */
-function getAuthToken(): string | null {
-  return localStorage.getItem('resumeai_access_token');
-}
-
-/**
  * Fetch GitHub connection status from backend
+ * Uses httpOnly cookies via secureApiCall
  */
 async function fetchGitHubConnectionStatus(): Promise<GitHubConnectionStatus> {
-  const token = getAuthToken();
-  if (!token) {
-    return { connected: false };
-  }
-
   try {
-    const response = await fetch(`${API_URL}/api/v1/github/status`, {
+    const response = await secureApiCall(`${API_URL}/api/v1/github/status`, {
       headers: {
-        Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
     });

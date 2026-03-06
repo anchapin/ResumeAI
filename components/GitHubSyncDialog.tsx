@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { toast } from 'react-toastify';
+import { secureApiCall, getAuthToken } from '../utils/security';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
 
@@ -40,24 +41,12 @@ interface GitHubSyncDialogProps {
 }
 
 /**
- * Get JWT token from localStorage
- */
-function getAuthToken(): string | null {
-  return localStorage.getItem('resumeai_access_token');
-}
-
-/**
  * Fetch GitHub connection status from backend
+ * Uses httpOnly cookies via secureApiCall
  */
 async function fetchGitHubConnectionStatus(): Promise<GitHubConnectionStatus> {
-  const token = getAuthToken();
-  if (!token) {
-    throw new Error('Not authenticated');
-  }
-
-  const response = await fetch(`${API_URL}/api/v1/github/status`, {
+  const response = await secureApiCall(`${API_URL}/api/v1/github/status`, {
     headers: {
-      Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json',
     },
   });
@@ -152,14 +141,23 @@ export const GitHubSyncDialog: React.FC<GitHubSyncDialogProps> = ({
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Check OAuth connection status on dialog open
-  useEffect(() => {
-    if (isOpen) {
-      checkConnectionStatus();
-    }
-  }, [isOpen, checkConnectionStatus]);
+  // Load repositories from GitHub - must be defined first since checkConnectionStatus uses it
+  const loadRepositories = useCallback(async () => {
+    setIsLoadingRepositories(true);
+    setError(null);
 
-  // Check connection status
+    try {
+      const repos = await fetchGitHubRepositories();
+      setRepositories(repos);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load repositories';
+      setError(errorMessage);
+    } finally {
+      setIsLoadingRepositories(false);
+    }
+  }, []);
+
+  // Check connection status - must be defined after loadRepositories since it uses it
   const checkConnectionStatus = useCallback(async () => {
     setIsLoadingStatus(true);
     setError(null);
@@ -183,21 +181,12 @@ export const GitHubSyncDialog: React.FC<GitHubSyncDialogProps> = ({
     }
   }, [loadRepositories]);
 
-  // Load repositories from GitHub
-  const loadRepositories = useCallback(async () => {
-    setIsLoadingRepositories(true);
-    setError(null);
-
-    try {
-      const repos = await fetchGitHubRepositories();
-      setRepositories(repos);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to load repositories';
-      setError(errorMessage);
-    } finally {
-      setIsLoadingRepositories(false);
+  // Check OAuth connection status on dialog open
+  useEffect(() => {
+    if (isOpen) {
+      checkConnectionStatus();
     }
-  }, []);
+  }, [isOpen, checkConnectionStatus]);
 
   // Handle GitHub connection
   const handleConnectGitHub = async () => {
