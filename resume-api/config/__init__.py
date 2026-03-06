@@ -7,7 +7,7 @@ import secrets
 from pathlib import Path
 from typing import Optional, Union
 
-from pydantic import Field, ValidationInfo, field_validator
+from pydantic import Field, ValidationInfo, field_validator, model_validator
 from pydantic_settings import BaseSettings
 from pydantic_settings import SettingsConfigDict
 
@@ -46,7 +46,22 @@ class Settings(BaseSettings):
     )
 
     # CORS Configuration
-    cors_origins: list[str] = ["*"]
+    # In production, restrict to specific frontend domains
+    # Use comma-separated list of allowed origins in ALLOWED_ORIGINS env variable
+    # Default to ["http://localhost:5173", "http://localhost:3000"] for development
+    cors_origins: list[str] = Field(default=[])
+
+    @model_validator(mode="after")
+    def parse_cors_origins(self) -> "Settings":
+        """Parse CORS origins from environment variable or use defaults."""
+        import os
+        env_origins = os.environ.get("ALLOWED_ORIGINS")
+        if env_origins:
+            self.cors_origins = [origin.strip() for origin in env_origins.split(",") if origin.strip()]
+        elif not self.cors_origins:
+            # Default for development
+            self.cors_origins = ["http://localhost:5173", "http://localhost:3000"]
+        return self
 
     # JWT Configuration
     # JWT secret must be provided via environment variable
