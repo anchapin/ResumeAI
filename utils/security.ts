@@ -237,4 +237,20 @@ export {
   getCookie,
   setCookie,
   deleteCookie,
+  getAuthToken,
 };
+
+/**
+ * Get JWT access token from cookie first, fallback to localStorage
+ * This provides backward compatibility while transitioning to httpOnly cookies
+ */
+function getAuthToken(): string | null {
+  // First try to get from cookie (httpOnly - more secure)
+  const cookieToken = getCookie('access_token');
+  if (cookieToken) {
+    return cookieToken;
+  }
+
+  // Fallback to localStorage for backward compatibility
+  return localStorage.getItem('resumeai_access_token');
+}
