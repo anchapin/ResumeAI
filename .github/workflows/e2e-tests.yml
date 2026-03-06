@@ -41,10 +41,26 @@ jobs:
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps chromium
 
+      - name: Start Dev Server
+        run: |
+          npm run dev > /tmp/vite.log 2>&1 &
+          echo "Waiting for dev server to be ready..."
+          for i in {1..30}; do
+            if curl -s -o /dev/null -w "%{http_code}" http://localhost:3000 | grep -q "200"; then
+              echo "Dev server is ready!"
+              break
+            fi
+            sleep 2
+          done
+
       - name: Run E2E tests
         run: npx playwright test --project=chromium
         env:
           CI: true
+
+      - name: Stop Dev Server
+        if: always()
+        run: pkill -f "vite" || true
 
       - name: Upload Playwright Report
         if: always() && !env.ACT
@@ -107,10 +123,26 @@ jobs:
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps chromium firefox webkit
 
+      - name: Start Dev Server
+        run: |
+          npm run dev > /tmp/vite.log 2>&1 &
+          echo "Waiting for dev server to be ready..."
+          for i in {1..30}; do
+            if curl -s -o /dev/null -w "%{http_code}" http://localhost:3000 | grep -q "200"; then
+              echo "Dev server is ready!"
+              break
+            fi
+            sleep 2
+          done
+
       - name: Run E2E tests on all browsers
         run: npx playwright test
         env:
           CI: true
+
+      - name: Stop Dev Server
+        if: always()
+        run: pkill -f "vite" || true
 
       - name: Upload Playwright Report
         if: always()
