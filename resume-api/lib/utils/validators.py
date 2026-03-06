@@ -54,6 +54,12 @@ ALLOWED_MIME_TYPES = {
     "text/plain",
 }
 
+# Large file detection thresholds
+LARGE_FILE_WARNING_MB = 5  # Warn when file exceeds 5MB
+LARGE_FILE_WARNING_BYTES = LARGE_FILE_WARNING_MB * 1024 * 1024
+LARGE_FILE_CRITICAL_MB = 8  # Critical threshold at 8MB (close to max)
+LARGE_FILE_CRITICAL_BYTES = LARGE_FILE_CRITICAL_MB * 1024 * 1024
+
 
 def escape_latex(text: Optional[str]) -> Optional[str]:
     """
@@ -612,6 +618,124 @@ def validate_file_content(
             return False, "Binary file"
 
     return True, None
+
+
+# =============================================================================
+# Large File Detection
+# =============================================================================
+
+
+class FileSizeLevel:
+    """File size level enumeration."""
+    NORMAL = "normal"
+    WARNING = "warning"
+    CRITICAL = "critical"
+    TOO_LARGE = "too_large"
+
+
+def detect_large_file(
+    file_size: int,
+) -> Tuple[FileSizeLevel, Optional[str]]:
+    """
+    Detect if a file is considered large based on its size.
+
+    This function categorizes files into different size levels:
+    - NORMAL: File is under the warning threshold (5MB)
+    - WARNING: File is between 5MB and 8MB
+    - CRITICAL: File is between 8MB and the maximum allowed size (10MB)
+    - TOO_LARGE: File exceeds the maximum allowed size (10MB)
+
+    Args:
+        file_size: Size of the file in bytes
+
+    Returns:
+        Tuple of (FileSizeLevel, optional warning message)
+
+    Example:
+        >>> detect_large_file(1024 * 1024)  # 1MB
+        ('normal', None)
+        >>> detect_large_file(6 * 1024 * 1024)  # 6MB
+        ('warning', 'File is 6.0MB. Consider using a smaller file for better performance.')
+        >>> detect_large_file(9 * 1024 * 1024)  # 9MB
+        ('critical', 'File is 9.0MB. This is close to the maximum allowed size of 10MB.')
+    """
+    if file_size > MAX_FILE_SIZE_BYTES:
+        size_mb = file_size / (1024 * 1024)
+        return (
+            FileSizeLevel.TOO_LARGE,
+            f"File is {size_mb:.1f}MB, which exceeds the maximum allowed size of {MAX_FILE_SIZE_MB}MB.",
+        )
+
+    if file_size >= LARGE_FILE_CRITICAL_BYTES:
+        size_mb = file_size / (1024 * 1024)
+        return (
+            FileSizeLevel.CRITICAL,
+            f"File is {size_mb:.1f}MB. This is close to the maximum allowed size of {MAX_FILE_SIZE_MB}MB.",
+        )
+
+    if file_size >= LARGE_FILE_WARNING_BYTES:
+        size_mb = file_size / (1024 * 1024)
+        return (
+            FileSizeLevel.WARNING,
+            f"File is {size_mb:.1f}MB. Consider using a smaller file for better performance.",
+        )
+
+    return FileSizeLevel.NORMAL, None
+
+
+def is_large_file(file_size: int, threshold_mb: int = LARGE_FILE_WARNING_MB) -> bool:
+    """
+    Check if a file is considered large based on a threshold.
+
+    Args:
+        file_size: Size of the file in bytes
+        threshold_mb: Threshold in MB to consider a file large (default: 5MB)
+
+    Returns:
+        True if file size exceeds the threshold, False otherwise
+
+    Example:
+        >>> is_large_file(6 * 1024 * 1024)  # 6MB
+        True
+        >>> is_large_file(4 * 1024 * 1024)  # 4MB
+        False
+    """
+    threshold_bytes = threshold_mb * 1024 * 1024
+    return file_size >= threshold_bytes
+
+
+def get_file_size_category(file_size: int) -> str:
+    """
+    Get a human-readable category for the file size.
+
+    Args:
+        file_size: Size of the file in bytes
+
+    Returns:
+        String category: "tiny", "small", "medium", "large", "very_large", or "huge"
+
+    Example:
+        >>> get_file_size_category(100 * 1024)  # 100KB
+        'small'
+        >>> get_file_size_category(2 * 1024 * 1024)  # 2MB
+        'medium'
+        >>> get_file_size_category(9 * 1024 * 1024)  # 9MB
+        'very_large'
+    """
+    size_kb = file_size / 1024
+
+    if size_kb < 100:  # Less than 100KB
+        return "tiny"
+    elif size_kb < 1024:  # Less than 1MB
+        return "small"
+    elif size_kb < 5 * 1024:  # Less than 5MB
+        return "medium"
+    elif size_kb < 8 * 1024:  # Less than 8MB
+        return "large"
+    elif size_kb < 10 * 1024:  # Less than 10MB
+        return "very_large"
+    else:
+        return "huge"
 
 
 def sanitize_markdown(text: Optional[str]) -> Optional[str]:

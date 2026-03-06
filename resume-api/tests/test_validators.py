@@ -19,6 +19,10 @@ from lib.utils.validators import (
     validate_resume_field,
     validate_resume_data,
     sanitize_html,
+    detect_large_file,
+    is_large_file,
+    get_file_size_category,
+    FileSizeLevel,
 )
 
 
@@ -463,3 +467,156 @@ class TestSecurityTestCases:
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
+
+
+# =============================================================================
+# Large File Detection Tests
+# =============================================================================
+
+
+class TestLargeFileDetection:
+    """Test large file detection functionality."""
+
+    def test_detect_large_file_normal(self):
+        """Test detection of normal file size."""
+        # 1MB file - should be normal
+        level, msg = detect_large_file(1024 * 1024)
+        assert level == FileSizeLevel.NORMAL
+        assert msg is None
+
+    def test_detect_large_file_at_warning_boundary(self):
+        """Test detection at warning threshold boundary (5MB)."""
+        # Exactly at warning threshold (5MB)
+        level, msg = detect_large_file(5 * 1024 * 1024)
+        assert level == FileSizeLevel.WARNING
+        assert msg is not None
+        assert "5.0MB" in msg
+
+    def test_detect_large_file_warning(self):
+        """Test detection of warning level file size."""
+        # 6MB file - should be warning
+        level, msg = detect_large_file(6 * 1024 * 1024)
+        assert level == FileSizeLevel.WARNING
+        assert msg is not None
+        assert "6.0MB" in msg
+        assert "smaller file" in msg.lower()
+
+    def test_detect_large_file_at_critical_boundary(self):
+        """Test detection at critical threshold boundary (8MB)."""
+        # Exactly at critical threshold (8MB)
+        level, msg = detect_large_file(8 * 1024 * 1024)
+        assert level == FileSizeLevel.CRITICAL
+        assert msg is not None
+        assert "8.0MB" in msg
+
+    def test_detect_large_file_critical(self):
+        """Test detection of critical level file size."""
+        # 9MB file - should be critical
+        level, msg = detect_large_file(9 * 1024 * 1024)
+        assert level == FileSizeLevel.CRITICAL
+        assert msg is not None
+        assert "9.0MB" in msg
+        assert "close to the maximum" in msg.lower()
+
+    def test_detect_large_file_at_max_boundary(self):
+        """Test detection at maximum file size boundary (10MB)."""
+        # Exactly at max (10MB)
+        level, msg = detect_large_file(10 * 1024 * 1024)
+        assert level == FileSizeLevel.CRITICAL
+        assert msg is not None
+
+    def test_detect_large_file_too_large(self):
+        """Test detection of file that exceeds maximum."""
+        # 11MB file - should be too large
+        level, msg = detect_large_file(11 * 1024 * 1024)
+        assert level == FileSizeLevel.TOO_LARGE
+        assert msg is not None
+        assert "11.0MB" in msg
+        assert "exceeds" in msg.lower()
+        assert "10MB" in msg
+
+    def test_detect_large_file_very_large(self):
+        """Test detection of very large file (50MB)."""
+        level, msg = detect_large_file(50 * 1024 * 1024)
+        assert level == FileSizeLevel.TOO_LARGE
+        assert "50.0MB" in msg
+
+    def test_detect_large_file_zero(self):
+        """Test detection of zero byte file."""
+        level, msg = detect_large_file(0)
+        assert level == FileSizeLevel.NORMAL
+        assert msg is None
+
+    def test_detect_large_file_small(self):
+        """Test detection of small file (100KB)."""
+        level, msg = detect_large_file(100 * 1024)
+        assert level == FileSizeLevel.NORMAL
+        assert msg is None
+
+
+class TestIsLargeFile:
+    """Test is_large_file utility function."""
+
+    def test_is_large_file_default_threshold(self):
+        """Test is_large_file with default threshold (5MB)."""
+        # Below threshold
+        assert is_large_file(4 * 1024 * 1024) is False
+        # At threshold
+        assert is_large_file(5 * 1024 * 1024) is True
+        # Above threshold
+        assert is_large_file(6 * 1024 * 1024) is True
+
+    def test_is_large_file_custom_threshold(self):
+        """Test is_large_file with custom threshold."""
+        # 3MB threshold
+        assert is_large_file(2 * 1024 * 1024, 3) is False
+        assert is_large_file(3 * 1024 * 1024, 3) is True
+        assert is_large_file(4 * 1024 * 1024, 3) is True
+
+    def test_is_large_file_zero(self):
+        """Test is_large_file with zero bytes."""
+        assert is_large_file(0) is False
+
+    def test_is_large_file_very_large(self):
+        """Test is_large_file with very large file."""
+        assert is_large_file(100 * 1024 * 1024) is True
+
+
+class TestGetFileSizeCategory:
+    """Test get_file_size_category utility function."""
+
+    def test_category_tiny(self):
+        """Test tiny file category (less than 100KB)."""
+        assert get_file_size_category(0) == "tiny"
+        assert get_file_size_category(50 * 1024) == "tiny"
+        assert get_file_size_category(99 * 1024) == "tiny"
+
+    def test_category_small(self):
+        """Test small file category (100KB - 1MB)."""
+        assert get_file_size_category(100 * 1024) == "small"
+        assert get_file_size_category(512 * 1024) == "small"
+        assert get_file_size_category(1023 * 1024) == "small"
+
+    def test_category_medium(self):
+        """Test medium file category (1MB - 5MB)."""
+        assert get_file_size_category(1024 * 1024) == "medium"
+        assert get_file_size_category(2 * 1024 * 1024) == "medium"
+        assert get_file_size_category(4 * 1024 * 1024) == "medium"
+
+    def test_category_large(self):
+        """Test large file category (5MB - 8MB)."""
+        assert get_file_size_category(5 * 1024 * 1024) == "large"
+        assert get_file_size_category(6 * 1024 * 1024) == "large"
+        assert get_file_size_category(7 * 1024 * 1024) == "large"
+
+    def test_category_very_large(self):
+        """Test very large file category (8MB - 10MB)."""
+        assert get_file_size_category(8 * 1024 * 1024) == "very_large"
+        assert get_file_size_category(9 * 1024 * 1024) == "very_large"
+        assert get_file_size_category(10 * 1024 * 1024 - 1) == "very_large"
+
+    def test_category_huge(self):
+        """Test huge file category (10MB+)."""
+        assert get_file_size_category(10 * 1024 * 1024) == "huge"
+        assert get_file_size_category(15 * 1024 * 1024) == "huge"
+        assert get_file_size_category(100 * 1024 * 1024) == "huge"
