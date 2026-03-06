@@ -45,23 +45,11 @@ class Settings(BaseSettings):
         None  # List of API keys (parsed from comma-separated env)
     )
 
-    # CORS Configuration
-    # In production, restrict to specific frontend domains
-    # Use comma-separated list of allowed origins in ALLOWED_ORIGINS env variable
-    # Default to ["http://localhost:5173", "http://localhost:3000"] for development
-    cors_origins: list[str] = Field(default=[])
-
-    @model_validator(mode="after")
-    def parse_cors_origins(self) -> "Settings":
-        """Parse CORS origins from environment variable or use defaults."""
-        import os
-        env_origins = os.environ.get("ALLOWED_ORIGINS")
-        if env_origins:
-            self.cors_origins = [origin.strip() for origin in env_origins.split(",") if origin.strip()]
-        elif not self.cors_origins:
-            # Default for development
-            self.cors_origins = ["http://localhost:5173", "http://localhost:3000"]
-        return self
+    # Allowed origins for CORS - should be configured via environment variable
+    # In production, specify exact origins (e.g., "https://resumeai.com")
+    # For local development, use "http://localhost:5173" or other local ports
+    cors_origins: Optional[list[str]] = None
+    cors_allow_credentials: bool = True  # Set to False in production if not needed
 
     # JWT Configuration
     # JWT secret must be provided via environment variable
@@ -203,6 +191,35 @@ class Settings(BaseSettings):
         if isinstance(v, list):
             return v
         return [key.strip() for key in str(v).split(",") if key.strip()]
+
+    @field_validator("cors_origins", mode="before")
+    @classmethod
+    def parse_cors_origins(cls, v: Union[str, list, None]) -> Optional[list[str]]:
+        """
+        Parse CORS origins from string or list.
+
+        SECURITY: This validator prevents using "*" (allow all) with credentials enabled.
+        It ensures that if credentials are needed, specific origins must be provided.
+        """
+        if v is None:
+            return [
+                "http://localhost:5173",
+                "http://localhost:3000",
+                "http://127.0.0.1:5173",
+                "http://127.0.0.1:3000",
+            ]
+        if isinstance(v, str):
+            if v.strip() == "*":
+                # Security: Don't allow wildcard with credentials
+                # Return default local origins instead
+                return [
+                    "http://localhost:5173",
+                    "http://localhost:3000",
+                    "http://127.0.0.1:5173",
+                    "http://127.0.0.1:3000",
+                ]
+            return [origin.strip() for origin in v.split(",") if origin.strip()]
+        return v
 
     model_config = SettingsConfigDict(env_file=".env", case_sensitive=False)
 
