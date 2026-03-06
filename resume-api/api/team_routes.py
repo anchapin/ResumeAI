@@ -18,6 +18,7 @@ from .models import (
     TeamResponse,
     TeamDetailResponse,
     TeamMemberResponse,
+    TeamMemberUpdate,
     TeamResumeShare,
     TeamActivityResponse,
     ResumeCommentCreate,
@@ -791,10 +792,8 @@ async def get_team_member(
         )
 
 
-
-
 @router.put(
-    "/v1/teams/{team_id}/members/{user_id}",
+    "/v1/teams/{team_id}/members/{member_id}",
     response_model=TeamMemberResponse,
     responses={
         400: {"model": ErrorResponse},
@@ -810,8 +809,8 @@ async def get_team_member(
 async def update_member_role(
     request: Request,
     team_id: int,
-    user_id: int,
-    role: str,
+    member_id: int,
+    member_update: TeamMemberUpdate,
     auth: AuthorizedAPIKey,
     db: AsyncSession = Depends(get_db),
 ):
@@ -843,7 +842,7 @@ async def update_member_role(
                 detail="Only team owners can change member roles",
             )
 
-        if user_id == team.owner_id:
+        if member_id == team.owner_id:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Cannot change the role of the team owner",
@@ -854,7 +853,7 @@ async def update_member_role(
             .where(
                 and_(
                     TeamMember.team_id == team_id,
-                    TeamMember.user_id == user_id,
+                    TeamMember.user_id == member_id,
                 )
             )
             .options(selectinload(TeamMember.user))
@@ -865,20 +864,20 @@ async def update_member_role(
         if not member:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Member {user_id} not found in team {team_id}",
+                detail=f"Member {member_id} not found in team {team_id}",
             )
 
         old_role = member.role
-        member.role = role
+        member.role = member_update.role
 
         activity = TeamActivity(
             team_id=team_id,
             user_id=current_user_id,
             action="role_changed",
-            description=f"{member.user.username}'s role was changed from {old_role} to {role}",
+            description=f"{member.user.username}'s role was changed from {old_role} to {member_update.role}",
             resource_type="user",
-            resource_id=user_id,
-            metadata={"old_role": old_role, "new_role": role},
+            resource_id=member_id,
+            metadata={"old_role": old_role, "new_role": member_update.role},
         )
         db.add(activity)
 
@@ -908,7 +907,7 @@ async def update_member_role(
 
 
 @router.delete(
-    "/v1/teams/{team_id}/members/{user_id}",
+    "/v1/teams/{team_id}/members/{member_id}",
     response_model=MessageResponse,
     responses={
         401: {"model": ErrorResponse},
@@ -923,7 +922,7 @@ async def update_member_role(
 async def remove_team_member(
     request: Request,
     team_id: int,
-    user_id: int,
+    member_id: int,
     auth: AuthorizedAPIKey,
     db: AsyncSession = Depends(get_db),
 ):
@@ -949,7 +948,7 @@ async def remove_team_member(
                 detail=f"Team {team_id} not found",
             )
 
-        if user_id == team.owner_id:
+        if member_id == team.owner_id:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Cannot remove the team owner",
@@ -960,7 +959,7 @@ async def remove_team_member(
             .where(
                 and_(
                     TeamMember.team_id == team_id,
-                    TeamMember.user_id == user_id,
+                    TeamMember.user_id == member_id,
                 )
             )
             .options(selectinload(TeamMember.user))
@@ -971,7 +970,7 @@ async def remove_team_member(
         if not member:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Member {user_id} not found in team {team_id}",
+                detail=f"Member {member_id} not found in team {team_id}",
             )
 
         if team.owner_id != current_user_id:
@@ -990,7 +989,7 @@ async def remove_team_member(
             action="member_left",
             description=f"{username} was removed from the team",
             resource_type="user",
-            resource_id=user_id,
+            resource_id=member_id,
         )
         db.add(activity)
 

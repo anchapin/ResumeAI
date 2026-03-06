@@ -187,7 +187,8 @@ export function getHeaders(): HeadersInit {
           return headers;
         }
       }
-    } catch {
+    } catch (err) {
+      console.error('Failed to parse token:', err);
       // Invalid token, fall through to API key
     }
   }

@@ -67,7 +67,9 @@ const TeamCard: React.FC<TeamCardProps> = ({ team, onSelect, onDelete, isOwner =
               title="Delete team"
               aria-label="Delete team"
             >
-              <span className="material-symbols-outlined text-[20px]" aria-hidden="true">delete</span>
+              <span className="material-symbols-outlined text-[20px]" aria-hidden="true">
+                delete
+              </span>
             </button>
           )}
         </div>

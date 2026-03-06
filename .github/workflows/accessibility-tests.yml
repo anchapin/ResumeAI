@@ -46,14 +46,14 @@ jobs:
           npm run test -- tests/accessibility.test.ts --reporter=json > a11y-reports/report.json || true
       
       - name: Upload accessibility report
-        if: always()
+        if: always() && !env.ACT
         uses: actions/upload-artifact@v4
         with:
           name: accessibility-reports-node-${{ matrix.node-version }}
           path: a11y-reports/
       
       - name: Comment PR with results
-        if: github.event_name == 'pull_request' && always()
+        if: github.event_name == 'pull_request' && always() && !env.ACT
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}

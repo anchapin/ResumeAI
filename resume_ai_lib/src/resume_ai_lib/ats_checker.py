@@ -6,7 +6,7 @@ Applicant Tracking Systems and provide recommendations for improvement.
 """
 
 import re
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 from dataclasses import dataclass, field
 
 

@@ -162,11 +162,16 @@ const TeamResumeLibrary: React.FC<TeamResumeLibraryProps> = ({
                   aria-label="Unshare from team"
                 >
                   {unsharingResumeId === sharedResume.id ? (
-                    <span className="material-symbols-outlined animate-spin text-[18px]" aria-hidden="true">
+                    <span
+                      className="material-symbols-outlined animate-spin text-[18px]"
+                      aria-hidden="true"
+                    >
                       progress_activity
                     </span>
                   ) : (
-                    <span className="material-symbols-outlined text-[18px]" aria-hidden="true">link_off</span>
+                    <span className="material-symbols-outlined text-[18px]" aria-hidden="true">
+                      link_off
+                    </span>
                   )}
                 </button>
               </div>
