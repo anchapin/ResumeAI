@@ -1,6 +1,12 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { getHeaders, convertToAPIData } from './api-client';
 import { SimpleResumeData } from '../types';
+import { getCookie } from './security';
+
+// Mock getCookie from security
+vi.mock('./security', () => ({
+  getCookie: vi.fn(),
+}));
 
 // Mock fetch globally
 global.fetch = vi.fn();
@@ -54,6 +60,7 @@ describe('API Client', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     localStorage.clear();
+    vi.mocked(getCookie).mockReturnValue(null);
   });
 
   afterEach(() => {
@@ -70,15 +77,10 @@ describe('API Client', () => {
     });
 
     it('includes Bearer token when JWT token exists and is valid', () => {
-      const validToken = 'valid.jwt.token';
-      localStorage.setItem('resume_ai_auth_token', validToken);
-
-      // Mock a valid JWT structure
-      const mockPayload = {
-        exp: Math.floor(Date.now() / 1000) + 3600, // 1 hour in future
-      };
-      const mockToken = `header.${Buffer.from(JSON.stringify(mockPayload)).toString('base64')}.signature`;
-      localStorage.setItem('resume_ai_auth_token', mockToken);
+      // Mock getCookie to return a valid JWT token from cookie
+      const mockPayload = { exp: Math.floor(Date.now() / 1000) + 3600 };
+      const mockToken = `header.${btoa(JSON.stringify(mockPayload))}.signature`;
+      vi.mocked(getCookie).mockReturnValue(mockToken);
 
       const headers = getHeaders();
 
@@ -108,11 +110,13 @@ describe('API Client', () => {
     });
 
     it('prefers JWT token over API key', () => {
+      // Mock getCookie to return a valid JWT token from cookie
       const mockPayload = {
         exp: Math.floor(Date.now() / 1000) + 3600,
       };
-      const mockToken = `header.${Buffer.from(JSON.stringify(mockPayload)).toString('base64')}.signature`;
-      localStorage.setItem('resume_ai_auth_token', mockToken);
+      const mockToken = `header.${btoa(JSON.stringify(mockPayload))}.signature`;
+      vi.mocked(getCookie).mockReturnValue(mockToken);
+
       localStorage.setItem('RESUMEAI_API_KEY', 'api-key');
 
       const headers = getHeaders();

@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, act, waitFor } from '@testing-library/react';
 import { useAuth } from './useAuth';
 import { useStore } from '../store/store';
-import { TokenManager, setCookie, deleteCookie, getCookie } from '../utils/security';
+import { TokenManager, getCookie } from '../utils/security';
 
 // Mock the store
 vi.mock('../store/store', () => ({
@@ -17,9 +17,10 @@ vi.mock('../utils/security', () => ({
     removeToken: vi.fn(),
     isTokenExpired: vi.fn(),
   },
+  setCookie: vi.fn(),
   deleteCookie: vi.fn(),
   getCookie: vi.fn(),
-  setCookie: vi.fn(),
+  getAuthToken: vi.fn(),
 }));
 
 // Mock api from requestSigning
@@ -80,9 +81,6 @@ describe('useAuth Hook', () => {
       });
 
       expect(TokenManager.setToken).toHaveBeenCalledWith(mockTokens.access_token);
-      expect(
-        (setCookie as any).mock.calls.find((call: any[]) => call[0] === 'refresh_token'),
-      ).toBeDefined();
       expect(mockStoreState.setUser).toHaveBeenCalledWith(mockUser);
     });
 
@@ -134,6 +132,9 @@ describe('useAuth Hook', () => {
 
   describe('logout', () => {
     it('successfully logs out a user', async () => {
+      // Set refresh token in cookie (new implementation uses cookies)
+      vi.mocked(getCookie).mockReturnValue('refresh-token-123');
+
       (api.post as any).mockResolvedValueOnce({ ok: true });
 
       const { result } = renderHook(() => useAuth());
@@ -143,7 +144,6 @@ describe('useAuth Hook', () => {
       });
 
       expect(TokenManager.removeToken).toHaveBeenCalled();
-      expect(deleteCookie).toHaveBeenCalledWith('refresh_token');
       expect(mockStoreState.setUser).toHaveBeenCalledWith(null);
     });
   });

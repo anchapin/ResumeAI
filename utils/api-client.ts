@@ -176,13 +176,7 @@ export function getHeaders(): HeadersInit {
   const headers: HeadersInit = { 'Content-Type': 'application/json' };
 
   // Try JWT token from httpOnly cookie first (Issue 477 - Bearer token auth)
-  let token = getCookie('access_token');
-
-  // Fall back to localStorage token for backwards compatibility
-  if (!token) {
-    token = localStorage.getItem('resume_ai_auth_token');
-  }
-
+  const token = getCookie('access_token');
   if (token) {
     try {
       // Check if token is expired

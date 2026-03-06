@@ -111,6 +111,8 @@ export interface EducationEntry {
   startDate: string;
   endDate: string;
   courses?: string[];
+  gpa?: string;
+  description?: string;
 }
 
 // Project entry type (matching JSON Resume standard)
@@ -123,6 +125,7 @@ export interface ProjectEntry {
   startDate: string;
   endDate: string;
   highlights?: string[];
+  tags?: string[];
 }
 
 // For backward compatibility with existing frontend code
