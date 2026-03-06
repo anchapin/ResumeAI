@@ -63,6 +63,11 @@ export const LinkedInImportDialog: React.FC<LinkedInImportDialogProps> = ({
   const [linkedInProfile, setLinkedInProfile] = useState<LinkedInProfile | null>(null);
   const [githubRepos, setGithubRepos] = useState<GitHubRepository[]>([]);
   const [selectedRepoIds, setSelectedRepoIds] = useState<number[]>([]);
+  const [oauthWindow, setOauthWindow] = useState<Window | null>(null);
+
+  // Ref to track OAuth popup check interval for cleanup
+  const oauthCheckIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const messageHandlerRef = useRef<((event: MessageEvent) => void) | null>(null);
 
   // Form states for editing imported data
   const [editedName, setEditedName] = useState('');
@@ -76,6 +81,20 @@ export const LinkedInImportDialog: React.FC<LinkedInImportDialogProps> = ({
   // Reset state when dialog closes
   useEffect(() => {
     if (!isOpen) {
+      // Clean up OAuth resources
+      if (oauthCheckIntervalRef.current) {
+        clearInterval(oauthCheckIntervalRef.current);
+        oauthCheckIntervalRef.current = null;
+      }
+      if (messageHandlerRef.current) {
+        window.removeEventListener('message', messageHandlerRef.current);
+        messageHandlerRef.current = null;
+      }
+      if (oauthWindow && !oauthWindow.closed) {
+        oauthWindow.close();
+      }
+      setOauthWindow(null);
+
       setCurrentStep('upload');
       setImportMethod(null);
       setLinkedInConnected(false);
@@ -84,7 +103,7 @@ export const LinkedInImportDialog: React.FC<LinkedInImportDialogProps> = ({
       setSelectedRepoIds([]);
       setIsImporting(false);
     }
-  }, [isOpen]);
+  }, [isOpen, oauthWindow]);
 
   if (!isOpen) return null;
 
@@ -111,6 +130,14 @@ export const LinkedInImportDialog: React.FC<LinkedInImportDialogProps> = ({
 
       setOauthWindow(popup);
 
+      // Cleanup any existing interval/handler from previous attempts
+      if (oauthCheckIntervalRef.current) {
+        clearInterval(oauthCheckIntervalRef.current);
+      }
+      if (messageHandlerRef.current) {
+        window.removeEventListener('message', messageHandlerRef.current);
+      }
+
       // Listen for OAuth completion via message
       const messageHandler = (event: MessageEvent) => {
         if (event.origin !== window.location.origin) return;
@@ -122,13 +149,18 @@ export const LinkedInImportDialog: React.FC<LinkedInImportDialogProps> = ({
         }
       };
 
+      messageHandlerRef.current = messageHandler;
       window.addEventListener('message', messageHandler);
 
       // Cleanup on popup close
-      const checkClosed = setInterval(() => {
+      oauthCheckIntervalRef.current = setInterval(() => {
         if (popup.closed) {
-          clearInterval(checkClosed);
+          if (oauthCheckIntervalRef.current) {
+            clearInterval(oauthCheckIntervalRef.current);
+            oauthCheckIntervalRef.current = null;
+          }
           window.removeEventListener('message', messageHandler);
+          messageHandlerRef.current = null;
           if (!linkedInConnected) {
             setIsImporting(false);
             showErrorToast('OAuth window was closed');
@@ -144,6 +176,21 @@ export const LinkedInImportDialog: React.FC<LinkedInImportDialogProps> = ({
 
   const handleOAuthSuccess = async (code: string, state: string) => {
     try {
+      // Clear OAuth interval and event listener to prevent memory leaks
+      if (oauthCheckIntervalRef.current) {
+        clearInterval(oauthCheckIntervalRef.current);
+        oauthCheckIntervalRef.current = null;
+      }
+      if (messageHandlerRef.current) {
+        window.removeEventListener('message', messageHandlerRef.current);
+        messageHandlerRef.current = null;
+      }
+      // Close the OAuth popup if still open
+      if (oauthWindow && !oauthWindow.closed) {
+        oauthWindow.close();
+      }
+      setOauthWindow(null);
+
       // Exchange code for profile data
       const profile = await handleLinkedInCallback(code, state);
       setLinkedInConnected(true);
@@ -173,6 +220,21 @@ export const LinkedInImportDialog: React.FC<LinkedInImportDialogProps> = ({
   };
 
   const handleOAuthError = (error: string) => {
+    // Clear OAuth interval and event listener to prevent memory leaks
+    if (oauthCheckIntervalRef.current) {
+      clearInterval(oauthCheckIntervalRef.current);
+      oauthCheckIntervalRef.current = null;
+    }
+    if (messageHandlerRef.current) {
+      window.removeEventListener('message', messageHandlerRef.current);
+      messageHandlerRef.current = null;
+    }
+    // Close the OAuth popup if still open
+    if (oauthWindow && !oauthWindow.closed) {
+      oauthWindow.close();
+    }
+    setOauthWindow(null);
+
     console.error('OAuth error:', error);
     showErrorToast(error);
     setIsImporting(false);
