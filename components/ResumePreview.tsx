@@ -6,6 +6,9 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { SimpleResumeData } from '../types';
 
+// Refresh indicator duration in milliseconds
+const REFRESH_INDICATOR_DURATION = 300;
+
 interface ResumePreviewProps {
   /** The resume data to preview */
   resumeData: SimpleResumeData;
@@ -49,7 +52,7 @@ const ResumePreview = React.memo<ResumePreviewProps>(
     // Debounced refresh indicator
     useEffect(() => {
       setIsRefreshing(true);
-      const timer = setTimeout(() => setIsRefreshing(false), 300);
+      const timer = setTimeout(() => setIsRefreshing(false), REFRESH_INDICATOR_DURATION);
       return () => clearTimeout(timer);
     }, [resumeData]);
 

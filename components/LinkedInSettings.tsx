@@ -3,6 +3,10 @@ import { LinkedInProfile } from '../types';
 import { importLinkedInProfile, disconnectLinkedIn } from '../utils/api-client';
 import { toast } from 'react-toastify';
 
+// LinkedIn brand colors
+const LINKEDIN_BRAND_PRIMARY = '#0077b5';
+const LINKEDIN_BRAND_HOVER = '#006097';
+
 /**
  * LinkedIn Connection Settings Component
  *
@@ -81,14 +85,25 @@ export const LinkedInSettings: React.FC = () => {
           </div>
         ) : !isConnected ? (
           <div className="text-center py-8">
-            <div className="bg-[#0077b5]/10 size-16 rounded-full flex items-center justify-center mx-auto mb-4">
-              <span className="material-symbols-outlined text-[#0077b5] text-3xl">link_off</span>
+            <div
+              style={{ background: `${LINKEDIN_BRAND_PRIMARY}10` }}
+              className="size-16 rounded-full flex items-center justify-center mx-auto mb-4"
+            >
+              <span
+                style={{ color: LINKEDIN_BRAND_PRIMARY }}
+                className="material-symbols-outlined text-3xl"
+              >
+                link_off
+              </span>
             </div>
             <p className="text-slate-500 font-medium mb-2">Not connected to LinkedIn</p>
             <p className="text-sm text-slate-400 mb-4">
               Connect your LinkedIn account to import your profile data and sync your experience
             </p>
-            <button className="px-4 py-2 rounded-lg bg-[#0077b5] text-white font-bold text-sm hover:bg-[#006097] transition-colors flex items-center gap-2 mx-auto">
+            <button
+              style={{ backgroundColor: LINKEDIN_BRAND_PRIMARY }}
+              className="px-4 py-2 rounded-lg text-white font-bold text-sm transition-colors flex items-center gap-2 mx-auto"
+            >
               <span className="material-symbols-outlined text-[18px]">link</span>
               Connect with LinkedIn
             </button>

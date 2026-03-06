@@ -1,6 +1,10 @@
 import React from 'react';
 import { SimpleResumeData } from '../../types';
 
+// LinkedIn brand colors
+const LINKEDIN_BRAND_PRIMARY = '#0077b5';
+const LINKEDIN_BRAND_SECONDARY = '#00a0dc';
+
 interface ContactInfoSectionProps {
   resumeData: SimpleResumeData;
   onUpdate: (field: keyof SimpleResumeData, value: string) => void;
@@ -33,7 +37,12 @@ export const ContactInfoSection = React.memo<ContactInfoSectionProps>(
           </div>
         </div>
 
-        <div className="bg-gradient-to-r from-[#0077b5] to-[#00a0dc] rounded-xl p-6 text-white shadow-lg">
+        <div
+          style={{
+            background: `linear-gradient(to right, ${LINKEDIN_BRAND_PRIMARY}, ${LINKEDIN_BRAND_SECONDARY})`,
+          }}
+          className="rounded-xl p-6 text-white shadow-lg"
+        >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <div className="bg-white/20 size-12 rounded-lg flex items-center justify-center">
@@ -48,7 +57,8 @@ export const ContactInfoSection = React.memo<ContactInfoSectionProps>(
             </div>
             <button
               onClick={onShowLinkedInImport}
-              className="px-4 py-2 bg-white text-[#0077b5] font-semibold rounded-lg hover:bg-white/90 transition-colors shadow-md"
+              style={{ color: LINKEDIN_BRAND_PRIMARY }}
+              className="px-4 py-2 bg-white font-semibold rounded-lg hover:bg-white/90 transition-colors shadow-md"
             >
               Import Now
             </button>

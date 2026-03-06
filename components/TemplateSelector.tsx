@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
 
+// Default API URL fallback (can be overridden via VITE_API_URL environment variable)
+const DEFAULT_API_URL = 'http://127.0.0.1:8000';
+
 interface TemplateMetadata {
   name: string;
   display_name: string;
@@ -40,7 +43,7 @@ export const TemplateSelector: React.FC<TemplateSelectorProps> = ({
   const fetchTemplates = async () => {
     try {
       setLoading(true);
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
+      const apiUrl = import.meta.env.VITE_API_URL || DEFAULT_API_URL;
       const response = await fetch(`${apiUrl}/api/v1/variants`);
       if (!response.ok) {
         throw new Error('Failed to fetch templates');
