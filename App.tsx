@@ -62,6 +62,10 @@ import StorageWarning from './components/StorageWarning';
 import SkipNavigation from './components/SkipNavigation';
 import OfflineIndicator from './components/OfflineIndicator';
 import { errorHandler, ErrorType } from './utils/errorHandler';
+import { initSentry, setUserContext } from './src/lib/sentry';
+
+// Initialize Sentry error tracking
+initSentry();
 
 // Timing constants for auto-save and status display
 const SAVE_STATUS_DISPLAY_DURATION = 3000;
@@ -97,6 +101,20 @@ function App() {
   const globalLoading = useStore((state) => state.globalLoading);
 
   const { isAuthenticated } = useAuth();
+
+  // Set Sentry user context when auth state changes
+  const user = useStore((state) => state.user);
+  useEffect(() => {
+    if (user) {
+      setUserContext({
+        id: String(user.id),
+        email: user.email,
+        username: user.username,
+      });
+    } else {
+      setUserContext(null);
+    }
+  }, [user]);
 
   // Setup global error handling
   const { currentError, dismissError } = useGlobalErrors();
