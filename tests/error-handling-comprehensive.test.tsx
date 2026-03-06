@@ -453,7 +453,8 @@ describe('Comprehensive Error Handling - Frontend', () => {
       const context = errorHandler.handleError(error, { fields: Object.keys(fieldErrors) });
 
       expect(context.type).toBe(ErrorType.VALIDATION);
-      expect(context.context?.fields.length).toBe(3);
+      const ctx = context.context as { fields?: unknown[] } | undefined;
+      expect(ctx?.fields?.length).toBe(3);
     });
 
     it('should handle API validation errors (422)', () => {
