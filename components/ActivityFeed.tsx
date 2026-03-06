@@ -1,6 +1,84 @@
 import React from 'react';
 import { TeamActivity } from '../types';
 
+// Helper functions moved outside component for performance
+const formatDate = (dateString: string): string => {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMinutes = Math.floor(diffMs / (1000 * 60));
+  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+  if (diffMinutes < 1) return 'Just now';
+  if (diffMinutes < 60) return `${diffMinutes} minute${diffMinutes !== 1 ? 's' : ''} ago`;
+  if (diffHours < 24) return `${diffHours} hour${diffHours !== 1 ? 's' : ''} ago`;
+  if (diffDays < 7) return `${diffDays} day${diffDays !== 1 ? 's' : ''} ago`;
+  if (diffDays < 30)
+    return `${Math.floor(diffDays / 7)} week${Math.floor(diffDays / 7) !== 1 ? 's' : ''} ago`;
+  if (diffDays < 365)
+    return `${Math.floor(diffDays / 30)} month${Math.floor(diffDays / 30) !== 1 ? 's' : ''} ago`;
+  return `${Math.floor(diffDays / 365)} year${Math.floor(diffDays / 365) !== 1 ? 's' : ''} ago`;
+};
+
+const getActivityIcon = (type: TeamActivity['type']): { icon: string; color: string } => {
+  switch (type) {
+    case 'team_created':
+      return { icon: 'group_add', color: 'text-green-500' };
+    case 'member_joined':
+      return { icon: 'person_add', color: 'text-blue-500' };
+    case 'member_left':
+      return { icon: 'person_remove', color: 'text-red-500' };
+    case 'role_changed':
+      return { icon: 'swap_horiz', color: 'text-amber-500' };
+    case 'resume_shared':
+      return { icon: 'share', color: 'text-purple-500' };
+    case 'resume_unshared':
+      return { icon: 'link_off', color: 'text-red-500' };
+    case 'team_updated':
+      return { icon: 'edit', color: 'text-blue-500' };
+    case 'team_deleted':
+      return { icon: 'delete', color: 'text-red-500' };
+    default:
+      return { icon: 'info', color: 'text-slate-500' };
+  }
+};
+
+const getActivityDescription = (activity: TeamActivity): string => {
+  const userName = activity.userName || 'Someone';
+
+  switch (activity.type) {
+    case 'team_created':
+      return `${userName} created the team`;
+    case 'member_joined':
+      return `${userName} joined the team`;
+    case 'member_left':
+      return `${userName} left the team`;
+    case 'role_changed':
+      return `${userName} changed a member's role`;
+    case 'resume_shared':
+      return `${userName} shared a resume`;
+    case 'resume_unshared':
+      return `${userName} unshared a resume`;
+    case 'team_updated':
+      return `${userName} updated team details`;
+    case 'team_deleted':
+      return `${userName} deleted the team`;
+    default:
+      return activity.description || 'Unknown activity';
+  }
+};
+
+const getInitials = (name?: string): string => {
+  if (!name) return '??';
+  return name
+    .split(' ')
+    .map((part) => part.charAt(0))
+    .join('')
+    .toUpperCase()
+    .slice(0, 2);
+};
+
 interface ActivityFeedProps {
   activities: TeamActivity[];
   loading?: boolean;
@@ -9,84 +87,7 @@ interface ActivityFeedProps {
 /**
  * ActivityFeed component for displaying recent team actions
  */
-const ActivityFeed: React.FC<ActivityFeedProps> = ({ activities, loading }) => {
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffMinutes = Math.floor(diffMs / (1000 * 60));
-    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-
-    if (diffMinutes < 1) return 'Just now';
-    if (diffMinutes < 60) return `${diffMinutes} minute${diffMinutes !== 1 ? 's' : ''} ago`;
-    if (diffHours < 24) return `${diffHours} hour${diffHours !== 1 ? 's' : ''} ago`;
-    if (diffDays < 7) return `${diffDays} day${diffDays !== 1 ? 's' : ''} ago`;
-    if (diffDays < 30)
-      return `${Math.floor(diffDays / 7)} week${Math.floor(diffDays / 7) !== 1 ? 's' : ''} ago`;
-    if (diffDays < 365)
-      return `${Math.floor(diffDays / 30)} month${Math.floor(diffDays / 30) !== 1 ? 's' : ''} ago`;
-    return `${Math.floor(diffDays / 365)} year${Math.floor(diffDays / 365) !== 1 ? 's' : ''} ago`;
-  };
-
-  const getActivityIcon = (type: TeamActivity['type']): { icon: string; color: string } => {
-    switch (type) {
-      case 'team_created':
-        return { icon: 'group_add', color: 'text-green-500' };
-      case 'member_joined':
-        return { icon: 'person_add', color: 'text-blue-500' };
-      case 'member_left':
-        return { icon: 'person_remove', color: 'text-red-500' };
-      case 'role_changed':
-        return { icon: 'swap_horiz', color: 'text-amber-500' };
-      case 'resume_shared':
-        return { icon: 'share', color: 'text-purple-500' };
-      case 'resume_unshared':
-        return { icon: 'link_off', color: 'text-red-500' };
-      case 'team_updated':
-        return { icon: 'edit', color: 'text-blue-500' };
-      case 'team_deleted':
-        return { icon: 'delete', color: 'text-red-500' };
-      default:
-        return { icon: 'info', color: 'text-slate-500' };
-    }
-  };
-
-  const getActivityDescription = (activity: TeamActivity): string => {
-    const userName = activity.userName || 'Someone';
-
-    switch (activity.type) {
-      case 'team_created':
-        return `${userName} created the team`;
-      case 'member_joined':
-        return `${userName} joined the team`;
-      case 'member_left':
-        return `${userName} left the team`;
-      case 'role_changed':
-        return `${userName} changed a member's role`;
-      case 'resume_shared':
-        return `${userName} shared a resume`;
-      case 'resume_unshared':
-        return `${userName} unshared a resume`;
-      case 'team_updated':
-        return `${userName} updated team details`;
-      case 'team_deleted':
-        return `${userName} deleted the team`;
-      default:
-        return activity.description || 'Unknown activity';
-    }
-  };
-
-  const getInitials = (name?: string): string => {
-    if (!name) return '??';
-    return name
-      .split(' ')
-      .map((part) => part.charAt(0))
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
-  };
-
+const ActivityFeed: React.FC<ActivityFeedProps> = React.memo(({ activities, loading }) => {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-8">
@@ -163,6 +164,6 @@ const ActivityFeed: React.FC<ActivityFeedProps> = ({ activities, loading }) => {
       </div>
     </div>
   );
-};
+});
 
 export default ActivityFeed;
