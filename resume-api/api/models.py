@@ -1751,7 +1751,12 @@ class TeamMemberUpdate(BaseModel):
     @classmethod
     def validate_role(cls, v: str) -> str:
         """Validate team member role."""
-        valid_roles = [TeamMemberRole.OWNER, TeamMemberRole.ADMIN, TeamMemberRole.EDITOR, TeamMemberRole.VIEWER]
+        valid_roles = [
+            TeamMemberRole.OWNER,
+            TeamMemberRole.ADMIN,
+            TeamMemberRole.EDITOR,
+            TeamMemberRole.VIEWER,
+        ]
         if v not in valid_roles:
             raise ValueError(f"Invalid role. Must be one of: {', '.join(valid_roles)}")
         return v

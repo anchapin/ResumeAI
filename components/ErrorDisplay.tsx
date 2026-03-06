@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { ErrorContext, ErrorType } from '../utils/errorHandler';
 import { getErrorMessageByType, getErrorSuggestion } from '../utils/errorMessages';
 
+// Default auto-dismiss time for error messages in milliseconds
+const DEFAULT_AUTO_DISMISS_TIME = 5000;
+
 interface ErrorDisplayProps {
   /** The error context to display */
   error: ErrorContext | null;
@@ -23,7 +26,7 @@ export const ErrorDisplay: React.FC<ErrorDisplayProps> = ({
   error,
   onDismiss,
   onRetry,
-  autoDismissTime = 5000,
+  autoDismissTime = DEFAULT_AUTO_DISMISS_TIME,
   showDetails = false,
 }) => {
   const [isVisible, setIsVisible] = useState(false);

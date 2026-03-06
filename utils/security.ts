@@ -110,18 +110,16 @@ const TokenManager = {
 };
 
 /**
- * Get JWT access token from cookie first, fallback to localStorage
- * This provides backward compatibility while transitioning to httpOnly cookies
+ * Get JWT access token - now returns null since tokens are stored in httpOnly cookies
+ * which cannot be accessed by JavaScript for security reasons (Issue #753)
+ * The browser automatically sends cookies with requests, so no need to read them
+ * @returns Always returns null - use cookie-based auth instead
  */
 function getAuthToken(): string | null {
-  // First try to get from cookie (httpOnly - more secure)
-  const cookieToken = getCookie('access_token');
-  if (cookieToken) {
-    return cookieToken;
-  }
-
-  // Fallback to localStorage for backward compatibility
-  return localStorage.getItem('resumeai_access_token');
+  // Tokens are now stored in httpOnly cookies by the backend
+  // JavaScript cannot read httpOnly cookies (by design for security)
+  // The browser automatically sends them with requests when credentials: 'include' is set
+  return null;
 }
 
 // Get CSRF token from cookie

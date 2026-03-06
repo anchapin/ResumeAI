@@ -63,6 +63,11 @@ import SkipNavigation from './components/SkipNavigation';
 import OfflineIndicator from './components/OfflineIndicator';
 import { errorHandler, ErrorType } from './utils/errorHandler';
 
+// Timing constants for auto-save and status display
+const SAVE_STATUS_DISPLAY_DURATION = 3000;
+const ERROR_STATUS_DISPLAY_DURATION = 5000;
+const AUTO_SAVE_DEBOUNCE_MS = 1000;
+
 // Skeleton components
 import AppSkeleton from './components/skeletons/AppSkeleton';
 import DashboardSkeleton from './components/skeletons/DashboardSkeleton';
@@ -140,7 +145,10 @@ function App() {
           console.log('Resume data saved to localStorage');
         }
 
-        innerTimeoutRef.current = setTimeout(() => setSaveStatus('idle'), 3000);
+        innerTimeoutRef.current = setTimeout(
+          () => setSaveStatus('idle'),
+          SAVE_STATUS_DISPLAY_DURATION,
+        );
       } catch (error) {
         setSaveStatus('error');
         const storageError = error instanceof StorageError ? error : null;
@@ -151,9 +159,12 @@ function App() {
           type: ErrorType.STORAGE,
         });
 
-        innerTimeoutRef.current = setTimeout(() => setSaveStatus('idle'), 5000);
+        innerTimeoutRef.current = setTimeout(
+          () => setSaveStatus('idle'),
+          ERROR_STATUS_DISPLAY_DURATION,
+        );
       }
-    }, 1000);
+    }, AUTO_SAVE_DEBOUNCE_MS);
 
     return () => {
       clearTimeout(handler);
