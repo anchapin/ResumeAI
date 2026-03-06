@@ -7,7 +7,7 @@ import secrets
 from pathlib import Path
 from typing import Optional, Union
 
-from pydantic import Field, ValidationInfo, field_validator, model_validator
+from pydantic import Field, ValidationInfo, field_validator
 from pydantic_settings import BaseSettings
 from pydantic_settings import SettingsConfigDict
 
