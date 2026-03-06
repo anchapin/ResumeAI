@@ -3,7 +3,7 @@
  * @description Real-time resume preview component that renders resume data as a preview
  */
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { SimpleResumeData } from '../types';
 
 // Refresh indicator duration in milliseconds
@@ -141,9 +141,9 @@ const ResumePreview = React.memo<ResumePreviewProps>(
                       )}
                       {exp.tags.length > 0 && (
                         <div className="flex flex-wrap gap-1 mt-2">
-                          {exp.tags.map((tag, idx) => (
+                          {exp.tags.map((tag) => (
                             <span
-                              key={idx}
+                              key={tag}
                               className="text-xs px-2 py-0.5 bg-slate-100 text-slate-600 rounded"
                             >
                               {tag}
@@ -164,9 +164,9 @@ const ResumePreview = React.memo<ResumePreviewProps>(
                   Skills
                 </h2>
                 <div className="flex flex-wrap gap-2">
-                  {resumeData.skills.map((skill, idx) => (
+                  {resumeData.skills.map((skill) => (
                     <span
-                      key={idx}
+                      key={skill}
                       className="text-sm px-3 py-1 bg-primary-50 text-primary-700 rounded-full font-medium"
                     >
                       {skill}

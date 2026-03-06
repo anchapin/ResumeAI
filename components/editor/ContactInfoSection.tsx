@@ -68,8 +68,11 @@ export const ContactInfoSection = React.memo<ContactInfoSectionProps>(
         <div className="bg-white rounded-xl border border-slate-200 p-8 space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
-              <label className="text-sm font-bold text-slate-700">Full Name</label>
+              <label htmlFor="full-name" className="text-sm font-bold text-slate-700">
+                Full Name
+              </label>
               <input
+                id="full-name"
                 type="text"
                 value={resumeData.name}
                 onChange={(e) => onUpdate('name', e.target.value)}
@@ -77,8 +80,11 @@ export const ContactInfoSection = React.memo<ContactInfoSectionProps>(
               />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-bold text-slate-700">Email</label>
+              <label htmlFor="email" className="text-sm font-bold text-slate-700">
+                Email
+              </label>
               <input
+                id="email"
                 type="email"
                 value={resumeData.email}
                 onChange={(e) => onUpdate('email', e.target.value)}
@@ -86,8 +92,11 @@ export const ContactInfoSection = React.memo<ContactInfoSectionProps>(
               />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-bold text-slate-700">Phone</label>
+              <label htmlFor="phone" className="text-sm font-bold text-slate-700">
+                Phone
+              </label>
               <input
+                id="phone"
                 type="tel"
                 value={resumeData.phone}
                 onChange={(e) => onUpdate('phone', e.target.value)}
@@ -95,8 +104,11 @@ export const ContactInfoSection = React.memo<ContactInfoSectionProps>(
               />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-bold text-slate-700">Location</label>
+              <label htmlFor="location" className="text-sm font-bold text-slate-700">
+                Location
+              </label>
               <input
+                id="location"
                 type="text"
                 value={resumeData.location}
                 onChange={(e) => onUpdate('location', e.target.value)}
@@ -104,8 +116,11 @@ export const ContactInfoSection = React.memo<ContactInfoSectionProps>(
               />
             </div>
             <div className="space-y-2 md:col-span-2">
-              <label className="text-sm font-bold text-slate-700">Job Title / Role</label>
+              <label htmlFor="job-title" className="text-sm font-bold text-slate-700">
+                Job Title / Role
+              </label>
               <input
+                id="job-title"
                 type="text"
                 value={resumeData.role}
                 onChange={(e) => onUpdate('role', e.target.value)}
