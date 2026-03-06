@@ -152,14 +152,23 @@ export const GitHubSyncDialog: React.FC<GitHubSyncDialogProps> = ({
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Check OAuth connection status on dialog open
-  useEffect(() => {
-    if (isOpen) {
-      checkConnectionStatus();
-    }
-  }, [isOpen, checkConnectionStatus]);
+  // Load repositories from GitHub - must be defined first since checkConnectionStatus uses it
+  const loadRepositories = useCallback(async () => {
+    setIsLoadingRepositories(true);
+    setError(null);
 
-  // Check connection status
+    try {
+      const repos = await fetchGitHubRepositories();
+      setRepositories(repos);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load repositories';
+      setError(errorMessage);
+    } finally {
+      setIsLoadingRepositories(false);
+    }
+  }, []);
+
+  // Check connection status - must be defined after loadRepositories since it uses it
   const checkConnectionStatus = useCallback(async () => {
     setIsLoadingStatus(true);
     setError(null);
@@ -183,21 +192,12 @@ export const GitHubSyncDialog: React.FC<GitHubSyncDialogProps> = ({
     }
   }, [loadRepositories]);
 
-  // Load repositories from GitHub
-  const loadRepositories = useCallback(async () => {
-    setIsLoadingRepositories(true);
-    setError(null);
-
-    try {
-      const repos = await fetchGitHubRepositories();
-      setRepositories(repos);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to load repositories';
-      setError(errorMessage);
-    } finally {
-      setIsLoadingRepositories(false);
+  // Check OAuth connection status on dialog open
+  useEffect(() => {
+    if (isOpen) {
+      checkConnectionStatus();
     }
-  }, []);
+  }, [isOpen, checkConnectionStatus]);
 
   // Handle GitHub connection
   const handleConnectGitHub = async () => {
