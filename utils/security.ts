@@ -64,6 +64,12 @@ const getCookie = (name: string): string | null => {
   return match ? decodeURIComponent(match[2]) : null;
 };
 
+const setCookie = (name: string, value: string, days: number = 7): void => {
+  if (typeof document === 'undefined') return;
+  const expires = new Date(Date.now() + days * 864e5).toUTCString();
+  document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires}; path=/; SameSite=Strict`;
+};
+
 const deleteCookie = (name: string): void => {
   if (typeof document === 'undefined') return;
   document.cookie = name + '=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Strict';
@@ -228,4 +234,7 @@ export {
   sanitizeInput,
   validateFileUpload,
   getCsrfToken,
+  getCookie,
+  setCookie,
+  deleteCookie,
 };
