@@ -43,7 +43,7 @@ class ResumeVersionManager:
         Returns:
             Dictionary with version info
         """
-        # Read current resume content
+        # Read current resume content to ensure it's accessible
         with open(self.yaml_path, "r", encoding="utf-8") as f:
             f.read()
 

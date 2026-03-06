@@ -461,9 +461,9 @@ class ATSCompatibilityChecker:
             if basics.get(field_name):
                 text_parts.append(str(basics[field_name]))
 
-        for field_name in ["work", "experience"]:
-            if field_name in resume_data and isinstance(resume_data[field_name], list):
-                for exp in resume_data[field_name]:
+        for section in ["work", "experience"]:
+            if section in resume_data and isinstance(resume_data[section], list):
+                for exp in resume_data[section]:
                     if isinstance(exp, dict):
                         for key in [
                             "position",

@@ -258,7 +258,7 @@ async def get_team(
     Rate limit: 30 requests per minute per API key.
     """
     try:
-        auth.user_id if hasattr(auth, "user_id") else 1
+        user_id = auth.user_id if hasattr(auth, "user_id") else 1
 
         stmt = (
             select(Team)
@@ -665,7 +665,7 @@ async def list_team_members(
     Rate limit: 30 requests per minute per API key.
     """
     try:
-        auth.user_id if hasattr(auth, "user_id") else 1
+        user_id = auth.user_id if hasattr(auth, "user_id") else 1
 
         team_stmt = select(Team).where(Team.id == team_id)
         result = await db.execute(team_stmt)
@@ -740,7 +740,7 @@ async def get_team_member(
     Rate limit: 30 requests per minute per API key.
     """
     try:
-        auth.user_id if hasattr(auth, "user_id") else 1
+        user_id = auth.user_id if hasattr(auth, "user_id") else 1
 
         team_stmt = select(Team).where(Team.id == team_id)
         result = await db.execute(team_stmt)
@@ -842,7 +842,7 @@ async def update_member_role(
                 detail="Only team owners can change member roles",
             )
 
-        if user_id == team.owner_id:
+        if member_id == team.owner_id:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Cannot change the role of the team owner",
@@ -853,7 +853,7 @@ async def update_member_role(
             .where(
                 and_(
                     TeamMember.team_id == team_id,
-                    TeamMember.user_id == user_id,
+                    TeamMember.user_id == member_id,
                 )
             )
             .options(selectinload(TeamMember.user))
