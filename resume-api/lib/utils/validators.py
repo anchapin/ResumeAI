@@ -627,6 +627,7 @@ def validate_file_content(
 
 class FileSizeLevel:
     """File size level enumeration."""
+
     NORMAL = "normal"
     WARNING = "warning"
     CRITICAL = "critical"
