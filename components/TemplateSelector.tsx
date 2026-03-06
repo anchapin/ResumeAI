@@ -178,7 +178,11 @@ export const TemplateSelector: React.FC<TemplateSelectorProps> = ({
               </div>
 
               {/* Selection Radio */}
-              <div className="mt-3 flex items-center gap-2">
+              <div
+                className="mt-3 flex items-center gap-2"
+                role="group"
+                aria-label="Template selection"
+              >
                 <input
                   type="radio"
                   id={`template-${template.name}`}
@@ -187,6 +191,7 @@ export const TemplateSelector: React.FC<TemplateSelectorProps> = ({
                   checked={selectedTemplate === template.name}
                   onChange={() => onTemplateChange(template.name)}
                   className="w-4 h-4 text-primary-600 focus:ring-primary-500"
+                  aria-label={`Select ${template.display_name} template`}
                 />
                 <label
                   htmlFor={`template-${template.name}`}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, memo } from 'react';
 import { LinkedInProfile } from '../types';
 import { importLinkedInProfile, disconnectLinkedIn } from '../utils/api-client';
 import { toast } from 'react-toastify';
@@ -12,7 +12,7 @@ const LINKEDIN_BRAND_HOVER = '#006097';
  *
  * Displays LinkedIn connection status, profile info, and disconnect functionality
  */
-export const LinkedInSettings: React.FC = () => {
+export const LinkedInSettings: React.FC = memo(() => {
   const [isConnected, setIsConnected] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [profile, setProfile] = useState<LinkedInProfile | null>(null);
@@ -103,6 +103,7 @@ export const LinkedInSettings: React.FC = () => {
             <button
               style={{ backgroundColor: LINKEDIN_BRAND_PRIMARY }}
               className="px-4 py-2 rounded-lg text-white font-bold text-sm transition-colors flex items-center gap-2 mx-auto"
+              aria-label="Connect with LinkedIn"
             >
               <span className="material-symbols-outlined text-[18px]">link</span>
               Connect with LinkedIn
@@ -273,6 +274,6 @@ export const LinkedInSettings: React.FC = () => {
       </div>
     </section>
   );
-};
+});
 
 export default LinkedInSettings;
