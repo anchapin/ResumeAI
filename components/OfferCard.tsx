@@ -217,8 +217,9 @@ export const OfferCard: React.FC<OfferCardProps> = ({
             }}
             className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
             title="Edit offer"
+            aria-label="Edit offer"
           >
-            <span className="material-symbols-outlined text-[20px]">edit</span>
+            <span className="material-symbols-outlined text-[20px]" aria-hidden="true">edit</span>
           </button>
         )}
 
@@ -232,8 +233,9 @@ export const OfferCard: React.FC<OfferCardProps> = ({
             }}
             className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
             title="Delete offer"
+            aria-label="Delete offer"
           >
-            <span className="material-symbols-outlined text-[20px]">delete</span>
+            <span className="material-symbols-outlined text-[20px]" aria-hidden="true">delete</span>
           </button>
         )}
       </div>
