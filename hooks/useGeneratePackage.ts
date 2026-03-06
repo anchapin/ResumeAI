@@ -334,7 +334,8 @@ export const useGeneratePackage = () => {
         },
       });
       return response.ok;
-    } catch {
+    } catch (err) {
+      console.error('Health check failed:', err);
       return false;
     }
   }, []);

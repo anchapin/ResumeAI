@@ -80,7 +80,8 @@ export function getLocalStorageUsage(): number {
       }
     }
     return totalSize;
-  } catch {
+  } catch (err) {
+    console.error('Error calculating storage size:', err);
     return 0;
   }
 }
@@ -124,7 +125,8 @@ function isStorageAvailable(): boolean {
     localStorage.removeItem(testKey);
     isStorageAvailableCache = true;
     return true;
-  } catch {
+  } catch (err) {
+    console.error('Storage availability check failed:', err);
     isStorageAvailableCache = false;
     return false;
   }
@@ -255,7 +257,8 @@ export class StorageManager {
 
       const data = localStorage.getItem(fullKey);
       return data ? data.length : 0;
-    } catch {
+    } catch (err) {
+      console.error('Error getting stored data size:', err);
       return 0;
     }
   }
@@ -279,7 +282,8 @@ export class StorageManager {
         }
       }
       return totalSize;
-    } catch {
+    } catch (err) {
+      console.error('Error getting total used storage size:', err);
       return 0;
     }
   }
@@ -343,7 +347,8 @@ export class StorageManager {
         }
       }
       return count;
-    } catch {
+    } catch (err) {
+      console.error('Error counting stored items:', err);
       return 0;
     }
   }

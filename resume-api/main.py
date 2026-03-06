@@ -6,7 +6,7 @@ FastAPI service for generating and tailoring professional resumes.
 
 import asyncio
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, Request, Response, status, Depends, WebSocket, APIRouter
+from fastapi import FastAPI, Request, Response, status, WebSocket, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
@@ -15,16 +15,15 @@ from starlette.middleware.base import BaseHTTPMiddleware
 
 from api import router
 from api.interview_routes import router as interview_router
-from api.websocket import handle_websocket_connection
 from config import settings
 from config.errors import create_error_response, ErrorCode
 from config.dependencies import (
     limiter,
     rate_limit_exceeded_handler,
-    get_current_user_ws,
 )
 from config.validation import startup_validation
-from database import create_db_and_tables, User
+from database import create_db_and_tables
+from config.cache_config import initialize_cache
 from middleware.monitoring import MonitoringMiddleware
 from middleware.error_handling import ErrorHandlingMiddleware
 from middleware.timeout import TimeoutMiddleware
@@ -161,6 +160,10 @@ async def lifespan(app: FastAPI):
     # Initialize database tables
     await create_db_and_tables()
     logger.info("Database initialized")
+
+    # Initialize cache manager (Redis or in-memory fallback)
+    await initialize_cache()
+    logger.info("Cache manager initialized")
 
     # Set up Sentry error tracking
     setup_sentry()

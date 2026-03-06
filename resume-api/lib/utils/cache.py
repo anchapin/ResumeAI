@@ -586,7 +586,6 @@ async def initialize_cache(
 
 
 from functools import wraps
-from fastapi import Request, Response
 
 
 def cached(
