@@ -180,27 +180,9 @@ function getAPIKey(): string | null {
 export function getHeaders(): HeadersInit {
   const headers: HeadersInit = { 'Content-Type': 'application/json' };
 
-  // Try JWT token from httpOnly cookie first (Issue 477 - Bearer token auth)
-  const token = getCookie('access_token');
-  if (token) {
-    try {
-      // Check if token is expired
-      const parts = token.split('.');
-      if (parts.length === 3) {
-        const payload = JSON.parse(atob(parts[1]));
-        const currentTime = Math.floor(Date.now() / 1000);
-        if (!payload.exp || payload.exp >= currentTime) {
-          headers['Authorization'] = `Bearer ${token}`;
-          return headers;
-        }
-      }
-    } catch (err) {
-      console.error('Failed to parse token:', err);
-      // Invalid token, fall through to API key
-    }
-  }
-
-  // Fall back to API key authentication
+  // With httpOnly cookies, the browser automatically sends the access token
+  // No need to read it in JavaScript - just rely on cookie-based auth
+  // Fall back to API key authentication if no cookie is available
   const apiKey = getAPIKey();
   if (apiKey) headers['X-API-KEY'] = apiKey;
   return headers;

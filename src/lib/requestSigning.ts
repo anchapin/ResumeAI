@@ -115,13 +115,9 @@ export async function signedFetch(endpoint: string, options: RequestInit = {}): 
     headers['Content-Type'] = headers['Content-Type'] || 'application/json';
   }
 
-  // Get access token from httpOnly cookie (set by backend on login)
-  // Note: With httpOnly cookies, the browser automatically sends the token
-  // However, for signedFetch we may still need it for the signature calculation
-  const token = getCookie('access_token');
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
-  }
+  // With httpOnly cookies, the browser automatically sends the access token
+  // No need to read it in JavaScript - rely on cookie-based auth
+  // The Authorization header is NOT needed when using httpOnly cookies
 
   // Get CSRF token from cookie for state-changing requests
   const csrfToken = getCookie('csrf_token');
