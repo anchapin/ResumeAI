@@ -24,8 +24,8 @@ test.describe('Offline Support (PWA)', () => {
 
   test('should cache dashboard for offline access', async ({ page, context }) => {
     // 1. Ensure page is fully loaded and PWA is registered
-    // (Service worker registration might take a moment)
-    await page.waitForTimeout(2000);
+    // Wait for the service worker to be registered by checking if the page has finished loading
+    await page.waitForLoadState('networkidle');
 
     // 2. Go offline
     await context.setOffline(true);
