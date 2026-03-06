@@ -1,8 +1,21 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { toast } from 'react-toastify';
-import { secureApiCall } from '../utils/security';
+import { secureApiCall, getCookie } from '../utils/security';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
+
+/**
+ * Get auth token - tries cookie first (httpOnly), falls back to localStorage
+ */
+function getToken(): string | null {
+  // Try JWT token from httpOnly cookie first
+  let token = getCookie('access_token');
+  // Fall back to localStorage token for backwards compatibility
+  if (!token) {
+    token = localStorage.getItem('resume_ai_auth_token');
+  }
+  return token;
+}
 
 /**
  * GitHub connection status interface
@@ -76,7 +89,7 @@ async function fetchGitHubConnectionStatus(): Promise<GitHubConnectionStatus> {
  * Get GitHub OAuth connect URL
  */
 async function getGitHubConnectUrl(): Promise<{ authorization_url: string; state: string }> {
-  const token = getAuthToken();
+  const token = getToken();
   if (!token) {
     throw new Error('Not authenticated');
   }
@@ -102,7 +115,7 @@ async function getGitHubConnectUrl(): Promise<{ authorization_url: string; state
  * Process GitHub OAuth callback
  */
 async function processGitHubCallback(code: string, state: string): Promise<void> {
-  const token = getAuthToken();
+  const token = getToken();
   if (!token) {
     throw new Error('Not authenticated');
   }
@@ -128,7 +141,7 @@ async function processGitHubCallback(code: string, state: string): Promise<void>
  * Disconnect GitHub account
  */
 async function disconnectGitHub(): Promise<void> {
-  const token = getAuthToken();
+  const token = getToken();
   if (!token) {
     throw new Error('Not authenticated');
   }
