@@ -60,7 +60,7 @@ describe('API Client', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     localStorage.clear();
-    vi.mocked(getCookie).mockReturnValue(undefined);
+    vi.mocked(getCookie).mockReturnValue(null);
   });
 
   afterEach(() => {
