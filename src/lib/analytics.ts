@@ -2,13 +2,13 @@ import { StorageManager } from './storage';
 
 /**
  * Product Analytics Instrumentation
- * 
+ *
  * Provides a simple interface for tracking user events and behaviors.
- * Currently uses localStorage for event storage - can be extended to 
+ * Currently uses localStorage for event storage - can be extended to
  * integrate with analytics providers like Google Analytics, Mixpanel, etc.
  */
 
-export type EventCategory = 
+export type EventCategory =
   | 'navigation'
   | 'resume'
   | 'editor'
@@ -104,7 +104,7 @@ export function clearAnalyticsEvents(): void {
  * Common navigation events
  */
 export const navigationEvents = {
-  pageView: (page: string) => 
+  pageView: (page: string) =>
     trackEvent('page_view', 'navigation', { page }),
   navigate: (from: string, to: string) =>
     trackEvent('navigate', 'navigation', { from, to }),
