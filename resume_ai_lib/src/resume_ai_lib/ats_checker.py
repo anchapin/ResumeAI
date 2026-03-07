@@ -55,292 +55,20 @@ class ATSCompatibilityChecker:
         "delivered",
     ]
 
-    def check_compatibility(
-        self,
-        resume_data: Dict[str, Any],
-        job_description: Optional[str] = None,
-        resume_text: Optional[str] = None,
-    ) -> ATSCompatibilityReport:
-        """Check ATS compatibility of a resume."""
-        report = ATSCompatibilityReport()
+    DATE_PATTERNS = [
+        r"\d{4}\s*[-–]\s*\d{4}",
+        r"\d{2}/\d{2}/\d{4}",
+        r"[A-Z][a-z]+\s+\d{4}",
+    ]
 
-        self._check_sections(resume_data, report)
-        self._check_content(resume_data, report)
+    DATE_PATTERNS_RE = [re.compile(pattern, re.IGNORECASE) for pattern in DATE_PATTERNS]
 
-        if resume_text:
-            self._check_formatting(resume_text, report)
+    METRIC_PATTERN = re.compile(r"\d+%|\$\d+|\d+\s*[kKmMbB]|\d+x|\d{4}")
 
-        if job_description:
-            self._check_keyword_matching(resume_data, job_description, report)
+    WORD_PATTERN = re.compile(r"\b[a-zA-Z]{3,}\b")
 
-        self._calculate_overall_score(report)
-        self._generate_recommendations(report)
-
-        return report
-
-    def _check_sections(
-        self, resume_data: Dict[str, Any], report: ATSCompatibilityReport
-    ) -> None:
-        sections_found = []
-        sections_missing = []
-
-        section_mapping = {
-            "contact": ["basics"],
-            "experience": ["work", "experience"],
-            "education": ["education"],
-            "skills": ["skills"],
-            "summary": ["basics.summary", "summary", "professional_summary"],
-            "projects": ["projects"],
-            "certifications": ["certificates", "certifications"],
-        }
-
-        for section_name, field_paths in section_mapping.items():
-            found = False
-            for field_path in field_paths:
-                if self._has_field(resume_data, field_path):
-                    found = True
-                    break
-
-            if found:
-                sections_found.append(section_name)
-            elif section_name in self.REQUIRED_SECTIONS:
-                sections_missing.append(section_name)
-
-        report.sections_found = sections_found
-        report.sections_missing = sections_missing
-
-        for section in sections_missing:
-            report.issues.append(
-                {
-                    "type": "missing_section",
-                    "severity": "high",
-                    "message": f"Missing required section: {section.title()}",
-                    "section": section,
-                }
-            )
-
-        required_found = len([s for s in sections_found if s in self.REQUIRED_SECTIONS])
-        required_total = len(self.REQUIRED_SECTIONS)
-        report.formatting_score = (
-            int((required_found / required_total) * 100) if required_total > 0 else 0
-        )
-
-    def _has_field(self, data: Dict[str, Any], field_path: str) -> bool:
-        parts = field_path.split(".")
-        current = data
-
-        for part in parts:
-            if isinstance(current, dict):
-                if part not in current:
-                    return False
-                current = current[part]
-            else:
-                return False
-
-        if current is None:
-            return False
-        if isinstance(current, (list, str)) and len(current) == 0:
-            return False
-
-        return True
-
-    def _check_content(
-        self, resume_data: Dict[str, Any], report: ATSCompatibilityReport
-    ) -> None:
-        issues = []
-
-        basics = resume_data.get("basics", {})
-        if basics:
-            if not basics.get("email"):
-                issues.append(
-                    {
-                        "type": "missing_contact",
-                        "severity": "high",
-                        "message": "Missing email address",
-                    }
-                )
-            if not basics.get("phone"):
-                issues.append(
-                    {
-                        "type": "missing_contact",
-                        "severity": "medium",
-                        "message": "Missing phone number (recommended)",
-                    }
-                )
-            if not basics.get("name"):
-                issues.append(
-                    {
-                        "type": "missing_contact",
-                        "severity": "high",
-                        "message": "Missing name",
-                    }
-                )
-
-        work = resume_data.get("work", []) or resume_data.get("experience", [])
-        if work:
-            has_metrics = False
-            has_action_verbs = False
-
-            for job in work:
-                bullets = job.get("bullets", []) or job.get("highlights", [])
-                description = job.get("summary", "") or job.get("description", "")
-
-                all_text = " ".join(
-                    [
-                        description,
-                        " ".join(
-                            [
-                                b.get("text", str(b)) if isinstance(b, dict) else str(b)
-                                for b in bullets
-                            ]
-                        ),
-                    ]
-                ).lower()
-
-                if re.search(r"\d+%|\$\d+|\d+\s*[kKmMbB]|\d+x|\d{4}", all_text):
-                    has_metrics = True
-
-                for verb in self.ACTION_VERBS:
-                    if verb in all_text:
-                        has_action_verbs = True
-                        break
-
-            if not has_metrics:
-                issues.append(
-                    {
-                        "type": "content_quality",
-                        "severity": "medium",
-                        "message": "Consider adding quantifiable metrics to your experience",
-                    }
-                )
-
-            if not has_action_verbs:
-                issues.append(
-                    {
-                        "type": "content_quality",
-                        "severity": "medium",
-                        "message": "Use strong action verbs to describe your achievements",
-                    }
-                )
-
-        skills = resume_data.get("skills", [])
-        if not skills:
-            issues.append(
-                {
-                    "type": "missing_section",
-                    "severity": "high",
-                    "message": "Missing skills section",
-                }
-            )
-        elif len(skills) < 5:
-            issues.append(
-                {
-                    "type": "content_quality",
-                    "severity": "low",
-                    "message": "Consider adding more skills to your resume",
-                }
-            )
-
-        resume_text = self._extract_resume_text(resume_data)
-        word_count = len(resume_text.split())
-
-        if word_count < 300:
-            issues.append(
-                {
-                    "type": "content_length",
-                    "severity": "medium",
-                    "message": "Resume may be too short (less than 300 words)",
-                }
-            )
-        elif word_count > 2000:
-            issues.append(
-                {
-                    "type": "content_length",
-                    "severity": "low",
-                    "message": "Resume may be too long (more than 2000 words)",
-                }
-            )
-
-        report.issues.extend(issues)
-
-    def _check_formatting(
-        self, resume_text: str, report: ATSCompatibilityReport
-    ) -> None:
-        issues = []
-
-        special_chars = re.findall(r"[^\w\s.,;:!?()'\-]", resume_text)
-        if len(special_chars) > len(resume_text) * 0.05:
-            issues.append(
-                {
-                    "type": "formatting",
-                    "severity": "medium",
-                    "message": "Resume contains many special characters that may not parse correctly",
-                }
-            )
-
-        date_patterns = [
-            r"\d{4}\s*[-–]\s*\d{4}",
-            r"\d{2}/\d{2}/\d{4}",
-            r"[A-Z][a-z]+\s+\d{4}",
-        ]
-
-        found_formats = []
-        for pattern in date_patterns:
-            if re.search(pattern, resume_text, re.IGNORECASE):
-                found_formats.append(pattern)
-
-        if len(found_formats) > 1:
-            issues.append(
-                {
-                    "type": "formatting",
-                    "severity": "low",
-                    "message": "Inconsistent date formats detected",
-                }
-            )
-
-        report.issues.extend(issues)
-
-    def _check_keyword_matching(
-        self,
-        resume_data: Dict[str, Any],
-        job_description: str,
-        report: ATSCompatibilityReport,
-    ) -> None:
-        jd_keywords = self._extract_keywords(job_description)
-        resume_text = self._extract_resume_text(resume_data)
-        resume_text_lower = resume_text.lower()
-
-        matched_keywords = []
-        missing_keywords = []
-
-        for keyword in jd_keywords:
-            if keyword.lower() in resume_text_lower:
-                matched_keywords.append(keyword)
-            else:
-                missing_keywords.append(keyword)
-
-        match_rate = len(matched_keywords) / len(jd_keywords) if jd_keywords else 0
-        report.keyword_match_rate = match_rate
-
-        report.skills_match = {
-            "matched": matched_keywords,
-            "missing": missing_keywords,
-            "match_count": len(matched_keywords),
-            "total_keywords": len(jd_keywords),
-        }
-
-        if match_rate < 0.5 and jd_keywords:
-            report.issues.append(
-                {
-                    "type": "keyword_match",
-                    "severity": "high",
-                    "message": f"Low keyword match rate ({match_rate:.0%})",
-                    "missing_keywords": missing_keywords[:10],
-                }
-            )
-
-    def _extract_keywords(self, text: str) -> List[str]:
-        stop_words = {
+    STOP_WORDS = frozenset(
+        {
             "the",
             "a",
             "an",
@@ -443,8 +171,309 @@ class ATSCompatibilityChecker:
             "role",
             "position",
         }
+    )
 
-        words = re.findall(r"\b[a-zA-Z]{3,}\b", text.lower())
+    def check_compatibility(
+        self,
+        resume_data: Dict[str, Any],
+        job_description: Optional[str] = None,
+        resume_text: Optional[str] = None,
+    ) -> ATSCompatibilityReport:
+        """Check ATS compatibility of a resume."""
+        report = ATSCompatibilityReport()
+
+        # ⚡ Bolt Optimization: Extract resume text once
+        # This prevents redundant calls to _extract_resume_text in subsequent checks
+        extracted_text = self._extract_resume_text(resume_data)
+
+        self._check_sections(resume_data, report)
+        self._check_content(resume_data, report, extracted_text)
+
+        if resume_text:
+            self._check_formatting(resume_text, report)
+
+        if job_description:
+            self._check_keyword_matching(resume_data, job_description, report, extracted_text)
+
+        self._calculate_overall_score(report)
+        self._generate_recommendations(report)
+
+        return report
+
+    def _check_sections(
+        self, resume_data: Dict[str, Any], report: ATSCompatibilityReport
+    ) -> None:
+        sections_found = []
+        sections_missing = []
+
+        section_mapping = {
+            "contact": ["basics"],
+            "experience": ["work", "experience"],
+            "education": ["education"],
+            "skills": ["skills"],
+            "summary": ["basics.summary", "summary", "professional_summary"],
+            "projects": ["projects"],
+            "certifications": ["certificates", "certifications"],
+        }
+
+        for section_name, field_paths in section_mapping.items():
+            found = False
+            for field_path in field_paths:
+                if self._has_field(resume_data, field_path):
+                    found = True
+                    break
+
+            if found:
+                sections_found.append(section_name)
+            elif section_name in self.REQUIRED_SECTIONS:
+                sections_missing.append(section_name)
+
+        report.sections_found = sections_found
+        report.sections_missing = sections_missing
+
+        for section in sections_missing:
+            report.issues.append(
+                {
+                    "type": "missing_section",
+                    "severity": "high",
+                    "message": f"Missing required section: {section.title()}",
+                    "section": section,
+                }
+            )
+
+        required_found = len([s for s in sections_found if s in self.REQUIRED_SECTIONS])
+        required_total = len(self.REQUIRED_SECTIONS)
+        report.formatting_score = (
+            int((required_found / required_total) * 100) if required_total > 0 else 0
+        )
+
+    def _has_field(self, data: Dict[str, Any], field_path: str) -> bool:
+        parts = field_path.split(".")
+        current = data
+
+        for part in parts:
+            if isinstance(current, dict):
+                if part not in current:
+                    return False
+                current = current[part]
+            else:
+                return False
+
+        if current is None:
+            return False
+        if isinstance(current, (list, str)) and len(current) == 0:
+            return False
+
+        return True
+
+    def _check_content(
+        self,
+        resume_data: Dict[str, Any],
+        report: ATSCompatibilityReport,
+        extracted_text: Optional[str] = None,
+    ) -> None:
+        issues = []
+
+        basics = resume_data.get("basics", {})
+        if basics:
+            if not basics.get("email"):
+                issues.append(
+                    {
+                        "type": "missing_contact",
+                        "severity": "high",
+                        "message": "Missing email address",
+                    }
+                )
+            if not basics.get("phone"):
+                issues.append(
+                    {
+                        "type": "missing_contact",
+                        "severity": "medium",
+                        "message": "Missing phone number (recommended)",
+                    }
+                )
+            if not basics.get("name"):
+                issues.append(
+                    {
+                        "type": "missing_contact",
+                        "severity": "high",
+                        "message": "Missing name",
+                    }
+                )
+
+        work = resume_data.get("work", []) or resume_data.get("experience", [])
+        if work:
+            has_metrics = False
+            has_action_verbs = False
+
+            for job in work:
+                if has_metrics and has_action_verbs:
+                    break
+
+                bullets = job.get("bullets", []) or job.get("highlights", [])
+                description = job.get("summary", "") or job.get("description", "")
+
+                all_text = " ".join(
+                    [
+                        description,
+                        " ".join(
+                            [
+                                b.get("text", str(b)) if isinstance(b, dict) else str(b)
+                                for b in bullets
+                            ]
+                        ),
+                    ]
+                ).lower()
+
+                if self.METRIC_PATTERN.search(all_text):
+                    has_metrics = True
+
+                for verb in self.ACTION_VERBS:
+                    if verb in all_text:
+                        has_action_verbs = True
+                        break
+
+            if not has_metrics:
+                issues.append(
+                    {
+                        "type": "content_quality",
+                        "severity": "medium",
+                        "message": "Consider adding quantifiable metrics to your experience",
+                    }
+                )
+
+            if not has_action_verbs:
+                issues.append(
+                    {
+                        "type": "content_quality",
+                        "severity": "medium",
+                        "message": "Use strong action verbs to describe your achievements",
+                    }
+                )
+
+        skills = resume_data.get("skills", [])
+        if not skills:
+            issues.append(
+                {
+                    "type": "missing_section",
+                    "severity": "high",
+                    "message": "Missing skills section",
+                }
+            )
+        elif len(skills) < 5:
+            issues.append(
+                {
+                    "type": "content_quality",
+                    "severity": "low",
+                    "message": "Consider adding more skills to your resume",
+                }
+            )
+
+        resume_text = (
+            extracted_text
+            if extracted_text is not None
+            else self._extract_resume_text(resume_data)
+        )
+        word_count = len(resume_text.split())
+
+        if word_count < 300:
+            issues.append(
+                {
+                    "type": "content_length",
+                    "severity": "medium",
+                    "message": "Resume may be too short (less than 300 words)",
+                }
+            )
+        elif word_count > 2000:
+            issues.append(
+                {
+                    "type": "content_length",
+                    "severity": "low",
+                    "message": "Resume may be too long (more than 2000 words)",
+                }
+            )
+
+        report.issues.extend(issues)
+
+    def _check_formatting(
+        self, resume_text: str, report: ATSCompatibilityReport
+    ) -> None:
+        issues = []
+
+        special_chars = re.findall(r"[^\w\s.,;:!?()'\-]", resume_text)
+        if len(special_chars) > len(resume_text) * 0.05:
+            issues.append(
+                {
+                    "type": "formatting",
+                    "severity": "medium",
+                    "message": "Resume contains many special characters that may not parse correctly",
+                }
+            )
+
+        found_formats = []
+        for pattern_re in self.DATE_PATTERNS_RE:
+            if pattern_re.search(resume_text):
+                found_formats.append(pattern_re.pattern)
+
+        if len(found_formats) > 1:
+            issues.append(
+                {
+                    "type": "formatting",
+                    "severity": "low",
+                    "message": "Inconsistent date formats detected",
+                }
+            )
+
+        report.issues.extend(issues)
+
+    def _check_keyword_matching(
+        self,
+        resume_data: Dict[str, Any],
+        job_description: str,
+        report: ATSCompatibilityReport,
+        extracted_text: Optional[str] = None,
+    ) -> None:
+        jd_keywords = self._extract_keywords(job_description)
+        resume_text = (
+            extracted_text
+            if extracted_text is not None
+            else self._extract_resume_text(resume_data)
+        )
+        resume_text_lower = resume_text.lower()
+
+        matched_keywords = []
+        missing_keywords = []
+
+        for keyword in jd_keywords:
+            if keyword.lower() in resume_text_lower:
+                matched_keywords.append(keyword)
+            else:
+                missing_keywords.append(keyword)
+
+        match_rate = len(matched_keywords) / len(jd_keywords) if jd_keywords else 0
+        report.keyword_match_rate = match_rate
+
+        report.skills_match = {
+            "matched": matched_keywords,
+            "missing": missing_keywords,
+            "match_count": len(matched_keywords),
+            "total_keywords": len(jd_keywords),
+        }
+
+        if match_rate < 0.5 and jd_keywords:
+            report.issues.append(
+                {
+                    "type": "keyword_match",
+                    "severity": "high",
+                    "message": f"Low keyword match rate ({match_rate:.0%})",
+                    "missing_keywords": missing_keywords[:10],
+                }
+            )
+
+    def _extract_keywords(self, text: str) -> List[str]:
+        stop_words = self.STOP_WORDS
+
+        words = self.WORD_PATTERN.findall(text.lower())
         word_count = {}
         for word in words:
             if word not in stop_words:
