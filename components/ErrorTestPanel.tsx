@@ -1,7 +1,6 @@
 import React from 'react';
 import {
   errorHandler,
-  ErrorType,
   createValidationError,
   createTimeoutError,
 } from '../utils/errorHandler';
