@@ -91,12 +91,14 @@ jobs:
         run: pip-audit --ignore-vuln CVE-2024-23342 --strict
 
       - name: Run Black formatter check
+        working-directory: ./resume-api
         run: black --check . --config pyproject.toml
         env:
           DEBUG: "true"
           JWT_SECRET: "test-secret-for-ci-testing-32chars"
 
       - name: Run Flake8 linter
+        working-directory: ./resume-api
         run: flake8 . --max-line-length=120 --extend-ignore=E203,W503,F541,E402,F841,W291,W293,E501
 
       - name: Run Radon cyclomatic complexity check
