@@ -180,9 +180,30 @@ function getAPIKey(): string | null {
 export function getHeaders(): HeadersInit {
   const headers: HeadersInit = { 'Content-Type': 'application/json' };
 
-  // With httpOnly cookies, the browser automatically sends the access token
-  // No need to read it in JavaScript - just rely on cookie-based auth
-  // Fall back to API key authentication if no cookie is available
+  // Check for JWT token from cookie first (preferred)
+  const jwtToken = getCookie('access_token');
+  
+  // Validate JWT token expiration
+  if (jwtToken) {
+    try {
+      const parts = jwtToken.split('.');
+      if (parts.length === 3) {
+        const payload = JSON.parse(atob(parts[1]));
+        const exp = payload.exp;
+        
+        // Check if token is not expired
+        if (exp && typeof exp === 'number' && exp * 1000 > Date.now()) {
+          headers['Authorization'] = `Bearer ${jwtToken}`;
+          // JWT takes precedence, don't add API key
+          return headers;
+        }
+      }
+    } catch (e) {
+      // Invalid JWT format, fall through to API key
+    }
+  }
+
+  // Fall back to API key authentication if no valid JWT is available
   const apiKey = getAPIKey();
   if (apiKey) headers['X-API-KEY'] = apiKey;
   return headers;
