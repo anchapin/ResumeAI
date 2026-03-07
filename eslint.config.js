@@ -110,18 +110,6 @@ export default [
     },
     settings: {
       react: { version: 'detect' },
-      boundaries: {
-        path: 'src',
-        elements: [
-          { name: 'components', pattern: 'src/components/**/*' },
-          { name: 'pages', pattern: 'src/pages/**/*' },
-          { name: 'hooks', pattern: 'src/hooks/**/*' },
-          { name: 'utils', pattern: 'src/utils/**/*' },
-          { name: 'contexts', pattern: 'src/contexts/**/*' },
-          { name: 'store', pattern: 'src/store/**/*' },
-          { name: 'types', pattern: 'src/types/**/*' },
-        ],
-      },
     },
   },
 ];
