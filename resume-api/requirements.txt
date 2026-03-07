@@ -85,3 +85,10 @@ stripe>=10.0.0
 # Email Sending (for verification emails)
 aiosmtplib>=3.0.0
 async-lru==2.0.4
+
+# Distributed Tracing (OpenTelemetry)
+opentelemetry-api==1.28.2
+opentelemetry-sdk==1.28.2
+opentelemetry-exporter-otlp==1.28.2
+opentelemetry-instrumentation-fastapi==0.49b2
+opentelemetry-instrumentation-httpx==0.49b2

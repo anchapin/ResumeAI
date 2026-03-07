@@ -1,4 +1,4 @@
-import { getItem, setItem } from './storage';
+import { StorageManager } from './storage';
 
 /**
  * Product Analytics Instrumentation
@@ -31,7 +31,7 @@ const ANALYTICS_EVENTS_KEY = 'resumeai_analytics_events';
  * Check if analytics is enabled
  */
 export function isAnalyticsEnabled(): boolean {
-  const stored = getItem(ANALYTICS_ENABLED_KEY);
+  const stored = StorageManager.getItem<string>(ANALYTICS_ENABLED_KEY);
   return stored === 'true';
 }
 
@@ -39,7 +39,10 @@ export function isAnalyticsEnabled(): boolean {
  * Enable or disable analytics collection
  */
 export function setAnalyticsEnabled(enabled: boolean): void {
-  setItem(ANALYTICS_ENABLED_KEY, enabled ? 'true' : 'false');
+  StorageManager.setItem(ANALYTICS_ENABLED_KEY, enabled ? 'true' : 'false', {
+    compress: false,
+    checkQuota: false,
+  });
 }
 
 /**
@@ -112,7 +115,7 @@ export const navigationEvents = {
  */
 export const resumeEvents = {
   create: (templateId?: string) =>
-    trackEvent('resume_create', 'resume', { templateId }),
+    trackEvent('resume_create', 'resume', { templateId: templateId ?? '' }),
   open: (resumeId: string) =>
     trackEvent('resume_open', 'resume', { resumeId }),
   save: (resumeId: string) =>
@@ -180,7 +183,7 @@ export const authEvents = {
  */
 export const errorEvents = {
   occur: (errorType: string, message: string, context?: string) =>
-    trackEvent('error_occur', 'error', { errorType, message, context }),
+    trackEvent('error_occur', 'error', { errorType, message, context: context ?? '' }),
   handle: (errorType: string, handled: boolean) =>
     trackEvent('error_handle', 'error', { errorType, handled }),
 };

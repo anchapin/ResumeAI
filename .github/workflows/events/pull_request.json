@@ -1,0 +1,12 @@
+{
+  "action": "opened",
+  "number": 828,
+  "pull_request": {
+    "head": {
+      "ref": "feature/issue-799-tech-debt-tracking"
+    },
+    "base": {
+      "ref": "main"
+    }
+  }
+}
