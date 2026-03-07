@@ -8,6 +8,8 @@ Provides endpoints for:
 - Deployment verification
 """
 
+from typing import Optional
+
 from fastapi import APIRouter, Depends, HTTPException, Query
 from datetime import datetime
 
