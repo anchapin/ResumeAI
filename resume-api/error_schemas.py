@@ -63,9 +63,7 @@ class ErrorResponse(BaseModel):
     error_code: ErrorCode = Field(..., description="Machine-readable error code")
     error_message: str = Field(..., description="Human-readable error message")
     request_id: str = Field(..., description="Unique request identifier for tracking")
-    timestamp: datetime = Field(
-        default_factory=datetime.utcnow, description="Error timestamp"
-    )
+    timestamp: datetime = Field(default_factory=datetime.utcnow, description="Error timestamp")
 
     # Optional fields for additional context
     status_code: Optional[int] = Field(None, description="HTTP status code")
@@ -73,9 +71,7 @@ class ErrorResponse(BaseModel):
     method: Optional[str] = Field(None, description="HTTP method")
 
     # Optional field for detailed validation errors
-    field_errors: Optional[List[FieldError]] = Field(
-        None, description="Field-specific errors"
-    )
+    field_errors: Optional[List[FieldError]] = Field(None, description="Field-specific errors")
 
     # Optional context for debugging
     debug_info: Optional[Dict[str, Any]] = Field(None, description="Debug information")

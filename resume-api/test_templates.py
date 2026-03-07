@@ -442,9 +442,7 @@ def test_template(template_name, resume_data, description):
         )
 
         # Generate PDF
-        pdf_bytes = generator.generate_pdf(
-            resume_data=resume_data, variant=template_name
-        )
+        pdf_bytes = generator.generate_pdf(resume_data=resume_data, variant=template_name)
 
         # Check PDF was generated
         if pdf_bytes and len(pdf_bytes) > 0:
@@ -488,14 +486,10 @@ def main():
     for template, template_results in results:
         passed = sum(1 for _, success in template_results if success)
         total = len(template_results)
-        status = (
-            "✅ PASS" if passed == total else "⚠️  PARTIAL" if passed > 0 else "❌ FAIL"
-        )
+        status = "✅ PASS" if passed == total else "⚠️  PARTIAL" if passed > 0 else "❌ FAIL"
         print(f"{template:15} {status} ({passed}/{total})")
 
-    overall_passed = sum(
-        1 for _, results in results for _, success in results if success
-    )
+    overall_passed = sum(1 for _, results in results for _, success in results if success)
     overall_total = sum(len(results) for _, results in results)
     print(f"\nOverall: {overall_passed}/{overall_total} tests passed")
 

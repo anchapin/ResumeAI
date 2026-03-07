@@ -75,9 +75,7 @@ async def setup_test_database(test_engine_fixture, override_get_async_session_fi
 @pytest_asyncio.fixture
 async def client():
     """Create async test client."""
-    async with AsyncClient(
-        transport=ASGITransport(app=app), base_url="http://test"
-    ) as ac:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
         yield ac
 
 

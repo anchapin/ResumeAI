@@ -180,9 +180,7 @@ async def get_feature_status(feature_name: str):
     try:
         flag = feature_flag_manager.get_flag(feature_name)
         if not flag:
-            raise HTTPException(
-                status_code=404, detail=f"Feature flag not found: {feature_name}"
-            )
+            raise HTTPException(status_code=404, detail=f"Feature flag not found: {feature_name}")
 
         return {
             "feature": feature_name,
@@ -204,9 +202,7 @@ async def get_feature_status(feature_name: str):
     tags=["feature-flags"],
     dependencies=[Depends(verify_api_key)],
 )
-async def enable_feature(
-    feature_name: str, rollout_percentage: int = Query(100, ge=0, le=100)
-):
+async def enable_feature(feature_name: str, rollout_percentage: int = Query(100, ge=0, le=100)):
     """
     Enable a feature flag (optionally with gradual rollout).
 
@@ -219,9 +215,7 @@ async def enable_feature(
     try:
         feature_flag_manager.enable_flag(feature_name, rollout_percentage)
 
-        logger.info(
-            "feature_flag_enabled", feature=feature_name, rollout=rollout_percentage
-        )
+        logger.info("feature_flag_enabled", feature=feature_name, rollout=rollout_percentage)
 
         flag = feature_flag_manager.get_flag(feature_name)
         return {
@@ -559,7 +553,9 @@ async def complete_deployment_event(
             "success": True,
             "deployment_id": deployment_id,
             "status": deployment.status.value,
-            "completed_at": deployment.completed_at.isoformat() if deployment.completed_at else None,
+            "completed_at": (
+                deployment.completed_at.isoformat() if deployment.completed_at else None
+            ),
             "duration_seconds": deployment.duration_seconds,
             "timestamp": datetime.utcnow().isoformat(),
         }

@@ -32,9 +32,7 @@ def test_hash_api_key():
     key = "test_api_key_12345678"
     hashed = hash_api_key(key)
 
-    assert hashed.startswith(
-        ("$2a$", "$2b$", "$2y$")
-    ), "Hash should start with bcrypt prefix"
+    assert hashed.startswith(("$2a$", "$2b$", "$2y$")), "Hash should start with bcrypt prefix"
     assert len(hashed) > 50, "Hash should be long enough"
     print("✓ test_hash_api_key passed")
 
@@ -97,15 +95,11 @@ def test_migrate_plaintext_keys():
     plaintext_keys = ["key1_12345678", "key2_87654321"]
     migration_map = migrate_plaintext_keys(plaintext_keys)
 
-    assert (
-        len(migration_map) == 2
-    ), f"Expected 2 migrated keys, got {len(migration_map)}"
+    assert len(migration_map) == 2, f"Expected 2 migrated keys, got {len(migration_map)}"
 
     for plaintext_key, hashed_key in migration_map.items():
         assert is_hashed_key(hashed_key) is True, "Migrated key should be hashed"
-        assert (
-            verify_api_key(plaintext_key, hashed_key) is True
-        ), "Migrated key should verify"
+        assert verify_api_key(plaintext_key, hashed_key) is True, "Migrated key should verify"
 
     # Empty list should raise ValueError
     try:

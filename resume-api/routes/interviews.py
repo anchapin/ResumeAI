@@ -103,9 +103,7 @@ async def start_interview(request: StartInterviewRequest):
             status=session.status,
         )
     except Exception as e:
-        raise HTTPException(
-            status_code=400, detail=f"Failed to start interview: {str(e)}"
-        )
+        raise HTTPException(status_code=400, detail=f"Failed to start interview: {str(e)}")
 
 
 @router.get("/{session_id}", response_model=InterviewSessionResponse)
@@ -149,9 +147,7 @@ async def submit_answer(session_id: str, request: SubmitAnswerRequest):
         raise HTTPException(status_code=404, detail="Interview session not found")
 
     if session.status == "completed":
-        raise HTTPException(
-            status_code=400, detail="Interview session is already completed"
-        )
+        raise HTTPException(status_code=400, detail="Interview session is already completed")
 
     # Get current question
     if session.current_question_index >= len(session.questions):
@@ -232,9 +228,7 @@ async def generate_questions(request: QuestionGenerationRequest):
 
         return QuestionsResponse(success=True, questions=question_list)
     except Exception as e:
-        raise HTTPException(
-            status_code=400, detail=f"Failed to generate questions: {str(e)}"
-        )
+        raise HTTPException(status_code=400, detail=f"Failed to generate questions: {str(e)}")
 
 
 @router.post("/questions/by-title", response_model=QuestionsResponse)
@@ -260,6 +254,4 @@ async def generate_questions_by_title(job_title: str, num_questions: int = 10):
 
         return QuestionsResponse(success=True, questions=question_list)
     except Exception as e:
-        raise HTTPException(
-            status_code=400, detail=f"Failed to generate questions: {str(e)}"
-        )
+        raise HTTPException(status_code=400, detail=f"Failed to generate questions: {str(e)}")

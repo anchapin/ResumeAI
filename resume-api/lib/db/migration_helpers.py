@@ -87,9 +87,7 @@ class MigrationManager:
                 )
 
                 if not success:
-                    logger.error(
-                        f"Migration {description} not replicated to all replicas"
-                    )
+                    logger.error(f"Migration {description} not replicated to all replicas")
 
                     # Attempt rollback if provided
                     if rollback_func:
@@ -138,9 +136,7 @@ class MigrationManager:
 
             return False
 
-    async def wait_for_replica_catchup(
-        self, migration_id: str, timeout: float = 300.0
-    ) -> bool:
+    async def wait_for_replica_catchup(self, migration_id: str, timeout: float = 300.0) -> bool:
         """
         Wait for all replicas to catch up with migration.
 
@@ -172,8 +168,7 @@ class MigrationManager:
                 if lag > self.lag_threshold:
                     all_caught_up = False
                     logger.debug(
-                        f"Replica {replica_url} lag: {lag}s "
-                        f"(threshold: {self.lag_threshold}s)"
+                        f"Replica {replica_url} lag: {lag}s " f"(threshold: {self.lag_threshold}s)"
                     )
                     break
 
@@ -232,9 +227,7 @@ class MigrationManager:
                             "lag_seconds": row_dict.get("Seconds_Behind_Master"),
                             "master_log_file": row_dict.get("Master_Log_File"),
                             "relay_log_file": row_dict.get("Relay_Master_Log_File"),
-                            "seconds_behind_master": row_dict.get(
-                                "Seconds_Behind_Master"
-                            ),
+                            "seconds_behind_master": row_dict.get("Seconds_Behind_Master"),
                             "io_running": row_dict.get("Slave_IO_Running"),
                             "sql_running": row_dict.get("Slave_SQL_Running"),
                         }
@@ -339,8 +332,7 @@ class BatchMigrationManager:
                     await migration_func(conn, ids)
                 total_migrated += len(ids)
                 logger.info(
-                    f"Migrated batch: {offset}-{offset + len(ids)} "
-                    f"({total_migrated} total)"
+                    f"Migrated batch: {offset}-{offset + len(ids)} " f"({total_migrated} total)"
                 )
             except Exception as e:
                 logger.error(f"Batch migration failed at offset {offset}: {e}")

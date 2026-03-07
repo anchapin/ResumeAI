@@ -136,9 +136,7 @@ class CircuitBreaker:
             if self.success_count >= self.success_threshold:
                 self.state = CircuitState.CLOSED
                 self.success_count = 0
-                logger.info(
-                    f"Circuit breaker '{self.name}' recovered. Transitioning to CLOSED"
-                )
+                logger.info(f"Circuit breaker '{self.name}' recovered. Transitioning to CLOSED")
 
     def _on_failure(self) -> None:
         """Handle failed call."""
@@ -150,8 +148,7 @@ class CircuitBreaker:
             self.open_time = datetime.now(timezone.utc)
             self.success_count = 0
             logger.warning(
-                f"Circuit breaker '{self.name}' failure in HALF_OPEN. "
-                f"Reopening circuit."
+                f"Circuit breaker '{self.name}' failure in HALF_OPEN. " f"Reopening circuit."
             )
         else:
             # CLOSED state: count failures
@@ -165,8 +162,7 @@ class CircuitBreaker:
                 self.state = CircuitState.OPEN
                 self.open_time = datetime.now(timezone.utc)
                 logger.warning(
-                    f"Circuit breaker '{self.name}' opened after "
-                    f"{self.failure_count} failures"
+                    f"Circuit breaker '{self.name}' opened after " f"{self.failure_count} failures"
                 )
 
     def _time_until_retry(self) -> int:

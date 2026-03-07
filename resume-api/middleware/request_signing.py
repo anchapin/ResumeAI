@@ -80,9 +80,7 @@ class NonceCache:
                 key = f"nonce:{nonce}"
                 redis = cache_mgr.backend.redis
                 # Set with NX=True (set if not exists) and EX (expiry)
-                result = await redis.set(
-                    key, "1", ex=REQUEST_SIGNATURE_EXPIRY_SECONDS, nx=True
-                )
+                result = await redis.set(key, "1", ex=REQUEST_SIGNATURE_EXPIRY_SECONDS, nx=True)
                 return result is True or result == "OK"
             except Exception as e:
                 logger.warning(f"Redis nonce cache error: {e}. Falling back to memory.")
@@ -139,12 +137,8 @@ class RequestSigningMiddleware(BaseHTTPMiddleware):
         require_signatures: bool = True,
     ):
         super().__init__(app)
-        self._secret_key = (
-            secret_key or settings.request_signing_secret or secrets.token_hex(32)
-        )
-        self._require_signatures = (
-            require_signatures and settings.enable_request_signing
-        )
+        self._secret_key = secret_key or settings.request_signing_secret or secrets.token_hex(32)
+        self._require_signatures = require_signatures and settings.enable_request_signing
 
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
         if not self._require_signatures or not settings.enable_request_signing:
@@ -167,9 +161,7 @@ class RequestSigningMiddleware(BaseHTTPMiddleware):
 
         return await call_next(request)
 
-    async def _process_signed_request(
-        self, request: Request, call_next: Callable
-    ) -> Response:
+    async def _process_signed_request(self, request: Request, call_next: Callable) -> Response:
         method = request.method
 
         timestamp = request.headers.get(TIMESTAMP_HEADER)

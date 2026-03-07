@@ -66,9 +66,7 @@ async def oauth_health():
         200: {"description": "Detected anomalies"},
     },
 )
-async def oauth_anomalies(
-    provider: str = Query("github", description="OAuth provider")
-):
+async def oauth_anomalies(provider: str = Query("github", description="OAuth provider")):
     """
     Detect and return OAuth anomalies.
 
@@ -149,8 +147,7 @@ async def oauth_metrics(
                 "avg_response_time_ms": f"{snapshot.avg_response_time_ms:.2f}",
                 "error_breakdown": snapshot.error_counts,
                 "top_errors": [
-                    {"error_code": code, "count": count}
-                    for code, count in snapshot.top_errors
+                    {"error_code": code, "count": count} for code, count in snapshot.top_errors
                 ],
             },
         }
@@ -419,27 +416,19 @@ async def oauth_endpoint_health():
             },
             "endpoints": {
                 "github_callback": {
-                    "status": (
-                        "operational" if metrics.success_rate > 0.8 else "degraded"
-                    ),
+                    "status": ("operational" if metrics.success_rate > 0.8 else "degraded"),
                     "availability": f"{metrics.success_rate:.2%}",
                 },
                 "github_connect": {
-                    "status": (
-                        "operational" if metrics.success_rate > 0.8 else "degraded"
-                    ),
+                    "status": ("operational" if metrics.success_rate > 0.8 else "degraded"),
                     "availability": f"{metrics.success_rate:.2%}",
                 },
                 "github_status": {
-                    "status": (
-                        "operational" if metrics.success_rate > 0.8 else "degraded"
-                    ),
+                    "status": ("operational" if metrics.success_rate > 0.8 else "degraded"),
                     "availability": f"{metrics.success_rate:.2%}",
                 },
                 "github_disconnect": {
-                    "status": (
-                        "operational" if metrics.success_rate > 0.8 else "degraded"
-                    ),
+                    "status": ("operational" if metrics.success_rate > 0.8 else "degraded"),
                     "availability": f"{metrics.success_rate:.2%}",
                 },
             },
@@ -465,14 +454,14 @@ async def oauth_endpoint_health():
 async def ingest_frontend_metrics(metrics_data: dict):
     """
     Receive and process metrics from the frontend client.
-    
+
     Accepts metric batches from the ResumeAI frontend including:
     - Page view metrics
     - Web Vitals (LCP, FID, CLS, etc.)
     - User interaction events
     - API request metrics
     - JavaScript errors
-    
+
     The backend stores these metrics for aggregation and analysis.
     """
     try:
@@ -482,31 +471,31 @@ async def ingest_frontend_metrics(metrics_data: dict):
             set_frontend_gauge,
             observe_frontend_histogram,
         )
-        
+
         metrics_received = 0
-        
+
         # Process each metric in the batch
         for metric in metrics_data.get("metrics", []):
             metric_type = metric.get("type")
             metric_name = metric.get("name")
             metric_value = metric.get("value", 1)
             labels = metric.get("labels", {})
-            
+
             if metric_type == "counter":
                 increment_frontend_counter(metric_name, metric_value, labels)
             elif metric_type == "gauge":
                 set_frontend_gauge(metric_name, metric_value, labels)
             elif metric_type in ("histogram", "timing"):
                 observe_frontend_histogram(metric_name, metric_value, labels)
-            
+
             metrics_received += 1
-        
+
         logger.info(
             "frontend_metrics_received",
             count=metrics_received,
             session_id=metrics_data.get("session_id"),
         )
-        
+
         return {
             "status": "success",
             "message": f"Received {metrics_received} metrics",
@@ -531,7 +520,7 @@ async def ingest_frontend_metrics(metrics_data: dict):
 async def get_frontend_metrics_summary():
     """
     Get a summary of all collected frontend metrics.
-    
+
     Returns aggregated metrics including:
     - Counters with their current values
     - Gauges with their current values
@@ -539,9 +528,9 @@ async def get_frontend_metrics_summary():
     """
     try:
         from monitoring.metrics import get_frontend_metrics_summary
-        
+
         summary = get_frontend_metrics_summary()
-        
+
         return {
             "status": "success",
             "data": summary,

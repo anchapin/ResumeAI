@@ -168,14 +168,14 @@ class PrometheusExporter:
             method=method, endpoint=endpoint, status_code=status_code
         ).inc()
 
-        self.http_request_duration_seconds.labels(
-            method=method, endpoint=endpoint
-        ).observe(duration)
+        self.http_request_duration_seconds.labels(method=method, endpoint=endpoint).observe(
+            duration
+        )
 
         if request_size:
-            self.http_request_size_bytes.labels(
-                method=method, endpoint=endpoint
-            ).observe(request_size)
+            self.http_request_size_bytes.labels(method=method, endpoint=endpoint).observe(
+                request_size
+            )
 
         if response_size:
             self.http_response_size_bytes.labels(
@@ -250,12 +250,10 @@ class PrometheusExporter:
         self, variant: str, template: str, duration: float, status: str = "success"
     ):
         """Record PDF generation metrics."""
-        self.pdfs_generated_total.labels(
-            variant=variant, template=template, status=status
-        ).inc()
-        self.pdf_generation_duration_seconds.labels(
-            variant=variant, template=template
-        ).observe(duration)
+        self.pdfs_generated_total.labels(variant=variant, template=template, status=status).inc()
+        self.pdf_generation_duration_seconds.labels(variant=variant, template=template).observe(
+            duration
+        )
 
     def record_resume_tailor(
         self, ai_provider: str, model: str, duration: float, status: str = "success"
@@ -264,9 +262,9 @@ class PrometheusExporter:
         self.resumes_tailored_total.labels(
             ai_provider=ai_provider, model=model, status=status
         ).inc()
-        self.resume_tailor_duration_seconds.labels(
-            ai_provider=ai_provider, model=model
-        ).observe(duration)
+        self.resume_tailor_duration_seconds.labels(ai_provider=ai_provider, model=model).observe(
+            duration
+        )
 
     # ============================================================================
     # AI Provider Metrics
@@ -329,12 +327,8 @@ class PrometheusExporter:
         error_type: Optional[str] = None,
     ):
         """Record AI request metrics."""
-        self.ai_requests_total.labels(
-            provider=provider, model=model, status=status
-        ).inc()
-        self.ai_request_duration_seconds.labels(provider=provider, model=model).observe(
-            duration
-        )
+        self.ai_requests_total.labels(provider=provider, model=model, status=status).inc()
+        self.ai_request_duration_seconds.labels(provider=provider, model=model).observe(duration)
 
         if input_tokens:
             self.ai_request_tokens_total.labels(
@@ -349,9 +343,7 @@ class PrometheusExporter:
             self.ai_request_cost_usd.labels(provider=provider, model=model).inc(cost)
 
         if error_type:
-            self.ai_provider_errors_total.labels(
-                provider=provider, error_type=error_type
-            ).inc()
+            self.ai_provider_errors_total.labels(provider=provider, error_type=error_type).inc()
 
     # ============================================================================
     # Database Metrics
@@ -402,16 +394,10 @@ class PrometheusExporter:
             registry=self.registry,
         )
 
-    def record_db_query(
-        self, operation: str, table: str, duration: float, status: str = "success"
-    ):
+    def record_db_query(self, operation: str, table: str, duration: float, status: str = "success"):
         """Record database query metrics."""
-        self.db_queries_total.labels(
-            operation=operation, table=table, status=status
-        ).inc()
-        self.db_query_duration_seconds.labels(operation=operation, table=table).observe(
-            duration
-        )
+        self.db_queries_total.labels(operation=operation, table=table, status=status).inc()
+        self.db_query_duration_seconds.labels(operation=operation, table=table).observe(duration)
 
         if duration > 1.0:
             self.db_slow_queries_total.labels(operation=operation, table=table).inc()
@@ -459,15 +445,11 @@ class PrometheusExporter:
 
     def record_cache_hit(self, cache_type: str, key_pattern: str = "default"):
         """Record cache hit."""
-        self.cache_hits_total.labels(
-            cache_type=cache_type, key_pattern=key_pattern
-        ).inc()
+        self.cache_hits_total.labels(cache_type=cache_type, key_pattern=key_pattern).inc()
 
     def record_cache_miss(self, cache_type: str, key_pattern: str = "default"):
         """Record cache miss."""
-        self.cache_misses_total.labels(
-            cache_type=cache_type, key_pattern=key_pattern
-        ).inc()
+        self.cache_misses_total.labels(cache_type=cache_type, key_pattern=key_pattern).inc()
 
     # ============================================================================
     # Queue Metrics
@@ -521,9 +503,9 @@ class PrometheusExporter:
     ):
         """Record async job metrics."""
         self.async_jobs_total.labels(queue_name=queue_name, status=status).inc()
-        self.async_job_duration_seconds.labels(
-            queue_name=queue_name, job_type=job_type
-        ).observe(duration)
+        self.async_job_duration_seconds.labels(queue_name=queue_name, job_type=job_type).observe(
+            duration
+        )
 
         if failure_reason:
             self.async_job_failures_total.labels(

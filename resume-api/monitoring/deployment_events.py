@@ -25,6 +25,7 @@ logger = get_logger(__name__)
 
 class EventType(str, Enum):
     """Types of deployment events."""
+
     DEPLOYMENT_START = "deployment_start"
     DEPLOYMENT_COMPLETE = "deployment_complete"
     DEPLOYMENT_FAIL = "deployment_fail"
@@ -37,6 +38,7 @@ class EventType(str, Enum):
 
 class DeploymentStatus(str, Enum):
     """Deployment status states."""
+
     IN_PROGRESS = "in_progress"
     SUCCESS = "success"
     FAILED = "failed"
@@ -46,6 +48,7 @@ class DeploymentStatus(str, Enum):
 
 class DeploymentType(str, Enum):
     """Types of deployment strategies."""
+
     ROLLING = "rolling"
     BLUE_GREEN = "blue_green"
     CANARY = "canary"
@@ -93,6 +96,7 @@ FEATURE_FLAG_CHANGES = Counter(
 @dataclass
 class Deployment:
     """Represents a single deployment instance."""
+
     deployment_id: str
     version: str
     environment: str
@@ -114,6 +118,7 @@ class Deployment:
 @dataclass
 class DeploymentEvent:
     """Represents a deployment-related event."""
+
     event_type: EventType
     deployment_id: Optional[str]
     timestamp: datetime = field(default_factory=datetime.utcnow)
@@ -124,18 +129,18 @@ class DeploymentEvent:
 class DeploymentEventTracker:
     """
     Tracks deployment events and provides deployment observability.
-    
+
     Thread-safe implementation that maintains in-memory state of deployments
     and emits Prometheus metrics.
     """
-    
+
     def __init__(self, max_events: int = 1000, max_deployments: int = 100):
         self._deployments: Dict[str, Deployment] = {}
         self._events: List[DeploymentEvent] = []
         self._max_events = max_events
         self._max_deployments = max_deployments
         self._lock = threading.RLock()
-    
+
     def start_deployment(
         self,
         deployment_id: str,
@@ -146,14 +151,14 @@ class DeploymentEventTracker:
     ) -> Deployment:
         """
         Record the start of a deployment.
-        
+
         Args:
             deployment_id: Unique identifier for the deployment
             version: Version being deployed
             environment: Target environment
             deployment_type: Type of deployment strategy
             metadata: Additional metadata
-            
+
         Returns:
             Deployment object
         """
@@ -165,12 +170,12 @@ class DeploymentEventTracker:
                 deployment_type=deployment_type,
                 metadata=metadata or {},
             )
-            
+
             self._deployments[deployment_id] = deployment
-            
+
             # Clean up old deployments if needed
             self._cleanup_deployments()
-            
+
             # Update metrics
             DEPLOYMENTS_IN_PROGRESS.labels(environment=environment).inc()
             DEPLOYMENT_COUNT.labels(
@@ -178,7 +183,7 @@ class DeploymentEventTracker:
                 status=DeploymentStatus.IN_PROGRESS.value,
                 deployment_type=deployment_type.value,
             ).inc()
-            
+
             # Record event
             self._record_event(
                 EventType.DEPLOYMENT_START,
@@ -186,7 +191,7 @@ class DeploymentEventTracker:
                 environment,
                 {"version": version, "type": deployment_type.value},
             )
-            
+
             logger.info(
                 "deployment_started",
                 deployment_id=deployment_id,
@@ -194,9 +199,9 @@ class DeploymentEventTracker:
                 environment=environment,
                 deployment_type=deployment_type.value,
             )
-            
+
             return deployment
-    
+
     def complete_deployment(
         self,
         deployment_id: str,
@@ -205,40 +210,42 @@ class DeploymentEventTracker:
     ) -> Optional[Deployment]:
         """
         Record the completion of a deployment.
-        
+
         Args:
             deployment_id: Unique identifier for the deployment
             status: Final deployment status
             error_message: Error message if failed
-            
+
         Returns:
             Updated Deployment object or None if not found
         """
         with self._lock:
             deployment = self._deployments.get(deployment_id)
             if not deployment:
-                logger.warning("completion_attempted_for_unknown_deployment", deployment_id=deployment_id)
+                logger.warning(
+                    "completion_attempted_for_unknown_deployment", deployment_id=deployment_id
+                )
                 return None
-            
+
             deployment.status = status
             deployment.completed_at = datetime.utcnow()
             deployment.error_message = error_message
-            
+
             # Update metrics
             DEPLOYMENTS_IN_PROGRESS.labels(environment=deployment.environment).dec()
-            
+
             if deployment.duration_seconds:
                 DEPLOYMENT_DURATION.labels(
                     environment=deployment.environment,
                     deployment_type=deployment.deployment_type.value,
                 ).observe(deployment.duration_seconds)
-            
+
             DEPLOYMENT_COUNT.labels(
                 environment=deployment.environment,
                 status=status.value,
                 deployment_type=deployment.deployment_type.value,
             ).inc()
-            
+
             # Record event
             event_type = (
                 EventType.DEPLOYMENT_COMPLETE
@@ -255,16 +262,16 @@ class DeploymentEventTracker:
                     "duration_seconds": str(deployment.duration_seconds or 0),
                 },
             )
-            
+
             logger.info(
                 "deployment_completed",
                 deployment_id=deployment_id,
                 status=status.value,
                 duration_seconds=deployment.duration_seconds,
             )
-            
+
             return deployment
-    
+
     def record_health_transition(
         self,
         from_state: str,
@@ -274,7 +281,7 @@ class DeploymentEventTracker:
     ) -> None:
         """
         Record a health state transition.
-        
+
         Args:
             from_state: Previous health state
             to_state: New health state
@@ -287,21 +294,21 @@ class DeploymentEventTracker:
                 from_state=from_state,
                 to_state=to_state,
             ).inc()
-            
+
             self._record_event(
                 EventType.HEALTH_TRANSITION,
                 deployment_id,
                 environment,
                 {"from_state": from_state, "to_state": to_state},
             )
-            
+
             logger.info(
                 "health_transition",
                 from_state=from_state,
                 to_state=to_state,
                 deployment_id=deployment_id,
             )
-    
+
     def record_feature_flag_change(
         self,
         flag_name: str,
@@ -311,7 +318,7 @@ class DeploymentEventTracker:
     ) -> None:
         """
         Record a feature flag change.
-        
+
         Args:
             flag_name: Name of the feature flag
             action: Action performed (enabled, disabled, updated)
@@ -324,26 +331,26 @@ class DeploymentEventTracker:
                 flag_name=flag_name,
                 action=action,
             ).inc()
-            
+
             self._record_event(
                 EventType.FEATURE_FLAG_CHANGE,
                 deployment_id,
                 environment,
                 {"flag_name": flag_name, "action": action},
             )
-            
+
             logger.info(
                 "feature_flag_change",
                 flag_name=flag_name,
                 action=action,
                 deployment_id=deployment_id,
             )
-    
+
     def get_deployment(self, deployment_id: str) -> Optional[Deployment]:
         """Get deployment by ID."""
         with self._lock:
             return self._deployments.get(deployment_id)
-    
+
     def get_deployments(
         self,
         environment: Optional[str] = None,
@@ -352,28 +359,28 @@ class DeploymentEventTracker:
     ) -> List[Deployment]:
         """
         Get deployments with optional filtering.
-        
+
         Args:
             environment: Filter by environment
             status: Filter by status
             limit: Maximum number of deployments to return
-            
+
         Returns:
             List of Deployment objects
         """
         with self._lock:
             deployments = list(self._deployments.values())
-            
+
             if environment:
                 deployments = [d for d in deployments if d.environment == environment]
             if status:
                 deployments = [d for d in deployments if d.status == status]
-            
+
             # Sort by start time, most recent first
             deployments.sort(key=lambda d: d.started_at, reverse=True)
-            
+
             return deployments[:limit]
-    
+
     def get_events(
         self,
         deployment_id: Optional[str] = None,
@@ -382,53 +389,53 @@ class DeploymentEventTracker:
     ) -> List[DeploymentEvent]:
         """
         Get deployment events with optional filtering.
-        
+
         Args:
             deployment_id: Filter by deployment ID
             event_type: Filter by event type
             limit: Maximum number of events to return
-            
+
         Returns:
             List of DeploymentEvent objects
         """
         with self._lock:
             events = list(self._events)
-            
+
             if deployment_id:
                 events = [e for e in events if e.deployment_id == deployment_id]
             if event_type:
                 events = [e for e in events if e.event_type == event_type]
-            
+
             # Sort by timestamp, most recent first
             events.sort(key=lambda e: e.timestamp, reverse=True)
-            
+
             return events[:limit]
-    
+
     def get_stats(self, environment: Optional[str] = None) -> Dict:
         """
         Get deployment statistics.
-        
+
         Args:
             environment: Optional environment filter
-            
+
         Returns:
             Dictionary with deployment statistics
         """
         with self._lock:
             deployments = self.get_deployments(environment=environment)
-            
+
             total = len(deployments)
             successful = len([d for d in deployments if d.status == DeploymentStatus.SUCCESS])
             failed = len([d for d in deployments if d.status == DeploymentStatus.FAILED])
             in_progress = len([d for d in deployments if d.status == DeploymentStatus.IN_PROGRESS])
-            
+
             completed_deployments = [d for d in deployments if d.duration_seconds is not None]
             avg_duration = (
                 sum(d.duration_seconds for d in completed_deployments) / len(completed_deployments)
                 if completed_deployments
                 else 0
             )
-            
+
             return {
                 "total_deployments": total,
                 "successful": successful,
@@ -437,7 +444,7 @@ class DeploymentEventTracker:
                 "success_rate": successful / total if total > 0 else 0,
                 "average_duration_seconds": avg_duration,
             }
-    
+
     def _record_event(
         self,
         event_type: EventType,
@@ -452,34 +459,33 @@ class DeploymentEventTracker:
             environment=environment,
             metadata=metadata,
         )
-        
+
         self._events.append(event)
         DEPLOYMENT_EVENTS.labels(
             environment=environment,
             event_type=event_type.value,
         ).inc()
-        
+
         # Clean up old events if needed
         self._cleanup_events()
-    
+
     def _cleanup_events(self) -> None:
         """Remove old events to prevent memory growth."""
         if len(self._events) > self._max_events:
             # Keep most recent events
-            self._events = self._events[-self._max_events:]
-    
+            self._events = self._events[-self._max_events :]
+
     def _cleanup_deployments(self) -> None:
         """Remove old completed deployments to prevent memory growth."""
         if len(self._deployments) > self._max_deployments:
             # Get completed deployments sorted by completion time
             completed = [
-                d for d in self._deployments.values()
-                if d.status != DeploymentStatus.IN_PROGRESS
+                d for d in self._deployments.values() if d.status != DeploymentStatus.IN_PROGRESS
             ]
             completed.sort(key=lambda d: d.completed_at or d.started_at, reverse=True)
-            
+
             # Keep only recent ones
-            to_remove = completed[self._max_deployments:]
+            to_remove = completed[self._max_deployments :]
             for d in to_remove:
                 del self._deployments[d.deployment_id]
 
@@ -489,6 +495,7 @@ deployment_event_tracker = DeploymentEventTracker()
 
 
 # Convenience functions that use the global tracker
+
 
 def start_deployment(
     deployment_id: str,

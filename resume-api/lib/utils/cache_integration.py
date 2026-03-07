@@ -58,9 +58,7 @@ class CacheMetrics:
                 "hits": hits,
                 "misses": misses,
                 "hit_rate": (hits / total * 100) if total > 0 else 0,
-                "avg_cache_time": (
-                    sum(cache_times) / len(cache_times) if cache_times else 0
-                ),
+                "avg_cache_time": (sum(cache_times) / len(cache_times) if cache_times else 0),
                 "avg_compute_time": (
                     sum(compute_times) / len(compute_times) if compute_times else 0
                 ),
@@ -163,9 +161,7 @@ def cached(
                 tags=tags,
             )
 
-            logger.debug(
-                f"Cache miss for {func.__name__}: {cache_key} (exec: {exec_time:.3f}s)"
-            )
+            logger.debug(f"Cache miss for {func.__name__}: {cache_key} (exec: {exec_time:.3f}s)")
             return result
 
         @functools.wraps(func)
@@ -207,9 +203,7 @@ def cached(
                 )
             )
 
-            logger.debug(
-                f"Cache miss for {func.__name__}: {cache_key} (exec: {exec_time:.3f}s)"
-            )
+            logger.debug(f"Cache miss for {func.__name__}: {cache_key} (exec: {exec_time:.3f}s)")
             return result
 
         # Return appropriate wrapper

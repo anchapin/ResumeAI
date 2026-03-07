@@ -336,9 +336,7 @@ class TestCacheInvalidation:
     @pytest.mark.asyncio
     async def test_on_resume_update_hook(self, cache_manager):
         """Test resume update invalidation"""
-        await cache_manager.set(
-            "resume:456:data", "value", tags={"resume", "resume:456"}
-        )
+        await cache_manager.set("resume:456:data", "value", tags={"resume", "resume:456"})
 
         count = await CacheInvalidationHook.on_resume_update(456)
         assert count == 1

@@ -30,9 +30,7 @@ from database import (
 
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///./test_indexes.db")
 TEST_ENGINE = create_async_engine(DATABASE_URL, echo=False)
-TestAsyncSession = sessionmaker(
-    TEST_ENGINE, class_=AsyncSession, expire_on_commit=False
-)
+TestAsyncSession = sessionmaker(TEST_ENGINE, class_=AsyncSession, expire_on_commit=False)
 
 
 @pytest.fixture(scope="function")
@@ -59,16 +57,13 @@ class TestIndexExistence:
             if "sqlite" in DATABASE_URL:
                 # SQLite
                 result = await conn.execute(
-                    text(
-                        "SELECT name FROM sqlite_master WHERE type='index' AND tbl_name='resumes'"
-                    )
+                    text("SELECT name FROM sqlite_master WHERE type='index' AND tbl_name='resumes'")
                 )
                 index_names = [row[0] for row in result.fetchall()]
 
                 # Check for key indexes
                 assert any(
-                    "user" in idx.lower() and "created" in idx.lower()
-                    for idx in index_names
+                    "user" in idx.lower() and "created" in idx.lower() for idx in index_names
                 ), "Missing index on resumes(owner_id, created_at)"
                 assert any(
                     "updated" in idx.lower() for idx in index_names
@@ -96,8 +91,7 @@ class TestIndexExistence:
                 index_names = [row[0] for row in result.fetchall()]
 
                 assert any(
-                    "resume" in idx.lower() and "created" in idx.lower()
-                    for idx in index_names
+                    "resume" in idx.lower() and "created" in idx.lower() for idx in index_names
                 ), "Missing composite index on resume_versions(resume_id, created_at)"
 
     @pytest.mark.asyncio
@@ -116,8 +110,7 @@ class TestIndexExistence:
                     "hash" in idx.lower() for idx in index_names
                 ), "Missing index on api_keys(key_hash)"
                 assert any(
-                    "user" in idx.lower() and "active" in idx.lower()
-                    for idx in index_names
+                    "user" in idx.lower() and "active" in idx.lower() for idx in index_names
                 ), "Missing index on api_keys(user_id, is_active)"
 
     @pytest.mark.asyncio
@@ -126,9 +119,7 @@ class TestIndexExistence:
         async with test_db.begin() as conn:
             if "sqlite" in DATABASE_URL:
                 result = await conn.execute(
-                    text(
-                        "SELECT name FROM sqlite_master WHERE type='index' AND tbl_name='users'"
-                    )
+                    text("SELECT name FROM sqlite_master WHERE type='index' AND tbl_name='users'")
                 )
                 index_names = [row[0] for row in result.fetchall()]
 
@@ -206,9 +197,7 @@ class TestQueryPerformance:
             start = time.time()
 
             # This query should use the idx_resume_user_created index
-            result = await session.execute(
-                select(Resume).where(Resume.owner_id == user.id)
-            )
+            result = await session.execute(select(Resume).where(Resume.owner_id == user.id))
             resumes = result.scalars().all()
 
             elapsed = time.time() - start
@@ -246,18 +235,14 @@ class TestQueryPerformance:
             start = time.time()
 
             # This query should use the idx_api_key_hash index
-            result = await session.execute(
-                select(APIKey).where(APIKey.key_hash == "hash_025")
-            )
+            result = await session.execute(select(APIKey).where(APIKey.key_hash == "hash_025"))
             api_key = result.scalar()
 
             elapsed = time.time() - start
 
             assert api_key is not None, "Should find the API key"
             assert api_key.key_prefix == "rai_025", "Should find correct key"
-            assert (
-                elapsed < 0.5
-            ), f"Key lookup took {elapsed:.2f}s, should be <0.5s with index"
+            assert elapsed < 0.5, f"Key lookup took {elapsed:.2f}s, should be <0.5s with index"
 
     @pytest.mark.asyncio
     async def test_version_history_lookup(self, test_db):
@@ -272,9 +257,7 @@ class TestQueryPerformance:
             session.add(user)
             await session.flush()
 
-            resume = Resume(
-                owner_id=user.id, title="Test Resume", data={"content": "test"}
-            )
+            resume = Resume(owner_id=user.id, title="Test Resume", data={"content": "test"})
             session.add(resume)
             await session.flush()
 
@@ -302,9 +285,7 @@ class TestQueryPerformance:
             elapsed = time.time() - start
 
             assert len(versions) == 50, "Should find all versions"
-            assert (
-                elapsed < 1.0
-            ), f"Version lookup took {elapsed:.2f}s, should be <1s with index"
+            assert elapsed < 1.0, f"Version lookup took {elapsed:.2f}s, should be <1s with index"
 
 
 class TestIndexNoNegativeEffects:
@@ -357,9 +338,7 @@ class TestIndexNoNegativeEffects:
             session.add(user)
             await session.flush()
 
-            resume = Resume(
-                owner_id=user.id, title="Original Title", data={"content": "test"}
-            )
+            resume = Resume(owner_id=user.id, title="Original Title", data={"content": "test"})
             session.add(resume)
             await session.flush()
             resume_id = resume.id
@@ -391,9 +370,7 @@ class TestIndexNoNegativeEffects:
             session.add(user)
             await session.flush()
 
-            resume = Resume(
-                owner_id=user.id, title="To Delete", data={"content": "test"}
-            )
+            resume = Resume(owner_id=user.id, title="To Delete", data={"content": "test"})
             session.add(resume)
             await session.flush()
             resume_id = resume.id
@@ -479,9 +456,7 @@ class TestIndexIntegration:
         async with TestAsyncSession() as session:
             # Typical query: get user's resumes ordered by creation
             result = await session.execute(
-                select(Resume)
-                .where(Resume.owner_id == user.id)
-                .order_by(Resume.created_at.desc())
+                select(Resume).where(Resume.owner_id == user.id).order_by(Resume.created_at.desc())
             )
             resumes = result.scalars().all()
 
@@ -514,9 +489,7 @@ class TestIndexIntegration:
         # Query public resumes
         async with TestAsyncSession() as session:
             result = await session.execute(
-                select(Resume)
-                .where(Resume.is_public)
-                .order_by(Resume.created_at.desc())
+                select(Resume).where(Resume.is_public).order_by(Resume.created_at.desc())
             )
             resumes = result.scalars().all()
 

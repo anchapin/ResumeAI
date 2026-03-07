@@ -31,9 +31,7 @@ class HealthCheckResult(BaseModel):
     status: ComponentStatus = Field(..., description="Component status")
     message: str = Field(default="", description="Status message")
     latency_ms: float = Field(default=0.0, description="Check latency in milliseconds")
-    details: Dict[str, Any] = Field(
-        default_factory=dict, description="Additional details"
-    )
+    details: Dict[str, Any] = Field(default_factory=dict, description="Additional details")
     timestamp: datetime = Field(default_factory=datetime.utcnow)
 
     def is_healthy(self) -> bool:
@@ -276,9 +274,7 @@ class DeploymentHealthChecker:
         results = await self.run_all_checks()
 
         healthy_count = sum(1 for r in results.values() if r.is_healthy())
-        unhealthy_count = sum(
-            1 for r in results.values() if r.status == ComponentStatus.UNHEALTHY
-        )
+        unhealthy_count = sum(1 for r in results.values() if r.status == ComponentStatus.UNHEALTHY)
 
         is_ready = unhealthy_count == 0 and healthy_count == len(results)
 

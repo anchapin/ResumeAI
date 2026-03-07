@@ -117,9 +117,7 @@ def sample_job_description():
 class TestCoverLetterEndpoint:
     """Test class for /v1/cover-letter endpoint."""
 
-    def test_cover_letter_requires_auth(
-        self, client, sample_resume_data, sample_job_description
-    ):
+    def test_cover_letter_requires_auth(self, client, sample_resume_data, sample_job_description):
         """Test that cover letter endpoint requires API key authentication."""
         # Note: When no API key is provided, the endpoint may return 400 (validation error)
         # before auth check due to empty resume validation, or 401/403 for auth failure
@@ -193,9 +191,7 @@ class TestCoverLetterEndpoint:
             assert data["header"] == mock_cover_letter["header"]
             assert data["introduction"] == mock_cover_letter["introduction"]
 
-    def test_cover_letter_missing_job_description(
-        self, client, valid_api_key, sample_resume_data
-    ):
+    def test_cover_letter_missing_job_description(self, client, valid_api_key, sample_resume_data):
         """Test that missing job description returns validation error."""
         response = client.post(
             "/api/v1/cover-letter",
@@ -241,9 +237,7 @@ class TestCoverLetterEndpoint:
         )
         assert response.status_code == 422  # Validation error
 
-    def test_cover_letter_empty_resume_data(
-        self, client, valid_api_key, sample_job_description
-    ):
+    def test_cover_letter_empty_resume_data(self, client, valid_api_key, sample_job_description):
         """Test that empty resume data returns validation error."""
         response = client.post(
             "/api/v1/cover-letter",
@@ -258,9 +252,7 @@ class TestCoverLetterEndpoint:
         # Should fail validation because resume is empty
         assert response.status_code in [422, 400]
 
-    def test_cover_letter_short_job_description(
-        self, client, valid_api_key, sample_resume_data
-    ):
+    def test_cover_letter_short_job_description(self, client, valid_api_key, sample_resume_data):
         """Test that very short job description returns validation error."""
         response = client.post(
             "/api/v1/cover-letter",
@@ -348,9 +340,7 @@ class TestCoverLetterEndpoint:
         """Test error handling when CoverLetterGenerator fails."""
         with patch("api.routes.CoverLetterGenerator") as mock_generator_class:
             mock_instance = MagicMock()
-            mock_instance.generate_cover_letter.side_effect = ValueError(
-                "Invalid input"
-            )
+            mock_instance.generate_cover_letter.side_effect = ValueError("Invalid input")
             mock_generator_class.return_value = mock_instance
 
             response = client.post(
@@ -374,9 +364,7 @@ class TestCoverLetterEndpoint:
         """Test error handling for unexpected internal errors."""
         with patch("api.routes.CoverLetterGenerator") as mock_generator_class:
             mock_instance = MagicMock()
-            mock_instance.generate_cover_letter.side_effect = Exception(
-                "Unexpected error"
-            )
+            mock_instance.generate_cover_letter.side_effect = Exception("Unexpected error")
             mock_generator_class.return_value = mock_instance
 
             response = client.post(
