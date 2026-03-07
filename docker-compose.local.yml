@@ -1,0 +1,117 @@
+version: '3.9'
+
+# Local development services for ResumeAI
+# Usage: docker-compose -f docker-compose.local.yml up -d
+#
+# This provides:
+# - PostgreSQL database (port 5432)
+# - Redis cache (port 6379)
+# - API service (port 8000)
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: resumeai-postgres
+    environment:
+      POSTGRES_USER: resumeai
+      POSTGRES_PASSWORD: resumeai_dev
+      POSTGRES_DB: resumeai
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U resumeai -d resumeai"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - resumeai-local
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: resumeai-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - resumeai-local
+
+  # API Service (Development)
+  api:
+    build:
+      context: .
+      dockerfile: resume-api/Dockerfile
+    container_name: resumeai-api-dev
+    ports:
+      - "8000:8000"
+    environment:
+      - HOST=0.0.0.0
+      - PORT=8000
+      - DEBUG=true
+      - AI_PROVIDER=${AI_PROVIDER:-openai}
+      - AI_MODEL=${AI_MODEL:-gpt-4o}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - MASTER_API_KEY=${MASTER_API_KEY:-dev_key_123}
+      - REQUIRE_API_KEY=${REQUIRE_API_KEY:-false}
+      - DATABASE_URL=postgresql://resumeai:resumeai_dev@postgres:5432/resumeai
+      - REDIS_URL=redis://redis:6379/0
+      - CACHE_BACKEND=redis
+    volumes:
+      - ./resume-api:/app
+      - ./resume-api/templates:/app/templates
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import httpx; httpx.get('http://localhost:8000/api/v1/health', timeout=10).raise_for_status()"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+    networks:
+      - resumeai-local
+
+  # Frontend Development Server (optional)
+  frontend:
+    image: node:20-alpine
+    container_name: resumeai-frontend-dev
+    working_dir: /app
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_URL=http://localhost:8000
+    volumes:
+      - .:/app
+      - /app/node_modules
+    depends_on:
+      - api
+    restart: unless-stopped
+    networks:
+      - resumeai-local
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  resumeai-local:
+    driver: bridge

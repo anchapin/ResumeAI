@@ -29,7 +29,7 @@ from middleware.error_handling import ErrorHandlingMiddleware
 from middleware.timeout import TimeoutMiddleware
 from middleware.csrf import CSRFMiddleware
 from middleware.request_signing import RequestSigningMiddleware
-from monitoring import logging_config, health, alerting, analytics, tracing
+from monitoring import logging_config, health, alerting, analytics, tracing, profiling
 from slowapi.errors import RateLimitExceeded
 
 # Import new feature routes
@@ -178,6 +178,15 @@ async def lifespan(app: FastAPI):
             tracing_config.instrument_fastapi(app)
         logger.info("Distributed tracing enabled", endpoint=settings.otlp_endpoint)
 
+    # Set up profiling instrumentation
+    if settings.enable_profiling:
+        profiling.start_memory_tracing()
+        logger.info(
+            "Profiling enabled",
+            memory_tracking=settings.profiling_memory_tracking,
+            log_results=settings.profiling_log_results,
+        )
+
     # Set up alerting in background
     if settings.enable_alerting:
         asyncio.create_task(alert_manager_task())
@@ -187,6 +196,13 @@ async def lifespan(app: FastAPI):
 
     # Shutdown
     logger.info("application_shutdown")
+
+    # Stop profiling and record final stats
+    if settings.enable_profiling:
+        profiling_stats = profiling.stop_memory_tracing()
+        if profiling_stats:
+            logger.info("Profiling shutdown", **profiling_stats)
+
     alerting.alert_manager.stop()
 
 
