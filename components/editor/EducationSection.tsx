@@ -1,5 +1,5 @@
 import React from 'react';
-import { SimpleResumeData, EducationEntry } from '../../types';
+import { EducationEntry } from '../../types';
 import EducationItem from './EducationItem';
 
 interface EducationSectionProps {

@@ -51,7 +51,6 @@ import {
   GitHubRepository,
   SalaryResearchRequest,
   SalaryResearchResponse,
-  SalaryInsight,
   RawSalaryInsight,
   JobOffer,
   JobOfferInput,

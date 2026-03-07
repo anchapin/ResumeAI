@@ -20,6 +20,44 @@
       "preLaunchTask": "npm: dev"
     },
     {
+      "name": "Python: FastAPI (ResumeAPI)",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "uvicorn",
+      "args": [
+        "resume-api.main:app",
+        "--host",
+        "0.0.0.0",
+        "--port",
+        "8000",
+        "--reload"
+      ],
+      "jinja": true,
+      "justMyCode": true,
+      "python": "/usr/local/bin/python3",
+      "envFile": "${workspaceFolder}/resume-api/.env",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Python: Current File",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${file}",
+      "console": "integratedTerminal",
+      "justMyCode": true
+    },
+    {
+      "name": "Python: Pytest",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "pytest",
+      "args": [
+        "${file}"
+      ],
+      "console": "integratedTerminal",
+      "justMyCode": false
+    },
+    {
       "name": "Debug Tests",
       "type": "node",
       "request": "launch",
@@ -58,7 +96,7 @@
   "compounds": [
     {
       "name": "Full Stack Debug",
-      "configurations": ["React: Chrome", "Python: FastAPI"],
+      "configurations": ["React: Chrome", "Python: FastAPI (ResumeAPI)"],
       "stopAll": true
     }
   ]

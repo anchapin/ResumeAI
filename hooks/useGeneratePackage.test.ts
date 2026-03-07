@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, act, waitFor } from '@testing-library/react';
 import { useGeneratePackage, convertToResumeData } from './useGeneratePackage';
-import { SimpleResumeData, ResumeData } from '../types';
+import { SimpleResumeData } from '../types';
 
 // Mock the api-client module to avoid JWT validation issues
 vi.mock('../utils/api-client', () => ({

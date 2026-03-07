@@ -294,6 +294,85 @@ ResumeAI/
 
 See [CLAUDE.md](CLAUDE.md) for detailed Git workflow guidelines.
 
+## Development Environment
+
+### Using Dev Container (Recommended)
+
+ResumeAI includes a devcontainer configuration for reproducible development environments. This is the recommended way to develop as it sets up all dependencies automatically.
+
+#### Prerequisites
+
+- [Docker](https://www.docker.com/get-started) installed and running
+- [Visual Studio Code](https://code.visualstudio.com/) installed
+- [Dev Containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) installed
+
+#### Setup
+
+1. **Open in VS Code**: Open the project in VS Code
+2. **Reopen in Container**: Click "Reopen in Container" when prompted (or press `F1` and select "Dev Containers: Reopen in Container")
+3. **Wait for Setup**: The container will install all dependencies automatically:
+   - Node.js 20 with npm
+   - Python 3.11 with pip
+   - GitHub CLI
+   - All required VS Code extensions
+
+#### Features
+
+The devcontainer provides:
+
+- **Debugging Configurations**:
+  - React frontend debugging (Chrome, Firefox)
+  - FastAPI backend debugging with hot reload
+  - Frontend and backend unit test debugging
+  - E2E test debugging with Playwright
+  - Full-stack combined debugging
+
+- **VS Code Extensions**:
+  - ESLint & Prettier for code quality
+  - Tailwind CSS support
+  - Python (Pylance, Black, Flake8, Pytest)
+  - Docker support
+  - GitLens for version control
+
+- **Pre-configured Settings**:
+  - Format on save enabled
+  - ESLint auto-fix on save
+  - Python testing with pytest
+  - Organized imports on save
+
+#### Available Debug Targets
+
+| Target | Description |
+|--------|-------------|
+| `React: Chrome` | Debug frontend in Chrome |
+| `React: Firefox` | Debug frontend in Firefox |
+| `Python: FastAPI (ResumeAPI)` | Debug backend with hot reload |
+| `Python: Current File` | Debug currently open Python file |
+| `Python: Pytest` | Debug pytest tests |
+| `Debug Tests` | Debug frontend vitest tests |
+| `Debug Current Test File` | Debug current test file |
+| `E2E Tests` | Run Playwright E2E tests |
+| `Full Stack Debug` | Debug both frontend and backend together |
+
+#### Running Both Services
+
+To run both frontend and backend:
+
+1. Start the backend using `Python: FastAPI (ResumeAPI)` debug configuration
+2. Start the frontend using `React: Chrome` debug configuration
+3. Or use the `Full Stack Debug` compound configuration to run both at once
+
+#### Ports
+
+- **5173**: Frontend (Vite dev server)
+- **8000**: Backend (FastAPI)
+
+The devcontainer automatically forwards these ports and notifies you when they're available.
+
+### Manual Setup
+
+If you prefer to develop locally without containers, follow the manual setup instructions in the [Installation](#installation) section above.
+
 ## Troubleshooting
 
 ### Dev Container (Recommended)
@@ -311,8 +390,6 @@ The devcontainer includes:
 - Pre-configured linting and formatting on save
 
 ### GitHub Connection Issues
-
-If you see errors connecting to GitHub:
 
 1. **Verify GitHub OAuth App credentials**:
    - Check that `GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET` are correctly set

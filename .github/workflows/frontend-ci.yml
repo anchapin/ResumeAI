@@ -71,11 +71,9 @@ jobs:
 
       - name: Run linting
         run: npm run lint
-        continue-on-error: true
 
       - name: Check for duplicate code
         run: npm run duplicate:check
-        continue-on-error: true
 
       - name: Run npm audit
         run: npm audit --audit-level=high

@@ -9,7 +9,6 @@ import {
   sleep,
   retryWithBackoff,
   fetchWithRetry,
-  RetryConfig,
 } from './retryLogic';
 
 describe('Retry Logic', () => {

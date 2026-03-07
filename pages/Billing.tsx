@@ -8,7 +8,6 @@ import {
   getBillingStatus,
   cancelSubscription,
   resumeSubscription,
-  upgradeSubscription,
   createPortalSession,
 } from '../utils/api-client';
 

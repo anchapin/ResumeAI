@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import StorageWarning from './StorageWarning';
 import { useStorageQuota } from '../src/hooks/useStorageQuota';
 

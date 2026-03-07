@@ -1,0 +1,25 @@
+{
+  "threshold": 5,
+  "minLines": 10,
+  "reporters": ["console"],
+  "output": ".jscpd-report",
+  "ignore": [
+    "**/node_modules/**",
+    "**/dist/**",
+    "**/build/**",
+    "**/.next/**",
+    "**/coverage/**",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/*.spec.ts",
+    "**/*.spec.tsx",
+    "**/tests/**",
+    "**/test_*.py",
+    "**/*_test.py",
+    "**/__pycache__/**",
+    "**/resume-api/tests/**",
+    "**/resume-api/templates/**",
+    "**/resume-api/dashboards/**",
+    "**/resume-api/migrations/**"
+  ]
+}

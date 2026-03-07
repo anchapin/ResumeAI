@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Route, JobOfferFormData } from '../types';
+import { JobOfferFormData } from '../types';
 import { Button, Card } from '../components/ui';
 import {
   researchSalary,
@@ -8,7 +8,6 @@ import {
   deleteOffer,
   listOffers,
   compareOffers,
-  updatePriorities,
   getDefaultPriorities,
 } from '../utils/api-client';
 import {
