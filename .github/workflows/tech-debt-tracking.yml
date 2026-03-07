@@ -1,0 +1,134 @@
+name: Tech Debt Tracking
+
+on:
+  schedule:
+    # Run weekly on Monday at 9am
+    - cron: '0 9 * * 1'
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'tech_debt.json'
+      - 'TECH_DEBT.md'
+
+jobs:
+  track-tech-debt:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Validate tech debt JSON
+        run: |
+          # Check if tech_debt.json is valid JSON
+          if ! jq empty tech_debt.json 2>/dev/null; then
+            echo "Error: tech_debt.json is not valid JSON"
+            exit 1
+          fi
+          
+          # Validate structure
+          echo "Validating tech_debt.json structure..."
+          
+          # Check required fields
+          jq -e '.version' tech_debt.json > /dev/null
+          jq -e '.description' tech_debt.json > /dev/null
+          jq -e '.categories' tech_debt.json > /dev/null
+          jq -e '.priorities' tech_debt.json > /dev/null
+          jq -e '.statuses' tech_debt.json > /dev/null
+          jq -e '.debtItems' tech_debt.json > /dev/null
+          
+          echo "JSON structure is valid"
+
+      - name: Generate tech debt summary
+        id: summary
+        run: |
+          # Get counts by status
+          TOTAL=$(jq '.debtItems | length' tech_debt.json)
+          IDENTIFIED=$(jq '[.debtItems[] | select(.status == "identified")] | length' tech_debt.json)
+          IN_PROGRESS=$(jq '[.debtItems[] | select(.status == "in_progress")] | length' tech_debt.json)
+          RESOLVED=$(jq '[.debtItems[] | select(.status == "resolved")] | length' tech_debt.json)
+          ACCEPTED=$(jq '[.debtItems[] | select(.status == "accepted")] | length' tech_debt.json)
+          
+          # Get counts by priority
+          CRITICAL=$(jq '[.debtItems[] | select(.priority == "critical")] | length' tech_debt.json)
+          HIGH=$(jq '[.debtItems[] | select(.priority == "high")] | length' tech_debt.json)
+          MEDIUM=$(jq '[.debtItems[] | select(.priority == "medium")] | length' tech_debt.json)
+          LOW=$(jq '[.debtItems[] | select(.priority == "low")] | length' tech_debt.json)
+          
+          echo "Total: $TOTAL"
+          echo "Identified: $IDENTIFIED"
+          echo "In Progress: $IN_PROGRESS"
+          echo "Resolved: $RESOLVED"
+          echo "Accepted: $ACCEPTED"
+          echo "Critical: $CRITICAL"
+          echo "High: $HIGH"
+          echo "Medium: $MEDIUM"
+          echo "Low: $LOW"
+          
+          # Set outputs
+          echo "total=$TOTAL" >> $GITHUB_OUTPUT
+          echo "identified=$IDENTIFIED" >> $GITHUB_OUTPUT
+          echo "in_progress=$IN_PROGRESS" >> $GITHUB_OUTPUT
+          echo "resolved=$RESOLVED" >> $GITHUB_OUTPUT
+          echo "accepted=$ACCEPTED" >> $GITHUB_OUTPUT
+          echo "critical=$CRITICAL" >> $GITHUB_OUTPUT
+          echo "high=$HIGH" >> $GITHUB_OUTPUT
+          echo "medium=$MEDIUM" >> $GITHUB_OUTPUT
+          echo "low=$LOW" >> $GITHUB_OUTPUT
+
+      - name: Create issue comment with summary (on schedule)
+        if: github.event_name == 'schedule'
+        run: |
+          TOTAL=${{ steps.summary.outputs.total }}
+          IDENTIFIED=${{ steps.summary.outputs.identified }}
+          IN_PROGRESS=${{ steps.summary.outputs.in_progress }}
+          RESOLVED=${{ steps.summary.outputs.resolved }}
+          ACCEPTED=${{ steps.summary.outputs.accepted }}
+          CRITICAL=${{ steps.summary.outputs.critical }}
+          HIGH=${{ steps.summary.outputs.high }}
+          MEDIUM=${{ steps.summary.outputs.medium }}
+          LOW=${{ steps.summary.outputs.low }}
+          
+          COMMENT_BODY="## Tech Debt Summary
+          
+          ### Status Overview
+          - **Total Items**: $TOTAL
+          - **Identified**: $IDENTIFIED
+          - **In Progress**: $IN_PROGRESS
+          - **Resolved**: $RESOLVED
+          - **Accepted**: $ACCEPTED
+          
+          ### Priority Breakdown
+          - 🔴 Critical: $CRITICAL
+          - 🟠 High: $HIGH
+          - 🟡 Medium: $MEDIUM
+          - 🟢 Low: $LOW
+          
+          *Last updated: $(date -u +'%Y-%m-%d %H:%M UTC')*"
+          
+          # Check if there's already a tracking issue
+          ISSUE_NUMBER=$(gh issue list --search "Tech Debt Tracking" --state open --json number --jq '.[0].number' 2>/dev/null || echo "")
+          
+          if [ -z "$ISSUE_NUMBER" ]; then
+            # Create new tracking issue
+            gh issue create --title "Tech Debt Tracking Report" --body "$COMMENT_BODY" --label "tech-debt"
+          else
+            # Update existing issue
+            gh issue comment $ISSUE_NUMBER --body "$COMMENT_BODY"
+          fi
+
+      - name: Check for stale tech debt items
+        run: |
+          # Get items that haven't been updated in over 30 days
+          STALE_ITEMS=$(jq -r '.debtItems[] | select(.status != "resolved") | select(.dateIdentified < "2026-02-01") | "- \(.title) (ID: \(.id))"' tech_debt.json 2>/dev/null || echo "")
+          
+          if [ -n "$STALE_ITEMS" ]; then
+            echo "Warning: Some tech debt items may be stale:"
+            echo "$STALE_ITEMS"
+          else
+            echo "No stale tech debt items found"
+          fi
