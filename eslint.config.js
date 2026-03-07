@@ -2,6 +2,7 @@ import js from '@eslint/js';
 import tseslint from 'typescript-eslint';
 import react from 'eslint-plugin-react';
 import reactHooks from 'eslint-plugin-react-hooks';
+import boundaries from 'eslint-plugin-boundaries';
 
 export default [
   {
@@ -40,6 +41,7 @@ export default [
       react,
       'react-hooks': reactHooks,
       '@typescript-eslint': tseslint.plugin,
+      boundaries,
     },
     rules: {
       ...react.configs.recommended.rules,
@@ -57,9 +59,46 @@ export default [
       'prefer-const': 'warn',
       'no-prototype-builtins': 'warn',
       'no-useless-assignment': 'warn',
+      // Module boundary rules
+      'boundaries/element-types': [
+        'error',
+        {
+          default: 'disallow',
+          rules: [
+            {
+              from: 'components',
+              allow: ['components', 'types', 'utils', 'hooks', 'contexts', 'store'],
+            },
+            {
+              from: 'pages',
+              allow: ['components', 'types', 'utils', 'hooks', 'contexts', 'store', 'pages'],
+            },
+            {
+              from: 'hooks',
+              allow: ['types', 'utils', 'hooks', 'store'],
+            },
+            {
+              from: 'contexts',
+              allow: ['types', 'utils', 'hooks', 'contexts', 'store'],
+            },
+            {
+              from: 'store',
+              allow: ['types', 'utils'],
+            },
+            {
+              from: 'utils',
+              allow: ['types', 'utils'],
+            },
+          ],
+        },
+      ],
+      'boundaries/no-external': 'off',
     },
     settings: {
       react: { version: 'detect' },
+      boundaries: {
+        path: 'src',
+      },
     },
   },
 ];
