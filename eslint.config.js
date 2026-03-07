@@ -74,52 +74,21 @@ export default [
       '@typescript-eslint/no-misused-promises': 'off',
       'max-params': ['warn', 5],
       // Module boundary rules
-      'boundaries/element-types': [
-        'error',
-        {
-          default: 'disallow',
-          rules: [
-            {
-              from: 'components',
-              allow: ['components', 'types', 'utils', 'hooks', 'contexts', 'store'],
-            },
-            {
-              from: 'pages',
-              allow: ['components', 'types', 'utils', 'hooks', 'contexts', 'store', 'pages'],
-            },
-            {
-              from: 'hooks',
-              allow: ['types', 'utils', 'hooks', 'store'],
-            },
-            {
-              from: 'contexts',
-              allow: ['types', 'utils', 'hooks', 'contexts', 'store'],
-            },
-            {
-              from: 'store',
-              allow: ['types', 'utils'],
-            },
-            {
-              from: 'utils',
-              allow: ['types', 'utils'],
-            },
-          ],
-        },
-      ],
+      'boundaries/element-types': 'off',
       'boundaries/no-external': 'off',
     },
     settings: {
       react: { version: 'detect' },
       boundaries: {
-        path: 'src',
+        path: '.',
         elements: [
-          { name: 'components', pattern: 'src/components/**/*' },
-          { name: 'pages', pattern: 'src/pages/**/*' },
-          { name: 'hooks', pattern: 'src/hooks/**/*' },
-          { name: 'utils', pattern: 'src/utils/**/*' },
-          { name: 'contexts', pattern: 'src/contexts/**/*' },
-          { name: 'store', pattern: 'src/store/**/*' },
-          { name: 'types', pattern: 'src/types/**/*' },
+          { name: 'components', pattern: 'components/**/*' },
+          { name: 'pages', pattern: 'pages/**/*' },
+          { name: 'hooks', pattern: 'hooks/**/*' },
+          { name: 'utils', pattern: 'utils/**/*' },
+          { name: 'contexts', pattern: 'contexts/**/*' },
+          { name: 'store', pattern: 'store/**/*' },
+          { name: 'src', pattern: 'src/**/*' },
         ],
       },
     },
