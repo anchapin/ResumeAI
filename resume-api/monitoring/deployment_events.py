@@ -14,7 +14,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Dict, List, Optional
 import threading
-import time
+
 
 from prometheus_client import Counter, Gauge, Histogram
 

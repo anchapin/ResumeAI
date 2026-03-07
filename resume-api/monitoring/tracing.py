@@ -5,7 +5,7 @@ This module provides tracing capabilities for the Resume API,
 enabling distributed tracing across microservices.
 """
 
-import os
+
 from typing import Optional
 
 from opentelemetry import trace
@@ -16,9 +16,7 @@ from opentelemetry.sdk.trace.export import (
 )
 from opentelemetry.sdk.resources import Resource, SERVICE_NAME
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
-from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
-    OTLPSpanExporter as OTLPSpanExporterHTTP,
-)
+from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter as OTLPSpanExporterHTTP
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
 
@@ -76,7 +74,6 @@ class TracingConfig:
             except Exception as e:
                 # Log warning but don't fail if OTLP export fails
                 import logging
-
                 logging.warning(f"Failed to set up OTLP exporter: {e}")
 
     def instrument_fastapi(self, app):
@@ -85,7 +82,6 @@ class TracingConfig:
             FastAPIInstrumentor.instrument_app(app)
         except Exception as e:
             import logging
-
             logging.warning(f"Failed to instrument FastAPI: {e}")
 
     def instrument_httpx(self):
@@ -94,7 +90,6 @@ class TracingConfig:
             HTTPXClientInstrumentor().instrument()
         except Exception as e:
             import logging
-
             logging.warning(f"Failed to instrument HTTPX: {e}")
 
     def get_tracer(self) -> trace.Tracer:
