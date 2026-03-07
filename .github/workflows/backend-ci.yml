@@ -91,7 +91,7 @@ jobs:
         run: pip-audit --ignore-vuln CVE-2024-23342 --strict
 
       - name: Run Black formatter check
-        run: black --check .
+        run: black --check . --config pyproject.toml
         env:
           DEBUG: "true"
           JWT_SECRET: "test-secret-for-ci-testing-32chars"
