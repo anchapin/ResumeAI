@@ -553,19 +553,15 @@ async def complete_deployment_event(
             "success": True,
             "deployment_id": deployment_id,
             "status": deployment.status.value,
-
-
             "completed_at": (
                 deployment.completed_at.isoformat() if deployment.completed_at else None
             ),
-
-            "completed_at": deployment.completed_at.isoformat() if deployment.completed_at else None,
-
-
             "completed_at": (
                 deployment.completed_at.isoformat() if deployment.completed_at else None
             ),
-
+            "completed_at": (
+                deployment.completed_at.isoformat() if deployment.completed_at else None
+            ),
             "duration_seconds": deployment.duration_seconds,
             "timestamp": datetime.utcnow().isoformat(),
         }

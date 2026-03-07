@@ -11,13 +11,6 @@ from typing import List, Pattern, Dict, Any, Optional
 from dataclasses import dataclass
 
 
-
-
-
-
-
-
-
 @dataclass
 class ScrubRule:
     """Represents a scrubbing rule for sensitive data"""

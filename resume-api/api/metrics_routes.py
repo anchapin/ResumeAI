@@ -458,7 +458,7 @@ async def ingest_frontend_metrics(metrics_data: dict):
 
 
 
-    
+
 
 
 
@@ -473,7 +473,7 @@ async def ingest_frontend_metrics(metrics_data: dict):
 
 
 
-    
+
 
 
 
@@ -488,19 +488,11 @@ async def ingest_frontend_metrics(metrics_data: dict):
             observe_frontend_histogram,
         )
 
-
+        metrics_received = 0
 
         metrics_received = 0
 
-
-        
         metrics_received = 0
-        
-
-
-
-        metrics_received = 0
-
 
         # Process each metric in the batch
         for metric in metrics_data.get("metrics", []):
@@ -509,14 +501,6 @@ async def ingest_frontend_metrics(metrics_data: dict):
             metric_value = metric.get("value", 1)
             labels = metric.get("labels", {})
 
-
-
-
-            
-
-
-
-
             if metric_type == "counter":
                 increment_frontend_counter(metric_name, metric_value, labels)
             elif metric_type == "gauge":
@@ -524,33 +508,17 @@ async def ingest_frontend_metrics(metrics_data: dict):
             elif metric_type in ("histogram", "timing"):
                 observe_frontend_histogram(metric_name, metric_value, labels)
 
-
+            metrics_received += 1
 
             metrics_received += 1
 
-
-            
             metrics_received += 1
-        
-
-
-
-            metrics_received += 1
-
 
         logger.info(
             "frontend_metrics_received",
             count=metrics_received,
             session_id=metrics_data.get("session_id"),
         )
-
-
-
-
-        
-
-
-
 
         return {
             "status": "success",
@@ -580,7 +548,7 @@ async def get_frontend_metrics_summary():
 
 
 
-    
+
 
 
 
@@ -593,19 +561,11 @@ async def get_frontend_metrics_summary():
     try:
         from monitoring.metrics import get_frontend_metrics_summary
 
-
+        summary = get_frontend_metrics_summary()
 
         summary = get_frontend_metrics_summary()
 
-
-        
         summary = get_frontend_metrics_summary()
-        
-
-
-
-        summary = get_frontend_metrics_summary()
-
 
         return {
             "status": "success",
