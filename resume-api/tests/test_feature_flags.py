@@ -2,7 +2,6 @@
 Tests for Feature Flag Service
 """
 
-import pytest
 from datetime import datetime, timedelta
 from resume_api.lib.feature_flags import (
     FeatureFlagService,
