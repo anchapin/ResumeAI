@@ -313,10 +313,7 @@ test(
 test(
     "validate_resume_field: LaTeX escaping",
     lambda: (
-        "\\%"
-        in validators.validate_resume_field(
-            "50% improvement", "Summary", escape_latex=True
-        )
+        "\\%" in validators.validate_resume_field("50% improvement", "Summary", escape_latex=True)
         or (_ for _ in ()).throw(AssertionError("LaTeX escaping failed"))
     ),
 )
@@ -326,9 +323,7 @@ test(
     lambda: (
         "<script>"
         not in str(
-            validators.validate_resume_field(
-                "<script>alert()</script>Hi", "Summary", sanitize=True
-            )
+            validators.validate_resume_field("<script>alert()</script>Hi", "Summary", sanitize=True)
         )
         or (_ for _ in ()).throw(AssertionError("Sanitization failed"))
     ),
@@ -390,9 +385,7 @@ def test_xss_in_resume():
     validated = validators.validate_resume_data(resume)
     # XSS attempts should be sanitized
     name_str = str(validated["basics"]["name"]) if validated["basics"]["name"] else ""
-    summary_str = (
-        str(validated["basics"]["summary"]) if validated["basics"]["summary"] else ""
-    )
+    summary_str = str(validated["basics"]["summary"]) if validated["basics"]["summary"] else ""
     assert "<script>" not in name_str or validated["basics"]["name"] is None
     assert "onerror" not in summary_str or validated["basics"]["summary"] is None
 
@@ -423,8 +416,7 @@ test(
 test(
     "security: SQL-like injection treated as text",
     lambda: (
-        "DROP TABLE"
-        in validators.validate_resume_field("John'; DROP TABLE users--", "Name")
+        "DROP TABLE" in validators.validate_resume_field("John'; DROP TABLE users--", "Name")
         or (_ for _ in ()).throw(AssertionError("SQL-like text not preserved"))
     ),
 )

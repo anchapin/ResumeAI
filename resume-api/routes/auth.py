@@ -60,9 +60,7 @@ def _get_dummy_hash() -> str:
     if _DUMMY_HASH is None:
         # Use a pre-computed bcrypt hash of "dummy_pass" to avoid
         # importing/calling hash_password at module load time
-        _DUMMY_HASH = (
-            "$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5GyYKKXm3rOHm"  # dummy_pass
-        )
+        _DUMMY_HASH = "$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5GyYKKXm3rOHm"  # dummy_pass
     return _DUMMY_HASH
 
 
@@ -118,9 +116,7 @@ async def register(
     - Include the CSRF token in the X-CSRF-Token header for state-changing requests
     """
     # Check if email already exists
-    email_result = await db.execute(
-        select(User).where(User.email == user_data.email.lower())
-    )
+    email_result = await db.execute(select(User).where(User.email == user_data.email.lower()))
     existing_user = email_result.scalar_one_or_none()
     if existing_user:
         raise HTTPException(
@@ -166,13 +162,9 @@ async def register(
 
     # Send verification email (non-blocking)
     try:
-        await send_verification_email(
-            new_user.email, verification_token, new_user.username
-        )
+        await send_verification_email(new_user.email, verification_token, new_user.username)
     except Exception as e:
-        logger.error(
-            "Failed to send verification email", user_id=new_user.id, error=str(e)
-        )
+        logger.error("Failed to send verification email", user_id=new_user.id, error=str(e))
 
     # Generate CSRF token
     csrf_token = _generate_csrf_token()
@@ -234,9 +226,7 @@ async def login(
     - Include the CSRF token in the X-CSRF-Token header for state-changing requests
     """
     # Find user by email
-    result = await db.execute(
-        select(User).where(User.email == credentials.email.lower())
-    )
+    result = await db.execute(select(User).where(User.email == credentials.email.lower()))
     user = result.scalar_one_or_none()
 
     # Always perform password verification to prevent timing attacks
@@ -459,9 +449,7 @@ async def logout(
     token_hash = _hash_token(token_request.refresh_token)
 
     # Find and revoke the token
-    result = await db.execute(
-        select(RefreshToken).where(RefreshToken.token_hash == token_hash)
-    )
+    result = await db.execute(select(RefreshToken).where(RefreshToken.token_hash == token_hash))
     stored_token = result.scalar_one_or_none()
 
     if stored_token:
@@ -583,9 +571,7 @@ async def change_password(
     The new password must meet the minimum requirements (8+ characters).
     """
     # Verify current password
-    if not verify_password(
-        password_data.current_password, current_user.hashed_password
-    ):
+    if not verify_password(password_data.current_password, current_user.hashed_password):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Current password is incorrect",
@@ -655,9 +641,7 @@ async def verify_email(
         )
 
     # Get user
-    user_result = await db.execute(
-        select(User).where(User.id == verification_token.user_id)
-    )
+    user_result = await db.execute(select(User).where(User.id == verification_token.user_id))
     user = user_result.scalar_one_or_none()
 
     if not user:
@@ -716,18 +700,14 @@ async def resend_verification_email(
     user = result.scalar_one_or_none()
 
     if not user:
-        logger.warning(
-            "resend_verification_failed", email=request.email, reason="user_not_found"
-        )
+        logger.warning("resend_verification_failed", email=request.email, reason="user_not_found")
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="If an account exists with this email, you will receive a verification link",
         )
 
     if user.is_verified:
-        logger.info(
-            "resend_verification_skipped", user_id=user.id, reason="already_verified"
-        )
+        logger.info("resend_verification_skipped", user_id=user.id, reason="already_verified")
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="This email is already verified",

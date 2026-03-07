@@ -269,9 +269,7 @@ class TestRetryAsyncCall:
     @pytest.mark.asyncio
     async def test_async_call_retries_on_error(self):
         """Test that async call retries on retryable error"""
-        async_func = AsyncMock(
-            side_effect=[ConnectionError("Network error"), "success"]
-        )
+        async_func = AsyncMock(side_effect=[ConnectionError("Network error"), "success"])
 
         result = await retry_async_call(
             async_func, config=RetryConfig(max_retries=2, initial_delay=0.01)
@@ -309,9 +307,7 @@ class TestRetrySyncCall:
         """Test that sync call retries on retryable error"""
         func = Mock(side_effect=[ConnectionError("Network error"), "success"])
 
-        result = retry_sync_call(
-            func, config=RetryConfig(max_retries=2, initial_delay=0.01)
-        )
+        result = retry_sync_call(func, config=RetryConfig(max_retries=2, initial_delay=0.01))
 
         assert result == "success"
         assert func.call_count == 2

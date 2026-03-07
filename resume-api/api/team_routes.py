@@ -117,9 +117,7 @@ async def create_team(
 
         await db.refresh(team)
 
-        member_count_stmt = select(func.count(TeamMember.id)).where(
-            TeamMember.team_id == team.id
-        )
+        member_count_stmt = select(func.count(TeamMember.id)).where(TeamMember.team_id == team.id)
         result = await db.execute(member_count_stmt)
         member_count = result.scalar() or 0
 
@@ -131,14 +129,10 @@ async def create_team(
             member_count=member_count,
             resume_count=0,
             created_at=(
-                team.created_at.isoformat()
-                if team.created_at
-                else datetime.utcnow().isoformat()
+                team.created_at.isoformat() if team.created_at else datetime.utcnow().isoformat()
             ),
             updated_at=(
-                team.updated_at.isoformat()
-                if team.updated_at
-                else datetime.utcnow().isoformat()
+                team.updated_at.isoformat() if team.updated_at else datetime.utcnow().isoformat()
             ),
         )
     except Exception as e:
@@ -307,9 +301,7 @@ async def get_team(
                 )
             )
 
-        resume_count_stmt = select(func.count(TeamResume.id)).where(
-            TeamResume.team_id == team.id
-        )
+        resume_count_stmt = select(func.count(TeamResume.id)).where(TeamResume.team_id == team.id)
         result = await db.execute(resume_count_stmt)
         resume_count = result.scalar() or 0
 
@@ -321,14 +313,10 @@ async def get_team(
             members=member_responses,
             resume_count=resume_count,
             created_at=(
-                team.created_at.isoformat()
-                if team.created_at
-                else datetime.utcnow().isoformat()
+                team.created_at.isoformat() if team.created_at else datetime.utcnow().isoformat()
             ),
             updated_at=(
-                team.updated_at.isoformat()
-                if team.updated_at
-                else datetime.utcnow().isoformat()
+                team.updated_at.isoformat() if team.updated_at else datetime.utcnow().isoformat()
             ),
         )
     except HTTPException:
@@ -416,15 +404,11 @@ async def update_team(
         await db.commit()
         await db.refresh(team)
 
-        member_count_stmt = select(func.count(TeamMember.id)).where(
-            TeamMember.team_id == team.id
-        )
+        member_count_stmt = select(func.count(TeamMember.id)).where(TeamMember.team_id == team.id)
         result = await db.execute(member_count_stmt)
         member_count = result.scalar() or 0
 
-        resume_count_stmt = select(func.count(TeamResume.id)).where(
-            TeamResume.team_id == team.id
-        )
+        resume_count_stmt = select(func.count(TeamResume.id)).where(TeamResume.team_id == team.id)
         result = await db.execute(resume_count_stmt)
         resume_count = result.scalar() or 0
 
@@ -436,14 +420,10 @@ async def update_team(
             member_count=member_count,
             resume_count=resume_count,
             created_at=(
-                team.created_at.isoformat()
-                if team.created_at
-                else datetime.utcnow().isoformat()
+                team.created_at.isoformat() if team.created_at else datetime.utcnow().isoformat()
             ),
             updated_at=(
-                team.updated_at.isoformat()
-                if team.updated_at
-                else datetime.utcnow().isoformat()
+                team.updated_at.isoformat() if team.updated_at else datetime.utcnow().isoformat()
             ),
         )
     except HTTPException:
@@ -507,9 +487,7 @@ async def delete_team(
         await db.delete(team)
         await db.commit()
 
-        return MessageResponse(
-            message=f"Team '{team.name}' has been deleted successfully"
-        )
+        return MessageResponse(message=f"Team '{team.name}' has been deleted successfully")
     except HTTPException:
         raise
     except Exception as e:
@@ -809,9 +787,7 @@ async def get_team_member(
             username=member.user.username,
             role=member.role,
             joined_at=(
-                member.joined_at.isoformat()
-                if member.joined_at
-                else datetime.utcnow().isoformat()
+                member.joined_at.isoformat() if member.joined_at else datetime.utcnow().isoformat()
             ),
         )
     except HTTPException:
@@ -922,9 +898,7 @@ async def update_member_role(
             username=member.user.username,
             role=member.role,
             joined_at=(
-                member.joined_at.isoformat()
-                if member.joined_at
-                else datetime.utcnow().isoformat()
+                member.joined_at.isoformat() if member.joined_at else datetime.utcnow().isoformat()
             ),
         )
     except HTTPException:
@@ -1135,9 +1109,7 @@ async def share_resume_with_team(
 
         await db.commit()
 
-        return MessageResponse(
-            message=f"Resume has been shared with team '{team.name}'"
-        )
+        return MessageResponse(message=f"Resume has been shared with team '{team.name}'")
     except HTTPException:
         raise
     except Exception as e:
@@ -1233,9 +1205,7 @@ async def unshare_resume_from_team(
 
         await db.commit()
 
-        return MessageResponse(
-            message=f"Resume has been unshared from team '{team.name}'"
-        )
+        return MessageResponse(message=f"Resume has been unshared from team '{team.name}'")
     except HTTPException:
         raise
     except Exception as e:

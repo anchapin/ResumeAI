@@ -116,9 +116,7 @@ class OAuthMonitor:
             elif event.status == "rate_limited":
                 monitoring_metrics.increment_oauth_rate_limit_hits(event.provider)
             elif event.status == "token_expired":
-                monitoring_metrics.increment_oauth_token_expiration_events(
-                    event.provider
-                )
+                monitoring_metrics.increment_oauth_token_expiration_events(event.provider)
 
             # Log the event
             logger.info(
@@ -165,9 +163,7 @@ class OAuthMonitor:
         with self.events_lock:
             # Filter events for the provider and time window
             relevant_events = [
-                e
-                for e in self.events
-                if e.provider == provider and e.timestamp >= since
+                e for e in self.events if e.provider == provider and e.timestamp >= since
             ]
 
         snapshot = OAuthMetricsSnapshot(
@@ -193,15 +189,11 @@ class OAuthMonitor:
 
         # Calculate success rate
         total_attempts = success_count + failure_count
-        snapshot.success_rate = (
-            success_count / total_attempts if total_attempts > 0 else 0.0
-        )
+        snapshot.success_rate = success_count / total_attempts if total_attempts > 0 else 0.0
 
         # Calculate average response time
         if relevant_events:
-            avg_time = sum(e.duration_ms for e in relevant_events) / len(
-                relevant_events
-            )
+            avg_time = sum(e.duration_ms for e in relevant_events) / len(relevant_events)
             snapshot.avg_response_time_ms = avg_time
 
         # Aggregate error codes
@@ -211,15 +203,11 @@ class OAuthMonitor:
                 error_counts[event.error_code] += 1
 
         snapshot.error_counts = dict(error_counts)
-        snapshot.top_errors = sorted(
-            error_counts.items(), key=lambda x: x[1], reverse=True
-        )[:5]
+        snapshot.top_errors = sorted(error_counts.items(), key=lambda x: x[1], reverse=True)[:5]
 
         return snapshot
 
-    def get_suspicious_ips(
-        self, window_minutes: Optional[int] = None
-    ) -> List[Tuple[str, int]]:
+    def get_suspicious_ips(self, window_minutes: Optional[int] = None) -> List[Tuple[str, int]]:
         """
         Detect suspicious IPs with multiple failed attempts.
 

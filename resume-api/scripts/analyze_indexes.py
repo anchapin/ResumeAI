@@ -294,9 +294,7 @@ class IndexAnalyzer:
         rec_table = []
         for rec in recommendations:
             cols = ", ".join(rec["columns"])
-            rec_table.append(
-                [rec["table"], cols, rec["reason"], rec["estimated_improvement"]]
-            )
+            rec_table.append([rec["table"], cols, rec["reason"], rec["estimated_improvement"]])
 
         print(
             tabulate(

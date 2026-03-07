@@ -192,9 +192,7 @@ def test_basic_functionality():
         "success_rate": snapshot.success_rate,
         "avg_response_time_ms": snapshot.avg_response_time_ms,
     }
-    print(
-        f"✓ Snapshot data exportable: {all(v is not None for v in metrics_dict.values())}"
-    )
+    print(f"✓ Snapshot data exportable: {all(v is not None for v in metrics_dict.values())}")
     print(f"  {metrics_dict}")
 
     print("\n" + "=" * 60)

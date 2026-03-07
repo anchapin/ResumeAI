@@ -162,9 +162,7 @@ async def test_get_subscription_inactive(test_user_id):
 
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
-        response = await ac.get(
-            "/api/billing/subscription", headers={"X-User-ID": test_user_id}
-        )
+        response = await ac.get("/api/billing/subscription", headers={"X-User-ID": test_user_id})
 
         assert response.status_code == 200
         data = response.json()
@@ -180,9 +178,7 @@ async def test_get_usage(test_user_id):
 
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
-        response = await ac.get(
-            "/api/billing/usage", headers={"X-User-ID": test_user_id}
-        )
+        response = await ac.get("/api/billing/usage", headers={"X-User-ID": test_user_id})
 
         assert response.status_code == 200
         data = response.json()
@@ -242,9 +238,7 @@ async def test_list_invoices_empty(test_user_id):
 
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
-        response = await ac.get(
-            "/api/billing/invoices", headers={"X-User-ID": test_user_id}
-        )
+        response = await ac.get("/api/billing/invoices", headers={"X-User-ID": test_user_id})
 
         assert response.status_code == 200
         data = response.json()
@@ -260,9 +254,7 @@ async def test_list_payment_methods_empty(test_user_id):
 
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
-        response = await ac.get(
-            "/api/billing/payment-methods", headers={"X-User-ID": test_user_id}
-        )
+        response = await ac.get("/api/billing/payment-methods", headers={"X-User-ID": test_user_id})
 
         assert response.status_code == 200
         data = response.json()
@@ -292,9 +284,7 @@ async def test_cancel_subscription_no_subscription(test_user_id):
 
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
-        response = await ac.post(
-            "/api/billing/cancel", headers={"X-User-ID": test_user_id}
-        )
+        response = await ac.post("/api/billing/cancel", headers={"X-User-ID": test_user_id})
 
         assert response.status_code == 404
 
@@ -306,9 +296,7 @@ async def test_resume_subscription_no_subscription(test_user_id):
 
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
-        response = await ac.post(
-            "/api/billing/resume", headers={"X-User-ID": test_user_id}
-        )
+        response = await ac.post("/api/billing/resume", headers={"X-User-ID": test_user_id})
 
         assert response.status_code == 404
 

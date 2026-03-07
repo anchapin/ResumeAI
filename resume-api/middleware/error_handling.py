@@ -36,9 +36,7 @@ class ErrorHandlingMiddleware(BaseHTTPMiddleware):
             error_code = self._map_status_to_error_code(exc.status_code)
             error_response = create_error_response(
                 error_code=error_code,
-                message=(
-                    exc.detail if isinstance(exc.detail, str) else "An error occurred"
-                ),
+                message=(exc.detail if isinstance(exc.detail, str) else "An error occurred"),
                 request_id=request_id,
                 path=str(request.url.path),
                 method=request.method,

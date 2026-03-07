@@ -21,9 +21,7 @@ def test_setup_logging():
 def test_request_context():
     """Test that RequestContext properly adds and removes context."""
     # Use context manager directly
-    with logging_config.RequestContext(
-        request_id="test-123", method="GET", path="/test"
-    ):
+    with logging_config.RequestContext(request_id="test-123", method="GET", path="/test"):
         # Context should be bound
         assert True  # If no exception, context was properly managed
 

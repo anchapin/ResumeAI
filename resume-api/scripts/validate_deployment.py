@@ -367,12 +367,8 @@ def main():
     parser.add_argument("--api-key", default=API_KEY, help="Master API key")
 
     # Validation modes
-    parser.add_argument(
-        "--pre-deployment", action="store_true", help="Run pre-deployment checks"
-    )
-    parser.add_argument(
-        "--check-health", action="store_true", help="Check service health"
-    )
+    parser.add_argument("--pre-deployment", action="store_true", help="Run pre-deployment checks")
+    parser.add_argument("--check-health", action="store_true", help="Check service health")
     parser.add_argument("--smoke-test", action="store_true", help="Run smoke tests")
     parser.add_argument(
         "--verify-safeguards", action="store_true", help="Verify deployment safeguards"

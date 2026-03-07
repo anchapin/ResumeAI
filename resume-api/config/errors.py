@@ -73,14 +73,10 @@ class ErrorResponse(BaseModel):
     method: Optional[str] = Field(None, description="HTTP method")
 
     # Optional field for detailed validation errors
-    field_errors: Optional[list[FieldError]] = Field(
-        None, description="Field-specific errors"
-    )
+    field_errors: Optional[list[FieldError]] = Field(None, description="Field-specific errors")
 
     # Optional context for debugging
-    details: Optional[Dict[str, Any]] = Field(
-        None, description="Additional error details"
-    )
+    details: Optional[Dict[str, Any]] = Field(None, description="Additional error details")
 
     class Config:
         json_schema_extra = {

@@ -315,9 +315,7 @@ class TestATSCompatibilityChecker:
         }
         report = self.checker.check_compatibility(resume_with_metrics)
         # Should not have metrics issue
-        metrics_issues = [
-            i for i in report.issues if "metrics" in i.get("message", "").lower()
-        ]
+        metrics_issues = [i for i in report.issues if "metrics" in i.get("message", "").lower()]
         assert len(metrics_issues) == 0
 
     def test_convenience_function(self):

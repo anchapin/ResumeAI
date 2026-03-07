@@ -470,15 +470,17 @@ async def get_jd_insights(
         summary = " ".join(summary_parts) + ". " if summary_parts else ""
 
         if overall_fit >= 80:
-            summary += (
-                "Excellent match! Your resume aligns well with the job requirements."
-            )
+            summary += "Excellent match! Your resume aligns well with the job requirements."
         elif overall_fit >= 60:
-            summary += "Good match with room for improvement. Consider addressing the missing skills."
+            summary += (
+                "Good match with room for improvement. Consider addressing the missing skills."
+            )
         elif overall_fit >= 40:
             summary += "Moderate match. Review the recommendations to improve your fit."
         else:
-            summary += "Low match. Consider tailoring your resume more closely to the job requirements."
+            summary += (
+                "Low match. Consider tailoring your resume more closely to the job requirements."
+            )
 
         # 7. Generate top recommendations
         recommendations = []
@@ -494,13 +496,9 @@ async def get_jd_insights(
 
         # Add content recommendations
         if ats_result.get("content_score", 0) < 70:
-            recommendations.append(
-                "Add quantifiable metrics to your experience bullets"
-            )
+            recommendations.append("Add quantifiable metrics to your experience bullets")
 
-        top_recommendations = list(dict.fromkeys(recommendations))[
-            :5
-        ]  # Remove duplicates
+        top_recommendations = list(dict.fromkeys(recommendations))[:5]  # Remove duplicates
 
         return JDInsightsResponse(
             jd_analysis=jd_analysis,
@@ -542,9 +540,7 @@ def _extract_resume_skills(resume_data: Dict[str, Any]) -> List[str]:
             # Check bullets/highlights
             bullets = job.get("bullets", []) or job.get("highlights", [])
             for bullet in bullets:
-                text = (
-                    bullet.get("text", "") if isinstance(bullet, dict) else str(bullet)
-                )
+                text = bullet.get("text", "") if isinstance(bullet, dict) else str(bullet)
                 # Extract potential skills from text
                 skills.extend(_extract_tech_terms(text))
 

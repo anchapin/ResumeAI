@@ -108,7 +108,10 @@ services:
     networks:
       - monitoring
     depends_on:
-      - prometheus
+      prometheus:
+        condition: service_healthy
+      jaeger:
+        condition: service_started
     restart: unless-stopped
     healthcheck:
       test: ['CMD', 'wget', '--spider', '-q', 'http://localhost:3000/api/health']
@@ -135,6 +138,9 @@ services:
       - DEBUG=${DEBUG:-false}
       - ENABLE_METRICS=true
       - METRICS_PATH=/metrics
+      - ENABLE_TRACING=true
+      - OTLP_ENDPOINT=http://jaeger:4317
+      - TRACE_SAMPLE_RATE=1.0
     volumes:
       - ./resume-api/templates:/app/templates
     networks:
@@ -169,6 +175,35 @@ services:
     labels:
       - "description=System metrics exporter"
 
+  # Jaeger - Distributed tracing backend
+  jaeger:
+    image: jaegertracing/all-in-one:1.52
+    container_name: resumeai-jaeger
+    ports:
+      - "6831:6831/udp"   # Jaeger agent (thrift compact)
+      - "6832:6832/udp"   # Jaeger agent (thrift binary)
+      - "16686:16686"     # Jaeger UI
+      - "4317:4317"       # OTLP gRPC
+      - "4318:4318"       # OTLP HTTP
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+      - SPAN_STORAGE_TYPE=badger
+      - BADGER_EPHEMERAL=false
+      - BADGER_DIRECTORY_VOLUME=/badger
+    volumes:
+      - jaeger_data:/badger
+    networks:
+      - monitoring
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD', 'wget', '--spider', '-q', 'http://localhost:16686/api/health']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    labels:
+      - "description=Jaeger distributed tracing backend"
+
 networks:
   monitoring:
     driver: bridge
@@ -184,3 +219,6 @@ volumes:
   grafana_data:
     driver: local
     name: resumeai-grafana-data
+  jaeger_data:
+    driver: local
+    name: resumeai-jaeger-data

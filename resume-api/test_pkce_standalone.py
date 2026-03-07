@@ -56,9 +56,7 @@ def test_code_verifier_generation():
     assert len(verifier) == 128, f"Verifier length should be 128, got {len(verifier)}"
 
     # Check valid characters (RFC 7636: unreserved = ALPHA / DIGIT / "-" / "." / "_" / "~")
-    valid_chars = set(
-        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~"
-    )
+    valid_chars = set("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~")
     for char in verifier:
         assert char in valid_chars, f"Invalid character in verifier: {char}"
 
@@ -78,9 +76,7 @@ def test_code_challenge_generation(verifier):
     assert "=" not in challenge, "Challenge should not contain padding ="
 
     # Check base64url alphabet
-    valid_chars = set(
-        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"
-    )
+    valid_chars = set("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_")
     for char in challenge:
         assert char in valid_chars, f"Invalid character in challenge: {char}"
 
@@ -178,9 +174,7 @@ def test_rfc7636_compliance():
     challenge = generate_pkce_code_challenge(verifier)
 
     # Verifier length requirements
-    assert (
-        43 <= len(verifier) <= 128
-    ), f"Verifier length must be 43-128, got {len(verifier)}"
+    assert 43 <= len(verifier) <= 128, f"Verifier length must be 43-128, got {len(verifier)}"
 
     # Challenge should be SHA256(verifier) in base64url
     sha256_hash = hashlib.sha256(verifier.encode("utf-8")).digest()

@@ -75,9 +75,7 @@ class TestWebSocketAuthentication:
 
         # Try to connect with expired token
         with pytest.raises(Exception):
-            with test_client.websocket_connect(
-                f"/api/v1/ws/resumes/test-resume-1?token={token}"
-            ):
+            with test_client.websocket_connect(f"/api/v1/ws/resumes/test-resume-1?token={token}"):
                 pass
 
 

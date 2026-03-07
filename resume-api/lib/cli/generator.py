@@ -39,9 +39,7 @@ class ResumeGenerator:
     def _validate_templates_dir(self):
         """Ensure the templates directory exists."""
         if not self.templates_dir.exists():
-            raise FileNotFoundError(
-                f"Templates directory not found: {self.templates_dir}"
-            )
+            raise FileNotFoundError(f"Templates directory not found: {self.templates_dir}")
         logger.info(f"Templates directory: {self.templates_dir}")
 
     def _setup_jinja2(self):
@@ -99,16 +97,13 @@ class ResumeGenerator:
         variant_dir = self.templates_dir / variant
         if not variant_dir.exists():
             raise ValueError(
-                f"Variant '{variant}' not found. "
-                f"Available variants: {self._list_variants()}"
+                f"Variant '{variant}' not found. " f"Available variants: {self._list_variants()}"
             )
 
         # Check for main.tex template
         template_file = variant_dir / "main.tex"
         if not template_file.exists():
-            raise ValueError(
-                f"Template file 'main.tex' not found in variant '{variant}'"
-            )
+            raise ValueError(f"Template file 'main.tex' not found in variant '{variant}'")
 
         # Create a temporary directory for PDF generation
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -188,15 +183,13 @@ class ResumeGenerator:
                 logger.error(f"stdout: {result.stdout[:500]}")
                 logger.error(f"stderr: {result.stderr[:500]}")
                 raise RuntimeError(
-                    f"XeLaTeX compilation failed: {result.returncode}. "
-                    f"PDF was not generated."
+                    f"XeLaTeX compilation failed: {result.returncode}. " f"PDF was not generated."
                 )
 
             # Log warnings but continue
             if result.returncode != 0:
                 logger.warning(
-                    f"XeLaTeX run {i} completed with warnings "
-                    f"(exit code: {result.returncode})"
+                    f"XeLaTeX run {i} completed with warnings " f"(exit code: {result.returncode})"
                 )
                 # Look for fatal errors in output
                 if "Fatal error" in result.stdout or "Fatal error" in result.stderr:

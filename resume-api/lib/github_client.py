@@ -156,9 +156,7 @@ class GitHubAPIClient:
 
             response_data = await self._make_request("GET", "/user/repos", params)
 
-            repositories = [
-                GitHubRepository.from_api_response(repo) for repo in response_data
-            ]
+            repositories = [GitHubRepository.from_api_response(repo) for repo in response_data]
 
             logger.info(
                 "github_api_fetch_repos_success",

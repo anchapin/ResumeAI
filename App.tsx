@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, lazy, Suspense } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
 import { registerPrefetch } from './utils/prefetch';
 import './i18n';
@@ -63,9 +63,21 @@ import SkipNavigation from './components/SkipNavigation';
 import OfflineIndicator from './components/OfflineIndicator';
 import { errorHandler, ErrorType } from './utils/errorHandler';
 import { initSentry, setUserContext } from './src/lib/sentry';
+import { isMetricsEnabled, setMetricsEnabled, initWebVitals, trackPageLoad, trackSessionMetrics } from './src/lib/metrics';
 
 // Initialize Sentry error tracking
 initSentry();
+
+// Enable metrics collection by default in production
+if (import.meta.env.PROD) {
+  setMetricsEnabled(true);
+}
+
+// Initialize Web Vitals collection if metrics are enabled
+if (typeof window !== 'undefined' && isMetricsEnabled()) {
+  initWebVitals();
+  trackSessionMetrics();
+}
 
 // Timing constants for auto-save and status display
 const SAVE_STATUS_DISPLAY_DURATION = 3000;
@@ -127,6 +139,14 @@ function App() {
       }
     });
   }, [showShortcuts, setShowShortcuts]);
+
+  // Track page views on route change
+  const location = useLocation();
+  useEffect(() => {
+    if (isMetricsEnabled()) {
+      trackPageLoad(location.pathname.replace('/', '') || 'dashboard');
+    }
+  }, [location.pathname]);
 
   // Sync store-level resumeError to global errorHandler
   useEffect(() => {

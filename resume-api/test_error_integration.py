@@ -39,9 +39,7 @@ def test_error_response_structure():
     assert json_data["timestamp"].endswith("Z"), "timestamp should end with Z"
 
     # Verify request ID format
-    assert json_data["request_id"].startswith(
-        "req_"
-    ), "request_id should start with req_"
+    assert json_data["request_id"].startswith("req_"), "request_id should start with req_"
 
     print("✓ Error response structure is valid")
 
@@ -51,9 +49,7 @@ def test_validation_error_with_field_errors():
     from config.errors import create_error_response, ErrorCode, FieldError
 
     field_errors = [
-        FieldError(
-            field="email", message="Invalid email format", code="INVALID_FORMAT"
-        ),
+        FieldError(field="email", message="Invalid email format", code="INVALID_FORMAT"),
         FieldError(field="phone", message="Too short", code="VALIDATION_ERROR"),
     ]
 
@@ -76,9 +72,7 @@ def test_error_with_details():
 
     details = {"resume_id": "123", "template": "modern", "error_type": "LaTeX"}
 
-    response = create_error_response(
-        error_code=ErrorCode.PDF_GENERATION_FAILED, details=details
-    )
+    response = create_error_response(error_code=ErrorCode.PDF_GENERATION_FAILED, details=details)
 
     json_data = response.model_dump(exclude_none=True)
 
@@ -136,9 +130,7 @@ def test_all_error_codes_defined():
 
     for error_code in ErrorCode:
         # Each code should have a message
-        assert (
-            error_code in ERROR_MESSAGES
-        ), f"Missing message for error code: {error_code.value}"
+        assert error_code in ERROR_MESSAGES, f"Missing message for error code: {error_code.value}"
 
         # Each code should have a status code
         assert (
@@ -153,9 +145,7 @@ def test_all_error_codes_defined():
 
         # Status code should be 4xx or 5xx
         status = ERROR_STATUS_CODES[error_code]
-        assert (
-            400 <= status < 600
-        ), f"Invalid status code for {error_code.value}: {status}"
+        assert 400 <= status < 600, f"Invalid status code for {error_code.value}: {status}"
 
     print(f"✓ All {len(ErrorCode)} error codes properly defined")
 
@@ -205,9 +195,7 @@ def test_middleware_error_conversion():
     from fastapi import HTTPException, status
 
     # Create an HTTPException like the routes would
-    exc = HTTPException(
-        status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid resume data"
-    )
+    exc = HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid resume data")
 
     # The middleware would convert this to unified error response
     # Let's verify the conversion logic

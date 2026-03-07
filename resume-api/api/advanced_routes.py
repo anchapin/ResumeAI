@@ -210,9 +210,7 @@ async def get_resume(
     """
     try:
         result = await db.execute(
-            select(Resume)
-            .options(selectinload(Resume.tags))
-            .where(Resume.id == resume_id)
+            select(Resume).options(selectinload(Resume.tags)).where(Resume.id == resume_id)
         )
         resume = result.scalar_one_or_none()
 
@@ -814,9 +812,7 @@ async def share_resume(
         if request.password:
             import hashlib
 
-            share.share_password_hash = hashlib.sha256(
-                request.password.encode()
-            ).hexdigest()
+            share.share_password_hash = hashlib.sha256(request.password.encode()).hexdigest()
 
         db.add(share)
 
@@ -831,9 +827,7 @@ async def share_resume(
         await db.commit()
 
         # Construct share URL
-        share_url = (
-            f"{os.getenv('FRONTEND_URL', 'http://localhost:5173')}/share/{share_token}"
-        )
+        share_url = f"{os.getenv('FRONTEND_URL', 'http://localhost:5173')}/share/{share_token}"
 
         return ShareResumeResponse(
             share_token=share_token,
@@ -869,9 +863,7 @@ async def access_shared_resume(
     """
     try:
         # Get share
-        result = await db.execute(
-            select(ResumeShare).where(ResumeShare.share_token == share_token)
-        )
+        result = await db.execute(select(ResumeShare).where(ResumeShare.share_token == share_token))
         share = result.scalar_one_or_none()
 
         if not share:
@@ -916,9 +908,7 @@ async def access_shared_resume(
 
         # Get resume
         result = await db.execute(
-            select(Resume)
-            .options(selectinload(Resume.tags))
-            .where(Resume.id == share.resume_id)
+            select(Resume).options(selectinload(Resume.tags)).where(Resume.id == share.resume_id)
         )
         resume = result.scalar_one_or_none()
 
@@ -1010,9 +1000,7 @@ async def bulk_operations(
                 elif request.operation == "tag":
                     if request.tags:
                         for tag_name in request.tags:
-                            tag = await db.execute(
-                                select(Tag).where(Tag.name == tag_name)
-                            )
+                            tag = await db.execute(select(Tag).where(Tag.name == tag_name))
                             existing_tag = tag.scalar_one_or_none()
                             if not existing_tag:
                                 existing_tag = Tag(name=tag_name)
@@ -1142,9 +1130,7 @@ async def update_user_settings(
         await db.refresh(settings)
 
         # Invalidate cache
-        await CacheInvalidationHook(
-            {"user", "settings", f"user:{user_identifier}"}
-        ).invalidate()
+        await CacheInvalidationHook({"user", "settings", f"user:{user_identifier}"}).invalidate()
 
         return UserSettingsResponse(
             keyboard_shortcuts_enabled=settings.keyboard_shortcuts_enabled,

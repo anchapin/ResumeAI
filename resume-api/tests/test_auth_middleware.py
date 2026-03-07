@@ -51,8 +51,9 @@ class TestAuthenticationMiddleware:
     def test_valid_api_key_acceptance(self, client):
         """Test that valid API keys are accepted."""
         # Mock settings to have a valid API key
-        with patch.object(config_settings, "require_api_key", True), patch.object(
-            config_settings, "api_keys", ["valid-test-key"]
+        with (
+            patch.object(config_settings, "require_api_key", True),
+            patch.object(config_settings, "api_keys", ["valid-test-key"]),
         ):
 
             response = client.get("/test-auth", headers={"X-API-KEY": "valid-test-key"})
@@ -64,13 +65,12 @@ class TestAuthenticationMiddleware:
     def test_valid_master_api_key_acceptance(self, client):
         """Test that valid master API key is accepted."""
         # Mock settings to have a master API key
-        with patch.object(config_settings, "require_api_key", True), patch.object(
-            config_settings, "master_api_key", "master-test-key"
+        with (
+            patch.object(config_settings, "require_api_key", True),
+            patch.object(config_settings, "master_api_key", "master-test-key"),
         ):
 
-            response = client.get(
-                "/test-auth", headers={"X-API-KEY": "master-test-key"}
-            )
+            response = client.get("/test-auth", headers={"X-API-KEY": "master-test-key"})
             assert response.status_code == 200
             data = response.json()
             assert data["authorized"] is True
@@ -79,13 +79,12 @@ class TestAuthenticationMiddleware:
     def test_invalid_api_key_rejection(self, client):
         """Test that invalid API keys are rejected."""
         # Mock settings with valid keys but test with invalid one
-        with patch.object(config_settings, "require_api_key", True), patch.object(
-            config_settings, "api_keys", ["valid-test-key"]
+        with (
+            patch.object(config_settings, "require_api_key", True),
+            patch.object(config_settings, "api_keys", ["valid-test-key"]),
         ):
 
-            response = client.get(
-                "/test-auth", headers={"X-API-KEY": "invalid-test-key"}
-            )
+            response = client.get("/test-auth", headers={"X-API-KEY": "invalid-test-key"})
             assert response.status_code == 403
             assert "Invalid API key" in response.json()["detail"]
 
@@ -122,8 +121,9 @@ class TestAuthenticationMiddleware:
         ]
 
         for key in valid_keys:
-            with patch.object(config_settings, "require_api_key", True), patch.object(
-                config_settings, "api_keys", [key]
+            with (
+                patch.object(config_settings, "require_api_key", True),
+                patch.object(config_settings, "api_keys", [key]),
             ):
 
                 response = client.get("/test-auth", headers={"X-API-KEY": key})
@@ -134,31 +134,30 @@ class TestAuthenticationMiddleware:
 
     def test_empty_api_key_handling(self, client):
         """Test handling of empty API key."""
-        with patch.object(config_settings, "require_api_key", True), patch.object(
-            config_settings, "api_keys", ["valid-key"]
+        with (
+            patch.object(config_settings, "require_api_key", True),
+            patch.object(config_settings, "api_keys", ["valid-key"]),
         ):
 
             response = client.get("/test-auth", headers={"X-API-KEY": ""})
-            assert (
-                response.status_code == 401
-            )  # Empty string is treated as missing API key
+            assert response.status_code == 401  # Empty string is treated as missing API key
 
     def test_whitespace_only_api_key_handling(self, client):
         """Test handling of whitespace-only API key."""
-        with patch.object(config_settings, "require_api_key", True), patch.object(
-            config_settings, "api_keys", ["valid-key"]
+        with (
+            patch.object(config_settings, "require_api_key", True),
+            patch.object(config_settings, "api_keys", ["valid-key"]),
         ):
 
             response = client.get("/test-auth", headers={"X-API-KEY": "   "})
-            assert (
-                response.status_code == 403
-            )  # Whitespace-only should be treated as invalid
+            assert response.status_code == 403  # Whitespace-only should be treated as invalid
 
     @pytest.mark.asyncio
     async def test_get_api_key_direct_call_valid_key(self):
         """Test direct call to get_api_key with valid key."""
-        with patch.object(config_settings, "require_api_key", True), patch.object(
-            config_settings, "api_keys", ["direct-test-key"]
+        with (
+            patch.object(config_settings, "require_api_key", True),
+            patch.object(config_settings, "api_keys", ["direct-test-key"]),
         ):
 
             result = await get_api_key("direct-test-key")
@@ -167,8 +166,9 @@ class TestAuthenticationMiddleware:
     @pytest.mark.asyncio
     async def test_get_api_key_direct_call_master_key(self):
         """Test direct call to get_api_key with master key."""
-        with patch.object(config_settings, "require_api_key", True), patch.object(
-            config_settings, "master_api_key", "master-direct-key"
+        with (
+            patch.object(config_settings, "require_api_key", True),
+            patch.object(config_settings, "master_api_key", "master-direct-key"),
         ):
 
             result = await get_api_key("master-direct-key")
@@ -177,8 +177,9 @@ class TestAuthenticationMiddleware:
     @pytest.mark.asyncio
     async def test_get_api_key_direct_call_invalid_key(self):
         """Test direct call to get_api_key with invalid key raises exception."""
-        with patch.object(config_settings, "require_api_key", True), patch.object(
-            config_settings, "api_keys", ["some-valid-key"]
+        with (
+            patch.object(config_settings, "require_api_key", True),
+            patch.object(config_settings, "api_keys", ["some-valid-key"]),
         ):
 
             with pytest.raises(Exception) as exc_info:
@@ -215,9 +216,11 @@ class TestAuthenticationMiddleware:
 
     def test_master_key_takes_precedence_over_regular_keys(self, client):
         """Test that master key takes precedence over regular keys."""
-        with patch.object(config_settings, "require_api_key", True), patch.object(
-            config_settings, "master_api_key", "master-key"
-        ), patch.object(config_settings, "api_keys", ["regular-key"]):
+        with (
+            patch.object(config_settings, "require_api_key", True),
+            patch.object(config_settings, "master_api_key", "master-key"),
+            patch.object(config_settings, "api_keys", ["regular-key"]),
+        ):
 
             # Test master key
             response = client.get("/test-auth", headers={"X-API-KEY": "master-key"})
@@ -228,9 +231,11 @@ class TestAuthenticationMiddleware:
 
     def test_regular_key_works_when_master_key_present(self, client):
         """Test that regular keys still work when master key is defined."""
-        with patch.object(config_settings, "require_api_key", True), patch.object(
-            config_settings, "master_api_key", "master-key"
-        ), patch.object(config_settings, "api_keys", ["regular-key"]):
+        with (
+            patch.object(config_settings, "require_api_key", True),
+            patch.object(config_settings, "master_api_key", "master-key"),
+            patch.object(config_settings, "api_keys", ["regular-key"]),
+        ):
 
             # Test regular key
             response = client.get("/test-auth", headers={"X-API-KEY": "regular-key"})
@@ -241,8 +246,9 @@ class TestAuthenticationMiddleware:
 
     def test_case_sensitivity_of_api_keys(self, client):
         """Test that API key comparison is case-sensitive."""
-        with patch.object(config_settings, "require_api_key", True), patch.object(
-            config_settings, "api_keys", ["ValidKey"]
+        with (
+            patch.object(config_settings, "require_api_key", True),
+            patch.object(config_settings, "api_keys", ["ValidKey"]),
         ):
 
             # Test with correct case - should work
@@ -307,9 +313,7 @@ class TestAPIKeyIdentifierFunction:
         request = MockRequest({})  # No X-API-KEY header
 
         # Mock get_remote_address to return a fixed IP
-        with patch(
-            "config.dependencies.get_remote_address", return_value="192.168.1.1"
-        ):
+        with patch("config.dependencies.get_remote_address", return_value="192.168.1.1"):
             identifier = get_request_identifier(request)
             assert identifier == "192.168.1.1"
 

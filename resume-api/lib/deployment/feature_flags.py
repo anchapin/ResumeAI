@@ -109,16 +109,12 @@ class FeatureFlagManager:
 
         flag = self.flags[flag_name]
         flag.status = (
-            FeatureFlagStatus.ENABLED
-            if rollout_percentage == 100
-            else FeatureFlagStatus.ROLLOUT
+            FeatureFlagStatus.ENABLED if rollout_percentage == 100 else FeatureFlagStatus.ROLLOUT
         )
         flag.rollout_percentage = rollout_percentage
         flag.updated_at = datetime.utcnow()
 
-        logger.info(
-            f"Enabled feature flag: {flag_name} (rollout: {rollout_percentage}%)"
-        )
+        logger.info(f"Enabled feature flag: {flag_name} (rollout: {rollout_percentage}%)")
 
     def disable_flag(self, flag_name: str):
         """Disable a feature flag."""
@@ -145,9 +141,7 @@ class FeatureFlagManager:
         ).isoformat()
         flag.updated_at = datetime.utcnow()
 
-        logger.info(
-            f"Set feature flag to maintenance: {flag_name} (duration: {duration_minutes}m)"
-        )
+        logger.info(f"Set feature flag to maintenance: {flag_name} (duration: {duration_minutes}m)")
 
     def get_all_flags(self) -> Dict[str, FeatureFlagConfig]:
         """Get all feature flags."""
