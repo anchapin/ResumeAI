@@ -5,15 +5,15 @@
 // Patterns that match sensitive data
 const SENSITIVE_PATTERNS = [
   // API Keys (generic patterns)
-  { pattern: /api[_-]?key["']?\s*[:=]\s*["']?([a-zA-Z0-9_\-]{20,})/gi, replacement: 'api_key: [REDACTED]' },
+  { pattern: /api[_-]?key["']?\s*[:=]\s*["']?([a-zA-Z0-9_-]{20,})/gi, replacement: 'api_key: [REDACTED]' },
   // Bearer tokens
-  { pattern: /Bearer\s+[a-zA-Z0-9_\-\.]+/gi, replacement: 'Bearer [REDACTED]' },
+  { pattern: /Bearer\s+[a-zA-Z0-9_.-]+/gi, replacement: 'Bearer [REDACTED]' },
   // JWT tokens
-  { pattern: /eyJ[a-zA-Z0-9_\-]+\.eyJ[a-zA-Z0-9_\-]+\.[a-zA-Z0-9_\-]+/g, replacement: '[JWT_REDACTED]' },
+  { pattern: /eyJ[a-zA-Z0-9_-]+\.eyJ[a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+/g, replacement: '[JWT_REDACTED]' },
   // Passwords in key-value format
   { pattern: /password["']?\s*[:=]\s*["']?([^"'\s]{4,})/gi, replacement: 'password: [REDACTED]' },
   // Secret keys
-  { pattern: /secret[_-]?key["']?\s*[:=]\s*["']?([a-zA-Z0-9_\-]{20,})/gi, replacement: 'secret_key: [REDACTED]' },
+  { pattern: /secret[_-]?key["']?\s*[:=]\s*["']?([a-zA-Z0-9_-]{20,})/gi, replacement: 'secret_key: [REDACTED]' },
   // Authorization headers
   { pattern: /Authorization:\s*[^\s]+/gi, replacement: 'Authorization: [REDACTED]' },
   // Private keys
@@ -25,13 +25,13 @@ const SENSITIVE_PATTERNS = [
   // Social Security Numbers
   { pattern: /\b\d{3}[-\s]?\d{2}[-\s]?\d{4}\b/g, replacement: '[SSN_REDACTED]' },
   // Email addresses (optional - might want to keep for debugging)
-  { pattern: /[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/g, replacement: '[EMAIL_REDACTED]' },
+  { pattern: /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g, replacement: '[EMAIL_REDACTED]' },
   // Bearer token shorthand
-  { pattern: /token["']?\s*[:=]\s*["']?([a-zA-Z0-9_\-\.]{20,})/gi, replacement: 'token: [REDACTED]' },
+  { pattern: /token["']?\s*[:=]\s*["']?([a-zA-Z0-9_.-]{20,})/gi, replacement: 'token: [REDACTED]' },
   // Access tokens
-  { pattern: /access[_-]?token["']?\s*[:=]\s*["']?([a-zA-Z0-9_\-]{20,})/gi, replacement: 'access_token: [REDACTED]' },
+  { pattern: /access[_-]?token["']?\s*[:=]\s*["']?([a-zA-Z0-9_-]{20,})/gi, replacement: 'access_token: [REDACTED]' },
   // Refresh tokens
-  { pattern: /refresh[_-]?token["']?\s*[:=]\s*["']?([a-zA-Z0-9_\-]{20,})/gi, replacement: 'refresh_token: [REDACTED]' },
+  { pattern: /refresh[_-]?token["']?\s*[:=]\s*["']?([a-zA-Z0-9_-]{20,})/gi, replacement: 'refresh_token: [REDACTED]' },
 ];
 
 /**
@@ -127,7 +127,7 @@ export function scrubObject<T extends object>(data: T, knownKeys?: string[]): T 
  * @param context - The logging context (e.g., 'API', 'Auth')
  * @returns A function that scrubs log messages
  */
-export function createLogScrubber(context?: string): (message: string, ...args: unknown[]) => unknown[] {
+export function createLogScrubber(_context?: string): (message: string, ...args: unknown[]) => unknown[] {
   return (message: string, ...args: unknown[]): unknown[] => {
     const scrubbedMessage = scrubSensitiveData(message);
     const scrubbedArgs = args.map((arg) => {
