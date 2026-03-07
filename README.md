@@ -296,6 +296,20 @@ See [CLAUDE.md](CLAUDE.md) for detailed Git workflow guidelines.
 
 ## Troubleshooting
 
+### Dev Container (Recommended)
+
+ResumeAI includes a devcontainer configuration for reproducible development environments:
+
+1. **Open in VS Code**: Open the project in VS Code
+2. **Reopen in Container**: Click "Reopen in Container" when prompted (or press `F1` and select "Dev Containers: Reopen in Container")
+3. **Wait for Setup**: The container will install all dependencies automatically
+
+The devcontainer includes:
+- Node.js 20 with npm
+- GitHub CLI
+- All required VS Code extensions (ESLint, Prettier, Python, Docker)
+- Pre-configured linting and formatting on save
+
 ### GitHub Connection Issues
 
 If you see errors connecting to GitHub:
