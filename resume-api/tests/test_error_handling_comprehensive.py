@@ -167,9 +167,7 @@ class TestErrorResponseFormat:
             FieldError(field="name", message="Name is required"),
         ]
 
-        response = create_error_response(
-            ErrorCode.VALIDATION_ERROR, field_errors=field_errors
-        )
+        response = create_error_response(ErrorCode.VALIDATION_ERROR, field_errors=field_errors)
 
         assert response.field_errors is not None
         assert len(response.field_errors) == 2
@@ -179,9 +177,7 @@ class TestErrorResponseFormat:
     def test_error_response_with_details(self):
         """Test error response with additional details."""
         details = {"attempted_action": "saveResume", "retry_count": 3}
-        response = create_error_response(
-            ErrorCode.INTERNAL_SERVER_ERROR, details=details
-        )
+        response = create_error_response(ErrorCode.INTERNAL_SERVER_ERROR, details=details)
 
         assert response.details == details
 
@@ -278,13 +274,9 @@ class TestValidationErrors:
         from config.errors import FieldError
 
         field_errors = [
-            FieldError(
-                field="email", message="Invalid email format", code="INVALID_FORMAT"
-            ),
+            FieldError(field="email", message="Invalid email format", code="INVALID_FORMAT"),
             FieldError(field="age", message="Must be a number", code="INVALID_FORMAT"),
-            FieldError(
-                field="name", message="Minimum 2 characters", code="VALIDATION_ERROR"
-            ),
+            FieldError(field="name", message="Minimum 2 characters", code="VALIDATION_ERROR"),
         ]
 
         response = create_error_response(
@@ -636,9 +628,7 @@ class TestEdgeCases:
     def test_extremely_long_error_message(self):
         """Test handling of extremely long error messages."""
         long_message = "x" * 10000
-        response = create_error_response(
-            ErrorCode.VALIDATION_ERROR, message=long_message
-        )
+        response = create_error_response(ErrorCode.VALIDATION_ERROR, message=long_message)
 
         assert response.message == long_message
 
@@ -646,9 +636,7 @@ class TestEdgeCases:
     def test_special_characters_in_error_message(self):
         """Test special characters in error messages."""
         special_message = "Error with special chars: <>&\"'"
-        response = create_error_response(
-            ErrorCode.VALIDATION_ERROR, message=special_message
-        )
+        response = create_error_response(ErrorCode.VALIDATION_ERROR, message=special_message)
 
         assert response.message == special_message
 
@@ -656,9 +644,7 @@ class TestEdgeCases:
     def test_unicode_in_error_message(self):
         """Test Unicode characters in error messages."""
         unicode_message = "Error: 日本語 中文 한국어"
-        response = create_error_response(
-            ErrorCode.VALIDATION_ERROR, message=unicode_message
-        )
+        response = create_error_response(ErrorCode.VALIDATION_ERROR, message=unicode_message)
 
         assert response.message == unicode_message
 

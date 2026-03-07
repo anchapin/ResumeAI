@@ -370,27 +370,21 @@ class TestAlertRuleValidation:
         """Test alert rules file exists."""
         import os
 
-        alert_rules_path = (
-            "/home/alex/Projects/ResumeAI/resume-api/config/alert_rules.yml"
-        )
+        alert_rules_path = "/home/alex/Projects/ResumeAI/resume-api/config/alert_rules.yml"
         assert os.path.exists(alert_rules_path), "alert_rules.yml should exist"
 
     def test_recording_rules_file_exists(self):
         """Test recording rules file exists."""
         import os
 
-        rules_path = (
-            "/home/alex/Projects/ResumeAI/resume-api/config/recording_rules.yml"
-        )
+        rules_path = "/home/alex/Projects/ResumeAI/resume-api/config/recording_rules.yml"
         assert os.path.exists(rules_path), "recording_rules.yml should exist"
 
     def test_alert_rules_yaml_valid(self):
         """Test alert rules YAML is valid."""
         import yaml
 
-        with open(
-            "/home/alex/Projects/ResumeAI/resume-api/config/alert_rules.yml", "r"
-        ) as f:
+        with open("/home/alex/Projects/ResumeAI/resume-api/config/alert_rules.yml", "r") as f:
             rules = yaml.safe_load(f)
             assert "groups" in rules
             assert len(rules["groups"]) > 0
@@ -399,9 +393,7 @@ class TestAlertRuleValidation:
         """Test recording rules YAML is valid."""
         import yaml
 
-        with open(
-            "/home/alex/Projects/ResumeAI/resume-api/config/recording_rules.yml", "r"
-        ) as f:
+        with open("/home/alex/Projects/ResumeAI/resume-api/config/recording_rules.yml", "r") as f:
             rules = yaml.safe_load(f)
             assert "groups" in rules
             assert len(rules["groups"]) > 0
@@ -421,9 +413,7 @@ class TestPrometheusConfiguration:
         """Test prometheus.yml is valid YAML."""
         import yaml
 
-        with open(
-            "/home/alex/Projects/ResumeAI/resume-api/config/prometheus.yml", "r"
-        ) as f:
+        with open("/home/alex/Projects/ResumeAI/resume-api/config/prometheus.yml", "r") as f:
             config = yaml.safe_load(f)
             assert "global" in config
             assert "scrape_configs" in config
@@ -433,9 +423,7 @@ class TestPrometheusConfiguration:
         """Test prometheus.yml has resume-api job."""
         import yaml
 
-        with open(
-            "/home/alex/Projects/ResumeAI/resume-api/config/prometheus.yml", "r"
-        ) as f:
+        with open("/home/alex/Projects/ResumeAI/resume-api/config/prometheus.yml", "r") as f:
             config = yaml.safe_load(f)
             job_names = [job["job_name"] for job in config["scrape_configs"]]
             assert "resume-api" in job_names
@@ -448,27 +436,21 @@ class TestGrafanaDashboards:
         """Test API performance dashboard exists."""
         import os
 
-        dashboard_path = (
-            "/home/alex/Projects/ResumeAI/resume-api/dashboards/api-performance.json"
-        )
+        dashboard_path = "/home/alex/Projects/ResumeAI/resume-api/dashboards/api-performance.json"
         assert os.path.exists(dashboard_path), "api-performance.json should exist"
 
     def test_business_metrics_dashboard_exists(self):
         """Test business metrics dashboard exists."""
         import os
 
-        dashboard_path = (
-            "/home/alex/Projects/ResumeAI/resume-api/dashboards/business-metrics.json"
-        )
+        dashboard_path = "/home/alex/Projects/ResumeAI/resume-api/dashboards/business-metrics.json"
         assert os.path.exists(dashboard_path), "business-metrics.json should exist"
 
     def test_system_health_dashboard_exists(self):
         """Test system health dashboard exists."""
         import os
 
-        dashboard_path = (
-            "/home/alex/Projects/ResumeAI/resume-api/dashboards/system-health.json"
-        )
+        dashboard_path = "/home/alex/Projects/ResumeAI/resume-api/dashboards/system-health.json"
         assert os.path.exists(dashboard_path), "system-health.json should exist"
 
     def test_dashboard_json_valid(self):

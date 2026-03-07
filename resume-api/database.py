@@ -73,9 +73,7 @@ class Resume(Base):
     # Metadata
     tags = relationship("Tag", secondary=resume_tags, back_populates="resumes")
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(
-        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
-    )
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
     # Relationships
     owner = relationship("User", back_populates="resumes")
@@ -84,12 +82,8 @@ class Resume(Base):
         back_populates="resume",
         cascade="all, delete-orphan",
     )
-    comments = relationship(
-        "Comment", back_populates="resume", cascade="all, delete-orphan"
-    )
-    shares = relationship(
-        "ResumeShare", back_populates="resume", cascade="all, delete-orphan"
-    )
+    comments = relationship("Comment", back_populates="resume", cascade="all, delete-orphan")
+    shares = relationship("ResumeShare", back_populates="resume", cascade="all, delete-orphan")
 
     __table_args__ = (Index("idx_resume_updated_at", "updated_at"),)
 
@@ -133,9 +127,7 @@ class Comment(Base):
     section = Column(String(100), nullable=True)  # Section of resume being commented on
     is_resolved = Column(Boolean, default=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), index=True)
-    updated_at = Column(
-        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
-    )
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
     # Relationships
     resume = relationship("Resume", back_populates="comments")
@@ -189,9 +181,7 @@ class UserSettings(Base):
 
     # Other preferences
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(
-        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
-    )
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
 
 class User(Base):
@@ -212,15 +202,11 @@ class User(Base):
 
     # Account metadata
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(
-        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
-    )
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
     last_login_at = Column(DateTime(timezone=True), nullable=True)
 
     # Relationships
-    resumes = relationship(
-        "Resume", back_populates="owner", cascade="all, delete-orphan"
-    )
+    resumes = relationship("Resume", back_populates="owner", cascade="all, delete-orphan")
     refresh_tokens = relationship(
         "RefreshToken", back_populates="user", cascade="all, delete-orphan"
     )
@@ -359,9 +345,7 @@ class SubscriptionPlan(Base):
     __tablename__ = "subscription_plans"
 
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(
-        String(100), nullable=False, unique=True, index=True
-    )  # e.g., "basic", "premium"
+    name = Column(String(100), nullable=False, unique=True, index=True)  # e.g., "basic", "premium"
     display_name = Column(String(200), nullable=False)  # e.g., "Basic Plan"
     description = Column(Text, nullable=True)
 
@@ -390,9 +374,7 @@ class SubscriptionPlan(Base):
 
     # Metadata
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(
-        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
-    )
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
 
 class Subscription(Base):
@@ -429,9 +411,7 @@ class Subscription(Base):
 
     # Metadata
     created_at = Column(DateTime(timezone=True), server_default=func.now(), index=True)
-    updated_at = Column(
-        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
-    )
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
     __table_args__ = (Index("idx_subscription_user_status", "user_id", "status"),)
 
@@ -481,9 +461,7 @@ class PaymentMethod(Base):
     user_id = Column(String(255), nullable=False, index=True)
 
     # Stripe integration
-    stripe_payment_method_id = Column(
-        String(255), unique=True, nullable=True, index=True
-    )
+    stripe_payment_method_id = Column(String(255), unique=True, nullable=True, index=True)
 
     # Payment method details
     type = Column(String(50), nullable=False)  # card, bank_account, etc.
@@ -508,9 +486,7 @@ class PaymentMethod(Base):
 
     # Metadata
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(
-        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
-    )
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
 
 class BillingEvent(Base):
@@ -572,9 +548,7 @@ class APIKey(Base):
 
     # Metadata
     created_at = Column(DateTime(timezone=True), server_default=func.now(), index=True)
-    updated_at = Column(
-        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
-    )
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
     # Relationships
     user = relationship("User", back_populates="api_keys")
@@ -591,9 +565,7 @@ class GitHubConnection(Base):
     __tablename__ = "github_connections"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(
-        Integer, ForeignKey("users.id"), nullable=False, unique=True, index=True
-    )
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, unique=True, index=True)
 
     # GitHub account details
     github_user_id = Column(String(100), nullable=False, index=True)  # GitHub user ID
@@ -607,9 +579,7 @@ class GitHubConnection(Base):
     scope = Column(String(500), nullable=True)  # Space-separated scopes
 
     # Token metadata
-    expires_at = Column(
-        DateTime(timezone=True), nullable=True
-    )  # OAuth token expiration
+    expires_at = Column(DateTime(timezone=True), nullable=True)  # OAuth token expiration
 
     # Connection status
     is_active = Column(Boolean, default=True, nullable=False, index=True)
@@ -618,9 +588,7 @@ class GitHubConnection(Base):
 
     # Metadata
     created_at = Column(DateTime(timezone=True), server_default=func.now(), index=True)
-    updated_at = Column(
-        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
-    )
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
     # Relationships
     user = relationship("User", back_populates="github_connections")
@@ -659,9 +627,7 @@ class GitHubOAuthState(Base):
 # Add relationship to User model
 
 # Note: This is done by modifying the User class after it's defined
-User.api_keys = relationship(
-    "APIKey", back_populates="user", cascade="all, delete-orphan"
-)
+User.api_keys = relationship("APIKey", back_populates="user", cascade="all, delete-orphan")
 User.github_connections = relationship(
     "GitHubConnection", back_populates="user", cascade="all, delete-orphan"
 )
@@ -679,21 +645,13 @@ class Team(Base):
 
     # Metadata
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(
-        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
-    )
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
     # Relationships
     owner = relationship("User", back_populates="owned_teams")
-    members = relationship(
-        "TeamMember", back_populates="team", cascade="all, delete-orphan"
-    )
-    shared_resumes = relationship(
-        "TeamResume", back_populates="team", cascade="all, delete-orphan"
-    )
-    activities = relationship(
-        "TeamActivity", back_populates="team", cascade="all, delete-orphan"
-    )
+    members = relationship("TeamMember", back_populates="team", cascade="all, delete-orphan")
+    shared_resumes = relationship("TeamResume", back_populates="team", cascade="all, delete-orphan")
+    activities = relationship("TeamActivity", back_populates="team", cascade="all, delete-orphan")
 
     __table_args__ = (Index("idx_team_owner", "owner_id"),)
 
@@ -786,9 +744,7 @@ class TeamActivity(Base):
 
 
 # Add relationships to User model
-User.owned_teams = relationship(
-    "Team", back_populates="owner", cascade="all, delete-orphan"
-)
+User.owned_teams = relationship("Team", back_populates="owner", cascade="all, delete-orphan")
 User.team_memberships = relationship(
     "TeamMember", back_populates="user", cascade="all, delete-orphan"
 )

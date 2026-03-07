@@ -63,10 +63,7 @@ class TestLatexEscaping:
 
     def test_escape_backslash(self):
         """Test escaping of backslash."""
-        assert (
-            escape_latex("C:\\folder\\file")
-            == "C:\\textbackslash{}folder\\textbackslash{}file"
-        )
+        assert escape_latex("C:\\folder\\file") == "C:\\textbackslash{}folder\\textbackslash{}file"
 
     def test_escape_multiple_special_chars(self):
         """Test escaping of multiple special characters."""

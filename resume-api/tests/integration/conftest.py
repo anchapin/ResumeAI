@@ -487,11 +487,7 @@ def mock_openai_response():
     """Mock OpenAI API response."""
     return {
         "choices": [
-            {
-                "message": {
-                    "content": "Modified resume content optimized for the job description."
-                }
-            }
+            {"message": {"content": "Modified resume content optimized for the job description."}}
         ]
     }
 

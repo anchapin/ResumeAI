@@ -120,8 +120,7 @@ class HealthChecker:
         ai_health = results[2]
 
         all_healthy = all(
-            r.get("status") == "ok"
-            for r in [database_health, ai_health]  # Redis optional
+            r.get("status") == "ok" for r in [database_health, ai_health]  # Redis optional
         )
 
         return {

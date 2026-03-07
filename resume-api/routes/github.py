@@ -302,9 +302,7 @@ async def github_oauth_callback(
     """
     try:
         # Verify OAuth state
-        result = await db.execute(
-            select(GitHubOAuthState).where(GitHubOAuthState.state == state)
-        )
+        result = await db.execute(select(GitHubOAuthState).where(GitHubOAuthState.state == state))
         oauth_state = result.scalar_one_or_none()
 
         if not oauth_state:
@@ -312,9 +310,7 @@ async def github_oauth_callback(
             frontend_url = settings.frontend_url
             return Response(
                 status_code=302,
-                headers={
-                    "Location": f"{frontend_url}?status=error&error=invalid_state"
-                },
+                headers={"Location": f"{frontend_url}?status=error&error=invalid_state"},
             )
 
         # Handle potential timezone naive datetime from SQLite
@@ -329,9 +325,7 @@ async def github_oauth_callback(
             frontend_url = settings.frontend_url
             return Response(
                 status_code=302,
-                headers={
-                    "Location": f"{frontend_url}?status=error&error=expired_state"
-                },
+                headers={"Location": f"{frontend_url}?status=error&error=expired_state"},
             )
 
         # Exchange code for token with PKCE validation
@@ -353,9 +347,7 @@ async def github_oauth_callback(
 
         # Check if connection already exists
         existing_connection = await db.execute(
-            select(GitHubConnection).where(
-                GitHubConnection.github_user_id == github_user_id
-            )
+            select(GitHubConnection).where(GitHubConnection.github_user_id == github_user_id)
         )
         existing = existing_connection.scalar_one_or_none()
 
@@ -439,9 +431,7 @@ async def _get_oauth_status(user_id: int, db: AsyncSession) -> GitHubStatusRespo
                 mode="oauth",
                 username=connection.github_username,
                 github_user_id=str(connection.github_user_id),
-                connected_at=(
-                    connection.created_at.isoformat() if connection.created_at else None
-                ),
+                connected_at=(connection.created_at.isoformat() if connection.created_at else None),
                 error=None,
             )
         else:
@@ -515,9 +505,7 @@ async def get_github_status(
                 mode="oauth",
                 username=connection.github_username,
                 github_user_id=str(connection.github_user_id),
-                connected_at=(
-                    connection.created_at.isoformat() if connection.created_at else None
-                ),
+                connected_at=(connection.created_at.isoformat() if connection.created_at else None),
                 error=None,
             )
         else:

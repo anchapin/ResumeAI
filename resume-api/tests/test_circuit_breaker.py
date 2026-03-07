@@ -357,7 +357,9 @@ class TestCircuitBreakerIntegration:
         # Mock the open_time to test calculation
         import datetime
 
-        breaker.open_time = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(seconds=30)
+        breaker.open_time = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(
+            seconds=30
+        )
 
         remaining = breaker._time_until_retry()
         assert 25 <= remaining <= 35  # Allow some tolerance for execution time

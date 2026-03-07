@@ -187,9 +187,9 @@ class ReplicationSyncMonitor:
 
         # Trim history
         if len(self.metrics_history[metrics.replica_url]) > self.max_history_size:
-            self.metrics_history[metrics.replica_url] = self.metrics_history[
-                metrics.replica_url
-            ][-self.max_history_size :]
+            self.metrics_history[metrics.replica_url] = self.metrics_history[metrics.replica_url][
+                -self.max_history_size :
+            ]
 
     async def _check_for_alerts(self, metrics: ReplicationMetrics):
         """Check for alert conditions and generate alerts."""
@@ -304,9 +304,7 @@ class ReplicationSyncMonitor:
                 )
 
         # Add replica health
-        lines.append(
-            "# HELP replica_health Replica health status (1=healthy, 0=unhealthy)"
-        )
+        lines.append("# HELP replica_health Replica health status (1=healthy, 0=unhealthy)")
         lines.append("# TYPE replica_health gauge")
 
         for replica_url, history in self.metrics_history.items():

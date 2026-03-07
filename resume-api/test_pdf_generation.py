@@ -24,8 +24,7 @@ SAMPLE_RESUME_DATA = {
         "phone": "+1 234 567 8900",
         "url": "https://johndoe.com",
         "summary": (
-            "Experienced software engineer with 5+ years of experience in "
-            "web development."
+            "Experienced software engineer with 5+ years of experience in " "web development."
         ),
         "location": {
             "city": "San Francisco",
@@ -88,12 +87,8 @@ SAMPLE_RESUME_DATA = {
             "awarder": "Tech Corp",
         }
     ],
-    "certificates": [
-        {"name": "AWS Solutions Architect", "date": "2022", "issuer": "Amazon"}
-    ],
-    "publications": [
-        {"name": "Paper on ML", "publisher": "IEEE", "releaseDate": "2020"}
-    ],
+    "certificates": [{"name": "AWS Solutions Architect", "date": "2022", "issuer": "Amazon"}],
+    "publications": [{"name": "Paper on ML", "publisher": "IEEE", "releaseDate": "2020"}],
 }
 
 # Template variants to test
@@ -169,11 +164,7 @@ class TestResumeGenerator:
             pdf_bytes = generator.generate_pdf({}, "base")
             assert pdf_bytes[:4] == b"%PDF"
         except (RuntimeError, FileNotFoundError) as e:
-            if (
-                "xelatex" in str(e).lower()
-                or "latex" in str(e).lower()
-                or "No such file" in str(e)
-            ):
+            if "xelatex" in str(e).lower() or "latex" in str(e).lower() or "No such file" in str(e):
                 pytest.skip(f"LaTeX not installed: {e}")
             raise
 
@@ -184,11 +175,7 @@ class TestResumeGenerator:
             pdf_bytes = generator.generate_pdf(minimal_data, "base")
             assert pdf_bytes[:4] == b"%PDF"
         except (RuntimeError, FileNotFoundError) as e:
-            if (
-                "xelatex" in str(e).lower()
-                or "latex" in str(e).lower()
-                or "No such file" in str(e)
-            ):
+            if "xelatex" in str(e).lower() or "latex" in str(e).lower() or "No such file" in str(e):
                 pytest.skip(f"LaTeX not installed: {e}")
             raise
 

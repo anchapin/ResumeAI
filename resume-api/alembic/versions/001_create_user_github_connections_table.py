@@ -68,9 +68,7 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     # Drop indexes
-    op.drop_index(
-        "idx_github_connections_github_user", table_name="user_github_connections"
-    )
+    op.drop_index("idx_github_connections_github_user", table_name="user_github_connections")
     op.drop_index("idx_github_connections_user", table_name="user_github_connections")
     op.drop_index("ix_user_github_connections_id", table_name="user_github_connections")
 

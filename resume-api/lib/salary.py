@@ -201,17 +201,11 @@ class SalaryResearcher:
             "5_year_projection": future_median,
             "annual_bonus_estimate": int(median * 0.1),
             "equity_estimate": (
-                int(median * 0.15)
-                if experience_level in ["senior", "lead", "executive"]
-                else 0
+                int(median * 0.15) if experience_level in ["senior", "lead", "executive"] else 0
             ),
             "total_compensation": median
             + int(median * 0.1)
-            + (
-                int(median * 0.15)
-                if experience_level in ["senior", "lead", "executive"]
-                else 0
-            ),
+            + (int(median * 0.15) if experience_level in ["senior", "lead", "executive"] else 0),
         }
 
 
@@ -274,9 +268,7 @@ class OfferComparison:
             "priorities_used": priorities,
         }
 
-    def _score_offer(
-        self, offer: Dict[str, Any], priorities: Dict[str, float]
-    ) -> float:
+    def _score_offer(self, offer: Dict[str, Any], priorities: Dict[str, float]) -> float:
         """Calculate weighted score for an offer."""
         score = 0.0
 
@@ -334,24 +326,20 @@ class OfferComparison:
         breakdown = {}
 
         if offer.get("base_salary"):
-            breakdown["salary"] = min(
-                100, offer["base_salary"] / 2500
-            ) * priorities.get("salary", 0)
+            breakdown["salary"] = min(100, offer["base_salary"] / 2500) * priorities.get(
+                "salary", 0
+            )
 
         breakdown["growth"] = self._normalize_growth(
             offer.get("growth_opportunities", 5)
         ) * priorities.get("growth", 0)
         breakdown["work_life_balance"] = (
-            offer.get("work_life_balance", 5)
-            * 20
-            * priorities.get("work_life_balance", 0)
+            offer.get("work_life_balance", 5) * 20 * priorities.get("work_life_balance", 0)
         )
         breakdown["benefits"] = self._normalize_benefits(
             offer.get("benefits", {})
         ) * priorities.get("benefits", 0)
-        breakdown["culture"] = (
-            offer.get("culture_score", 5) * 20 * priorities.get("culture", 0)
-        )
+        breakdown["culture"] = offer.get("culture_score", 5) * 20 * priorities.get("culture", 0)
 
         return breakdown
 

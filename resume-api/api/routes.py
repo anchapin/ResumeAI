@@ -132,9 +132,7 @@ async def render_pdf(request: Request, body: ResumeRequest, auth: AuthorizedAPIK
             raise ValueError("Invalid variant name")
 
         # Initialize generator
-        generator = ResumeGenerator(
-            templates_dir=str(TEMPLATES_DIR), lib_dir=str(LIB_DIR)
-        )
+        generator = ResumeGenerator(templates_dir=str(TEMPLATES_DIR), lib_dir=str(LIB_DIR))
 
         # Generate PDF
         pdf_bytes = await asyncio.to_thread(
@@ -145,9 +143,7 @@ async def render_pdf(request: Request, body: ResumeRequest, auth: AuthorizedAPIK
         return Response(
             content=pdf_bytes,
             media_type="application/pdf",
-            headers={
-                "Content-Disposition": f'attachment; filename="resume_{body.variant}.pdf"'
-            },
+            headers={"Content-Disposition": f'attachment; filename="resume_{body.variant}.pdf"'},
         )
 
     except ValueError as e:
@@ -355,9 +351,7 @@ def create_docx_from_resume(resume_data: dict) -> bytes:
     if basics.get("location"):
         location = basics["location"]
         if isinstance(location, dict):
-            location_str = ", ".join(
-                filter(None, [location.get("city"), location.get("region")])
-            )
+            location_str = ", ".join(filter(None, [location.get("city"), location.get("region")]))
         else:
             location_str = str(location)
         if location_str:
@@ -671,9 +665,7 @@ def parse_resume_text(text: str) -> dict:
         current_entry = {}
         for entry in work_entries:
             # Check if this looks like a date line
-            if re.match(
-                r"\d{4}\s*[-–]\s*\d{4}|\d{4}\s*[-–]\s*present", entry, re.IGNORECASE
-            ):
+            if re.match(r"\d{4}\s*[-–]\s*\d{4}|\d{4}\s*[-–]\s*present", entry, re.IGNORECASE):
                 if current_entry:
                     work.append(current_entry)
                 current_entry = {
@@ -683,9 +675,7 @@ def parse_resume_text(text: str) -> dict:
                     "endDate": "",
                     "highlights": [],
                 }
-                current_entry["startDate"], current_entry["endDate"] = extract_dates(
-                    entry
-                )
+                current_entry["startDate"], current_entry["endDate"] = extract_dates(entry)
             elif current_entry is not None:
                 if not current_entry.get("company"):
                     current_entry["company"] = entry
@@ -787,9 +777,7 @@ def extract_dates(text: str) -> tuple:
     tags=["Import"],
 )
 @rate_limit("10/minute")
-async def import_pdf(
-    request: Request, file: UploadFile = File(...), auth: AuthorizedAPIKey = None
-):
+async def import_pdf(request: Request, file: UploadFile = File(...), auth: AuthorizedAPIKey = None):
     """
     Import resume from PDF file.
 
@@ -812,9 +800,7 @@ async def import_pdf(
         content = await file.read()
 
         # Validate file upload
-        is_valid, error = validate_file_upload(
-            file.filename, len(content), file.content_type
-        )
+        is_valid, error = validate_file_upload(file.filename, len(content), file.content_type)
         if not is_valid:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -908,9 +894,7 @@ async def import_docx(
         content = await file.read()
 
         # Validate file upload
-        is_valid, error = validate_file_upload(
-            file.filename, len(content), file.content_type
-        )
+        is_valid, error = validate_file_upload(file.filename, len(content), file.content_type)
         if not is_valid:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -1315,8 +1299,7 @@ def _parse_linkedin_csv_files(csv_files: dict) -> dict:
                     rows = list(csv.DictReader(io.StringIO(content)))
                     if rows:
                         cleaned_rows = [
-                            {k: v.strip() if v else "" for k, v in row.items()}
-                            for row in rows
+                            {k: v.strip() if v else "" for k, v in row.items()} for row in rows
                         ]
                         linkedin_data[data_key] = cleaned_rows
                 except Exception as e:
@@ -1331,9 +1314,7 @@ def _parse_linkedin_csv_files(csv_files: dict) -> dict:
                 if rows and rows[0].get("Summary"):
                     if "profile" not in linkedin_data:
                         linkedin_data["profile"] = []
-                    if linkedin_data["profile"] and isinstance(
-                        linkedin_data["profile"], list
-                    ):
+                    if linkedin_data["profile"] and isinstance(linkedin_data["profile"], list):
                         linkedin_data["profile"][0]["Summary"] = rows[0]["Summary"]
             except Exception:
                 pass
@@ -1377,9 +1358,7 @@ async def _parse_linkedin_csv_zip(zip_content: bytes, importer) -> dict:
             for csv_filename, data_key in csv_mappings.items():
                 # Find the CSV file (may be at root or in a subfolder)
                 matching_files = [
-                    f
-                    for f in zip_file.namelist()
-                    if f.lower().endswith(csv_filename.lower())
+                    f for f in zip_file.namelist() if f.lower().endswith(csv_filename.lower())
                 ]
 
                 if matching_files:
@@ -1394,8 +1373,7 @@ async def _parse_linkedin_csv_zip(zip_content: bytes, importer) -> dict:
                                 cleaned_rows = []
                                 for row in rows:
                                     cleaned_row = {
-                                        k: v.strip() if v else ""
-                                        for k, v in row.items()
+                                        k: v.strip() if v else "" for k, v in row.items()
                                     }
                                     cleaned_rows.append(cleaned_row)
 
@@ -1406,9 +1384,7 @@ async def _parse_linkedin_csv_zip(zip_content: bytes, importer) -> dict:
 
             # Also check for Profile Summary.csv if present
             profile_summary_files = [
-                f
-                for f in zip_file.namelist()
-                if f.lower().endswith("profile summary.csv")
+                f for f in zip_file.namelist() if f.lower().endswith("profile summary.csv")
             ]
             if profile_summary_files:
                 try:
@@ -1422,9 +1398,7 @@ async def _parse_linkedin_csv_zip(zip_content: bytes, importer) -> dict:
                             if linkedin_data["profile"] and isinstance(
                                 linkedin_data["profile"], list
                             ):
-                                linkedin_data["profile"][0]["Summary"] = rows[0][
-                                    "Summary"
-                                ]
+                                linkedin_data["profile"][0]["Summary"] = rows[0]["Summary"]
                 except Exception:
                     pass  # Profile Summary is optional
 
@@ -1518,10 +1492,7 @@ def _convert_csv_data_to_importer_format(csv_data: dict) -> dict:
         for edu in csv_data["education"]:
             # Try multiple field names for field of study
             field_of_study = (
-                edu.get("Field of Study")
-                or edu.get("Activities")
-                or edu.get("Notes")
-                or ""
+                edu.get("Field of Study") or edu.get("Activities") or edu.get("Notes") or ""
             )
 
             edu_entry = {
@@ -1560,11 +1531,7 @@ def _convert_csv_data_to_importer_format(csv_data: dict) -> dict:
         skills = []
         for skill_row in csv_data["skills"]:
             # Try both "Name" and "Skill" as column names
-            skill_name = (
-                skill_row.get("Name")
-                or skill_row.get("Skill")
-                or skill_row.get("skill")
-            )
+            skill_name = skill_row.get("Name") or skill_row.get("Skill") or skill_row.get("skill")
             if skill_name:
                 skills.append({"name": skill_name})
         if skills:
@@ -1646,9 +1613,7 @@ def convert_linkedin_to_json_resume(linkedin_data: dict) -> dict:
         resume["basics"]["name"] = linkedin_data["name"]
 
     if linkedin_data.get("headline") or linkedin_data.get("role"):
-        resume["basics"]["label"] = linkedin_data.get("headline") or linkedin_data.get(
-            "role"
-        )
+        resume["basics"]["label"] = linkedin_data.get("headline") or linkedin_data.get("role")
 
     if linkedin_data.get("summary"):
         resume["basics"]["summary"] = linkedin_data["summary"]
@@ -1835,6 +1800,4 @@ async def websocket_resume(
     WebSocket endpoint for real-time collaboration on resumes.
     """
     user, expires_at = current_user_info
-    await handle_websocket_connection(
-        websocket, resume_id, str(user.id), expires_at=expires_at
-    )
+    await handle_websocket_connection(websocket, resume_id, str(user.id), expires_at=expires_at)

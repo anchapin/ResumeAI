@@ -75,9 +75,7 @@ async def _render_pdf_handler(job: Job) -> bytes:
     """Handler function for rendering PDF from job."""
     try:
         # Initialize resume generator
-        generator = ResumeGenerator(
-            template_dir=str(Path(__file__).parent.parent / "templates")
-        )
+        generator = ResumeGenerator(template_dir=str(Path(__file__).parent.parent / "templates"))
 
         # Render PDF
         pdf_bytes = generator.render_pdf(

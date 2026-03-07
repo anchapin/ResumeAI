@@ -176,9 +176,7 @@ def generate_questions(
                     "AWS",
                     "Database Design",
                 ]
-                question_text = question_text.replace(
-                    "{skill}", skills[question_id % len(skills)]
-                )
+                question_text = question_text.replace("{skill}", skills[question_id % len(skills)])
 
             tips = ANSWER_TIPS.get(category, [])
 
@@ -236,15 +234,11 @@ Respond with only valid JSON, no markdown formatting.
                 id=feedback_id,
                 answer_id=answer_id,
                 score=min(10, max(1, int(feedback_data.get("score", 5)))),
-                strengths=feedback_data.get(
-                    "strengths", ["Good effort", "Clear communication"]
-                ),
+                strengths=feedback_data.get("strengths", ["Good effort", "Clear communication"]),
                 improvements=feedback_data.get(
                     "improvements", ["Provide more examples", "Explain your reasoning"]
                 ),
-                summary=feedback_data.get(
-                    "summary", "Good answer with room for improvement"
-                ),
+                summary=feedback_data.get("summary", "Good answer with room for improvement"),
                 suggested_answer=feedback_data.get("suggested_answer"),
             )
         except Exception as e:
@@ -320,9 +314,7 @@ async def generate_interview_questions(
         )
         _sessions[session_id] = session
 
-        logger.info(
-            f"Generated {len(questions)} interview questions for session {session_id}"
-        )
+        logger.info(f"Generated {len(questions)} interview questions for session {session_id}")
 
         return GenerateQuestionsResponse(questions=questions, session_id=session_id)
 
@@ -360,9 +352,7 @@ async def submit_interview_answer(
             )
 
         # Find the question
-        question = next(
-            (q for q in session.questions if q.id == request.question_id), None
-        )
+        question = next((q for q in session.questions if q.id == request.question_id), None)
         if not question:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -392,9 +382,7 @@ async def submit_interview_answer(
         session.feedback.append(feedback)
 
         # Update session progress
-        session.completion_percentage = int(
-            (len(session.answers) / len(session.questions)) * 100
-        )
+        session.completion_percentage = int((len(session.answers) / len(session.questions)) * 100)
 
         # Calculate average score
         if session.feedback:

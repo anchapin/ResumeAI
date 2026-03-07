@@ -131,9 +131,7 @@ def validate_dashboards():
                 if len(targets) == 0:
                     errors.append(f"⚠️  Panel {i} ({panel_title}) has no targets")
                 else:
-                    print(
-                        f"   ✓ Panel {i}: {panel_title} ({panel_type}) - {len(targets)} targets"
-                    )
+                    print(f"   ✓ Panel {i}: {panel_title} ({panel_type}) - {len(targets)} targets")
 
         except json.JSONDecodeError as e:
             errors.append(f"❌ Dashboard {dashboard} has invalid JSON: {e}")

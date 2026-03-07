@@ -48,9 +48,7 @@ def sample_docx_bytes():
     headline.alignment = WD_ALIGN_PARAGRAPH.CENTER
 
     # Add contact info
-    contact = doc.add_paragraph(
-        "john.doe@example.com | (555) 123-4567 | San Francisco, CA"
-    )
+    contact = doc.add_paragraph("john.doe@example.com | (555) 123-4567 | San Francisco, CA")
     contact.alignment = WD_ALIGN_PARAGRAPH.CENTER
 
     # Add summary

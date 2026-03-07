@@ -123,9 +123,7 @@ class StripeService:
             "url": "https://checkout.stripe.com/c/pay/cs_test_123",
         }
 
-    async def create_portal_session(
-        self, customer_id: str, return_url: str
-    ) -> Dict[str, str]:
+    async def create_portal_session(self, customer_id: str, return_url: str) -> Dict[str, str]:
         """Create a Stripe billing portal session."""
         # TODO: Implement with Stripe Billing Portal API
         return {"url": "https://billing.stripe.com/p/session/test_123"}

@@ -54,9 +54,7 @@ def test_error_messages():
     for code in ErrorCode:
         assert code in ERROR_MESSAGES, f"Missing message for {code}"
         message = ERROR_MESSAGES[code]
-        assert (
-            isinstance(message, str) and len(message) > 0
-        ), f"Invalid message for {code}"
+        assert isinstance(message, str) and len(message) > 0, f"Invalid message for {code}"
 
     print("✓ All error codes have messages")
 
@@ -111,9 +109,7 @@ def test_get_status_code():
 
 def test_field_error_model():
     """Test FieldError model"""
-    field_error = FieldError(
-        field="email", message="Invalid email format", code="INVALID_FORMAT"
-    )
+    field_error = FieldError(field="email", message="Invalid email format", code="INVALID_FORMAT")
 
     assert field_error.field == "email"
     assert field_error.message == "Invalid email format"
@@ -236,9 +232,7 @@ def test_consistent_error_schema():
     # All should have the same required keys
     required_keys = {"error_code", "message", "request_id", "timestamp", "status"}
     for schema in schemas:
-        assert required_keys.issubset(
-            schema
-        ), f"Missing required keys in schema: {schema}"
+        assert required_keys.issubset(schema), f"Missing required keys in schema: {schema}"
 
     print("✓ All errors have consistent schema")
 
