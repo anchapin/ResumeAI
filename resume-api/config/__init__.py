@@ -21,6 +21,7 @@ class Settings(BaseSettings):
     service_name: str = "resume-api"  # Service name for tracing/metrics
     api_v1_prefix: str = "/api/v1"
     debug: bool = False
+    environment: str = "development"  # production, staging, development
 
     # Server Configuration
     host: str = "0.0.0.0"
@@ -71,16 +72,21 @@ class Settings(BaseSettings):
     enable_metrics: bool = True
     metrics_path: str = "/metrics"
 
+    # Profiling Configuration
+    enable_profiling: bool = False  # Enable profiling instrumentation
+    profiling_memory_tracking: bool = True  # Track memory usage during profiling
+    profiling_log_results: bool = True  # Log profiling results
+
     # Sentry (Error Tracking) Configuration
     enable_sentry: bool = False
     sentry_dsn: Optional[str] = None
     sentry_environment: str = "production"
     sentry_traces_sample_rate: float = 0.1
 
-    # Distributed Tracing Configuration
+    # Distributed Tracing (OpenTelemetry) Configuration
     enable_tracing: bool = False
-    otlp_endpoint: Optional[str] = None
-    trace_sample_rate: float = 1.0
+    otlp_endpoint: Optional[str] = None  # OTLP exporter endpoint (e.g., "http://localhost:4317")
+    trace_sample_rate: float = 1.0  # 1.0 = 100% of traces, 0.1 = 10%
 
     # Alerting Configuration
     enable_alerting: bool = True
