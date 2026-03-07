@@ -3,11 +3,8 @@
  * Provides centralized error handling, user-friendly messages, and error tracking
  */
 
-import { ErrorContextData } from '../types';
 import {
   getErrorMessageByType,
-  getErrorSuggestion,
-  isErrorRetryable,
   ErrorType,
 } from './errorMessages';
 import { captureError, addBreadcrumb } from '../src/lib/sentry';

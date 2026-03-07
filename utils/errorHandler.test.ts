@@ -5,7 +5,6 @@ import {
   withErrorHandling,
   createValidationError,
   createTimeoutError,
-  type ErrorContext,
 } from './errorHandler';
 
 describe('Global Error Handler', () => {

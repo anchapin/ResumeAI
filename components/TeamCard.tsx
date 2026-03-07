@@ -1,6 +1,6 @@
 import React from 'react';
 import { Team } from '../types';
-import { showSuccessToast, showErrorToast } from '../utils/toast';
+import { showErrorToast } from '../utils/toast';
 
 interface TeamCardProps {
   team: Team;

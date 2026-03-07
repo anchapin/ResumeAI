@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { getStorageQuota, checkStorageWarning } from '../lib/storage';
+import { getStorageQuota } from '../lib/storage';
 
 export interface StorageStats {
   usedBytes: number;

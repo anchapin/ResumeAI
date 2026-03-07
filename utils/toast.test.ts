@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { toast, ToastOptions } from 'react-toastify';
+import { toast } from 'react-toastify';
 import {
   showSuccessToast,
   showErrorToast,

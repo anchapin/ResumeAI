@@ -4,11 +4,10 @@ import { SimpleResumeData } from '../types';
 import { mockResumeData } from '../__mocks__/resume';
 import {
   loadResumeData,
-  saveResumeData,
   StorageError,
   getStorageErrorMessage,
 } from '../utils/storage';
-import { TokenManager, sanitizeInput } from '../utils/security';
+import { sanitizeInput } from '../utils/security';
 
 export interface AuthUser {
   id: number;

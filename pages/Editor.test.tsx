@@ -3,7 +3,7 @@ import { render, screen } from '@testing-library/react';
 import React from 'react';
 import { MemoryRouter } from 'react-router-dom';
 import Editor from './Editor';
-import { mockResumeData, createMockResume, emptyResumeData } from '../__mocks__/resume';
+import { mockResumeData } from '../__mocks__/resume';
 import type { SimpleResumeData } from '../types';
 
 const renderWithRouter = (component: React.ReactElement) => {

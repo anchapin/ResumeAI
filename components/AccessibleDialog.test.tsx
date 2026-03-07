@@ -231,7 +231,7 @@ describe('AccessibleDialog', () => {
   });
 
   it('should have correct dialog structure', () => {
-    const { container } = render(
+    render(
       <AccessibleDialog
         isOpen={true}
         onClose={vi.fn()}

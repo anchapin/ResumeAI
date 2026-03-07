@@ -1,5 +1,5 @@
 import React from 'react';
-import { SimpleResumeData, ProjectEntry } from '../../types';
+import { ProjectEntry } from '../../types';
 import ProjectItem from './ProjectItem';
 
 interface ProjectsSectionProps {

@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
-import { JobApplication, SimpleResumeData, ATSReport } from '../types';
+import { SimpleResumeData, ATSReport } from '../types';
 import StatusBadge from '../components/StatusBadge';
 import JobApplicationsSkeleton from '../components/skeletons/JobApplicationsSkeleton';
 import AccessibleDialog from '../components/AccessibleDialog';
@@ -10,10 +10,6 @@ import {
   checkATSScore,
   TailoredResumeResponse,
   listJobApplications,
-  createJobApplication,
-  updateJobApplication,
-  deleteJobApplication,
-  getApplicationStats,
   ApplicationStats,
   ApplicationStatus,
 } from '../utils/api-client';

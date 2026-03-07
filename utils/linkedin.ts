@@ -15,8 +15,6 @@ import {
   Skill,
   WorkItem,
   EducationItem,
-  Location,
-  Profile,
   LinkedInImportData,
   LinkedInExperienceInput,
   LinkedInEducationInput,

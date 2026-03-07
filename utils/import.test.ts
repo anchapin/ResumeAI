@@ -9,7 +9,6 @@ import {
   validateImportedData,
   detectFileFormat,
 } from './import';
-import { ResumeData } from '../types';
 
 // Mock resume data for testing
 const mockResumeData: any = {

@@ -1,6 +1,6 @@
-import { describe, it, vi } from 'vitest';
+import { describe, it } from 'vitest';
 import { render, screen, fireEvent, act } from '@testing-library/react';
-import React, { useState } from 'react';
+import React from 'react';
 import { MemoryRouter } from 'react-router-dom';
 import Editor from './Editor';
 import { SimpleResumeData, WorkExperience } from '../types';

@@ -6,7 +6,7 @@ import {
   downloadLinkedInProfile,
   validateLinkedInData,
 } from './linkedin';
-import { LinkedInImportData, ResumeData } from '../types';
+import { LinkedInImportData } from '../types';
 
 const mockResumeData: any = {
   basics: {

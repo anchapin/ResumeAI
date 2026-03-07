@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
-import { SimpleResumeData, ResumeMetadata, ResumeVersion, Comment } from '../types';
+import { ResumeVersion, Comment } from '../types';
 import { useStore } from '../store/store';
 import { useGeneratePackage, convertToResumeData } from '../hooks/useGeneratePackage';
 import { useVariants } from '../hooks/useVariants';
 import { showErrorToast, showSuccessToast } from '../utils/toast';
-import WorkspaceSkeleton from '../components/skeletons/WorkspaceSkeleton';
-import { getResume, listResumeVersions, listComments } from '../utils/api-client';
+import { listResumeVersions, listComments } from '../utils/api-client';
 import { Button, Input, Card } from '../components/ui';
 
 /** Available tab types for the workspace */

@@ -1,5 +1,5 @@
 import React from 'react';
-import { SimpleResumeData, WorkExperience } from '../../types';
+import { WorkExperience } from '../../types';
 import ExperienceItem from '../ExperienceItem';
 
 interface ExperienceSectionProps {

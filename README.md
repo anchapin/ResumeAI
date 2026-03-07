@@ -375,6 +375,20 @@ If you prefer to develop locally without containers, follow the manual setup ins
 
 ## Troubleshooting
 
+### Dev Container (Recommended)
+
+ResumeAI includes a devcontainer configuration for reproducible development environments:
+
+1. **Open in VS Code**: Open the project in VS Code
+2. **Reopen in Container**: Click "Reopen in Container" when prompted (or press `F1` and select "Dev Containers: Reopen in Container")
+3. **Wait for Setup**: The container will install all dependencies automatically
+
+The devcontainer includes:
+- Node.js 20 with npm
+- GitHub CLI
+- All required VS Code extensions (ESLint, Prettier, Python, Docker)
+- Pre-configured linting and formatting on save
+
 ### GitHub Connection Issues
 
 1. **Verify GitHub OAuth App credentials**:

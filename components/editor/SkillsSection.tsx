@@ -1,5 +1,4 @@
 import React from 'react';
-import { SimpleResumeData } from '../../types';
 
 interface SkillsSectionProps {
   skills: string[];

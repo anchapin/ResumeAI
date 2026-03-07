@@ -1,5 +1,5 @@
 import { getHeaders } from '../utils/api-client';
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { ResumeData, SimpleResumeData } from '../types';
 
 // Get API URL from environment variable
