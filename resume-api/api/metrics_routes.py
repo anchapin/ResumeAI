@@ -455,12 +455,28 @@ async def ingest_frontend_metrics(metrics_data: dict):
     """
     Receive and process metrics from the frontend client.
 
+
+
+
+
+
+
+
+
     Accepts metric batches from the ResumeAI frontend including:
     - Page view metrics
     - Web Vitals (LCP, FID, CLS, etc.)
     - User interaction events
     - API request metrics
     - JavaScript errors
+
+
+
+
+
+
+
+
 
     The backend stores these metrics for aggregation and analysis.
     """
@@ -471,6 +487,10 @@ async def ingest_frontend_metrics(metrics_data: dict):
             set_frontend_gauge,
             observe_frontend_histogram,
         )
+
+        metrics_received = 0
+
+        metrics_received = 0
 
         metrics_received = 0
 
@@ -487,6 +507,10 @@ async def ingest_frontend_metrics(metrics_data: dict):
                 set_frontend_gauge(metric_name, metric_value, labels)
             elif metric_type in ("histogram", "timing"):
                 observe_frontend_histogram(metric_name, metric_value, labels)
+
+            metrics_received += 1
+
+            metrics_received += 1
 
             metrics_received += 1
 
@@ -521,6 +545,14 @@ async def get_frontend_metrics_summary():
     """
     Get a summary of all collected frontend metrics.
 
+
+
+
+
+
+
+
+
     Returns aggregated metrics including:
     - Counters with their current values
     - Gauges with their current values
@@ -528,6 +560,10 @@ async def get_frontend_metrics_summary():
     """
     try:
         from monitoring.metrics import get_frontend_metrics_summary
+
+        summary = get_frontend_metrics_summary()
+
+        summary = get_frontend_metrics_summary()
 
         summary = get_frontend_metrics_summary()
 
