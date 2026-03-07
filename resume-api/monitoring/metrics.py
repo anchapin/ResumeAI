@@ -231,3 +231,38 @@ def set_oauth_active_connections(count):
 def observe_pdf_generation_duration(variant, duration_seconds):
     """Observe PDF generation duration for percentile tracking."""
     pdf_generation_duration_seconds.labels(variant=variant).observe(duration_seconds)
+
+
+# Frontend metrics storage (in-memory for now, could be extended to Redis)
+_frontend_counters: dict = {}
+_frontend_gauges: dict = {}
+_frontend_histograms: dict = {}
+
+
+def increment_frontend_counter(name: str, value: float = 1, labels: dict = None):
+    """Increment a frontend counter metric."""
+    key = (name, tuple(sorted((labels or {}).items())))
+    _frontend_counters[key] = _frontend_counters.get(key, 0) + value
+
+
+def set_frontend_gauge(name: str, value: float, labels: dict = None):
+    """Set a frontend gauge metric."""
+    key = (name, tuple(sorted((labels or {}).items())))
+    _frontend_gauges[key] = value
+
+
+def observe_frontend_histogram(name: str, value: float, labels: dict = None):
+    """Observe a frontend histogram/timing metric."""
+    key = (name, tuple(sorted((labels or {}).items())))
+    if key not in _frontend_histograms:
+        _frontend_histograms[key] = []
+    _frontend_histograms[key].append(value)
+
+
+def get_frontend_metrics_summary() -> dict:
+    """Get summary of frontend metrics."""
+    return {
+        "counters": {str(k): v for k, v in _frontend_counters.items()},
+        "gauges": dict(_frontend_gauges),
+        "histograms": {str(k): v for k, v in _frontend_histograms.items()},
+    }

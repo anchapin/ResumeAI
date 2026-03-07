@@ -451,3 +451,104 @@ async def oauth_endpoint_health():
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to retrieve endpoint health",
         )
+
+
+@router.post(
+    "/frontend",
+    summary="Ingest Frontend Metrics",
+    tags=["Frontend Metrics"],
+    responses={
+        200: {"description": "Metrics received successfully"},
+        400: {"description": "Invalid metric data"},
+    },
+)
+async def ingest_frontend_metrics(metrics_data: dict):
+    """
+    Receive and process metrics from the frontend client.
+    
+    Accepts metric batches from the ResumeAI frontend including:
+    - Page view metrics
+    - Web Vitals (LCP, FID, CLS, etc.)
+    - User interaction events
+    - API request metrics
+    - JavaScript errors
+    
+    The backend stores these metrics for aggregation and analysis.
+    """
+    try:
+        # Import the frontend metrics functions
+        from monitoring.metrics import (
+            increment_frontend_counter,
+            set_frontend_gauge,
+            observe_frontend_histogram,
+        )
+        
+        metrics_received = 0
+        
+        # Process each metric in the batch
+        for metric in metrics_data.get("metrics", []):
+            metric_type = metric.get("type")
+            metric_name = metric.get("name")
+            metric_value = metric.get("value", 1)
+            labels = metric.get("labels", {})
+            
+            if metric_type == "counter":
+                increment_frontend_counter(metric_name, metric_value, labels)
+            elif metric_type == "gauge":
+                set_frontend_gauge(metric_name, metric_value, labels)
+            elif metric_type in ("histogram", "timing"):
+                observe_frontend_histogram(metric_name, metric_value, labels)
+            
+            metrics_received += 1
+        
+        logger.info(
+            "frontend_metrics_received",
+            count=metrics_received,
+            session_id=metrics_data.get("session_id"),
+        )
+        
+        return {
+            "status": "success",
+            "message": f"Received {metrics_received} metrics",
+            "metrics_count": metrics_received,
+        }
+    except Exception as e:
+        logger.error("frontend_metrics_error", error=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Failed to process metrics: {str(e)}",
+        )
+
+
+@router.get(
+    "/frontend/summary",
+    summary="Get Frontend Metrics Summary",
+    tags=["Frontend Metrics"],
+    responses={
+        200: {"description": "Frontend metrics summary"},
+    },
+)
+async def get_frontend_metrics_summary():
+    """
+    Get a summary of all collected frontend metrics.
+    
+    Returns aggregated metrics including:
+    - Counters with their current values
+    - Gauges with their current values
+    - Histograms with collected values
+    """
+    try:
+        from monitoring.metrics import get_frontend_metrics_summary
+        
+        summary = get_frontend_metrics_summary()
+        
+        return {
+            "status": "success",
+            "data": summary,
+        }
+    except Exception as e:
+        logger.error("frontend_metrics_summary_error", error=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to retrieve metrics summary",
+        )
