@@ -36,9 +36,7 @@ class TestPKCEGeneration:
         # RFC 7636: unreserved characters are [A-Z] [a-z] [0-9] - . _ ~
         import re
 
-        assert re.match(
-            r"^[A-Za-z0-9\-._~]+$", verifier
-        ), f"Invalid chars in verifier: {verifier}"
+        assert re.match(r"^[A-Za-z0-9\-._~]+$", verifier), f"Invalid chars in verifier: {verifier}"
 
     def test_code_verifier_randomness(self):
         """Different calls should generate different verifiers."""
@@ -121,9 +119,7 @@ class TestPKCEVerification:
 
         # Should be False for incorrect verifier (all cases)
         for i in range(len(verifier)):
-            wrong_verifier = (
-                verifier[:i] + ("X" if verifier[i] != "X" else "Y") + verifier[i + 1 :]
-            )
+            wrong_verifier = verifier[:i] + ("X" if verifier[i] != "X" else "Y") + verifier[i + 1 :]
             assert verify_pkce_challenge(wrong_verifier, challenge) is False
 
 
@@ -273,9 +269,7 @@ class TestRFC7636Compliance:
         """Code verifier must use only unreserved characters (RFC 7636)."""
         verifier = generate_pkce_code_verifier()
         # RFC 3986: unreserved = ALPHA / DIGIT / "-" / "." / "_" / "~"
-        unreserved = set(
-            "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~"
-        )
+        unreserved = set("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~")
         assert all(c in unreserved for c in verifier)
 
     def test_challenge_method_s256(self):
@@ -287,9 +281,7 @@ class TestRFC7636Compliance:
         # Should be base64url(SHA256(verifier))
         # Verify by comparing with manual SHA256
         sha256_hash = hashlib.sha256(verifier.encode("utf-8")).digest()
-        expected_challenge = (
-            base64.urlsafe_b64encode(sha256_hash).decode("utf-8").rstrip("=")
-        )
+        expected_challenge = base64.urlsafe_b64encode(sha256_hash).decode("utf-8").rstrip("=")
         assert challenge == expected_challenge
 
     def test_challenge_base64url_encoding(self):

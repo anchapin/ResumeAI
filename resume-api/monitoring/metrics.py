@@ -44,9 +44,7 @@ variants_listed_total = Counter(
     "variants_listed_total", "Total variant listings", registry=registry
 )
 active_users_gauge = Gauge("active_users", "Active users", registry=registry)
-requests_per_user_gauge = Gauge(
-    "requests_per_user_avg", "Avg requests per user", registry=registry
-)
+requests_per_user_gauge = Gauge("requests_per_user_avg", "Avg requests per user", registry=registry)
 ai_requests_total = Counter(
     "ai_requests_total",
     "Total AI requests",
@@ -67,9 +65,7 @@ pdf_generation_duration_seconds = Histogram(
     buckets=(0.5, 1, 2.5, 5, 7.5, 10, 15, 20),
     registry=registry,
 )
-db_connections_active = Gauge(
-    "db_connections_active", "Active DB connections", registry=registry
-)
+db_connections_active = Gauge("db_connections_active", "Active DB connections", registry=registry)
 db_query_duration_seconds = Histogram(
     "db_query_duration_seconds",
     "DB query latency",
@@ -77,9 +73,7 @@ db_query_duration_seconds = Histogram(
     buckets=(0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1.0, 2.0),
     registry=registry,
 )
-db_queries_total = Counter(
-    "db_queries_total", "Total DB queries", ["operation"], registry=registry
-)
+db_queries_total = Counter("db_queries_total", "Total DB queries", ["operation"], registry=registry)
 api_info = Info("api", "API info", registry=registry)
 api_info.info(
     {
@@ -134,21 +128,15 @@ oauth_active_connections_gauge = Gauge(
 
 
 def increment_http_requests(method, endpoint, status_code):
-    http_requests_total.labels(
-        method=method, endpoint=endpoint, status_code=status_code
-    ).inc()
+    http_requests_total.labels(method=method, endpoint=endpoint, status_code=status_code).inc()
 
 
 def observe_http_request_duration(method, endpoint, duration_seconds):
-    http_request_duration_seconds.labels(method=method, endpoint=endpoint).observe(
-        duration_seconds
-    )
+    http_request_duration_seconds.labels(method=method, endpoint=endpoint).observe(duration_seconds)
 
 
 def increment_http_errors(method, endpoint, status_code):
-    http_errors_total.labels(
-        method=method, endpoint=endpoint, status_code=status_code
-    ).inc()
+    http_errors_total.labels(method=method, endpoint=endpoint, status_code=status_code).inc()
 
 
 def increment_rate_limit_exceeded(endpoint):
@@ -180,9 +168,7 @@ def increment_ai_requests(provider, model, status="success"):
 
 
 def observe_ai_request_duration(provider, model, duration_seconds):
-    ai_request_duration_seconds.labels(provider=provider, model=model).observe(
-        duration_seconds
-    )
+    ai_request_duration_seconds.labels(provider=provider, model=model).observe(duration_seconds)
 
 
 def set_db_connections_active(count):
@@ -203,9 +189,7 @@ def increment_oauth_connection_success(provider="github"):
 
 
 def increment_oauth_connection_failure(provider="github", error_type="unknown"):
-    oauth_connection_failure_total.labels(
-        provider=provider, error_type=error_type
-    ).inc()
+    oauth_connection_failure_total.labels(provider=provider, error_type=error_type).inc()
 
 
 def increment_oauth_token_refresh(provider="github", status="success"):

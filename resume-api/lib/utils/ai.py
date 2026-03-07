@@ -139,9 +139,7 @@ class AITailoringUtils:
         return [word for word, freq in sorted_keywords[:20]]
 
     @staticmethod
-    def calculate_match_score(
-        resume_data: Dict[str, Any], keywords: List[str]
-    ) -> float:
+    def calculate_match_score(resume_data: Dict[str, Any], keywords: List[str]) -> float:
         """
         Calculate a match score between resume and job keywords.
 
@@ -204,8 +202,7 @@ class AITailoringUtils:
         # Check for metrics
         if not re.search(r"\d+%|\$\d+|\d+\+ years", resume_text):
             suggestions.append(
-                "Add quantifiable metrics to your achievements "
-                "(e.g., 'increased sales by 25%')"
+                "Add quantifiable metrics to your achievements " "(e.g., 'increased sales by 25%')"
             )
 
         # Check for action verbs
@@ -222,21 +219,15 @@ class AITailoringUtils:
             "delivered",
         ]
         if not any(verb in resume_text for verb in action_verbs):
-            suggestions.append(
-                "Use strong action verbs at the beginning of bullet points"
-            )
+            suggestions.append("Use strong action verbs at the beginning of bullet points")
 
         # Check summary length
         if "basics" in resume_data and "summary" in resume_data["basics"]:
             summary = resume_data["basics"]["summary"]
             if len(summary) < 100:
-                suggestions.append(
-                    "Consider expanding your summary to provide more context"
-                )
+                suggestions.append("Consider expanding your summary to provide more context")
             elif len(summary) > 300:
-                suggestions.append(
-                    "Consider shortening your summary for better readability"
-                )
+                suggestions.append("Consider shortening your summary for better readability")
 
         # Default suggestions if none generated
         if not suggestions:
@@ -251,9 +242,7 @@ class AITailoringUtils:
         return suggestions[:5]
 
     @staticmethod
-    def prioritize_experience(
-        resume_data: Dict[str, Any], job_description: str
-    ) -> Dict[str, Any]:
+    def prioritize_experience(resume_data: Dict[str, Any], job_description: str) -> Dict[str, Any]:
         """
         Prioritize work experience entries based on job relevance.
 

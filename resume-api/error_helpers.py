@@ -84,9 +84,7 @@ class ValidationException(APIException):
 class NotFoundException(APIException):
     """Resource not found exception"""
 
-    def __init__(
-        self, resource_type: str, resource_id: str, request_id: Optional[str] = None
-    ):
+    def __init__(self, resource_type: str, resource_id: str, request_id: Optional[str] = None):
         message = f"{resource_type} with ID '{resource_id}' not found"
         super().__init__(
             error_code=ErrorCode.NOT_FOUND,

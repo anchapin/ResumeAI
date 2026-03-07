@@ -217,9 +217,7 @@ class TestOAuthMonitor:
             )
 
         anomalies = monitor.detect_anomalies("github")
-        high_failure_anomalies = [
-            a for a in anomalies if a["type"] == "high_failure_rate"
-        ]
+        high_failure_anomalies = [a for a in anomalies if a["type"] == "high_failure_rate"]
         assert len(high_failure_anomalies) > 0
         assert high_failure_anomalies[0]["severity"] == "high"
 
@@ -237,9 +235,7 @@ class TestOAuthMonitor:
             )
 
         anomalies = monitor.detect_anomalies("github")
-        rate_limit_anomalies = [
-            a for a in anomalies if a["type"] == "rate_limit_detected"
-        ]
+        rate_limit_anomalies = [a for a in anomalies if a["type"] == "rate_limit_detected"]
         assert len(rate_limit_anomalies) > 0
         assert rate_limit_anomalies[0]["severity"] == "medium"
 
@@ -257,9 +253,7 @@ class TestOAuthMonitor:
             )
 
         anomalies = monitor.detect_anomalies("github")
-        expiration_anomalies = [
-            a for a in anomalies if a["type"] == "token_expiration_spike"
-        ]
+        expiration_anomalies = [a for a in anomalies if a["type"] == "token_expiration_spike"]
         assert len(expiration_anomalies) > 0
         assert expiration_anomalies[0]["severity"] == "medium"
 

@@ -614,9 +614,7 @@ def cached(
             for k, v in kwargs.items():
                 if isinstance(v, Response):
                     response = v
-                elif not isinstance(v, Request) and not str(type(v)).endswith(
-                    "AuthorizedAPIKey'>"
-                ):
+                elif not isinstance(v, Request) and not str(type(v)).endswith("AuthorizedAPIKey'>"):
                     filtered_kwargs[k] = v
 
             # Generate cache key using only serializable kwargs
@@ -638,9 +636,7 @@ def cached(
                         if config_name in cache_mgr.configs
                         else 300
                     )
-                    response.headers["Cache-Control"] = (
-                        f"public, max-age={str(current_ttl)}"
-                    )
+                    response.headers["Cache-Control"] = f"public, max-age={str(current_ttl)}"
                 return cached_value
 
             # Execute function

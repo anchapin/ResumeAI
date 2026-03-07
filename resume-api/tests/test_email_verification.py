@@ -45,9 +45,7 @@ class TestEmailVerificationToken:
         assert token.is_used is False
         assert token.expires_at > datetime.now(timezone.utc)
 
-    async def test_verify_email_with_valid_token(
-        self, async_client: AsyncClient, test_db_session
-    ):
+    async def test_verify_email_with_valid_token(self, async_client: AsyncClient, test_db_session):
         """Test email verification with valid token."""
         # Register user
         register_response = await async_client.post(
@@ -82,9 +80,7 @@ class TestEmailVerificationToken:
 
         # Check token is marked as used
         result = await test_db_session.execute(
-            EmailVerificationToken.__table__.select().where(
-                EmailVerificationToken.token == token
-            )
+            EmailVerificationToken.__table__.select().where(EmailVerificationToken.token == token)
         )
         updated_token = result.fetchone()
         assert updated_token.is_used is True
@@ -138,9 +134,7 @@ class TestEmailVerificationToken:
 
         assert verify_response.status_code == 400
 
-    async def test_resend_verification_email(
-        self, async_client: AsyncClient, test_db_session
-    ):
+    async def test_resend_verification_email(self, async_client: AsyncClient, test_db_session):
         """Test resending verification email."""
         # Register user
         register_response = await async_client.post(
@@ -222,9 +216,7 @@ class TestEmailVerificationToken:
 
         assert resend_response.status_code == 404
 
-    async def test_resend_verification_nonexistent_email(
-        self, async_client: AsyncClient
-    ):
+    async def test_resend_verification_nonexistent_email(self, async_client: AsyncClient):
         """Test resending verification email for nonexistent email."""
         response = await async_client.post(
             "/api/v1/auth/resend-verification",

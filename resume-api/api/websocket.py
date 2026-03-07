@@ -127,23 +127,17 @@ class ConnectionManager:
                     # Check inactivity timeout
                     last_pong = datetime.fromisoformat(conn_data["last_pong"])
                     if now - last_pong > timeout_threshold:
-                        connections_to_close.append(
-                            (connection_id, "inactivity_timeout")
-                        )
+                        connections_to_close.append((connection_id, "inactivity_timeout"))
                         continue
 
                     # Check token expiration
                     if "expires_at" in conn_data and conn_data["expires_at"]:
                         expires_at = datetime.fromtimestamp(conn_data["expires_at"])
                         if now > expires_at:
-                            connections_to_close.append(
-                                (connection_id, "token_expired")
-                            )
+                            connections_to_close.append((connection_id, "token_expired"))
 
                 for connection_id, reason in connections_to_close:
-                    logger.warning(
-                        f"Closing connection {connection_id} due to {reason}"
-                    )
+                    logger.warning(f"Closing connection {connection_id} due to {reason}")
                     await self.close_connection(connection_id, reason=reason)
 
             except asyncio.CancelledError:
@@ -285,10 +279,7 @@ class ConnectionManager:
             del self.rooms[room_id]
 
         # Remove from user connections tracking
-        if (
-            user_id in self.user_connections
-            and connection_id in self.user_connections[user_id]
-        ):
+        if user_id in self.user_connections and connection_id in self.user_connections[user_id]:
             self.user_connections[user_id].remove(connection_id)
             if not self.user_connections[user_id]:
                 del self.user_connections[user_id]
@@ -305,9 +296,7 @@ class ConnectionManager:
         except Exception:
             pass  # Connection might be closed
 
-    async def broadcast_to_room(
-        self, room_id: str, message: dict, exclude_connection: str = None
-    ):
+    async def broadcast_to_room(self, room_id: str, message: dict, exclude_connection: str = None):
         """Broadcast a message to all users in a room."""
         if room_id not in self.rooms:
             return
@@ -319,9 +308,7 @@ class ConnectionManager:
                 except Exception:
                     pass  # Connection might be closed
 
-    async def broadcast_resume_update(
-        self, room_id: str, resume_data: dict, connection_id: str
-    ):
+    async def broadcast_resume_update(self, room_id: str, resume_data: dict, connection_id: str):
         """Broadcast resume data updates to all users in a room."""
         if room_id not in self.rooms:
             return
@@ -356,9 +343,7 @@ class ConnectionManager:
                         {
                             "connection_id": connection_id,
                             "user_id": self.connections[connection_id]["user_id"],
-                            "cursor_position": self.connections[connection_id][
-                                "cursor_position"
-                            ],
+                            "cursor_position": self.connections[connection_id]["cursor_position"],
                             "last_seen": self.connections[connection_id]["last_seen"],
                         }
                     )
@@ -384,18 +369,14 @@ async def handle_websocket_connection(
     connection_id = None
     heartbeat_task = None
 
-    logger.info(
-        f"Incoming WebSocket connection attempt. room_id={room_id}, user_id={user_id}"
-    )
+    logger.info(f"Incoming WebSocket connection attempt. room_id={room_id}, user_id={user_id}")
 
     try:
         # Start monitoring if not already running
         await manager.start_monitoring()
 
         # Connect to room
-        connection_id = await manager.connect(
-            websocket, room_id, user_id, expires_at=expires_at
-        )
+        connection_id = await manager.connect(websocket, room_id, user_id, expires_at=expires_at)
 
         logger.info(
             f"WebSocket connection established. room_id={room_id}, "
@@ -412,9 +393,7 @@ async def handle_websocket_connection(
 
             # Update last_seen timestamp
             if connection_id in manager.connections:
-                manager.connections[connection_id][
-                    "last_seen"
-                ] = datetime.utcnow().isoformat()
+                manager.connections[connection_id]["last_seen"] = datetime.utcnow().isoformat()
 
             message_type = message.get("type")
 
@@ -439,9 +418,7 @@ async def handle_websocket_connection(
             elif message_type == "resume_update":
                 # Broadcast resume data update
                 resume_data = message.get("resume_data")
-                await manager.broadcast_resume_update(
-                    room_id, resume_data, connection_id
-                )
+                await manager.broadcast_resume_update(room_id, resume_data, connection_id)
 
             elif message_type == "typing_start":
                 # User started typing
@@ -470,17 +447,13 @@ async def handle_websocket_connection(
             elif message_type == "ping":
                 # Respond to ping and update last_pong
                 if connection_id in manager.connections:
-                    manager.connections[connection_id][
-                        "last_pong"
-                    ] = datetime.utcnow().isoformat()
+                    manager.connections[connection_id]["last_pong"] = datetime.utcnow().isoformat()
                 await websocket.send_json({"type": "pong"})
 
             elif message_type == "pong":
                 # Update last_pong on pong response
                 if connection_id in manager.connections:
-                    manager.connections[connection_id][
-                        "last_pong"
-                    ] = datetime.utcnow().isoformat()
+                    manager.connections[connection_id]["last_pong"] = datetime.utcnow().isoformat()
 
             else:
                 # Unknown message type

@@ -19,9 +19,7 @@ class TestAPIKeyCreation:
     """Test API key creation and management."""
 
     @pytest.mark.asyncio
-    async def test_create_api_key(
-        self, jwt_authenticated_client: AsyncClient, test_user
-    ):
+    async def test_create_api_key(self, jwt_authenticated_client: AsyncClient, test_user):
         """Test creating a new API key."""
         response = await jwt_authenticated_client.post(
             "/api/v1/api-keys",
@@ -48,9 +46,7 @@ class TestAPIKeyCreation:
         assert test_api_key.user_id is not None
 
     @pytest.mark.asyncio
-    async def test_list_api_keys(
-        self, jwt_authenticated_client: AsyncClient, test_api_key
-    ):
+    async def test_list_api_keys(self, jwt_authenticated_client: AsyncClient, test_api_key):
         """Test listing user's API keys."""
         response = await jwt_authenticated_client.get("/api/v1/api-keys")
 
@@ -81,9 +77,7 @@ class TestAPIKeyValidation:
         assert response.status_code == 401
 
     @pytest.mark.asyncio
-    async def test_invalid_api_key_rejected(
-        self, api_client: AsyncClient, minimal_resume_data
-    ):
+    async def test_invalid_api_key_rejected(self, api_client: AsyncClient, minimal_resume_data):
         """Test that invalid API key is rejected."""
         api_client.headers = {"X-API-KEY": "invalid_key_xyz"}
 
@@ -150,9 +144,7 @@ class TestAPIKeyRateLimiting:
     """Test rate limiting per API key."""
 
     @pytest.mark.asyncio
-    async def test_rate_limit_per_key(
-        self, authenticated_client: AsyncClient, minimal_resume_data
-    ):
+    async def test_rate_limit_per_key(self, authenticated_client: AsyncClient, minimal_resume_data):
         """Test that rate limiting is enforced per API key."""
         # Make multiple requests
         responses = []
@@ -192,9 +184,7 @@ class TestAPIKeyDeactivation:
     """Test API key deactivation."""
 
     @pytest.mark.asyncio
-    async def test_deactivate_api_key(
-        self, jwt_authenticated_client: AsyncClient, test_api_key
-    ):
+    async def test_deactivate_api_key(self, jwt_authenticated_client: AsyncClient, test_api_key):
         """Test deactivating an API key."""
         response = await jwt_authenticated_client.put(
             f"/api/v1/api-keys/{test_api_key.id}",
@@ -207,13 +197,9 @@ class TestAPIKeyDeactivation:
         assert response.status_code in [200, 201, 401, 404]
 
     @pytest.mark.asyncio
-    async def test_delete_api_key(
-        self, jwt_authenticated_client: AsyncClient, test_api_key
-    ):
+    async def test_delete_api_key(self, jwt_authenticated_client: AsyncClient, test_api_key):
         """Test deleting an API key."""
-        response = await jwt_authenticated_client.delete(
-            f"/api/v1/api-keys/{test_api_key.id}"
-        )
+        response = await jwt_authenticated_client.delete(f"/api/v1/api-keys/{test_api_key.id}")
 
         # May not be implemented
         assert response.status_code in [200, 204, 401, 404]
@@ -262,13 +248,9 @@ class TestAPIKeyRotation:
     """Test API key rotation and renewal."""
 
     @pytest.mark.asyncio
-    async def test_rotate_api_key(
-        self, jwt_authenticated_client: AsyncClient, test_api_key
-    ):
+    async def test_rotate_api_key(self, jwt_authenticated_client: AsyncClient, test_api_key):
         """Test rotating an API key."""
-        response = await jwt_authenticated_client.post(
-            f"/api/v1/api-keys/{test_api_key.id}/rotate"
-        )
+        response = await jwt_authenticated_client.post(f"/api/v1/api-keys/{test_api_key.id}/rotate")
 
         # May not be implemented
         assert response.status_code in [200, 201, 401, 404]

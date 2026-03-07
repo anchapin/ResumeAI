@@ -106,9 +106,7 @@ def test_xss_attempt():
     try:
         xss_payload = "<script>alert('XSS')</script>"
         resume = ResumeData(
-            basics=BasicInfo(
-                name=xss_payload, summary="<img src=x onerror=alert('XSS')>"
-            )
+            basics=BasicInfo(name=xss_payload, summary="<img src=x onerror=alert('XSS')>")
         )
 
         # Check that script tags were removed

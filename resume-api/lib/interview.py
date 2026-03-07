@@ -270,16 +270,12 @@ class MockInterviewGenerator:
         self.sessions: Dict[str, MockInterviewSession] = {}
         self.question_generator = InterviewQuestionGenerator()
 
-    def create_session(
-        self, job_description: str, num_questions: int = 5
-    ) -> MockInterviewSession:
+    def create_session(self, job_description: str, num_questions: int = 5) -> MockInterviewSession:
         """Create a new mock interview session."""
         session_id = str(uuid.uuid4())
 
         # Generate questions based on job description
-        questions = self.question_generator.generate_questions(
-            job_description, num_questions
-        )
+        questions = self.question_generator.generate_questions(job_description, num_questions)
 
         session = MockInterviewSession(
             id=session_id, job_description=job_description, questions=questions
@@ -386,9 +382,7 @@ class MockInterviewGenerator:
 
         # Calculate overall score
         total_score = (
-            sum(a.score for a in session.answers) / len(session.answers)
-            if session.answers
-            else 0
+            sum(a.score for a in session.answers) / len(session.answers) if session.answers else 0
         )
 
         # Category breakdown
@@ -421,7 +415,5 @@ class MockInterviewGenerator:
                 }
                 for q, a in zip(session.questions, session.answers)
             ],
-            "completed_at": (
-                session.completed_at.isoformat() if session.completed_at else None
-            ),
+            "completed_at": (session.completed_at.isoformat() if session.completed_at else None),
         }

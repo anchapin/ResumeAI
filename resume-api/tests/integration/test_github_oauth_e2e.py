@@ -115,9 +115,7 @@ class TestGitHubOAuthCallback:
         assert response.status_code == 422
 
     @pytest.mark.asyncio
-    async def test_callback_with_error_from_github(
-        self, jwt_authenticated_client: AsyncClient
-    ):
+    async def test_callback_with_error_from_github(self, jwt_authenticated_client: AsyncClient):
         """Test callback when GitHub returns error."""
         response = await jwt_authenticated_client.get(
             "/api/v1/github/callback",
@@ -131,9 +129,7 @@ class TestGitHubOAuthCallback:
         assert response.status_code == 422
 
     @pytest.mark.asyncio
-    async def test_callback_with_invalid_state(
-        self, jwt_authenticated_client: AsyncClient
-    ):
+    async def test_callback_with_invalid_state(self, jwt_authenticated_client: AsyncClient):
         """Test callback with mismatched state parameter."""
         response = await jwt_authenticated_client.get(
             "/api/v1/github/callback",
@@ -152,9 +148,7 @@ class TestGitHubTokenExchange:
     """Test GitHub token exchange process."""
 
     @pytest.mark.asyncio
-    async def test_token_response_contains_access_token(
-        self, mock_github_token_response
-    ):
+    async def test_token_response_contains_access_token(self, mock_github_token_response):
         """Test GitHub token response structure."""
         assert "access_token" in mock_github_token_response
         assert "token_type" in mock_github_token_response

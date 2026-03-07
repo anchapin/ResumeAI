@@ -16,9 +16,7 @@ def test_secure_default_jwt_secret():
         # Settings should raise ValidationError in production mode
         try:
             Settings()
-            assert (
-                False
-            ), "Expected ValidationError for missing JWT_SECRET in production"
+            assert False, "Expected ValidationError for missing JWT_SECRET in production"
         except Exception as e:
             # Verify the error message mentions JWT_SECRET
             assert "JWT_SECRET" in str(e)

@@ -84,9 +84,7 @@ class AIProviderManager:
 
         if preferred_provider and preferred_provider in self.providers:
             provider_order = [preferred_provider]
-            provider_order.extend(
-                p for p in self.provider_priority if p != preferred_provider
-            )
+            provider_order.extend(p for p in self.provider_priority if p != preferred_provider)
         else:
             provider_order = self.provider_priority
 
@@ -171,6 +169,4 @@ class AIProviderManager:
             if provider_type not in self.providers:
                 logger.warning(f"Provider {provider_type.value} not configured")
         self.provider_priority = priority
-        logger.info(
-            f"Set provider priority: {', '.join(p.value for p in self.provider_priority)}"
-        )
+        logger.info(f"Set provider priority: {', '.join(p.value for p in self.provider_priority)}")

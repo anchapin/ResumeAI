@@ -21,9 +21,7 @@ def test_code_verifier_generation():
     assert len(verifier) == 128, f"Verifier length should be 128, got {len(verifier)}"
 
     # Check valid characters (RFC 7636: unreserved = ALPHA / DIGIT / "-" / "." / "_" / "~")
-    valid_chars = set(
-        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~"
-    )
+    valid_chars = set("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~")
     for char in verifier:
         assert char in valid_chars, f"Invalid character in verifier: {char}"
 
@@ -43,9 +41,7 @@ def test_code_challenge_generation(verifier):
     assert "=" not in challenge, "Challenge should not contain padding ="
 
     # Check base64url alphabet
-    valid_chars = set(
-        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"
-    )
+    valid_chars = set("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_")
     for char in challenge:
         assert char in valid_chars, f"Invalid character in challenge: {char}"
 

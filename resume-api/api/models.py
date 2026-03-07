@@ -29,9 +29,7 @@ MAX_RESUME_ITEMS = 50
 
 # Regex patterns for validation
 EMAIL_PATTERN = re.compile(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
-URL_PATTERN = re.compile(
-    r"^(https?://|ftp://)?[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(/.*)?$", re.IGNORECASE
-)
+URL_PATTERN = re.compile(r"^(https?://|ftp://)?[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(/.*)?$", re.IGNORECASE)
 PHONE_PATTERN = re.compile(r"^[\d\s\-\+\(\)]{7,20}$")
 
 
@@ -49,16 +47,12 @@ def sanitize_html(text: Optional[str]) -> Optional[str]:
         return None
 
     # Remove script tags and content
-    text = re.sub(
-        r"<script[^>]*>.*?</script>", "", text, flags=re.IGNORECASE | re.DOTALL
-    )
+    text = re.sub(r"<script[^>]*>.*?</script>", "", text, flags=re.IGNORECASE | re.DOTALL)
 
     # Remove other dangerous tags
     dangerous_tags = ["iframe", "object", "embed", "form", "input", "button"]
     for tag in dangerous_tags:
-        text = re.sub(
-            f"<{tag}[^>]*>.*?</{tag}>", "", text, flags=re.IGNORECASE | re.DOTALL
-        )
+        text = re.sub(f"<{tag}[^>]*>.*?</{tag}>", "", text, flags=re.IGNORECASE | re.DOTALL)
         text = re.sub(f"<{tag}[^>]*/?>", "", text, flags=re.IGNORECASE)
 
     # Remove event handlers (onclick, onerror, etc.)
@@ -115,8 +109,7 @@ def validate_list_length(
     """
     if value and len(value) > max_length:
         raise ValueError(
-            f"{field_name} exceeds maximum length of {max_length} items "
-            f"(current: {len(value)})"
+            f"{field_name} exceeds maximum length of {max_length} items " f"(current: {len(value)})"
         )
     return value or []
 
@@ -131,9 +124,7 @@ class BasicInfo(BaseModel):
     label: Optional[str] = Field(
         None, max_length=MAX_STRING_LENGTH, description="Professional label or title"
     )
-    email: Optional[str] = Field(
-        None, max_length=MAX_STRING_LENGTH, description="Email address"
-    )
+    email: Optional[str] = Field(None, max_length=MAX_STRING_LENGTH, description="Email address")
     phone: Optional[str] = Field(None, max_length=50, description="Phone number")
     url: Optional[str] = Field(
         None, max_length=MAX_STRING_LENGTH, description="Personal website URL"
@@ -151,9 +142,7 @@ class BasicInfo(BaseModel):
         if v:
             v = sanitize_html(v)
             if not EMAIL_PATTERN.match(v):
-                raise ValueError(
-                    f"Invalid email format: '{v}'. Expected format: user@example.com"
-                )
+                raise ValueError(f"Invalid email format: '{v}'. Expected format: user@example.com")
         return v
 
     @field_validator("url")
@@ -195,15 +184,9 @@ class BasicInfo(BaseModel):
 class Location(BaseModel):
     """Location information."""
 
-    address: Optional[str] = Field(
-        None, max_length=MAX_STRING_LENGTH, description="Street address"
-    )
-    postalCode: Optional[str] = Field(
-        None, max_length=20, description="Postal or ZIP code"
-    )
-    city: Optional[str] = Field(
-        None, max_length=MAX_STRING_LENGTH, description="City name"
-    )
+    address: Optional[str] = Field(None, max_length=MAX_STRING_LENGTH, description="Street address")
+    postalCode: Optional[str] = Field(None, max_length=20, description="Postal or ZIP code")
+    city: Optional[str] = Field(None, max_length=MAX_STRING_LENGTH, description="City name")
     countryCode: Optional[str] = Field(
         None, max_length=5, description="ISO 3166-1 country code (e.g., 'US', 'GB')"
     )
@@ -242,9 +225,7 @@ class Profile(BaseModel):
     username: Optional[str] = Field(
         None, max_length=MAX_STRING_LENGTH, description="Username or handle"
     )
-    url: Optional[str] = Field(
-        None, max_length=MAX_STRING_LENGTH, description="Profile URL"
-    )
+    url: Optional[str] = Field(None, max_length=MAX_STRING_LENGTH, description="Profile URL")
 
     @field_validator("url")
     @classmethod
@@ -288,8 +269,7 @@ class Skill(BaseModel):
         # Check list length
         if len(v) > MAX_LIST_LENGTH:
             raise ValueError(
-                f"Skill keywords exceed maximum of {MAX_LIST_LENGTH} items "
-                f"(current: {len(v)})"
+                f"Skill keywords exceed maximum of {MAX_LIST_LENGTH} items " f"(current: {len(v)})"
             )
 
         # Sanitize and validate each keyword
@@ -315,9 +295,7 @@ class Skill(BaseModel):
 class WorkItem(BaseModel):
     """Work experience item."""
 
-    company: Optional[str] = Field(
-        None, max_length=MAX_STRING_LENGTH, description="Company name"
-    )
+    company: Optional[str] = Field(None, max_length=MAX_STRING_LENGTH, description="Company name")
     position: Optional[str] = Field(
         None, max_length=MAX_STRING_LENGTH, description="Job title or position"
     )
@@ -351,8 +329,7 @@ class WorkItem(BaseModel):
 
         if len(v) > MAX_LIST_LENGTH:
             raise ValueError(
-                f"Work highlights exceed maximum of {MAX_LIST_LENGTH} items "
-                f"(current: {len(v)})"
+                f"Work highlights exceed maximum of {MAX_LIST_LENGTH} items " f"(current: {len(v)})"
             )
 
         validated = []
@@ -509,15 +486,11 @@ class EducationItem(BaseModel):
 class ProjectItem(BaseModel):
     """Project item."""
 
-    name: Optional[str] = Field(
-        None, max_length=MAX_STRING_LENGTH, description="Project name"
-    )
+    name: Optional[str] = Field(None, max_length=MAX_STRING_LENGTH, description="Project name")
     description: Optional[str] = Field(
         None, max_length=MAX_LONG_STRING_LENGTH, description="Project description"
     )
-    url: Optional[str] = Field(
-        None, max_length=MAX_STRING_LENGTH, description="Project URL"
-    )
+    url: Optional[str] = Field(None, max_length=MAX_STRING_LENGTH, description="Project URL")
     roles: Optional[List[str]] = Field(
         default_factory=list,
         max_length=MAX_LIST_LENGTH,
@@ -696,8 +669,7 @@ class ResumeData(BaseModel):
         max_length = MAX_RESUME_ITEMS
         if len(v) > max_length:
             raise ValueError(
-                f"Resume {field_name} exceed maximum of {max_length} items "
-                f"(current: {len(v)})"
+                f"Resume {field_name} exceed maximum of {max_length} items " f"(current: {len(v)})"
             )
 
         # Validate and sanitize each item
@@ -785,9 +757,7 @@ class ResumeData(BaseModel):
 class ResumeRequest(BaseModel):
     """Request to generate a PDF resume."""
 
-    resume_data: ResumeData = Field(
-        ..., description="Resume data in JSON Resume format"
-    )
+    resume_data: ResumeData = Field(..., description="Resume data in JSON Resume format")
     variant: str = Field(
         default="base",
         max_length=50,
@@ -862,18 +832,10 @@ class VariantMetadata(BaseModel):
 
     name: str = Field(..., max_length=50, description="Variant identifier")
     display_name: str = Field(..., max_length=100, description="Human-readable name")
-    description: str = Field(
-        ..., max_length=MAX_STRING_LENGTH, description="Variant description"
-    )
-    format: str = Field(
-        ..., max_length=20, description="File format (e.g., 'json', 'yaml')"
-    )
-    output_formats: List[str] = Field(
-        ..., max_length=10, description="Supported output formats"
-    )
-    category: Optional[str] = Field(
-        None, max_length=50, description="Template category"
-    )
+    description: str = Field(..., max_length=MAX_STRING_LENGTH, description="Variant description")
+    format: str = Field(..., max_length=20, description="File format (e.g., 'json', 'yaml')")
+    output_formats: List[str] = Field(..., max_length=10, description="Supported output formats")
+    category: Optional[str] = Field(None, max_length=50, description="Template category")
     layout: Optional[str] = Field(None, max_length=50, description="Layout type")
     color_theme: Optional[str] = Field(None, max_length=50, description="Color theme")
     tags: Optional[List[str]] = Field(None, description="Template tags")
@@ -886,9 +848,7 @@ class VariantMetadata(BaseModel):
             raise ValueError("Output formats cannot be empty")
 
         if len(v) > 10:
-            raise ValueError(
-                f"Output formats exceed maximum of 10 items (current: {len(v)})"
-            )
+            raise ValueError(f"Output formats exceed maximum of 10 items (current: {len(v)})")
 
         # Common output formats
 
@@ -1027,25 +987,17 @@ class TemplateMetadata(BaseModel):
 
     name: str = Field(..., max_length=50, description="Template identifier")
     display_name: str = Field(..., max_length=100, description="Human-readable name")
-    description: str = Field(
-        ..., max_length=MAX_STRING_LENGTH, description="Template description"
-    )
+    description: str = Field(..., max_length=MAX_STRING_LENGTH, description="Template description")
     format: str = Field(..., max_length=20, description="File format")
     output_formats: List[str] = Field(..., description="Supported output formats")
     category: str = Field(..., max_length=50, description="Template category")
     style: str = Field(..., max_length=50, description="Template style")
     features: List[str] = Field(default_factory=list, description="Template features")
-    recommended_for: List[str] = Field(
-        default_factory=list, description="Recommended roles"
-    )
+    recommended_for: List[str] = Field(default_factory=list, description="Recommended roles")
     font_options: List[str] = Field(default_factory=list, description="Available fonts")
-    color_schemes: List[ColorScheme] = Field(
-        default_factory=list, description="Color schemes"
-    )
+    color_schemes: List[ColorScheme] = Field(default_factory=list, description="Color schemes")
 
-    @field_validator(
-        "name", "display_name", "description", "format", "category", "style"
-    )
+    @field_validator("name", "display_name", "description", "format", "category", "style")
     @classmethod
     def sanitize_text_fields(cls, v: str) -> str:
         """Sanitize text fields."""
@@ -1071,13 +1023,9 @@ class TemplateCustomization(BaseModel):
     """Template customization options."""
 
     template_name: str = Field(..., max_length=50, description="Template to customize")
-    color_scheme: str = Field(
-        default="default", max_length=50, description="Color scheme name"
-    )
+    color_scheme: str = Field(default="default", max_length=50, description="Color scheme name")
     font: str = Field(default="default", max_length=50, description="Font choice")
-    paper_size: str = Field(
-        default="letter", max_length=10, description="Paper size (letter, A4)"
-    )
+    paper_size: str = Field(default="letter", max_length=10, description="Paper size (letter, A4)")
     margin_left: Optional[float] = Field(
         default=0.75, ge=0.25, le=2.0, description="Left margin in inches"
     )
@@ -1104,9 +1052,7 @@ class SavedTemplateConfiguration(BaseModel):
     id: str = Field(..., max_length=100, description="Configuration ID")
     user_id: str = Field(..., max_length=100, description="User ID")
     name: str = Field(..., max_length=100, description="Configuration name")
-    customization: TemplateCustomization = Field(
-        ..., description="Customization settings"
-    )
+    customization: TemplateCustomization = Field(..., description="Customization settings")
     created_at: str = Field(..., description="Creation timestamp")
     updated_at: str = Field(..., description="Last update timestamp")
 
@@ -1182,9 +1128,7 @@ class CommentRequest(BaseModel):
 
     author_name: str = Field(..., max_length=200, description="Comment author name")
     author_email: str = Field(..., max_length=255, description="Comment author email")
-    content: str = Field(
-        ..., min_length=1, max_length=5000, description="Comment content"
-    )
+    content: str = Field(..., min_length=1, max_length=5000, description="Comment content")
     section: Optional[str] = Field(
         None, max_length=100, description="Resume section being commented on"
     )
@@ -1227,12 +1171,8 @@ class ShareResumeRequest(BaseModel):
         max_length=50,
         description="Permissions level (view, comment, edit)",
     )
-    expires_at: Optional[str] = Field(
-        None, description="Expiration date (ISO 8601 format)"
-    )
-    max_views: Optional[int] = Field(
-        None, ge=1, description="Maximum number of views allowed"
-    )
+    expires_at: Optional[str] = Field(None, description="Expiration date (ISO 8601 format)")
+    max_views: Optional[int] = Field(None, ge=1, description="Maximum number of views allowed")
     password: Optional[str] = Field(
         None, max_length=100, description="Optional password protection"
     )
@@ -1257,9 +1197,7 @@ class BulkOperationRequest(BaseModel):
         max_length=50,
         description="Operation type (delete, export, duplicate, tag)",
     )
-    tags: Optional[List[str]] = Field(
-        None, max_length=20, description="Tags for tag operation"
-    )
+    tags: Optional[List[str]] = Field(None, max_length=20, description="Tags for tag operation")
     export_format: Optional[str] = Field(
         None, max_length=20, description="Export format for export operation"
     )
@@ -1277,30 +1215,14 @@ class FormatOptions(BaseModel):
 
     font_family: str = Field(default="Arial", max_length=50, description="Font family")
     font_size: int = Field(default=11, ge=8, le=24, description="Font size")
-    line_spacing: float = Field(
-        default=1.15, ge=1.0, le=2.0, description="Line spacing"
-    )
-    margin_top: float = Field(
-        default=0.5, ge=0, le=2.0, description="Top margin (inches)"
-    )
-    margin_bottom: float = Field(
-        default=0.5, ge=0, le=2.0, description="Bottom margin (inches)"
-    )
-    margin_left: float = Field(
-        default=0.75, ge=0, le=2.0, description="Left margin (inches)"
-    )
-    margin_right: float = Field(
-        default=0.75, ge=0, le=2.0, description="Right margin (inches)"
-    )
-    color_theme: str = Field(
-        default="default", max_length=50, description="Color theme name"
-    )
-    layout: str = Field(
-        default="single", max_length=20, description="Layout (single, double)"
-    )
-    show_section_dividers: bool = Field(
-        default=True, description="Show section dividers"
-    )
+    line_spacing: float = Field(default=1.15, ge=1.0, le=2.0, description="Line spacing")
+    margin_top: float = Field(default=0.5, ge=0, le=2.0, description="Top margin (inches)")
+    margin_bottom: float = Field(default=0.5, ge=0, le=2.0, description="Bottom margin (inches)")
+    margin_left: float = Field(default=0.75, ge=0, le=2.0, description="Left margin (inches)")
+    margin_right: float = Field(default=0.75, ge=0, le=2.0, description="Right margin (inches)")
+    color_theme: str = Field(default="default", max_length=50, description="Color theme name")
+    layout: str = Field(default="single", max_length=20, description="Layout (single, double)")
+    show_section_dividers: bool = Field(default=True, description="Show section dividers")
     section_order: Optional[List[str]] = Field(
         None, max_length=20, description="Custom section order"
     )
@@ -1310,25 +1232,17 @@ class ExportRequest(BaseModel):
     """Request to export resume in different formats."""
 
     resume_data: ResumeData = Field(..., description="Resume data to export")
-    format: str = Field(
-        ..., max_length=20, description="Export format (pdf, docx, html)"
-    )
-    format_options: Optional[FormatOptions] = Field(
-        None, description="Advanced formatting options"
-    )
+    format: str = Field(..., max_length=20, description="Export format (pdf, docx, html)")
+    format_options: Optional[FormatOptions] = Field(None, description="Advanced formatting options")
     variant: str = Field(default="base", max_length=50, description="Template variant")
 
 
 class ImportRequest(BaseModel):
     """Request to import resume from different formats."""
 
-    format: str = Field(
-        ..., max_length=20, description="Import format (pdf, docx, json)"
-    )
+    format: str = Field(..., max_length=20, description="Import format (pdf, docx, json)")
     data: Optional[str] = Field(None, description="Raw data for JSON import")
-    url: Optional[str] = Field(
-        None, max_length=500, description="URL for LinkedIn import"
-    )
+    url: Optional[str] = Field(None, max_length=500, description="URL for LinkedIn import")
 
 
 class TemplateFilter(BaseModel):
@@ -1336,18 +1250,12 @@ class TemplateFilter(BaseModel):
 
     search: Optional[str] = Field(None, max_length=100, description="Search query")
     tags: Optional[List[str]] = Field(None, max_length=20, description="Filter by tags")
-    category: Optional[str] = Field(
-        None, max_length=50, description="Filter by category"
-    )
-    industry: Optional[str] = Field(
-        None, max_length=50, description="Filter by industry"
-    )
+    category: Optional[str] = Field(None, max_length=50, description="Filter by category")
+    industry: Optional[str] = Field(None, max_length=50, description="Filter by industry")
     layout: Optional[str] = Field(
         None, max_length=20, description="Filter by layout (single, double)"
     )
-    color_theme: Optional[str] = Field(
-        None, max_length=50, description="Filter by color theme"
-    )
+    color_theme: Optional[str] = Field(None, max_length=50, description="Filter by color theme")
 
 
 class KeyboardShortcut(BaseModel):
@@ -1355,9 +1263,7 @@ class KeyboardShortcut(BaseModel):
 
     key: str = Field(..., max_length=50, description="Key combination (e.g., 'Ctrl+S')")
     action: str = Field(..., max_length=100, description="Action description")
-    category: str = Field(
-        ..., max_length=50, description="Category (e.g., 'File', 'Edit')"
-    )
+    category: str = Field(..., max_length=50, description="Category (e.g., 'File', 'Edit')")
 
 
 class UserSettingsRequest(BaseModel):
@@ -1366,20 +1272,12 @@ class UserSettingsRequest(BaseModel):
     keyboard_shortcuts_enabled: Optional[bool] = Field(
         None, description="Enable keyboard shortcuts"
     )
-    high_contrast_mode: Optional[bool] = Field(
-        None, description="Enable high contrast mode"
-    )
+    high_contrast_mode: Optional[bool] = Field(None, description="Enable high contrast mode")
     reduced_motion: Optional[bool] = Field(None, description="Enable reduced motion")
-    screen_reader_optimized: Optional[bool] = Field(
-        None, description="Optimize for screen readers"
-    )
+    screen_reader_optimized: Optional[bool] = Field(None, description="Optimize for screen readers")
     default_font: Optional[str] = Field(None, max_length=50, description="Default font")
-    default_font_size: Optional[int] = Field(
-        None, ge=8, le=24, description="Default font size"
-    )
-    default_spacing: Optional[str] = Field(
-        None, max_length=20, description="Default spacing"
-    )
+    default_font_size: Optional[int] = Field(None, ge=8, le=24, description="Default font size")
+    default_spacing: Optional[str] = Field(None, max_length=20, description="Default spacing")
 
 
 class UserSettingsResponse(BaseModel):
@@ -1407,9 +1305,7 @@ class UserCreate(BaseModel):
     password: str = Field(
         ..., min_length=8, max_length=100, description="Password (min 8 characters)"
     )
-    full_name: Optional[str] = Field(
-        None, max_length=200, description="Full name (optional)"
-    )
+    full_name: Optional[str] = Field(None, max_length=200, description="Full name (optional)")
 
     @field_validator("email")
     @classmethod
@@ -1426,9 +1322,7 @@ class UserCreate(BaseModel):
         """Validate password strength."""
         is_valid, error_message = validate_password_strength(v)
         if not is_valid:
-            raise ValueError(
-                error_message or "Password does not meet security requirements"
-            )
+            raise ValueError(error_message or "Password does not meet security requirements")
         return v
 
     @field_validator("username")
@@ -1437,9 +1331,7 @@ class UserCreate(BaseModel):
         """Validate username format."""
         v = v.strip()
         if not re.match(r"^[a-zA-Z0-9_-]+$", v):
-            raise ValueError(
-                "Username can only contain letters, numbers, underscores, and hyphens"
-            )
+            raise ValueError("Username can only contain letters, numbers, underscores, and hyphens")
         return v
 
 
@@ -1498,9 +1390,7 @@ class UserUpdate(BaseModel):
     """Request model for updating user profile."""
 
     full_name: Optional[str] = Field(None, max_length=200, description="Full name")
-    username: Optional[str] = Field(
-        None, min_length=3, max_length=100, description="Username"
-    )
+    username: Optional[str] = Field(None, min_length=3, max_length=100, description="Username")
 
     @field_validator("username")
     @classmethod
@@ -1553,9 +1443,7 @@ class SalaryInfo(BaseModel):
     min: Optional[int] = Field(None, description="Minimum salary")
     max: Optional[int] = Field(None, description="Maximum salary")
     currency: str = Field(default="USD", description="Currency code")
-    period: str = Field(
-        default="yearly", description="Salary period (yearly, hourly, monthly)"
-    )
+    period: str = Field(default="yearly", description="Salary period (yearly, hourly, monthly)")
 
 
 class JDAnalysisRequest(BaseModel):
@@ -1579,15 +1467,9 @@ class JDAnalysisResponse(BaseModel):
         None, description="Remote work type (remote, hybrid, onsite)"
     )
     salary: Optional[SalaryInfo] = Field(None, description="Salary information")
-    requirements: List[str] = Field(
-        default_factory=list, description="Job requirements"
-    )
-    qualifications: List[str] = Field(
-        default_factory=list, description="Preferred qualifications"
-    )
-    responsibilities: List[str] = Field(
-        default_factory=list, description="Job responsibilities"
-    )
+    requirements: List[str] = Field(default_factory=list, description="Job requirements")
+    qualifications: List[str] = Field(default_factory=list, description="Preferred qualifications")
+    responsibilities: List[str] = Field(default_factory=list, description="Job responsibilities")
     skills: List[str] = Field(default_factory=list, description="Required skills")
     experience_level: Optional[str] = Field(
         None, description="Experience level (entry, mid, senior, lead, executive)"
@@ -1626,15 +1508,9 @@ class SkillsMatchResponse(BaseModel):
     additional_skills: List[str] = Field(
         ..., description="Skills in resume not mentioned in job description"
     )
-    match_rate: float = Field(
-        ..., ge=0.0, le=1.0, description="Skills match rate (0.0 to 1.0)"
-    )
-    match_score: int = Field(
-        ..., ge=0, le=100, description="Overall match score (0-100)"
-    )
-    jd_skills: List[str] = Field(
-        ..., description="Skills extracted from job description"
-    )
+    match_rate: float = Field(..., ge=0.0, le=1.0, description="Skills match rate (0.0 to 1.0)")
+    match_score: int = Field(..., ge=0, le=100, description="Overall match score (0-100)")
+    jd_skills: List[str] = Field(..., description="Skills extracted from job description")
     resume_skills: List[str] = Field(..., description="Skills extracted from resume")
 
 
@@ -1660,16 +1536,10 @@ class ATSIssue(BaseModel):
 class ATSCheckResponse(BaseModel):
     """Response with ATS compatibility results."""
 
-    overall_score: int = Field(
-        ..., ge=0, le=100, description="Overall ATS score (0-100)"
-    )
-    passed: bool = Field(
-        ..., description="Whether resume passed ATS check (score >= 70)"
-    )
+    overall_score: int = Field(..., ge=0, le=100, description="Overall ATS score (0-100)")
+    passed: bool = Field(..., description="Whether resume passed ATS check (score >= 70)")
     issues: List[ATSIssue] = Field(..., description="List of ATS issues found")
-    recommendations: List[str] = Field(
-        ..., description="Recommendations for improvement"
-    )
+    recommendations: List[str] = Field(..., description="Recommendations for improvement")
     keyword_match_rate: float = Field(
         ..., ge=0.0, le=1.0, description="Keyword match rate with job description"
     )
@@ -1695,17 +1565,11 @@ class JDInsightsResponse(BaseModel):
     """Comprehensive response with JD analysis and resume matching."""
 
     jd_analysis: JDAnalysisResponse = Field(..., description="Parsed job description")
-    skills_match: SkillsMatchResponse = Field(
-        ..., description="Skills matching results"
-    )
+    skills_match: SkillsMatchResponse = Field(..., description="Skills matching results")
     ats_check: ATSCheckResponse = Field(..., description="ATS compatibility check")
-    overall_fit_score: int = Field(
-        ..., ge=0, le=100, description="Overall candidate fit score"
-    )
+    overall_fit_score: int = Field(..., ge=0, le=100, description="Overall candidate fit score")
     summary: str = Field(..., description="Summary of analysis")
-    top_recommendations: List[str] = Field(
-        ..., description="Top recommendations for improving fit"
-    )
+    top_recommendations: List[str] = Field(..., description="Top recommendations for improving fit")
 
 
 class SkillGapRequest(BaseModel):
@@ -1722,9 +1586,7 @@ class SkillGapResponse(BaseModel):
         ...,
         description="Skills required by the job but not present in the resume",
     )
-    matched_skills: List[str] = Field(
-        ..., description="Skills present in both job and resume"
-    )
+    matched_skills: List[str] = Field(..., description="Skills present in both job and resume")
     match_score: int = Field(..., description="Overall match percentage (0-100)")
 
 
@@ -1860,9 +1722,7 @@ class TeamDetailResponse(BaseModel):
     name: str = Field(..., description="Team name")
     description: Optional[str] = Field(None, description="Team description")
     owner_id: int = Field(..., description="Owner user ID")
-    members: List[TeamMemberResponse] = Field(
-        default_factory=list, description="Team members"
-    )
+    members: List[TeamMemberResponse] = Field(default_factory=list, description="Team members")
     resume_count: int = Field(default=0, description="Number of shared resumes")
     created_at: str = Field(..., description="Creation timestamp")
     updated_at: str = Field(..., description="Last update timestamp")
@@ -1885,9 +1745,7 @@ class TeamResumeShare(BaseModel):
         valid_permissions = ["view", "edit", "admin"]
         v = v.strip().lower()
         if v not in valid_permissions:
-            raise ValueError(
-                f"Invalid permission. Must be one of: {', '.join(valid_permissions)}"
-            )
+            raise ValueError(f"Invalid permission. Must be one of: {', '.join(valid_permissions)}")
         return v
 
 
@@ -1908,9 +1766,7 @@ class TeamActivityResponse(BaseModel):
 class ResumeCommentCreate(BaseModel):
     """Request model for adding a comment to a resume."""
 
-    content: str = Field(
-        ..., min_length=1, max_length=5000, description="Comment content"
-    )
+    content: str = Field(..., min_length=1, max_length=5000, description="Comment content")
     section: Optional[str] = Field(
         None, max_length=100, description="Resume section being commented on"
     )
@@ -1974,16 +1830,10 @@ class ResumeCommentUpdate(BaseModel):
 class GitHubStatusResponse(BaseModel):
     """Response model for GitHub connection status."""
 
-    authenticated: bool = Field(
-        ..., description="Whether user is authenticated with GitHub"
-    )
+    authenticated: bool = Field(..., description="Whether user is authenticated with GitHub")
     mode: str = Field(..., description="Authentication mode being used (oauth or cli)")
-    username: Optional[str] = Field(
-        None, description="GitHub username if authenticated"
-    )
-    github_user_id: Optional[str] = Field(
-        None, description="GitHub user ID if authenticated"
-    )
+    username: Optional[str] = Field(None, description="GitHub username if authenticated")
+    github_user_id: Optional[str] = Field(None, description="GitHub user ID if authenticated")
     connected_at: Optional[str] = Field(
         None, description="Timestamp when connection was established (OAuth mode only)"
     )
@@ -2016,9 +1866,7 @@ class InterviewQuestion(BaseModel):
         ..., description="Question category: technical, behavioral, situational, domain"
     )
     difficulty: str = Field(..., description="Difficulty level: easy, medium, hard")
-    tips: Optional[List[str]] = Field(
-        None, description="Tips for answering the question"
-    )
+    tips: Optional[List[str]] = Field(None, description="Tips for answering the question")
 
 
 class InterviewAnswer(BaseModel):
@@ -2054,18 +1902,10 @@ class InterviewSession(BaseModel):
     job_title: Optional[str] = Field(None, description="Target job title")
     company: Optional[str] = Field(None, description="Target company")
     questions: List[InterviewQuestion] = Field(..., description="Interview questions")
-    answers: List[InterviewAnswer] = Field(
-        default_factory=list, description="User answers"
-    )
-    feedback: Optional[List[InterviewFeedback]] = Field(
-        None, description="Feedback on answers"
-    )
-    completion_percentage: int = Field(
-        ..., description="Percentage of interview completed"
-    )
-    average_score: Optional[float] = Field(
-        None, description="Average score across answers"
-    )
+    answers: List[InterviewAnswer] = Field(default_factory=list, description="User answers")
+    feedback: Optional[List[InterviewFeedback]] = Field(None, description="Feedback on answers")
+    completion_percentage: int = Field(..., description="Percentage of interview completed")
+    average_score: Optional[float] = Field(None, description="Average score across answers")
 
 
 class GenerateQuestionsRequest(BaseModel):
@@ -2073,9 +1913,7 @@ class GenerateQuestionsRequest(BaseModel):
 
     job_title: Optional[str] = Field(None, description="Target job title")
     company: Optional[str] = Field(None, description="Target company")
-    count: int = Field(
-        default=5, ge=1, le=20, description="Number of questions to generate"
-    )
+    count: int = Field(default=5, ge=1, le=20, description="Number of questions to generate")
     difficulty: Optional[str] = Field(None, description="Difficulty level filter")
     categories: Optional[List[str]] = Field(None, description="Question categories")
     resume_data: Optional[Dict[str, Any]] = Field(
@@ -2113,9 +1951,7 @@ class SessionHistoryResponse(BaseModel):
 
     sessions: List[InterviewSession] = Field(..., description="List of past sessions")
     total_sessions: int = Field(..., description="Total number of sessions")
-    average_score: Optional[float] = Field(
-        None, description="Average score across all sessions"
-    )
+    average_score: Optional[float] = Field(None, description="Average score across all sessions")
 
 
 # ========================
@@ -2147,9 +1983,7 @@ class SubmitPDFRenderJobRequest(BaseModel):
 
     resume_data: Dict[str, Any] = Field(..., description="Resume data to render")
     variant: Optional[str] = Field("default", description="Resume variant/template")
-    priority: JobPriorityLevel = Field(
-        JobPriorityLevel.NORMAL, description="Job priority"
-    )
+    priority: JobPriorityLevel = Field(JobPriorityLevel.NORMAL, description="Job priority")
 
     class Config:
         json_schema_extra = {
@@ -2176,9 +2010,7 @@ class JobStatusResponse(BaseModel):
     retry_count: int = Field(..., description="Number of retries attempted")
     created_at: str = Field(..., description="ISO format creation timestamp")
     started_at: Optional[str] = Field(None, description="ISO format start timestamp")
-    completed_at: Optional[str] = Field(
-        None, description="ISO format completion timestamp"
-    )
+    completed_at: Optional[str] = Field(None, description="ISO format completion timestamp")
     result: Optional[Dict[str, Any]] = Field(None, description="Job result data")
 
     class Config:

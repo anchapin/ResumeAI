@@ -24,12 +24,8 @@ class TestComputeSignature:
         nonce = "abc123"
         body = '{"email": "test@example.com"}'
 
-        sig1 = compute_signature(
-            secret_key, method, path, timestamp, nonce, body.encode()
-        )
-        sig2 = compute_signature(
-            secret_key, method, path, timestamp, nonce, body.encode()
-        )
+        sig1 = compute_signature(secret_key, method, path, timestamp, nonce, body.encode())
+        sig2 = compute_signature(secret_key, method, path, timestamp, nonce, body.encode())
 
         assert sig1 == sig2
 

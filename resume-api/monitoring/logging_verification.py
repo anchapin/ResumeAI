@@ -44,9 +44,7 @@ class LogVerifier:
         """Verify JSON output format is configured."""
         try:
             if settings.log_format != "json":
-                print(
-                    f"Warning: log_format is '{settings.log_format}', expected 'json'"
-                )
+                print(f"Warning: log_format is '{settings.log_format}', expected 'json'")
                 return False
 
             config = structlog.get_config()
@@ -91,8 +89,7 @@ class LogVerifier:
             processors = config.get("processors", [])
 
             has_timestamp = any(
-                "timestamp" in str(p).lower() or "add_timestamp" in str(p)
-                for p in processors
+                "timestamp" in str(p).lower() or "add_timestamp" in str(p) for p in processors
             )
             has_log_level = any("log_level" in str(p).lower() for p in processors)
 
