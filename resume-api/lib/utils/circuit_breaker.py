@@ -16,7 +16,7 @@ Configuration:
 import logging
 from enum import Enum
 from typing import Optional, Callable, Any, TypeVar
-from datetime import datetime
+from datetime import datetime, timezone
 
 logger = logging.getLogger(__name__)
 
@@ -119,7 +119,7 @@ class CircuitBreaker:
         if self.open_time is None:
             return False
 
-        elapsed = (datetime.utcnow() - self.open_time).total_seconds()
+        elapsed = (datetime.now(timezone.utc) - self.open_time).total_seconds()
         return elapsed >= self.timeout
 
     def _on_success(self) -> None:
@@ -142,12 +142,12 @@ class CircuitBreaker:
 
     def _on_failure(self) -> None:
         """Handle failed call."""
-        self.last_failure_time = datetime.utcnow()
+        self.last_failure_time = datetime.now(timezone.utc)
 
         if self.state == CircuitState.HALF_OPEN:
             # Any failure in HALF_OPEN reopens circuit
             self.state = CircuitState.OPEN
-            self.open_time = datetime.utcnow()
+            self.open_time = datetime.now(timezone.utc)
             self.success_count = 0
             logger.warning(
                 f"Circuit breaker '{self.name}' failure in HALF_OPEN. "
@@ -163,7 +163,7 @@ class CircuitBreaker:
 
             if self.failure_count >= self.failure_threshold:
                 self.state = CircuitState.OPEN
-                self.open_time = datetime.utcnow()
+                self.open_time = datetime.now(timezone.utc)
                 logger.warning(
                     f"Circuit breaker '{self.name}' opened after "
                     f"{self.failure_count} failures"
@@ -174,7 +174,7 @@ class CircuitBreaker:
         if self.open_time is None:
             return self.timeout
 
-        elapsed = (datetime.utcnow() - self.open_time).total_seconds()
+        elapsed = (datetime.now(timezone.utc) - self.open_time).total_seconds()
         remaining = max(0, self.timeout - elapsed)
         return int(remaining)
 
