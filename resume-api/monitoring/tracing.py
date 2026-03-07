@@ -21,6 +21,8 @@ from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
 
+from monitoring.logging_config import get_logger
+
 
 class TracingConfig:
     """Configuration for distributed tracing."""
@@ -74,27 +76,24 @@ class TracingConfig:
                 provider.add_span_processor(BatchSpanProcessor(otlp_exporter))
             except Exception as e:
                 # Log warning but don't fail if OTLP export fails
-                import logging
-
-                logging.warning(f"Failed to set up OTLP exporter: {e}")
+                logger = get_logger("monitoring.tracing")
+                logger.warning("otlp_exporter_setup_failed", error=str(e))
 
     def instrument_fastapi(self, app):
         """Instrument FastAPI application with OpenTelemetry."""
         try:
             FastAPIInstrumentor.instrument_app(app)
         except Exception as e:
-            import logging
-
-            logging.warning(f"Failed to instrument FastAPI: {e}")
+            logger = get_logger("monitoring.tracing")
+            logger.warning("fastapi_instrumentation_failed", error=str(e))
 
     def instrument_httpx(self):
         """Instrument HTTPX client with OpenTelemetry."""
         try:
             HTTPXClientInstrumentor().instrument()
         except Exception as e:
-            import logging
-
-            logging.warning(f"Failed to instrument HTTPX: {e}")
+            logger = get_logger("monitoring.tracing")
+            logger.warning("httpx_instrumentation_failed", error=str(e))
 
     def get_tracer(self) -> trace.Tracer:
         """Get the tracer instance."""

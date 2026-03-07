@@ -4,7 +4,6 @@ Feature Flag API Routes
 Provides endpoints for feature flag management and evaluation.
 """
 
-import logging
 from typing import Optional
 from fastapi import APIRouter, Depends, Query, Header, HTTPException
 from pydantic import BaseModel
@@ -13,8 +12,9 @@ from resume_api.lib.feature_flags import (
     FeatureFlagService,
     get_feature_flag_service,
 )
+from resume_api.monitoring.logging_config import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger("routes.feature_flags")
 
 router = APIRouter(prefix="/api/v1/feature-flags", tags=["feature-flags"])
 

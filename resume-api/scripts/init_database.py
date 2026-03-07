@@ -11,7 +11,6 @@ Initializes the database schema for ResumeAI, including:
 
 import asyncio
 import argparse
-import logging
 import sys
 from pathlib import Path
 
@@ -24,11 +23,9 @@ from sqlalchemy.ext.asyncio import create_async_engine
 from resume_api.database import DATABASE_URL, create_db_and_tables
 from resume_api.lib.db.schema_manager import SchemaManager
 from resume_api.lib.db.schema_validation import SchemaValidator
+from resume_api.monitoring.logging_config import get_logger
 
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
-logger = logging.getLogger(__name__)
+logger = get_logger("scripts.init_database")
 
 
 class DatabaseInitializer:
@@ -56,7 +53,7 @@ class DatabaseInitializer:
             True if initialization succeeded
         """
         try:
-            logger.info("Starting database initialization...")
+            logger.info("starting_database_initialization")
 
             # Create tables
             await self._create_tables()
@@ -69,16 +66,16 @@ class DatabaseInitializer:
             if seed:
                 await self._seed_data()
 
-            logger.info("Database initialization completed successfully!")
+            logger.info("database_initialization_completed")
             return True
 
         except Exception as e:
-            logger.error(f"Database initialization failed: {e}")
+            logger.error("database_initialization_failed", error=str(e))
             return False
 
     async def _create_tables(self):
         """Create all database tables."""
-        logger.info("Creating database tables...")
+        logger.info("creating_database_tables")
 
         await create_db_and_tables()
 
@@ -87,47 +84,47 @@ class DatabaseInitializer:
             result = await conn.execute(text("SELECT name FROM sqlite_master WHERE type='table'"))
             tables = [row[0] for row in result.fetchall()]
 
-        logger.info(f"Created {len(tables)} tables: {', '.join(tables)}")
+        logger.info("tables_created", table_count=len(tables), tables=tables)
 
     async def _validate_schema(self):
         """Validate the database schema."""
-        logger.info("Validating database schema...")
+        logger.info("validating_database_schema")
 
         validator = SchemaValidator(self.engine)
         schema_result = await validator.validate_all_tables()
 
         if not schema_result.passed:
-            logger.warning(f"Schema validation had issues: {schema_result.summary}")
+            logger.warning("schema_validation_issues", summary=schema_result.summary)
             # Log details of failed checks
             for table in schema_result.tables:
                 if not table.passed:
                     for validation in table.validations:
                         if validation.status.value == "failed":
-                            logger.warning(f"  {table.table_name}: {validation.message}")
+                            logger.warning("validation_failed", table=table.table_name, message=validation.message)
         else:
-            logger.info("Schema validation passed!")
+            logger.info("schema_validation_passed")
 
         # Also run integrity checks
         integrity = await validator.check_database_integrity()
         for check in integrity.get("checks", []):
             status = check.get("status", "unknown")
             if status == "failed":
-                logger.error(f"  Integrity check '{check['name']}': {check['message']}")
+                logger.error("integrity_check_failed", check_name=check["name"], message=check["message"])
             elif status == "warning":
-                logger.warning(f"  Integrity check '{check['name']}': {check['message']}")
+                logger.warning("integrity_check_warning", check_name=check["name"], message=check["message"])
             else:
-                logger.debug(f"  Integrity check '{check['name']}': {check['message']}")
+                logger.debug("integrity_check_passed", check_name=check["name"], message=check["message"])
 
     async def _seed_data(self):
         """Seed initial data into the database."""
-        logger.info("Seeding initial data...")
+        logger.info("seeding_initial_data")
         # This can be extended to add initial data
         # For now, just log that seeding would happen
-        logger.info("Seed data step completed (no data to seed)")
+        logger.info("seed_data_completed")
 
     async def generate_schema_report(self):
         """Generate a schema report."""
-        logger.info("Generating schema report...")
+        logger.info("generating_schema_report")
 
         manager = SchemaManager(self.engine)
         report = await manager.generate_schema_report()
