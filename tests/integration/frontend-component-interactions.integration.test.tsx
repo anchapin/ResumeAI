@@ -33,16 +33,10 @@ describe('Frontend Component Integration Tests', () => {
           <div data-testid="app-layout">
             <aside data-testid="sidebar">
               <nav>
-                <button
-                  data-testid="nav-editor"
-                  onClick={() => mockNavigate('/editor')}
-                >
+                <button data-testid="nav-editor" onClick={() => mockNavigate('/editor')}>
                   Editor
                 </button>
-                <button
-                  data-testid="nav-workspace"
-                  onClick={() => mockNavigate('/workspace')}
-                >
+                <button data-testid="nav-workspace" onClick={() => mockNavigate('/workspace')}>
                   Workspace
                 </button>
               </nav>
@@ -114,11 +108,7 @@ describe('Frontend Component Integration Tests', () => {
             <div data-testid="modal-backdrop" style={{ display: 'block' }}>
               <dialog open data-testid="create-modal">
                 <h2>New Resume</h2>
-                <input
-                  data-testid="modal-input"
-                  placeholder="Resume Name"
-                  type="text"
-                />
+                <input data-testid="modal-input" placeholder="Resume Name" type="text" />
                 <button data-testid="modal-confirm">Create</button>
                 <button data-testid="modal-cancel">Cancel</button>
               </dialog>
@@ -248,21 +238,13 @@ describe('Frontend Component Integration Tests', () => {
             <div data-testid="sections-container">
               <div data-testid="section-0" key="0">
                 <input data-testid="section-0-input" placeholder="Item 1" />
-                <button
-                  type="button"
-                  data-testid="remove-0"
-                  onClick={() => mockRemoveSection(0)}
-                >
+                <button type="button" data-testid="remove-0" onClick={() => mockRemoveSection(0)}>
                   Remove
                 </button>
               </div>
               <div data-testid="section-1" key="1">
                 <input data-testid="section-1-input" placeholder="Item 2" />
-                <button
-                  type="button"
-                  data-testid="remove-1"
-                  onClick={() => mockRemoveSection(1)}
-                >
+                <button type="button" data-testid="remove-1" onClick={() => mockRemoveSection(1)}>
                   Remove
                 </button>
               </div>
@@ -324,10 +306,7 @@ describe('Frontend Component Integration Tests', () => {
         <MemoryRouter initialEntries={['/editor']}>
           <div data-testid="parent">
             <div data-testid="parent-display">Count: 0</div>
-            <button
-              data-testid="child-button"
-              onClick={() => mockParentUpdate('increment')}
-            >
+            <button data-testid="child-button" onClick={() => mockParentUpdate('increment')}>
               Increment
             </button>
           </div>
@@ -471,9 +450,12 @@ describe('Frontend Component Integration Tests', () => {
       render(
         <MemoryRouter initialEntries={['/editor']}>
           <div data-testid="container">
-            <button data-testid="start-all" onClick={() => {
-              Promise.all([mockOp1(), mockOp2(), mockOp3()]);
-            }}>
+            <button
+              data-testid="start-all"
+              onClick={() => {
+                Promise.all([mockOp1(), mockOp2(), mockOp3()]);
+              }}
+            >
               Start All Operations
             </button>
             <div data-testid="status">Ready</div>
@@ -531,10 +513,7 @@ describe('Frontend Component Integration Tests', () => {
 
       render(
         <MemoryRouter initialEntries={['/editor']}>
-          <div
-            data-testid="parent"
-            onClick={mockParentClick}
-          >
+          <div data-testid="parent" onClick={mockParentClick}>
             <button
               data-testid="child-btn"
               onClick={(e) => {
@@ -571,9 +550,7 @@ describe('Frontend Component Integration Tests', () => {
               data-testid="input"
               onKeyPress={(e) => {
                 if (e.key === 'Enter') {
-                  e.currentTarget.form?.dispatchEvent(
-                    new Event('submit', { bubbles: true })
-                  );
+                  e.currentTarget.form?.dispatchEvent(new Event('submit', { bubbles: true }));
                 }
               }}
             />
@@ -648,10 +625,7 @@ describe('Frontend Component Integration Tests', () => {
           <ul data-testid="selectable-list">
             {items.map((item, i) => (
               <li key={i} data-testid={`item-${i}`}>
-                <button
-                  onClick={() => mockSelect(item)}
-                  data-testid={`select-${i}`}
-                >
+                <button onClick={() => mockSelect(item)} data-testid={`select-${i}`}>
                   {item}
                 </button>
               </li>
@@ -678,10 +652,7 @@ describe('Frontend Component Integration Tests', () => {
               <span>Theme: {mockContextValue.theme}</span>
             </div>
             <div data-testid="child2">
-              <button
-                onClick={mockContextValue.toggleTheme}
-                data-testid="toggle-theme"
-              >
+              <button onClick={mockContextValue.toggleTheme} data-testid="toggle-theme">
                 Toggle
               </button>
             </div>

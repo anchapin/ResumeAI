@@ -80,7 +80,7 @@ export const OfferComparison: React.FC<OfferComparisonProps> = ({ comparison, on
               </div>
               <div className="flex-1">
                 <h3 className="font-bold text-lg mb-1">Recommended Offer</h3>
-                <p className="text-white/90 mb-3">{comparison.recommendation?.reason || ""}</p>
+                <p className="text-white/90 mb-3">{comparison.recommendation?.reason || ''}</p>
                 {topOffer && (
                   <div className="bg-white/10 rounded-lg p-3 backdrop-blur-sm">
                     <p className="font-bold">{topOffer.companyName}</p>
