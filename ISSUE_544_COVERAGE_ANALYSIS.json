@@ -425,20 +425,12 @@
     },
     "phase_3_utilities": {
       "description": "Test helper utilities and enhancements",
-      "files": [
-        "utils/validation.ts",
-        "utils/import.ts",
-        "utils/linkedin.ts",
-        "src/lib/oauth.ts"
-      ],
+      "files": ["utils/validation.ts", "utils/import.ts", "utils/linkedin.ts", "src/lib/oauth.ts"],
       "estimated_coverage_gain": "15-20%"
     },
     "phase_4_dialogs": {
       "description": "Test dialog components and lesser-used features",
-      "files": [
-        "components/*Dialog.tsx",
-        "components/*Settings.tsx"
-      ],
+      "files": ["components/*Dialog.tsx", "components/*Settings.tsx"],
       "estimated_coverage_gain": "15-20%"
     }
   }

@@ -902,6 +902,7 @@ const Settings: React.FC = () => {
                       />
                       <button
                         onClick={() => copyToClipboard(createdApiKey)}
+                        aria-label={isCopied ? 'API key copied' : 'Copy API key'}
                         className={`absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1.5 text-xs font-bold rounded transition-colors flex items-center gap-1 ${
                           isCopied
                             ? 'bg-green-100 text-green-700'

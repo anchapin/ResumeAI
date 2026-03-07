@@ -10,6 +10,7 @@ import {
   isErrorRetryable,
   ErrorType,
 } from './errorMessages';
+import { captureError, addBreadcrumb } from '../src/lib/sentry';
 
 // Custom error interfaces for better type safety
 export interface ValidationError extends Error {
@@ -82,6 +83,28 @@ class GlobalErrorHandlerService {
 
     // Add to history
     this.addToHistory(errorContext);
+
+    // Report to Sentry
+    if (errorContext.originalError) {
+      captureError(errorContext.originalError, {
+        tags: {
+          errorType: errorContext.type,
+          errorId: errorContext.id,
+        },
+        extra: {
+          statusCode: errorContext.statusCode,
+          context: errorContext.context,
+        },
+      });
+    }
+
+    // Add breadcrumb for tracking
+    addBreadcrumb(
+      `Error: ${errorContext.type} - ${errorContext.message}`,
+      'error',
+      'error',
+      { errorId: errorContext.id, ...errorContext.context },
+    );
 
     // Notify all handlers
     this.errorHandlers.forEach((handler) => {
