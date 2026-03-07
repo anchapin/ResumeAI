@@ -5,6 +5,7 @@ import reactHooks from 'eslint-plugin-react-hooks';
 import boundaries from 'eslint-plugin-boundaries';
 import unusedImports from 'eslint-plugin-unused-imports';
 import complexity from 'eslint-plugin-complexity';
+import noOnlyTests from 'eslint-plugin-no-only-tests';
 
 export default [
   {
@@ -20,6 +21,7 @@ export default [
       'scripts/**',
       'benchmarks/**',
       'tests/**',
+      '.jscpd-report/**',
     ],
   },
   js.configs.recommended,
@@ -46,6 +48,7 @@ export default [
       boundaries,
       'unused-imports': unusedImports,
       complexity,
+      'no-only-tests': noOnlyTests,
     },
     rules: {
       ...react.configs.recommended.rules,
@@ -68,6 +71,8 @@ export default [
       'prefer-const': 'warn',
       'no-prototype-builtins': 'warn',
       'no-useless-assignment': 'warn',
+      // No only tests - prevent accidental .only in tests
+      'no-only-tests/no-only-tests': 'error',
       // Complexity rules (threshold 20 for cyclomatic complexity)
       'complexity': ['warn', 20],
       // Max parameters rule (max 5 parameters per function)

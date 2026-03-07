@@ -22,7 +22,9 @@
     "lint:fix": "eslint . --ext .ts,.tsx --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "duplicate:check": "jscpd --threshold 5 src/ resume-api/"
+    "duplicate:check": "jscpd --threshold 5 src/ resume-api/",
+    "duplicate:check:frontend": "jscpd --threshold 5 components/ pages/ utils/ hooks/ store/ contexts/",
+    "duplicate:check:all": "jscpd --config .jscpd.json"
   },
   "dependencies": {
     "@sentry/react": "^10.42.0",
@@ -64,6 +66,7 @@
     "eslint-plugin-boundaries": "^5.0.0",
     "eslint-plugin-complexity": "^1.0.2",
     "eslint-plugin-import": "^2.32.0",
+    "eslint-plugin-no-only-tests": "^3.3.0",
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.5.2",

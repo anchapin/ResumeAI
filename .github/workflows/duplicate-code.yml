@@ -1,0 +1,81 @@
+name: Duplicate Code Detection
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - '**/*.ts'
+      - '**/*.tsx'
+      - '**/*.js'
+      - '**/*.jsx'
+      - '**/*.py'
+      - '.jscpd.json'
+      - '.github/workflows/duplicate-code.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - '**/*.ts'
+      - '**/*.tsx'
+      - '**/*.js'
+      - '**/*.jsx'
+      - '**/*.py'
+      - '.jscpd.json'
+      - '.github/workflows/duplicate-code.yml'
+
+defaults:
+  run:
+    working-directory: ./
+
+jobs:
+  jscpd:
+    name: Detect Duplicate Code
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm install --legacy-peer-deps
+
+      - name: Run jscpd duplicate detection (Frontend)
+        run: npx jscpd --threshold 5 components/ pages/ utils/ hooks/ store/ contexts/
+        continue-on-error: true
+
+      - name: Run jscpd duplicate detection (Full - src/ and resume-api/)
+        run: npm run duplicate:check
+        continue-on-error: true
+
+      - name: Upload duplicate code report
+        if: always() && !env.ACT
+        uses: actions/upload-artifact@v4
+        with:
+          name: duplicate-code-report
+          path: .jscpd-report/
+          retention-days: 30
+
+  eslint-no-only-tests:
+    name: ESLint No Only Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm install --legacy-peer-deps
+
+      - name: Run ESLint (no-only-tests)
+        run: npm run lint

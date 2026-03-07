@@ -44,3 +44,6 @@ playwright/.cache/
 
 # Local binaries
 bin/
+
+# Duplicate code detection reports
+.jscpd-report/
