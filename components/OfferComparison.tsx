@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { OfferComparison as OfferComparisonType, JobOffer } from '../types';
+import { OfferComparison as OfferComparisonType } from '../types';
 import { showSuccessToast } from '../utils/toast';
 
 interface OfferComparisonProps {
