@@ -60,7 +60,7 @@ export default [
       'unused-imports/no-unused-imports': 'error',
       'unused-imports/no-unused-vars': [
         'warn',
-        { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
+        { argsIgnorePattern: '^_', varsIgnorePattern: '^_', caughtErrorsIgnorePattern: '^_' },
       ],
       'react-hooks/rules-of-hooks': 'warn',
       'react-hooks/exhaustive-deps': 'warn',
@@ -110,18 +110,6 @@ export default [
     },
     settings: {
       react: { version: 'detect' },
-      boundaries: {
-        path: 'src',
-        elements: [
-          { name: 'components', pattern: 'src/components/**/*' },
-          { name: 'pages', pattern: 'src/pages/**/*' },
-          { name: 'hooks', pattern: 'src/hooks/**/*' },
-          { name: 'utils', pattern: 'src/utils/**/*' },
-          { name: 'contexts', pattern: 'src/contexts/**/*' },
-          { name: 'store', pattern: 'src/store/**/*' },
-          { name: 'types', pattern: 'src/types/**/*' },
-        ],
-      },
     },
   },
 ];
