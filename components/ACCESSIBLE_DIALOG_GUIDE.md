@@ -143,12 +143,12 @@ export function MyComponent() {
 
 ## Keyboard Interactions
 
-| Key | Action |
-|-----|--------|
-| <kbd>Tab</kbd> | Move focus to next focusable element |
+| Key                               | Action                                   |
+| --------------------------------- | ---------------------------------------- |
+| <kbd>Tab</kbd>                    | Move focus to next focusable element     |
 | <kbd>Shift</kbd> + <kbd>Tab</kbd> | Move focus to previous focusable element |
-| <kbd>Escape</kbd> | Close dialog |
-| <kbd>Click outside</kbd> | Close dialog (backdrop click) |
+| <kbd>Escape</kbd>                 | Close dialog                             |
+| <kbd>Click outside</kbd>          | Close dialog (backdrop click)            |
 
 ## CSS Classes
 

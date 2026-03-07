@@ -97,12 +97,7 @@ function MockLoginPage() {
 
           <div>
             <label htmlFor="password-input">Password</label>
-            <input
-              id="password-input"
-              type="password"
-              required
-              aria-required="true"
-            />
+            <input id="password-input" type="password" required aria-required="true" />
           </div>
 
           <div>
@@ -149,7 +144,12 @@ function MockSettingsPage() {
         <button role="tab" aria-selected="false" aria-controls="privacy-panel" id="privacy-tab">
           Privacy
         </button>
-        <button role="tab" aria-selected="false" aria-controls="notifications-panel" id="notifications-tab">
+        <button
+          role="tab"
+          aria-selected="false"
+          aria-controls="notifications-panel"
+          id="notifications-tab"
+        >
           Notifications
         </button>
       </div>
@@ -377,7 +377,9 @@ describe('Page-level Accessibility Integration', () => {
 
     it('should have proper form labels for all inputs', () => {
       const { container } = render(<MockSettingsPage />);
-      const inputs = container.querySelectorAll('input[type="text"], input[type="email"], textarea');
+      const inputs = container.querySelectorAll(
+        'input[type="text"], input[type="email"], textarea',
+      );
 
       inputs.forEach((input) => {
         const id = input.getAttribute('id');

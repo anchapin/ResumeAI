@@ -140,5 +140,8 @@ describe('Settings Page', () => {
     // Verify check icon appears
     const checkIcon = within(copyButton).getByText('check');
     expect(checkIcon).toBeInTheDocument();
+
+    // Verify aria-label is present
+    expect(copyButton).toHaveAttribute('aria-label', 'API key copied');
   });
 });

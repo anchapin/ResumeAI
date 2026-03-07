@@ -21,20 +21,21 @@ A production-ready, fully accessible dialog component wrapper that standardizes 
 
 ```typescript
 export interface DialogProps {
-  isOpen: boolean;                    // Control dialog visibility
-  onClose: () => void;                // Close handler
-  title: React.ReactNode;             // Dialog title
-  children: React.ReactNode;          // Main content
-  footer?: React.ReactNode;           // Optional footer (buttons, etc)
-  className?: string;                 // Optional backdrop class
-  headerId?: string;                  // Custom header ID
-  descriptionId?: string;             // Optional description ID
+  isOpen: boolean; // Control dialog visibility
+  onClose: () => void; // Close handler
+  title: React.ReactNode; // Dialog title
+  children: React.ReactNode; // Main content
+  footer?: React.ReactNode; // Optional footer (buttons, etc)
+  className?: string; // Optional backdrop class
+  headerId?: string; // Custom header ID
+  descriptionId?: string; // Optional description ID
 }
 ```
 
 ### Core Implementation Details
 
 #### 1. Focus Management
+
 - Uses `useFocusTrap` hook with `isActive={isOpen}` to:
   - Trap Tab key navigation within dialog
   - Return focus to trigger element on close
@@ -48,6 +49,7 @@ const { ref: dialogContentRef } = useFocusTrap<HTMLDivElement>({
 ```
 
 #### 2. Keyboard Navigation
+
 - **Escape Key**: Closes dialog via keydown listener
 - **Tab/Shift+Tab**: Managed by useFocusTrap hook
 - Event cleanup in useEffect dependencies
@@ -67,6 +69,7 @@ useEffect(() => {
 ```
 
 #### 3. Body Scroll Prevention
+
 - Disables page scrolling when dialog is open
 - Restores original overflow value on close
 - Properly handles component lifecycle
@@ -83,6 +86,7 @@ useEffect(() => {
 ```
 
 #### 4. Backdrop Click Handling
+
 - Click on backdrop closes dialog
 - Click inside dialog content doesn't close it
 - Uses event.target comparison for precision
@@ -96,8 +100,9 @@ const handleBackdropClick = (event: React.MouseEvent<HTMLDivElement>) => {
 ```
 
 #### 5. ARIA Implementation
+
 ```typescript
-<div role="dialog" 
+<div role="dialog"
      aria-modal="true"
      aria-labelledby={headerId}
      aria-describedby={descriptionId}
@@ -111,6 +116,7 @@ const handleBackdropClick = (event: React.MouseEvent<HTMLDivElement>) => {
 - `tabIndex={-1}` - Prevents focus on dialog container
 
 #### 6. Semantic HTML Structure
+
 ```typescript
 <header>
   <h2 id={headerId}>{title}</h2>
@@ -126,28 +132,29 @@ const handleBackdropClick = (event: React.MouseEvent<HTMLDivElement>) => {
 
 ### 18 Test Cases Implemented
 
-| Test | Purpose |
-|------|---------|
-| Render nothing when closed | Verify conditional rendering |
-| Render when open | Confirm dialog displays |
-| Correct title ID | Validate heading ID attribute |
-| Custom headerId | Support custom ID override |
-| Render children | Ensure content displays |
-| Render footer | Test footer section |
-| ARIA attributes | Verify accessibility attributes |
-| aria-describedby | Confirm description linking |
-| Close button click | Test button interaction |
-| Escape key close | Verify keyboard shortcut |
-| Backdrop click | Test click outside |
-| Dialog click ignored | Prevent close on inside click |
-| Body scroll prevention | Confirm overflow hidden |
-| Custom className | Test class application |
-| Dialog structure | Verify semantic HTML |
-| Focus management | Test focus behavior |
-| Backdrop rendering | Confirm not rendered when closed |
-| Focusable element focus | Test initial focus |
+| Test                       | Purpose                          |
+| -------------------------- | -------------------------------- |
+| Render nothing when closed | Verify conditional rendering     |
+| Render when open           | Confirm dialog displays          |
+| Correct title ID           | Validate heading ID attribute    |
+| Custom headerId            | Support custom ID override       |
+| Render children            | Ensure content displays          |
+| Render footer              | Test footer section              |
+| ARIA attributes            | Verify accessibility attributes  |
+| aria-describedby           | Confirm description linking      |
+| Close button click         | Test button interaction          |
+| Escape key close           | Verify keyboard shortcut         |
+| Backdrop click             | Test click outside               |
+| Dialog click ignored       | Prevent close on inside click    |
+| Body scroll prevention     | Confirm overflow hidden          |
+| Custom className           | Test class application           |
+| Dialog structure           | Verify semantic HTML             |
+| Focus management           | Test focus behavior              |
+| Backdrop rendering         | Confirm not rendered when closed |
+| Focusable element focus    | Test initial focus               |
 
 ### Test Results
+
 ```
 ✓ components/AccessibleDialog.test.tsx (18 tests) 113ms
 Test Files: 1 passed
@@ -157,6 +164,7 @@ Tests: 18 passed
 ## Accessibility Features Checklist
 
 ### ✅ Keyboard Navigation
+
 - [x] Tab key cycles through focusable elements
 - [x] Shift+Tab reverses focus order
 - [x] Escape key closes dialog
@@ -164,6 +172,7 @@ Tests: 18 passed
 - [x] No keyboard trap (can escape with Escape key)
 
 ### ✅ Screen Reader Support
+
 - [x] Dialog role properly set
 - [x] Modal semantics with aria-modal
 - [x] Title linked with aria-labelledby
@@ -172,18 +181,21 @@ Tests: 18 passed
 - [x] Semantic HTML (header, footer)
 
 ### ✅ Focus Management
+
 - [x] Focus moves to first focusable element
 - [x] Focus returns to trigger element on close
 - [x] Focus trapped within dialog
 - [x] Focus visible on interactive elements
 
 ### ✅ Visual Accessibility
+
 - [x] High contrast backdrop (black/50)
 - [x] Clear focus indicators (browser default)
 - [x] Readable text sizes
 - [x] Proper spacing and padding
 
 ### ✅ Motor Skills
+
 - [x] Large click targets (buttons)
 - [x] Clear visual feedback
 - [x] Multiple interaction methods (click, keyboard)
@@ -192,16 +204,19 @@ Tests: 18 passed
 ## Build & Verification
 
 ### Build Status
+
 ```bash
 ✓ 908 modules transformed
 ✓ built in 2.54s
 ```
 
 ### Linting Status
+
 - **AccessibleDialog.tsx**: 0 errors, 0 warnings
 - **AccessibleDialog.test.tsx**: 0 errors, 0 warnings
 
 ### All Tests Pass
+
 ```bash
 ✓ components/AccessibleDialog.test.tsx (18 tests) 113ms
 Test Files: 1 passed (1)
@@ -211,24 +226,26 @@ Duration: 641ms
 
 ## WCAG 2.1 Level AA Compliance
 
-| Criterion | Level | Status | Notes |
-|-----------|-------|--------|-------|
-| 1.4.11 Non-text Contrast | AA | ✅ | High contrast backdrop |
-| 2.1.1 Keyboard | A | ✅ | Full keyboard navigation |
-| 2.1.2 No Keyboard Trap | A | ✅ | Escape to exit |
-| 2.4.3 Focus Order | A | ✅ | Logical tab order |
-| 2.4.7 Focus Visible | AA | ✅ | Browser focus indicators |
-| 4.1.2 Name, Role, Value | A | ✅ | ARIA semantics |
-| 4.1.3 Status Messages | AA | ✅ | Dialog content |
+| Criterion                | Level | Status | Notes                    |
+| ------------------------ | ----- | ------ | ------------------------ |
+| 1.4.11 Non-text Contrast | AA    | ✅     | High contrast backdrop   |
+| 2.1.1 Keyboard           | A     | ✅     | Full keyboard navigation |
+| 2.1.2 No Keyboard Trap   | A     | ✅     | Escape to exit           |
+| 2.4.3 Focus Order        | A     | ✅     | Logical tab order        |
+| 2.4.7 Focus Visible      | AA    | ✅     | Browser focus indicators |
+| 4.1.2 Name, Role, Value  | A     | ✅     | ARIA semantics           |
+| 4.1.3 Status Messages    | AA    | ✅     | Dialog content           |
 
 ## Integration Guide
 
 ### Import in Existing Components
+
 ```typescript
 import AccessibleDialog, { DialogProps } from '@/components/AccessibleDialog';
 ```
 
 ### Replace Existing Dialogs
+
 The component can be used as a drop-in replacement for custom dialog implementations:
 
 ```typescript
@@ -262,6 +279,7 @@ The component can be used as a drop-in replacement for custom dialog implementat
 ## Design System Integration
 
 ### Tailwind Classes Used
+
 - Colors: `bg-white`, `bg-black/50`, `bg-slate-*`
 - Spacing: `px-6`, `py-4`, `gap-3`
 - Border: `border-b`, `border-slate-200`
@@ -270,15 +288,18 @@ The component can be used as a drop-in replacement for custom dialog implementat
 - Rounded: `rounded-2xl`, `rounded-b-2xl`
 
 ### Easy to Customize
+
 All styling uses Tailwind, making it easy to customize colors, sizes, and spacing by editing the component or using the `className` prop.
 
 ## Dependencies
 
 ### Internal
+
 - `useFocusTrap` hook - For keyboard navigation and focus management
 - React 18+ - For hooks and JSX
 
 ### No External Dependencies
+
 - No additional libraries required
 - Uses native browser APIs
 - Built on React fundamentals
@@ -297,6 +318,7 @@ Potential improvements for future iterations:
 ## Usage Examples
 
 ### Basic Confirmation
+
 ```typescript
 <AccessibleDialog
   isOpen={showConfirm}
@@ -309,6 +331,7 @@ Potential improvements for future iterations:
 ```
 
 ### Form Dialog
+
 ```typescript
 <AccessibleDialog
   isOpen={showForm}
@@ -323,6 +346,7 @@ Potential improvements for future iterations:
 ```
 
 ### Alert Dialog
+
 ```typescript
 <AccessibleDialog
   isOpen={showAlert}

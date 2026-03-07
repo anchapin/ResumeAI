@@ -76,7 +76,7 @@ describe('API Client', () => {
       expect((headers as any)['Content-Type']).toBe('application/json');
     });
 
-    it('includes Bearer token when JWT token exists and is valid', () => {
+    it('does not include Authorization header explicitly due to httpOnly cookies', () => {
       // Mock getCookie to return a valid JWT token from cookie
       const mockPayload = { exp: Math.floor(Date.now() / 1000) + 3600 };
       const mockToken = `header.${btoa(JSON.stringify(mockPayload))}.signature`;
@@ -84,23 +84,11 @@ describe('API Client', () => {
 
       const headers = getHeaders();
 
-      expect((headers as any)['Authorization']).toBe(`Bearer ${mockToken}`);
-    });
-
-    it('excludes expired tokens', () => {
-      // Mock an expired JWT
-      const mockPayload = {
-        exp: Math.floor(Date.now() / 1000) - 3600, // 1 hour in past
-      };
-      const mockToken = `header.${Buffer.from(JSON.stringify(mockPayload)).toString('base64')}.signature`;
-      localStorage.setItem('resume_ai_auth_token', mockToken);
-
-      const headers = getHeaders();
-
+      // With httpOnly cookies, we don't manually append the token via Authorization header
       expect((headers as any)['Authorization']).toBeUndefined();
     });
 
-    it('falls back to API key when JWT is not available', () => {
+    it('falls back to API key when available', () => {
       const apiKey = 'test-api-key-123';
       localStorage.setItem('RESUMEAI_API_KEY', apiKey);
 
@@ -109,42 +97,9 @@ describe('API Client', () => {
       expect((headers as any)['X-API-KEY']).toBe(apiKey);
     });
 
-    it('prefers JWT token over API key', () => {
-      // Mock getCookie to return a valid JWT token from cookie
-      const mockPayload = {
-        exp: Math.floor(Date.now() / 1000) + 3600,
-      };
-      const mockToken = `header.${btoa(JSON.stringify(mockPayload))}.signature`;
-      vi.mocked(getCookie).mockReturnValue(mockToken);
-
-      localStorage.setItem('RESUMEAI_API_KEY', 'api-key');
-
-      const headers = getHeaders();
-
-      expect((headers as any)['Authorization']).toBe(`Bearer ${mockToken}`);
-      expect((headers as any)['X-API-KEY']).toBeUndefined();
-    });
-
-    it('handles invalid JWT tokens gracefully', () => {
-      localStorage.setItem('resume_ai_auth_token', 'invalid-token-format');
-
-      const headers = getHeaders();
-
-      expect((headers as any)['Authorization']).toBeUndefined();
-      expect((headers as any)['Content-Type']).toBe('application/json');
-    });
-
-    it('handles malformed JWT payload', () => {
-      const badToken = 'header.invalid-base64!!!.signature';
-      localStorage.setItem('resume_ai_auth_token', badToken);
-
-      const headers = getHeaders();
-
-      expect((headers as any)['Authorization']).toBeUndefined();
-    });
-
     it('does not include Authorization or API key when neither exists', () => {
       localStorage.clear();
+      vi.mocked(getCookie).mockReturnValue(null);
 
       const headers = getHeaders();
 
