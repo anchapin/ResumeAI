@@ -9,29 +9,36 @@
       "extensions": [
         "dbaeumer.vscode-eslint",
         "esbenp.prettier-vscode",
-        "ms-playwright.playwright",
-        "bradlc.vscode-tailwindcss"
+        "bradlc.vscode-tailwindcss",
+        "ms-vscode.vscode-typescript-next",
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "ms-azuretools.vscode-docker",
+        "wayou.vscode-todo-highlight",
+        "eamodio.gitlens"
       ],
       "settings": {
         "editor.defaultFormatter": "esbenp.prettier-vscode",
         "editor.formatOnSave": true,
         "editor.codeActionsOnSave": {
-          "source.fixAll.eslint": "explicit"
+          "source.fixAll.eslint": "explicit",
+          "source.organizeImports": "explicit"
         },
-        "eslint.validate": [
-          "javascript",
-          "javascriptreact",
-          "typescript",
-          "typescriptreact"
-        ],
-        "tailwindCSS.experimental.classRegex": [
-          ["cva\\(([^)]*)\\)", "[\"'`]([^\"'`]*).*?[\"'`]"],
-          ["cn\\(([^)]*)\\)", "[\"'`]([^\"'`]*).*?[\"'`]"]
-        ]
+        "eslint.validate": ["javascript", "javascriptreact", "typescript", "typescriptreact"],
+        "typescript.tsdk": "node_modules/typescript/lib",
+        "python.defaultInterpreterPath": "/usr/local/bin/python3",
+        "python.linting.enabled": true,
+        "python.linting.pylintEnabled": true,
+        "python.formatting.provider": "black",
+        "files.exclude": {
+          "**/__pycache__": true,
+          "**/.pytest_cache": true,
+          "**/node_modules": true
+        }
       }
     }
   },
-  "postCreateCommand": "npm install && cd resume-api && pip install -r requirements.txt",
+  "postCreateCommand": "npm install --legacy-peer-deps",
   "portsAttributes": {
     "5173": {
       "label": "Vite Dev Server",
@@ -42,5 +49,7 @@
       "onAutoForward": "notify"
     }
   },
-  "remoteUser": "node"
+  "remoteUser": "node",
+  "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
+  "workspaceMount": "source=${localWorkspaceFolder},target=/workspaces/${localWorkspaceFolderBasename},type=bind"
 }

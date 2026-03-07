@@ -56,34 +56,14 @@ function MockDropdown({ onSelect = vi.fn() }: { onSelect?: (value: string) => vo
       >
         Select Template
       </button>
-      <div
-        id="dropdown-list"
-        role="listbox"
-        aria-labelledby="dropdown-button"
-        hidden
-      >
-        <div
-          role="option"
-          aria-selected="false"
-          onClick={() => onSelect('modern')}
-          tabIndex={0}
-        >
+      <div id="dropdown-list" role="listbox" aria-labelledby="dropdown-button" hidden>
+        <div role="option" aria-selected="false" onClick={() => onSelect('modern')} tabIndex={0}>
           Modern
         </div>
-        <div
-          role="option"
-          aria-selected="false"
-          onClick={() => onSelect('classic')}
-          tabIndex={0}
-        >
+        <div role="option" aria-selected="false" onClick={() => onSelect('classic')} tabIndex={0}>
           Classic
         </div>
-        <div
-          role="option"
-          aria-selected="false"
-          onClick={() => onSelect('minimal')}
-          tabIndex={0}
-        >
+        <div role="option" aria-selected="false" onClick={() => onSelect('minimal')} tabIndex={0}>
           Minimal
         </div>
       </div>
@@ -249,17 +229,13 @@ describe('Advanced Accessibility Patterns', () => {
 
   describe('Modal Dialog Pattern', () => {
     it('should be accessible', async () => {
-      const { container } = render(
-        <MockConfirmDialog />
-      );
+      const { container } = render(<MockConfirmDialog />);
       const results = await checkPatternA11y(container);
       expect(results).toHaveNoViolations();
     });
 
     it('should have proper dialog attributes', () => {
-      const { container } = render(
-        <MockConfirmDialog />
-      );
+      const { container } = render(<MockConfirmDialog />);
       const dialog = container.querySelector('[role="dialog"]');
 
       expect(dialog?.getAttribute('aria-modal')).toBe('true');
@@ -268,9 +244,7 @@ describe('Advanced Accessibility Patterns', () => {
     });
 
     it('should have labeled title and description', () => {
-      const { container } = render(
-        <MockConfirmDialog />
-      );
+      const { container } = render(<MockConfirmDialog />);
       const title = container.querySelector('#dialog-title');
       const description = container.querySelector('#dialog-description');
 
@@ -279,9 +253,7 @@ describe('Advanced Accessibility Patterns', () => {
     });
 
     it('should have accessible action buttons', () => {
-      const { container } = render(
-        <MockConfirmDialog />
-      );
+      const { container } = render(<MockConfirmDialog />);
       const buttons = container.querySelectorAll('button');
 
       expect(buttons.length).toBeGreaterThan(0);
@@ -291,11 +263,9 @@ describe('Advanced Accessibility Patterns', () => {
     });
 
     it('should have accessible delete button', () => {
-      const { container } = render(
-        <MockConfirmDialog />
-      );
+      const { container } = render(<MockConfirmDialog />);
       const deleteButton = Array.from(container.querySelectorAll('button')).find(
-        (b) => b.textContent === 'Delete'
+        (b) => b.textContent === 'Delete',
       );
 
       expect(deleteButton).toBeTruthy();
@@ -305,17 +275,13 @@ describe('Advanced Accessibility Patterns', () => {
 
   describe('Dropdown/Listbox Pattern', () => {
     it('should be accessible', async () => {
-      const { container } = render(
-        <MockDropdown />
-      );
+      const { container } = render(<MockDropdown />);
       const results = await checkPatternA11y(container);
       expect(results).toHaveNoViolations();
     });
 
     it('should have proper button and listbox relationship', () => {
-      const { container } = render(
-        <MockDropdown />
-      );
+      const { container } = render(<MockDropdown />);
       const button = container.querySelector('button');
       const listbox = container.querySelector('[role="listbox"]');
 
@@ -325,9 +291,7 @@ describe('Advanced Accessibility Patterns', () => {
     });
 
     it('should have accessible options', () => {
-      const { container } = render(
-        <MockDropdown />
-      );
+      const { container } = render(<MockDropdown />);
       const options = container.querySelectorAll('[role="option"]');
 
       expect(options.length).toBeGreaterThan(0);
@@ -339,17 +303,13 @@ describe('Advanced Accessibility Patterns', () => {
 
   describe('Searchable Select Pattern', () => {
     it('should be accessible', async () => {
-      const { container } = render(
-        <MockSearchableSelect />
-      );
+      const { container } = render(<MockSearchableSelect />);
       const results = await checkPatternA11y(container);
       expect(results).toHaveNoViolations();
     });
 
     it('should have proper combobox attributes', () => {
-      const { container } = render(
-        <MockSearchableSelect />
-      );
+      const { container } = render(<MockSearchableSelect />);
       const combobox = container.querySelector('[role="combobox"]');
 
       expect(combobox?.getAttribute('aria-expanded')).toBeTruthy();
@@ -357,9 +317,7 @@ describe('Advanced Accessibility Patterns', () => {
     });
 
     it('should have labeled searchbox input', () => {
-      const { container } = render(
-        <MockSearchableSelect />
-      );
+      const { container } = render(<MockSearchableSelect />);
       const input = container.querySelector('input[role="searchbox"]');
       const label = container.querySelector('label');
 
@@ -368,9 +326,7 @@ describe('Advanced Accessibility Patterns', () => {
     });
 
     it('should have autocomplete attributes', () => {
-      const { container } = render(
-        <MockSearchableSelect />
-      );
+      const { container } = render(<MockSearchableSelect />);
       const input = container.querySelector('input[role="searchbox"]');
 
       expect(input?.getAttribute('aria-autocomplete')).toBe('list');
@@ -380,37 +336,29 @@ describe('Advanced Accessibility Patterns', () => {
 
   describe('Pagination Pattern', () => {
     it('should be accessible', async () => {
-      const { container } = render(
-        <MockPagination />
-      );
+      const { container } = render(<MockPagination />);
       const results = await checkPatternA11y(container);
       expect(results).toHaveNoViolations();
     });
 
     it('should have navigation landmark', () => {
-      const { container } = render(
-        <MockPagination />
-      );
+      const { container } = render(<MockPagination />);
       const nav = container.querySelector('nav');
 
       expect(nav?.getAttribute('aria-label')).toBe('Pagination');
     });
 
     it('should mark current page', () => {
-      const { container } = render(
-        <MockPagination />
-      );
+      const { container } = render(<MockPagination />);
       const currentPage = container.querySelector('[aria-current="page"]');
 
       expect(currentPage?.textContent).toBe('1');
     });
 
     it('should have accessible page navigation buttons', () => {
-      const { container } = render(
-        <MockPagination />
-      );
-      const prevButton = Array.from(container.querySelectorAll('button')).find(
-        (b) => b.getAttribute('aria-label')?.includes('Previous')
+      const { container } = render(<MockPagination />);
+      const prevButton = Array.from(container.querySelectorAll('button')).find((b) =>
+        b.getAttribute('aria-label')?.includes('Previous'),
       );
 
       expect(prevButton?.getAttribute('disabled')).not.toBeNull();
@@ -420,17 +368,13 @@ describe('Advanced Accessibility Patterns', () => {
 
   describe('Toast Notification Pattern', () => {
     it('success toast should be accessible', async () => {
-      const { container } = render(
-        <MockToast type="success" message="Saved successfully" />
-      );
+      const { container } = render(<MockToast type="success" message="Saved successfully" />);
       const results = await checkPatternA11y(container);
       expect(results).toHaveNoViolations();
     });
 
     it('error toast should use assertive aria-live', async () => {
-      const { container } = render(
-        <MockToast type="error" message="Error occurred" />
-      );
+      const { container } = render(<MockToast type="error" message="Error occurred" />);
       const toast = container.querySelector('[role="alert"]');
 
       expect(toast?.getAttribute('aria-live')).toBe('assertive');
@@ -438,18 +382,14 @@ describe('Advanced Accessibility Patterns', () => {
     });
 
     it('success toast should use polite aria-live', () => {
-      const { container } = render(
-        <MockToast type="success" message="Success" />
-      );
+      const { container } = render(<MockToast type="success" message="Success" />);
       const toast = container.querySelector('[role="status"]');
 
       expect(toast?.getAttribute('aria-live')).toBe('polite');
     });
 
     it('should have hidden icon with aria-hidden', () => {
-      const { container } = render(
-        <MockToast type="success" />
-      );
+      const { container } = render(<MockToast type="success" />);
       const icon = container.querySelector('[aria-hidden]');
 
       expect(icon?.getAttribute('aria-hidden')).toBe('true');
@@ -458,17 +398,13 @@ describe('Advanced Accessibility Patterns', () => {
 
   describe('Expandable Section Pattern', () => {
     it('should be accessible', async () => {
-      const { container } = render(
-        <MockExpandableSection />
-      );
+      const { container } = render(<MockExpandableSection />);
       const results = await checkPatternA11y(container);
       expect(results).toHaveNoViolations();
     });
 
     it('should have proper expanded state indicator', () => {
-      const { container } = render(
-        <MockExpandableSection />
-      );
+      const { container } = render(<MockExpandableSection />);
       const button = container.querySelector('button');
 
       expect(button?.getAttribute('aria-expanded')).toBeTruthy();
@@ -476,9 +412,7 @@ describe('Advanced Accessibility Patterns', () => {
     });
 
     it('should have content labeled by button', () => {
-      const { container } = render(
-        <MockExpandableSection />
-      );
+      const { container } = render(<MockExpandableSection />);
       const button = container.querySelector('button');
       const content = container.querySelector('#section-content');
 
@@ -486,9 +420,7 @@ describe('Advanced Accessibility Patterns', () => {
     });
 
     it('should have accessible form controls in content', () => {
-      const { container } = render(
-        <MockExpandableSection />
-      );
+      const { container } = render(<MockExpandableSection />);
       const inputs = container.querySelectorAll('input[type="checkbox"]');
 
       inputs.forEach((input) => {
@@ -501,17 +433,13 @@ describe('Advanced Accessibility Patterns', () => {
 
   describe('Progress Indicator Pattern', () => {
     it('should be accessible', async () => {
-      const { container } = render(
-        <MockProgressIndicator />
-      );
+      const { container } = render(<MockProgressIndicator />);
       const results = await checkPatternA11y(container);
       expect(results).toHaveNoViolations();
     });
 
     it('should have proper progressbar role and attributes', () => {
-      const { container } = render(
-        <MockProgressIndicator />
-      );
+      const { container } = render(<MockProgressIndicator />);
       const progressbar = container.querySelector('[role="progressbar"]');
 
       expect(progressbar?.getAttribute('aria-valuenow')).toBe('75');
@@ -520,9 +448,7 @@ describe('Advanced Accessibility Patterns', () => {
     });
 
     it('should have descriptive label', () => {
-      const { container } = render(
-        <MockProgressIndicator />
-      );
+      const { container } = render(<MockProgressIndicator />);
       const progressbar = container.querySelector('[role="progressbar"]');
       const label = container.querySelector('#progress-label');
 
@@ -533,26 +459,20 @@ describe('Advanced Accessibility Patterns', () => {
 
   describe('Tooltip Pattern', () => {
     it('should be accessible', async () => {
-      const { container } = render(
-        <MockTooltip />
-      );
+      const { container } = render(<MockTooltip />);
       const results = await checkPatternA11y(container);
       expect(results).toHaveNoViolations();
     });
 
     it('should have tooltip role', () => {
-      const { container } = render(
-        <MockTooltip />
-      );
+      const { container } = render(<MockTooltip />);
       const tooltip = container.querySelector('[role="tooltip"]');
 
       expect(tooltip).toBeTruthy();
     });
 
     it('should link button to tooltip via aria-describedby', () => {
-      const { container } = render(
-        <MockTooltip />
-      );
+      const { container } = render(<MockTooltip />);
       const button = container.querySelector('button');
       const tooltip = container.querySelector('[role="tooltip"]');
 
@@ -560,9 +480,7 @@ describe('Advanced Accessibility Patterns', () => {
     });
 
     it('should have accessible trigger button label', () => {
-      const { container } = render(
-        <MockTooltip />
-      );
+      const { container } = render(<MockTooltip />);
       const button = container.querySelector('button');
 
       expect(button?.getAttribute('aria-label')).toBeTruthy();
@@ -574,7 +492,7 @@ describe('Advanced Accessibility Patterns', () => {
       const { container } = render(
         <div aria-live="polite" aria-atomic="true" role="status">
           Content added dynamically
-        </div>
+        </div>,
       );
 
       const liveRegion = container.querySelector('[aria-live]');
@@ -586,13 +504,13 @@ describe('Advanced Accessibility Patterns', () => {
       const { container, rerender } = render(
         <div aria-live="polite" aria-atomic="true">
           Step 1 of 3
-        </div>
+        </div>,
       );
 
       rerender(
         <div aria-live="polite" aria-atomic="true">
           Step 2 of 3
-        </div>
+        </div>,
       );
 
       const region = container.querySelector('[aria-live]');

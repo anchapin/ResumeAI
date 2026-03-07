@@ -180,10 +180,7 @@ describe('Frontend UI Integration Tests', () => {
         <MemoryRouter initialEntries={['/editor']}>
           <div data-testid="editor-page">
             <div data-testid="experience-section">
-              <button
-                data-testid="add-experience-btn"
-                onClick={() => mockAddExp()}
-              >
+              <button data-testid="add-experience-btn" onClick={() => mockAddExp()}>
                 Add Experience
               </button>
               <div data-testid="experience-list">
@@ -228,10 +225,7 @@ describe('Frontend UI Integration Tests', () => {
         <MemoryRouter initialEntries={['/editor']}>
           <div data-testid="editor-page">
             <div data-testid="experience-section">
-              <button
-                data-testid="add-experience-btn"
-                onClick={() => mockAddExp()}
-              >
+              <button data-testid="add-experience-btn" onClick={() => mockAddExp()}>
                 Add Experience
               </button>
               <div data-testid="experience-list" />
@@ -287,30 +281,20 @@ describe('Frontend UI Integration Tests', () => {
         <MemoryRouter initialEntries={['/editor']}>
           <div data-testid="editor-page">
             <div data-testid="skills-section">
-              <input
-                data-testid="skill-input"
-                placeholder="Add a skill"
-                type="text"
-              />
+              <input data-testid="skill-input" placeholder="Add a skill" type="text" />
               <button data-testid="add-skill-btn" onClick={() => mockAddSkill()}>
                 Add Skill
               </button>
               <ul data-testid="skills-list">
                 <li data-testid="skill-0" data-skill="React">
                   React
-                  <button
-                    data-testid="remove-skill-0"
-                    onClick={() => mockRemoveSkill(0)}
-                  >
+                  <button data-testid="remove-skill-0" onClick={() => mockRemoveSkill(0)}>
                     Remove
                   </button>
                 </li>
                 <li data-testid="skill-1" data-skill="TypeScript">
                   TypeScript
-                  <button
-                    data-testid="remove-skill-1"
-                    onClick={() => mockRemoveSkill(1)}
-                  >
+                  <button data-testid="remove-skill-1" onClick={() => mockRemoveSkill(1)}>
                     Remove
                   </button>
                 </li>
@@ -335,30 +319,20 @@ describe('Frontend UI Integration Tests', () => {
         <MemoryRouter initialEntries={['/editor']}>
           <div data-testid="editor-page">
             <div data-testid="skills-section">
-              <input
-                data-testid="skill-input"
-                placeholder="Add a skill"
-                type="text"
-              />
+              <input data-testid="skill-input" placeholder="Add a skill" type="text" />
               <button data-testid="add-skill-btn" onClick={() => mockAddSkill()}>
                 Add Skill
               </button>
               <ul data-testid="skills-list">
                 <li data-testid="skill-0" data-skill="TypeScript">
                   TypeScript
-                  <button
-                    data-testid="remove-skill-0"
-                    onClick={() => mockRemoveSkill(0)}
-                  >
+                  <button data-testid="remove-skill-0" onClick={() => mockRemoveSkill(0)}>
                     Remove
                   </button>
                 </li>
                 <li data-testid="skill-1" data-skill="Node.js">
                   Node.js
-                  <button
-                    data-testid="remove-skill-1"
-                    onClick={() => mockRemoveSkill(1)}
-                  >
+                  <button data-testid="remove-skill-1" onClick={() => mockRemoveSkill(1)}>
                     Remove
                   </button>
                 </li>
@@ -416,22 +390,12 @@ describe('Frontend UI Integration Tests', () => {
         <MemoryRouter initialEntries={['/workspace']}>
           <div data-testid="workspace-page">
             <div data-testid="create-resume-section">
-              <button
-                data-testid="new-resume-btn"
-                onClick={() => mockOnCreate('New Resume')}
-              >
+              <button data-testid="new-resume-btn" onClick={() => mockOnCreate('New Resume')}>
                 Create New Resume
               </button>
               <dialog data-testid="create-dialog" open>
-                <input
-                  data-testid="resume-name-input"
-                  placeholder="Resume Name"
-                  type="text"
-                />
-                <button
-                  data-testid="confirm-create"
-                  onClick={() => mockOnCreate('New Resume')}
-                >
+                <input data-testid="resume-name-input" placeholder="Resume Name" type="text" />
+                <button data-testid="confirm-create" onClick={() => mockOnCreate('New Resume')}>
                   Create
                 </button>
               </dialog>
@@ -454,10 +418,7 @@ describe('Frontend UI Integration Tests', () => {
           <div data-testid="workspace-page">
             <div data-testid="resume-item" data-id="resume-1">
               <h3>Original Resume</h3>
-              <button
-                data-testid="duplicate-btn"
-                onClick={() => mockDuplicate('resume-1')}
-              >
+              <button data-testid="duplicate-btn" onClick={() => mockDuplicate('resume-1')}>
                 Duplicate
               </button>
             </div>
@@ -546,10 +507,7 @@ describe('Frontend UI Integration Tests', () => {
         <MemoryRouter initialEntries={['/editor']}>
           <div data-testid="editor-page">
             <div data-testid="export-section">
-              <button
-                data-testid="export-pdf-btn"
-                onClick={() => mockDownload('resume.pdf')}
-              >
+              <button data-testid="export-pdf-btn" onClick={() => mockDownload('resume.pdf')}>
                 Download PDF
               </button>
             </div>
@@ -838,19 +796,13 @@ describe('Frontend UI Integration Tests', () => {
         <MemoryRouter initialEntries={['/settings']}>
           <div data-testid="settings-page">
             <div data-testid="api-keys-section">
-              <button
-                data-testid="generate-key-btn"
-                onClick={() => mockGenerateKey()}
-              >
+              <button data-testid="generate-key-btn" onClick={() => mockGenerateKey()}>
                 Generate New Key
               </button>
               <ul data-testid="keys-list">
                 <li data-testid="key-item-1">
                   <span>sk_test_123456</span>
-                  <button
-                    data-testid="revoke-key-1"
-                    onClick={() => mockRevokeKey('key-1')}
-                  >
+                  <button data-testid="revoke-key-1" onClick={() => mockRevokeKey('key-1')}>
                     Revoke
                   </button>
                 </li>
@@ -876,11 +828,7 @@ describe('Frontend UI Integration Tests', () => {
       render(
         <MemoryRouter initialEntries={['/workspace']}>
           <div data-testid="workspace-page">
-            <input
-              data-testid="search-input"
-              placeholder="Search resumes..."
-              type="text"
-            />
+            <input data-testid="search-input" placeholder="Search resumes..." type="text" />
             <div data-testid="results-list">
               <div data-testid="result-1">Main Resume</div>
               <div data-testid="result-2">Tech Resume</div>
@@ -901,10 +849,7 @@ describe('Frontend UI Integration Tests', () => {
       render(
         <MemoryRouter initialEntries={['/applications']}>
           <div data-testid="applications-page">
-            <select
-              data-testid="status-filter"
-              onChange={(e) => mockFilterChange(e.target.value)}
-            >
+            <select data-testid="status-filter" onChange={(e) => mockFilterChange(e.target.value)}>
               <option value="">All Statuses</option>
               <option value="applied">Applied</option>
               <option value="interviewing">Interviewing</option>
@@ -1005,11 +950,7 @@ describe('Frontend UI Integration Tests', () => {
       render(
         <MemoryRouter initialEntries={['/editor']}>
           <div data-testid="editor-page">
-            <input
-              data-testid="name-input"
-              onChange={() => mockAutoSave()}
-              placeholder="Name"
-            />
+            <input data-testid="name-input" onChange={() => mockAutoSave()} placeholder="Name" />
           </div>
         </MemoryRouter>,
       );
@@ -1037,7 +978,9 @@ describe('Frontend UI Integration Tests', () => {
           <div data-testid="editor-page">
             <input
               data-testid="name-input"
-              defaultValue={JSON.parse(localStorage.getItem('resumeai_master_profile') || '{}').name}
+              defaultValue={
+                JSON.parse(localStorage.getItem('resumeai_master_profile') || '{}').name
+              }
               placeholder="Name"
             />
           </div>
@@ -1056,16 +999,10 @@ describe('Frontend UI Integration Tests', () => {
           <div data-testid="editor-page">
             <dialog data-testid="conflict-dialog" open>
               <p>Data conflict detected</p>
-              <button
-                data-testid="use-local"
-                onClick={() => mockResolveConflict('local')}
-              >
+              <button data-testid="use-local" onClick={() => mockResolveConflict('local')}>
                 Use Local Version
               </button>
-              <button
-                data-testid="use-server"
-                onClick={() => mockResolveConflict('server')}
-              >
+              <button data-testid="use-server" onClick={() => mockResolveConflict('server')}>
                 Use Server Version
               </button>
             </dialog>
