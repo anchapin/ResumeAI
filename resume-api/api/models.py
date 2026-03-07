@@ -1733,7 +1733,7 @@ class SkillGapResponse(BaseModel):
 # =============================================================================
 
 
-class TeamMemberRole(str):
+class TeamMemberRole(str, Enum):
     """Team member role enumeration."""
 
     OWNER = "owner"
