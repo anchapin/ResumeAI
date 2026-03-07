@@ -24,7 +24,7 @@ describe('StatusBadge Component', () => {
     it('should render with correct styling', () => {
       render(<StatusBadge status="Applied" />);
       const badge = screen.getByTestId('status-badge');
-      
+
       expect(badge).toHaveClass('bg-blue-100');
       expect(badge).toHaveClass('text-blue-700');
     });
@@ -39,7 +39,7 @@ describe('StatusBadge Component', () => {
     it('should render with correct styling', () => {
       render(<StatusBadge status="Interview" />);
       const badge = screen.getByTestId('status-badge');
-      
+
       expect(badge).toHaveClass('bg-purple-100');
       expect(badge).toHaveClass('text-purple-700');
     });
@@ -54,7 +54,7 @@ describe('StatusBadge Component', () => {
     it('should render with correct styling', () => {
       render(<StatusBadge status="Offer" />);
       const badge = screen.getByTestId('status-badge');
-      
+
       expect(badge).toHaveClass('bg-emerald-100');
       expect(badge).toHaveClass('text-emerald-700');
     });
@@ -69,7 +69,7 @@ describe('StatusBadge Component', () => {
     it('should render with correct styling', () => {
       render(<StatusBadge status="Rejected" />);
       const badge = screen.getByTestId('status-badge');
-      
+
       expect(badge).toHaveClass('bg-red-100');
       expect(badge).toHaveClass('text-red-700');
     });
@@ -84,7 +84,7 @@ describe('StatusBadge Component', () => {
     it('should use default styling for unknown status', () => {
       render(<StatusBadge status="Unknown" />);
       const badge = screen.getByTestId('status-badge');
-      
+
       expect(badge).toHaveClass('bg-slate-100');
       expect(badge).toHaveClass('text-slate-700');
     });
@@ -99,7 +99,7 @@ describe('StatusBadge Component', () => {
     it('should always have base badge classes', () => {
       render(<StatusBadge status="Applied" />);
       const badge = screen.getByTestId('status-badge');
-      
+
       expect(badge).toHaveClass('inline-flex');
       expect(badge).toHaveClass('items-center');
       expect(badge).toHaveClass('px-3');
@@ -119,7 +119,7 @@ describe('StatusBadge Component', () => {
     it('should not have interactive elements', () => {
       render(<StatusBadge status="Applied" />);
       const badge = screen.getByTestId('status-badge');
-      
+
       // Should be a simple span, not a button or link
       expect(badge.tagName).toBe('SPAN');
       expect(badge).not.toHaveAttribute('onClick');
@@ -136,7 +136,7 @@ describe('StatusBadge Component', () => {
     it('should handle status with different casing', () => {
       render(<StatusBadge status="applied" />);
       const badge = screen.getByTestId('status-badge');
-      
+
       // lowercase doesn't match 'Applied', so should get default styling
       expect(badge).toHaveClass('bg-slate-100');
     });
@@ -156,7 +156,7 @@ describe('StatusBadge Component', () => {
           <StatusBadge status="Applied" />
           <StatusBadge status="Interview" />
           <StatusBadge status="Offer" />
-        </>
+        </>,
       );
 
       const badges = screen.getAllByTestId('status-badge');
