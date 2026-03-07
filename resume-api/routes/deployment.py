@@ -26,9 +26,9 @@ logger = logging_config.get_logger(__name__)
 router = APIRouter(prefix="/deployment", tags=["deployment"])
 
 
-# =====================================================================
+# ==============================================================
 # Health Check Endpoints
-# =====================================================================
+# ==============================================================
 
 
 @router.get("/health", tags=["health"])
@@ -135,9 +135,9 @@ async def get_liveness_status():
         raise HTTPException(status_code=503, detail="Liveness check failed")
 
 
-# =====================================================================
+# ==============================================================
 # Feature Flag Endpoints
-# =====================================================================
+# ==============================================================
 
 
 @router.get("/features", tags=["feature-flags"], dependencies=[Depends(verify_api_key)])
@@ -293,9 +293,9 @@ async def set_feature_maintenance(
         raise HTTPException(status_code=500, detail="Failed to set maintenance mode")
 
 
-# =====================================================================
+# ==============================================================
 # Database Migration Validation Endpoints
-# =====================================================================
+# ==============================================================
 
 
 @router.post(
@@ -396,9 +396,9 @@ async def check_migration_readiness():
         raise HTTPException(status_code=500, detail="Migration readiness check failed")
 
 
-# =====================================================================
+# ==============================================================
 # Deployment Verification Endpoints
-# =====================================================================
+# ==============================================================
 
 
 @router.get("/verify", tags=["verification"], dependencies=[Depends(verify_api_key)])
@@ -459,9 +459,9 @@ async def get_deployment_status():
         raise HTTPException(status_code=500, detail="Status check failed")
 
 
-# =====================================================================
+# ==============================================================
 # Deployment Event Tracking Endpoints
-# =====================================================================
+# ==============================================================
 
 
 @router.post(
@@ -554,11 +554,17 @@ async def complete_deployment_event(
             "deployment_id": deployment_id,
             "status": deployment.status.value,
 
+
             "completed_at": (
                 deployment.completed_at.isoformat() if deployment.completed_at else None
             ),
 
             "completed_at": deployment.completed_at.isoformat() if deployment.completed_at else None,
+
+
+            "completed_at": (
+                deployment.completed_at.isoformat() if deployment.completed_at else None
+            ),
 
             "duration_seconds": deployment.duration_seconds,
             "timestamp": datetime.utcnow().isoformat(),

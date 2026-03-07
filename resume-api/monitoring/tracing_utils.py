@@ -27,11 +27,17 @@ def get_tracer(name: str = "resume-api") -> trace.Tracer:
 
 @asynccontextmanager
 
+
 async def async_trace(
     name: str, attributes: Optional[dict] = None, kind: SpanKind = SpanKind.INTERNAL
 ):
 
 async def async_trace(name: str, attributes: Optional[dict] = None, kind: SpanKind = SpanKind.INTERNAL):
+
+
+async def async_trace(
+    name: str, attributes: Optional[dict] = None, kind: SpanKind = SpanKind.INTERNAL
+):
 
     """
     Async context manager for creating spans.

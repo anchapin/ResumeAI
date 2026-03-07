@@ -454,22 +454,30 @@ async def oauth_endpoint_health():
 async def ingest_frontend_metrics(metrics_data: dict):
     """
     Receive and process metrics from the frontend client.
-<<<<<<< HEAD
 
-=======
+
+
+
     
->>>>>>> 25a6161 (feat: Add metrics collection (#818))
+
+
+
+
     Accepts metric batches from the ResumeAI frontend including:
     - Page view metrics
     - Web Vitals (LCP, FID, CLS, etc.)
     - User interaction events
     - API request metrics
     - JavaScript errors
-<<<<<<< HEAD
 
-=======
+
+
+
     
->>>>>>> 25a6161 (feat: Add metrics collection (#818))
+
+
+
+
     The backend stores these metrics for aggregation and analysis.
     """
     try:
@@ -479,51 +487,71 @@ async def ingest_frontend_metrics(metrics_data: dict):
             set_frontend_gauge,
             observe_frontend_histogram,
         )
-<<<<<<< HEAD
+
+
 
         metrics_received = 0
 
-=======
+
         
         metrics_received = 0
         
->>>>>>> 25a6161 (feat: Add metrics collection (#818))
+
+
+
+        metrics_received = 0
+
+
         # Process each metric in the batch
         for metric in metrics_data.get("metrics", []):
             metric_type = metric.get("type")
             metric_name = metric.get("name")
             metric_value = metric.get("value", 1)
             labels = metric.get("labels", {})
-<<<<<<< HEAD
 
-=======
+
+
+
             
->>>>>>> 25a6161 (feat: Add metrics collection (#818))
+
+
+
+
             if metric_type == "counter":
                 increment_frontend_counter(metric_name, metric_value, labels)
             elif metric_type == "gauge":
                 set_frontend_gauge(metric_name, metric_value, labels)
             elif metric_type in ("histogram", "timing"):
                 observe_frontend_histogram(metric_name, metric_value, labels)
-<<<<<<< HEAD
+
+
 
             metrics_received += 1
 
-=======
+
             
             metrics_received += 1
         
->>>>>>> 25a6161 (feat: Add metrics collection (#818))
+
+
+
+            metrics_received += 1
+
+
         logger.info(
             "frontend_metrics_received",
             count=metrics_received,
             session_id=metrics_data.get("session_id"),
         )
-<<<<<<< HEAD
 
-=======
+
+
+
         
->>>>>>> 25a6161 (feat: Add metrics collection (#818))
+
+
+
+
         return {
             "status": "success",
             "message": f"Received {metrics_received} metrics",
@@ -548,11 +576,15 @@ async def ingest_frontend_metrics(metrics_data: dict):
 async def get_frontend_metrics_summary():
     """
     Get a summary of all collected frontend metrics.
-<<<<<<< HEAD
 
-=======
+
+
+
     
->>>>>>> 25a6161 (feat: Add metrics collection (#818))
+
+
+
+
     Returns aggregated metrics including:
     - Counters with their current values
     - Gauges with their current values
@@ -560,15 +592,21 @@ async def get_frontend_metrics_summary():
     """
     try:
         from monitoring.metrics import get_frontend_metrics_summary
-<<<<<<< HEAD
+
+
 
         summary = get_frontend_metrics_summary()
 
-=======
+
         
         summary = get_frontend_metrics_summary()
         
->>>>>>> 25a6161 (feat: Add metrics collection (#818))
+
+
+
+        summary = get_frontend_metrics_summary()
+
+
         return {
             "status": "success",
             "data": summary,
