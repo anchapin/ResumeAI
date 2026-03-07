@@ -74,23 +74,23 @@ export default [
       '@typescript-eslint/no-misused-promises': 'off',
       'max-params': ['warn', 5],
       // Module boundary rules
-      'boundaries/element-types': 'off',
+      'boundaries/element-types': ['warn', {
+        default: 'disallow',
+        message: 'Module boundary violation: {{plugin}} {{element}} cannot import {{dependency}} {{dependencyType}}',
+      }],
       'boundaries/no-external': 'off',
     },
     settings: {
       react: { version: 'detect' },
-      boundaries: {
-        path: '.',
-        elements: [
-          { name: 'components', pattern: 'components/**/*' },
-          { name: 'pages', pattern: 'pages/**/*' },
-          { name: 'hooks', pattern: 'hooks/**/*' },
-          { name: 'utils', pattern: 'utils/**/*' },
-          { name: 'contexts', pattern: 'contexts/**/*' },
-          { name: 'store', pattern: 'store/**/*' },
-          { name: 'src', pattern: 'src/**/*' },
-        ],
-      },
+      'boundaries/elements': [
+        { name: 'components', type: 'app', pattern: 'components/**/*' },
+        { name: 'pages', type: 'app', pattern: 'pages/**/*' },
+        { name: 'hooks', type: 'app', pattern: 'hooks/**/*' },
+        { name: 'utils', type: 'app', pattern: 'utils/**/*' },
+        { name: 'contexts', type: 'app', pattern: 'contexts/**/*' },
+        { name: 'store', type: 'app', pattern: 'store/**/*' },
+        { name: 'src', type: 'app', pattern: 'src/**/*' },
+      ],
     },
   },
 ];

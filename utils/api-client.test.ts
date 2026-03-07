@@ -76,7 +76,7 @@ describe('API Client', () => {
       expect((headers as any)['Content-Type']).toBe('application/json');
     });
 
-    it('does not include Authorization header explicitly due to httpOnly cookies', () => {
+    it('includes Authorization header from valid JWT cookie', () => {
       // Mock getCookie to return a valid JWT token from cookie
       const mockPayload = { exp: Math.floor(Date.now() / 1000) + 3600 };
       const mockToken = `header.${btoa(JSON.stringify(mockPayload))}.signature`;
@@ -84,8 +84,8 @@ describe('API Client', () => {
 
       const headers = getHeaders();
 
-      // With httpOnly cookies, we don't manually append the token via Authorization header
-      expect((headers as any)['Authorization']).toBeUndefined();
+      // With httpOnly cookies, we manually append the token via Authorization header
+      expect((headers as any)['Authorization']).toBe(`Bearer ${mockToken}`);
     });
 
     it('falls back to API key when available', () => {

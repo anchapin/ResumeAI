@@ -75,6 +75,10 @@ jobs:
       - name: Check for duplicate code
         run: npm run duplicate:check
 
+      - name: Run knip (dead code detection)
+        run: npx knip --strict || true
+        continue-on-error: true
+
       - name: Run npm audit
         run: npm audit --audit-level=high
         continue-on-error: true
