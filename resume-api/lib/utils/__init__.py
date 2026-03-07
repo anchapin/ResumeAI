@@ -9,6 +9,14 @@ from .ats_checker import (
     check_ats_compatibility,
     ATSCompatibilityReport,
 )
+from .circuit_breaker import (
+    CircuitBreaker,
+    CircuitBreakerOpen,
+    CircuitState,
+    openai_breaker,
+    claude_breaker,
+    gemini_breaker,
+)
 
 __all__ = [
     "AITailoringUtils",
@@ -19,4 +27,10 @@ __all__ = [
     "ATSCompatibilityChecker",
     "check_ats_compatibility",
     "ATSCompatibilityReport",
+    "CircuitBreaker",
+    "CircuitBreakerOpen",
+    "CircuitState",
+    "openai_breaker",
+    "claude_breaker",
+    "gemini_breaker",
 ]

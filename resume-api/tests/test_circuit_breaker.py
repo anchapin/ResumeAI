@@ -345,19 +345,19 @@ class TestCircuitBreakerIntegration:
 
     def test_time_until_retry_calculation(self):
         """Test _time_until_retry calculates correctly."""
-        breaker = CircuitBreaker(name="test", timeout=60)
+        breaker = CircuitBreaker(name="test", timeout=60, failure_threshold=1)
         func = Mock(side_effect=Exception("error"))
 
         with pytest.raises(Exception):
             breaker.call(func)
 
-        # Open the circuit
+        # Open the circuit (failure_threshold=1)
         assert breaker.state == CircuitState.OPEN
 
         # Mock the open_time to test calculation
         import datetime
 
-        breaker.open_time = datetime.datetime.utcnow() - datetime.timedelta(seconds=30)
+        breaker.open_time = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(seconds=30)
 
         remaining = breaker._time_until_retry()
         assert 25 <= remaining <= 35  # Allow some tolerance for execution time
