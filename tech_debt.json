@@ -1,0 +1,76 @@
+{
+  "version": "1.0.0",
+  "description": "Technical debt tracking for ResumeAI codebase",
+  "lastUpdated": "2026-03-07",
+  "categories": {
+    "code_quality": {
+      "name": "Code Quality",
+      "description": "Issues related to code structure, readability, and maintainability"
+    },
+    "architecture": {
+      "name": "Architecture",
+      "description": "Structural improvements needed in the codebase"
+    },
+    "dependencies": {
+      "name": "Dependencies",
+      "description": "Outdated packages, security vulnerabilities, or dependency issues"
+    },
+    "testing": {
+      "name": "Testing",
+      "description": "Test coverage gaps, testing infrastructure improvements"
+    },
+    "documentation": {
+      "name": "Documentation",
+      "description": "Missing or outdated documentation"
+    },
+    "performance": {
+      "name": "Performance",
+      "description": "Performance optimization opportunities"
+    },
+    "security": {
+      "name": "Security",
+      "description": "Security improvements and vulnerabilities"
+    }
+  },
+  "priorities": {
+    "critical": {
+      "name": "Critical",
+      "description": "Must be addressed immediately",
+      "score": 4
+    },
+    "high": {
+      "name": "High",
+      "description": "Should be addressed in current sprint",
+      "score": 3
+    },
+    "medium": {
+      "name": "Medium",
+      "description": "Should be addressed in next few sprints",
+      "score": 2
+    },
+    "low": {
+      "name": "Low",
+      "description": "Can be addressed when time permits",
+      "score": 1
+    }
+  },
+  "statuses": {
+    "identified": {
+      "name": "Identified",
+      "description": "Debt item has been identified"
+    },
+    "in_progress": {
+      "name": "In Progress",
+      "description": "Currently addressing this debt"
+    },
+    "resolved": {
+      "name": "Resolved",
+      "description": "Debt has been resolved"
+    },
+    "accepted": {
+      "name": "Accepted",
+      "description": "Debt is accepted and documented"
+    }
+  },
+  "debtItems": []
+}
