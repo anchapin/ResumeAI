@@ -9,7 +9,7 @@
 
 import { createHash } from 'crypto';
 import { readFileSync, writeFileSync, existsSync, readdirSync, statSync } from 'fs';
-import { join, relative } from 'path';
+import { join } from 'path';
 
 // Configuration for flaky test detection
 export interface FlakyTestConfig {
@@ -251,7 +251,6 @@ export async function runFlakyTestDetection(
   threshold: number = 0.3
 ): Promise<FlakyTestSummary> {
   const tempDir = join(process.cwd(), '.flaky-test-results');
-  const allResults: TestResult[] = [];
   
   // Track results per test across multiple runs
   const testRunResults: Map<string, TestResult> = new Map();
@@ -273,7 +272,7 @@ export async function runFlakyTestDetection(
     const testPathArg = testPaths.length > 0 ? testPaths.join(' ') : '';
     const command = `npx vitest run --reporter=json --outputFile=${reportFile} ${testPathArg}`;
     
-    await new Promise<void>((resolve, reject) => {
+    await new Promise<void>((resolve) => {
       exec(command, { cwd: process.cwd() }, (error, stdout, stderr) => {
         // Log output but don't fail on test failures
         if (stdout) console.log(stdout);
@@ -334,9 +333,9 @@ export function createFlakyTestPlugin(config: Partial<FlakyTestConfig>) {
         // Add any necessary test configuration
       },
     }),
-    configResolved(config: any) {
+    configResolved(_config: unknown) {
       // Store config for later use
-      (global as any).__flakyTestConfig = defaultConfig;
+      (global as unknown).__flakyTestConfig = defaultConfig;
     },
   };
 }
