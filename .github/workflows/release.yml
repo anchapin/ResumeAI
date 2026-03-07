@@ -1,0 +1,105 @@
+name: Release Notes
+
+on:
+  workflow_dispatch:
+    inputs:
+      previous_tag:
+        description: 'Previous release tag (e.g., v1.0.0)'
+        required: false
+        type: string
+      current_tag:
+        description: 'Current release tag (e.g., v1.1.0)'
+        required: true
+        type: string
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: read
+
+jobs:
+  generate-release-notes:
+    name: Generate Release Notes
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    
+    outputs:
+      release_notes: ${{ steps.generate.outputs.release_notes }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Generate release notes
+        id: generate
+        run: |
+          # Get previous tag if not provided
+          PREVIOUS_TAG="${{ github.event.inputs.previous_tag }}"
+          if [ -z "$PREVIOUS_TAG" ]; then
+            PREVIOUS_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+          fi
+          
+          CURRENT_TAG="${{ github.event.inputs.current_tag }}"
+          if [ -z "$CURRENT_TAG" ]; then
+            CURRENT_TAG="${GITHUB_REF#refs/tags/}"
+          fi
+          
+          echo "Previous tag: $PREVIOUS_TAG"
+          echo "Current tag: $CURRENT_TAG"
+          
+          # Generate release notes using Python script
+          python3 .github/scripts/generate_release_notes.py \
+            --previous-tag "$PREVIOUS_TAG" \
+            --current-tag "$CURRENT_TAG" \
+            --repo "${{ github.repository }}" \
+            >> $GITHUB_OUTPUT
+          
+          cat $GITHUB_OUTPUT
+        shell: bash
+      
+      - name: Display release notes
+        run: |
+          echo "## Release Notes Preview"
+          echo "${{ steps.generate.outputs.release_notes }}"
+    
+  create-release:
+    name: Create GitHub Release
+    needs: generate-release-notes
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    permissions:
+      contents: write
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Generate release notes
+        id: generate
+        run: |
+          PREVIOUS_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+          CURRENT_TAG="${GITHUB_REF#refs/tags/}"
+          
+          python3 .github/scripts/generate_release_notes.py \
+            --previous-tag "$PREVIOUS_TAG" \
+            --current-tag "$CURRENT_TAG" \
+            --repo "${{ github.repository }}" > release_notes.md
+          
+          cat release_notes.md
+      
+      - name: Create GitHub Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          body_path: release_notes.md
+          draft: false
+          prerelease: ${{ contains(github.ref, 'alpha') || contains(github.ref, 'beta') || contains(github.ref, 'rc') }}
