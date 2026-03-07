@@ -6,27 +6,44 @@ This document describes the branch protection configuration for the ResumeAI rep
 
 ## Current Status
 
-**Status**: Requires GitHub Pro (or higher)
+**Status**: ✅ Enabled
 
-The ResumeAI repository is a **private repository** owned by a free-tier GitHub account. GitHub requires a paid subscription (Pro or higher) to enable branch protection rules on private repositories.
+Branch protection rules are now configured on the ResumeAI repository. The main branch has the following protections in place:
 
-### GitHub Plan Requirements
+| Feature                     | Status |
+| --------------------------- | ------ |
+| Branch Protection           | ✅     |
+| Required Reviews           | ✅     |
+| Status Checks               | ✅     |
+| Code Owner Reviews         | ❌     |
+| Require Linear History     | ✅     |
+| Require Signed Commits     | ❌     |
+| Include Administrators     | ✅     |
 
-| Feature                     | Free Tier | Pro |
-| --------------------------- | --------- | --- |
-| Branch Protection (Public)  | ✅        | ✅  |
-| Branch Protection (Private) | ❌        | ✅  |
-| Required Reviews            | ❌        | ✅  |
-| Status Checks               | ❌        | ✅  |
-| Code Owner Reviews          | ❌        | ✅  |
+### Active Protection Rules
 
-## Acceptance Criteria (from Issue #718)
+The following protection rules are currently enforced on the main branch:
 
-- [ ] Branch protection enabled for main branch
-- [ ] Require pull request reviews before merging
-- [ ] Require status checks to pass
-- [ ] Require code owner reviews (optional)
-- [ ] Include administrator in protection rules
+- **Required Reviews**: 1 approving review required
+- **Status Checks**: PR Check, Frontend CI, Backend CI (must pass)
+- **Require Linear History**: Enabled (no merge commits)
+- **Force Pushes**: Blocked
+- **Branch Deletion**: Blocked
+- **Conversation Resolution**: Required before merge
+- **Administrator Enforcement**: Enabled
+
+### Current Limitations
+
+- **Code Owner Reviews**: Not enabled (optional feature)
+- **Signed Commits**: Not required (optional feature)
+
+## Acceptance Criteria (from Issue #778)
+
+- [x] Branch protection enabled for main branch
+- [x] Require pull request reviews before merging
+- [x] Require status checks to pass
+- [ ] Require code owner reviews (optional - not enabled)
+- [x] Include administrator in protection rules
 
 ## Configuration Commands
 

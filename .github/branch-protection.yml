@@ -1,0 +1,64 @@
+# Branch Protection Configuration for ResumeAI
+#
+# This file documents the branch protection rules enforced on the main branch.
+# The actual protection is configured via GitHub API and enforced by GitHub.
+#
+# To update these settings:
+# 1. Modify this file with new settings
+# 2. Run: ./scripts/setup-branch-protection.sh
+# 3. Or update via GitHub UI: Repository Settings > Branches > Branch protection rules
+
+# Branch protection rules
+protection:
+  # The protected branch name
+  branch: "main"
+
+  # Require pull request reviews before merging
+  require_pull_request_reviews:
+    # Number of approving reviews required
+    required_approving_review_count: 1
+    
+    # Dismiss stale reviews when new commits are pushed
+    dismiss_stale_reviews: true
+    
+    # Require review from code owners
+    require_code_owner_reviews: false
+    
+    # Include administrators in these requirements
+    include_admins: true
+
+  # Require status checks to pass before merging
+  required_status_checks:
+    # Require branches to be up to date before merging
+    strict: true
+    
+    # Required status check contexts
+    contexts:
+      - "PR Check"
+      - "Frontend CI"
+      - "Backend CI"
+
+  # Enforce branch protection for administrators
+  enforce_admins: true
+
+  # Require linear history (no merge commits)
+  required_linear_history: true
+
+  # Prevent force pushes
+  allow_force_pushes: false
+
+  # Prevent branch deletion
+  allow_deletions: false
+
+  # Require all conversations to be resolved before merging
+  required_conversation_resolution: true
+
+  # Optional: Require signed commits
+  # Note: This requires GitHub Pro for private repositories
+  # required_signatures: false
+
+# Reviewers configuration
+# These are requested automatically via CODEOWNERS file
+reviewers:
+  - type: "codeowners"
+    # Code owners are defined in .github/CODEOWNERS

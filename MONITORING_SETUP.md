@@ -369,6 +369,107 @@ PAGERDUTY_API_KEY=...
 - Health: `http://localhost:8000/api/v1/health`
 - Ready: `http://localhost:8000/ready`
 
+## Structured Logging
+
+The application uses `structlog` for structured logging with JSON output for production environments.
+
+### Configuration
+
+Logging is configured in `resume-api/monitoring/logging_config.py`:
+
+```python
+# Log level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
+LOG_LEVEL=INFO
+
+# Log format: "json" for production, "console" for development
+LOG_FORMAT=json
+```
+
+### Log Output Format
+
+JSON format example:
+```json
+{"method": "GET", "path": "/api/v1/resumes", "status_code": 200, "duration_ms": 50.5, "event": "request_completed", "level": "info", "timestamp": "2026-03-06T23:24:32.245107"}
+```
+
+### Request Context
+
+The monitoring middleware automatically adds contextual information:
+- `request_id`: Unique request identifier
+- `method`: HTTP method
+- `path`: Request path
+- `client_ip`: Client IP address
+- `user_id`: User identifier (if authenticated)
+- `duration_ms`: Request duration
+
+### Log Aggregation
+
+#### Option 1: ELK Stack (Elasticsearch, Logstash, Kibana)
+
+Configure Filebeat to ship JSON logs:
+
+```yaml
+# filebeat.yml
+filebeat.inputs:
+  - type: json
+    paths:
+      - /var/log/resumeai/*.log
+    json.keys_under_root: true
+    json.add_error_key: true
+
+output.logstash:
+  hosts: ["localhost:5044"]
+```
+
+#### Option 2: Loki (Grafana Labs)
+
+Configure Promtail to scrape logs:
+
+```yaml
+# promtail.yml
+scrape_configs:
+  - job_name: resumeai
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: resumeai
+          __path__: /var/log/resumeai/*.log
+```
+
+#### Option 3: Cloud Services
+
+- **AWS CloudWatch**: Use CloudWatch Agent
+- **GCP Cloud Logging**: Use Logging Agent
+- **Azure Monitor**: Use Azure Log Analytics
+
+### Structured Logging Best Practices
+
+1. Use JSON format in production for log aggregation
+2. Include request IDs for tracing
+3. Add user IDs when available (respecting privacy)
+4. Use appropriate log levels:
+   - `DEBUG`: Detailed debugging information
+   - `INFO`: General operational events
+   - `WARNING`: Warning conditions
+   - `ERROR`: Error conditions
+   - `CRITICAL`: Critical conditions
+
+### Integration with Sentry
+
+Sentry is configured for error tracking:
+
+```python
+import sentry_sdk
+from sentry_sdk.integrations.structlog import StructlogIntegration
+
+sentry_sdk.init(
+    dsn=settings.sentry_dsn,
+    integrations=[StructlogIntegration()],
+    traces_sample_rate=0.1,
+)
+```
+
 ## Testing Alerts
 
 ```bash
