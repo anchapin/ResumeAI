@@ -9,6 +9,9 @@ on:
 jobs:
   accessibility:
     runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      pull-requests: write
     
     strategy:
       matrix:
@@ -27,7 +30,7 @@ jobs:
         run: npm ci
       
       - name: Run accessibility tests
-        run: npm run test -- tests/accessibility.test.ts --reporter=verbose
+        run: npx vitest run tests/accessibility.test.ts --reporter=verbose
       
       - name: Run all tests with coverage
         run: npm run test:coverage
@@ -43,7 +46,7 @@ jobs:
         if: always()
         run: |
           mkdir -p a11y-reports
-          npm run test -- tests/accessibility.test.ts --reporter=json > a11y-reports/report.json || true
+          npx vitest run tests/accessibility.test.ts --reporter=json > a11y-reports/report.json || true
       
       - name: Upload accessibility report
         if: always() && !env.ACT
