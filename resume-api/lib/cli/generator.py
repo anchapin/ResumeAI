@@ -14,6 +14,9 @@ import logging
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from markupsafe import Markup
 
+# Use ecryptfs-safe temp directory when needed
+from lib.utils.ecryptfs_utils import get_temp_dir, is_ecryptfs_path
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -106,7 +109,9 @@ class ResumeGenerator:
             raise ValueError(f"Template file 'main.tex' not found in variant '{variant}'")
 
         # Create a temporary directory for PDF generation
-        with tempfile.TemporaryDirectory() as temp_dir:
+        # Use /tmp to avoid ecryptfs 140-character path limit
+        temp_base = get_temp_dir()
+        with tempfile.TemporaryDirectory(dir=temp_base) as temp_dir:
             temp_path = Path(temp_dir)
 
             # Validate resume data

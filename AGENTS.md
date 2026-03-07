@@ -251,7 +251,7 @@ import { Button } from './components/Button';
 
 The home directory (`/home/alex`) uses `ecryptfs` (encrypted filesystem) which has a **140-character filename path limit**. This can cause errors like `[Errno 36] File name too long` when working with nested directories or long file paths.
 
-**Workaround**: Use the symlink in `/tmp` for agent work:
+**Workaround 1 - Use symlink**: Use the symlink in `/tmp` for agent work:
 
 ```bash
 # Agents should use this path instead
@@ -262,4 +262,15 @@ cd /tmp/ResumeAI
 ```
 
 This symlink points to the same project but bypasses the ecryptfs limitations.
+
+**Workaround 2 - Use utility module**: The codebase includes `resume-api/lib/utils/ecryptfs_utils.py` which provides helper functions for creating temporary files/directories in `/tmp` instead of the home directory:
+
+```python
+from lib.utils.ecryptfs_utils import get_temp_dir, is_ecryptfs_path
+
+# Use /tmp to avoid ecryptfs path limits
+temp_base = get_temp_dir()
+with tempfile.TemporaryDirectory(dir=temp_base) as temp_dir:
+    # Your code here
+```
 
