@@ -88,6 +88,10 @@ class Settings(BaseSettings):
     enable_analytics: bool = True
     analytics_retention_days: int = 90  # Keep analytics data for 90 days
 
+    # Deployment Observability Configuration
+    enable_deployment_observability: bool = True  # Enable deployment event tracking
+    deployment_events_retention: int = 1000  # Max deployment events to retain
+
     # Stripe Configuration
     stripe_secret_key: Optional[str] = None
     stripe_publishable_key: Optional[str] = None
