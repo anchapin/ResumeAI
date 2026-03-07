@@ -86,6 +86,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install pip-audit
+          pip install --force-reinstall black
 
       - name: Run pip-audit
         run: pip-audit --ignore-vuln CVE-2024-23342 --strict
