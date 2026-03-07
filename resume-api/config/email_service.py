@@ -69,9 +69,7 @@ async def send_email(
         return False
 
 
-async def send_verification_email(
-    to_email: str, verification_token: str, username: str
-) -> bool:
+async def send_verification_email(to_email: str, verification_token: str, username: str) -> bool:
     """
     Send an email verification link to a user.
 
@@ -83,9 +81,7 @@ async def send_verification_email(
     Returns:
         True if email was sent successfully, False otherwise
     """
-    verification_url = (
-        f"{settings.frontend_url}/auth/verify-email?token={verification_token}"
-    )
+    verification_url = f"{settings.frontend_url}/auth/verify-email?token={verification_token}"
 
     subject = "Verify Your Email Address - ResumeAI"
 

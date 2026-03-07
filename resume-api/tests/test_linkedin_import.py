@@ -207,9 +207,7 @@ class TestLinkedInImporter:
         result = self.importer._parse_standard_format(data)
 
         assert len(result["certifications"]) == 1
-        assert (
-            result["certifications"][0]["name"] == "AWS Certified Solutions Architect"
-        )
+        assert result["certifications"][0]["name"] == "AWS Certified Solutions Architect"
         assert result["certifications"][0]["issuer"] == "Amazon Web Services"
 
     def test_parse_volunteer(self):

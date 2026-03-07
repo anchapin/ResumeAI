@@ -60,9 +60,7 @@ class OAuthAuthenticationFailureRule(AlertRule):
             pass
 
             # Get OAuth connection metrics
-            success_count = (
-                monitoring_metrics.oauth_connection_success_total._value.get()
-            )
+            success_count = monitoring_metrics.oauth_connection_success_total._value.get()
             failure_count = sum(
                 metric._value.get()
                 for metric in monitoring_metrics.oauth_connection_failure_total._value.values()
@@ -101,9 +99,7 @@ class OAuthRateLimitRule(AlertRule):
         """Check if OAuth rate limit hits exceed threshold."""
         try:
             # Get rate limit hits from metrics
-            rate_limit_hits = (
-                monitoring_metrics.oauth_rate_limit_hits_total._value.get()
-            )
+            rate_limit_hits = monitoring_metrics.oauth_rate_limit_hits_total._value.get()
 
             if rate_limit_hits > self.threshold:
                 return Alert(
@@ -131,9 +127,7 @@ class OAuthTokenExpirationRule(AlertRule):
         """Check if OAuth token expiration events exceed threshold."""
         try:
             # Get token expiration events from metrics
-            expiration_count = (
-                monitoring_metrics.oauth_token_expiration_events._value.get()
-            )
+            expiration_count = monitoring_metrics.oauth_token_expiration_events._value.get()
 
             if expiration_count > self.threshold:
                 return Alert(
@@ -231,9 +225,7 @@ class DatabaseConnectionPoolExhaustedRule(AlertRule):
             # This would be evaluated by Prometheus in production
             pass
         except Exception as e:
-            logger.error(
-                "database_connection_pool_exhausted_rule_check_error", error=str(e)
-            )
+            logger.error("database_connection_pool_exhausted_rule_check_error", error=str(e))
         return None
 
 
@@ -272,9 +264,7 @@ class AlertManager:
         """Add default alert rules."""
         # Issue #402: Prometheus alert rules
         self.add_rule(HighErrorRateRule(threshold=0.001))  # > 0.1%
-        self.add_rule(
-            PDFGenerationSlowRule(threshold_seconds=5, percentile=0.95)
-        )  # p95 > 5s
+        self.add_rule(PDFGenerationSlowRule(threshold_seconds=5, percentile=0.95))  # p95 > 5s
         self.add_rule(DatabaseConnectionPoolExhaustedRule())
         self.add_rule(APIKeyInvalidRule(threshold_per_second=1))
 

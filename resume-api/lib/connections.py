@@ -69,9 +69,7 @@ class ConnectionFinder:
         connections.sort(key=lambda x: x.similarity_score, reverse=True)
         return connections[:limit]
 
-    async def _find_github_employees(
-        self, company: str, limit: int
-    ) -> List[Connection]:
+    async def _find_github_employees(self, company: str, limit: int) -> List[Connection]:
         """Find employees at company using GitHub API."""
         connections = []
 
@@ -88,9 +86,7 @@ class ConnectionFinder:
                     data = response.json()
                     for item in data.get("items", []):
                         # Get user details
-                        user_response = await client.get(
-                            item["url"], headers=self.github_headers
-                        )
+                        user_response = await client.get(item["url"], headers=self.github_headers)
                         if user_response.status_code == 200:
                             user = user_response.json()
                             connection = Connection(
@@ -108,9 +104,7 @@ class ConnectionFinder:
 
         return connections
 
-    async def _find_alumni(
-        self, target_company: str, education: List[Dict]
-    ) -> List[Connection]:
+    async def _find_alumni(self, target_company: str, education: List[Dict]) -> List[Connection]:
         """Find alumni from same school now at target company."""
         connections = []
 

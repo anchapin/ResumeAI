@@ -154,9 +154,7 @@ async def start_linkedin_oauth():
     try:
         # Validate required settings
         if not settings.linkedin_client_id or not settings.linkedin_client_secret:
-            raise HTTPException(
-                status_code=500, detail="LinkedIn OAuth credentials not configured"
-            )
+            raise HTTPException(status_code=500, detail="LinkedIn OAuth credentials not configured")
 
         # Generate secure state parameter
         state = secrets.token_urlsafe(32)
@@ -184,9 +182,7 @@ async def start_linkedin_oauth():
         raise
     except Exception as e:
         logger.error("linkedin_oauth_start_failed", error=str(e))
-        raise HTTPException(
-            status_code=500, detail=f"Failed to initiate LinkedIn OAuth: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to initiate LinkedIn OAuth: {str(e)}")
 
 
 @router.post("/oauth/callback", response_model=LinkedInOAuthCallbackResponse)
@@ -225,17 +221,13 @@ async def handle_linkedin_oauth_callback(request: LinkedInOAuthCallbackRequest):
                     status=token_response.status_code,
                     response=token_response.text,
                 )
-                raise HTTPException(
-                    status_code=400, detail="Failed to exchange authorization code"
-                )
+                raise HTTPException(status_code=400, detail="Failed to exchange authorization code")
 
             token_data = token_response.json()
             access_token = token_data.get("access_token")
 
             if not access_token:
-                raise HTTPException(
-                    status_code=400, detail="No access token in response"
-                )
+                raise HTTPException(status_code=400, detail="No access token in response")
 
             # Fetch user profile
             profile = await fetch_linkedin_profile(access_token)
@@ -279,9 +271,7 @@ async def fetch_linkedin_profile(access_token: str) -> Dict[str, Any]:
             profile_response = await client.get(LINKEDIN_PROFILE_URL, headers=headers)
 
             if profile_response.status_code != 200:
-                raise HTTPException(
-                    status_code=400, detail="Failed to fetch LinkedIn profile"
-                )
+                raise HTTPException(status_code=400, detail="Failed to fetch LinkedIn profile")
 
             profile_data = profile_response.json()
 
@@ -296,9 +286,7 @@ async def fetch_linkedin_profile(access_token: str) -> Dict[str, Any]:
 
             # Try to fetch experience
             try:
-                exp_response = await client.get(
-                    LINKEDIN_EXPERIENCE_URL, headers=headers
-                )
+                exp_response = await client.get(LINKEDIN_EXPERIENCE_URL, headers=headers)
                 if exp_response.status_code == 200:
                     exp_data = exp_response.json()
                     profile["experience"] = parse_linkedin_experience(exp_data)
@@ -322,9 +310,7 @@ async def fetch_linkedin_profile(access_token: str) -> Dict[str, Any]:
         raise
     except Exception as e:
         logger.error("fetch_linkedin_profile_failed", error=str(e))
-        raise HTTPException(
-            status_code=500, detail=f"Failed to fetch LinkedIn profile: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to fetch LinkedIn profile: {str(e)}")
 
 
 def parse_linkedin_experience(data: Dict[str, Any]) -> List[Dict[str, Any]]:
@@ -449,9 +435,7 @@ async def find_connections(request: ConnectionFindRequest):
             count=len(connection_responses),
         )
     except Exception as e:
-        raise HTTPException(
-            status_code=400, detail=f"Connection search failed: {str(e)}"
-        )
+        raise HTTPException(status_code=400, detail=f"Connection search failed: {str(e)}")
 
 
 @router.get("/profile", response_model=LinkedInProfileResponse)
@@ -471,9 +455,7 @@ async def get_linkedin_profile():
         raise
     except Exception as e:
         logger.error("get_linkedin_profile_failed", error=str(e))
-        raise HTTPException(
-            status_code=500, detail=f"Failed to fetch LinkedIn profile: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to fetch LinkedIn profile: {str(e)}")
 
 
 @router.post("/disconnect")
@@ -492,14 +474,10 @@ async def disconnect_linkedin():
 
     except Exception as e:
         logger.error("linkedin_disconnect_failed", error=str(e))
-        raise HTTPException(
-            status_code=500, detail=f"Failed to disconnect LinkedIn: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to disconnect LinkedIn: {str(e)}")
 
 
-@router.post(
-    "/connections/{connection_id}/outreach", response_model=OutreachSuggestionResponse
-)
+@router.post("/connections/{connection_id}/outreach", response_model=OutreachSuggestionResponse)
 async def get_outreach_suggestions(
     connection_id: str, connection: ConnectionResponse, user_profile: Dict[str, Any]
 ):
@@ -526,10 +504,6 @@ async def get_outreach_suggestions(
 
         suggestions = finder.generate_outreach_suggestions(conn, user_profile)
 
-        return OutreachSuggestionResponse(
-            connection_id=connection_id, suggestions=suggestions
-        )
+        return OutreachSuggestionResponse(connection_id=connection_id, suggestions=suggestions)
     except Exception as e:
-        raise HTTPException(
-            status_code=400, detail=f"Suggestion generation failed: {str(e)}"
-        )
+        raise HTTPException(status_code=400, detail=f"Suggestion generation failed: {str(e)}")

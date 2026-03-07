@@ -51,9 +51,7 @@ class CoverLetterGenerator:
         self.model = model or os.getenv("AI_MODEL")
 
         if not self.api_key:
-            raise ValueError(
-                f"{self.ai_provider.upper()}_API_KEY environment variable not set"
-            )
+            raise ValueError(f"{self.ai_provider.upper()}_API_KEY environment variable not set")
 
         # Initialize the AI client
         if self.ai_provider == "openai":
@@ -249,9 +247,7 @@ Return ONLY valid JSON, nothing else."""
                     "body": data.get("body", ""),
                     "closing": data.get("closing", ""),
                     "full_text": data.get("full_text", response),
-                    "metadata": data.get(
-                        "metadata", {"word_count": len(response.split())}
-                    ),
+                    "metadata": data.get("metadata", {"word_count": len(response.split())}),
                 }
         except (json.JSONDecodeError, AttributeError):
             pass

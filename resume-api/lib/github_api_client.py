@@ -298,9 +298,7 @@ class GitHubAPIClient:
                 return await self._make_request(
                     method, endpoint, params, json_data, retry_count + 1
                 )
-            raise GitHubAPIError(
-                f"HTTP error: {str(e)}", status_code=e.response.status_code
-            )
+            raise GitHubAPIError(f"HTTP error: {str(e)}", status_code=e.response.status_code)
 
     def _check_rate_limit(self, response: httpx.Response):
         """
@@ -386,9 +384,7 @@ class GitHubAPIClient:
         elif status_code == 404:
             raise GitHubNotFoundError(message)
         else:
-            raise GitHubAPIError(
-                message, status_code=status_code, response_data=error_data
-            )
+            raise GitHubAPIError(message, status_code=status_code, response_data=error_data)
 
     def _calculate_retry_delay(self, retry_count: int) -> float:
         """

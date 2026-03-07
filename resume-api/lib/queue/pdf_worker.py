@@ -124,9 +124,7 @@ class PDFWorker:
 
             try:
                 job.progress = 20
-                pdf_bytes = await asyncio.wait_for(
-                    self.render_handler(job), timeout=self.timeout
-                )
+                pdf_bytes = await asyncio.wait_for(self.render_handler(job), timeout=self.timeout)
                 job.progress = 90
 
             except asyncio.TimeoutError:
@@ -147,9 +145,7 @@ class PDFWorker:
             job.progress = 100
             await self.queue.update_job(job)
 
-            logger.info(
-                f"Completed job {job.job_id} - PDF size: {len(pdf_bytes)} bytes"
-            )
+            logger.info(f"Completed job {job.job_id} - PDF size: {len(pdf_bytes)} bytes")
 
         except Exception as e:
             await self._handle_job_error(job, e)
@@ -159,9 +155,7 @@ class PDFWorker:
         job.error = str(error)
         job.retry_count += 1
 
-        logger.error(
-            f"Job {job.job_id} error: {error} (retry {job.retry_count}/{job.max_retries})"
-        )
+        logger.error(f"Job {job.job_id} error: {error} (retry {job.retry_count}/{job.max_retries})")
 
         # Check if should retry
         if job.should_retry():
@@ -173,9 +167,7 @@ class PDFWorker:
             job.state = JobState.FAILED
             job.progress = 0
             await self.queue.update_job(job)
-            logger.error(
-                f"Job {job.job_id} permanently failed after {job.retry_count} retries"
-            )
+            logger.error(f"Job {job.job_id} permanently failed after {job.retry_count} retries")
 
     async def get_job_status(self, job_id: str) -> Optional[Dict[str, Any]]:
         """Get current status of a job."""

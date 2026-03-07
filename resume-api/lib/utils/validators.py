@@ -31,9 +31,7 @@ LATEX_SPECIAL_CHARS = {
 
 # Validation patterns
 EMAIL_PATTERN = re.compile(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
-URL_PATTERN = re.compile(
-    r"^(https?://|ftp://)?[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(/.*)?$", re.IGNORECASE
-)
+URL_PATTERN = re.compile(r"^(https?://|ftp://)?[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(/.*)?$", re.IGNORECASE)
 PHONE_PATTERN = re.compile(r"^[\d\s\-\+\(\)]{7,20}$")
 
 # Maximum field lengths
@@ -121,9 +119,7 @@ def validate_email(email: Optional[str]) -> Optional[str]:
 
     # Check length
     if len(email) > MAX_STRING_LENGTH:
-        raise ValueError(
-            f"Email exceeds maximum length of {MAX_STRING_LENGTH} characters"
-        )
+        raise ValueError(f"Email exceeds maximum length of {MAX_STRING_LENGTH} characters")
 
     return email
 
@@ -151,15 +147,11 @@ def validate_url(url: Optional[str]) -> Optional[str]:
 
     # Check length
     if len(url) > MAX_STRING_LENGTH:
-        raise ValueError(
-            f"URL exceeds maximum length of {MAX_STRING_LENGTH} characters"
-        )
+        raise ValueError(f"URL exceeds maximum length of {MAX_STRING_LENGTH} characters")
 
     try:
         parsed = urlparse(
-            url
-            if url.startswith(("http://", "https://", "ftp://"))
-            else f"https://{url}"
+            url if url.startswith(("http://", "https://", "ftp://")) else f"https://{url}"
         )
         if not parsed.netloc:
             raise ValueError("URL must have a valid domain")
@@ -240,8 +232,7 @@ def validate_list_length(
     """
     if items and len(items) > max_items:
         raise ValueError(
-            f"{field_name} exceeds maximum of {max_items} items "
-            f"(current: {len(items)})"
+            f"{field_name} exceeds maximum of {max_items} items " f"(current: {len(items)})"
         )
     return items or []
 
@@ -266,16 +257,12 @@ def sanitize_html(text: Optional[str]) -> Optional[str]:
         return None
 
     # Remove script tags and content
-    text = re.sub(
-        r"<script[^>]*>.*?</script>", "", text, flags=re.IGNORECASE | re.DOTALL
-    )
+    text = re.sub(r"<script[^>]*>.*?</script>", "", text, flags=re.IGNORECASE | re.DOTALL)
 
     # Remove other dangerous tags
     dangerous_tags = ["iframe", "object", "embed", "form", "input", "button"]
     for tag in dangerous_tags:
-        text = re.sub(
-            f"<{tag}[^>]*>.*?</{tag}>", "", text, flags=re.IGNORECASE | re.DOTALL
-        )
+        text = re.sub(f"<{tag}[^>]*>.*?</{tag}>", "", text, flags=re.IGNORECASE | re.DOTALL)
         text = re.sub(f"<{tag}[^>]*/?>", "", text, flags=re.IGNORECASE)
 
     # Remove event handlers
@@ -392,21 +379,15 @@ def validate_resume_data(resume_dict: Dict[str, Any]) -> Dict[str, Any]:
 
     # Validate skills
     if "skills" in resume_dict and resume_dict["skills"]:
-        validated["skills"] = [
-            validate_skill_item(item) for item in resume_dict["skills"]
-        ]
+        validated["skills"] = [validate_skill_item(item) for item in resume_dict["skills"]]
 
     # Validate projects
     if "projects" in resume_dict and resume_dict["projects"]:
-        validated["projects"] = [
-            validate_project_item(item) for item in resume_dict["projects"]
-        ]
+        validated["projects"] = [validate_project_item(item) for item in resume_dict["projects"]]
 
     # Validate languages
     if "languages" in resume_dict and resume_dict["languages"]:
-        validated["languages"] = [
-            validate_language_item(item) for item in resume_dict["languages"]
-        ]
+        validated["languages"] = [validate_language_item(item) for item in resume_dict["languages"]]
 
     # Copy any other fields as-is
     for key in resume_dict:
@@ -425,9 +406,7 @@ def validate_location(location: Dict[str, Any]) -> Dict[str, Any]:
             location.get("address"), "Address", MAX_STRING_LENGTH
         )
     if "city" in location:
-        validated["city"] = validate_resume_field(
-            location.get("city"), "City", MAX_STRING_LENGTH
-        )
+        validated["city"] = validate_resume_field(location.get("city"), "City", MAX_STRING_LENGTH)
     if "region" in location:
         validated["region"] = validate_resume_field(
             location.get("region"), "Region", MAX_STRING_LENGTH
@@ -462,8 +441,7 @@ def validate_work_item(item: Dict[str, Any]) -> Dict[str, Any]:
         )
     if "highlights" in item and item["highlights"]:
         validated["highlights"] = [
-            validate_resume_field(h, "Highlight", MAX_HIGHLIGHT_LENGTH)
-            for h in item["highlights"]
+            validate_resume_field(h, "Highlight", MAX_HIGHLIGHT_LENGTH) for h in item["highlights"]
         ]
     if "startDate" in item:
         validated["startDate"] = item.get("startDate")
@@ -508,15 +486,12 @@ def validate_skill_item(item: Dict[str, Any]) -> Dict[str, Any]:
     validated = {}
 
     if "name" in item:
-        validated["name"] = validate_resume_field(
-            item.get("name"), "Skill Name", MAX_STRING_LENGTH
-        )
+        validated["name"] = validate_resume_field(item.get("name"), "Skill Name", MAX_STRING_LENGTH)
     if "level" in item:
         validated["level"] = validate_resume_field(item.get("level"), "Skill Level", 50)
     if "keywords" in item and item["keywords"]:
         validated["keywords"] = [
-            validate_resume_field(k, "Keyword", MAX_STRING_LENGTH)
-            for k in item["keywords"]
+            validate_resume_field(k, "Keyword", MAX_STRING_LENGTH) for k in item["keywords"]
         ]
 
     return validated

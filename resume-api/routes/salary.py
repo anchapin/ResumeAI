@@ -155,9 +155,7 @@ async def compare_offers(request: OfferComparisonRequest):
             report=report,
         )
     except Exception as e:
-        raise HTTPException(
-            status_code=400, detail=f"Offer comparison failed: {str(e)}"
-        )
+        raise HTTPException(status_code=400, detail=f"Offer comparison failed: {str(e)}")
 
 
 @router.put("/offers/priorities", response_model=Dict[str, float])

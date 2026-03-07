@@ -12,12 +12,8 @@ from datetime import datetime
 from sqlalchemy import (
     inspect,
     text,
-    Table,
-    Column,
-    Index,
 )
-from sqlalchemy.ext.asyncio import AsyncEngine, AsyncConnection
-from sqlalchemy.types import TypeEngine
+from sqlalchemy.ext.asyncio import AsyncEngine
 
 logger = logging.getLogger(__name__)
 
@@ -80,21 +76,26 @@ class SchemaManager:
 
             columns_info = []
             for col in columns:
-                columns_info.append({
-                    "name": col["name"],
-                    "type": str(col["type"]),
-                    "nullable": col["nullable"],
-                    "default": str(col.get("default", "")) if col.get("default") else None,
-                    "is_primary_key": col["name"] in pk_constraint.get("constrained_columns", []),
-                })
+                columns_info.append(
+                    {
+                        "name": col["name"],
+                        "type": str(col["type"]),
+                        "nullable": col["nullable"],
+                        "default": str(col.get("default", "")) if col.get("default") else None,
+                        "is_primary_key": col["name"]
+                        in pk_constraint.get("constrained_columns", []),
+                    }
+                )
 
-            tables.append({
-                "name": table_name,
-                "columns": columns_info,
-                "primary_key": pk_constraint.get("constrained_columns", []),
-                "unique_constraints": [uc.get("column_names", []) for uc in unique_constraints],
-                "row_count": None,  # Will be populated separately
-            })
+            tables.append(
+                {
+                    "name": table_name,
+                    "columns": columns_info,
+                    "primary_key": pk_constraint.get("constrained_columns", []),
+                    "unique_constraints": [uc.get("column_names", []) for uc in unique_constraints],
+                    "row_count": None,  # Will be populated separately
+                }
+            )
 
         return tables
 
@@ -108,16 +109,20 @@ class SchemaManager:
             columns = inspector.get_columns(view_name)
             columns_info = []
             for col in columns:
-                columns_info.append({
-                    "name": col["name"],
-                    "type": str(col["type"]),
-                    "nullable": col["nullable"],
-                })
+                columns_info.append(
+                    {
+                        "name": col["name"],
+                        "type": str(col["type"]),
+                        "nullable": col["nullable"],
+                    }
+                )
 
-            views.append({
-                "name": view_name,
-                "columns": columns_info,
-            })
+            views.append(
+                {
+                    "name": view_name,
+                    "columns": columns_info,
+                }
+            )
 
         return views
 
@@ -130,12 +135,14 @@ class SchemaManager:
         for table_name in table_names:
             table_indexes = inspector.get_indexes(table_name)
             for idx in table_indexes:
-                indexes.append({
-                    "name": idx["name"],
-                    "table_name": table_name,
-                    "columns": idx["column_names"],
-                    "unique": idx["unique"],
-                })
+                indexes.append(
+                    {
+                        "name": idx["name"],
+                        "table_name": table_name,
+                        "columns": idx["column_names"],
+                        "unique": idx["unique"],
+                    }
+                )
 
         return indexes
 
@@ -148,15 +155,17 @@ class SchemaManager:
         for table_name in table_names:
             fks = inspector.get_foreign_keys(table_name)
             for fk in fks:
-                foreign_keys.append({
-                    "name": fk.get("name"),
-                    "table_name": table_name,
-                    "columns": fk["constrained_columns"],
-                    "referred_table": fk["referred_table"],
-                    "referred_columns": fk["referred_columns"],
-                    "ondelete": fk.get("options", {}).get("ondelete"),
-                    "onupdate": fk.get("options", {}).get("onupdate"),
-                })
+                foreign_keys.append(
+                    {
+                        "name": fk.get("name"),
+                        "table_name": table_name,
+                        "columns": fk["constrained_columns"],
+                        "referred_table": fk["referred_table"],
+                        "referred_columns": fk["referred_columns"],
+                        "ondelete": fk.get("options", {}).get("ondelete"),
+                        "onupdate": fk.get("options", {}).get("onupdate"),
+                    }
+                )
 
         return foreign_keys
 
@@ -164,9 +173,7 @@ class SchemaManager:
         """Get row count for a table."""
         try:
             async with self.engine.connect() as conn:
-                result = await conn.execute(
-                    text(f"SELECT COUNT(*) FROM {table_name}")
-                )
+                result = await conn.execute(text(f"SELECT COUNT(*) FROM {table_name}"))
                 return result.scalar()
         except Exception as e:
             logger.debug(f"Could not get row count for {table_name}: {e}")
@@ -200,7 +207,7 @@ class SchemaManager:
     def _get_table_info_sync(self, conn, table_name: str) -> Optional[Dict[str, Any]]:
         """Get detailed table information (sync version for run_sync)."""
         inspector = inspect(conn)
-        
+
         try:
             columns = inspector.get_columns(table_name)
             pk_constraint = inspector.get_pk_constraint(table_name)
@@ -210,13 +217,16 @@ class SchemaManager:
 
             columns_info = []
             for col in columns:
-                columns_info.append({
-                    "name": col["name"],
-                    "type": str(col["type"]),
-                    "nullable": col["nullable"],
-                    "default": str(col.get("default", "")) if col.get("default") else None,
-                    "is_primary_key": col["name"] in pk_constraint.get("constrained_columns", []),
-                })
+                columns_info.append(
+                    {
+                        "name": col["name"],
+                        "type": str(col["type"]),
+                        "nullable": col["nullable"],
+                        "default": str(col.get("default", "")) if col.get("default") else None,
+                        "is_primary_key": col["name"]
+                        in pk_constraint.get("constrained_columns", []),
+                    }
+                )
 
             return {
                 "name": table_name,
@@ -276,7 +286,7 @@ class SchemaManager:
     def _list_indexes_sync(self, conn, table_name: Optional[str] = None) -> List[Dict[str, Any]]:
         """List all indexes (sync version for run_sync)."""
         inspector = inspect(conn)
-        
+
         if table_name:
             indexes = inspector.get_indexes(table_name)
             return [
@@ -294,12 +304,14 @@ class SchemaManager:
         for table in inspector.get_table_names():
             table_indexes = inspector.get_indexes(table)
             for idx in table_indexes:
-                all_indexes.append({
-                    "name": idx["name"],
-                    "table_name": table,
-                    "columns": idx["column_names"],
-                    "unique": idx["unique"],
-                })
+                all_indexes.append(
+                    {
+                        "name": idx["name"],
+                        "table_name": table,
+                        "columns": idx["column_names"],
+                        "unique": idx["unique"],
+                    }
+                )
 
         return all_indexes
 
@@ -339,9 +351,7 @@ class SchemaManager:
         for table_name in inspector.get_table_names():
             fks = inspector.get_foreign_keys(table_name)
             if fks:
-                relationships[table_name] = [
-                    fk["referred_table"] for fk in fks
-                ]
+                relationships[table_name] = [fk["referred_table"] for fk in fks]
 
         return relationships
 
@@ -371,7 +381,9 @@ class SchemaManager:
         for table in schema_info.get("tables", []):
             lines.append(f"\n{table['name']}")
             lines.append(f"  Columns: {len(table['columns'])}")
-            lines.append(f"  Primary Key: {', '.join(table['primary_key']) if table['primary_key'] else 'None'}")
+            lines.append(
+                f"  Primary Key: {', '.join(table['primary_key']) if table['primary_key'] else 'None'}"
+            )
             if table.get("row_count") is not None:
                 lines.append(f"  Row Count: {table['row_count']}")
             lines.append("  Columns:")
@@ -385,13 +397,17 @@ class SchemaManager:
         lines.append("-" * 40)
         for idx in schema_info.get("indexes", []):
             unique = "UNIQUE " if idx["unique"] else ""
-            lines.append(f"  {idx['name']} ({unique}on {idx['table_name']}): {', '.join(idx['columns'])}")
+            lines.append(
+                f"  {idx['name']} ({unique}on {idx['table_name']}): {', '.join(idx['columns'])}"
+            )
 
         # Foreign Keys
         lines.append("\n\nFOREIGN KEYS")
         lines.append("-" * 40)
         for fk in schema_info.get("foreign_keys", []):
-            lines.append(f"  {fk['table_name']}.{', '.join(fk['columns'])} -> {fk['referred_table']}.{', '.join(fk['referred_columns'])}")
+            lines.append(
+                f"  {fk['table_name']}.{', '.join(fk['columns'])} -> {fk['referred_table']}.{', '.join(fk['referred_columns'])}"
+            )
 
         lines.append("\n" + "=" * 60)
 
@@ -471,7 +487,9 @@ class SchemaExporter:
             lines.append("## Foreign Keys")
             lines.append("")
             for fk in schema_info["foreign_keys"]:
-                lines.append(f"- `{fk['table_name']}`.{', '.join(fk['columns'])} → `{fk['referred_table']}`.{', '.join(fk['referred_columns'])}")
+                lines.append(
+                    f"- `{fk['table_name']}`.{', '.join(fk['columns'])} → `{fk['referred_table']}`.{', '.join(fk['referred_columns'])}"
+                )
             lines.append("")
 
         return "\n".join(lines)

@@ -42,9 +42,7 @@ class Settings(BaseSettings):
     # API Authentication
     require_api_key: bool = True
     master_api_key: Optional[str] = None
-    api_keys: Optional[list[str]] = (
-        None  # List of API keys (parsed from comma-separated env)
-    )
+    api_keys: Optional[list[str]] = None  # List of API keys (parsed from comma-separated env)
 
     # Allowed origins for CORS - should be configured via environment variable
     # In production, specify exact origins (e.g., "https://resumeai.com")
@@ -131,9 +129,7 @@ class Settings(BaseSettings):
     enable_csrf: bool = True
     ws_heartbeat_interval: int = 10  # Send heartbeat ping every 10 seconds
     ws_connection_timeout: int = 30  # Close connection after 30s of inactivity
-    ws_max_connections_per_user: int = (
-        5  # Max concurrent WebSocket connections per user
-    )
+    ws_max_connections_per_user: int = 5  # Max concurrent WebSocket connections per user
     ws_rate_limit_connections: str = "10/minute"  # Rate limit new connections
 
     @field_validator("jwt_secret")

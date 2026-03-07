@@ -125,9 +125,7 @@ class TestGitHubOAuthFlow:
     """Test complete GitHub OAuth flow."""
 
     @pytest.mark.asyncio
-    async def test_github_oauth_complete_flow(
-        self, authenticated_client, db_session, test_user
-    ):
+    async def test_github_oauth_complete_flow(self, authenticated_client, db_session, test_user):
         """Test complete GitHub OAuth flow from connect to disconnect."""
         with patch("routes.github.settings") as mock_settings:
             mock_settings.github_client_id = "test_client_id"
@@ -208,9 +206,7 @@ class TestGitHubOAuthFlow:
             assert connection is None
 
     @pytest.mark.asyncio
-    async def test_github_oauth_state_expiration(
-        self, authenticated_client, db_session, test_user
-    ):
+    async def test_github_oauth_state_expiration(self, authenticated_client, db_session, test_user):
         """Test that expired OAuth states are rejected."""
         # Create an expired state
         expired_state = GitHubOAuthState(
@@ -253,9 +249,7 @@ class TestGitHubOAuthFlow:
             assert "not configured" in response.json()["detail"]
 
     @pytest.mark.asyncio
-    async def test_github_state_uniqueness(
-        self, authenticated_client, db_session, test_user
-    ):
+    async def test_github_state_uniqueness(self, authenticated_client, db_session, test_user):
         """Test that multiple state values are unique."""
         with patch("routes.github.settings") as mock_settings:
             mock_settings.github_client_id = "test_client_id"
@@ -409,9 +403,7 @@ class TestTokenManagement:
     @pytest.mark.asyncio
     async def test_github_token_encryption(self, db_session):
         """Test that GitHub tokens are encrypted at rest."""
-        with patch.dict(
-            os.environ, {"TOKEN_ENCRYPTION_KEY": generate_encryption_key()}
-        ):
+        with patch.dict(os.environ, {"TOKEN_ENCRYPTION_KEY": generate_encryption_key()}):
             # Create encrypted token
             plaintext_token = "gho_test_token_12345"
             encrypted_token = encrypt_token(plaintext_token)
@@ -480,9 +472,7 @@ class TestOAuthErrorHandling:
     """Test error scenarios and edge cases."""
 
     @pytest.mark.asyncio
-    async def test_duplicate_github_connection(
-        self, authenticated_client, db_session, test_user
-    ):
+    async def test_duplicate_github_connection(self, authenticated_client, db_session, test_user):
         """Test handling of duplicate GitHub connections."""
         with patch("routes.github.settings") as mock_settings:
             mock_settings.github_client_id = "test_client_id"
@@ -708,9 +698,7 @@ class TestSessionManagement:
     """Test user session management."""
 
     @pytest.mark.asyncio
-    async def test_user_profile_update(
-        self, authenticated_client, test_user, db_session
-    ):
+    async def test_user_profile_update(self, authenticated_client, test_user, db_session):
         """Test updating user profile."""
         response = await authenticated_client.put(
             "/api/v1/auth/me",

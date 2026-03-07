@@ -89,9 +89,7 @@ class RateLimitTester:
                         print(f"    Remaining: {headers['X-RateLimit-Remaining']}")
                         print(f"    Reset: {headers['X-RateLimit-Reset']}")
                 else:
-                    print(
-                        f"  Request {i + 1}: Failed with status {response.status_code}"
-                    )
+                    print(f"  Request {i + 1}: Failed with status {response.status_code}")
                     print(f"    Error: {response.text}")
                     return False
 
@@ -129,9 +127,7 @@ class RateLimitTester:
                 elif response.status_code == 200:
                     success_count += 1
                 else:
-                    print(
-                        f"  Unexpected status {response.status_code} at request {i + 1}"
-                    )
+                    print(f"  Unexpected status {response.status_code} at request {i + 1}")
                     return False
 
             except Exception as e:
@@ -139,9 +135,7 @@ class RateLimitTester:
                 return False
 
         if rate_limited:
-            print(
-                f"✓ Rate limit detected: {success_count} successful, {fail_count} rate limited"
-            )
+            print(f"✓ Rate limit detected: {success_count} successful, {fail_count} rate limited")
             return True
         else:
             print("✗ Rate limit not triggered")
@@ -242,14 +236,10 @@ class RateLimitTester:
         results.append(("Normal usage", await self.test_variants_normal(TEST_API_KEY)))
 
         # Test 2: PDF rate limits
-        results.append(
-            ("PDF rate limits", await self.test_pdf_rate_limits(TEST_API_KEY))
-        )
+        results.append(("PDF rate limits", await self.test_pdf_rate_limits(TEST_API_KEY)))
 
         # Test 3: Variants rate limit
-        results.append(
-            ("Variants rate limit", await self.test_variants_exceed_limit(TEST_API_KEY))
-        )
+        results.append(("Variants rate limit", await self.test_variants_exceed_limit(TEST_API_KEY)))
 
         # Test 4: Multiple API keys
         results.append(("Multiple API keys", await self.test_multiple_api_keys()))

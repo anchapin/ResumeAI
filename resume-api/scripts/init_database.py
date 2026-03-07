@@ -26,8 +26,7 @@ from resume_api.lib.db.schema_manager import SchemaManager
 from resume_api.lib.db.schema_validation import SchemaValidator
 
 logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
 
@@ -61,11 +60,11 @@ class DatabaseInitializer:
 
             # Create tables
             await self._create_tables()
-            
+
             # Validate schema
             if validate:
                 await self._validate_schema()
-            
+
             # Seed data if requested
             if seed:
                 await self._seed_data()
@@ -80,23 +79,23 @@ class DatabaseInitializer:
     async def _create_tables(self):
         """Create all database tables."""
         logger.info("Creating database tables...")
-        
+
         await create_db_and_tables()
-        
+
         # Verify tables were created
         async with self.engine.connect() as conn:
             result = await conn.execute(text("SELECT name FROM sqlite_master WHERE type='table'"))
             tables = [row[0] for row in result.fetchall()]
-        
+
         logger.info(f"Created {len(tables)} tables: {', '.join(tables)}")
 
     async def _validate_schema(self):
         """Validate the database schema."""
         logger.info("Validating database schema...")
-        
+
         validator = SchemaValidator(self.engine)
         schema_result = await validator.validate_all_tables()
-        
+
         if not schema_result.passed:
             logger.warning(f"Schema validation had issues: {schema_result.summary}")
             # Log details of failed checks
@@ -107,7 +106,7 @@ class DatabaseInitializer:
                             logger.warning(f"  {table.table_name}: {validation.message}")
         else:
             logger.info("Schema validation passed!")
-        
+
         # Also run integrity checks
         integrity = await validator.check_database_integrity()
         for check in integrity.get("checks", []):
@@ -129,38 +128,38 @@ class DatabaseInitializer:
     async def generate_schema_report(self):
         """Generate a schema report."""
         logger.info("Generating schema report...")
-        
+
         manager = SchemaManager(self.engine)
         report = await manager.generate_schema_report()
-        
+
         print("\n" + report)
-        
+
         return report
 
     async def export_schema_json(self, output_path: str):
         """Export schema to JSON."""
         logger.info(f"Exporting schema to {output_path}...")
-        
+
         import json
-        
+
         manager = SchemaManager(self.engine)
         schema = await manager.export_to_json()
-        
+
         with open(output_path, "w") as f:
             json.dump(schema, f, indent=2)
-        
+
         logger.info(f"Schema exported to {output_path}")
 
     async def export_schema_markdown(self, output_path: str):
         """Export schema to Markdown."""
         logger.info(f"Exporting schema to {output_path}...")
-        
+
         manager = SchemaManager(self.engine)
         markdown = await manager.export_to_markdown()
-        
+
         with open(output_path, "w") as f:
             f.write(markdown)
-        
+
         logger.info(f"Schema exported to {output_path}")
 
     async def close(self):
@@ -170,41 +169,20 @@ class DatabaseInitializer:
 
 async def main():
     """Main entry point."""
-    parser = argparse.ArgumentParser(
-        description="Initialize ResumeAI database schema"
+    parser = argparse.ArgumentParser(description="Initialize ResumeAI database schema")
+    parser.add_argument(
+        "--database-url", type=str, default=DATABASE_URL, help="Database connection URL"
+    )
+    parser.add_argument("--no-validate", action="store_true", help="Skip schema validation")
+    parser.add_argument("--seed", action="store_true", help="Seed initial data")
+    parser.add_argument(
+        "--report", action="store_true", help="Generate schema report after initialization"
     )
     parser.add_argument(
-        "--database-url",
-        type=str,
-        default=DATABASE_URL,
-        help="Database connection URL"
+        "--export-json", type=str, metavar="PATH", help="Export schema to JSON file"
     )
     parser.add_argument(
-        "--no-validate",
-        action="store_true",
-        help="Skip schema validation"
-    )
-    parser.add_argument(
-        "--seed",
-        action="store_true",
-        help="Seed initial data"
-    )
-    parser.add_argument(
-        "--report",
-        action="store_true",
-        help="Generate schema report after initialization"
-    )
-    parser.add_argument(
-        "--export-json",
-        type=str,
-        metavar="PATH",
-        help="Export schema to JSON file"
-    )
-    parser.add_argument(
-        "--export-markdown",
-        type=str,
-        metavar="PATH",
-        help="Export schema to Markdown file"
+        "--export-markdown", type=str, metavar="PATH", help="Export schema to Markdown file"
     )
 
     args = parser.parse_args()
@@ -212,10 +190,7 @@ async def main():
     initializer = DatabaseInitializer(args.database_url)
 
     try:
-        success = await initializer.initialize(
-            validate=not args.no_validate,
-            seed=args.seed
-        )
+        success = await initializer.initialize(validate=not args.no_validate, seed=args.seed)
 
         if args.report:
             await initializer.generate_schema_report()

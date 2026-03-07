@@ -59,9 +59,9 @@ class MetricsMiddleware(BaseHTTPMiddleware):
 
         # Record request size
         if request_size > 0:
-            self.exporter.http_request_size_bytes.labels(
-                method=method, endpoint=endpoint
-            ).observe(request_size)
+            self.exporter.http_request_size_bytes.labels(method=method, endpoint=endpoint).observe(
+                request_size
+            )
 
         # Call the endpoint
         response = None
@@ -102,9 +102,7 @@ class MetricsMiddleware(BaseHTTPMiddleware):
             )
 
             # Decrement in-progress counter
-            self.exporter.http_in_progress.labels(
-                method=method, endpoint=endpoint
-            ).dec()
+            self.exporter.http_in_progress.labels(method=method, endpoint=endpoint).dec()
 
         return response
 

@@ -10,7 +10,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Dict, List, Optional, Any
 
-from sqlalchemy import inspect, text
+from sqlalchemy import inspect
 from sqlalchemy.ext.asyncio import AsyncEngine
 
 logger = logging.getLogger(__name__)
@@ -18,6 +18,7 @@ logger = logging.getLogger(__name__)
 
 class ValidationStatus(Enum):
     """Validation status enumeration."""
+
     PASSED = "passed"
     FAILED = "failed"
     WARNING = "warning"
@@ -26,6 +27,7 @@ class ValidationStatus(Enum):
 @dataclass
 class ValidationResult:
     """Result of a single validation check."""
+
     check_name: str
     status: ValidationStatus
     message: str
@@ -39,6 +41,7 @@ class ValidationResult:
 @dataclass
 class TableValidationResult:
     """Validation result for a specific table."""
+
     table_name: str
     passed: bool = True
     validations: List[ValidationResult] = field(default_factory=list)
@@ -53,6 +56,7 @@ class TableValidationResult:
 @dataclass
 class SchemaValidationResult:
     """Complete schema validation result."""
+
     passed: bool = True
     tables: List[TableValidationResult] = field(default_factory=list)
     summary: Optional[Dict[str, Any]] = None
@@ -117,16 +121,20 @@ class SchemaValidator:
         # Check for missing tables
         missing_tables = self.EXPECTED_TABLES - existing_tables
         if missing_tables:
-            result.add_table(TableValidationResult(
-                table_name="__all_tables__",
-                passed=False,
-                validations=[ValidationResult(
-                    check_name="table_existence",
-                    status=ValidationStatus.FAILED,
-                    message=f"Missing tables: {', '.join(missing_tables)}",
-                    details={"missing": list(missing_tables)}
-                )]
-            ))
+            result.add_table(
+                TableValidationResult(
+                    table_name="__all_tables__",
+                    passed=False,
+                    validations=[
+                        ValidationResult(
+                            check_name="table_existence",
+                            status=ValidationStatus.FAILED,
+                            message=f"Missing tables: {', '.join(missing_tables)}",
+                            details={"missing": list(missing_tables)},
+                        )
+                    ],
+                )
+            )
 
         # Validate each existing table
         for table_name in existing_tables:
@@ -163,44 +171,52 @@ class SchemaValidator:
 
         async with self.engine.connect() as conn:
             inspector_result = await conn.run_sync(self._validate_table_sync, table_name)
-            
+
         # Process validation results
         if inspector_result["error"]:
-            result.add_validation(ValidationResult(
-                check_name="table_exists",
-                status=ValidationStatus.FAILED,
-                message=f"Table does not exist: {table_name}",
-                details={"error": inspector_result["error"]}
-            ))
+            result.add_validation(
+                ValidationResult(
+                    check_name="table_exists",
+                    status=ValidationStatus.FAILED,
+                    message=f"Table does not exist: {table_name}",
+                    details={"error": inspector_result["error"]},
+                )
+            )
             return result
 
         # Table exists, check columns
         columns = inspector_result.get("columns", [])
         if not columns:
-            result.add_validation(ValidationResult(
-                check_name="column_count",
-                status=ValidationStatus.FAILED,
-                message=f"Table {table_name} has no columns",
-            ))
+            result.add_validation(
+                ValidationResult(
+                    check_name="column_count",
+                    status=ValidationStatus.FAILED,
+                    message=f"Table {table_name} has no columns",
+                )
+            )
 
         # Check for primary key
         pk_columns = inspector_result.get("primary_key", [])
         if not pk_columns:
-            result.add_validation(ValidationResult(
-                check_name="primary_key",
-                status=ValidationStatus.WARNING,
-                message=f"Table {table_name} has no primary key",
-            ))
+            result.add_validation(
+                ValidationResult(
+                    check_name="primary_key",
+                    status=ValidationStatus.WARNING,
+                    message=f"Table {table_name} has no primary key",
+                )
+            )
 
         # Validate foreign keys
         fk_issues = inspector_result.get("fk_issues", [])
         for fk_issue in fk_issues:
-            result.add_validation(ValidationResult(
-                check_name="foreign_key",
-                status=ValidationStatus.FAILED,
-                message=fk_issue["message"],
-                details=fk_issue
-            ))
+            result.add_validation(
+                ValidationResult(
+                    check_name="foreign_key",
+                    status=ValidationStatus.FAILED,
+                    message=fk_issue["message"],
+                    details=fk_issue,
+                )
+            )
 
         return result
 
@@ -235,12 +251,14 @@ class SchemaValidator:
             for fk in foreign_keys:
                 # Check if referred table exists
                 if fk["referred_table"] not in table_names:
-                    result["fk_issues"].append({
-                        "message": f"Foreign key references non-existent table: {fk['referred_table']}",
-                        "table": table_name,
-                        "columns": fk["constrained_columns"],
-                        "referred_table": fk["referred_table"],
-                    })
+                    result["fk_issues"].append(
+                        {
+                            "message": f"Foreign key references non-existent table: {fk['referred_table']}",
+                            "table": table_name,
+                            "columns": fk["constrained_columns"],
+                            "referred_table": fk["referred_table"],
+                        }
+                    )
 
             result["foreign_keys"] = foreign_keys
 
@@ -264,30 +282,36 @@ class SchemaValidator:
         async with self.engine.connect() as conn:
             # Check 1: Count tables
             table_count = await conn.run_sync(self._count_tables_sync)
-            checks.append({
-                "name": "table_count",
-                "status": "passed" if table_count > 0 else "failed",
-                "message": f"Found {table_count} tables",
-                "details": {"count": table_count}
-            })
+            checks.append(
+                {
+                    "name": "table_count",
+                    "status": "passed" if table_count > 0 else "failed",
+                    "message": f"Found {table_count} tables",
+                    "details": {"count": table_count},
+                }
+            )
 
             # Check 2: Verify foreign key integrity
             fk_result = await conn.run_sync(self._check_foreign_keys_sync)
-            checks.append({
-                "name": "foreign_key_integrity",
-                "status": fk_result["status"],
-                "message": fk_result["message"],
-                "details": fk_result.get("details", {})
-            })
+            checks.append(
+                {
+                    "name": "foreign_key_integrity",
+                    "status": fk_result["status"],
+                    "message": fk_result["message"],
+                    "details": fk_result.get("details", {}),
+                }
+            )
 
             # Check 3: Verify indexes
             index_result = await conn.run_sync(self._check_indexes_sync)
-            checks.append({
-                "name": "index_analysis",
-                "status": index_result["status"],
-                "message": index_result["message"],
-                "details": index_result.get("details", {})
-            })
+            checks.append(
+                {
+                    "name": "index_analysis",
+                    "status": index_result["status"],
+                    "message": index_result["message"],
+                    "details": index_result.get("details", {}),
+                }
+            )
 
         return {
             "passed": all(c["status"] == "passed" for c in checks),
@@ -310,11 +334,13 @@ class SchemaValidator:
                 fks = inspector.get_foreign_keys(table_name)
                 for fk in fks:
                     if fk["referred_table"] not in table_names:
-                        issues.append({
-                            "table": table_name,
-                            "columns": fk["constrained_columns"],
-                            "referred_table": fk["referred_table"],
-                        })
+                        issues.append(
+                            {
+                                "table": table_name,
+                                "columns": fk["constrained_columns"],
+                                "referred_table": fk["referred_table"],
+                            }
+                        )
             except Exception:
                 pass
 
@@ -322,14 +348,10 @@ class SchemaValidator:
             return {
                 "status": "failed",
                 "message": f"Found {len(issues)} broken foreign key(s)",
-                "details": {"issues": issues}
+                "details": {"issues": issues},
             }
 
-        return {
-            "status": "passed",
-            "message": "All foreign keys are valid",
-            "details": {}
-        }
+        return {"status": "passed", "message": "All foreign keys are valid", "details": {}}
 
     def _check_indexes_sync(self, conn) -> Dict[str, Any]:
         """Check index status (sync version)."""
@@ -347,7 +369,7 @@ class SchemaValidator:
         return {
             "status": "passed",
             "message": f"Found {index_count} indexes",
-            "details": {"index_count": index_count}
+            "details": {"index_count": index_count},
         }
 
     async def validate_column(
@@ -371,8 +393,7 @@ class SchemaValidator:
         """
         async with self.engine.connect() as conn:
             result = await conn.run_sync(
-                self._validate_column_sync,
-                table_name, column_name, expected_type, nullable
+                self._validate_column_sync, table_name, column_name, expected_type, nullable
             )
 
         if result["exists"]:
@@ -391,21 +412,21 @@ class SchemaValidator:
                     check_name="column_definition",
                     status=ValidationStatus.FAILED,
                     message="; ".join(messages),
-                    details=result
+                    details=result,
                 )
 
             return ValidationResult(
                 check_name="column_definition",
                 status=ValidationStatus.PASSED,
                 message=f"Column {table_name}.{column_name} is valid",
-                details=result
+                details=result,
             )
 
         return ValidationResult(
             check_name="column_exists",
             status=ValidationStatus.FAILED,
             message=f"Column {table_name}.{column_name} does not exist",
-            details=result
+            details=result,
         )
 
     def _validate_column_sync(
@@ -414,7 +435,7 @@ class SchemaValidator:
         table_name: str,
         column_name: str,
         expected_type: Optional[str],
-        nullable: Optional[bool]
+        nullable: Optional[bool],
     ) -> Dict[str, Any]:
         """Validate column (sync version)."""
         inspector = inspect(conn)

@@ -50,9 +50,7 @@ class ReplicaHealth:
     response_time_ms: Optional[float] = None
     consecutive_failures: int = 0
 
-    def mark_healthy(
-        self, lag: Optional[float] = None, response_time: Optional[float] = None
-    ):
+    def mark_healthy(self, lag: Optional[float] = None, response_time: Optional[float] = None):
         """Mark replica as healthy."""
         self.is_healthy = True
         self.last_check_at = datetime.utcnow()
@@ -73,9 +71,7 @@ class ReplicaHealth:
 class ReplicaPool:
     """Manages a pool of read replicas with health monitoring and failover."""
 
-    def __init__(
-        self, primary_url: str, replicas: Optional[List[ReplicaConfig]] = None
-    ):
+    def __init__(self, primary_url: str, replicas: Optional[List[ReplicaConfig]] = None):
         """
         Initialize replica pool.
 
@@ -137,9 +133,7 @@ class ReplicaPool:
                 echo=config.echo,
             )
 
-        logger.info(
-            f"Initialized replica pool with {len(self.replica_engines)} replicas"
-        )
+        logger.info(f"Initialized replica pool with {len(self.replica_engines)} replicas")
 
     async def close(self):
         """Close all database connections."""
@@ -171,9 +165,7 @@ class ReplicaPool:
 
         return health_status
 
-    async def _check_replica_health(
-        self, engine: AsyncEngine, url: str, timeout: int = 5
-    ) -> bool:
+    async def _check_replica_health(self, engine: AsyncEngine, url: str, timeout: int = 5) -> bool:
         """Check if a single replica is healthy."""
         try:
             async with asyncio.timeout(timeout):
@@ -195,9 +187,7 @@ class ReplicaPool:
                             pass
 
                     if url in self.replica_health:
-                        self.replica_health[url].mark_healthy(
-                            lag=lag, response_time=elapsed
-                        )
+                        self.replica_health[url].mark_healthy(lag=lag, response_time=elapsed)
 
                     return True
         except asyncio.TimeoutError:
@@ -270,8 +260,6 @@ class ReplicaPool:
 
 def create_replica_pool_from_env() -> ReplicaPool:
     """Create a replica pool from environment variables."""
-    primary_url = os.getenv(
-        "DATABASE_URL", "postgresql+asyncpg://user:password@localhost/resumeai"
-    )
+    primary_url = os.getenv("DATABASE_URL", "postgresql+asyncpg://user:password@localhost/resumeai")
 
     return ReplicaPool(primary_url)

@@ -72,9 +72,7 @@ class Job:
         data["priority"] = self.priority.value
         data["created_at"] = self.created_at.isoformat()
         data["started_at"] = self.started_at.isoformat() if self.started_at else None
-        data["completed_at"] = (
-            self.completed_at.isoformat() if self.completed_at else None
-        )
+        data["completed_at"] = self.completed_at.isoformat() if self.completed_at else None
         return data
 
     @classmethod
@@ -89,15 +87,11 @@ class Job:
             data["created_at"] = datetime.fromisoformat(data["created_at"])
         if isinstance(data.get("started_at"), str):
             data["started_at"] = (
-                datetime.fromisoformat(data["started_at"])
-                if data["started_at"]
-                else None
+                datetime.fromisoformat(data["started_at"]) if data["started_at"] else None
             )
         if isinstance(data.get("completed_at"), str):
             data["completed_at"] = (
-                datetime.fromisoformat(data["completed_at"])
-                if data["completed_at"]
-                else None
+                datetime.fromisoformat(data["completed_at"]) if data["completed_at"] else None
             )
         return cls(**data)
 
@@ -245,11 +239,7 @@ class LocalQueue(JobQueue):
         jobs_to_remove = []
 
         for job_id, job in self.jobs.items():
-            if (
-                job.is_completed()
-                and job.completed_at
-                and job.completed_at < cutoff_date
-            ):
+            if job.is_completed() and job.completed_at and job.completed_at < cutoff_date:
                 jobs_to_remove.append(job_id)
 
         for job_id in jobs_to_remove:
@@ -272,14 +262,10 @@ class LocalQueue(JobQueue):
             if job and job.state == JobState.PENDING:
                 pending_jobs.append((job.priority.value, job.created_at, job_id))
 
-        pending_jobs.sort(
-            key=lambda x: (-x[0], x[1])
-        )  # Sort by priority desc, then created_at asc
+        pending_jobs.sort(key=lambda x: (-x[0], x[1]))  # Sort by priority desc, then created_at asc
         self.queue = [job_id for _, _, job_id in pending_jobs]
 
-    def _update_job_states(
-        self, job_id: str, old_state: JobState, new_state: JobState
-    ) -> None:
+    def _update_job_states(self, job_id: str, old_state: JobState, new_state: JobState) -> None:
         """Update job state tracking."""
         if job_id in self.job_states[old_state]:
             self.job_states[old_state].remove(job_id)

@@ -8,9 +8,11 @@ from config import settings
 @pytest.mark.asyncio
 async def test_get_api_key_valid_master_key():
     """Test get_api_key with valid master key."""
-    with patch.object(settings, "require_api_key", True), patch.object(
-        settings, "master_api_key", "master-secret"
-    ), patch.object(settings, "api_keys", ["user-key"]):
+    with (
+        patch.object(settings, "require_api_key", True),
+        patch.object(settings, "master_api_key", "master-secret"),
+        patch.object(settings, "api_keys", ["user-key"]),
+    ):
 
         result = await get_api_key("master-secret")
         assert result == "master-secret"
@@ -19,9 +21,11 @@ async def test_get_api_key_valid_master_key():
 @pytest.mark.asyncio
 async def test_get_api_key_valid_user_key():
     """Test get_api_key with valid user key."""
-    with patch.object(settings, "require_api_key", True), patch.object(
-        settings, "master_api_key", "master-secret"
-    ), patch.object(settings, "api_keys", ["user-key", "another-key"]):
+    with (
+        patch.object(settings, "require_api_key", True),
+        patch.object(settings, "master_api_key", "master-secret"),
+        patch.object(settings, "api_keys", ["user-key", "another-key"]),
+    ):
 
         result = await get_api_key("user-key")
         assert result == "user-key"
@@ -30,9 +34,11 @@ async def test_get_api_key_valid_user_key():
 @pytest.mark.asyncio
 async def test_get_api_key_invalid_key():
     """Test get_api_key with invalid key."""
-    with patch.object(settings, "require_api_key", True), patch.object(
-        settings, "master_api_key", "master-secret"
-    ), patch.object(settings, "api_keys", ["user-key"]):
+    with (
+        patch.object(settings, "require_api_key", True),
+        patch.object(settings, "master_api_key", "master-secret"),
+        patch.object(settings, "api_keys", ["user-key"]),
+    ):
 
         with pytest.raises(HTTPException) as exc_info:
             await get_api_key("wrong-key")

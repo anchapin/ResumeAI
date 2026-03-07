@@ -113,10 +113,7 @@ class TestErrorLogging:
         output = captured.out
 
         if output:
-            assert (
-                "Specific validation failure" in output
-                or "validation" in output.lower()
-            )
+            assert "Specific validation failure" in output or "validation" in output.lower()
 
     def test_error_reproduction_json_format(self, capsys):
         """Reproduce error scenario and verify JSON logging output."""

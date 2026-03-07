@@ -56,16 +56,12 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         response: Response = await call_next(request)
 
         # Add security headers
-        response.headers["Strict-Transport-Security"] = (
-            "max-age=31536000; includeSubDomains"
-        )
+        response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["X-Frame-Options"] = "DENY"
         response.headers["X-XSS-Protection"] = "1; mode=block"
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
-        response.headers["Permissions-Policy"] = (
-            "geolocation=(), microphone=(), camera=()"
-        )
+        response.headers["Permissions-Policy"] = "geolocation=(), microphone=(), camera=()"
 
         # Add deprecation notice for CLI authentication mode
         response.headers["X-Deprecated-Notice"] = (
@@ -131,9 +127,7 @@ def setup_prometheus(app: FastAPI):
                 metrics_path=getattr(settings, "metrics_path", "/metrics"),
             )
         except (ImportError, RuntimeError) as e:
-            logger.warning(
-                "prometheus_fastapi_instrumentator not available", error=str(e)
-            )
+            logger.warning("prometheus_fastapi_instrumentator not available", error=str(e))
 
 
 # Define lifespan to handle startup and shutdown events

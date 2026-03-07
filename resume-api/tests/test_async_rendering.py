@@ -51,12 +51,8 @@ async def test_render_pdf_concurrency():
     app.dependency_overrides[get_api_key] = lambda: "valid-test-key"
 
     # Patch the ResumeGenerator.generate_pdf method
-    with patch(
-        "lib.cli.generator.ResumeGenerator.generate_pdf", side_effect=slow_generate_pdf
-    ):
-        async with AsyncClient(
-            transport=ASGITransport(app=app), base_url="http://test"
-        ) as ac:
+    with patch("lib.cli.generator.ResumeGenerator.generate_pdf", side_effect=slow_generate_pdf):
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
 
             # Prepare requests
             payload = {"resume_data": SAMPLE_RESUME_DATA, "variant": "base"}
@@ -89,9 +85,7 @@ async def test_render_pdf_concurrency():
     # Verify performance (should be parallel)
     # Expected: slightly more than 1.0s (due to overhead), but much less than 2.0s
     print(f"Total duration for 2 requests: {duration:.2f}s")
-    assert (
-        duration < 1.5
-    ), f"Requests took {duration:.2f}s, expected < 1.5s (parallel execution)"
+    assert duration < 1.5, f"Requests took {duration:.2f}s, expected < 1.5s (parallel execution)"
 
     return duration
 
