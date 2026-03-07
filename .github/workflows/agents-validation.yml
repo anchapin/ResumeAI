@@ -1,0 +1,60 @@
+name: Validate AGENTS.md
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "AGENTS.md"
+  pull_request:
+    branches: [main]
+    paths:
+      - "AGENTS.md"
+
+jobs:
+  validate-agents-md:
+    name: Validate AGENTS.md
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check AGENTS.md exists
+        id: check_file
+        run: |
+          if [ ! -f "AGENTS.md" ]; then
+            echo "error=AGENTS.md file not found" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+          echo "exists=true" >> $GITHUB_OUTPUT
+
+      - name: Validate AGENTS.md structure
+        if: steps.check_file.outputs.exists == 'true'
+        run: |
+          # Check for required sections
+          REQUIRED_SECTIONS=("Build" "Testing" "Code Style")
+          MISSING_SECTIONS=""
+
+          for section in "${REQUIRED_SECTIONS[@]}"; do
+            if ! grep -q "$section" AGENTS.md; then
+              MISSING_SECTIONS="$MISSING_SECTIONS $section"
+            fi
+          done
+
+          if [ -n "$MISSING_SECTIONS" ]; then
+            echo "error=Missing required sections:$MISSING_SECTIONS" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+
+          echo "validation=passed" >> $GITHUB_OUTPUT
+
+      - name: Check file is not empty
+        if: steps.check_file.outputs.exists == 'true'
+        run: |
+          if [ ! -s "AGENTS.md" ]; then
+            echo "error=AGENTS.md is empty" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+
+      - name: Report validation success
+        if: success()
+        run: echo "AGENTS.md validation passed"

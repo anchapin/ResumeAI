@@ -7,6 +7,13 @@ export default defineConfig({
     globals: true,
     setupFiles: './vitest.setup.ts',
     exclude: ['node_modules', 'dist', '.idea', '.git', '.cache', 'tests/e2e/**'],
+    // Track test results for flaky test detection
+    onConsoleLog: (type, message) => {
+      // Track console output for debugging
+      if (message.includes('FAIL') || message.includes('failed')) {
+        console.log(`[Test ${type}]: ${message}`);
+      }
+    },
   },
   resolve: {
     alias: {
