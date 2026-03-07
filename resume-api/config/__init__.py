@@ -83,10 +83,17 @@ class Settings(BaseSettings):
     sentry_environment: str = "production"
     sentry_traces_sample_rate: float = 0.1
 
+
     # Distributed Tracing (OpenTelemetry) Configuration
     enable_tracing: bool = False
     otlp_endpoint: Optional[str] = None  # OTLP exporter endpoint (e.g., "http://localhost:4317")
     trace_sample_rate: float = 1.0  # 1.0 = 100% of traces, 0.1 = 10%
+
+    # Distributed Tracing Configuration
+    enable_tracing: bool = False
+    otlp_endpoint: Optional[str] = None
+    trace_sample_rate: float = 1.0
+
 
     # Alerting Configuration
     enable_alerting: bool = True
