@@ -85,9 +85,7 @@ def _record_profile(name: str, duration: float, memory_delta: Optional[int] = No
 
     profile_execution_seconds.labels(name=name, type="function").observe(duration)
     if memory_delta is not None and _should_track_memory():
-        profile_memory_usage_bytes.labels(name=name, type="function").observe(
-            abs(memory_delta)
-        )
+        profile_memory_usage_bytes.labels(name=name, type="function").observe(abs(memory_delta))
 
 
 def profile(name: Optional[str] = None):
@@ -130,7 +128,9 @@ def profile(name: Optional[str] = None):
                         end_memory = tracemalloc.get_traced_memory()[0]
                         memory_delta = end_memory - start_memory
 
-                    _record_profile(profile_name, duration, memory_delta if _should_track_memory() else None)
+                    _record_profile(
+                        profile_name, duration, memory_delta if _should_track_memory() else None
+                    )
                     profile_calls_total.labels(
                         name=profile_name, type="async", status=success
                     ).inc()
@@ -169,10 +169,10 @@ def profile(name: Optional[str] = None):
                         end_memory = tracemalloc.get_traced_memory()[0]
                         memory_delta = end_memory - start_memory
 
-                    _record_profile(profile_name, duration, memory_delta if _should_track_memory() else None)
-                    profile_calls_total.labels(
-                        name=profile_name, type="sync", status=success
-                    ).inc()
+                    _record_profile(
+                        profile_name, duration, memory_delta if _should_track_memory() else None
+                    )
+                    profile_calls_total.labels(name=profile_name, type="sync", status=success).inc()
 
                     if _should_log_results():
                         logger.debug(
@@ -220,13 +220,9 @@ def profile_context(name: str):
             memory_delta = end_memory - start_memory
 
         if _is_profiling_enabled():
-            profile_execution_seconds.labels(name=name, type="context").observe(
-                duration
-            )
+            profile_execution_seconds.labels(name=name, type="context").observe(duration)
             if memory_delta > 0 and _should_track_memory():
-                profile_memory_usage_bytes.labels(name=name, type="context").observe(
-                    memory_delta
-                )
+                profile_memory_usage_bytes.labels(name=name, type="context").observe(memory_delta)
             profile_calls_total.labels(name=name, type="context", status=success).inc()
 
         if _should_log_results():
@@ -271,16 +267,12 @@ async def async_profile_context(name: str):
             memory_delta = end_memory - start_memory
 
         if _is_profiling_enabled():
-            profile_execution_seconds.labels(name=name, type="async_context").observe(
-                duration
-            )
+            profile_execution_seconds.labels(name=name, type="async_context").observe(duration)
             if memory_delta > 0 and _should_track_memory():
-                profile_memory_usage_bytes.labels(
-                    name=name, type="async_context"
-                ).observe(memory_delta)
-            profile_calls_total.labels(
-                name=name, type="async_context", status=success
-            ).inc()
+                profile_memory_usage_bytes.labels(name=name, type="async_context").observe(
+                    memory_delta
+                )
+            profile_calls_total.labels(name=name, type="async_context", status=success).inc()
 
         if _should_log_results():
             logger.debug(
@@ -347,16 +339,12 @@ class Profiler:
             memory_delta = end_memory - (self.start_memory or 0)
 
         if _is_profiling_enabled():
-            profile_execution_seconds.labels(name=self.name, type="profiler").observe(
-                duration
-            )
+            profile_execution_seconds.labels(name=self.name, type="profiler").observe(duration)
             if memory_delta > 0 and _should_track_memory():
                 profile_memory_usage_bytes.labels(name=self.name, type="profiler").observe(
                     memory_delta
                 )
-            profile_calls_total.labels(
-                name=self.name, type="profiler", status="success"
-            ).inc()
+            profile_calls_total.labels(name=self.name, type="profiler", status="success").inc()
 
         if _should_log_results():
             logger.debug(
