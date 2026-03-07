@@ -420,21 +420,81 @@ groups:
           description: |
             Service restart detected. Check logs for crash causes.
 
-  # Rate Limiting Alerts
-  - name: rate_limiting
+  # Deployment Observability Alerts (Issue #820)
+  - name: deployment_observability
     interval: 30s
     rules:
-      # High rate limit violations
-      - alert: HighRateLimitViolations
+      # Alert when a deployment is in progress for too long
+      - alert: DeploymentInProgressTooLong
         expr: |
-          rate(rate_limit_exceeded_total[5m]) > 100
-        for: 5m
+          deployment_duration_seconds > 3600
+        for: 10m
         labels:
           severity: warning
           service: resume-api
-          component: rate_limit
+          component: deployment
         annotations:
-          summary: "High rate limit violations ({{ $value | humanize }}/sec)"
+          summary: "Deployment in progress for more than 1 hour"
           description: |
-            Rate limit is being exceeded {{ $value | humanize }} times per second.
-            Investigate traffic patterns or adjust rate limits if needed.
+            Deployment {{ $labels.deployment_id }} in environment {{ $labels.environment }}
+            has been running for over 1 hour. Check for issues.
+
+      # Alert on deployment failure
+      - alert: DeploymentFailed
+        expr: |
+          increase(deployment_total{status="failed"}[5m]) > 0
+        for: 1m
+        labels:
+          severity: critical
+          service: resume-api
+          component: deployment
+        annotations:
+          summary: "Deployment failed in {{ $labels.environment }}"
+          description: |
+            A deployment has failed in {{ $labels.environment }} environment.
+            Check deployment logs immediately.
+
+      # Alert on deployment rollback
+      - alert: DeploymentRolledBack
+        expr: |
+          increase(deployment_total{status="rolled_back"}[5m]) > 0
+        for: 1m
+        labels:
+          severity: warning
+          service: resume-api
+          component: deployment
+        annotations:
+          summary: "Deployment rolled back in {{ $labels.environment }}"
+          description: |
+            A deployment has been rolled back in {{ $labels.environment }} environment.
+            Investigate the cause of the rollback.
+
+      # Alert on health transition to unhealthy
+      - alert: HealthTransitionToUnhealthy
+        expr: |
+          health_transitions_total{to_state="unhealthy"} > 0
+        for: 1m
+        labels:
+          severity: critical
+          service: resume-api
+          component: health
+        annotations:
+          summary: "Service health transitioned to unhealthy"
+          description: |
+            Service has transitioned to unhealthy state in {{ $labels.environment }}.
+            Check service health endpoints immediately.
+
+      # Alert on high deployment frequency
+      - alert: HighDeploymentFrequency
+        expr: |
+          rate(deployment_total[1h]) > 10
+        for: 5m
+        labels:
+          severity: info
+          service: resume-api
+          component: deployment
+        annotations:
+          summary: "High deployment frequency detected"
+          description: |
+            More than 10 deployments per hour detected in {{ $labels.environment }}.
+            This may indicate instability or automated deployments.
