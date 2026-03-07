@@ -8,7 +8,10 @@ enabling distributed tracing across microservices.
 
 
 
+
 import os
+
+
 
 
 
@@ -25,6 +28,7 @@ from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExport
 
 
 
+
 from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
     OTLPSpanExporter as OTLPSpanExporterHTTP,
 )
@@ -38,6 +42,11 @@ from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
 
 
 from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter as OTLPSpanExporterHTTP
+
+
+from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
+    OTLPSpanExporter as OTLPSpanExporterHTTP,
+)
 
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
@@ -106,6 +115,9 @@ class TracingConfig:
 
 
 
+
+
+
                 logging.warning(f"Failed to set up OTLP exporter: {e}")
 
     def instrument_fastapi(self, app):
@@ -124,6 +136,9 @@ class TracingConfig:
 
 
 
+
+
+
             logging.warning(f"Failed to instrument FastAPI: {e}")
 
     def instrument_httpx(self):
@@ -132,6 +147,9 @@ class TracingConfig:
             HTTPXClientInstrumentor().instrument()
         except Exception as e:
             import logging
+
+
+
 
 
 
