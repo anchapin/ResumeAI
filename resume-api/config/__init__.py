@@ -18,6 +18,7 @@ class Settings(BaseSettings):
     # API Configuration
     app_name: str = "Resume API"
     app_version: str = "1.0.0"
+    service_name: str = "resume-api"  # Service name for tracing/metrics
     api_v1_prefix: str = "/api/v1"
     debug: bool = False
 
@@ -77,6 +78,11 @@ class Settings(BaseSettings):
     sentry_dsn: Optional[str] = None
     sentry_environment: str = "production"
     sentry_traces_sample_rate: float = 0.1
+
+    # Distributed Tracing Configuration
+    enable_tracing: bool = False
+    otlp_endpoint: Optional[str] = None
+    trace_sample_rate: float = 1.0
 
     # Alerting Configuration
     enable_alerting: bool = True
