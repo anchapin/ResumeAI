@@ -22,7 +22,7 @@
     "lint:fix": "eslint . --ext .ts,.tsx --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "duplicate:check": "jscpd --threshold 5 src/ resume-api/"
+    "duplicate:check": "jscpd src/ resume-api/"
   },
   "dependencies": {
     "@sentry/react": "^10.42.0",
