@@ -55,8 +55,7 @@ class ResumeTailorer:
         # Validate provider
         if self.ai_provider not in ["openai", "claude", "gemini"]:
             raise ValueError(
-                f"Invalid AI provider: {ai_provider}. "
-                "Must be 'openai', 'claude', or 'gemini'"
+                f"Invalid AI provider: {ai_provider}. " "Must be 'openai', 'claude', or 'gemini'"
             )
 
         # Initialize AI client
@@ -149,9 +148,7 @@ class ResumeTailorer:
         """
         logger.info(f"Tailoring resume for {company_name} - {job_title}")
 
-        prompt = self._build_tailor_prompt(
-            resume_data, job_description, company_name, job_title
-        )
+        prompt = self._build_tailor_prompt(resume_data, job_description, company_name, job_title)
 
         response = self._call_ai(prompt)
         tailored_data = self._parse_tailor_response(response, resume_data)
@@ -200,9 +197,7 @@ Return ONLY a valid JSON object matching the exact same JSON Resume schema as th
             if json_match:
                 tailored = json.loads(json_match.group(0))
                 # Validate that the response has at least basics or work
-                if isinstance(tailored, dict) and (
-                    "basics" in tailored or "work" in tailored
-                ):
+                if isinstance(tailored, dict) and ("basics" in tailored or "work" in tailored):
                     return tailored
         except (json.JSONDecodeError, AttributeError):
             logger.warning("Failed to parse AI tailoring response, using original data")
@@ -291,9 +286,7 @@ Return ONLY valid JSON, nothing else."""
         sorted_kw = sorted(word_freq.items(), key=lambda x: x[1], reverse=True)
         return [word for word, _ in sorted_kw[:20]]
 
-    def suggest_improvements(
-        self, resume_data: Dict[str, Any], job_description: str
-    ) -> List[str]:
+    def suggest_improvements(self, resume_data: Dict[str, Any], job_description: str) -> List[str]:
         """
         Suggest improvements to a resume based on a job description using AI.
 
@@ -346,14 +339,11 @@ Return ONLY valid JSON, nothing else."""
         missing = [kw for kw in keywords[:10] if kw not in resume_text]
 
         if missing:
-            suggestions.append(
-                f"Consider incorporating these keywords: {', '.join(missing[:5])}"
-            )
+            suggestions.append(f"Consider incorporating these keywords: {', '.join(missing[:5])}")
 
         if not re.search(r"\d+%|\$\d+|\d+\+ years", resume_text):
             suggestions.append(
-                "Add quantifiable metrics to your achievements "
-                "(e.g., 'increased sales by 25%')"
+                "Add quantifiable metrics to your achievements " "(e.g., 'increased sales by 25%')"
             )
 
         if "basics" in resume_data and isinstance(resume_data["basics"], dict):
@@ -416,9 +406,7 @@ class MockResumeTailorer:
         words = re.findall(r"\b[a-zA-Z]{3,}\b", job_description.lower())
         return list(set(words))[:20]
 
-    def suggest_improvements(
-        self, resume_data: Dict[str, Any], job_description: str
-    ) -> List[str]:
+    def suggest_improvements(self, resume_data: Dict[str, Any], job_description: str) -> List[str]:
         """Provide mock improvement suggestions."""
         return [
             "Add more quantifiable achievements",

@@ -151,7 +151,4 @@ class TestGitHubOAuthConfig:
         """Test that settings has default callback URL."""
         from config import settings
 
-        assert (
-            settings.github_oauth_callback_url
-            == "http://127.0.0.1:8000/github/callback"
-        )
+        assert settings.github_oauth_callback_url == "http://127.0.0.1:8000/github/callback"

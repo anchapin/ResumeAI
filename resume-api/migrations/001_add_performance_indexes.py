@@ -102,17 +102,13 @@ async def create_indexes():
                     columns_str = ", ".join(columns)
                     sql = f"CREATE INDEX IF NOT EXISTS {index_name} ON {table_name} ({columns_str})"
                     await conn.execute(text(sql))
-                    print(
-                        f"✓ Created index: {index_name} on {table_name}({columns_str})"
-                    )
+                    print(f"✓ Created index: {index_name} on {table_name}({columns_str})")
                 else:
                     # SQLite syntax
                     columns_str = ", ".join(columns)
                     sql = f"CREATE INDEX IF NOT EXISTS {index_name} ON {table_name} ({columns_str})"
                     await conn.execute(text(sql))
-                    print(
-                        f"✓ Created index: {index_name} on {table_name}({columns_str})"
-                    )
+                    print(f"✓ Created index: {index_name} on {table_name}({columns_str})")
             except Exception as e:
                 print(f"⚠ Index {index_name} creation failed (may already exist): {e}")
 

@@ -67,9 +67,7 @@ def calculate_backoff_delay(
         delay in seconds
     """
     # exponential: initial_delay * (backoff_multiplier ^ attempt_number)
-    exponential_delay = config.initial_delay * (
-        config.backoff_multiplier**attempt_number
-    )
+    exponential_delay = config.initial_delay * (config.backoff_multiplier**attempt_number)
     capped_delay = min(exponential_delay, config.max_delay)
 
     # add jitter: random variance of 0 to jitter_fraction * delay

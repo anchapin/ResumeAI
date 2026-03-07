@@ -42,9 +42,7 @@ class TestLatexEscape(unittest.TestCase):
         self.assertEqual(_latex_escape(text), Markup(expected))
 
     def test_complex_string(self):
-        text = (
-            r"Combined & Complex % String # With _ Special " r"{ Characters } ~ ^ \ < >"
-        )
+        text = r"Combined & Complex % String # With _ Special " r"{ Characters } ~ ^ \ < >"
         expected = (
             r"Combined \& Complex \% String \# With \_ Special "
             r"\{ Characters \} \textasciitilde{} \^{} \textbackslash{} "

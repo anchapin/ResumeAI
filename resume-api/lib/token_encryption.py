@@ -144,9 +144,7 @@ class TokenEncryption:
             return decrypted_str
 
         except InvalidToken as e:
-            raise TokenEncryptionError(
-                f"Decryption failed (invalid token or wrong key): {e}"
-            )
+            raise TokenEncryptionError(f"Decryption failed (invalid token or wrong key): {e}")
         except Exception as e:
             raise TokenEncryptionError(f"Unexpected error during decryption: {e}")
 

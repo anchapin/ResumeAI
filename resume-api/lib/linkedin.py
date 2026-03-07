@@ -93,9 +93,7 @@ class LinkedInImporter:
 
         # Basic profile info
         if "firstName" in data or "lastName" in data:
-            result["name"] = (
-                f"{data.get('firstName', '')} {data.get('lastName', '')}".strip()
-            )
+            result["name"] = f"{data.get('firstName', '')} {data.get('lastName', '')}".strip()
 
         if "headline" in data:
             result["role"] = data["headline"]
@@ -138,9 +136,7 @@ class LinkedInImporter:
 
         # Certifications
         if "certifications" in data:
-            result["certifications"] = self._parse_certifications(
-                data["certifications"]
-            )
+            result["certifications"] = self._parse_certifications(data["certifications"])
 
         # Volunteer
         if "volunteer" in data:
@@ -202,14 +198,10 @@ class LinkedInImporter:
             result["name"] = data["name"]
 
         if "headline" in data or "title" in data or "role" in data:
-            result["headline"] = (
-                data.get("headline") or data.get("title") or data.get("role", "")
-            )
+            result["headline"] = data.get("headline") or data.get("title") or data.get("role", "")
 
         if "summary" in data or "bio" in data or "about" in data:
-            result["summary"] = (
-                data.get("summary") or data.get("bio") or data.get("about", "")
-            )
+            result["summary"] = data.get("summary") or data.get("bio") or data.get("about", "")
 
         # Contact info
         if "email" in data:
@@ -240,14 +232,10 @@ class LinkedInImporter:
         experience = []
         for pos in positions:
             exp = {
-                "id": str(hash(f"{pos.get('companyName', '')}{pos.get('title', '')}"))[
-                    :8
-                ],
+                "id": str(hash(f"{pos.get('companyName', '')}{pos.get('title', '')}"))[:8],
                 "company": pos.get("companyName", ""),
                 "role": pos.get("title", ""),
-                "startDate": self._parse_date(
-                    pos.get("timePeriod", {}).get("startDate")
-                ),
+                "startDate": self._parse_date(pos.get("timePeriod", {}).get("startDate")),
                 "endDate": self._parse_date(pos.get("timePeriod", {}).get("endDate")),
                 "current": not pos.get("timePeriod", {}).get("endDate"),
                 "description": pos.get("description", ""),
@@ -268,18 +256,12 @@ class LinkedInImporter:
         education = []
         for edu in educations:
             ed = {
-                "id": str(
-                    hash(f"{edu.get('schoolName', '')}{edu.get('degreeName', '')}")
-                )[:8],
+                "id": str(hash(f"{edu.get('schoolName', '')}{edu.get('degreeName', '')}"))[:8],
                 "institution": edu.get("schoolName", ""),
                 "area": edu.get("fieldOfStudy", ""),
                 "studyType": edu.get("degreeName", ""),
-                "startDate": str(
-                    edu.get("timePeriod", {}).get("startDate", {}).get("year", "")
-                ),
-                "endDate": str(
-                    edu.get("timePeriod", {}).get("endDate", {}).get("year", "")
-                ),
+                "startDate": str(edu.get("timePeriod", {}).get("startDate", {}).get("year", "")),
+                "endDate": str(edu.get("timePeriod", {}).get("endDate", {}).get("year", "")),
             }
             education.append(ed)
 
@@ -344,9 +326,7 @@ class LinkedInImporter:
         result = []
         for exp in experience:
             entry = {
-                "id": str(hash(f"{exp.get('companyName', '')}{exp.get('title', '')}"))[
-                    :8
-                ],
+                "id": str(hash(f"{exp.get('companyName', '')}{exp.get('title', '')}"))[:8],
                 "company": exp.get("companyName", "") or exp.get("company", ""),
                 "role": exp.get("title", "") or exp.get("position", ""),
                 "description": exp.get("description", "") or exp.get("summary", ""),
@@ -372,9 +352,7 @@ class LinkedInImporter:
         result = []
         for edu in education:
             entry = {
-                "id": str(
-                    hash(f"{edu.get('schoolName', '')}{edu.get('degreeName', '')}")
-                )[:8],
+                "id": str(hash(f"{edu.get('schoolName', '')}{edu.get('degreeName', '')}"))[:8],
                 "institution": edu.get("schoolName", "") or edu.get("institution", ""),
                 "studyType": edu.get("degreeName", "") or edu.get("degree", ""),
                 "area": edu.get("fieldOfStudy", "") or edu.get("area", ""),
@@ -409,25 +387,17 @@ class LinkedInImporter:
         for exp in experience:
             entry = {
                 "id": str(
-                    hash(
-                        f"{exp.get('company', '')}{exp.get('role', '')}{exp.get('position', '')}"
-                    )
+                    hash(f"{exp.get('company', '')}{exp.get('role', '')}{exp.get('position', '')}")
                 )[:8],
                 "company": exp.get("company", ""),
-                "role": exp.get("role", "")
-                or exp.get("position", "")
-                or exp.get("title", ""),
+                "role": exp.get("role", "") or exp.get("position", "") or exp.get("title", ""),
                 "description": exp.get("description", "")
                 or exp.get("summary", "")
                 or exp.get("details", ""),
             }
 
             # Handle various date formats
-            start = (
-                exp.get("startDate", "")
-                or exp.get("start_date", "")
-                or exp.get("from", "")
-            )
+            start = exp.get("startDate", "") or exp.get("start_date", "") or exp.get("from", "")
             end = exp.get("endDate", "") or exp.get("end_date", "") or exp.get("to", "")
             current = (
                 exp.get("current", False)
@@ -451,9 +421,7 @@ class LinkedInImporter:
         result = []
         for edu in education:
             entry = {
-                "id": str(hash(f"{edu.get('institution', '')}{edu.get('degree', '')}"))[
-                    :8
-                ],
+                "id": str(hash(f"{edu.get('institution', '')}{edu.get('degree', '')}"))[:8],
                 "institution": edu.get("institution", "")
                 or edu.get("school", "")
                 or edu.get("university", ""),
@@ -465,11 +433,7 @@ class LinkedInImporter:
                 or edu.get("field_of_study", ""),
             }
 
-            start = (
-                edu.get("startDate", "")
-                or edu.get("start_date", "")
-                or edu.get("from", "")
-            )
+            start = edu.get("startDate", "") or edu.get("start_date", "") or edu.get("from", "")
             end = edu.get("endDate", "") or edu.get("end_date", "") or edu.get("to", "")
 
             if start:
@@ -487,11 +451,7 @@ class LinkedInImporter:
             if isinstance(skill, str):
                 result.append(skill)
             elif isinstance(skill, dict):
-                name = (
-                    skill.get("name", "")
-                    or skill.get("skill", "")
-                    or skill.get("title", "")
-                )
+                name = skill.get("name", "") or skill.get("skill", "") or skill.get("title", "")
                 if name:
                     result.append(name)
         return result
@@ -528,14 +488,9 @@ class LinkedInImporter:
         result = []
         for vol in volunteer:
             entry = {
-                "id": str(
-                    hash(f"{vol.get('organizationName', '')}{vol.get('role', '')}")
-                )[:8],
-                "organization": vol.get("organizationName", "")
-                or vol.get("organization", ""),
-                "role": vol.get("role", "")
-                or vol.get("position", "")
-                or vol.get("title", ""),
+                "id": str(hash(f"{vol.get('organizationName', '')}{vol.get('role', '')}"))[:8],
+                "organization": vol.get("organizationName", "") or vol.get("organization", ""),
+                "role": vol.get("role", "") or vol.get("position", "") or vol.get("title", ""),
                 "description": vol.get("description", ""),
             }
 

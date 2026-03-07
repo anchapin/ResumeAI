@@ -84,9 +84,7 @@ class ApplicationStatsResponse(BaseModel):
     tags=["Application Tracking"],
 )
 @rate_limit("30/minute")
-async def create_application(
-    request: Request, body: JobApplicationCreate, auth: AuthorizedAPIKey
-):
+async def create_application(request: Request, body: JobApplicationCreate, auth: AuthorizedAPIKey):
     return JobApplicationResponse(
         id=1,
         company_name=body.company_name,
@@ -127,12 +125,8 @@ async def list_applications(
     tags=["Application Tracking"],
 )
 @rate_limit("60/minute")
-async def get_application(
-    request: Request, application_id: int, auth: AuthorizedAPIKey
-):
-    raise HTTPException(
-        status_code=404, detail=f"Application {application_id} not found"
-    )
+async def get_application(request: Request, application_id: int, auth: AuthorizedAPIKey):
+    raise HTTPException(status_code=404, detail=f"Application {application_id} not found")
 
 
 @router.put(
@@ -147,19 +141,13 @@ async def update_application(
     body: JobApplicationUpdate,
     auth: AuthorizedAPIKey,
 ):
-    raise HTTPException(
-        status_code=404, detail=f"Application {application_id} not found"
-    )
+    raise HTTPException(status_code=404, detail=f"Application {application_id} not found")
 
 
 @router.delete("/{application_id}", tags=["Application Tracking"])
 @rate_limit("30/minute")
-async def delete_application(
-    request: Request, application_id: int, auth: AuthorizedAPIKey
-):
-    raise HTTPException(
-        status_code=404, detail=f"Application {application_id} not found"
-    )
+async def delete_application(request: Request, application_id: int, auth: AuthorizedAPIKey):
+    raise HTTPException(status_code=404, detail=f"Application {application_id} not found")
 
 
 @router.get(
@@ -168,9 +156,7 @@ async def delete_application(
     tags=["Application Analytics"],
 )
 @rate_limit("30/minute")
-async def get_application_stats(
-    request: Request, auth: AuthorizedAPIKey, days: int = 30
-):
+async def get_application_stats(request: Request, auth: AuthorizedAPIKey, days: int = 30):
     return ApplicationStatsResponse(
         total_applications=0,
         by_status={},
@@ -182,17 +168,13 @@ async def get_application_stats(
 
 @router.get("/funnel", tags=["Application Analytics"])
 @rate_limit("30/minute")
-async def get_application_funnel(
-    request: Request, auth: AuthorizedAPIKey, days: int = 30
-):
+async def get_application_funnel(request: Request, auth: AuthorizedAPIKey, days: int = 30):
     return {"stages": [], "total_applications": 0}
 
 
 @router.get("/timeline", tags=["Application Analytics"])
 @rate_limit("30/minute")
-async def get_application_timeline(
-    request: Request, auth: AuthorizedAPIKey, days: int = 30
-):
+async def get_application_timeline(request: Request, auth: AuthorizedAPIKey, days: int = 30):
     return {"timeline": []}
 
 

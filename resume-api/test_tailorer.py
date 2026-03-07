@@ -86,9 +86,7 @@ class TestResumeTailorer:
 
     def test_tailorer_initialization(self):
         """Test that tailorer initializes correctly."""
-        tailorer = ResumeTailorer(
-            ai_provider="openai", api_key="test-key", model="gpt-4"
-        )
+        tailorer = ResumeTailorer(ai_provider="openai", api_key="test-key", model="gpt-4")
         assert tailorer.ai_provider == "openai"
         assert tailorer.api_key == "test-key"
         assert tailorer.model == "gpt-4"
@@ -159,9 +157,7 @@ class TestResumeTailorer:
         """Test improvement suggestions."""
         tailorer = ResumeTailorer(ai_provider="openai")
 
-        suggestions = tailorer.suggest_improvements(
-            SAMPLE_RESUME_DATA, SAMPLE_JOB_DESCRIPTION
-        )
+        suggestions = tailorer.suggest_improvements(SAMPLE_RESUME_DATA, SAMPLE_JOB_DESCRIPTION)
 
         assert isinstance(suggestions, list)
         assert len(suggestions) > 0
@@ -248,9 +244,7 @@ class TestMockResumeTailorer:
         """Test mock improvement suggestions."""
         mock = MockResumeTailorer()
 
-        suggestions = mock.suggest_improvements(
-            SAMPLE_RESUME_DATA, SAMPLE_JOB_DESCRIPTION
-        )
+        suggestions = mock.suggest_improvements(SAMPLE_RESUME_DATA, SAMPLE_JOB_DESCRIPTION)
 
         assert isinstance(suggestions, list)
         assert len(suggestions) > 0
@@ -273,9 +267,7 @@ class TestKeywordExtraction:
         """Test that keywords don't have duplicates."""
         tailorer = ResumeTailorer(ai_provider="openai")
 
-        keywords = tailorer.extract_keywords(
-            "Python Python Python JavaScript JavaScript"
-        )
+        keywords = tailorer.extract_keywords("Python Python Python JavaScript JavaScript")
 
         # Should not have duplicates
         assert len(keywords) == len(set(keywords))

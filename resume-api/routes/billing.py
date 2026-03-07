@@ -58,9 +58,7 @@ async def get_billing_status():
     Returns billing availability status and a message.
     """
     if BILLING_ENABLED:
-        return BillingStatusResponse(
-            enabled=True, message="Billing is fully operational."
-        )
+        return BillingStatusResponse(enabled=True, message="Billing is fully operational.")
     return BillingStatusResponse(
         enabled=False,
         message="Billing is coming soon. Subscription plans will be available shortly. "
@@ -137,9 +135,7 @@ class PaymentMethodRequest(BaseModel):
     """Request to attach payment method."""
 
     payment_method_id: str = Field(..., description="Stripe payment method ID")
-    set_as_default: bool = Field(
-        default=False, description="Set as default payment method"
-    )
+    set_as_default: bool = Field(default=False, description="Set as default payment method")
 
 
 class PaymentMethodResponse(BaseModel):
@@ -240,9 +236,7 @@ async def get_subscription(
 
     Returns subscription status, plan, and usage information.
     """
-    result = await db.execute(
-        select(Subscription).where(Subscription.user_id == user_id)
-    )
+    result = await db.execute(select(Subscription).where(Subscription.user_id == user_id))
     subscription = result.scalar_one_or_none()
 
     if not subscription:
@@ -290,16 +284,12 @@ async def get_subscription(
             else None
         ),
         current_period_end=(
-            subscription.current_period_end.isoformat()
-            if subscription.current_period_end
-            else None
+            subscription.current_period_end.isoformat() if subscription.current_period_end else None
         ),
         cancel_at_period_end=subscription.cancel_at_period_end,
         resumes_generated_this_period=subscription.resumes_generated_this_period,
         ai_tailorings_this_period=subscription.ai_tailorings_this_period,
-        created_at=(
-            subscription.created_at.isoformat() if subscription.created_at else ""
-        ),
+        created_at=(subscription.created_at.isoformat() if subscription.created_at else ""),
     )
 
 
@@ -331,9 +321,7 @@ async def create_checkout_session(
     # Get plan details
     plan = await stripe_service.get_plan_by_name(request.plan_name)
     if not plan:
-        raise HTTPException(
-            status_code=404, detail=f"Plan '{request.plan_name}' not found"
-        )
+        raise HTTPException(status_code=404, detail=f"Plan '{request.plan_name}' not found")
 
     if not plan.get("stripe_price_id"):
         raise HTTPException(
@@ -345,9 +333,7 @@ async def create_checkout_session(
     customer = await stripe_service.create_or_get_customer(user_id=user_id)
 
     # Update subscription record with Stripe customer ID
-    result = await db.execute(
-        select(Subscription).where(Subscription.user_id == user_id)
-    )
+    result = await db.execute(select(Subscription).where(Subscription.user_id == user_id))
     subscription = result.scalar_one_or_none()
 
     if subscription:
@@ -386,9 +372,7 @@ async def create_portal_session(
     Users can manage their subscription, update payment methods,
     and view invoice history through the portal.
     """
-    result = await db.execute(
-        select(Subscription).where(Subscription.user_id == user_id)
-    )
+    result = await db.execute(select(Subscription).where(Subscription.user_id == user_id))
     subscription = result.scalar_one_or_none()
 
     if not subscription or not subscription.stripe_customer_id:
@@ -417,9 +401,7 @@ async def cancel_subscription(
     Args:
         at_period_end: If True, subscription remains active until period ends
     """
-    result = await db.execute(
-        select(Subscription).where(Subscription.user_id == user_id)
-    )
+    result = await db.execute(select(Subscription).where(Subscription.user_id == user_id))
     subscription = result.scalar_one_or_none()
 
     if not subscription or not subscription.stripe_subscription_id:
@@ -452,9 +434,7 @@ async def resume_subscription(
     """
     Resume a canceled subscription (before period ends).
     """
-    result = await db.execute(
-        select(Subscription).where(Subscription.user_id == user_id)
-    )
+    result = await db.execute(select(Subscription).where(Subscription.user_id == user_id))
     subscription = result.scalar_one_or_none()
 
     if not subscription or not subscription.stripe_subscription_id:
@@ -493,9 +473,7 @@ async def upgrade_subscription(
     Args:
         new_plan_name: Name of the new plan
     """
-    result = await db.execute(
-        select(Subscription).where(Subscription.user_id == user_id)
-    )
+    result = await db.execute(select(Subscription).where(Subscription.user_id == user_id))
     subscription = result.scalar_one_or_none()
 
     if not subscription or not subscription.stripe_subscription_id:
@@ -542,9 +520,7 @@ async def list_payment_methods(
     Get all saved payment methods for the user.
     """
     result = await db.execute(
-        select(PaymentMethod).where(
-            PaymentMethod.user_id == user_id, PaymentMethod.is_active
-        )
+        select(PaymentMethod).where(PaymentMethod.user_id == user_id, PaymentMethod.is_active)
     )
     payment_methods = result.scalars().all()
 
@@ -576,9 +552,7 @@ async def add_payment_method(
         payment_method_id: Stripe payment method ID (from frontend Elements)
         set_as_default: Whether to set as default payment method
     """
-    result = await db.execute(
-        select(Subscription).where(Subscription.user_id == user_id)
-    )
+    result = await db.execute(select(Subscription).where(Subscription.user_id == user_id))
     subscription = result.scalar_one_or_none()
 
     if not subscription or not subscription.stripe_customer_id:
@@ -660,9 +634,7 @@ async def remove_payment_method(
 
     # Detach from Stripe
     if payment_method.stripe_payment_method_id:
-        await stripe_service.detach_payment_method(
-            payment_method.stripe_payment_method_id
-        )
+        await stripe_service.detach_payment_method(payment_method.stripe_payment_method_id)
 
     # Remove from database
     payment_method.is_active = False
@@ -748,9 +720,7 @@ async def get_usage(
 
 
 @router.post("/usage/check")
-async def check_usage_limit(
-    action: str, user_id: str = Depends(get_user_id_from_header)
-):
+async def check_usage_limit(action: str, user_id: str = Depends(get_user_id_from_header)):
     """
     Check if user can perform a specific action based on usage limits.
 
@@ -797,9 +767,7 @@ async def stripe_webhook(request: Request, stripe_signature: str = Header(None))
             webhook_secret=settings.stripe_webhook_secret,
         )
     except Exception as e:
-        raise HTTPException(
-            status_code=400, detail=f"Invalid webhook signature: {str(e)}"
-        )
+        raise HTTPException(status_code=400, detail=f"Invalid webhook signature: {str(e)}")
 
     # Handle different event types
     event_type = event["type"]
@@ -910,13 +878,9 @@ async def handle_subscription_updated(session: AsyncSession, data: Dict[str, Any
         subscription.cancel_at_period_end = data.get("cancel_at_period_end", False)
 
         if data.get("current_period_start"):
-            subscription.current_period_start = datetime.fromtimestamp(
-                data["current_period_start"]
-            )
+            subscription.current_period_start = datetime.fromtimestamp(data["current_period_start"])
         if data.get("current_period_end"):
-            subscription.current_period_end = datetime.fromtimestamp(
-                data["current_period_end"]
-            )
+            subscription.current_period_end = datetime.fromtimestamp(data["current_period_end"])
 
         event = BillingEvent(
             user_id=subscription.user_id,

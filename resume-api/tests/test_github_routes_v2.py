@@ -92,9 +92,7 @@ async def test_get_github_projects_success(mock_current_user, mock_github_connec
             with patch("routes.github.GitHubAPIClient") as mock_client_class:
                 # Create mock client instance
                 mock_client = AsyncMock()
-                mock_client.get_user_repositories = AsyncMock(
-                    return_value=[MockGitHubRepository()]
-                )
+                mock_client.get_user_repositories = AsyncMock(return_value=[MockGitHubRepository()])
                 mock_client_class.return_value = mock_client
 
                 # Import the function after patching
@@ -157,9 +155,7 @@ async def test_get_github_projects_no_connection(mock_current_user):
 
 
 @pytest.mark.asyncio
-async def test_get_github_projects_token_expired(
-    mock_current_user, mock_github_connection
-):
+async def test_get_github_projects_token_expired(mock_current_user, mock_github_connection):
     """Test fetching projects when token is expired."""
     # Set token as expired
     mock_github_connection.expires_at = datetime.now(timezone.utc) - timedelta(days=1)
@@ -195,9 +191,7 @@ async def test_get_github_projects_token_expired(
 
 
 @pytest.mark.asyncio
-async def test_get_github_projects_invalid_token(
-    mock_current_user, mock_github_connection
-):
+async def test_get_github_projects_invalid_token(mock_current_user, mock_github_connection):
     """Test fetching projects when token is invalid (401 from GitHub)."""
     # Create mock database session
     mock_db = AsyncMock(spec=AsyncSession)
@@ -238,9 +232,7 @@ async def test_get_github_projects_invalid_token(
 
 
 @pytest.mark.asyncio
-async def test_get_github_projects_rate_limited(
-    mock_current_user, mock_github_connection
-):
+async def test_get_github_projects_rate_limited(mock_current_user, mock_github_connection):
     """Test fetching projects when GitHub API rate limit is exceeded."""
     # Create mock database session
     mock_db = AsyncMock(spec=AsyncSession)

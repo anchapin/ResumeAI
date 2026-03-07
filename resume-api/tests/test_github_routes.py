@@ -106,9 +106,7 @@ async def test_disconnect_github_with_connection():
     # Create mock request
     mock_request = MagicMock()
 
-    with patch(
-        "routes.github._revoke_github_token", new_callable=AsyncMock
-    ) as mock_revoke:
+    with patch("routes.github._revoke_github_token", new_callable=AsyncMock) as mock_revoke:
         with patch("routes.github.get_current_user", return_value=mock_user):
             with patch("routes.github.get_async_session", return_value=mock_db):
                 # Import the router function
@@ -145,9 +143,7 @@ async def test_disconnect_github_without_connection():
     # Create mock request
     mock_request = MagicMock()
 
-    with patch(
-        "routes.github._revoke_github_token", new_callable=AsyncMock
-    ) as mock_revoke:
+    with patch("routes.github._revoke_github_token", new_callable=AsyncMock) as mock_revoke:
         with patch("routes.github.get_current_user", return_value=mock_user):
             with patch("routes.github.get_async_session", return_value=mock_db):
                 # Import the router function

@@ -29,7 +29,7 @@ from middleware.error_handling import ErrorHandlingMiddleware
 from middleware.timeout import TimeoutMiddleware
 from middleware.csrf import CSRFMiddleware
 from middleware.request_signing import RequestSigningMiddleware
-from monitoring import logging_config, health, alerting, analytics
+from monitoring import logging_config, health, alerting, analytics, tracing
 from slowapi.errors import RateLimitExceeded
 
 # Import new feature routes
@@ -56,16 +56,12 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         response: Response = await call_next(request)
 
         # Add security headers
-        response.headers["Strict-Transport-Security"] = (
-            "max-age=31536000; includeSubDomains"
-        )
+        response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["X-Frame-Options"] = "DENY"
         response.headers["X-XSS-Protection"] = "1; mode=block"
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
-        response.headers["Permissions-Policy"] = (
-            "geolocation=(), microphone=(), camera=()"
-        )
+        response.headers["Permissions-Policy"] = "geolocation=(), microphone=(), camera=()"
 
         # Add deprecation notice for CLI authentication mode
         response.headers["X-Deprecated-Notice"] = (
@@ -131,9 +127,7 @@ def setup_prometheus(app: FastAPI):
                 metrics_path=getattr(settings, "metrics_path", "/metrics"),
             )
         except (ImportError, RuntimeError) as e:
-            logger.warning(
-                "prometheus_fastapi_instrumentator not available", error=str(e)
-            )
+            logger.warning("prometheus_fastapi_instrumentator not available", error=str(e))
 
 
 # Define lifespan to handle startup and shutdown events
@@ -170,6 +164,18 @@ async def lifespan(app: FastAPI):
 
     # Set up Prometheus metrics
     setup_prometheus(app)
+
+    # Set up distributed tracing
+    if settings.enable_tracing:
+        tracing.setup_tracing(
+            service_name=settings.service_name,
+            otlp_endpoint=settings.otlp_endpoint,
+            sample_rate=settings.trace_sample_rate,
+        )
+        tracing_config = tracing.get_tracing_config()
+        if tracing_config:
+            tracing_config.instrument_fastapi(app)
+        logger.info("Distributed tracing enabled", endpoint=settings.otlp_endpoint)
 
     # Set up alerting in background
     if settings.enable_alerting:

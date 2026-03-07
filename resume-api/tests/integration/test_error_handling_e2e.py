@@ -18,9 +18,7 @@ class TestValidationErrors:
     """Test validation error handling."""
 
     @pytest.mark.asyncio
-    async def test_missing_required_field_contact_name(
-        self, authenticated_client: AsyncClient
-    ):
+    async def test_missing_required_field_contact_name(self, authenticated_client: AsyncClient):
         """Test error when resume data is empty."""
         response = await authenticated_client.post(
             "/api/v1/render/pdf",
@@ -70,9 +68,7 @@ class TestValidationErrors:
         assert response.status_code in [200, 422]
 
     @pytest.mark.asyncio
-    async def test_invalid_url_format(
-        self, authenticated_client: AsyncClient, minimal_resume_data
-    ):
+    async def test_invalid_url_format(self, authenticated_client: AsyncClient, minimal_resume_data):
         """Test error with invalid URL format."""
         resume_data = minimal_resume_data.copy()
         resume_data["basics"]["url"] = "not a url"
@@ -165,9 +161,7 @@ class TestInvalidDataTypes:
         assert response.status_code == 422
 
     @pytest.mark.asyncio
-    async def test_variant_not_string(
-        self, authenticated_client: AsyncClient, minimal_resume_data
-    ):
+    async def test_variant_not_string(self, authenticated_client: AsyncClient, minimal_resume_data):
         """Test error when variant is not a string."""
         response = await authenticated_client.post(
             "/api/v1/render/pdf",
@@ -277,9 +271,7 @@ class TestAuthenticationErrors:
         assert "error_code" in data or "detail" in data
 
     @pytest.mark.asyncio
-    async def test_malformed_api_key(
-        self, api_client: AsyncClient, minimal_resume_data
-    ):
+    async def test_malformed_api_key(self, api_client: AsyncClient, minimal_resume_data):
         """Test error with malformed API key."""
         api_client.headers = {"X-API-KEY": ""}
 
@@ -313,9 +305,7 @@ class TestErrorResponseFormat:
     """Test error response format and content."""
 
     @pytest.mark.asyncio
-    async def test_error_response_contains_detail(
-        self, authenticated_client: AsyncClient
-    ):
+    async def test_error_response_contains_detail(self, authenticated_client: AsyncClient):
         """Test that error response contains detail field."""
         response = await authenticated_client.post(
             "/api/v1/render/pdf",
@@ -333,9 +323,7 @@ class TestErrorResponseFormat:
             assert "detail" in data or "error_code" in data
 
     @pytest.mark.asyncio
-    async def test_validation_error_response_format(
-        self, authenticated_client: AsyncClient
-    ):
+    async def test_validation_error_response_format(self, authenticated_client: AsyncClient):
         """Test validation error response format."""
         response = await authenticated_client.post(
             "/api/v1/render/pdf",
@@ -385,9 +373,7 @@ class TestEdgeCaseErrors:
         assert response.status_code in [200, 422]
 
     @pytest.mark.asyncio
-    async def test_empty_sections(
-        self, authenticated_client: AsyncClient, minimal_resume_data
-    ):
+    async def test_empty_sections(self, authenticated_client: AsyncClient, minimal_resume_data):
         """Test handling of empty sections."""
         resume_data = minimal_resume_data.copy()
         resume_data["work"] = []

@@ -18,6 +18,7 @@ class Settings(BaseSettings):
     # API Configuration
     app_name: str = "Resume API"
     app_version: str = "1.0.0"
+    service_name: str = "resume-api"  # Service name for tracing/metrics
     api_v1_prefix: str = "/api/v1"
     debug: bool = False
     environment: str = "development"  # production, staging, development
@@ -42,9 +43,7 @@ class Settings(BaseSettings):
     # API Authentication
     require_api_key: bool = True
     master_api_key: Optional[str] = None
-    api_keys: Optional[list[str]] = (
-        None  # List of API keys (parsed from comma-separated env)
-    )
+    api_keys: Optional[list[str]] = None  # List of API keys (parsed from comma-separated env)
 
     # Allowed origins for CORS - should be configured via environment variable
     # In production, specify exact origins (e.g., "https://resumeai.com")
@@ -88,7 +87,6 @@ class Settings(BaseSettings):
     enable_tracing: bool = False
     otlp_endpoint: Optional[str] = None  # OTLP exporter endpoint (e.g., "http://localhost:4317")
     trace_sample_rate: float = 1.0  # 1.0 = 100% of traces, 0.1 = 10%
-    service_name: str = "resume-api"
 
     # Alerting Configuration
     enable_alerting: bool = True
@@ -99,6 +97,10 @@ class Settings(BaseSettings):
     # Analytics Configuration
     enable_analytics: bool = True
     analytics_retention_days: int = 90  # Keep analytics data for 90 days
+
+    # Deployment Observability Configuration
+    enable_deployment_observability: bool = True  # Enable deployment event tracking
+    deployment_events_retention: int = 1000  # Max deployment events to retain
 
     # Stripe Configuration
     stripe_secret_key: Optional[str] = None
@@ -137,9 +139,7 @@ class Settings(BaseSettings):
     enable_csrf: bool = True
     ws_heartbeat_interval: int = 10  # Send heartbeat ping every 10 seconds
     ws_connection_timeout: int = 30  # Close connection after 30s of inactivity
-    ws_max_connections_per_user: int = (
-        5  # Max concurrent WebSocket connections per user
-    )
+    ws_max_connections_per_user: int = 5  # Max concurrent WebSocket connections per user
     ws_rate_limit_connections: str = "10/minute"  # Rate limit new connections
 
     @field_validator("jwt_secret")

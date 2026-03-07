@@ -257,9 +257,7 @@ class TestVariantMetadata:
 
         # Variants should be organized in some way
         if len(variants) > 1:
-            assert any(
-                "category" in v or "tags" in v for v in variants if isinstance(v, dict)
-            )
+            assert any("category" in v or "tags" in v for v in variants if isinstance(v, dict))
 
 
 class TestVariantPerformance:
@@ -297,9 +295,7 @@ class TestVariantAvailability:
     """Test variant availability and compatibility."""
 
     @pytest.mark.asyncio
-    async def test_variants_available_without_auth(
-        self, unauthenticated_client: AsyncClient
-    ):
+    async def test_variants_available_without_auth(self, unauthenticated_client: AsyncClient):
         """Test that variant listing doesn't require authentication."""
         response = await unauthenticated_client.get("/api/v1/variants")
 
