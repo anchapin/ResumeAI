@@ -29,7 +29,7 @@ from middleware.error_handling import ErrorHandlingMiddleware
 from middleware.timeout import TimeoutMiddleware
 from middleware.csrf import CSRFMiddleware
 from middleware.request_signing import RequestSigningMiddleware
-from monitoring import logging_config, health, alerting, analytics
+from monitoring import logging_config, health, alerting, analytics, tracing
 from slowapi.errors import RateLimitExceeded
 
 # Import new feature routes
@@ -170,6 +170,18 @@ async def lifespan(app: FastAPI):
 
     # Set up Prometheus metrics
     setup_prometheus(app)
+
+    # Set up distributed tracing
+    if settings.enable_tracing:
+        tracing.setup_tracing(
+            service_name=settings.service_name,
+            otlp_endpoint=settings.otlp_endpoint,
+            sample_rate=settings.trace_sample_rate,
+        )
+        tracing_config = tracing.get_tracing_config()
+        if tracing_config:
+            tracing_config.instrument_fastapi(app)
+        logger.info("Distributed tracing enabled", endpoint=settings.otlp_endpoint)
 
     # Set up alerting in background
     if settings.enable_alerting:
