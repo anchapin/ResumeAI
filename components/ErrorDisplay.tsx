@@ -64,7 +64,7 @@ export const ErrorDisplay: React.FC<ErrorDisplayProps> = ({
     return null;
   }
 
-  const errorInfo = getErrorMessageByType(error.type);
+  const _errorInfo = getErrorMessageByType(error.type);
   const suggestion = getErrorSuggestion(error.type, error.statusCode);
 
   const getIcon = (type: ErrorType) => {
