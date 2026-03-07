@@ -8,6 +8,7 @@ import {
   getStorageErrorMessage,
 } from '../utils/storage';
 import { sanitizeInput } from '../utils/security';
+import type { FeatureFlagConfig } from '../lib/feature-flags';
 
 export interface AuthUser {
   id: number;
@@ -34,6 +35,7 @@ interface AppState {
   theme: Theme;
   showShortcuts: boolean;
   globalLoading: boolean;
+  featureFlags: FeatureFlagConfig | null;
 }
 
 interface AppActions {
@@ -50,6 +52,7 @@ interface AppActions {
   setShowShortcuts: (show: boolean) => void;
   toggleShortcuts: () => void;
   setGlobalLoading: (isLoading: boolean) => void;
+  setFeatureFlags: (flags: FeatureFlagConfig | null) => void;
 }
 
 type AppStore = AppState & AppActions;
@@ -130,11 +133,13 @@ export const useStore = create<AppStore>()(
       theme: 'light' as Theme,
       showShortcuts: false,
       globalLoading: false,
+      featureFlags: null,
       setUser: (user) => set({ user, isAuthenticated: !!user }),
       setAuthLoading: (isAuthLoading) => set({ isAuthLoading }),
       setAuthError: (authError) => set({ authError }),
       clearAuthError: () => set({ authError: null }),
       setGlobalLoading: (globalLoading) => set({ globalLoading }),
+      setFeatureFlags: (featureFlags) => set({ featureFlags }),
       setResumeData: (data) =>
         set((state) => {
           const newData = typeof data === 'function' ? data(state.resumeData) : data;
