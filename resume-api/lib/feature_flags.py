@@ -18,6 +18,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class TargetingRule:
     """Feature flag targeting rules."""
+
     percentage: float = 0.0
     groups: list[str] = field(default_factory=list)
     users: list[str] = field(default_factory=list)
@@ -27,6 +28,7 @@ class TargetingRule:
 @dataclass
 class Variant:
     """Feature flag variant for A/B testing."""
+
     id: str
     name: str
     weight: float = 0.0
@@ -36,6 +38,7 @@ class Variant:
 @dataclass
 class FeatureFlag:
     """Feature flag definition."""
+
     key: str
     description: str
     enabled: bool = False
@@ -105,7 +108,7 @@ DEFAULT_FLAGS: dict[str, FeatureFlag] = {
 class FeatureFlagService:
     """
     Feature flag service for gradual rollouts and A/B testing.
-    
+
     Supports:
     - Simple on/off flags
     - Percentage-based rollouts
@@ -116,7 +119,7 @@ class FeatureFlagService:
     def __init__(self, flags: Optional[dict[str, FeatureFlag]] = None):
         """
         Initialize the feature flag service.
-        
+
         Args:
             flags: Optional dictionary of feature flags. Uses defaults if not provided.
         """
@@ -144,7 +147,7 @@ class FeatureFlagService:
     ) -> bool:
         """
         Check if a feature flag is enabled for a user.
-        
+
         Args:
             key: Feature flag key
             user_id: User ID if authenticated
@@ -153,7 +156,7 @@ class FeatureFlagService:
             ip: User IP address
             session_id: Session ID
             attributes: Additional custom attributes
-            
+
         Returns:
             True if the feature is enabled for the user
         """
@@ -184,12 +187,12 @@ class FeatureFlagService:
             # Check user-specific targeting
             if flag.targeting.users and user_id and user_id in flag.targeting.users:
                 return True
-            
+
             # Check group targeting
             if flag.targeting.groups and groups:
                 if any(group in flag.targeting.groups for group in groups):
                     return True
-            
+
             # Check IP range targeting (simple implementation)
             if flag.targeting.ip_ranges and ip:
                 if self._check_ip_in_ranges(ip, flag.targeting.ip_ranges):
@@ -219,7 +222,7 @@ class FeatureFlagService:
     ) -> dict[str, Any]:
         """
         Evaluate a feature flag and return detailed information.
-        
+
         Args:
             key: Feature flag key
             user_id: User ID if authenticated
@@ -228,7 +231,7 @@ class FeatureFlagService:
             ip: User IP address
             session_id: Session ID
             attributes: Additional custom attributes
-            
+
         Returns:
             Dictionary with flag evaluation results
         """
@@ -397,21 +400,29 @@ class FeatureFlagService:
             "description": flag.description,
             "enabled": flag.enabled,
             "rolloutPercentage": flag.rollout_percentage,
-            "targeting": {
-                "percentage": flag.targeting.percentage if flag.targeting else 0,
-                "groups": flag.targeting.groups if flag.targeting else [],
-                "users": flag.targeting.users if flag.targeting else [],
-                "ipRanges": flag.targeting.ip_ranges if flag.targeting else [],
-            } if flag.targeting else None,
-            "variants": [
+            "targeting": (
                 {
-                    "id": v.id,
-                    "name": v.name,
-                    "weight": v.weight,
-                    "config": v.config,
+                    "percentage": flag.targeting.percentage if flag.targeting else 0,
+                    "groups": flag.targeting.groups if flag.targeting else [],
+                    "users": flag.targeting.users if flag.targeting else [],
+                    "ipRanges": flag.targeting.ip_ranges if flag.targeting else [],
                 }
-                for v in flag.variants
-            ] if flag.variants else None,
+                if flag.targeting
+                else None
+            ),
+            "variants": (
+                [
+                    {
+                        "id": v.id,
+                        "name": v.name,
+                        "weight": v.weight,
+                        "config": v.config,
+                    }
+                    for v in flag.variants
+                ]
+                if flag.variants
+                else None
+            ),
             "defaultVariant": flag.default_variant,
             "tags": flag.tags,
             "createdAt": flag.created_at.isoformat() if flag.created_at else None,

@@ -21,6 +21,7 @@ router = APIRouter(prefix="/api/v1/feature-flags", tags=["feature-flags"])
 
 class FeatureFlagEvaluationRequest(BaseModel):
     """Request model for evaluating feature flags."""
+
     user_id: Optional[str] = None
     email: Optional[str] = None
     groups: Optional[list[str]] = None
@@ -30,6 +31,7 @@ class FeatureFlagEvaluationRequest(BaseModel):
 
 class FeatureFlagResponse(BaseModel):
     """Response model for a feature flag."""
+
     key: str
     description: str
     enabled: bool
@@ -39,6 +41,7 @@ class FeatureFlagResponse(BaseModel):
 
 class FeatureFlagConfigResponse(BaseModel):
     """Response model for feature flag configuration."""
+
     flags: list[dict]
     timestamp: int
     version: str
@@ -46,6 +49,7 @@ class FeatureFlagConfigResponse(BaseModel):
 
 class FeatureFlagEvaluationResponse(BaseModel):
     """Response model for feature flag evaluation."""
+
     key: str
     enabled: bool
     variant: Optional[str] = None
@@ -58,7 +62,7 @@ async def get_feature_flags(
 ) -> FeatureFlagConfigResponse:
     """
     Get all feature flags configuration.
-    
+
     Returns the complete feature flag configuration including all flags,
     their current status, and targeting rules.
     """
@@ -73,17 +77,17 @@ async def get_feature_flag(
 ) -> FeatureFlagResponse:
     """
     Get a specific feature flag by key.
-    
+
     Args:
         flag_key: The feature flag key
-        
+
     Returns:
         The feature flag configuration
     """
     flag = service.get_flag(flag_key)
     if not flag:
         raise HTTPException(status_code=404, detail=f"Feature flag '{flag_key}' not found")
-    
+
     return FeatureFlagResponse(**flag)
 
 
@@ -95,14 +99,14 @@ async def evaluate_feature_flags(
 ) -> list[FeatureFlagEvaluationResponse]:
     """
     Evaluate feature flags for a user.
-    
+
     Provide user context to get personalized feature flag evaluations
     with A/B testing variants if configured.
-    
+
     Args:
         request: User context for evaluation
         x_forwarded_for: Client IP address from headers
-        
+
     Returns:
         List of feature flag evaluations
     """
@@ -111,11 +115,11 @@ async def evaluate_feature_flags(
     if x_forwarded_for:
         # Take the first IP if there are multiple
         ip = x_forwarded_for.split(",")[0].strip()
-    
+
     # Get all flags and evaluate each one
     all_flags = service.get_all_flags()
     results = []
-    
+
     for flag in all_flags:
         evaluation = service.evaluate_flag(
             key=flag["key"],
@@ -127,7 +131,7 @@ async def evaluate_feature_flags(
             attributes=request.attributes,
         )
         results.append(FeatureFlagEvaluationResponse(**evaluation))
-    
+
     return results
 
 
@@ -143,7 +147,7 @@ async def evaluate_single_flag(
 ) -> FeatureFlagEvaluationResponse:
     """
     Evaluate a single feature flag for a user.
-    
+
     Args:
         flag_key: The feature flag key
         user_id: User ID
@@ -151,18 +155,18 @@ async def evaluate_single_flag(
         groups: Comma-separated list of user groups
         session_id: Session ID
         x_forwarded_for: Client IP address
-        
+
     Returns:
         Feature flag evaluation result
     """
     # Parse groups from comma-separated string
     groups_list = groups.split(",") if groups else None
-    
+
     # Extract IP from X-Forwarded-For header
     ip = None
     if x_forwarded_for:
         ip = x_forwarded_for.split(",")[0].strip()
-    
+
     evaluation = service.evaluate_flag(
         key=flag_key,
         user_id=user_id,
@@ -171,10 +175,10 @@ async def evaluate_single_flag(
         ip=ip,
         session_id=session_id,
     )
-    
+
     if "error" in evaluation and not evaluation["enabled"]:
         # Check if it's a "not found" error
         if service.get_flag(flag_key) is None:
             raise HTTPException(status_code=404, detail=f"Feature flag '{flag_key}' not found")
-    
+
     return FeatureFlagEvaluationResponse(**evaluation)

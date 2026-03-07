@@ -20,7 +20,7 @@ class TestFeatureFlagService:
         """Test that default flags are initialized correctly."""
         service = FeatureFlagService()
         flags = service.get_all_flags()
-        
+
         assert len(flags) > 0
         assert any(f["key"] == "ai_tailoring" for f in flags)
         assert any(f["key"] == "new_resume_editor" for f in flags)
@@ -29,7 +29,7 @@ class TestFeatureFlagService:
         """Test getting a specific flag."""
         service = FeatureFlagService()
         flag = service.get_flag("ai_tailoring")
-        
+
         assert flag is not None
         assert flag["key"] == "ai_tailoring"
         assert flag["enabled"] is True
@@ -38,27 +38,27 @@ class TestFeatureFlagService:
         """Test getting a flag that doesn't exist."""
         service = FeatureFlagService()
         flag = service.get_flag("nonexistent_flag")
-        
+
         assert flag is None
 
     def test_is_enabled_global_100_percent(self):
         """Test flag with 100% rollout is always enabled."""
         service = FeatureFlagService()
-        
+
         # ai_tailoring has 100% rollout
         assert service.is_enabled("ai_tailoring") is True
 
     def test_is_enabled_global_0_percent(self):
         """Test flag with 0% rollout is always disabled."""
         service = FeatureFlagService()
-        
+
         # advanced_analytics has 0% rollout
         assert service.is_enabled("advanced_analytics") is False
 
     def test_is_enabled_disabled_flag(self):
         """Test that disabled flags return False regardless of rollout."""
         service = FeatureFlagService()
-        
+
         # Create a flag that's disabled
         flag = FeatureFlag(
             key="test_flag",
@@ -67,13 +67,13 @@ class TestFeatureFlagService:
             rollout_percentage=100,
         )
         service.add_flag(flag)
-        
+
         assert service.is_enabled("test_flag") is False
 
     def test_is_enabled_consistent_hashing(self):
         """Test that consistent hashing works correctly."""
         service = FeatureFlagService()
-        
+
         # Create a flag with 50% rollout
         flag = FeatureFlag(
             key="test_rollout",
@@ -82,17 +82,17 @@ class TestFeatureFlagService:
             rollout_percentage=50,
         )
         service.add_flag(flag)
-        
+
         # Same user should always get the same result
         result1 = service.is_enabled("test_rollout", user_id="user123")
         result2 = service.is_enabled("test_rollout", user_id="user123")
-        
+
         assert result1 == result2
 
     def test_is_enabled_user_targeting(self):
         """Test user-specific targeting."""
         service = FeatureFlagService()
-        
+
         # Create a flag with user targeting
         targeting = TargetingRule(
             users=["target_user1", "target_user2"],
@@ -105,18 +105,18 @@ class TestFeatureFlagService:
             targeting=targeting,
         )
         service.add_flag(flag)
-        
+
         # Targeted users should have access
         assert service.is_enabled("user_targeted", user_id="target_user1") is True
         assert service.is_enabled("user_targeted", user_id="target_user2") is True
-        
+
         # Non-targeted users should not have access
         assert service.is_enabled("user_targeted", user_id="other_user") is False
 
     def test_is_enabled_group_targeting(self):
         """Test group-based targeting."""
         service = FeatureFlagService()
-        
+
         # Create a flag with group targeting
         targeting = TargetingRule(
             groups=["premium", "admin"],
@@ -129,21 +129,21 @@ class TestFeatureFlagService:
             targeting=targeting,
         )
         service.add_flag(flag)
-        
+
         # Users in targeted groups should have access
         assert service.is_enabled("group_targeted", groups=["premium"]) is True
         assert service.is_enabled("group_targeted", groups=["admin"]) is True
         assert service.is_enabled("group_targeted", groups=["premium", "basic"]) is True
-        
+
         # Users not in targeted groups should not have access
         assert service.is_enabled("group_targeted", groups=["basic"]) is False
 
     def test_evaluate_flag_simple(self):
         """Test simple flag evaluation."""
         service = FeatureFlagService()
-        
+
         result = service.evaluate_flag("ai_tailoring")
-        
+
         assert result["key"] == "ai_tailoring"
         assert result["enabled"] is True
         assert "variant" not in result
@@ -151,7 +151,7 @@ class TestFeatureFlagService:
     def test_evaluate_flag_with_variants(self):
         """Test flag evaluation with A/B testing variants."""
         service = FeatureFlagService()
-        
+
         # Create a flag with variants
         variants = [
             Variant(id="control", name="Control", weight=50),
@@ -166,11 +166,11 @@ class TestFeatureFlagService:
             default_variant="control",
         )
         service.add_flag(flag)
-        
+
         # Evaluate with the same user - should get consistent results
         result1 = service.evaluate_flag("ab_test", user_id="user123")
         result2 = service.evaluate_flag("ab_test", user_id="user123")
-        
+
         assert result1["enabled"] is True
         assert result1["variant"] in ["control", "treatment"]
         assert result1["variant"] == result2["variant"]  # Consistent hashing
@@ -178,9 +178,9 @@ class TestFeatureFlagService:
     def test_get_config(self):
         """Test getting full configuration."""
         service = FeatureFlagService()
-        
+
         config = service.get_config()
-        
+
         assert "flags" in config
         assert "timestamp" in config
         assert "version" in config
@@ -189,14 +189,14 @@ class TestFeatureFlagService:
     def test_update_flag(self):
         """Test updating a flag's configuration."""
         service = FeatureFlagService()
-        
+
         # Update a flag
         result = service.update_flag(
             "new_resume_editor",
             rollout_percentage=75,
             enabled=True,
         )
-        
+
         assert result is True
         flag = service.get_flag("new_resume_editor")
         assert flag["rolloutPercentage"] == 75
@@ -205,17 +205,17 @@ class TestFeatureFlagService:
     def test_update_nonexistent_flag(self):
         """Test updating a flag that doesn't exist."""
         service = FeatureFlagService()
-        
+
         result = service.update_flag("nonexistent", rollout_percentage=50)
-        
+
         assert result is False
 
     def test_add_flag(self):
         """Test adding a new flag."""
         service = FeatureFlagService()
-        
+
         initial_count = len(service.get_all_flags())
-        
+
         new_flag = FeatureFlag(
             key="brand_new_feature",
             description="A brand new feature",
@@ -223,10 +223,10 @@ class TestFeatureFlagService:
             rollout_percentage=100,
         )
         result = service.add_flag(new_flag)
-        
+
         assert result is True
         assert len(service.get_all_flags()) == initial_count + 1
-        
+
         flag = service.get_flag("brand_new_feature")
         assert flag is not None
         assert flag["key"] == "brand_new_feature"
@@ -234,7 +234,7 @@ class TestFeatureFlagService:
     def test_add_duplicate_flag(self):
         """Test adding a duplicate flag fails."""
         service = FeatureFlagService()
-        
+
         new_flag = FeatureFlag(
             key="ai_tailoring",  # Already exists in defaults
             description="Duplicate",
@@ -242,13 +242,13 @@ class TestFeatureFlagService:
             rollout_percentage=100,
         )
         result = service.add_flag(new_flag)
-        
+
         assert result is False
 
     def test_delete_flag(self):
         """Test deleting a flag."""
         service = FeatureFlagService()
-        
+
         # Add a flag first
         new_flag = FeatureFlag(
             key="temp_flag",
@@ -257,12 +257,12 @@ class TestFeatureFlagService:
             rollout_percentage=100,
         )
         service.add_flag(new_flag)
-        
+
         initial_count = len(service.get_all_flags())
-        
+
         # Delete it
         result = service.delete_flag("temp_flag")
-        
+
         assert result is True
         assert len(service.get_all_flags()) == initial_count - 1
         assert service.get_flag("temp_flag") is None
@@ -270,15 +270,15 @@ class TestFeatureFlagService:
     def test_delete_nonexistent_flag(self):
         """Test deleting a flag that doesn't exist."""
         service = FeatureFlagService()
-        
+
         result = service.delete_flag("nonexistent")
-        
+
         assert result is False
 
     def test_expired_flag(self):
         """Test that expired flags are disabled."""
         service = FeatureFlagService()
-        
+
         # Create an expired flag
         flag = FeatureFlag(
             key="expired_flag",
@@ -288,13 +288,13 @@ class TestFeatureFlagService:
             expires_at=datetime.utcnow() - timedelta(days=1),
         )
         service.add_flag(flag)
-        
+
         assert service.is_enabled("expired_flag") is False
 
     def test_flag_with_ip_targeting(self):
         """Test IP-based targeting."""
         service = FeatureFlagService()
-        
+
         # Create a flag with IP targeting
         targeting = TargetingRule(
             ip_ranges=["192.168.1.*", "10.0.0.1"],
@@ -307,11 +307,11 @@ class TestFeatureFlagService:
             targeting=targeting,
         )
         service.add_flag(flag)
-        
+
         # Matching IPs should have access
         assert service.is_enabled("ip_targeted", ip="192.168.1.100") is True
         assert service.is_enabled("ip_targeted", ip="10.0.0.1") is True
-        
+
         # Non-matching IPs should not have access
         assert service.is_enabled("ip_targeted", ip="172.16.0.1") is False
 
@@ -327,7 +327,7 @@ class TestFeatureFlagModel:
             enabled=True,
             rollout_percentage=50,
         )
-        
+
         assert flag.key == "test_flag"
         assert flag.description == "A test flag"
         assert flag.enabled is True
@@ -348,7 +348,7 @@ class TestFeatureFlagModel:
             variants=variants,
             default_variant="a",
         )
-        
+
         assert len(flag.variants) == 3
         assert flag.default_variant == "a"
 
