@@ -11,6 +11,7 @@
 **Prevention:** Always sanitize request data before logging. Use a dedicated sanitization function that redacts known sensitive keys (e.g., matching "token", "key", "password", "secret") and suffixes.
 
 ## 2026-03-01 - [Unquoted Attribute XSS Bypass]
+
 **Vulnerability:** `sanitize_html` stripped quoted event handlers (`onload="..."`) but missed unquoted ones (`onerror=alert(1)`), allowing XSS via unquoted attributes.
 **Learning:** Regex-based HTML sanitizers must account for all valid HTML syntax variations (quoted, single-quoted, unquoted). Simple patterns often miss edge cases.
 **Prevention:** Use multi-pass regex validation or dedicated parsing libraries. Ensure test cases cover all attribute quoting styles.

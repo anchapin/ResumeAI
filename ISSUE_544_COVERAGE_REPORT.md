@@ -11,21 +11,22 @@
 
 ## Coverage Breakdown
 
-| Metric | Value |
-|--------|-------|
-| Total Source Files | 100 |
-| Files with Tests | 13 (13%) |
-| Files without Tests | 87 (87%) |
-| Current Coverage Estimate | 13.0% |
-| High Priority Gaps | 80 files |
-| Medium Priority Gaps | 5 files |
-| Low Priority Gaps | 2 files |
+| Metric                    | Value    |
+| ------------------------- | -------- |
+| Total Source Files        | 100      |
+| Files with Tests          | 13 (13%) |
+| Files without Tests       | 87 (87%) |
+| Current Coverage Estimate | 13.0%    |
+| High Priority Gaps        | 80 files |
+| Medium Priority Gaps      | 5 files  |
+| Low Priority Gaps         | 2 files  |
 
 ---
 
 ## Currently Tested Files (13)
 
 ### Components (9 files)
+
 - `components/ErrorBoundary.tsx`
 - `components/ErrorDisplay.tsx`
 - `components/ExperienceItem.tsx`
@@ -37,6 +38,7 @@
 - `components/StorageWarning.tsx`
 
 ### Skeleton Components (6 files)
+
 - `components/skeletons/DashboardSkeleton.tsx`
 - `components/skeletons/EditorSkeleton.tsx`
 - `components/skeletons/JobApplicationsSkeleton.tsx`
@@ -45,16 +47,19 @@
 - `components/skeletons/WorkspaceSkeleton.tsx`
 
 ### Hooks (3 files)
+
 - `hooks/useFocus.ts`
 - `hooks/useFocusTrap.ts`
 - `hooks/useGlobalErrors.ts`
 
 ### Pages (3 files)
+
 - `pages/Editor.tsx`
 - `pages/JobApplications.tsx`
 - `pages/Settings.tsx`
 
 ### Utilities (9 files)
+
 - `utils/errorHandler.ts`
 - `utils/export.ts`
 - `utils/fetch-timeout.ts`
@@ -66,6 +71,7 @@
 - `utils/validation.ts`
 
 ### Other (3 files)
+
 - `src/lib/storage.ts`
 - `store/store.ts`
 
@@ -74,6 +80,7 @@
 ## Critical Coverage Gaps (High Priority)
 
 ### Hooks Missing Tests (4 files) - **CRITICAL**
+
 ```
 hooks/useAuth.ts          - Authentication hook, used throughout app
 hooks/useTheme.ts         - Theme management
@@ -82,6 +89,7 @@ hooks/useGeneratePackage.ts - Package generation
 ```
 
 ### Core Pages Missing Tests (13 files)
+
 ```
 pages/Login.tsx              - Authentication
 pages/Register.tsx           - User registration
@@ -99,6 +107,7 @@ pages/NotFound.tsx           - Error page
 ```
 
 ### Core Utilities Missing Tests (5 files) - **HIGH PRIORITY**
+
 ```
 utils/api-client.ts    - API communication layer
 utils/security.ts      - Security utilities
@@ -108,6 +117,7 @@ utils/versioning.ts    - Version management
 ```
 
 ### Editor Components Missing Tests (13 files) - **CRITICAL**
+
 ```
 components/editor/ContactInfoSection.tsx
 components/editor/EditorActions.tsx
@@ -126,6 +136,7 @@ components/editor/VersionHistoryDialog.tsx
 ```
 
 ### Major Components Missing Tests (35 files)
+
 ```
 Core Components:
   - components/Sidebar.tsx
@@ -155,16 +166,16 @@ Feature Components:
   - components/StatusBadge.tsx
   - components/VersionHistory.tsx
   - components/KeyboardShortcutsHelp.tsx
-  
+
 Activity & Tracking:
   - components/ActivityFeed.tsx
   - components/CommentPanel.tsx
   - components/DeliveryLogs.tsx
-  
+
 Webhooks:
   - components/WebhookForm.tsx
   - components/WebhookList.tsx
-  
+
 Error & Testing:
   - components/ErrorTestPanel.tsx
 ```
@@ -189,13 +200,15 @@ utils/enhancements/version-comparison.ts
 components/editor/index.ts
 utils/enhancements/index.ts
 ```
-*(Index/barrel files - re-exports only)*
+
+_(Index/barrel files - re-exports only)_
 
 ---
 
 ## Phased Approach to Reach 80% Coverage
 
 ### Phase 1: Critical Path (Est. 15-20% coverage gain)
+
 Focus on most-used files and authentication:
 
 1. **hooks/useAuth.ts** - Used in authentication, critical path
@@ -207,6 +220,7 @@ Focus on most-used files and authentication:
 7. **hooks/useVariants.ts** - Resume variants
 
 ### Phase 2: Editor Components (Est. 20-25% coverage gain)
+
 Focus on core editor functionality:
 
 1. All `components/editor/*` files (13 files)
@@ -215,6 +229,7 @@ Focus on core editor functionality:
 4. `components/TemplateSelector.tsx`
 
 ### Phase 3: Utilities & OAuth (Est. 15-20% coverage gain)
+
 Focus on helper functions:
 
 1. `utils/linkedin.ts` - LinkedIn import
@@ -224,6 +239,7 @@ Focus on helper functions:
 5. `src/lib/accessibility.ts` - A11y features
 
 ### Phase 4: Pages & Dialogs (Est. 15-20% coverage gain)
+
 Test remaining pages and dialog components:
 
 1. All remaining page components (Register, Teams, Workspace, etc.)
@@ -231,6 +247,7 @@ Test remaining pages and dialog components:
 3. Feature components (OfferCard, TeamCard, etc.)
 
 ### Phase 5: Finalization (Est. 10-15% coverage gain)
+
 Test remaining components:
 
 1. Activity components (ActivityFeed, CommentPanel, etc.)
@@ -243,14 +260,17 @@ Test remaining components:
 ## Files to Test by Priority
 
 ### HIGH PRIORITY (80 files)
+
 These files are critical to app functionality and heavily used.
 
-**Estimated effort to reach 80%:** 
+**Estimated effort to reach 80%:**
+
 - ~67 out of 87 untested files need tests
 - At ~1 test per file: ~1-2 weeks (if 3-5 tests written per day)
 - With 2-3 developers: ~5-10 days
 
 **Quick wins (most impact per test):**
+
 1. hooks/useAuth.ts → +2% coverage
 2. pages/Login.tsx → +1.5% coverage
 3. pages/Dashboard.tsx → +1.5% coverage
@@ -261,14 +281,14 @@ These files are critical to app functionality and heavily used.
 
 ## Test Coverage Targets
 
-| Phase | Target Coverage | Files to Test | Estimated Effort |
-|-------|-----------------|---------------|------------------|
-| Current | 13.0% | 0 | 0 days |
-| Phase 1 | ~25% | 7 files | 3-4 days |
-| Phase 2 | ~45% | 17 files | 4-5 days |
-| Phase 3 | ~60% | 15 files | 3-4 days |
-| Phase 4 | ~75% | 20 files | 4-5 days |
-| Phase 5 | ~80% | 28 files | 5-7 days |
+| Phase   | Target Coverage | Files to Test | Estimated Effort |
+| ------- | --------------- | ------------- | ---------------- |
+| Current | 13.0%           | 0             | 0 days           |
+| Phase 1 | ~25%            | 7 files       | 3-4 days         |
+| Phase 2 | ~45%            | 17 files      | 4-5 days         |
+| Phase 3 | ~60%            | 15 files      | 3-4 days         |
+| Phase 4 | ~75%            | 20 files      | 4-5 days         |
+| Phase 5 | ~80%            | 28 files      | 5-7 days         |
 
 **Total Estimated Effort:** 19-25 days of development time
 

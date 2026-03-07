@@ -122,7 +122,7 @@ describe('Error Display Enhancements', () => {
 
       testCases.forEach(({ type, title }) => {
         const { unmount } = render(
-          <ErrorDisplay error={createErrorContext(type)} onDismiss={vi.fn()} />
+          <ErrorDisplay error={createErrorContext(type)} onDismiss={vi.fn()} />,
         );
         expect(screen.getByText(title)).toBeInTheDocument();
         unmount();
@@ -190,7 +190,7 @@ describe('Error Display Enhancements', () => {
       const onDismiss = vi.fn();
 
       const { rerender } = render(
-        <ErrorDisplay error={error} onDismiss={onDismiss} showDetails={false} />
+        <ErrorDisplay error={error} onDismiss={onDismiss} showDetails={false} />,
       );
 
       expect(screen.queryByText(/code/)).not.toBeInTheDocument();
@@ -212,7 +212,7 @@ describe('Error Display Enhancements', () => {
         () => {
           expect(onDismiss).toHaveBeenCalled();
         },
-        { timeout: 200 }
+        { timeout: 200 },
       );
     });
 

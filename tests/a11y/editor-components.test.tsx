@@ -20,7 +20,12 @@ function MockEditorTabs() {
         <button role="tab" aria-selected="true" aria-controls="personal-panel" id="personal-tab">
           Personal
         </button>
-        <button role="tab" aria-selected="false" aria-controls="experience-panel" id="experience-tab">
+        <button
+          role="tab"
+          aria-selected="false"
+          aria-controls="experience-panel"
+          id="experience-tab"
+        >
           Experience
         </button>
         <button role="tab" aria-selected="false" aria-controls="education-panel" id="education-tab">

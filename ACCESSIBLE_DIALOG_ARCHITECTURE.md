@@ -25,7 +25,7 @@ AccessibleDialog
 │       ├── Listen for Escape key
 │       ├── Call onClose()
 │       └── Cleanup listener
-│   
+│
 │   └── useEffect (Body scroll prevention)
 │       ├── Set document.body.style.overflow = 'hidden'
 │       ├── Store original value
@@ -143,34 +143,27 @@ Dialog Root (role="dialog")
 
 ```html
 <!-- Backdrop Container -->
-<div class="backdrop" onClick={handleBackdropClick}>
-  
+<div class="backdrop" onClick="{handleBackdropClick}">
   <!-- Dialog Container -->
   <div
     role="dialog"
     aria-modal="true"
     aria-labelledby="dialog-title"
-    aria-describedby={descriptionId}
-    tabIndex={-1}
-    ref={dialogContentRef}
+    aria-describedby="{descriptionId}"
+    tabindex="{-1}"
+    ref="{dialogContentRef}"
   >
-    
     <!-- Header Section -->
     <header class="header">
       <h2 id="dialog-title">{{ title }}</h2>
       <button aria-label="Close dialog">X</button>
     </header>
-    
+
     <!-- Content Section -->
-    <div class="content" id={descriptionId}>
-      {{ children }}
-    </div>
-    
+    <div class="content" id="{descriptionId}">{{ children }}</div>
+
     <!-- Footer Section (optional) -->
-    <footer class="footer">
-      {{ footer }}
-    </footer>
-    
+    <footer class="footer">{{ footer }}</footer>
   </div>
 </div>
 ```

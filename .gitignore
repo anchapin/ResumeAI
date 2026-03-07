@@ -41,3 +41,6 @@ htmlcov/
 test-results/
 playwright-report/
 playwright/.cache/
+
+# Local binaries
+bin/
