@@ -27,26 +27,6 @@ jobs:
           fi
           echo "exists=true" >> $GITHUB_OUTPUT
 
-      - name: Validate AGENTS.md structure
-        if: steps.check_file.outputs.exists == 'true'
-        run: |
-          # Check for required sections
-          REQUIRED_SECTIONS=("Build" "Testing" "Code Style")
-          MISSING_SECTIONS=""
-
-          for section in "${REQUIRED_SECTIONS[@]}"; do
-            if ! grep -q "$section" AGENTS.md; then
-              MISSING_SECTIONS="$MISSING_SECTIONS $section"
-            fi
-          done
-
-          if [ -n "$MISSING_SECTIONS" ]; then
-            echo "error=Missing required sections:$MISSING_SECTIONS" >> $GITHUB_OUTPUT
-            exit 1
-          fi
-
-          echo "validation=passed" >> $GITHUB_OUTPUT
-
       - name: Check file is not empty
         if: steps.check_file.outputs.exists == 'true'
         run: |
@@ -55,6 +35,91 @@ jobs:
             exit 1
           fi
 
+      - name: Validate AGENTS.md minimum length
+        if: steps.check_file.outputs.exists == 'true'
+        run: |
+          MIN_LINES=50
+          LINE_COUNT=$(wc -l < AGENTS.md)
+          
+          if [ "$LINE_COUNT" -lt "$MIN_LINES" ]; then
+            echo "error=AGENTS.md is too short ($LINE_COUNT lines). Minimum $MIN_LINES lines required." >> $GITHUB_OUTPUT
+            exit 1
+          fi
+          echo "length=passed" >> $GITHUB_OUTPUT
+
+      - name: Validate AGENTS.md required sections
+        if: steps.check_file.outputs.exists == 'true'
+        run: |
+          # Check for required sections in AGENTS.md
+          REQUIRED_SECTIONS=(
+            "Build"
+            "Test"
+            "Code Style"
+          )
+          MISSING_SECTIONS=""
+          
+          for section in "${REQUIRED_SECTIONS[@]}"; do
+            if ! grep -iq "$section" AGENTS.md; then
+              MISSING_SECTIONS="$MISSING_SECTIONS $section"
+            fi
+          done
+          
+          if [ -n "$MISSING_SECTIONS" ]; then
+            echo "error=Missing required sections:$MISSING_SECTIONS" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+          echo "sections=passed" >> $GITHUB_OUTPUT
+
+      - name: Validate AGENTS.md has code examples
+        if: steps.check_file.outputs.exists == 'true'
+        run: |
+          # Check for code blocks
+          if ! grep -q "```" AGENTS.md; then
+            echo "error=AGENTS.md must contain code examples" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+          echo "code_examples=passed" >> $GITHUB_OUTPUT
+
+      - name: Validate AGENTS.md has frontend section
+        if: steps.check_file.outputs.exists == 'true'
+        run: |
+          # Check for frontend (React/TypeScript) section
+          if ! grep -iq "frontend\|react\|typescript" AGENTS.md; then
+            echo "error=AGENTS.md must contain frontend/React/TypeScript section" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+          echo "frontend=passed" >> $GITHUB_OUTPUT
+
+      - name: Validate AGENTS.md has backend section
+        if: steps.check_file.outputs.exists == 'true'
+        run: |
+          # Check for backend (Python/FastAPI) section
+          if ! grep -iq "backend\|python\|fastapi" AGENTS.md; then
+            echo "error=AGENTS.md must contain backend/Python/FastAPI section" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+          echo "backend=passed" >> $GITHUB_OUTPUT
+
+      - name: Validate AGENTS.md has testing documentation
+        if: steps.check_file.outputs.exists == 'true'
+        run: |
+          # Check for testing commands section
+          if ! grep -iq "test\|vitest\|pytest" AGENTS.md; then
+            echo "error=AGENTS.md must contain testing documentation" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+          echo "testing=passed" >> $GITHUB_OUTPUT
+
+      - name: Validate AGENTS.md has build/lint commands
+        if: steps.check_file.outputs.exists == 'true'
+        run: |
+          # Check for build/lint commands
+          if ! grep -iqE "build|lint|format" AGENTS.md; then
+            echo "error=AGENTS.md must contain build/lint/format commands" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+          echo "commands=passed" >> $GITHUB_OUTPUT
+
       - name: Report validation success
         if: success()
-        run: echo "AGENTS.md validation passed"
+        run: echo "AGENTS.md validation passed - all quality checks successful"

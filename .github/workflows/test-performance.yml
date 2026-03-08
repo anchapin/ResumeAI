@@ -1,0 +1,63 @@
+name: Test Performance Tracking
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'tests/**'
+      - 'vitest.config.ts'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'tests/**'
+      - 'vitest.config.ts'
+  workflow_dispatch:
+    inputs:
+      threshold:
+        description: 'Slow test threshold in ms'
+        required: false
+        default: '100'
+        type: string
+
+jobs:
+  test-performance:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run test performance tracking
+        id: performance
+        run: |
+          THRESHOLD=${{ github.event.inputs.threshold || '100' }}
+          node scripts/test-performance.mjs --threshold $THRESHOLD
+
+      - name: Upload performance results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-performance-results
+          path: .test-performance.json
+          retention-days: 30
+
+      - name: Check for slow tests
+        run: |
+          if [ -f .test-performance.json ]; then
+            SLOW_COUNT=$(jq '.slowTests | length' .test-performance.json)
+            echo "Slow tests detected: $SLOW_COUNT"
+            if [ "$SLOW_COUNT" -gt 0 ]; then
+              echo "## ⚠️ Slow Tests Detected" >> $GITHUB_STEP_SUMMARY
+              jq -r '.slowTests[] | "- \(.name): \(.duration)ms"' .test-performance.json >> $GITHUB_STEP_SUMMARY
+            fi
+          fi

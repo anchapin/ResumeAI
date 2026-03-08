@@ -14,6 +14,9 @@ from fastapi.middleware.cors import CORSMiddleware
 import yaml
 import redis.asyncio as redis
 
+# Use ecryptfs-safe temp directory when needed
+from resume_api.lib.utils.ecryptfs_utils import get_temp_dir
+
 # --- Caching Configuration ---
 
 REDIS_URL = os.environ.get("REDIS_URL")
@@ -492,7 +495,9 @@ async def v1_render_pdf(request: V1RenderPdfRequest):
     Generate a real PDF from resume data using resume-cli.
     """
     try:
-        with tempfile.TemporaryDirectory() as temp_dir:
+        # Use /tmp to avoid ecryptfs 140-character path limit
+        temp_base = get_temp_dir()
+        with tempfile.TemporaryDirectory(dir=temp_base) as temp_dir:
             temp_path = Path(temp_dir)
             resume_yaml_path = temp_path / "resume.yaml"
             output_pdf_path = temp_path / "resume.pdf"
@@ -551,7 +556,9 @@ async def v1_render_markdown(request: V1RenderPdfRequest):
     Generate a markdown preview from resume data using resume-cli.
     """
     try:
-        with tempfile.TemporaryDirectory() as temp_dir:
+        # Use /tmp to avoid ecryptfs 140-character path limit
+        temp_base = get_temp_dir()
+        with tempfile.TemporaryDirectory(dir=temp_base) as temp_dir:
             temp_path = Path(temp_dir)
             resume_yaml_path = temp_path / "resume.yaml"
 
@@ -621,7 +628,9 @@ async def v1_tailor(request: V1TailorRequest):
         ]
 
         # Generate a markdown preview using resume-cli
-        with tempfile.TemporaryDirectory() as temp_dir:
+        # Use /tmp to avoid ecryptfs 140-character path limit
+        temp_base = get_temp_dir()
+        with tempfile.TemporaryDirectory(dir=temp_base) as temp_dir:
             temp_path = Path(temp_dir)
             resume_yaml_path = temp_path / "resume.yaml"
 
