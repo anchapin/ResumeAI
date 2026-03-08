@@ -1,0 +1,13 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "entryPoints": ["components/", "pages/", "utils/", "hooks/"],
+  "entryPointStrategy": "expand",
+  "out": "docs",
+  "theme": "default",
+  "excludeNotDocumented": true,
+  "excludeInternal": true,
+  "includeVersion": true,
+  "name": "ResumeAI",
+  "readme": "none",
+  "plugin": []
+}
