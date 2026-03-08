@@ -100,7 +100,11 @@ class DatabaseInitializer:
                 if not table.passed:
                     for validation in table.validations:
                         if validation.status.value == "failed":
-                            logger.warning("validation_failed", table=table.table_name, message=validation.message)
+                            logger.warning(
+                                "validation_failed",
+                                table=table.table_name,
+                                message=validation.message,
+                            )
         else:
             logger.info("schema_validation_passed")
 
@@ -109,11 +113,17 @@ class DatabaseInitializer:
         for check in integrity.get("checks", []):
             status = check.get("status", "unknown")
             if status == "failed":
-                logger.error("integrity_check_failed", check_name=check["name"], message=check["message"])
+                logger.error(
+                    "integrity_check_failed", check_name=check["name"], message=check["message"]
+                )
             elif status == "warning":
-                logger.warning("integrity_check_warning", check_name=check["name"], message=check["message"])
+                logger.warning(
+                    "integrity_check_warning", check_name=check["name"], message=check["message"]
+                )
             else:
-                logger.debug("integrity_check_passed", check_name=check["name"], message=check["message"])
+                logger.debug(
+                    "integrity_check_passed", check_name=check["name"], message=check["message"]
+                )
 
     async def _seed_data(self):
         """Seed initial data into the database."""

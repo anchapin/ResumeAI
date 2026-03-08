@@ -166,11 +166,17 @@ export const TemplateSelector: React.FC<TemplateSelectorProps> = ({
                     <p className="text-sm text-slate-500 mt-1">{template.description}</p>
                   </div>
                 </div>
-                <button className="p-2 text-slate-400 hover:text-slate-600">
+                <button
+                  className="p-2 text-slate-400 hover:text-slate-600"
+                  aria-label={
+                    expandedTemplate === template.name ? 'Collapse details' : 'Expand details'
+                  }
+                >
                   <span
                     className={`material-symbols-outlined transition-transform ${
                       expandedTemplate === template.name ? 'rotate-180' : ''
                     }`}
+                    aria-hidden="true"
                   >
                     expand_more
                   </span>
