@@ -244,6 +244,42 @@ import { Button } from './components/Button';
 - Run `npm run test:coverage` or `pytest --cov` before committing
 - Accessibility testing: `npm run test:a11y` with jest-axe
 
+## Dependency Management
+
+### Detecting Unused Dependencies
+
+The project includes tooling to detect unused dependencies:
+
+```bash
+# Detect all unused dependencies
+npm run deps:unused
+
+# Check only production dependencies
+npm run deps:unused -- --prod
+
+# Check only dev dependencies
+npm run deps:unused -- --dev
+
+# Output JSON format
+npm run deps:unused -- --json
+```
+
+The detection script scans:
+- Source files (`src/`, `components/`, `pages/`, `hooks/`, `utils/`, `contexts/`, `store/`, `i18n/`)
+- Config files (`eslint.config.js`, `vitest.config.ts`, `vite.config.ts`, etc.)
+- Package.json scripts and configuration
+
+It handles special cases like:
+- Type packages (`@types/*`) - automatically considered used
+- ESLint plugins and configs
+- Vitest coverage providers
+- Scoped packages (`@org/package`)
+
+A GitHub Actions workflow (`.github/workflows/unused-deps.yml`) runs this check on:
+- Push to main/develop branches
+- Pull requests
+- Weekly schedule
+
 
 ## Known Limitations
 

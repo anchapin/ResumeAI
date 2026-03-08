@@ -20,10 +20,10 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import create_async_engine
 
-from resume_api.database import DATABASE_URL, create_db_and_tables
-from resume_api.lib.db.schema_manager import SchemaManager
-from resume_api.lib.db.schema_validation import SchemaValidator
-from resume_api.monitoring.logging_config import get_logger
+from database import DATABASE_URL, create_db_and_tables
+from lib.db.schema_manager import SchemaManager
+from lib.db.schema_validation import SchemaValidator
+from monitoring.logging_config import get_logger
 
 logger = get_logger("scripts.init_database")
 

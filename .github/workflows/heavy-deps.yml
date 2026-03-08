@@ -1,0 +1,72 @@
+name: Heavy Dependency Detection
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  workflow_dispatch:
+    inputs:
+      threshold:
+        description: 'Size threshold in KB'
+        required: false
+        default: '50'
+        type: string
+
+jobs:
+  detect-heavy-deps:
+    name: Detect Heavy Dependencies
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run heavy dependency detection
+        id: detect
+        run: |
+          THRESHOLD=${{ github.event.inputs.threshold || '50' }}
+          node scripts/detect-heavy-deps.mjs --threshold $THRESHOLD
+        continue-on-error: true
+
+      - name: Generate summary report
+        if: always()
+        run: |
+          echo "## 📦 Heavy Dependency Detection" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ -f heavy-deps-report.json ]; then
+            HEAVY_COUNT=$(cat heavy-deps-report.json | jq -r '.heavyDeps | length' 2>/dev/null || echo "0")
+            
+            if [ "$HEAVY_COUNT" -gt 0 ]; then
+              echo "### ⚠️ Heavy Dependencies Detected ($HEAVY_COUNT)" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "| Dependency | Size (KB) | Recommendation |" >> $GITHUB_STEP_SUMMARY
+              echo "|------------|-----------|----------------|" >> $GITHUB_STEP_SUMMARY
+              cat heavy-deps-report.json | jq -r '.heavyDeps[] | "| \(.name) | \(.size) | \(.recommendation) |"' >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "Consider using lighter alternatives or lazy loading these dependencies." >> $GITHUB_STEP_SUMMARY
+            else
+              echo "### ✅ No Heavy Dependencies Detected" >> $GITHUB_STEP_SUMMARY
+              echo "All dependencies are within the size threshold." >> $GITHUB_STEP_SUMMARY
+            fi
+          else
+            echo "No heavy dependencies report generated." >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Upload heavy deps report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: heavy-deps-report
+          path: heavy-deps-report.json
+          retention-days: 7

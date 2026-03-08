@@ -8,11 +8,11 @@ from typing import Optional
 from fastapi import APIRouter, Depends, Query, Header, HTTPException
 from pydantic import BaseModel
 
-from resume_api.lib.feature_flags import (
+from lib.feature_flags import (
     FeatureFlagService,
     get_feature_flag_service,
 )
-from resume_api.monitoring.logging_config import get_logger
+from monitoring.logging_config import get_logger
 
 logger = get_logger("routes.feature_flags")
 

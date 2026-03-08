@@ -1,0 +1,55 @@
+name: Unused Dependencies Detection
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  schedule:
+    - cron: '0 0 * * 0'  # Weekly on Sunday
+
+jobs:
+  detect-unused-deps:
+    name: Detect Unused Dependencies
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run unused dependencies detection
+        id: detect
+        run: |
+          npm run deps:unused
+        continue-on-error: true
+
+      - name: Check for unused dependencies
+        if: steps.detect.outcome == 'failure'
+        run: |
+          if [ -f .unused-deps-report.json ]; then
+            echo "## ⚠️ Unused Dependencies Detected" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "The following dependencies are not being used in the codebase:" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            cat .unused-deps-report.json | jq -r '.unused[]' | while read dep; do
+              echo "- $dep" >> $GITHUB_STEP_SUMMARY
+            done
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Please review and remove unused dependencies to keep the project lean." >> $GITHUB_STEP_SUMMARY
+          fi
+          exit 1
+
+      - name: Success message
+        if: steps.detect.outcome == 'success'
+        run: |
+          echo "## ✅ No Unused Dependencies" >> $GITHUB_STEP_SUMMARY
+          echo "All dependencies are being used in the codebase." >> $GITHUB_STEP_SUMMARY
