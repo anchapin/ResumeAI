@@ -184,8 +184,11 @@ const Teams: React.FC = () => {
               onClick={handleBackToList}
               className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
               title="Back to teams"
+              aria-label="Back to teams"
             >
-              <span className="material-symbols-outlined text-slate-600">arrow_back</span>
+              <span className="material-symbols-outlined text-slate-600" aria-hidden="true">
+                arrow_back
+              </span>
             </button>
           )}
           <h2 className="text-slate-800 font-bold text-xl">
@@ -198,12 +201,19 @@ const Teams: React.FC = () => {
               onClick={handleCreateTeam}
               className="px-4 py-2 rounded-lg bg-primary-600 text-white font-bold text-sm hover:bg-primary-700 transition-colors shadow-lg shadow-primary-600/20 flex items-center gap-2"
             >
-              <span className="material-symbols-outlined text-[18px]">add</span>
+              <span className="material-symbols-outlined text-[18px]" aria-hidden="true">
+                add
+              </span>
               Create Team
             </button>
           )}
-          <button className="p-2 text-slate-400 hover:text-slate-600 transition-colors relative">
-            <span className="material-symbols-outlined">notifications</span>
+          <button
+            className="p-2 text-slate-400 hover:text-slate-600 transition-colors relative"
+            aria-label="Notifications"
+          >
+            <span className="material-symbols-outlined" aria-hidden="true">
+              notifications
+            </span>
             <div className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></div>
           </button>
           <div
