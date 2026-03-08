@@ -15,13 +15,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         
-      - name: Check for files larger than 1MB
+      - name: Check for files larger than 100KB
         run: |
-          # Find files larger than 1MB (1024KB)
-          large_files=$(find . -type f -size +1M ! -path './.git/*' 2>/dev/null)
+          # Find files larger than 100KB
+          large_files=$(find . -type f -size +100k ! -path './.git/*' 2>/dev/null)
           
           if [ -n "$large_files" ]; then
-            echo "❌ Error: The following files exceed 1MB:"
+            echo "❌ Error: The following files exceed 100KB:"
             echo "$large_files"
             echo ""
             echo "Please either:"
@@ -31,4 +31,4 @@ jobs:
             exit 1
           fi
           
-          echo "✅ No files larger than 1MB found"
+          echo "✅ No files larger than 100KB found"

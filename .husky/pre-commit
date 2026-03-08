@@ -1,18 +1,18 @@
 #!/bin/sh
 . "$(dirname "$0")/_/husky.sh"
 
-# Check for large files (> 1MB) - Use git ls-files for tracked files
+# Check for large files (> 100KB) - Use git ls-files for tracked files
 LARGE_FILES=$(git diff --cached --name-only --diff-filter=ACM | while read -r file; do
   if [ -f "$file" ]; then
     size=$(du -k "$file" 2>/dev/null | cut -f1)
-    if [ "$size" -gt 1024 ]; then
+    if [ "$size" -gt 100 ]; then
       echo "$file"
     fi
   fi
 done)
 
 if [ -n "$LARGE_FILES" ]; then
-  echo "❌ Error: The following files exceed 1MB:"
+  echo "❌ Error: The following files exceed 100KB:"
   echo "$LARGE_FILES"
   echo ""
   echo "Please either:"
