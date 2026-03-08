@@ -15,7 +15,7 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape
 from markupsafe import Markup
 
 # Use ecryptfs-safe temp directory when needed
-from lib.utils.ecryptfs_utils import get_temp_dir, is_ecryptfs_path
+from lib.utils.ecryptfs_utils import get_temp_dir
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
