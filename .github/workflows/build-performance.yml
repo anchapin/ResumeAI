@@ -1,0 +1,79 @@
+name: Build Performance Tracking
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  workflow_dispatch:
+    inputs:
+      threshold:
+        description: 'Build time threshold in seconds'
+        required: false
+        default: '60'
+        type: string
+
+jobs:
+  build-performance:
+    name: Track Build Performance
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run build with performance tracking
+        id: build
+        run: |
+          THRESHOLD=${{ github.event.inputs.threshold || '60' }}
+          echo "Threshold: ${THRESHOLD}s"
+          
+          START_TIME=$(date +%s)
+          npm run build
+          END_TIME=$(date +%s)
+          
+          BUILD_TIME=$((END_TIME - START_TIME))
+          echo "build_time=$BUILD_TIME" >> $GITHUB_OUTPUT
+          
+          # Check against threshold
+          if [ "$BUILD_TIME" -gt "$THRESHOLD" ]; then
+            echo "⚠️ Build time ($BUILD_TIME s) exceeds threshold ($THRESHOLD s)" >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
+
+      - name: Generate performance report
+        if: always()
+        run: |
+          echo "## 📊 Build Performance Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Build Time:** ${{ steps.build.outputs.build_time }} seconds" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          THRESHOLD=${{ github.event.inputs.threshold || '60' }}
+          if [ "${{ steps.build.outputs.build_time }}" -le "$THRESHOLD" ]; then
+            echo "✅ Build time is within acceptable range" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ Build time exceeds threshold of ${THRESHOLD}s" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### Optimization Suggestions" >> $GITHUB_STEP_SUMMARY
+            echo "- Consider enabling build caching" >> $GITHUB_STEP_SUMMARY
+            echo "- Split large dependencies into dynamic imports" >> $GITHUB_STEP_SUMMARY
+            echo "- Use swc/esbuild instead of babel for faster transpilation" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Upload build artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-output
+          path: dist/
+          retention-days: 1

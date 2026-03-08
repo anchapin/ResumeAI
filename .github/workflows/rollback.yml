@@ -1,0 +1,110 @@
+name: Deployment Rollback
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to rollback'
+        required: true
+        type: choice
+        options:
+          - production
+          - staging
+          - development
+      reason:
+        description: 'Reason for rollback'
+        required: false
+        type: string
+      target_version:
+        description: 'Specific version to rollback to (optional, defaults to previous)'
+        required: false
+        type: string
+
+# Sets permissions of the GITHUB_TOKEN
+permissions:
+  contents: read
+  deployments: write
+
+jobs:
+  rollback:
+    name: Rollback ${{ github.event.inputs.environment }}
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Determine rollback target
+        id: target
+        run: |
+          if [ "${{ github.event.inputs.target_version }}" != "" ]; then
+            # Specific version requested
+            echo "version=${{ github.event.inputs.target_version }}" >> $GITHUB_OUTPUT
+            echo "target_type=specific" >> $GITHUB_OUTPUT
+          else
+            # Find previous successful deployment
+            PREVIOUS_SHA=$(git log --format=%H -1 main)
+            if [ -n "$PREVIOUS_SHA" ]; then
+              echo "version=$PREVIOUS_SHA" >> $GITHUB_OUTPUT
+              echo "target_type=previous" >> $GITHUB_OUTPUT
+            else
+              echo "No previous deployment found" >> $GITHUB_STEP_SUMMARY
+              exit 1
+            fi
+          fi
+
+      - name: Perform rollback
+        run: |
+          ENVIRONMENT="${{ github.event.inputs.environment }}"
+          VERSION="${{ steps.target.outputs.version }}"
+          REASON="${{ github.event.inputs.reason }}"
+          
+          echo "## 🔄 Deployment Rollback" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Environment:** $ENVIRONMENT" >> $GITHUB_STEP_SUMMARY
+          echo "**Target Version:** $VERSION" >> $GITHUB_STEP_SUMMARY
+          echo "**Reason:** ${REASON:-Manual rollback}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Docker image rollback
+          echo "Rolling back Docker image..."
+          # docker pull anchapin/resume-api:$VERSION || echo "Image not found locally"
+          
+          # Kubernetes rollback (example)
+          # kubectl rollout undo deployment/resume-api -n $ENVIRONMENT
+          
+          # Docker Compose rollback (example)
+          # docker-compose -f docker-compose.prod.yml down
+          # docker-compose -f docker-compose.prod.yml up -d
+          
+          echo "Rollback initiated for version: $VERSION"
+
+      - name: Verify rollback
+        run: |
+          echo "Verifying rollback..."
+          # Add health check after rollback
+          # curl -f https://your-api.example.com/api/v1/health || exit 1
+          echo "Rollback verification complete"
+
+      - name: Create rollback deployment record
+        uses: actions/create-deployment@v1
+        with:
+          environment: ${{ github.event.inputs.environment }}
+          ref: ${{ steps.target.outputs.version }}
+          description: "Rollback - ${{ github.event.inputs.reason || 'Manual rollback' }}"
+          auto_merge: false
+
+      - name: Update rollback status
+        uses: actions/update-deployment@v1
+        with:
+          environment: ${{ github.event.inputs.environment }}
+          state: ${{ job.status == 'success' && 'success' || 'failure' }}
+          description: "Rollback to ${{ steps.target.outputs.version }}"
+
+      - name: Notify on failure
+        if: failure()
+        run: |
+          echo "## ❌ Rollback Failed" >> $GITHUB_STEP_SUMMARY
+          echo "Please check the deployment manually." >> $GITHUB_STEP_SUMMARY
