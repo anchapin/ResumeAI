@@ -9,7 +9,6 @@ limitation by using alternative paths when necessary.
 import os
 import tempfile
 from pathlib import Path
-from typing import Optional
 
 
 # Ecryptfs path limit (140 characters as per kernel documentation)
