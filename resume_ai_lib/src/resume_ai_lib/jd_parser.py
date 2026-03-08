@@ -336,6 +336,12 @@ class JobDescriptionParser:
         rf"(?:^|\n)\s*({'|'.join(_ALL_HEADERS)})\s*[:\-]?\s*(?:\n|)", re.IGNORECASE
     )
 
+    # Pre-compile item extraction pattern for O(N) extraction
+    # Matches bullet points, numbered lists, and key: value pairs
+    SECTION_ITEM_PATTERN = re.compile(
+        r"^(?:[•\-\*]|\d+[\.\)]|(?:[A-Z][a-zA-Z]+)\s*[:\-])\s*(.+)$"
+    )
+
     def parse(self, job_description: str) -> ParsedJobDescription:
         """Parse a job description into structured data."""
         result = ParsedJobDescription()
@@ -546,10 +552,6 @@ class JobDescriptionParser:
             return []
 
         items = []
-        patterns = [
-            r"^[•\-\*]\s*(.+)$",
-            r"^\d+[\.\)]\s*(.+)$",
-        ]
 
         lines = section_text.split("\n")
         for line in lines:
@@ -557,18 +559,22 @@ class JobDescriptionParser:
             if not line:
                 continue
 
-            for pattern in patterns:
-                match = re.match(pattern, line)
-                if match:
-                    item = match.group(1).strip()
-                    if item and len(item) > 5:
-                        items.append(item)
-                    break
-            else:
-                if len(line) > 10 and len(line) < 500:
-                    items.append(line)
+            match = self.SECTION_ITEM_PATTERN.match(line)
+            if match:
+                item = match.group(1).strip()
+                if item and len(item) > 5:
+                    items.append(item)
+                    if len(items) == 20:
+                        break
+                continue
 
-        return items[:20]
+            # If no pattern matched but line is substantial, include it
+            if len(line) > 10 and len(line) < 500:
+                items.append(line)
+                if len(items) == 20:
+                    break
+
+        return items
 
     def _extract_skills(
         self,
