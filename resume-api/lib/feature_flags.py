@@ -5,12 +5,13 @@ Provides feature flag infrastructure for gradual rollouts and A/B testing.
 """
 
 import hashlib
-import logging
 from datetime import datetime
 from typing import Any, Optional
 from dataclasses import dataclass, field
 
-logger = logging.getLogger(__name__)
+from monitoring.logging_config import get_logger
+
+logger = get_logger("lib.feature_flags")
 
 
 @dataclass
@@ -160,7 +161,7 @@ class FeatureFlagService:
         """
         flag = self._flags.get(key)
         if not flag:
-            logger.warning(f"Feature flag '{key}' not found")
+            logger.warning("feature_flag_not_found", flag_key=key)
             return False
 
         # Check if flag is globally disabled
@@ -169,7 +170,7 @@ class FeatureFlagService:
 
         # Check if flag has expired
         if flag.expires_at and flag.expires_at < datetime.utcnow():
-            logger.info(f"Feature flag '{key}' has expired")
+            logger.info("feature_flag_expired", flag_key=key)
             return False
 
         # If rollout is 100%, enable for everyone
@@ -283,7 +284,7 @@ class FeatureFlagService:
         """Update a feature flag's configuration."""
         flag = self._flags.get(key)
         if not flag:
-            logger.warning(f"Feature flag '{key}' not found")
+            logger.warning("feature_flag_not_found", flag_key=key)
             return False
 
         for attr, value in kwargs.items():
@@ -291,27 +292,27 @@ class FeatureFlagService:
                 setattr(flag, attr, value)
 
         flag.updated_at = datetime.utcnow()
-        logger.info(f"Updated feature flag '{key}'")
+        logger.info("feature_flag_updated", flag_key=key)
         return True
 
     def add_flag(self, flag: FeatureFlag) -> bool:
         """Add a new feature flag."""
         if flag.key in self._flags:
-            logger.warning(f"Feature flag '{flag.key}' already exists")
+            logger.warning("feature_flag_already_exists", flag_key=flag.key)
             return False
 
         self._flags[flag.key] = flag
-        logger.info(f"Added feature flag '{flag.key}'")
+        logger.info("feature_flag_added", flag_key=flag.key)
         return True
 
     def delete_flag(self, key: str) -> bool:
         """Delete a feature flag."""
         if key not in self._flags:
-            logger.warning(f"Feature flag '{key}' not found")
+            logger.warning("feature_flag_not_found", flag_key=key)
             return False
 
         del self._flags[key]
-        logger.info(f"Deleted feature flag '{key}'")
+        logger.info("feature_flag_deleted", flag_key=key)
         return True
 
     def _is_in_rollout(

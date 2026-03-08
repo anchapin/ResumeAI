@@ -7,14 +7,14 @@ CSRF tokens are generated per-session and must be included in state-changing req
 """
 
 import secrets
-import logging
 from typing import Callable
 from fastapi import Request, Response, HTTPException, status
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from config import settings
+from monitoring.logging_config import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger("middleware.csrf")
 
 # Methods that require CSRF protection
 CSRF_PROTECTED_METHODS = {"POST", "PUT", "DELETE", "PATCH"}
@@ -62,7 +62,10 @@ class CSRFMiddleware(BaseHTTPMiddleware):
 
         if not csrf_token or not session_token:
             logger.warning(
-                f"csrf_validation_failed: missing_token at {request.url.path} ({request.method})"
+                "csrf_validation_failed",
+                reason="missing_token",
+                path=str(request.url.path),
+                method=request.method,
             )
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
@@ -72,7 +75,10 @@ class CSRFMiddleware(BaseHTTPMiddleware):
         # Validate CSRF token
         if not secrets.compare_digest(csrf_token, session_token):
             logger.warning(
-                f"csrf_validation_failed: invalid_token at {request.url.path} ({request.method})"
+                "csrf_validation_failed",
+                reason="invalid_token",
+                path=str(request.url.path),
+                method=request.method,
             )
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,

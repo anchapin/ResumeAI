@@ -243,3 +243,23 @@ import { Button } from './components/Button';
 - Coverage thresholds: 60% (lines, functions, branches, statements)
 - Run `npm run test:coverage` or `pytest --cov` before committing
 - Accessibility testing: `npm run test:a11y` with jest-axe
+
+
+## Known Limitations
+
+### ecryptfs Filename Length Limit
+
+The home directory (`/home/alex`) uses `ecryptfs` (encrypted filesystem) which has a **140-character filename path limit**. This can cause errors like `[Errno 36] File name too long` when working with nested directories or long file paths.
+
+**Workaround**: Use the symlink in `/tmp` for agent work:
+
+```bash
+# Agents should use this path instead
+cd /tmp/ResumeAI
+
+# Or use absolute path
+/tmp/ResumeAI
+```
+
+This symlink points to the same project but bypasses the ecryptfs limitations.
+

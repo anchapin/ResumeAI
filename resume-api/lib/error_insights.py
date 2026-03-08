@@ -8,13 +8,14 @@ Analyzes errors and converts them into actionable insights:
 - Error trend analysis
 """
 
-import logging
 import hashlib
 from datetime import datetime, timedelta
 from typing import Optional, Dict, List, Any
 from dataclasses import dataclass, field
 
-logger = logging.getLogger(__name__)
+from monitoring.logging_config import get_logger
+
+logger = get_logger("lib.error_insights")
 
 
 @dataclass

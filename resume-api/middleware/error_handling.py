@@ -4,18 +4,19 @@ Centralized error handling and request tracking with unified error responses
 """
 
 import time
-import logging
 from typing import Callable
 from fastapi import Request, Response, HTTPException, status
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import JSONResponse
+
+from monitoring.logging_config import get_logger
 from config.errors import (
     ErrorCode,
     create_error_response,
     generate_request_id,
 )
 
-logger = logging.getLogger(__name__)
+logger = get_logger("middleware.error_handling")
 
 
 class ErrorHandlingMiddleware(BaseHTTPMiddleware):
@@ -59,13 +60,11 @@ class ErrorHandlingMiddleware(BaseHTTPMiddleware):
             )
 
             logger.exception(
-                "Unhandled exception",
-                extra={
-                    "request_id": request_id,
-                    "path": str(request.url.path),
-                    "method": request.method,
-                    "error": str(exc),
-                },
+                "unhandled_exception",
+                request_id=request_id,
+                path=str(request.url.path),
+                method=request.method,
+                error=str(exc),
             )
 
             return JSONResponse(
