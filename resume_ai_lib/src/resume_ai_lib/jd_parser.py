@@ -40,7 +40,7 @@ class JobDescriptionParser:
     Parse and analyze job descriptions.
     """
 
-    CAPITALIZED_PATTERN = re.compile(r"\b[A-Z][a-zA-Z]{2,}(?:\s+[A-Z][a-zA-Z]+)*\b")
+    CAPITALIZED_PATTERN = re.compile(r"\b[A-Z][a-zA-Z]{2,}(?:[ ]+[A-Z][a-zA-Z]+)*\b")
     WORD_PATTERN = re.compile(r"\b[a-z]{3,}\b")
 
     SECTION_HEADERS = {
@@ -616,7 +616,7 @@ class JobDescriptionParser:
         all_text = f"{education_section} {requirements_section}"
 
         patterns = [
-            r"(bachelor['']?s?|master['']?s?|phd|doctorate|mba)\s+(?:degree)?\s*(?:in\s+)?([^\n,.]+)",
+            r"(bachelor['']?s?|master['']?s?|phd|doctorate|mba)[ ]+(?:degree)?[ ]*(?:in[ ]+)?([^\n,.]+)",
         ]
 
         for pattern in patterns:

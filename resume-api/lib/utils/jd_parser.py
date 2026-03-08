@@ -45,7 +45,7 @@ class JobDescriptionParser:
     Extracts structured information from unstructured job description text.
     """
 
-    CAPITALIZED_PATTERN = re.compile(r"\b[A-Z][a-zA-Z]{2,}(?:\s+[A-Z][a-zA-Z]+)*\b")
+    CAPITALIZED_PATTERN = re.compile(r"\b[A-Z][a-zA-Z]{2,}(?:[ ]+[A-Z][a-zA-Z]+)*\b")
     WORD_PATTERN = re.compile(r"\b[a-z]{3,}\b")
 
     # Section headers that indicate different parts of a JD
@@ -783,8 +783,8 @@ class JobDescriptionParser:
 
         # Common education patterns
         patterns = [
-            r"(bachelor['']?s?|master['']?s?|phd|doctorate|mba)\s+(?:degree)?\s*(?:in\s+)?([^\n,.]+)",
-            r"(?:degree|education)\s*(?:required|preferred)?\s*(?:in)?\s*([^\n,.]+)",
+            r"(bachelor['']?s?|master['']?s?|phd|doctorate|mba)[ ]+(?:degree)?[ ]*(?:in[ ]+)?([^\n,.]+)",
+            r"(?:degree|education)[ ]*(?:required|preferred)?[ ]*(?:in)?[ ]*([^\n,.]+)",
         ]
 
         all_text = f"{education_section} {requirements_section}"
