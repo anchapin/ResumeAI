@@ -309,3 +309,45 @@ temp_base = get_temp_dir()
 with tempfile.TemporaryDirectory(dir=temp_base) as temp_dir:
     # Your code here
 ```
+
+
+## Code Modularization Enforcement
+
+This project uses ESLint with `eslint-plugin-boundaries` and `eslint-plugin-import` to enforce module boundaries and prevent circular dependencies.
+
+### Module Boundaries
+
+The following element types are defined in `eslint.config.js`:
+- `components/` - React UI components
+- `pages/` - Route-based page components
+- `hooks/` - Custom React hooks
+- `utils/` - Utility functions
+- `contexts/` - React context providers
+- `store/` - State management
+- `src/` - Source files
+
+### Enforcement Rules
+
+1. **Module Boundary Types** (`boundaries/element-types`): Warns when elements import from restricted paths
+2. **Circular Dependency Detection** (`import/no-cycle`): Warns about circular imports with max depth of 3
+3. **Import Rules**: Uses `eslint-plugin-import` for advanced import analysis
+
+### Running Modularization Checks
+
+```bash
+# Run ESLint with modularization rules
+npm run lint
+
+# Check specifically for circular dependencies
+npx eslint --rule "import/no-cycle: warn" .
+
+# Check module boundaries
+npx eslint --rule "boundaries/element-types: warn" .
+```
+
+### CI Integration
+
+A GitHub Actions workflow (`.github/workflows/modularization.yml`) runs these checks on:
+- Push to main/develop branches
+- Pull requests
+

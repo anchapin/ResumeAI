@@ -5,6 +5,7 @@ import reactHooks from 'eslint-plugin-react-hooks';
 import boundaries from 'eslint-plugin-boundaries';
 import unusedImports from 'eslint-plugin-unused-imports';
 import complexity from 'eslint-plugin-complexity';
+import importPlugin from 'eslint-plugin-import';
 
 export default [
   {
@@ -46,6 +47,7 @@ export default [
       boundaries,
       'unused-imports': unusedImports,
       complexity,
+      import: importPlugin,
     },
     rules: {
       ...react.configs.recommended.rules,
@@ -79,6 +81,8 @@ export default [
         message: 'Module boundary violation: {{plugin}} {{element}} cannot import {{dependency}} {{dependencyType}}',
       }],
       'boundaries/no-external': 'off',
+      // Circular dependency detection
+      'import/no-cycle': ['warn', { maxDepth: 3 }],
     },
     settings: {
       react: { version: 'detect' },
@@ -91,6 +95,11 @@ export default [
         { name: 'store', type: 'app', pattern: 'store/**/*' },
         { name: 'src', type: 'app', pattern: 'src/**/*' },
       ],
+      'import/resolver': {
+        node: {
+          extensions: ['.ts', '.tsx', '.js', '.jsx'],
+        },
+      },
     },
   },
 ];
