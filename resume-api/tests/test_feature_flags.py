@@ -3,7 +3,7 @@ Tests for Feature Flag Service
 """
 
 from datetime import datetime, timedelta
-from resume_api.lib.feature_flags import (
+from lib.feature_flags import (
     FeatureFlagService,
     FeatureFlag,
     Variant,
