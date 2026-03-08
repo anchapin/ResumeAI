@@ -17,8 +17,15 @@ jobs:
         
       - name: Check for files larger than 100KB
         run: |
-          # Find files larger than 100KB
-          large_files=$(find . -type f -size +100k ! -path './.git/*' 2>/dev/null)
+          # Find files larger than 100KB, excluding package manager lock files
+          # (lock files are necessary for reproducible builds)
+          large_files=$(find . -type f -size +100k \
+            ! -path './.git/*' \
+            ! -name 'package-lock.json' \
+            ! -name 'pnpm-lock.yaml' \
+            ! -name 'yarn.lock' \
+            ! -name 'bun.lockb' \
+            2>/dev/null)
           
           if [ -n "$large_files" ]; then
             echo "❌ Error: The following files exceed 100KB:"
