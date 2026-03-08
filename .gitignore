@@ -44,3 +44,7 @@ playwright/.cache/
 
 # Local binaries
 bin/
+
+# Dependency reports
+.unused-deps-report.json
+.deps-audit.json
