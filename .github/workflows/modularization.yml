@@ -1,0 +1,37 @@
+name: Modularization Check
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  modularization:
+    name: Check Module Boundaries
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci --silent
+      
+      - name: Check circular dependencies
+        run: |
+          echo "Checking for circular dependencies..."
+          npx eslint --no-eslintrc -c eslint.config.js --rule "import/no-cycle: error" .
+        continue-on-error: true
+      
+      - name: Check module boundaries
+        run: |
+          echo "Checking module boundaries..."
+          npx eslint --no-eslintrc -c eslint.config.js --rule "boundaries/element-types: error" .
+        continue-on-error: true
