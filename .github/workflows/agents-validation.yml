@@ -73,8 +73,8 @@ jobs:
       - name: Validate AGENTS.md has code examples
         if: steps.check_file.outputs.exists == 'true'
         run: |
-          # Check for code blocks
-          if ! grep -q "```" AGENTS.md; then
+          # Check for code blocks (escape backticks for literal match)
+          if ! grep -q '\`\`\`' AGENTS.md; then
             echo "error=AGENTS.md must contain code examples" >> $GITHUB_OUTPUT
             exit 1
           fi
