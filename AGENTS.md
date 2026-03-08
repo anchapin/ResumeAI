@@ -273,4 +273,3 @@ temp_base = get_temp_dir()
 with tempfile.TemporaryDirectory(dir=temp_base) as temp_dir:
     # Your code here
 ```
-

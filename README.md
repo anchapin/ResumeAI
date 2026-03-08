@@ -105,6 +105,61 @@ docker build -t resume-api:latest .
 docker run -p 8000:8000 resume-api:latest
 ```
 
+### Local Development with Docker Compose
+
+ResumeAI provides a `docker-compose.local.yml` file for setting up local development services including PostgreSQL, Redis, and the API.
+
+#### Prerequisites
+
+- [Docker](https://www.docker.com/get-started) installed and running
+- [Docker Compose](https://docs.docker.com/compose/install/) installed
+
+#### Quick Start
+
+```bash
+# Copy the example environment file
+cp .env.local.example .env.local
+
+# Start all local services (PostgreSQL, Redis, API)
+docker-compose -f docker-compose.local.yml up -d
+
+# View logs
+docker-compose -f docker-compose.local.yml logs -f
+
+# Stop all services
+docker-compose -f docker-compose.local.yml down
+```
+
+#### Services
+
+| Service   | Port  | Description              |
+| --------- | ----- | ------------------------ |
+| PostgreSQL| 5432  | Local database          |
+| Redis     | 6379  | Cache backend           |
+| API       | 8000  | ResumeAI API            |
+| Frontend  | 5173  | Vite dev server (optional) |
+
+#### Using the Frontend
+
+To also run the frontend in the local stack:
+
+```bash
+# The frontend service is disabled by default
+# To enable, edit docker-compose.local.yml and uncomment the frontend service
+
+# Or run frontend locally with npm
+npm run dev
+```
+
+#### Environment Variables
+
+The `.env.local.example` file contains all required variables. Key settings:
+
+- `DATABASE_URL`: PostgreSQL connection string
+- `REDIS_URL`: Redis connection string  
+- `CACHE_BACKEND`: Set to `redis` to use Redis caching
+- `REQUIRE_API_KEY=false`: Disable API key auth for local development
+
 ## Configuration
 
 ### Frontend (.env.local)
