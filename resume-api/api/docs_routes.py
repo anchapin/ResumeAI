@@ -5,7 +5,6 @@ Provides OpenAPI schema endpoints and API documentation utilities.
 """
 
 from fastapi import APIRouter, Response
-from fastapi.responses import JSONResponse
 
 router = APIRouter(prefix="/docs", tags=["Documentation"])
 
