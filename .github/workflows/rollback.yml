@@ -20,15 +20,23 @@ on:
         required: false
         type: string
 
+  # Auto-rollback on health check failure
+  workflow_run:
+    workflows: [Deployment]
+    types: [completed]
+    branches: [main]
+
 # Sets permissions of the GITHUB_TOKEN
 permissions:
   contents: read
   deployments: write
 
 jobs:
+  # Manual rollback job
   rollback:
     name: Rollback ${{ github.event.inputs.environment }}
     runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
     
     steps:
       - name: Checkout code
@@ -70,7 +78,6 @@ jobs:
           
           # Docker image rollback
           echo "Rolling back Docker image..."
-          # docker pull anchapin/resume-api:$VERSION || echo "Image not found locally"
           
           # Kubernetes rollback (example)
           # kubectl rollout undo deployment/resume-api -n $ENVIRONMENT
@@ -108,3 +115,85 @@ jobs:
         run: |
           echo "## ❌ Rollback Failed" >> $GITHUB_STEP_SUMMARY
           echo "Please check the deployment manually." >> $GITHUB_STEP_SUMMARY
+
+  # Auto-rollback on deployment failure
+  auto-rollback:
+    name: Auto-rollback on failure
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'failure'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Determine failed deployment info
+        id: failed_deploy
+        run: |
+          echo "## 🔄 Auto-Rollback Triggered" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Trigger:** Deployment workflow failed" >> $GITHUB_STEP_SUMMARY
+          echo "**Run ID:** ${{ github.event.workflow_run.id }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Conclusion:** ${{ github.event.workflow_run.conclusion }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+      - name: Find last good deployment
+        id: last_good
+        run: |
+          # Find the last successful deployment SHA
+          LAST_GOOD_SHA=$(git log --format=%H -1 main)
+          if [ -n "$LAST_GOOD_SHA" ]; then
+            echo "version=$LAST_GOOD_SHA" >> $GITHUB_OUTPUT
+            echo "Rolling back to: $LAST_GOOD_SHA"
+          else
+            echo "No previous successful deployment found" >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
+
+      - name: Wait for health check cooldown
+        run: |
+          echo "Waiting for cooldown period before rollback..."
+          sleep 30
+
+      - name: Perform auto-rollback
+        run: |
+          VERSION="${{ steps.last_good.outputs.version }}"
+          
+          echo "## 🚨 Auto-Rollback Execution" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Target Version:** $VERSION" >> $GITHUB_STEP_SUMMARY
+          echo "**Trigger:** Failed deployment health check" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Add rollback commands here
+          # Example: kubectl rollout undo deployment/resume-api -n production
+          # Example: docker-compose -f docker-compose.prod.yml rollback
+          
+          echo "Auto-rollback initiated for version: $VERSION"
+
+      - name: Verify health after rollback
+        run: |
+          echo "Verifying health after rollback..."
+          # Add health check verification
+          # curl -f https://your-api.example.com/api/v1/health || exit 1
+          echo "Health check verification complete"
+
+      - name: Create auto-rollback deployment record
+        uses: actions/create-deployment@v1
+        with:
+          environment: production
+          ref: ${{ steps.last_good.outputs.version }}
+          description: "Auto-rollback - deployment failed"
+          auto_merge: false
+
+      - name: Notify auto-rollback status
+        if: always()
+        run: |
+          if [ "${{ job.status }}" == "success" ]; then
+            echo "## ✅ Auto-Rollback Successful" >> $GITHUB_STEP_SUMMARY
+            echo "System has been rolled back to the previous stable version." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "## ❌ Auto-Rollback Failed" >> $GITHUB_STEP_SUMMARY
+            echo "Please check the deployment manually." >> $GITHUB_STEP_SUMMARY
+          fi

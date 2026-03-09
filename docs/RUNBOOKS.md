@@ -1,6 +1,6 @@
 # ResumeAI Runbooks
 
-**Last Updated:** March 7, 2026  
+**Last Updated:** March 9, 2026  
 **Maintained By:** DevOps / Platform Team  
 **Status:** Production Ready
 
@@ -16,6 +16,12 @@
 6. [Security Incident Response](#security-incident-response)
 7. [Data Export and Import](#data-export-and-import)
 8. [Service Restart Procedures](#service-restart-procedures)
+9. [Cache Management](./RUNBOOKS_CACHE.md) - Redis cache operations
+10. [Queue and Worker Management](./RUNBOOKS_QUEUE.md) - Celery queue operations
+11. [Authentication Troubleshooting](./RUNBOOKS_AUTH.md) - Auth and OAuth issues
+12. [File Upload Troubleshooting](./RUNBOOKS_FILE_UPLOAD.md) - Upload and storage issues
+13. [Data Recovery](./RUNBOOKS_DATA_RECOVERY.md) - Partial data recovery procedures
+14. [Monitoring and Logging](./RUNBOOKS_MONITORING.md) - Metrics and log analysis
 
 ---
 
@@ -757,6 +763,7 @@ curl -s http://api.resumeai.com/metrics | grep error_rate
 | Date       | Author      | Changes                      |
 | ---------- | ----------- | ---------------------------- |
 | 2026-03-07 | DevOps Team | Initial version - Issue #821 |
+| 2026-03-09 | DevOps Team | Added runbooks documentation - Issue #918 |
 
 ## Related Documentation
 
@@ -764,9 +771,15 @@ curl -s http://api.resumeai.com/metrics | grep error_rate
 - [oauth-monitoring-runbook.md](./oauth-monitoring-runbook.md) - OAuth-specific runbook
 - [DEPLOYMENT_GUIDE.md](../DEPLOYMENT_GUIDE.md) - Deployment procedures
 - [TROUBLESHOOTING.md](./TROUBLESHOOTING.md) - General troubleshooting
+- [RUNBOOKS_CACHE.md](./RUNBOOKS_CACHE.md) - Cache management
+- [RUNBOOKS_QUEUE.md](./RUNBOOKS_QUEUE.md) - Queue and worker management
+- [RUNBOOKS_AUTH.md](./RUNBOOKS_AUTH.md) - Authentication troubleshooting
+- [RUNBOOKS_FILE_UPLOAD.md](./RUNBOOKS_FILE_UPLOAD.md) - File upload troubleshooting
+- [RUNBOOKS_DATA_RECOVERY.md](./RUNBOOKS_DATA_RECOVERY.md) - Data recovery procedures
+- [RUNBOOKS_MONITORING.md](./RUNBOOKS_MONITORING.md) - Monitoring and logging
 
 ---
 
-**Last Reviewed:** March 7, 2026  
-**Next Review:** April 7, 2026 (Monthly)  
+**Last Reviewed:** March 9, 2026  
+**Next Review:** April 9, 2026 (Monthly)  
 **Owner:** DevOps Team
