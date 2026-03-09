@@ -301,21 +301,27 @@ const JobApplications: React.FC = () => {
             onClick={() => setShowATSModal(true)}
             className="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg font-medium transition-colors shadow-sm shadow-emerald-500/20"
           >
-            <span className="material-symbols-outlined text-[20px]">fact_check</span>
+            <span className="material-symbols-outlined text-[20px]" aria-hidden="true">
+              fact_check
+            </span>
             <span>ATS Check</span>
           </button>
           <button
             onClick={() => setShowTailorModal(true)}
             className="flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg font-medium transition-colors shadow-sm shadow-amber-500/20"
           >
-            <span className="material-symbols-outlined text-[20px]">auto_fix_high</span>
+            <span className="material-symbols-outlined text-[20px]" aria-hidden="true">
+              auto_fix_high
+            </span>
             <span>Tailor Resume</span>
           </button>
           <button
             onClick={() => setShowAddModal(true)}
             className="flex items-center gap-2 bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg font-medium transition-colors shadow-sm shadow-primary-600/20"
           >
-            <span className="material-symbols-outlined text-[20px]">add</span>
+            <span className="material-symbols-outlined text-[20px]" aria-hidden="true">
+              add
+            </span>
             <span>Add Application</span>
           </button>
           <div className="w-px h-8 bg-slate-200 mx-2"></div>
@@ -380,7 +386,9 @@ const JobApplications: React.FC = () => {
           <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-primary-100 rounded-lg">
-                <span className="material-symbols-outlined text-primary-600">send</span>
+                <span className="material-symbols-outlined text-primary-600" aria-hidden="true">
+                  send
+                </span>
               </div>
               <div>
                 <p className="text-sm text-slate-500 font-medium">Applications Sent</p>
@@ -391,7 +399,9 @@ const JobApplications: React.FC = () => {
           <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-amber-100 rounded-lg">
-                <span className="material-symbols-outlined text-amber-600">hourglass_empty</span>
+                <span className="material-symbols-outlined text-amber-600" aria-hidden="true">
+                  hourglass_empty
+                </span>
               </div>
               <div>
                 <p className="text-sm text-slate-500 font-medium">Pending</p>
@@ -402,7 +412,9 @@ const JobApplications: React.FC = () => {
           <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-purple-100 rounded-lg">
-                <span className="material-symbols-outlined text-purple-600">forum</span>
+                <span className="material-symbols-outlined text-purple-600" aria-hidden="true">
+                  forum
+                </span>
               </div>
               <div>
                 <p className="text-sm text-slate-500 font-medium">Interviews</p>
@@ -413,7 +425,9 @@ const JobApplications: React.FC = () => {
           <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-green-100 rounded-lg">
-                <span className="material-symbols-outlined text-green-600">workspace_premium</span>
+                <span className="material-symbols-outlined text-green-600" aria-hidden="true">
+                  workspace_premium
+                </span>
               </div>
               <div>
                 <p className="text-sm text-slate-500 font-medium">Interview Rate</p>
@@ -449,7 +463,9 @@ const JobApplications: React.FC = () => {
                 <tr>
                   <td colSpan={5} className="px-6 py-12 text-center">
                     <div className="flex flex-col items-center justify-center text-red-500">
-                      <span className="material-symbols-outlined text-4xl mb-4">error</span>
+                      <span className="material-symbols-outlined text-4xl mb-4" aria-hidden="true">
+                        error
+                      </span>
                       <p className="font-medium">{error}</p>
                       <button
                         onClick={() => window.location.reload()}
@@ -464,7 +480,9 @@ const JobApplications: React.FC = () => {
                 <tr>
                   <td colSpan={5} className="px-6 py-12 text-center">
                     <div className="flex flex-col items-center justify-center text-slate-400">
-                      <span className="material-symbols-outlined text-6xl mb-4">work_off</span>
+                      <span className="material-symbols-outlined text-6xl mb-4" aria-hidden="true">
+                        work_off
+                      </span>
                       <p className="font-medium text-slate-500">No job applications yet</p>
                       <p className="text-sm">
                         Click "Add Application" to track your first job application
@@ -553,12 +571,19 @@ const JobApplications: React.FC = () => {
             >
               {isTailoring ? (
                 <>
-                  <span className="material-symbols-outlined text-[18px] animate-spin">sync</span>
+                  <span
+                    className="material-symbols-outlined text-[18px] animate-spin"
+                    aria-hidden="true"
+                  >
+                    sync
+                  </span>
                   Tailoring...
                 </>
               ) : (
                 <>
-                  <span className="material-symbols-outlined text-[18px]">auto_fix_high</span>
+                  <span className="material-symbols-outlined text-[18px]" aria-hidden="true">
+                    auto_fix_high
+                  </span>
                   Tailor Resume
                 </>
               )}
@@ -606,7 +631,9 @@ const JobApplications: React.FC = () => {
           {/* Error Message */}
           {tailorError && (
             <div className="flex items-center gap-2 text-red-600 text-sm bg-red-50 p-3 rounded-lg">
-              <span className="material-symbols-outlined text-[16px]">error</span>
+              <span className="material-symbols-outlined text-[16px]" aria-hidden="true">
+                error
+              </span>
               {tailorError}
             </div>
           )}
@@ -615,7 +642,9 @@ const JobApplications: React.FC = () => {
           {tailoredResult && (
             <div className="space-y-4">
               <div className="flex items-center gap-2 text-green-600 text-sm bg-green-50 p-3 rounded-lg">
-                <span className="material-symbols-outlined text-[16px]">check_circle</span>
+                <span className="material-symbols-outlined text-[16px]" aria-hidden="true">
+                  check_circle
+                </span>
                 Resume tailored successfully!
               </div>
 
@@ -640,7 +669,10 @@ const JobApplications: React.FC = () => {
                 <ul className="space-y-2">
                   {tailoredResult.suggestions.map((suggestion, idx) => (
                     <li key={idx} className="flex items-start gap-2 text-sm text-slate-600">
-                      <span className="material-symbols-outlined text-[16px] text-primary-600">
+                      <span
+                        className="material-symbols-outlined text-[16px] text-primary-600"
+                        aria-hidden="true"
+                      >
                         lightbulb
                       </span>
                       {suggestion}
@@ -681,12 +713,19 @@ const JobApplications: React.FC = () => {
             >
               {isCheckingATS ? (
                 <>
-                  <span className="material-symbols-outlined text-[18px] animate-spin">sync</span>
+                  <span
+                    className="material-symbols-outlined text-[18px] animate-spin"
+                    aria-hidden="true"
+                  >
+                    sync
+                  </span>
                   Checking...
                 </>
               ) : (
                 <>
-                  <span className="material-symbols-outlined text-[18px]">fact_check</span>
+                  <span className="material-symbols-outlined text-[18px]" aria-hidden="true">
+                    fact_check
+                  </span>
                   Check ATS Score
                 </>
               )}
@@ -710,7 +749,9 @@ const JobApplications: React.FC = () => {
           {/* Error Message */}
           {atsError && (
             <div className="flex items-center gap-2 text-red-600 text-sm bg-red-50 p-3 rounded-lg">
-              <span className="material-symbols-outlined text-[16px]">error</span>
+              <span className="material-symbols-outlined text-[16px]" aria-hidden="true">
+                error
+              </span>
               {atsError}
             </div>
           )}
@@ -788,7 +829,10 @@ const JobApplications: React.FC = () => {
                   <ul className="space-y-2">
                     {atsReport.recommendations.map((rec, idx) => (
                       <li key={idx} className="flex items-start gap-2 text-sm text-amber-700">
-                        <span className="material-symbols-outlined text-[16px] text-amber-600 mt-0.5">
+                        <span
+                          className="material-symbols-outlined text-[16px] text-amber-600 mt-0.5"
+                          aria-hidden="true"
+                        >
                           lightbulb
                         </span>
                         {rec}
