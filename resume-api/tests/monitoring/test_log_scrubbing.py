@@ -2,8 +2,6 @@
 Tests for log scrubbing functionality.
 """
 
-import pytest
-
 from monitoring.log_scrubbing import (
     REDACTED,
     _is_sensitive_field_key,
