@@ -43,7 +43,7 @@ class JobDescriptionParser:
     Extracts structured information from unstructured job description text.
     """
 
-    CAPITALIZED_PATTERN = re.compile(r"\b[A-Z][a-zA-Z]{2,}(?:\s+[A-Z][a-zA-Z]+)*\b")
+    CAPITALIZED_PATTERN = re.compile(r"\b[A-Z][a-zA-Z]{2,}(?:[ ]+[A-Z][a-zA-Z]+)*\b")
     WORD_PATTERN = re.compile(r"\b[a-z]{3,}\b")
 
     # Section headers that indicate different parts of a JD
@@ -396,6 +396,10 @@ class JobDescriptionParser:
         rf"(?:^|\n)\s*({'|'.join(_ALL_HEADERS)})\s*[:\-]?\s*(?:\n|)", re.IGNORECASE
     )
 
+    # Pre-compile item extraction pattern for O(N) extraction
+    # Matches bullet points, numbered lists, and key: value pairs
+    SECTION_ITEM_PATTERN = re.compile(r"^(?:[•\-\*]|\d+[\.\)]|(?:[A-Z][a-zA-Z]+)\s*[:\-])\s*(.+)$")
+
     def __init__(self):
         """Initialize the job description parser."""
         pass
@@ -702,32 +706,28 @@ class JobDescriptionParser:
 
         items = []
 
-        # Split by common bullet point markers
-        patterns = [
-            r"^[•\-\*]\s*(.+)$",  # Bullet points
-            r"^\d+[\.\)]\s*(.+)$",  # Numbered lists
-            r"^(?:[A-Z][a-zA-Z]+)\s*[:\-]\s*(.+)$",  # Key: value pairs
-        ]
-
         lines = section_text.split("\n")
         for line in lines:
             line = line.strip()
             if not line:
                 continue
 
-            for pattern in patterns:
-                match = re.match(pattern, line)
-                if match:
-                    item = match.group(1).strip()
-                    if item and len(item) > 5:
-                        items.append(item)
-                    break
-            else:
-                # If no pattern matched but line is substantial, include it
-                if len(line) > 10 and len(line) < 500:
-                    items.append(line)
+            match = self.SECTION_ITEM_PATTERN.match(line)
+            if match:
+                item = match.group(1).strip()
+                if item and len(item) > 5:
+                    items.append(item)
+                    if len(items) == 20:
+                        break
+                continue
 
-        return items[:20]  # Limit to 20 items per section
+            # If no pattern matched but line is substantial, include it
+            if len(line) > 10 and len(line) < 500:
+                items.append(line)
+                if len(items) == 20:
+                    break
+
+        return items
 
     def _extract_skills(
         self,
@@ -770,8 +770,8 @@ class JobDescriptionParser:
 
         # Common education patterns
         patterns = [
-            r"(bachelor['']?s?|master['']?s?|phd|doctorate|mba)\s+(?:degree)?\s*(?:in\s+)?([^\n,.]+)",
-            r"(?:degree|education)\s*(?:required|preferred)?\s*(?:in)?\s*([^\n,.]+)",
+            r"(bachelor['']?s?|master['']?s?|phd|doctorate|mba)[ ]+(?:degree)?[ ]*(?:in[ ]+)?([^\n,.]+)",
+            r"(?:degree|education)[ ]*(?:required|preferred)?[ ]*(?:in)?[ ]*([^\n,.]+)",
         ]
 
         all_text = f"{education_section} {requirements_section}"
