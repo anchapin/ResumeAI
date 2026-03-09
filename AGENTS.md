@@ -230,6 +230,25 @@ import { Button } from './components/Button';
 - Create PRs for all changes to main
 - Never push directly to main without PR
 
+### AI Agent Commits
+
+This repository supports AI agent contributions. AI agents can:
+
+- Create feature branches and submit pull requests
+- Run tests, linters, and formatters
+- Make commits following the conventional commits format
+
+**Agent Commit Guidelines:**
+- Use `feat:`, `fix:`, `docs:`, `chore:`, `refactor:` prefix for commit messages
+- Include issue number in PR title: `feat: description (#123)`
+- All AI agent PRs require code review before merging
+- Branch protection rules apply to all commits
+
+**Commit Detection:**
+- Commits by AI agents are tracked via the readiness report
+- Agents should sign commits with their identity in the message footer:
+  `Co-authored-by: Agent Name <agent@ai.com>`
+
 ### CI/CD
 
 - Use local `act` CLI tool when GitHub Actions has billing issues

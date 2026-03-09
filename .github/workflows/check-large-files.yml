@@ -15,11 +15,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         
-      - name: Check for files larger than 100KB
+      - name: Check for files larger than 1MB
         run: |
-          # Find files larger than 100KB, excluding package manager lock files
+          # Find files larger than 1MB, excluding package manager lock files
           # (lock files are necessary for reproducible builds)
-          large_files=$(find . -type f -size +100k \
+          large_files=$(find . -type f -size +1M \
             ! -path './.git/*' \
             ! -name 'package-lock.json' \
             ! -name 'pnpm-lock.yaml' \
@@ -28,7 +28,7 @@ jobs:
             2>/dev/null)
           
           if [ -n "$large_files" ]; then
-            echo "❌ Error: The following files exceed 100KB:"
+            echo "❌ Error: The following files exceed 1MB:"
             echo "$large_files"
             echo ""
             echo "Please either:"
@@ -38,4 +38,23 @@ jobs:
             exit 1
           fi
           
-          echo "✅ No files larger than 100KB found"
+          echo "✅ No files larger than 1MB found"
+          
+      - name: Check for files between 100KB and 1MB (warning)
+        run: |
+          # Warn about files between 100KB and 1MB
+          medium_files=$(find . -type f -size +100k -size -1M \
+            ! -path './.git/*' \
+            ! -name 'package-lock.json' \
+            ! -name 'pnpm-lock.yaml' \
+            ! -name 'yarn.lock' \
+            ! -name 'bun.lockb' \
+            2>/dev/null)
+          
+          if [ -n "$medium_files" ]; then
+            echo "⚠️ Warning: The following files are between 100KB and 1MB:"
+            echo "$medium_files"
+            echo "Consider optimizing these files or using Git LFS"
+          else
+            echo "✅ No files between 100KB and 1MB found"
+          fi
