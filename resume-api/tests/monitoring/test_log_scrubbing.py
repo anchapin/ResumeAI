@@ -57,12 +57,12 @@ class TestStringScrubbing:
         assert REDACTED in result or "password" not in result.lower()
 
     def test_api_key_pattern(self):
-        text = 'api_key=sk_live_abcdef123456'
+        text = "api_key=sk_live_abcdef123456"
         result = _scrub_string(text)
         assert REDACTED in result
 
     def test_bearer_token_pattern(self):
-        text = 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9'
+        text = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"
         result = _scrub_string(text)
         assert REDACTED in result
 
@@ -141,11 +141,7 @@ class TestScrubLogEntry:
     def test_scrub_nested_structures(self):
         event_dict = {
             "event": "api_request",
-            "request": {
-                "headers": {
-                    "Authorization": "Bearer token123"
-                }
-            }
+            "request": {"headers": {"Authorization": "Bearer token123"}},
         }
         result = scrub_log_entry(None, "info", event_dict.copy())
         assert result["request"]["headers"]["Authorization"] == REDACTED
@@ -153,10 +149,7 @@ class TestScrubLogEntry:
     def test_scrub_list_values(self):
         event_dict = {
             "event": "batch_operation",
-            "items": [
-                {"password": "secret1"},
-                {"api_key": "key1"}
-            ]
+            "items": [{"password": "secret1"}, {"api_key": "key1"}],
         }
         result = scrub_log_entry(None, "info", event_dict.copy())
         assert result["items"][0]["password"] == REDACTED
