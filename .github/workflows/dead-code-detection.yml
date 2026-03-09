@@ -1,0 +1,42 @@
+name: Dead Code Detection
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  detect-dead-code:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run depcheck for unused dependencies
+        run: |
+          npx --yes depcheck --timed-out 120 || echo "Depcheck found issues - reporting only"
+
+      - name: Check for unused exports in TypeScript
+        run: |
+          npx eslint . --ext .ts,.tsx \
+            --rule 'no-unused-vars: warn' \
+            --rule 'no-unused-imports: warn' \
+            --format compact || echo "ESLint found warnings - reporting only"
+
+      - name: Check Python dead code
+        run: |
+          pip install pyflakes flake8 --quiet || true
+          find resume-api -name "*.py" -exec pyflakes {} + || echo "Pyflakes found issues - reporting only"
+
+      - name: Report findings
+        run: |
+          echo "Dead code detection completed"
+          echo "Review warnings above for unused code"
