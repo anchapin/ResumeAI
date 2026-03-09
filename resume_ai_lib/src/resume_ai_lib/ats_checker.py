@@ -7,6 +7,7 @@ Applicant Tracking Systems and provide recommendations for improvement.
 
 import re
 from typing import Any, Dict, List, Optional
+from collections import Counter
 from dataclasses import dataclass, field
 
 
@@ -193,7 +194,9 @@ class ATSCompatibilityChecker:
             self._check_formatting(resume_text, report)
 
         if job_description:
-            self._check_keyword_matching(resume_data, job_description, report, extracted_text)
+            self._check_keyword_matching(
+                resume_data, job_description, report, extracted_text
+            )
 
         self._calculate_overall_score(report)
         self._generate_recommendations(report)
@@ -474,13 +477,10 @@ class ATSCompatibilityChecker:
         stop_words = self.STOP_WORDS
 
         words = self.WORD_PATTERN.findall(text.lower())
-        word_count = {}
-        for word in words:
-            if word not in stop_words:
-                word_count[word] = word_count.get(word, 0) + 1
+        # ⚡ Bolt Optimization: Use collections.Counter for faster frequency counting
+        word_count = Counter(word for word in words if word not in stop_words)
 
-        sorted_keywords = sorted(word_count.items(), key=lambda x: x[1], reverse=True)
-        return [kw for kw, count in sorted_keywords[:30]]
+        return [kw for kw, _ in word_count.most_common(30)]
 
     def _extract_resume_text(self, resume_data: Dict[str, Any]) -> str:
         text_parts = []

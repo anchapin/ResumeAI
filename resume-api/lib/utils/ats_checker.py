@@ -7,6 +7,7 @@ Applicant Tracking Systems and provide recommendations for improvement.
 
 import re
 from typing import Any, Dict, List, Optional
+from collections import Counter
 from dataclasses import dataclass, field
 
 
@@ -672,15 +673,12 @@ class ATSCompatibilityChecker:
         # Extract words
         words = self.WORD_PATTERN.findall(text.lower())
 
-        # Filter and count
-        word_count = {}
-        for word in words:
-            if word not in stop_words:
-                word_count[word] = word_count.get(word, 0) + 1
+        # ⚡ Bolt Optimization: Use collections.Counter for faster frequency counting
+        # Filter and count in a single pass using the C-optimized Counter
+        word_count = Counter(word for word in words if word not in stop_words)
 
         # Return top keywords by frequency
-        sorted_keywords = sorted(word_count.items(), key=lambda x: x[1], reverse=True)
-        return [kw for kw, count in sorted_keywords[:30]]
+        return [kw for kw, _ in word_count.most_common(30)]
 
     def _extract_resume_text(self, resume_data: Dict[str, Any]) -> str:
         """Extract all text content from resume data."""

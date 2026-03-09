@@ -12,3 +12,7 @@
 
 **Learning:** In text parsing code (like `JobDescriptionParser._extract_section_content`), looping over uncompiled regex patterns and attempting to match each line sequentially is a massive performance bottleneck. Combining multiple patterns into a single pre-compiled regex (`^(?:[•\-\*]|\d+[\.\)]|(?:[A-Z][a-zA-Z]+)\s*[:\-])\s*(.+)$`) avoids repetitive regex execution overhead. Furthermore, when there's an artificial limit on output size (like `items[:20]`), failing to implement an early `break` leads to wasted work on long documents. Combining the regex compilation and early termination reduced the execution time by ~94% (6.9s down to 0.38s over 10,000 runs) in benchmarks.
 **Action:** When extracting a limited number of items from a string using regex, always pre-compile the patterns, try to consolidate multiple regex patterns into one single logical OR pattern, and implement early termination as soon as the target item limit is reached.
+
+## 2026-03-09 - Optimize keyword extraction using collections.Counter
+**Learning:** Manual dictionary-based word frequency counting (incrementing keys and sorting `.items()`) is slower than `collections.Counter`, which is implemented in C and optimized for this exact use case.
+**Action:** Always prefer `collections.Counter` along with a generator expression for frequency counting of elements in sequences, especially for strings and text processing.
