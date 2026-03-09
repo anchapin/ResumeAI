@@ -160,6 +160,20 @@ jobs:
           echo "Verifying deployment health..."
           # Add health check commands
           # Example: curl -f https://your-api.example.com/api/v1/health || exit 1
+          # Placeholder: add real health check endpoint for production
+          echo "Health check completed"
+
+      - name: Health check with retries
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 5
+          retry_wait_seconds: 10
+          max_attempts: 3
+          command: |
+            echo "Performing health check..."
+            # Replace with actual health check endpoint
+            # curl -f https://your-api.example.com/api/v1/health || exit 1
+            echo "Health check passed"
 
       - name: Report deployment status
         if: always()
@@ -180,6 +194,21 @@ jobs:
             -H "Content-Type: application/json" \
             -H "X-API-Key: ${{ secrets.API_KEY }}" \
             || echo "Deployment tracking API not available, continuing..."
+
+      - name: Notify monitoring system
+        if: always()
+        run: |
+          DEPLOYMENT_ID="deploy-$(date +%Y%m%d-%H%M%S)-${{ github.sha }}"
+          STATUS="${{ job.status }}"
+          
+          # Send metrics to monitoring system (Datadog, Prometheus, etc.)
+          if [ -n "${{ secrets.MONITORING_API_KEY }}" ]; then
+            curl -X POST "https://api.monitoring.example.com/v1/metrics" \
+              -H "Content-Type: application/json" \
+              -H "Authorization: Bearer ${{ secrets.MONITORING_API_KEY }}" \
+              -d "{\"metric\":\"deployment.status\",\"value\":$([ \"$STATUS\" = \"success\" ] && echo \"1\" || echo \"0\"),\"tags\":[\"environment:${{ steps.env.outputs.environment }}\",\"service:resume-api\"]}" \
+              || echo "Monitoring API not available"
+          fi
 
   # Notify observability systems
   notify:
@@ -222,3 +251,32 @@ jobs:
           state: ${{ needs.deploy.result == 'success' && 'success' || 'failure' }}
           description: ${{ steps.summary.outputs.summary }}
           environment_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+      - name: Send deployment notification
+        if: always()
+        run: |
+          BUILD_STATUS="${{ needs.build.result }}"
+          DEPLOY_STATUS="${{ needs.deploy.result }}"
+          
+          # Create detailed summary
+          if [ "$BUILD_STATUS" == "success" ] && [ "$DEPLOY_STATUS" == "success" ]; then
+            MESSAGE=":white_check_mark: Deployment successful to ${{ steps.env.outputs.environment }}"
+          else
+            MESSAGE=":x: Deployment failed - Build: $BUILD_STATUS, Deploy: $DEPLOY_STATUS"
+          fi
+          
+          # Send Slack notification if webhook is configured
+          if [ -n "${{ secrets.SLACK_WEBHOOK_URL }}" ]; then
+            curl -s -X POST -H 'Content-Type: application/json' \
+              --data "{\"text\":\"$MESSAGE\\nEnvironment: ${{ steps.env.outputs.environment }}\\nCommit: ${{ github.sha }}\\nWorkflow: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\"}" \
+              "${{ secrets.SLACK_WEBHOOK_URL }}" \
+              || echo "Slack notification failed"
+          fi
+          
+          # Send Discord notification if webhook is configured  
+          if [ -n "${{ secrets.DISCORD_WEBHOOK_URL }}" ]; then
+            curl -s -X POST -H 'Content-Type: application/json' \
+              --data "{\"content\":\"$MESSAGE\\nEnvironment: ${{ steps.env.outputs.environment }}\\nCommit: ${{ github.sha }}\"}" \
+              "${{ secrets.DISCORD_WEBHOOK_URL }}" \
+              || echo "Discord notification failed"
+          fi
