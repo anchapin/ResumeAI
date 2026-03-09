@@ -5,10 +5,14 @@ on:
     branches: [main]
     paths:
       - "AGENTS.md"
+      - "package.json"
+      - "package-lock.json"
   pull_request:
     branches: [main]
     paths:
       - "AGENTS.md"
+      - "package.json"
+      - "package-lock.json"
 
 jobs:
   validate-agents-md:
@@ -119,6 +123,67 @@ jobs:
             exit 1
           fi
           echo "commands=passed" >> $GITHUB_OUTPUT
+
+      - name: Validate npm scripts referenced in AGENTS.md exist
+        if: steps.check_file.outputs.exists == 'true'
+        run: |
+          # Extract npm script names from AGENTS.md and verify they exist in package.json
+          if [ -f "package.json" ]; then
+            # Get all npm scripts from package.json
+            SCRIPTS=$(jq -r '.scripts | keys[]' package.json 2>/dev/null || echo "")
+            
+            # Look for script references in AGENTS.md (e.g., npm run test, npm run build)
+            # Extract potential script names from AGENTS.md
+            REFERENCES=$(grep -oE 'npm run [a-zA-Z0-9_-]+' AGENTS.md | sed 's/npm run //' | sort -u)
+            
+            for ref in $REFERENCES; do
+              if ! echo "$SCRIPTS" | grep -q "^${ref}$"; then
+                echo "Warning: AGENTS.md references npm script '$ref' but it doesn't exist in package.json"
+              fi
+            done
+            echo "npm_scripts=validated"
+          else
+            echo "package.json not found, skipping npm script validation"
+          fi
+
+      - name: Validate Python scripts/commands are valid
+        if: steps.check_file.outputs.exists == 'true'
+        run: |
+          # Check for common Python commands referenced in AGENTS.md
+          # Look for pytest, black, flake8, mypy references
+          
+          if grep -qE "pytest" AGENTS.md; then
+            # Check if pytest is available (installed or in requirements)
+            if [ -f "resume-api/requirements.txt" ]; then
+              if ! grep -qi "pytest" resume-api/requirements.txt; then
+                echo "Warning: AGENTS.md mentions pytest but it's not in requirements.txt"
+              fi
+            fi
+          fi
+          
+          echo "python_commands=validated"
+
+      - name: Validate file paths referenced in AGENTS.md exist
+        if: steps.check_file.outputs.exists == 'true'
+        run: |
+          # Extract potential file paths from AGENTS.md and verify they exist
+          # This catches paths like src/, resume-api/, .github/workflows/
+          
+          # Common paths that should exist
+          EXPECTED_PATHS=(
+            "src"
+            "resume-api"
+            ".github/workflows"
+          )
+          
+          for path in "${EXPECTED_PATHS[@]}"; do
+            if grep -qE "(^|[^a-zA-Z])$path(/|$)" AGENTS.md; then
+              if [ ! -d "$path" ]; then
+                echo "Warning: AGENTS.md references '$path/' but directory doesn't exist"
+              fi
+            fi
+          done
+          echo "file_paths=validated"
 
       - name: Report validation success
         if: success()
