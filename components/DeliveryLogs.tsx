@@ -118,8 +118,11 @@ const DeliveryLogs: React.FC<DeliveryLogsProps> = ({ webhookId, onClose }) => {
         <button
           onClick={onClose}
           className="p-2 text-slate-400 hover:text-slate-600 transition-colors"
+          aria-label="Close delivery logs"
         >
-          <span className="material-symbols-outlined">close</span>
+          <span className="material-symbols-outlined" aria-hidden="true">
+            close
+          </span>
         </button>
       </div>
 
@@ -218,8 +221,9 @@ const DeliveryLogs: React.FC<DeliveryLogsProps> = ({ webhookId, onClose }) => {
                         disabled={retryingDeliveryId === delivery.id}
                         className="p-2 text-slate-500 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
                         title="Retry delivery"
+                        aria-label="Retry delivery"
                       >
-                        <span className="material-symbols-outlined text-[20px]">
+                        <span className="material-symbols-outlined text-[20px]" aria-hidden="true">
                           {retryingDeliveryId === delivery.id ? 'progress_activity' : 'refresh'}
                         </span>
                       </button>
@@ -231,8 +235,11 @@ const DeliveryLogs: React.FC<DeliveryLogsProps> = ({ webhookId, onClose }) => {
                       }}
                       className="p-2 text-slate-500 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
                       title="View payload"
+                      aria-label="View payload"
                     >
-                      <span className="material-symbols-outlined text-[20px]">code</span>
+                      <span className="material-symbols-outlined text-[20px]" aria-hidden="true">
+                        code
+                      </span>
                     </button>
                   </div>
                 </div>
