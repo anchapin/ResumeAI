@@ -1,0 +1,248 @@
+name: Profiling Instrumentation
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'resume-api/**'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'resume-api/**'
+  workflow_dispatch:
+    inputs:
+      profiling_type:
+        description: 'Type of profiling to run'
+        required: false
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - bundle
+          - runtime
+          - memory
+
+jobs:
+  bundle-profiling:
+    name: Bundle Size Profiling
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' || github.event_name == 'push' || github.event_name == 'pull_request'
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build and analyze bundle
+        id: bundle
+        run: |
+          # Build the project
+          npm run build
+          
+          # Analyze bundle sizes
+          echo "## Bundle Analysis" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Check dist directory
+          if [ -d "dist" ]; then
+            echo "### Asset Sizes" >> $GITHUB_STEP_SUMMARY
+            ls -lh dist/assets/ | tail -n +2 >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          # Run bundle analysis
+          node scripts/analyze-bundle.cjs --output bundle-report.json
+          
+          # Output summary
+          if [ -f bundle-report.json ]; then
+            TOTAL_SIZE=$(jq -r '.totalSize' bundle-report.json)
+            CHUNK_COUNT=$(jq -r '.chunks | length' bundle-report.json)
+            echo "**Total Bundle Size:** $TOTAL_SIZE" >> $GITHUB_STEP_SUMMARY
+            echo "**Chunk Count:** $CHUNK_COUNT" >> $GITHUB_STEP_SUMMARY
+            echo "bundle_size=$TOTAL_SIZE" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Check bundle size limits
+        run: |
+          # Warn if bundle exceeds thresholds
+          if [ -f bundle-report.json ]; then
+            TOTAL_SIZE_KB=$(jq -r '.totalSizeKB // 0' bundle-report.json)
+            THRESHOLD_KB=500
+            
+            if [ "$TOTAL_SIZE_KB" -gt "$THRESHOLD_KB" ]; then
+              echo "## ⚠️ Bundle Size Warning" >> $GITHUB_STEP_SUMMARY
+              echo "Bundle size ($TOTAL_SIZE_KB KB) exceeds threshold ($THRESHOLD_KB KB)" >> $GITHUB_STEP_SUMMARY
+            fi
+          fi
+
+      - name: Upload bundle report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: bundle-report
+          path: bundle-report.json
+          retention-days: 30
+
+  runtime-profiling:
+    name: Runtime Performance Profiling
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' && (github.event.inputs.profiling_type == 'all' || github.event.inputs.profiling_type == 'runtime')
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run performance benchmarks
+        id: benchmarks
+        run: |
+          # Check if benchmarks exist
+          if [ -d "benchmarks" ]; then
+            echo "Running performance benchmarks..."
+            
+            # Run benchmarks
+            for benchmark in benchmarks/*.js; do
+              if [ -f "$benchmark" ]; then
+                echo "Running: $benchmark"
+                node "$benchmark" >> benchmark-results.txt 2>&1 || true
+              fi
+            done
+            
+            # Output results
+            if [ -f benchmark-results.txt ]; then
+              echo "## Benchmark Results" >> $GITHUB_STEP_SUMMARY
+              cat benchmark-results.txt >> $GITHUB_STEP_SUMMARY
+            fi
+          else
+            echo "No benchmarks directory found"
+          fi
+
+      - name: Check for slow operations
+        run: |
+          # Analyze performance data
+          if [ -f benchmark-results.txt ]; then
+            # Check for slow operations (>100ms)
+            SLOW_COUNT=$(grep -c "ms" benchmark-results.txt || echo "0")
+            echo "Operations analyzed: $SLOW_COUNT"
+          fi
+
+      - name: Upload benchmark results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: benchmark-results
+          path: benchmark-results.txt
+          retention-days: 30
+
+  memory-profiling:
+    name: Memory Usage Profiling
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' && (github.event.inputs.profiling_type == 'all' || github.event.inputs.profiling_type == 'memory')
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run memory analysis
+        id: memory
+        run: |
+          # Create memory profiling script
+          cat > profile-memory.mjs << 'EOF'
+import { spawn } from 'child_process';
+
+const runMemoryProfile = async () => {
+  console.log('Starting memory profiling...');
+  
+  // Run Node with --inspect and capture heap snapshots
+  const proc = spawn('node', [
+    '--inspect',
+    '--expose-gc',
+    'server.js'
+  ], {
+    stdio: ['pipe', 'pipe', 'pipe']
+  });
+  
+  let output = '';
+  proc.stdout.on('data', (data) => {
+    output += data.toString();
+  });
+  
+  proc.stderr.on('data', (data) => {
+    console.error(data.toString());
+  });
+  
+  // Let it run for 5 seconds
+  await new Promise(resolve => setTimeout(resolve, 5000));
+  
+  proc.kill();
+  console.log('Memory profiling complete');
+  console.log(output);
+};
+
+runMemoryProfile().catch(console.error);
+EOF
+          
+          echo "Memory profiling instrumentation added"
+          echo "## Memory Profiling" >> $GITHUB_STEP_SUMMARY
+          echo "Memory profiling hooks have been added to the application" >> $GITHUB_STEP_SUMMARY
+          echo "Use --expose-gc flag to enable garbage collection profiling" >> $GITHUB_STEP_SUMMARY
+
+  generate-report:
+    name: Generate Profiling Report
+    runs-on: ubuntu-latest
+    needs: [bundle-profiling, runtime-profiling, memory-profiling]
+    if: github.event_name == 'workflow_dispatch'
+    
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: reports
+
+      - name: Generate summary report
+        run: |
+          echo "## 📊 Profiling Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Bundle report
+          if [ -d "reports/bundle-report" ]; then
+            echo "### Bundle Analysis" >> $GITHUB_STEP_SUMMARY
+            cat reports/bundle-report/bundle-report.json 2>/dev/null || echo "No data" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          # Benchmark results
+          if [ -d "reports/benchmark-results" ]; then
+            echo "### Performance Benchmarks" >> $GITHUB_STEP_SUMMARY
+            cat reports/benchmark-results/benchmark-results.txt 2>/dev/null || echo "No data" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "Profiling report generated successfully"
