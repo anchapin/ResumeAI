@@ -10,6 +10,8 @@ from colorama import Fore, Style, init
 
 from config import settings
 
+from .log_scrubbing import scrub_log_entry
+
 # Initialize colorama
 init(autoreset=True)
 
@@ -39,6 +41,8 @@ def setup_logging() -> None:
         structlog.processors.StackInfoRenderer(),
         add_timestamp,
         structlog.processors.UnicodeDecoder(),
+        # Scrub sensitive data from all log entries before rendering
+        scrub_log_entry,
     ]
 
     if settings.log_format == "json" or not settings.debug:

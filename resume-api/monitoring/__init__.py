@@ -14,4 +14,5 @@ __all__ = [
     "tracing",
     "tracing_utils",
     "profiling",
+    "log_scrubbing",
 ]
