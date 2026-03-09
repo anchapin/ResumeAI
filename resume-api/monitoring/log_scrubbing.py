@@ -7,7 +7,6 @@ This module provides:
 - Validation utilities to ensure no sensitive information is logged
 """
 
-import logging
 import re
 from typing import Any
 
@@ -31,8 +30,7 @@ SENSITIVE_PATTERNS = {
         re.IGNORECASE,
     ),
     "password": re.compile(
-        r"(?i)(password|passwd|pwd|pass)"
-        r"[\"']?\s*[:=]\s*[\"']?([^\s\"']{4,})[\"']?",
+        r"(?i)(password|passwd|pwd|pass)" r"[\"']?\s*[:=]\s*[\"']?([^\s\"']{4,})[\"']?",
         re.IGNORECASE,
     ),
     "private_key": re.compile(
@@ -47,23 +45,25 @@ SENSITIVE_PATTERNS = {
         r"(?i)(AKIA|ABIA|ACCA|ASIA)[A-Z0-9]{16}",
     ),
     "aws_secret_key": re.compile(
-        r"(?i)aws[_-]?secret[_-]?access[_-]?key[\"']?\s*[:=]\s*[\"']?[a-zA-Z0-9/+=]{40}[\"']?",
+        r"(?i)aws[_-]?secret[_-]?access[_-]?key" r"[\"']?\s*[:=]\s*[\"']?[a-zA-Z0-9/+=]{40}[\"']?",
     ),
     # PII patterns
     "email": re.compile(
         r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b",
     ),
     "ssn": re.compile(
-        r"\b(?!000|666|9\d{2})[0-9]{3}[-\s]?(?!00)[0-9]{2}[-\s]?(?!0000)[0-9]{4}\b",
+        r"\b(?!000|666|9\d{2})[0-9]{3}[-\s]?(?!00)[0-9]{2}" r"[-\s]?(?!0000)[0-9]{4}\b",
     ),
     "phone": re.compile(
         r"\b(?:\+?1[-.\s]?)?\(?[0-9]{3}\)?[-.\s]?[0-9]{3}[-.\s]?[0-9]{4}\b",
     ),
     "credit_card": re.compile(
-        r"\b(?:4[0-9]{12}(?:[0-9]{3})?|5[1-5][0-9]{14}|3[47][0-9]{13}|6(?:011|5[0-9]{2})[0-9]{12})\b",
+        r"\b(?:4[0-9]{12}(?:[0-9]{3})?|5[1-5][0-9]{14}|3[47][0-9]{13}"
+        r"|6(?:011|5[0-9]{2})[0-9]{12})\b",
     ),
     "ip_address": re.compile(
-        r"\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b",
+        r"\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}"
+        r"(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b",
     ),
 }
 
@@ -139,16 +139,17 @@ def _is_sensitive_field_key(key: str) -> bool:
 def scrub_value(value: Any) -> Any:
     """
     Recursively scrub sensitive values from a dictionary or list.
-    
+
     Args:
         value: The value to scrub (can be dict, list, str, or other)
-    
+
     Returns:
         The scrubbed value with sensitive data replaced
     """
     if isinstance(value, dict):
-        return {k: REDACTED if _is_sensitive_field_key(k) else scrub_value(v) 
-                for k, v in value.items()}
+        return {
+            k: REDACTED if _is_sensitive_field_key(k) else scrub_value(v) for k, v in value.items()
+        }
     elif isinstance(value, list):
         return [scrub_value(item) for item in value]
     elif isinstance(value, str):
@@ -159,26 +160,26 @@ def scrub_value(value: Any) -> Any:
 def _scrub_string(text: str) -> str:
     """
     Scrub sensitive patterns from a string.
-    
+
     Args:
         text: The text to scrub
-    
+
     Returns:
         The scrubbed text
     """
     result = text
-    
+
     # Check for high-confidence secrets first (private keys, AWS keys, GitHub tokens)
     for pattern_name, pattern in SENSITIVE_PATTERNS.items():
         if pattern_name in ("private_key", "github_token", "aws_access_key", "aws_secret_key"):
             result = pattern.sub(REDACTED, result)
-    
+
     # Generic patterns that might cause false positives - only apply in context
     # These check for key=value patterns
     for pattern_name, pattern in SENSITIVE_PATTERNS.items():
         if pattern_name in ("api_key", "bearer_token", "secret_key", "password"):
             result = pattern.sub(lambda m: f"{m.group(1)}={REDACTED}", result)
-    
+
     return result
 
 
@@ -189,15 +190,15 @@ def scrub_log_entry(
 ) -> dict:
     """
     Structlog processor to scrub sensitive data from log entries.
-    
+
     This processor should be added early in the processor chain to ensure
     all log data is scrubbed before rendering.
-    
+
     Args:
         logger: The structlog logger
         method_name: The log method name (info, warning, error, etc.)
         event_dict: The log event dictionary
-    
+
     Returns:
         The scrubbed event dictionary
     """
@@ -212,27 +213,27 @@ def scrub_log_entry(
         # Recursively scrub nested structures
         elif isinstance(value, (dict, list)):
             event_dict[key] = scrub_value(value)
-    
+
     return event_dict
 
 
 def validate_log_entry(event_dict: dict) -> list[str]:
     """
     Validate that a log entry doesn't contain sensitive data.
-    
+
     Args:
         event_dict: The log event dictionary to validate
-    
+
     Returns:
         List of warnings for potential sensitive data found
     """
     warnings = []
-    
+
     # Check field keys
     for key in event_dict.keys():
         if _is_sensitive_field_key(key):
             warnings.append(f"Potentially sensitive field key: {key}")
-    
+
     # Check string values for patterns
     def check_values(value: Any, path: str = ""):
         if isinstance(value, dict):
@@ -249,16 +250,16 @@ def validate_log_entry(event_dict: dict) -> list[str]:
                         f"Potential {pattern_name} detected at {path}: "
                         f"{value[:50]}{'...' if len(value) > 50 else ''}"
                     )
-    
+
     check_values(event_dict)
-    
+
     return warnings
 
 
 def get_scrubber_processor():
     """
     Get a configured structlog processor for scrubbing.
-    
+
     Returns:
         A structlog processor function for use in structlog.configure()
     """
