@@ -21,6 +21,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -50,16 +52,61 @@ jobs:
             exit 1
           fi
 
+      - name: Get previous build time
+        id: previous_build
+        run: |
+          # Try to get build time from previous main branch build
+          PREVIOUS_TIME=$(gh run list --branch main --workflow "Build Performance Tracking" --status success --limit 1 --json conclusionDuration 2>/dev/null | jq -r '.[0].conclusionDuration // "0"' | grep -oE '^[0-9]+' || echo "0")
+          echo "previous_build_time=$PREVIOUS_TIME" >> $GITHUB_OUTPUT
+          echo "Previous build time: ${PREVIOUS_TIME}s"
+
       - name: Generate performance report
         if: always()
         run: |
+          CURRENT_TIME=${{ steps.build.outputs.build_time }}
+          PREVIOUS_TIME=${{ steps.previous_build.outputs.previous_build_time }}
+          THRESHOLD=${{ github.event.inputs.threshold || '60' }}
+          
           echo "## 📊 Build Performance Report" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Build Time:** ${{ steps.build.outputs.build_time }} seconds" >> $GITHUB_STEP_SUMMARY
+          echo "**Current Build Time:** ${CURRENT_TIME} seconds" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           
-          THRESHOLD=${{ github.event.inputs.threshold || '60' }}
-          if [ "${{ steps.build.outputs.build_time }}" -le "$THRESHOLD" ]; then
+          if [ "$PREVIOUS_TIME" -gt 0 ]; then
+            echo "**Previous Build Time:** ${PREVIOUS_TIME} seconds" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            
+            # Calculate percentage change
+            if [ "$PREVIOUS_TIME" -gt 0 ]; then
+              CHANGE=$(( (CURRENT_TIME - PREVIOUS_TIME) * 100 / PREVIOUS_TIME ))
+              if [ "$CHANGE" -gt 0 ]; then
+                echo "**Change:** 🔴 +${CHANGE}% (slower)" >> $GITHUB_STEP_SUMMARY
+              elif [ "$CHANGE" -lt 0 ]; then
+                echo "**Change:** 🟢 ${CHANGE}% (faster)" >> $GITHUB_STEP_SUMMARY
+              else
+                echo "**Change:** ⚪ No change" >> $GITHUB_STEP_SUMMARY
+              fi
+            fi
+            echo "" >> $GITHUB_STEP_SUMMARY
+            
+            # Warn if significant regression (>20% slower)
+            if [ "$PREVIOUS_TIME" -gt 0 ] && [ $(( (CURRENT_TIME - PREVIOUS_TIME) * 100 / PREVIOUS_TIME )) -gt 20 ]; then
+              echo "⚠️ **Performance Regression Detected:** Build is more than 20% slower than previous run" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "### Investigation Steps" >> $GITHUB_STEP_SUMMARY
+              echo "1. Check recent commits for large dependency additions" >> $GITHUB_STEP_SUMMARY
+              echo "2. Review changes to build configuration (vite.config.ts)" >> $GITHUB_STEP_SUMMARY
+              echo "3. Look for circular dependencies causing extra processing" >> $GITHUB_STEP_SUMMARY
+            fi
+          else
+            echo "_No previous build data available for comparison_" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Threshold:** ${THRESHOLD}s" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ "$CURRENT_TIME" -le "$THRESHOLD" ]; then
             echo "✅ Build time is within acceptable range" >> $GITHUB_STEP_SUMMARY
           else
             echo "⚠️ Build time exceeds threshold of ${THRESHOLD}s" >> $GITHUB_STEP_SUMMARY
@@ -77,3 +124,26 @@ jobs:
           name: build-output
           path: dist/
           retention-days: 1
+
+      - name: Store build time for historical tracking
+        run: |
+          # Create a JSON file with build time data
+          BUILD_DATA=$(cat <<EOF
+          {
+            "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+            "build_time": ${{ steps.build.outputs.build_time }},
+            "branch": "${{ github.ref_name }}",
+            "commit": "${{ github.sha }}",
+            "workflow_run_id": ${{ github.run_id }}
+          }
+          EOF
+          )
+          echo "$BUILD_DATA" > build-time.json
+          echo "Build time data: $BUILD_DATA"
+
+      - name: Upload build time data
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-time-data
+          path: build-time.json
+          retention-days: 30
