@@ -9,7 +9,7 @@ on:
       - 'pages/**'
       - 'utils/**'
       - 'hooks/**'
-      - 'resume-api/api/**'
+      - 'resume-api/**'
       - 'package.json'
       - 'typedoc.json'
   workflow_dispatch:
@@ -31,6 +31,19 @@ jobs:
 
       - name: Generate TypeScript documentation
         run: npm run docs
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Python doc generator
+        run: pip install pdoc
+
+      - name: Generate Python API documentation
+        run: |
+          pdoc resume-api/lib resume-api/api -o docs/python --template-dir .github/workflows/docs-template 2>/dev/null || \
+          pdoc resume-api/lib resume-api/api -o docs/python
 
       - name: Upload documentation artifact
         uses: actions/upload-artifact@v4
