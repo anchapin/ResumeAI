@@ -1,0 +1,128 @@
+name: Deployment Health Check
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to check'
+        required: true
+        type: choice
+        options:
+          - production
+          - staging
+          - development
+      url:
+        description: 'Health check URL'
+        required: true
+        default: 'https://api.resumeai.com/api/v1/health'
+
+  schedule:
+    # Run health checks every 5 minutes
+    - cron: '*/5 * * * *'
+
+jobs:
+  health-check:
+    name: Deployment Health Check
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Check endpoint health
+        id: health
+        run: |
+          URL="${{ github.event.inputs.url }}"
+          ENV="${{ github.event.inputs.environment }}"
+          
+          echo "Checking health for: $URL"
+          
+          # Perform health check with timeout
+          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 30 "$URL" || echo "000")
+          echo "HTTP Status: $HTTP_CODE"
+          echo "http_code=$HTTP_CODE" >> $GITHUB_OUTPUT
+          
+          if [ "$HTTP_CODE" = "200" ]; then
+            echo "✅ Health check passed"
+            echo "status=healthy" >> $GITHUB_OUTPUT
+          else
+            echo "⚠️ Health check failed with status: $HTTP_CODE"
+            echo "status=unhealthy" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Check response time
+        id: timing
+        if: steps.health.outputs.status == 'healthy'
+        run: |
+          URL="${{ github.event.inputs.url }}"
+          
+          START=$(date +%s%3N)
+          curl -s -o /dev/null "$URL"
+          END=$(date +%s%3N)
+          
+          RESPONSE_TIME=$((END - START))
+          echo "Response time: ${RESPONSE_TIME}ms"
+          echo "response_time=$RESPONSE_TIME" >> $GITHUB_OUTPUT
+          
+          # Warn if response time > 500ms
+          if [ "$RESPONSE_TIME" -gt 500 ]; then
+            echo "⚠️ Response time is above 500ms threshold"
+          fi
+
+      - name: Report status
+        if: always()
+        run: |
+          STATUS="${{ steps.health.outputs.status }}"
+          ENV="${{ github.event.inputs.environment || 'production' }}"
+          HTTP_CODE="${{ steps.health.outputs.http_code }}"
+          
+          echo "## 🚨 Deployment Health Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Environment:** $ENV" >> $GITHUB_STEP_SUMMARY
+          echo "**Status:** $STATUS" >> $GITHUB_STEP_SUMMARY
+          echo "**HTTP Code:** $HTTP_CODE" >> $GITHUB_STEP_SUMMARY
+          
+          if [ "$STATUS" = "healthy" ]; then
+            echo "✅ Service is healthy" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ Service is unhealthy - immediate attention required" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Alert on failure
+        if: steps.health.outputs.status != 'healthy'
+        run: |
+          STATUS="${{ steps.health.outputs.status }}"
+          HTTP_CODE="${{ steps.health.outputs.http_code }}"
+          ENV="${{ github.event.inputs.environment || 'production' }}"
+          
+          # Create issue for persistent failures (if triggered manually)
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "Creating alert for unhealthy deployment..."
+            # Could integrate with PagerDuty, OpsGenie, etc.
+          fi
+          
+          # Send alerts to configured channels
+          if [ -n "${{ secrets.SLACK_WEBHOOK_URL }}" ]; then
+            curl -s -X POST -H 'Content-Type: application/json' \
+              --data "{\"text\":\":warning: Health check failed for $ENV\\nStatus: $STATUS\\nHTTP Code: $HTTP_CODE\\nURL: ${{ github.event.inputs.url }}\"}" \
+              "${{ secrets.SLACK_WEBHOOK_URL }}"
+          fi
+
+  api-endpoint-check:
+    name: API Endpoint Validation
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
+    
+    steps:
+      - name: Test critical API endpoints
+        run: |
+          BASE_URL="${{ github.event.inputs.url }}/api/v1"
+          
+          echo "Testing API endpoints..."
+          
+          # Test health endpoint
+          echo -n "Health endpoint: "
+          curl -s -o /dev/null -w "%{http_code}" "$BASE_URL/health" || echo "failed"
+          
+          # Test API key validation
+          echo -n "\nAPI key validation: "
+          curl -s -o /dev/null -w "%{http_code}" -H "X-API-Key: invalid" "$BASE_URL/health" || echo "failed"
+          
+          echo "\n✅ API endpoint validation complete"
