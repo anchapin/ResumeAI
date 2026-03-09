@@ -173,41 +173,8 @@ jobs:
       - name: Run memory analysis
         id: memory
         run: |
-          # Create memory profiling script
-          cat > profile-memory.mjs << 'EOF'
-import { spawn } from 'child_process';
-
-const runMemoryProfile = async () => {
-  console.log('Starting memory profiling...');
-  
-  // Run Node with --inspect and capture heap snapshots
-  const proc = spawn('node', [
-    '--inspect',
-    '--expose-gc',
-    'server.js'
-  ], {
-    stdio: ['pipe', 'pipe', 'pipe']
-  });
-  
-  let output = '';
-  proc.stdout.on('data', (data) => {
-    output += data.toString();
-  });
-  
-  proc.stderr.on('data', (data) => {
-    console.error(data.toString());
-  });
-  
-  // Let it run for 5 seconds
-  await new Promise(resolve => setTimeout(resolve, 5000));
-  
-  proc.kill();
-  console.log('Memory profiling complete');
-  console.log(output);
-};
-
-runMemoryProfile().catch(console.error);
-EOF
+          # Create memory profiling script using printf
+          printf '%s\n' "import { spawn } from 'child_process';" "" "const runMemoryProfile = async () => {" "  console.log('Starting memory profiling...');" "" "  // Run Node with --inspect and capture heap snapshots" "  const proc = spawn('node', [" "    '--inspect'," "    '--expose-gc'," "    'server.js'" "  ], {" "    stdio: ['pipe', 'pipe', 'pipe']" "  });" "" "  let output = '';" "  proc.stdout.on('data', (data) => {" "    output += data.toString();" "  });" "" "  proc.stderr.on('data', (data) => {" "    console.error(data.toString());" "  });" "" "  // Let it run for 5 seconds" "  await new Promise(resolve => setTimeout(resolve, 5000));" "" "  proc.kill();" "  console.log('Memory profiling complete');" "  console.log(output);" "};" "" "runMemoryProfile().catch(console.error);" > profile-memory.mjs
           
           echo "Memory profiling instrumentation added"
           echo "## Memory Profiling" >> $GITHUB_STEP_SUMMARY
