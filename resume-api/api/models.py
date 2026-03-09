@@ -1620,7 +1620,9 @@ class TeamMemberUpdate(BaseModel):
             TeamMemberRole.VIEWER,
         ]
         if v not in valid_roles:
-            raise ValueError(f"Invalid role. Must be one of: {', '.join([r.value for r in valid_roles])}")
+            raise ValueError(
+                f"Invalid role. Must be one of: {', '.join([r.value for r in valid_roles])}"
+            )
         return v
 
 
