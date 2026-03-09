@@ -7,6 +7,7 @@ Applicant Tracking Systems and provide recommendations for improvement.
 
 import re
 from typing import Any, Dict, List, Optional
+from collections import Counter
 from dataclasses import dataclass, field
 
 
@@ -184,7 +185,8 @@ class ATSCompatibilityChecker:
 
     # Pre-compiled regex patterns for performance
     PROBLEMATIC_PATTERNS_RE = {
-        name: re.compile(pattern, re.IGNORECASE) for name, pattern in PROBLEMATIC_PATTERNS.items()
+        name: re.compile(pattern, re.IGNORECASE)
+        for name, pattern in PROBLEMATIC_PATTERNS.items()
     }
 
     DATE_PATTERNS_RE = [re.compile(pattern, re.IGNORECASE) for pattern in DATE_PATTERNS]
@@ -340,7 +342,9 @@ class ATSCompatibilityChecker:
 
         # Check keyword matching (if job description provided)
         if job_description:
-            self._check_keyword_matching(resume_data, job_description, report, extracted_text)
+            self._check_keyword_matching(
+                resume_data, job_description, report, extracted_text
+            )
 
         # Calculate overall score
         self._calculate_overall_score(report)
@@ -350,7 +354,9 @@ class ATSCompatibilityChecker:
 
         return report
 
-    def _check_sections(self, resume_data: Dict[str, Any], report: ATSCompatibilityReport) -> None:
+    def _check_sections(
+        self, resume_data: Dict[str, Any], report: ATSCompatibilityReport
+    ) -> None:
         """Check for required and recommended sections."""
         sections_found = []
         sections_missing = []
@@ -537,7 +543,9 @@ class ATSCompatibilityChecker:
         # Check for keywords
         # Use provided text or extract it if not available
         resume_text = (
-            extracted_text if extracted_text is not None else self._extract_resume_text(resume_data)
+            extracted_text
+            if extracted_text is not None
+            else self._extract_resume_text(resume_data)
         )
         word_count = len(resume_text.split())
 
@@ -560,7 +568,9 @@ class ATSCompatibilityChecker:
 
         report.issues.extend(issues)
 
-    def _check_formatting(self, resume_text: str, report: ATSCompatibilityReport) -> None:
+    def _check_formatting(
+        self, resume_text: str, report: ATSCompatibilityReport
+    ) -> None:
         """Check formatting for ATS compatibility."""
         issues = []
 
@@ -569,7 +579,8 @@ class ATSCompatibilityChecker:
             if pattern_re.search(resume_text):
                 readable_pattern = pattern_name.replace("_", " ")
                 msg = (
-                    f"Detected {readable_pattern} which may not parse " + "correctly in ATS systems"
+                    f"Detected {readable_pattern} which may not parse "
+                    + "correctly in ATS systems"
                 )
                 issues.append(
                     {
@@ -582,7 +593,10 @@ class ATSCompatibilityChecker:
         # Check for special characters that might cause issues
         special_chars = re.findall(r"[^\w\s.,;:!?()'\-]", resume_text)
         if len(special_chars) > len(resume_text) * 0.05:
-            msg = "Resume contains many special characters that may not " + "parse correctly"
+            msg = (
+                "Resume contains many special characters that may not "
+                + "parse correctly"
+            )
             issues.append(
                 {
                     "type": "formatting",
@@ -598,7 +612,10 @@ class ATSCompatibilityChecker:
                 found_formats.append(pattern_re.pattern)
 
         if len(found_formats) > 1:
-            msg = "Inconsistent date formats detected. Use a consistent " + "format throughout"
+            msg = (
+                "Inconsistent date formats detected. Use a consistent "
+                + "format throughout"
+            )
             issues.append(
                 {
                     "type": "formatting",
@@ -623,7 +640,9 @@ class ATSCompatibilityChecker:
         # Extract resume text
         # Use provided text or extract it if not available
         resume_text = (
-            extracted_text if extracted_text is not None else self._extract_resume_text(resume_data)
+            extracted_text
+            if extracted_text is not None
+            else self._extract_resume_text(resume_data)
         )
         resume_text_lower = resume_text.lower()
 
@@ -672,15 +691,12 @@ class ATSCompatibilityChecker:
         # Extract words
         words = self.WORD_PATTERN.findall(text.lower())
 
-        # Filter and count
-        word_count = {}
-        for word in words:
-            if word not in stop_words:
-                word_count[word] = word_count.get(word, 0) + 1
+        # ⚡ Bolt Optimization: Use collections.Counter for faster frequency counting
+        # Filter and count in a single pass using the C-optimized Counter
+        word_count = Counter(word for word in words if word not in stop_words)
 
         # Return top keywords by frequency
-        sorted_keywords = sorted(word_count.items(), key=lambda x: x[1], reverse=True)
-        return [kw for kw, count in sorted_keywords[:30]]
+        return [kw for kw, _ in word_count.most_common(30)]
 
     def _extract_resume_text(self, resume_data: Dict[str, Any]) -> str:
         """Extract all text content from resume data."""
@@ -785,11 +801,15 @@ class ATSCompatibilityChecker:
 
             if issue_type == "missing_contact":
                 if "email" in msg:
-                    recommendations.append("Add your email address to the contact section")
+                    recommendations.append(
+                        "Add your email address to the contact section"
+                    )
                 elif "phone" in msg:
                     recommendations.append("Add your phone number for easier contact")
                 elif "name" in msg:
-                    recommendations.append("Add your full name at the top of the resume")
+                    recommendations.append(
+                        "Add your full name at the top of the resume"
+                    )
 
             elif issue_type == "content_quality":
                 if "metrics" in msg:
@@ -804,17 +824,20 @@ class ATSCompatibilityChecker:
                     )
                 elif "skills" in msg:
                     recommendations.append(
-                        "Expand your skills section with relevant " + "technologies and tools"
+                        "Expand your skills section with relevant "
+                        + "technologies and tools"
                     )
 
             elif issue_type == "formatting":
                 if "table" in msg:
                     recommendations.append(
-                        "Avoid using tables as they may not parse correctly " + "in ATS systems"
+                        "Avoid using tables as they may not parse correctly "
+                        + "in ATS systems"
                     )
                 elif "date" in msg:
                     recommendations.append(
-                        "Use consistent date formats throughout (e.g., " + "'Jan 2020 - Present')"
+                        "Use consistent date formats throughout (e.g., "
+                        + "'Jan 2020 - Present')"
                     )
 
             elif issue_type == "keyword_match":
@@ -828,7 +851,8 @@ class ATSCompatibilityChecker:
         # Add general recommendations if score is low
         if report.overall_score < 50:
             recommendations.append(
-                "Consider using a simple, clean resume template with standard " + "section headings"
+                "Consider using a simple, clean resume template with standard "
+                + "section headings"
             )
 
         # Remove duplicates while preserving order
@@ -839,7 +863,9 @@ class ATSCompatibilityChecker:
                 seen.add(rec)
                 unique_recommendations.append(rec)
 
-        report.recommendations = unique_recommendations[:10]  # Limit to 10 recommendations
+        report.recommendations = unique_recommendations[
+            :10
+        ]  # Limit to 10 recommendations
 
 
 def check_ats_compatibility(
