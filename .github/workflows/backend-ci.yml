@@ -95,6 +95,7 @@ jobs:
       - name: Run Black formatter check
         working-directory: ./resume-api
         run: |
+          black --version
           black --check . --config pyproject.toml
         env:
           DEBUG: "true"
