@@ -9,6 +9,7 @@ on:
       - 'pages/**'
       - 'utils/**'
       - 'hooks/**'
+      - 'resume-api/api/**'
       - 'package.json'
       - 'typedoc.json'
   workflow_dispatch:
