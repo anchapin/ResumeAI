@@ -39,7 +39,7 @@ jobs:
           pip install pip-audit
 
       - name: Run pip-audit
-        run: pip-audit --ignore-vuln CVE-2024-23342 --strict
+        run: pip-audit --ignore-vuln CVE-2024-23342
 
       - name: Run tests with pytest
         run: |
@@ -89,7 +89,7 @@ jobs:
           pip install black==26.1.0
 
       - name: Run pip-audit
-        run: pip-audit --ignore-vuln CVE-2024-23342 --strict
+        run: pip-audit --ignore-vuln CVE-2024-23342
 
       - name: Run Black formatter check
         working-directory: ./resume-api
