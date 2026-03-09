@@ -86,6 +86,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install pip-audit
+          # Install black==26.1.0 AFTER requirements.txt to override any version from requirements
           pip install black==26.1.0
 
       - name: Run pip-audit
@@ -94,6 +95,15 @@ jobs:
       - name: Run Black formatter check
         working-directory: ./resume-api
         run: |
+          black --version
+          echo "=== Target version ==="
+          python3 -c "import black; print('Target version:', getattr(black, '__version__', 'unknown'))"
+          echo "=== File first 500 chars ==="
+          head -c 500 middleware/monitoring.py
+          echo ""
+          echo "=== Running black with --verbose ==="
+          black --verbose middleware/monitoring.py 2>&1 | head -20
+          echo "=== Running black --check ==="
           black --check . --config pyproject.toml
         env:
           DEBUG: "true"
