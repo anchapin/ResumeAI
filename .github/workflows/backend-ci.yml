@@ -96,6 +96,8 @@ jobs:
         working-directory: ./resume-api
         run: |
           black --version
+          md5sum middleware/monitoring.py
+          python3 -c "import ast; ast.parse(open('middleware/monitoring.py').read())"
           black --check . --config pyproject.toml
         env:
           DEBUG: "true"
