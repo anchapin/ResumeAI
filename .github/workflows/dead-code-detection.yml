@@ -21,7 +21,8 @@ jobs:
         run: npm ci
 
       - name: Run depcheck for unused dependencies
-        run: npx depcheck
+        run: |
+          npx --yes depcheck --timed-out 120
 
       - name: Check for unused exports in TypeScript
         run: |
