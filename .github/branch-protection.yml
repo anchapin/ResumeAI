@@ -8,6 +8,20 @@
 # 2. Run: ./scripts/setup-branch-protection.sh
 # 3. Or update via GitHub UI: Repository Settings > Branches > Branch protection rules
 
+# AI Agent Commit Support
+# -----------------------
+# This repository supports AI agent contributions. AI agents can:
+# - Create feature branches and submit pull requests
+# - Make commits following conventional commits format
+# - All AI agent commits are subject to the same protection rules as human commits
+# - Each PR requires at least 1 approving review before merge
+# - All status checks must pass (CI, tests, linting)
+#
+# Branch protection is enforced for ALL contributors including:
+# - Human developers
+# - AI agents (OpenHands, Claude, GitHub Actions bots)
+# - Administrators
+
 # Branch protection rules
 protection:
   # The protected branch name
