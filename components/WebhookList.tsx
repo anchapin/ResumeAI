@@ -202,8 +202,9 @@ const WebhookList: React.FC<WebhookListProps> = ({ onEdit, onViewDeliveries, onR
                     disabled={testingWebhookId === webhook.id}
                     className="p-2 text-slate-500 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
                     title="Test webhook"
+                    aria-label="Test webhook"
                   >
-                    <span className="material-symbols-outlined text-[20px]">
+                    <span className="material-symbols-outlined text-[20px]" aria-hidden="true">
                       {testingWebhookId === webhook.id ? 'progress_activity' : 'play_arrow'}
                     </span>
                   </button>
@@ -211,23 +212,32 @@ const WebhookList: React.FC<WebhookListProps> = ({ onEdit, onViewDeliveries, onR
                     onClick={() => onViewDeliveries(webhook.id)}
                     className="p-2 text-slate-500 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
                     title="View deliveries"
+                    aria-label="View deliveries"
                   >
-                    <span className="material-symbols-outlined text-[20px]">history</span>
+                    <span className="material-symbols-outlined text-[20px]" aria-hidden="true">
+                      history
+                    </span>
                   </button>
                   <button
                     onClick={() => onEdit(webhook)}
                     className="p-2 text-slate-500 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
                     title="Edit webhook"
+                    aria-label="Edit webhook"
                   >
-                    <span className="material-symbols-outlined text-[20px]">edit</span>
+                    <span className="material-symbols-outlined text-[20px]" aria-hidden="true">
+                      edit
+                    </span>
                   </button>
                   <button
                     onClick={() => handleDeleteWebhook(webhook.id, webhook.description || '')}
                     disabled={deletingWebhookId === webhook.id}
                     className="p-2 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                     title="Delete webhook"
+                    aria-label="Delete webhook"
                   >
-                    <span className="material-symbols-outlined text-[20px]">delete</span>
+                    <span className="material-symbols-outlined text-[20px]" aria-hidden="true">
+                      delete
+                    </span>
                   </button>
                 </div>
               </div>
