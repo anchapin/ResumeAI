@@ -13,6 +13,7 @@ from opentelemetry.sdk.trace.export import (
     BatchSpanProcessor,
     ConsoleSpanExporter,
 )
+from opentelemetry.sdk.trace.sampling import TraceIdRatioBased
 from opentelemetry.sdk.resources import Resource, SERVICE_NAME
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
 from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
@@ -45,8 +46,11 @@ class TracingConfig:
         # Create a resource with service name
         resource = Resource(attributes={SERVICE_NAME: self.service_name})
 
-        # Create tracer provider
-        provider = TracerProvider(resource=resource)
+        # Create sampler based on sample rate
+        sampler = TraceIdRatioBased(self.sample_rate)
+
+        # Create tracer provider with sampler
+        provider = TracerProvider(resource=resource, sampler=sampler)
 
         # Set the global tracer provider
         trace.set_tracer_provider(provider)
