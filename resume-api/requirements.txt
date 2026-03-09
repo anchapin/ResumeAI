@@ -17,7 +17,7 @@ PyYAML==6.0.3
 httpx==0.28.1
 
 # OpenAI Support (optional, for AI tailoring)
-openai==2.24.0
+openai==2.26.0
 
 # Anthropic Support (optional, for Claude AI)
 anthropic==0.84.0
@@ -48,7 +48,7 @@ python-jose[cryptography]==3.5.0
 cryptography>=42.0.0
 
 # Password Hashing
-bcrypt==4.2.0
+bcrypt==5.0.0
 passlib[bcrypt]==1.7.4
 
 # Structured Logging
@@ -60,7 +60,7 @@ prometheus-client==0.24.1
 prometheus-fastapi-instrumentator==7.1.0
 
 # Error Tracking and Alerting
-sentry-sdk==2.53.0
+sentry-sdk==2.54.0
 
 # Scheduled Tasks
 apscheduler==3.11.2
@@ -69,7 +69,7 @@ apscheduler==3.11.2
 psutil==7.2.2
 
 # Database (SQLAlchemy async)
-sqlalchemy==2.0.47
+sqlalchemy==2.0.48
 aiosqlite==0.22.1
 
 # PDF Parsing (for import feature)
@@ -84,11 +84,11 @@ stripe>=10.0.0
 
 # Email Sending (for verification emails)
 aiosmtplib>=3.0.0
-async-lru==2.0.4
+async-lru==2.2.0
 
 # Distributed Tracing (OpenTelemetry)
-opentelemetry-api==1.28.2
-opentelemetry-sdk==1.28.2
-opentelemetry-exporter-otlp==1.28.2
-opentelemetry-instrumentation-fastapi==0.49b2
-opentelemetry-instrumentation-httpx==0.49b2
+opentelemetry-api==1.40.0
+opentelemetry-sdk==1.40.0
+opentelemetry-exporter-otlp==1.40.0
+opentelemetry-instrumentation-fastapi==0.61b0
+opentelemetry-instrumentation-httpx==0.61b0
