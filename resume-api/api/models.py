@@ -1611,7 +1611,7 @@ class TeamMemberUpdate(BaseModel):
 
     @field_validator("role")
     @classmethod
-    def validate_role(cls, v: str) -> str:
+    def validate_role(cls, v: TeamMemberRole) -> TeamMemberRole:
         """Validate team member role."""
         valid_roles = [
             TeamMemberRole.OWNER,
@@ -1620,7 +1620,9 @@ class TeamMemberUpdate(BaseModel):
             TeamMemberRole.VIEWER,
         ]
         if v not in valid_roles:
-            raise ValueError(f"Invalid role. Must be one of: {', '.join(valid_roles)}")
+            raise ValueError(
+                f"Invalid role. Must be one of: {', '.join([r.value for r in valid_roles])}"
+            )
         return v
 
 
