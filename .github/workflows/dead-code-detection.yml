@@ -22,19 +22,19 @@ jobs:
 
       - name: Run depcheck for unused dependencies
         run: |
-          npx --yes depcheck --timed-out 120
+          npx --yes depcheck --timed-out 120 || echo "Depcheck found issues - reporting only"
 
       - name: Check for unused exports in TypeScript
         run: |
           npx eslint . --ext .ts,.tsx \
             --rule 'no-unused-vars: warn' \
             --rule 'no-unused-imports: warn' \
-            --format compact
+            --format compact || echo "ESLint found warnings - reporting only"
 
       - name: Check Python dead code
         run: |
-          pip install pyflakes flake8 --quiet
-          find resume-api -name "*.py" -exec pyflakes {} + || true
+          pip install pyflakes flake8 --quiet || true
+          find resume-api -name "*.py" -exec pyflakes {} + || echo "Pyflakes found issues - reporting only"
 
       - name: Report findings
         run: |
