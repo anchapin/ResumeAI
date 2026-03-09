@@ -28,9 +28,7 @@ class ParsedJobDescription:
     qualifications: List[str] = field(default_factory=list)
     responsibilities: List[str] = field(default_factory=list)
     skills: List[str] = field(default_factory=list)
-    experience_level: Optional[str] = (
-        None  # "entry", "mid", "senior", "lead", "executive"
-    )
+    experience_level: Optional[str] = None  # "entry", "mid", "senior", "lead", "executive"
     experience_years: Optional[Tuple[int, int]] = None  # (min, max) years
     education_requirements: List[str] = field(default_factory=list)
     benefits: List[str] = field(default_factory=list)
@@ -400,9 +398,7 @@ class JobDescriptionParser:
 
     # Pre-compile item extraction pattern for O(N) extraction
     # Matches bullet points, numbered lists, and key: value pairs
-    SECTION_ITEM_PATTERN = re.compile(
-        r"^(?:[•\-\*]|\d+[\.\)]|(?:[A-Z][a-zA-Z]+)\s*[:\-])\s*(.+)$"
-    )
+    SECTION_ITEM_PATTERN = re.compile(r"^(?:[•\-\*]|\d+[\.\)]|(?:[A-Z][a-zA-Z]+)\s*[:\-])\s*(.+)$")
 
     def __init__(self):
         """Initialize the job description parser."""
@@ -451,9 +447,7 @@ class JobDescriptionParser:
         result.responsibilities = self._extract_section_content(
             sections.get("responsibilities", ""), "responsibilities"
         )
-        result.benefits = self._extract_section_content(
-            sections.get("benefits", ""), "benefits"
-        )
+        result.benefits = self._extract_section_content(sections.get("benefits", ""), "benefits")
         result.education_requirements = self._extract_education_requirements(
             sections.get("education", ""), sections.get("requirements", "")
         )
@@ -551,9 +545,7 @@ class JobDescriptionParser:
             if len(line) < 3 or len(line) > 100:
                 continue
             # Skip lines that look like contact info or locations
-            if re.search(
-                r"^\d+|\s+(Street|Ave|Road|Blvd|CA|NY|TX|USA)|@|\d{3}[-.]\d{3}", line
-            ):
+            if re.search(r"^\d+|\s+(Street|Ave|Road|Blvd|CA|NY|TX|USA)|@|\d{3}[-.]\d{3}", line):
                 continue
             # Skip section headers
             if line.lower() in [
@@ -602,9 +594,7 @@ class JobDescriptionParser:
             if match:
                 location = match.group(1).strip()
                 # Clean up location
-                location = re.sub(
-                    r"\s*\([^)]*\)", "", location
-                )  # Remove parentheticals
+                location = re.sub(r"\s*\([^)]*\)", "", location)  # Remove parentheticals
                 return location[:100]  # Limit length
 
         return None
@@ -709,9 +699,7 @@ class JobDescriptionParser:
 
         return None
 
-    def _extract_section_content(
-        self, section_text: str, section_type: str
-    ) -> List[str]:
+    def _extract_section_content(self, section_text: str, section_type: str) -> List[str]:
         """Extract bullet points or items from a section."""
         if not section_text:
             return []
@@ -749,7 +737,9 @@ class JobDescriptionParser:
         full_text: str = "",
     ) -> List[str]:
         """Extract skills from relevant sections."""
-        all_text_lower = f"{skills_section} {requirements_section} {qualifications_section} {full_text}".lower()
+        all_text_lower = (
+            f"{skills_section} {requirements_section} {qualifications_section} {full_text}".lower()
+        )
 
         skills_dict = {}
         for skill in self.TECH_SKILLS:
@@ -765,10 +755,7 @@ class JobDescriptionParser:
         for word in self.CAPITALIZED_PATTERN.findall(section_text):
             if len(word) > 2:
                 word_lower = word.lower()
-                if (
-                    word_lower not in skills_dict
-                    and word_lower not in self.SKILL_IGNORE_WORDS
-                ):
+                if word_lower not in skills_dict and word_lower not in self.SKILL_IGNORE_WORDS:
                     skills_dict[word_lower] = None
                     if len(skills_dict) >= 50:
                         break
@@ -794,9 +781,7 @@ class JobDescriptionParser:
             for match in matches:
                 if isinstance(match, tuple):
                     requirement = (
-                        f"{match[0].title()} in {match[1].strip()}"
-                        if len(match) > 1
-                        else match[0]
+                        f"{match[0].title()} in {match[1].strip()}" if len(match) > 1 else match[0]
                     )
                 else:
                     requirement = match
@@ -815,9 +800,7 @@ class JobDescriptionParser:
         ]
 
         for keyword in education_keywords:
-            if keyword in all_text.lower() and keyword not in [
-                r.lower() for r in requirements
-            ]:
+            if keyword in all_text.lower() and keyword not in [r.lower() for r in requirements]:
                 requirements.append(keyword.title())
 
         return list(dict.fromkeys(requirements))[:10]
