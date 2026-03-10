@@ -111,7 +111,7 @@ jobs:
 
       - name: Run Flake8 linter
         working-directory: ./resume-api
-        run: flake8 . --max-line-length=120 --extend-ignore=E203,W503,F541,E402,F841,W291,W293,E501
+        run: flake8 . --max-line-length=120 --max-complexity=10 --extend-ignore=E203,W503,F541,E402,F841,W291,W293,E501,C901
 
       - name: Run Radon cyclomatic complexity check
         run: |
