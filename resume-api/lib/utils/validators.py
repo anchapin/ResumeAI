@@ -324,6 +324,26 @@ def validate_resume_field(
     return value
 
 
+def _validate_basics(basics: dict) -> dict:
+    """Validate basics section of resume."""
+    validated = {}
+    if "name" in basics:
+        validated["name"] = validate_resume_field(basics["name"], "Name", MAX_STRING_LENGTH)
+    if "label" in basics:
+        validated["label"] = validate_resume_field(basics["label"], "Label", MAX_STRING_LENGTH)
+    if "email" in basics:
+        validated["email"] = validate_email(basics.get("email"))
+    if "phone" in basics:
+        validated["phone"] = validate_phone(basics.get("phone"))
+    if "url" in basics:
+        validated["url"] = validate_url(basics.get("url"))
+    if "summary" in basics:
+        validated["summary"] = validate_resume_field(basics["summary"], "Summary", MAX_SUMMARY_LENGTH)
+    if "location" in basics and basics["location"]:
+        validated["location"] = validate_location(basics["location"])
+    return validated
+
+
 def validate_resume_data(resume_dict: Dict[str, Any]) -> Dict[str, Any]:
     """
     Validate and escape all fields in resume data.
@@ -341,31 +361,7 @@ def validate_resume_data(resume_dict: Dict[str, Any]) -> Dict[str, Any]:
 
     # Validate basic info
     if "basics" in resume_dict and resume_dict["basics"]:
-        basics = resume_dict["basics"]
-        validated_basics = {}
-
-        if "name" in basics:
-            validated_basics["name"] = validate_resume_field(
-                basics["name"], "Name", MAX_STRING_LENGTH
-            )
-        if "label" in basics:
-            validated_basics["label"] = validate_resume_field(
-                basics["label"], "Label", MAX_STRING_LENGTH
-            )
-        if "email" in basics:
-            validated_basics["email"] = validate_email(basics.get("email"))
-        if "phone" in basics:
-            validated_basics["phone"] = validate_phone(basics.get("phone"))
-        if "url" in basics:
-            validated_basics["url"] = validate_url(basics.get("url"))
-        if "summary" in basics:
-            validated_basics["summary"] = validate_resume_field(
-                basics["summary"], "Summary", MAX_SUMMARY_LENGTH
-            )
-        if "location" in basics and basics["location"]:
-            validated_basics["location"] = validate_location(basics["location"])
-
-        validated["basics"] = validated_basics
+        validated["basics"] = _validate_basics(resume_dict["basics"])
 
     # Validate work experience
     if "work" in resume_dict and resume_dict["work"]:
