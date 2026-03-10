@@ -187,3 +187,151 @@ The ResumeAI Team
 """
 
     return await send_email(to_email, subject, html_content, text_content)
+
+
+async def send_api_key_expiration_notification(
+    to_email: str,
+    user_name: str,
+    key_name: str,
+    key_prefix: str,
+    expires_at,
+    days_until_expiry: int,
+) -> bool:
+    """
+    Send an API key expiration notification to a user.
+
+    Args:
+        to_email: Recipient email address
+        user_name: User's name
+        key_name: Name of the API key
+        key_prefix: Prefix of the API key for identification
+        expires_at: When the key expires
+        days_until_expiry: Days until key expiration
+
+    Returns:
+        True if email was sent successfully, False otherwise
+    """
+    subject = f"Action Required: Your API Key '{key_name}' Expires Soon"
+
+    text_content = f"""Hi {user_name},
+
+Your API key '{key_name}' (prefix: {key_prefix}) will expire in {days_until_expiry} days.
+
+Expiration date: {expires_at.strftime('%Y-%m-%d %H:%M:%S UTC')}
+
+To avoid service interruption, please:
+1. Rotate your API key in the ResumeAI dashboard
+2. Update your applications with the new key before expiration
+
+If you did not expect this key or have any questions, please contact support.
+
+Best regards,
+The ResumeAI Team
+"""
+
+    html_content = f"""
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Key Expiration Notice</title>
+    <style>
+        body {{
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }}
+        .container {{
+            background: #f9fafb;
+            border-radius: 8px;
+            padding: 30px;
+        }}
+        .header {{
+            text-align: center;
+            margin-bottom: 30px;
+        }}
+        .logo {{
+            font-size: 24px;
+            font-weight: bold;
+            color: #2563eb;
+        }}
+        .content {{
+            background: white;
+            border-radius: 8px;
+            padding: 25px;
+            margin-bottom: 20px;
+        }}
+        h1 {{
+            color: #1f2937;
+            margin-top: 0;
+        }}
+        .warning {{
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 15px;
+            margin: 20px 0;
+        }}
+        .key-info {{
+            background: #f3f4f6;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 15px 0;
+        }}
+        .key-info strong {{
+            color: #1f2937;
+        }}
+        .button {{
+            display: inline-block;
+            background: #2563eb;
+            color: white;
+            padding: 12px 30px;
+            text-decoration: none;
+            border-radius: 6px;
+            margin: 20px 0;
+        }}
+        .button:hover {{
+            background: #1d4ed8;
+        }}
+        .footer {{
+            text-align: center;
+            color: #6b7280;
+            font-size: 14px;
+        }}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">ResumeAI</div>
+        </div>
+        <div class="content">
+            <h1>API Key Expiration Notice</h1>
+            <p>Hi {user_name},</p>
+            <div class="warning">
+                <strong>⚠️ Your API key is expiring soon!</strong>
+            </div>
+            <p>Your API key <strong>'{key_name}'</strong> will expire in <strong>{days_until_expiry} days</strong>.</p>
+            <div class="key-info">
+                <p><strong>Key Name:</strong> {key_name}</p>
+                <p><strong>Key Prefix:</strong> {key_prefix}</p>
+                <p><strong>Expiration Date:</strong> {expires_at.strftime('%Y-%m-%d %H:%M:%M UTC')}</p>
+            </div>
+            <p>To avoid service interruption, please rotate your API key before expiration:</p>
+            <p style="text-align: center;">
+                <a href="{settings.frontend_url}/settings/api-keys" class="button">Rotate API Key</a>
+            </p>
+            <p>If you did not expect this notification or have any questions, please contact support.</p>
+        </div>
+        <div class="footer">
+            <p>&copy; 2026 ResumeAI. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>
+"""
+
+    return await send_email(to_email, subject, html_content, text_content)

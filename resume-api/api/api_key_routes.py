@@ -6,6 +6,7 @@ Provides endpoints for:
 - Listing API keys
 - Revoking API keys
 - Viewing API key usage analytics
+- API key rotation (manual and automatic)
 
 All endpoints require JWT authentication and are user-specific.
 """
@@ -14,7 +15,7 @@ import secrets
 from datetime import datetime, timezone, timedelta
 from typing import List, Optional, Annotated
 
-from fastapi import APIRouter, HTTPException, Query, status, Depends
+from fastapi import APIRouter, HTTPException, Query, status, Depends, Request
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
@@ -23,6 +24,7 @@ from database import get_async_session, APIKey
 from config.dependencies import CurrentUser
 from monitoring import logging_config
 from lib.security.key_management import hash_api_key
+from lib.security.key_rotation import create_rotation_service
 
 # Get logger
 logger = logging_config.get_logger(__name__)
@@ -40,6 +42,10 @@ class APIKeyCreateRequest(BaseModel):
         1000, ge=10, le=100000, description="Daily request limit"
     )
     expires_in_days: Optional[int] = Field(None, ge=1, le=365, description="Days until expiration")
+    rotation_enabled: Optional[bool] = Field(False, description="Enable automatic key rotation")
+    rotation_period_days: Optional[int] = Field(
+        90, ge=1, le=365, description="Days between automatic rotations"
+    )
 
 
 class APIKeyCreateResponse(BaseModel):
@@ -53,6 +59,9 @@ class APIKeyCreateResponse(BaseModel):
     rate_limit: str
     rate_limit_daily: int
     expires_at: Optional[str] = None
+    rotation_enabled: bool = False
+    rotation_period_days: Optional[int] = None
+    next_rotation_at: Optional[str] = None
 
 
 class APIKeyInfo(BaseModel):
@@ -70,6 +79,10 @@ class APIKeyInfo(BaseModel):
     rate_limit: str
     rate_limit_daily: int
     expires_at: Optional[str] = None
+    rotation_enabled: bool = False
+    rotation_period_days: Optional[int] = None
+    next_rotation_at: Optional[str] = None
+    is_rotating: bool = False
 
 
 class APIKeyListResponse(BaseModel):
@@ -99,6 +112,37 @@ class APIKeyUpdateRequest(BaseModel):
     rate_limit: Optional[str] = None
     rate_limit_daily: Optional[int] = Field(None, ge=10, le=100000)
     is_active: Optional[bool] = None
+    rotation_enabled: Optional[bool] = None
+    rotation_period_days: Optional[int] = Field(None, ge=1, le=365)
+
+
+class APIKeyRotationRequest(BaseModel):
+    """Request model for rotating an API key."""
+
+    dual_key_period_days: Optional[int] = Field(
+        7, ge=0, le=30, description="Days to keep old key active (0 to disable dual key period)"
+    )
+
+
+class APIKeyRotationResponse(BaseModel):
+    """Response model for API key rotation."""
+
+    new_key_id: int
+    new_api_key: str  # Only returned once at rotation time
+    new_key_prefix: str
+    created_at: str
+    rotation_status: dict
+
+
+class APIKeyRotationStatus(BaseModel):
+    """Model for API key rotation status."""
+
+    rotation_enabled: bool
+    rotation_period_days: Optional[int]
+    next_rotation_at: Optional[str]
+    is_rotating: bool
+    has_previous_key: bool
+    rotated_at: Optional[str]
 
 
 def _generate_api_key() -> str:
@@ -143,6 +187,10 @@ async def create_api_key(
     **Expiration:**
     - Optional expiration in days (1-365)
     - If not set, the key does not expire
+
+    **Key Rotation:**
+    - `rotation_enabled`: Enable automatic key rotation
+    - `rotation_period_days`: Days between automatic rotations (default 90)
     """
     # Generate new API key
     api_key = _generate_api_key()
@@ -153,6 +201,11 @@ async def create_api_key(
     expires_at = None
     if request.expires_in_days:
         expires_at = datetime.now(timezone.utc) + timedelta(days=request.expires_in_days)
+
+    # Calculate next rotation date if rotation enabled
+    next_rotation_at = None
+    if request.rotation_enabled and request.rotation_period_days:
+        next_rotation_at = datetime.now(timezone.utc) + timedelta(days=request.rotation_period_days)
 
     # Create API key record
     new_key = APIKey(
@@ -166,6 +219,9 @@ async def create_api_key(
         expires_at=expires_at,
         is_active=True,
         is_revoked=False,
+        rotation_enabled=request.rotation_enabled or False,
+        rotation_period_days=request.rotation_period_days,
+        next_rotation_at=next_rotation_at,
     )
 
     db.add(new_key)
@@ -188,6 +244,9 @@ async def create_api_key(
         rate_limit=new_key.rate_limit,
         rate_limit_daily=new_key.rate_limit_daily,
         expires_at=expires_at.isoformat() if expires_at else None,
+        rotation_enabled=new_key.rotation_enabled,
+        rotation_period_days=new_key.rotation_period_days,
+        next_rotation_at=next_rotation_at.isoformat() if next_rotation_at else None,
     )
 
 
@@ -233,6 +292,10 @@ async def list_api_keys(
                 rate_limit=key.rate_limit,
                 rate_limit_daily=key.rate_limit_daily,
                 expires_at=key.expires_at.isoformat() if key.expires_at else None,
+                rotation_enabled=key.rotation_enabled,
+                rotation_period_days=key.rotation_period_days,
+                next_rotation_at=key.next_rotation_at.isoformat() if key.next_rotation_at else None,
+                is_rotating=key.is_rotating,
             )
         )
 
@@ -286,6 +349,10 @@ async def get_api_key(
         rate_limit=key.rate_limit,
         rate_limit_daily=key.rate_limit_daily,
         expires_at=key.expires_at.isoformat() if key.expires_at else None,
+        rotation_enabled=key.rotation_enabled,
+        rotation_period_days=key.rotation_period_days,
+        next_rotation_at=key.next_rotation_at.isoformat() if key.next_rotation_at else None,
+        is_rotating=key.is_rotating,
     )
 
 
@@ -468,24 +535,16 @@ async def verify_api_key(
     Verify if an API key is valid and active.
 
     Returns key information if valid.
-    """
-    key_hash = hash_api_key(api_key)
 
-    result = await db.execute(
-        select(APIKey).where(
-            APIKey.key_hash == key_hash,
-            APIKey.is_active.is_(True),
-            APIKey.is_revoked.is_(False),
-        )
-    )
-    key = result.scalar_one_or_none()
+    Supports verification during dual key period (both old and new keys work).
+    """
+    rotation_service = create_rotation_service(db)
+
+    # Use the rotation service to verify (supports dual key period)
+    key, is_dual_key = await rotation_service.verify_key_with_rotation(api_key)
 
     if not key:
         return {"valid": False, "error": "Invalid or inactive API key"}
-
-    # Check expiration
-    if key.expires_at and key.expires_at < datetime.now(timezone.utc):
-        return {"valid": False, "error": "API key has expired"}
 
     return {
         "valid": True,
@@ -493,4 +552,253 @@ async def verify_api_key(
         "name": key.name,
         "rate_limit": key.rate_limit,
         "rate_limit_daily": key.rate_limit_daily,
+        "is_dual_key_period": is_dual_key,
+    }
+
+
+# ============== API Key Rotation Endpoints ==============
+
+
+@router.post(
+    "/{key_id}/rotate",
+    response_model=APIKeyRotationResponse,
+    summary="Rotate API key",
+    responses={
+        200: {"model": APIKeyRotationResponse, "description": "Key rotated successfully"},
+        401: {"description": "Not authenticated"},
+        404: {"description": "API key not found"},
+    },
+)
+async def rotate_api_key(
+    key_id: int,
+    request: APIKeyRotationRequest,
+    current_user: CurrentUser,
+    db: Annotated[AsyncSession, Depends(get_async_session)],
+    http_request: Request,
+):
+    """
+    Rotate an API key.
+
+    Creates a new API key and optionally keeps the old key active for a
+    configurable period (dual key period) to allow gradual rollover.
+
+    The new API key is returned only once at rotation time. Store it securely
+    as it cannot be retrieved later.
+    """
+    rotation_service = create_rotation_service(db)
+
+    # Get client info for audit logging
+    client_ip = http_request.client.host if http_request.client else None
+    user_agent = http_request.headers.get("user-agent")
+
+    new_key, new_api_key = await rotation_service.rotate_key(
+        key_id=key_id,
+        user_id=current_user.id,
+        dual_key_period_days=request.dual_key_period_days or 7,
+        ip_address=client_ip,
+        user_agent=user_agent,
+    )
+
+    if not new_key:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"API key with ID {key_id} not found or cannot be rotated",
+        )
+
+    # Get rotation status for response
+    rotation_status = await rotation_service.get_rotation_status(
+        key_id=new_key.id,
+        user_id=current_user.id,
+    )
+
+    return APIKeyRotationResponse(
+        new_key_id=new_key.id,
+        new_api_key=new_api_key,
+        new_key_prefix=new_key.key_prefix,
+        created_at=new_key.created_at.isoformat(),
+        rotation_status=rotation_status,
+    )
+
+
+@router.get(
+    "/{key_id}/rotation-status",
+    response_model=APIKeyRotationStatus,
+    summary="Get API key rotation status",
+    responses={
+        200: {"model": APIKeyRotationStatus, "description": "Rotation status"},
+        401: {"description": "Not authenticated"},
+        404: {"description": "API key not found"},
+    },
+)
+async def get_rotation_status(
+    key_id: int,
+    current_user: CurrentUser,
+    db: Annotated[AsyncSession, Depends(get_async_session)],
+):
+    """Get rotation status for an API key."""
+    rotation_service = create_rotation_service(db)
+
+    status = await rotation_service.get_rotation_status(
+        key_id=key_id,
+        user_id=current_user.id,
+    )
+
+    if not status:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"API key with ID {key_id} not found",
+        )
+
+    return APIKeyRotationStatus(**status)
+
+
+@router.post(
+    "/{key_id}/rotation/enable",
+    response_model=APIKeyInfo,
+    summary="Enable automatic key rotation",
+    responses={
+        200: {"model": APIKeyInfo, "description": "Rotation enabled"},
+        401: {"description": "Not authenticated"},
+        404: {"description": "API key not found"},
+    },
+)
+async def enable_rotation(
+    key_id: int,
+    current_user: CurrentUser,
+    db: Annotated[AsyncSession, Depends(get_async_session)],
+    http_request: Request,
+    rotation_period_days: int = Query(90, ge=1, le=365, description="Days between rotations"),
+):
+    """Enable automatic rotation for an API key."""
+    rotation_service = create_rotation_service(db)
+
+    # Get client info for audit logging
+    client_ip = http_request.client.host if http_request.client else None
+    user_agent = http_request.headers.get("user-agent")
+
+    key = await rotation_service.enable_rotation(
+        key_id=key_id,
+        user_id=current_user.id,
+        rotation_period_days=rotation_period_days,
+        ip_address=client_ip,
+        user_agent=user_agent,
+    )
+
+    if not key:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"API key with ID {key_id} not found or cannot be rotated",
+        )
+
+    return APIKeyInfo(
+        id=key.id,
+        key_prefix=key.key_prefix,
+        name=key.name,
+        description=key.description,
+        created_at=key.created_at.isoformat(),
+        last_used=key.last_request_at.isoformat() if key.last_request_at else None,
+        is_active=key.is_active,
+        is_revoked=key.is_revoked,
+        request_count=key.total_requests,
+        rate_limit=key.rate_limit,
+        rate_limit_daily=key.rate_limit_daily,
+        expires_at=key.expires_at.isoformat() if key.expires_at else None,
+        rotation_enabled=key.rotation_enabled,
+        rotation_period_days=key.rotation_period_days,
+        next_rotation_at=key.next_rotation_at.isoformat() if key.next_rotation_at else None,
+        is_rotating=key.is_rotating,
+    )
+
+
+@router.post(
+    "/{key_id}/rotation/disable",
+    response_model=APIKeyInfo,
+    summary="Disable automatic key rotation",
+    responses={
+        200: {"model": APIKeyInfo, "description": "Rotation disabled"},
+        401: {"description": "Not authenticated"},
+        404: {"description": "API key not found"},
+    },
+)
+async def disable_rotation(
+    key_id: int,
+    current_user: CurrentUser,
+    db: Annotated[AsyncSession, Depends(get_async_session)],
+    http_request: Request,
+):
+    """Disable automatic rotation for an API key."""
+    rotation_service = create_rotation_service(db)
+
+    # Get client info for audit logging
+    client_ip = http_request.client.host if http_request.client else None
+    user_agent = http_request.headers.get("user-agent")
+
+    key = await rotation_service.disable_rotation(
+        key_id=key_id,
+        user_id=current_user.id,
+        ip_address=client_ip,
+        user_agent=user_agent,
+    )
+
+    if not key:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"API key with ID {key_id} not found",
+        )
+
+    return APIKeyInfo(
+        id=key.id,
+        key_prefix=key.key_prefix,
+        name=key.name,
+        description=key.description,
+        created_at=key.created_at.isoformat(),
+        last_used=key.last_request_at.isoformat() if key.last_request_at else None,
+        is_active=key.is_active,
+        is_revoked=key.is_revoked,
+        request_count=key.total_requests,
+        rate_limit=key.rate_limit,
+        rate_limit_daily=key.rate_limit_daily,
+        expires_at=key.expires_at.isoformat() if key.expires_at else None,
+        rotation_enabled=key.rotation_enabled,
+        rotation_period_days=key.rotation_period_days,
+        next_rotation_at=key.next_rotation_at.isoformat() if key.next_rotation_at else None,
+        is_rotating=key.is_rotating,
+    )
+
+
+# Admin endpoints for automated rotation
+
+
+@router.post(
+    "/admin/rotate-all",
+    summary="Trigger automatic rotation for all eligible keys",
+    responses={
+        200: {"description": "Rotation completed"},
+        401: {"description": "Not authenticated"},
+    },
+)
+async def trigger_automatic_rotation(
+    current_user: CurrentUser,
+    db: Annotated[AsyncSession, Depends(get_async_session)],
+):
+    """Admin endpoint to trigger automatic rotation for all keys that need it.
+
+    This should be called periodically (e.g., via cron job).
+    """
+    # Check if user is admin
+    if not getattr(current_user, "is_admin", False):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin access required",
+        )
+
+    rotation_service = create_rotation_service(db)
+    results = await rotation_service.process_automatic_rotation()
+
+    return {
+        "status": "completed",
+        "keys_rotated": results["keys_rotated"],
+        "dual_keys_completed": results["dual_keys_completed"],
+        "notifications_sent": results["notifications_sent"],
+        "errors": results["errors"],
     }
