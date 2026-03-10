@@ -546,6 +546,14 @@ class APIKey(Base):
     # Expiration (optional)
     expires_at = Column(DateTime(timezone=True), nullable=True)
 
+    # Key rotation fields
+    rotation_enabled = Column(Boolean, default=False, nullable=False)
+    rotation_period_days = Column(Integer, nullable=True)  # Days between rotations
+    next_rotation_at = Column(DateTime(timezone=True), nullable=True, index=True)
+    previous_key_hash = Column(String(255), nullable=True)  # For dual key period
+    is_rotating = Column(Boolean, default=False, nullable=False)  # During dual key period
+    rotated_at = Column(DateTime(timezone=True), nullable=True)
+
     # Metadata
     created_at = Column(DateTime(timezone=True), server_default=func.now(), index=True)
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
@@ -622,6 +630,49 @@ class GitHubOAuthState(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now(), index=True)
     expires_at = Column(DateTime(timezone=True), nullable=False, index=True)
     is_used = Column(Boolean, default=False, nullable=False, index=True)
+
+
+class APIKeyAuditLog(Base):
+    """Audit log for API key events including rotation, creation, and revocation."""
+
+    __tablename__ = "api_key_audit_logs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    api_key_id = Column(Integer, ForeignKey("api_keys.id"), nullable=False, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+
+    # Event types: created, rotated, revoked, expired, renewed, rollover_started, rollover_completed
+    event_type = Column(String(50), nullable=False, index=True)
+
+    # Event details (JSON for flexibility)
+    event_details = Column(Text, nullable=True)  # JSON string
+
+    # Key identifiers at time of event
+    key_prefix = Column(String(12), nullable=True)
+
+    # For rotation events - tracks both old and new key info
+    previous_key_prefix = Column(String(12), nullable=True)
+    new_key_prefix = Column(String(12), nullable=True)
+
+    # Timestamp of event
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), index=True)
+
+    # IP address and user agent for security tracking
+    ip_address = Column(String(45), nullable=True)  # IPv6 compatible
+    user_agent = Column(Text, nullable=True)
+
+    # Success/failure status
+    success = Column(Boolean, default=True, nullable=False)
+
+    # Error message if failed
+    error_message = Column(String(500), nullable=True)
+
+    __table_args__ = (
+        Index("idx_audit_api_key_id", "api_key_id"),
+        Index("idx_audit_user_id", "user_id"),
+        Index("idx_audit_event_type", "event_type"),
+        Index("idx_audit_created_at", "created_at"),
+    )
 
 
 # Add relationship to User model
