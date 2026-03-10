@@ -1,0 +1,123 @@
+---
+# ConfigMap for canary-specific environment configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: resume-api-canary-config
+  namespace: production
+  labels:
+    app: resume-api
+    version: canary
+data:
+  ENVIRONMENT: "production"
+  CANARY: "true"
+  LOG_LEVEL: "debug"
+  ENABLE_CANARY_METRICS: "true"
+  CANARY_TRAFFIC_PERCENTAGE: "10"
+  # Feature flags specific to canary testing
+  ENABLE_NEW_FEATURE_FLAG: "true"
+  FEATURE_RATE_LIMITING: "true"
+  FEATURE_CACHING: "true"
+---
+# Canary-specific environment variables (secret)
+apiVersion: v1
+kind: Secret
+metadata:
+  name: resume-api-canary-secrets
+  namespace: production
+  labels:
+    app: resume-api
+    version: canary
+type: Opaque
+stringData:
+  # Additional secrets specific to canary if needed
+  # These will override base secrets for canary-specific behavior
+  CANARY_API_KEY: ""
+  CANARY_SIGNING_SECRET: ""
+---
+# ServiceMonitor for Prometheus to scrape canary metrics
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: resume-api-canary-monitor
+  namespace: production
+  labels:
+    app: resume-api
+    version: canary
+spec:
+  selector:
+    matchLabels:
+      app: resume-api
+      version: canary
+  endpoints:
+    - port: http
+      path: /api/v1/metrics
+      interval: 15s
+      scrapeTimeout: 10s
+  namespaceSelector:
+    matchNames:
+      - production
+---
+# PrometheusRule for canary-specific alerting
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: resume-api-canary-alerts
+  namespace: production
+  labels:
+    app: resume-api
+    version: canary
+spec:
+  groups:
+    - name: canary-deployment
+      interval: 30s
+      rules:
+        - alert: CanaryHighErrorRate
+          expr: |
+            sum(rate(http_requests_total{canary="true",status=~"5.."}[5m])) 
+            / sum(rate(http_requests_total{canary="true"}[5m])) > 0.05
+          for: 2m
+          labels:
+            severity: warning
+            team: platform
+          annotations:
+            summary: "High error rate detected on canary deployment"
+            description: "Canary deployment error rate is {{ $value | humanizePercentage }} for the last 5 minutes"
+            
+        - alert: CanaryHighLatency
+          expr: |
+            histogram_quantile(0.95, 
+              sum(rate(http_request_duration_seconds_bucket{canary="true"}[5m])) by (le)
+            ) > 2
+          for: 3m
+          labels:
+            severity: warning
+            team: platform
+          annotations:
+            summary: "High latency detected on canary deployment"
+            description: "P95 latency is {{ $value | humanizeDuration }} on canary deployment"
+            
+        - alert: CanaryDeploymentFailed
+          expr: |
+            kube_deployment_status_replicas_unavailable{deployment="resume-api-canary",namespace="production"} > 0
+          for: 1m
+          labels:
+            severity: critical
+            team: platform
+          annotations:
+            summary: "Canary deployment has unavailable replicas"
+            description: "Canary deployment has {{ $value }} unavailable replicas"
+            
+        - alert: CanaryTrafficMismatch
+          expr: |
+            abs(
+              sum(rate(http_requests_total{canary="true"}[5m])) 
+              - sum(rate(http_requests_total{version="canary"}[5m]))
+            ) / sum(rate(http_requests_total{}[5m])) > 0.1
+          for: 5m
+          labels:
+            severity: info
+            team: platform
+          annotations:
+            summary: "Canary traffic mismatch detected"
+            description: "Canary traffic routing doesn't match expected percentage"
