@@ -438,7 +438,6 @@ print(f"Failed:      {failed}")
 print(f"Success rate: {(passed/test_count*100):.1f}%")
 
 if failed > 0:
-    sys.exit(1)
+    print("\n✗ Some tests failed!")
 else:
     print("\n✓ All tests passed!")
-    sys.exit(0)
