@@ -16,3 +16,7 @@
 ## 2026-03-09 - Optimize keyword extraction using collections.Counter
 **Learning:** Manual dictionary-based word frequency counting (incrementing keys and sorting `.items()`) is slower than `collections.Counter`, which is implemented in C and optimized for this exact use case.
 **Action:** Always prefer `collections.Counter` along with a generator expression for frequency counting of elements in sequences, especially for strings and text processing.
+
+## 2024-05-26 - HTTP Client Connection Reuse
+**Learning:** Instantiating `httpx.AsyncClient` inside iterative loops (e.g., when making API requests per school or previous company) causes redundant SSL/TCP handshakes, significantly increasing latency and overhead.
+**Action:** Always instantiate HTTP clients (like `httpx.AsyncClient` or `requests.Session`) outside of iterative loops or parallel tasks, and pass the single client instance to helper methods to ensure connection reuse.

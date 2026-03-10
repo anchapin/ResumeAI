@@ -49,16 +49,19 @@ class ConnectionFinder:
         """
         connections = []
 
-        # Run searches in parallel
-        tasks = [
-            self._find_github_employees(target_company, limit),
-            self._find_alumni(target_company, user_profile.get("education", [])),
-            self._find_previous_company_connections(
-                target_company, user_profile.get("experience", [])
-            ),
-        ]
+        # ⚡ Bolt Optimization: Instantiate AsyncClient outside the loops/tasks
+        # to ensure connection reuse and reduce SSL/TCP handshake overhead
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            # Run searches in parallel
+            tasks = [
+                self._find_github_employees(client, target_company, limit),
+                self._find_alumni(client, target_company, user_profile.get("education", [])),
+                self._find_previous_company_connections(
+                    client, target_company, user_profile.get("experience", [])
+                ),
+            ]
 
-        results = await asyncio.gather(*tasks, return_exceptions=True)
+            results = await asyncio.gather(*tasks, return_exceptions=True)
 
         # Collect all connections
         for result in results:
@@ -69,42 +72,45 @@ class ConnectionFinder:
         connections.sort(key=lambda x: x.similarity_score, reverse=True)
         return connections[:limit]
 
-    async def _find_github_employees(self, company: str, limit: int) -> List[Connection]:
+    async def _find_github_employees(
+        self, client: httpx.AsyncClient, company: str, limit: int
+    ) -> List[Connection]:
         """Find employees at company using GitHub API."""
         connections = []
 
         try:
             # Search GitHub users by company
-            async with httpx.AsyncClient(timeout=30.0) as client:
-                response = await client.get(
-                    "https://api.github.com/search/users",
-                    params={"q": f"company:{company} in:login", "per_page": limit},
-                    headers=self.github_headers,
-                )
+            response = await client.get(
+                "https://api.github.com/search/users",
+                params={"q": f"company:{company} in:login", "per_page": limit},
+                headers=self.github_headers,
+            )
 
-                if response.status_code == 200:
-                    data = response.json()
-                    for item in data.get("items", []):
-                        # Get user details
-                        user_response = await client.get(item["url"], headers=self.github_headers)
-                        if user_response.status_code == 200:
-                            user = user_response.json()
-                            connection = Connection(
-                                name=user.get("name", item["login"]),
-                                company=company,
-                                title=user.get("bio", "GitHub User"),
-                                connection_type="github",
-                                profile_url=user.get("html_url", ""),
-                                avatar_url=user.get("avatar_url"),
-                                similarity_score=0.5,
-                            )
-                            connections.append(connection)
+            if response.status_code == 200:
+                data = response.json()
+                for item in data.get("items", []):
+                    # Get user details
+                    user_response = await client.get(item["url"], headers=self.github_headers)
+                    if user_response.status_code == 200:
+                        user = user_response.json()
+                        connection = Connection(
+                            name=user.get("name", item["login"]),
+                            company=company,
+                            title=user.get("bio", "GitHub User"),
+                            connection_type="github",
+                            profile_url=user.get("html_url", ""),
+                            avatar_url=user.get("avatar_url"),
+                            similarity_score=0.5,
+                        )
+                        connections.append(connection)
         except Exception as e:
             print(f"GitHub search error: {e}")
 
         return connections
 
-    async def _find_alumni(self, target_company: str, education: List[Dict]) -> List[Connection]:
+    async def _find_alumni(
+        self, client: httpx.AsyncClient, target_company: str, education: List[Dict]
+    ) -> List[Connection]:
         """Find alumni from same school now at target company."""
         connections = []
 
@@ -117,39 +123,38 @@ class ConnectionFinder:
                 schools.add(edu["institution"])
 
         # Search GitHub for users from same schools at target company
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            for school in schools:
-                try:
-                    # Search for users who worked at target_company and attended school
-                    response = await client.get(
-                        "https://api.github.com/search/users",
-                        params={
-                            "q": f"company:{target_company} school:{school}",
-                            "per_page": 5,
-                        },
-                        headers=self.github_headers,
-                    )
+        for school in schools:
+            try:
+                # Search for users who worked at target_company and attended school
+                response = await client.get(
+                    "https://api.github.com/search/users",
+                    params={
+                        "q": f"company:{target_company} school:{school}",
+                        "per_page": 5,
+                    },
+                    headers=self.github_headers,
+                )
 
-                    if response.status_code == 200:
-                        data = response.json()
-                        for item in data.get("items", []):
-                            connection = Connection(
-                                name=item.get("name", item["login"]),
-                                company=target_company,
-                                title=item.get("bio", "Alumni"),
-                                connection_type="alumni",
-                                profile_url=item.get("html_url", ""),
-                                avatar_url=item.get("avatar_url"),
-                                similarity_score=0.8,  # Higher score for alumni
-                            )
-                            connections.append(connection)
-                except Exception as e:
-                    print(f"Alumni search error: {e}")
+                if response.status_code == 200:
+                    data = response.json()
+                    for item in data.get("items", []):
+                        connection = Connection(
+                            name=item.get("name", item["login"]),
+                            company=target_company,
+                            title=item.get("bio", "Alumni"),
+                            connection_type="alumni",
+                            profile_url=item.get("html_url", ""),
+                            avatar_url=item.get("avatar_url"),
+                            similarity_score=0.8,  # Higher score for alumni
+                        )
+                        connections.append(connection)
+            except Exception as e:
+                print(f"Alumni search error: {e}")
 
         return connections
 
     async def _find_previous_company_connections(
-        self, target_company: str, experience: List[Dict]
+        self, client: httpx.AsyncClient, target_company: str, experience: List[Dict]
     ) -> List[Connection]:
         """Find people who previously worked at same companies."""
         connections = []
@@ -164,33 +169,32 @@ class ConnectionFinder:
                 previous_companies.add(exp["company"])
 
         # Search for users who worked at both previous companies and target
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            for prev_company in previous_companies:
-                try:
-                    response = await client.get(
-                        "https://api.github.com/search/users",
-                        params={
-                            "q": f"company:{target_company} company:{prev_company}",
-                            "per_page": 5,
-                        },
-                        headers=self.github_headers,
-                    )
+        for prev_company in previous_companies:
+            try:
+                response = await client.get(
+                    "https://api.github.com/search/users",
+                    params={
+                        "q": f"company:{target_company} company:{prev_company}",
+                        "per_page": 5,
+                    },
+                    headers=self.github_headers,
+                )
 
-                    if response.status_code == 200:
-                        data = response.json()
-                        for item in data.get("items", []):
-                            connection = Connection(
-                                name=item.get("name", item["login"]),
-                                company=target_company,
-                                title=item.get("bio", "Previous Company Connection"),
-                                connection_type="previous_company",
-                                profile_url=item.get("html_url", ""),
-                                avatar_url=item.get("avatar_url"),
-                                similarity_score=0.7,
-                            )
-                            connections.append(connection)
-                except Exception as e:
-                    print(f"Previous company search error: {e}")
+                if response.status_code == 200:
+                    data = response.json()
+                    for item in data.get("items", []):
+                        connection = Connection(
+                            name=item.get("name", item["login"]),
+                            company=target_company,
+                            title=item.get("bio", "Previous Company Connection"),
+                            connection_type="previous_company",
+                            profile_url=item.get("html_url", ""),
+                            avatar_url=item.get("avatar_url"),
+                            similarity_score=0.7,
+                        )
+                        connections.append(connection)
+            except Exception as e:
+                print(f"Previous company search error: {e}")
 
         return connections
 
