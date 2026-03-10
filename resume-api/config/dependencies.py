@@ -93,6 +93,31 @@ def _check_static_api_keys(x_api_key: str) -> bool:
     return False
 
 
+def _check_key_expiration(db_key) -> None:
+    """Check if API key has expired and raise exception if so."""
+    if db_key.expires_at:
+        expires_at = db_key.expires_at
+        if expires_at.tzinfo is None:
+            expires_at = expires_at.replace(tzinfo=timezone.utc)
+        if datetime.now(timezone.utc) > expires_at:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="API key has expired",
+            )
+
+
+async def _update_key_usage(db: AsyncSession, db_key) -> None:
+    """Update API key usage statistics."""
+    try:
+        db_key.last_request_at = datetime.now(timezone.utc)
+        db_key.total_requests += 1
+        db_key.requests_today += 1
+        await db.commit()
+    except Exception as e:
+        await db.rollback()
+        logger.warning(f"Failed to update API key usage stats: {e}")
+
+
 async def _check_database_api_keys(
     db: AsyncSession, x_api_key: str
 ) -> bool:
@@ -115,26 +140,8 @@ async def _check_database_api_keys(
 
         for db_key in db_keys:
             if verify_api_key(x_api_key, db_key.key_hash):
-                # Check expiration
-                if db_key.expires_at:
-                    expires_at = db_key.expires_at
-                    if expires_at.tzinfo is None:
-                        expires_at = expires_at.replace(tzinfo=timezone.utc)
-                    if datetime.now(timezone.utc) > expires_at:
-                        raise HTTPException(
-                            status_code=status.HTTP_403_FORBIDDEN,
-                            detail="API key has expired",
-                        )
-
-                # Update usage stats
-                try:
-                    db_key.last_request_at = datetime.now(timezone.utc)
-                    db_key.total_requests += 1
-                    db_key.requests_today += 1
-                    await db.commit()
-                except Exception as e:
-                    await db.rollback()
-                    logger.warning(f"Failed to update API key usage stats: {e}")
+                _check_key_expiration(db_key)
+                await _update_key_usage(db, db_key)
                 return True
     except HTTPException:
         raise
