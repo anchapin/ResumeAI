@@ -118,9 +118,7 @@ async def _update_key_usage(db: AsyncSession, db_key) -> None:
         logger.warning(f"Failed to update API key usage stats: {e}")
 
 
-async def _check_database_api_keys(
-    db: AsyncSession, x_api_key: str
-) -> bool:
+async def _check_database_api_keys(db: AsyncSession, x_api_key: str) -> bool:
     """Check if API key exists in database and is valid."""
     try:
         from lib.security.key_management import verify_api_key, generate_api_key_prefix

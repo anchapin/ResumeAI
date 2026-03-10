@@ -1501,7 +1501,9 @@ def _convert_education_data(education_data: list) -> list:
     """Convert education CSV data to importer format."""
     education = []
     for edu in education_data:
-        field_of_study = edu.get("Field of Study") or edu.get("Activities") or edu.get("Notes") or ""
+        field_of_study = (
+            edu.get("Field of Study") or edu.get("Activities") or edu.get("Notes") or ""
+        )
         edu_entry = {
             "schoolName": edu.get("School Name", ""),
             "degreeName": edu.get("Degree Name", ""),
@@ -1701,10 +1703,12 @@ def _convert_linkedin_languages(linkedin_data: dict) -> list:
     languages = []
     for lang in linkedin_data.get("languages", []):
         if isinstance(lang, dict):
-            languages.append({
-                "name": lang.get("name", ""),
-                "proficiency": lang.get("proficiency", ""),
-            })
+            languages.append(
+                {
+                    "name": lang.get("name", ""),
+                    "proficiency": lang.get("proficiency", ""),
+                }
+            )
     return languages
 
 
