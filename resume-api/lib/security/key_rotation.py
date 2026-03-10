@@ -378,8 +378,6 @@ class KeyRotationService:
         Returns:
             Tuple of (APIKey if valid, whether during dual key period)
         """
-        from lib.security.key_management import verify_api_key
-
         key_hash = hash_api_key(plaintext_key)
 
         # First try to find the key directly
@@ -400,7 +398,7 @@ class KeyRotationService:
 
         # If not found and key has prefix pattern, try to find by previous key hash
         # This supports the dual key period
-        key_prefix = plaintext_key[:12]
+        _key_prefix = plaintext_key[:12]
 
         # Look for keys where this might be a previous key
         result = await self.db.execute(

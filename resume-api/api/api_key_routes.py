@@ -12,7 +12,6 @@ All endpoints require JWT authentication and are user-specific.
 """
 
 import secrets
-import json
 from datetime import datetime, timezone, timedelta
 from typing import List, Optional, Annotated
 
@@ -25,7 +24,7 @@ from database import get_async_session, APIKey
 from config.dependencies import CurrentUser
 from monitoring import logging_config
 from lib.security.key_management import hash_api_key
-from lib.security.key_rotation import KeyRotationService, create_rotation_service
+from lib.security.key_rotation import create_rotation_service
 
 # Get logger
 logger = logging_config.get_logger(__name__)
@@ -43,6 +42,10 @@ class APIKeyCreateRequest(BaseModel):
         1000, ge=10, le=100000, description="Daily request limit"
     )
     expires_in_days: Optional[int] = Field(None, ge=1, le=365, description="Days until expiration")
+    rotation_enabled: Optional[bool] = Field(False, description="Enable automatic key rotation")
+    rotation_period_days: Optional[int] = Field(
+        90, ge=1, le=365, description="Days between automatic rotations"
+    )
 
 
 class APIKeyCreateResponse(BaseModel):
@@ -142,22 +145,6 @@ class APIKeyRotationStatus(BaseModel):
     rotated_at: Optional[str]
 
 
-class APIKeyCreateRequest(BaseModel):
-    """Request model for creating API key."""
-
-    name: str = Field(..., min_length=1, max_length=100, description="Name for the API key")
-    description: Optional[str] = Field(None, max_length=500, description="Optional description")
-    rate_limit: Optional[str] = Field("100/minute", description="Rate limit (e.g., '100/minute')")
-    rate_limit_daily: Optional[int] = Field(
-        1000, ge=10, le=100000, description="Daily request limit"
-    )
-    expires_in_days: Optional[int] = Field(None, ge=1, le=365, description="Days until expiration")
-    rotation_enabled: Optional[bool] = Field(False, description="Enable automatic key rotation")
-    rotation_period_days: Optional[int] = Field(
-        90, ge=1, le=365, description="Days between automatic rotations"
-    )
-
-
 def _generate_api_key() -> str:
     """Generate a new API key with prefix."""
     return f"rai_{secrets.token_urlsafe(32)}"
@@ -186,7 +173,6 @@ async def create_api_key(
     request: APIKeyCreateRequest,
     current_user: CurrentUser,
     db: Annotated[AsyncSession, Depends(get_async_session)],
-    http_request: Request,
 ):
     """
     Create a new API key for the authenticated user.
@@ -206,10 +192,6 @@ async def create_api_key(
     - `rotation_enabled`: Enable automatic key rotation
     - `rotation_period_days`: Days between automatic rotations (default 90)
     """
-    # Get client info for audit logging
-    client_ip = http_request.client.host if http_request.client else None
-    user_agent = http_request.headers.get("user-agent")
-
     # Generate new API key
     api_key = _generate_api_key()
     key_hash = hash_api_key(api_key)
@@ -556,8 +538,6 @@ async def verify_api_key(
 
     Supports verification during dual key period (both old and new keys work).
     """
-    from lib.security.key_management import verify_api_key
-
     rotation_service = create_rotation_service(db)
 
     # Use the rotation service to verify (supports dual key period)
