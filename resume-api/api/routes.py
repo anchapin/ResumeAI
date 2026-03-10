@@ -1637,6 +1637,92 @@ def _extract_year(date_str: str) -> int:
     return None
 
 
+def _convert_linkedin_basics(linkedin_data: dict) -> dict:
+    """Convert basic info from LinkedIn data to JSON Resume basics."""
+    basics = {}
+    if linkedin_data.get("name"):
+        basics["name"] = linkedin_data["name"]
+    if linkedin_data.get("headline") or linkedin_data.get("role"):
+        basics["label"] = linkedin_data.get("headline") or linkedin_data.get("role")
+    if linkedin_data.get("summary"):
+        basics["summary"] = linkedin_data["summary"]
+    if linkedin_data.get("email"):
+        basics["email"] = linkedin_data["email"]
+    if linkedin_data.get("phone"):
+        basics["phone"] = linkedin_data["phone"]
+    return basics
+
+
+def _convert_linkedin_work(linkedin_data: dict) -> list:
+    """Convert work experience from LinkedIn data."""
+    work = []
+    for exp in linkedin_data.get("experience", []):
+        work_entry = {
+            "company": exp.get("company", ""),
+            "position": exp.get("role", ""),
+            "startDate": exp.get("startDate", ""),
+            "endDate": exp.get("endDate", "") if not exp.get("current") else "",
+            "summary": exp.get("description", ""),
+        }
+        if work_entry["company"] or work_entry["position"]:
+            work.append(work_entry)
+    return work
+
+
+def _convert_linkedin_education(linkedin_data: dict) -> list:
+    """Convert education from LinkedIn data."""
+    education = []
+    for edu in linkedin_data.get("education", []):
+        edu_entry = {
+            "institution": edu.get("institution", ""),
+            "studyType": edu.get("studyType", ""),
+            "area": edu.get("area", ""),
+            "startDate": edu.get("startDate", ""),
+            "endDate": edu.get("endDate", ""),
+        }
+        if edu_entry["institution"]:
+            education.append(edu_entry)
+    return education
+
+
+def _convert_linkedin_skills(linkedin_data: dict) -> list:
+    """Convert skills from LinkedIn data."""
+    skills = []
+    for skill in linkedin_data.get("skills", []):
+        if isinstance(skill, str):
+            skills.append({"name": skill})
+        elif isinstance(skill, dict) and skill.get("name"):
+            skills.append({"name": skill["name"]})
+    return skills
+
+
+def _convert_linkedin_languages(linkedin_data: dict) -> list:
+    """Convert languages from LinkedIn data."""
+    languages = []
+    for lang in linkedin_data.get("languages", []):
+        if isinstance(lang, dict):
+            languages.append({
+                "name": lang.get("name", ""),
+                "proficiency": lang.get("proficiency", ""),
+            })
+    return languages
+
+
+def _convert_linkedin_projects(linkedin_data: dict) -> list:
+    """Convert projects from LinkedIn data."""
+    projects = []
+    for proj in linkedin_data.get("projects", []):
+        if isinstance(proj, dict):
+            project_entry = {
+                "name": proj.get("name", ""),
+                "description": proj.get("description", ""),
+                "url": proj.get("url", ""),
+            }
+            if project_entry["name"]:
+                projects.append(project_entry)
+    return projects
+
+
 def convert_linkedin_to_json_resume(linkedin_data: dict) -> dict:
     """
     Convert parsed LinkedIn data to JSON Resume format.
@@ -1648,85 +1734,17 @@ def convert_linkedin_to_json_resume(linkedin_data: dict) -> dict:
         Dictionary in JSON Resume format
     """
     resume = {
-        "basics": {},
-        "work": [],
-        "education": [],
-        "skills": [],
-        "languages": [],
-        "projects": [],
+        "basics": _convert_linkedin_basics(linkedin_data),
+        "work": _convert_linkedin_work(linkedin_data),
+        "education": _convert_linkedin_education(linkedin_data),
+        "skills": _convert_linkedin_skills(linkedin_data),
+        "languages": _convert_linkedin_languages(linkedin_data),
+        "projects": _convert_linkedin_projects(linkedin_data),
         "certificates": [],
     }
 
-    # Basic info
-    if linkedin_data.get("name"):
-        resume["basics"]["name"] = linkedin_data["name"]
-
-    if linkedin_data.get("headline") or linkedin_data.get("role"):
-        resume["basics"]["label"] = linkedin_data.get("headline") or linkedin_data.get("role")
-
-    if linkedin_data.get("summary"):
-        resume["basics"]["summary"] = linkedin_data["summary"]
-
-    if linkedin_data.get("email"):
-        resume["basics"]["email"] = linkedin_data["email"]
-
-    if linkedin_data.get("phone"):
-        resume["basics"]["phone"] = linkedin_data["phone"]
-
     if linkedin_data.get("location"):
         resume["location"] = {"city": linkedin_data["location"]}
-
-    # Work experience
-    for exp in linkedin_data.get("experience", []):
-        work_entry = {
-            "company": exp.get("company", ""),
-            "position": exp.get("role", ""),
-            "startDate": exp.get("startDate", ""),
-            "endDate": exp.get("endDate", "") if not exp.get("current") else "",
-            "summary": exp.get("description", ""),
-        }
-        if work_entry["company"] or work_entry["position"]:
-            resume["work"].append(work_entry)
-
-    # Education
-    for edu in linkedin_data.get("education", []):
-        edu_entry = {
-            "institution": edu.get("institution", ""),
-            "studyType": edu.get("studyType", ""),
-            "area": edu.get("area", ""),
-            "startDate": edu.get("startDate", ""),
-            "endDate": edu.get("endDate", ""),
-        }
-        if edu_entry["institution"]:
-            resume["education"].append(edu_entry)
-
-    # Skills
-    for skill in linkedin_data.get("skills", []):
-        if isinstance(skill, str):
-            resume["skills"].append({"name": skill})
-        elif isinstance(skill, dict) and skill.get("name"):
-            resume["skills"].append({"name": skill["name"]})
-
-    # Languages
-    for lang in linkedin_data.get("languages", []):
-        if isinstance(lang, dict):
-            resume["languages"].append(
-                {
-                    "name": lang.get("name", ""),
-                    "proficiency": lang.get("proficiency", ""),
-                }
-            )
-
-    # Projects
-    for proj in linkedin_data.get("projects", []):
-        if isinstance(proj, dict):
-            project_entry = {
-                "name": proj.get("name", ""),
-                "description": proj.get("description", ""),
-                "url": proj.get("url", ""),
-            }
-            if project_entry["name"]:
-                resume["projects"].append(project_entry)
 
     return resume
 
