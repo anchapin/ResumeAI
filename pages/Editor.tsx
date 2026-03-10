@@ -16,6 +16,7 @@ import {
   updateResume,
 } from '../utils/api-client';
 import { useStore } from '../store/store';
+import { useHistory } from '../src/hooks/useHistory';
 import { LinkedInImportDialog } from '../components/LinkedInImportDialog';
 import ResumePreview from '../components/ResumePreview';
 import VersionHistory from '../components/VersionHistory';
@@ -109,31 +110,17 @@ const Editor = () => {
     resumeDataRef.current = resumeData;
   }, [resumeData]);
 
-  // Undo/Redo functionality
+  // Undo/Redo functionality using useHistory hook
   const MAX_HISTORY = 50;
-  const [history, setHistory] = useState<SimpleResumeData[]>([]);
-  const [historyIndex, setHistoryIndex] = useState(-1);
-  const historyRef = useRef<{ history: SimpleResumeData[]; index: number }>({
-    history: [],
-    index: -1,
-  });
-
-  // Track history in ref for stable callbacks
-  useEffect(() => {
-    historyRef.current = { history, index: historyIndex };
-  }, [history, historyIndex]);
-
-  // Add state to history
-  const addToHistory = useCallback((newState: SimpleResumeData) => {
-    setHistory((prev) => {
-      const newIndex = historyRef.current.index + 1;
-      const trimmed = prev.slice(0, newIndex);
-      const updated = [...trimmed, newState];
-      const final = updated.slice(-MAX_HISTORY);
-      return final;
-    });
-    setHistoryIndex((prev) => Math.min(prev + 1, MAX_HISTORY - 1));
-  }, []);
+  const {
+    history,
+    historyIndex,
+    canUndo,
+    canRedo,
+    addToHistory,
+    undo,
+    redo,
+  } = useHistory<SimpleResumeData>(resumeData, { maxHistory: MAX_HISTORY, trackInitialState: false });
 
   // Wrap setResumeData to track history
   const trackedUpdate = useCallback(
@@ -146,22 +133,6 @@ const Editor = () => {
     },
     [setResumeData, addToHistory],
   );
-
-  const undo = useCallback(() => {
-    const { history: currentHistory, index: currentIndex } = historyRef.current;
-    if (currentIndex <= 0) return;
-    const newIndex = currentIndex - 1;
-    setHistoryIndex(newIndex);
-    setResumeData(currentHistory[newIndex]);
-  }, [setResumeData]);
-
-  const redo = useCallback(() => {
-    const { history: currentHistory, index: currentIndex } = historyRef.current;
-    if (currentIndex >= currentHistory.length - 1) return;
-    const newIndex = currentIndex + 1;
-    setHistoryIndex(newIndex);
-    setResumeData(currentHistory[newIndex]);
-  }, [setResumeData]);
 
   // Fetch variants on mount
   useEffect(() => {
@@ -726,8 +697,6 @@ const Editor = () => {
   };
 
   const saveStatus = useStore((state) => state.saveStatus);
-  const canUndo = historyIndex > 0;
-  const canRedo = historyIndex < history.length - 1;
 
   return (
     <div className="min-h-screen bg-[#f6f6f8] flex flex-col">
