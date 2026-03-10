@@ -134,6 +134,29 @@ class FeatureFlagService:
         flag = self._flags.get(key)
         return self._flag_to_dict(flag) if flag else None
 
+    def _check_user_targeting(
+        self, flag, user_id: Optional[str], groups: Optional[list[str]], ip: Optional[str]
+    ) -> bool | None:
+        """Check user-specific targeting rules. Returns True/False or None if no match."""
+        if not flag.targeting:
+            return None
+
+        # Check user-specific targeting
+        if flag.targeting.users and user_id and user_id in flag.targeting.users:
+            return True
+
+        # Check group targeting
+        if flag.targeting.groups and groups:
+            if any(group in flag.targeting.groups for group in groups):
+                return True
+
+        # Check IP range targeting
+        if flag.targeting.ip_ranges and ip:
+            if self._check_ip_in_ranges(ip, flag.targeting.ip_ranges):
+                return True
+
+        return None
+
     def is_enabled(
         self,
         key: str,
@@ -182,32 +205,18 @@ class FeatureFlagService:
             return False
 
         # Check targeting rules
-        if flag.targeting:
-            # Check user-specific targeting
-            if flag.targeting.users and user_id and user_id in flag.targeting.users:
-                return True
-
-            # Check group targeting
-            if flag.targeting.groups and groups:
-                if any(group in flag.targeting.groups for group in groups):
-                    return True
-
-            # Check IP range targeting (simple implementation)
-            if flag.targeting.ip_ranges and ip:
-                if self._check_ip_in_ranges(ip, flag.targeting.ip_ranges):
-                    return True
+        targeting_result = self._check_user_targeting(flag, user_id, groups, ip)
+        if targeting_result is not None:
+            return targeting_result
 
         # Check percentage-based rollout using consistent hashing
-        if self._is_in_rollout(
+        return self._is_in_rollout(
             key=key,
             user_id=user_id,
             email=email,
             session_id=session_id,
             percentage=flag.rollout_percentage,
-        ):
-            return True
-
-        return False
+        )
 
     def evaluate_flag(
         self,

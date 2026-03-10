@@ -471,6 +471,67 @@ class KeyRotationService:
 
         return list(result.scalars().all())
 
+    async def _rotate_keys_needing_rotation(self) -> tuple[int, list[str]]:
+        """Process keys that need rotation."""
+        keys_rotated = 0
+        errors = []
+        keys_to_rotate = await self.get_keys_needing_rotation(days_ahead=0)
+
+        for key in keys_to_rotate:
+            try:
+                new_key, _ = await self.rotate_key(
+                    key_id=key.id,
+                    user_id=key.user_id,
+                )
+                if new_key:
+                    keys_rotated += 1
+            except Exception as e:
+                logger.error("auto_rotation_failed", key_id=key.id, error=str(e))
+                errors.append(f"Key {key.id}: {str(e)}")
+
+        return keys_rotated, errors
+
+    async def _complete_dual_key_periods(self) -> tuple[int, list[str]]:
+        """Complete dual key periods that have expired."""
+        dual_keys_completed = 0
+        errors = []
+        now = datetime.now(timezone.utc)
+        result = await self.db.execute(
+            select(APIKey).where(
+                APIKey.is_rotating.is_(True),
+                APIKey.is_active.is_(True),
+                APIKey.next_rotation_at <= now,
+            )
+        )
+
+        dual_keys = list(result.scalars().all())
+        for key in dual_keys:
+            try:
+                success = await self.complete_dual_key_period(key.id, key.user_id)
+                if success:
+                    dual_keys_completed += 1
+            except Exception as e:
+                logger.error("dual_key_completion_failed", key_id=key.id, error=str(e))
+                errors.append(f"Dual key {key.id}: {str(e)}")
+
+        return dual_keys_completed, errors
+
+    async def _send_expiration_notifications(self) -> tuple[int, list[str]]:
+        """Send expiration notifications for keys."""
+        notifications_sent = 0
+        errors = []
+        keys_for_notification = await self.get_keys_for_notification()
+
+        for key in keys_for_notification:
+            try:
+                await self._send_expiration_notification(key)
+                notifications_sent += 1
+            except Exception as e:
+                logger.error("notification_failed", key_id=key.id, error=str(e))
+                errors.append(f"Notification {key.id}: {str(e)}")
+
+        return notifications_sent, errors
+
     async def process_automatic_rotation(self) -> Dict[str, Any]:
         """Process automatic key rotations.
 
@@ -487,50 +548,16 @@ class KeyRotationService:
         }
 
         # 1. Process keys that need rotation
-        keys_to_rotate = await self.get_keys_needing_rotation(days_ahead=0)
-
-        for key in keys_to_rotate:
-            try:
-                new_key, _ = await self.rotate_key(
-                    key_id=key.id,
-                    user_id=key.user_id,
-                )
-                if new_key:
-                    results["keys_rotated"] += 1
-            except Exception as e:
-                logger.error("auto_rotation_failed", key_id=key.id, error=str(e))
-                results["errors"].append(f"Key {key.id}: {str(e)}")
+        results["keys_rotated"], rot_errors = await self._rotate_keys_needing_rotation()
+        results["errors"].extend(rot_errors)
 
         # 2. Complete dual key periods that have expired
-        now = datetime.now(timezone.utc)
-        result = await self.db.execute(
-            select(APIKey).where(
-                APIKey.is_rotating.is_(True),
-                APIKey.is_active.is_(True),
-                APIKey.next_rotation_at <= now,
-            )
-        )
-
-        dual_keys = list(result.scalars().all())
-        for key in dual_keys:
-            try:
-                success = await self.complete_dual_key_period(key.id, key.user_id)
-                if success:
-                    results["dual_keys_completed"] += 1
-            except Exception as e:
-                logger.error("dual_key_completion_failed", key_id=key.id, error=str(e))
-                results["errors"].append(f"Dual key {key.id}: {str(e)}")
+        results["dual_keys_completed"], dual_errors = await self._complete_dual_key_periods()
+        results["errors"].extend(dual_errors)
 
         # 3. Send expiration notifications
-        keys_for_notification = await self.get_keys_for_notification()
-
-        for key in keys_for_notification:
-            try:
-                await self._send_expiration_notification(key)
-                results["notifications_sent"] += 1
-            except Exception as e:
-                logger.error("notification_failed", key_id=key.id, error=str(e))
-                results["errors"].append(f"Notification {key.id}: {str(e)}")
+        results["notifications_sent"], notif_errors = await self._send_expiration_notifications()
+        results["errors"].extend(notif_errors)
 
         logger.info("automatic_rotation_completed", **results)
         return results
