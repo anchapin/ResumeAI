@@ -1118,9 +1118,7 @@ async def batch_create_resumes(
 
             # Load tags for response
             result = await db.execute(
-                select(Resume)
-                .options(selectinload(Resume.tags))
-                .where(Resume.id == resume.id)
+                select(Resume).options(selectinload(Resume.tags)).where(Resume.id == resume.id)
             )
             resume = result.scalar_one()
 
@@ -1139,11 +1137,17 @@ async def batch_create_resumes(
 
         except Exception as e:
             await db.rollback()
-            failed.append({
-                "index": idx,
-                "title": resume_request.title if hasattr(resume_request, 'title') else f"Resume {idx}",
-                "error": str(e)
-            })
+            failed.append(
+                {
+                    "index": idx,
+                    "title": (
+                        resume_request.title
+                        if hasattr(resume_request, "title")
+                        else f"Resume {idx}"
+                    ),
+                    "error": str(e),
+                }
+            )
 
     return BatchCreateResponse(
         successful=successful,
@@ -1186,11 +1190,13 @@ async def batch_update_resumes(
             resume = result.scalar_one_or_none()
 
             if not resume:
-                failed.append({
-                    "index": idx,
-                    "id": update_request.id,
-                    "error": f"Resume with ID {update_request.id} not found"
-                })
+                failed.append(
+                    {
+                        "index": idx,
+                        "id": update_request.id,
+                        "error": f"Resume with ID {update_request.id} not found",
+                    }
+                )
                 continue
 
             # Update fields
@@ -1241,11 +1247,13 @@ async def batch_update_resumes(
 
         except Exception as e:
             await db.rollback()
-            failed.append({
-                "index": idx,
-                "id": update_request.id if hasattr(update_request, 'id') else None,
-                "error": str(e)
-            })
+            failed.append(
+                {
+                    "index": idx,
+                    "id": update_request.id if hasattr(update_request, "id") else None,
+                    "error": str(e),
+                }
+            )
 
     return BatchUpdateResponse(
         successful=successful,
@@ -1278,9 +1286,7 @@ async def batch_delete_resumes(
     for resume_id in request.resume_ids:
         try:
             result = await db.execute(
-                select(Resume)
-                .options(selectinload(Resume.tags))
-                .where(Resume.id == resume_id)
+                select(Resume).options(selectinload(Resume.tags)).where(Resume.id == resume_id)
             )
             resume = result.scalar_one_or_none()
 
@@ -1332,34 +1338,28 @@ async def batch_export_resumes(
     for resume_id in request.resume_ids:
         try:
             result = await db.execute(
-                select(Resume)
-                .options(selectinload(Resume.tags))
-                .where(Resume.id == resume_id)
+                select(Resume).options(selectinload(Resume.tags)).where(Resume.id == resume_id)
             )
             resume = result.scalar_one_or_none()
 
             if not resume:
-                failed.append({
-                    "id": resume_id,
-                    "error": "Resume not found"
-                })
+                failed.append({"id": resume_id, "error": "Resume not found"})
                 continue
 
             # In a real implementation, this would trigger an async export job
             # and return a job ID for progress tracking
             # For now, we simulate successful export with a placeholder URL
-            successful.append({
-                "id": resume_id,
-                "title": resume.title,
-                "format": request.format,
-                "download_url": f"/api/v1/exports/{export_job_id}/resume_{resume_id}.{request.format}"
-            })
+            successful.append(
+                {
+                    "id": resume_id,
+                    "title": resume.title,
+                    "format": request.format,
+                    "download_url": f"/api/v1/exports/{export_job_id}/resume_{resume_id}.{request.format}",
+                }
+            )
 
         except Exception as e:
-            failed.append({
-                "id": resume_id,
-                "error": str(e)
-            })
+            failed.append({"id": resume_id, "error": str(e)})
 
     return BatchExportResponse(
         successful=successful,

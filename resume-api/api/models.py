@@ -1222,9 +1222,7 @@ class BatchCreateResponse(BaseModel):
     """Response for batch resume creation."""
 
     successful: List[ResumeResponse] = Field(description="Successfully created resumes")
-    failed: List[dict] = Field(
-        description="Failed resume creations with error messages"
-    )
+    failed: List[dict] = Field(description="Failed resume creations with error messages")
     total_created: int = Field(description="Total number of resumes created")
     total_failed: int = Field(description="Total number of resumes that failed")
 
@@ -1241,9 +1239,7 @@ class BatchUpdateResponse(BaseModel):
     """Response for batch resume update."""
 
     successful: List[ResumeResponse] = Field(description="Successfully updated resumes")
-    failed: List[dict] = Field(
-        description="Failed resume updates with error messages"
-    )
+    failed: List[dict] = Field(description="Failed resume updates with error messages")
     total_updated: int = Field(description="Total number of resumes updated")
     total_failed: int = Field(description="Total number of resumes that failed")
 
@@ -1251,18 +1247,14 @@ class BatchUpdateResponse(BaseModel):
 class BatchDeleteRequest(BaseModel):
     """Request to delete multiple resumes in a batch."""
 
-    resume_ids: List[int] = Field(
-        ..., max_length=100, description="List of resume IDs to delete"
-    )
+    resume_ids: List[int] = Field(..., max_length=100, description="List of resume IDs to delete")
 
 
 class BatchDeleteResponse(BaseModel):
     """Response for batch resume deletion."""
 
     successful: List[int] = Field(description="IDs of successfully deleted resumes")
-    failed: List[dict] = Field(
-        description="Failed deletions with error messages"
-    )
+    failed: List[dict] = Field(description="Failed deletions with error messages")
     total_deleted: int = Field(description="Total number of resumes deleted")
     total_failed: int = Field(description="Total number of deletions that failed")
 
@@ -1270,21 +1262,15 @@ class BatchDeleteResponse(BaseModel):
 class BatchExportRequest(BaseModel):
     """Request to export multiple resumes in a batch."""
 
-    resume_ids: List[int] = Field(
-        ..., max_length=50, description="List of resume IDs to export"
-    )
-    format: str = Field(
-        default="pdf", max_length=20, description="Export format (pdf, docx, html)"
-    )
+    resume_ids: List[int] = Field(..., max_length=50, description="List of resume IDs to export")
+    format: str = Field(default="pdf", max_length=20, description="Export format (pdf, docx, html)")
 
 
 class BatchExportResponse(BaseModel):
     """Response for batch resume export."""
 
     successful: List[dict] = Field(description="Successfully exported resumes with download URLs")
-    failed: List[dict] = Field(
-        description="Failed exports with error messages"
-    )
+    failed: List[dict] = Field(description="Failed exports with error messages")
     total_exported: int = Field(description="Total number of resumes exported")
     total_failed: int = Field(description="Total number of exports that failed")
     export_job_id: str = Field(description="Job ID for tracking export progress")
@@ -1299,9 +1285,7 @@ class BatchProgressResponse(BaseModel):
     processed: int = Field(description="Number of items processed")
     successful: int = Field(description="Number of successful operations")
     failed: int = Field(description="Number of failed operations")
-    results: Optional[List[dict]] = Field(
-        None, description="Detailed results when completed"
-    )
+    results: Optional[List[dict]] = Field(None, description="Detailed results when completed")
     created_at: str = Field(description="Job creation timestamp")
     updated_at: str = Field(description="Last update timestamp")
 
