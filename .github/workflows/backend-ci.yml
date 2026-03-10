@@ -96,14 +96,6 @@ jobs:
         working-directory: ./resume-api
         run: |
           black --version
-          echo "=== Target version ==="
-          python3 -c "import black; print('Target version:', getattr(black, '__version__', 'unknown'))"
-          echo "=== File first 500 chars ==="
-          head -c 500 middleware/monitoring.py
-          echo ""
-          echo "=== Running black with --verbose ==="
-          black --verbose middleware/monitoring.py 2>&1 | head -20
-          echo "=== Running black --check ==="
           black --check . --config pyproject.toml
         env:
           DEBUG: "true"
