@@ -12,7 +12,7 @@ Tests the key rotation service, including:
 import pytest
 import secrets
 from datetime import datetime, timezone, timedelta
-from unittest.mock import MagicMock, AsyncMock, patch
+from unittest.mock import MagicMock, AsyncMock
 
 from lib.security.key_rotation import (
     KeyRotationService,
