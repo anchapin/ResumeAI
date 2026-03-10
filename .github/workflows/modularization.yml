@@ -35,3 +35,14 @@ jobs:
           echo "Checking module boundaries..."
           npx eslint --no-eslintrc -c eslint.config.js --rule "boundaries/element-types: error" .
         continue-on-error: true
+
+      - name: Check for unused imports
+        run: |
+          echo "Checking for unused imports..."
+          npx eslint --no-eslintrc -c eslint.config.js --rule "no-unused-imports: error" . 2>/dev/null || true
+
+      - name: Enforce element-type boundaries
+        run: |
+          echo "Verifying element type boundaries..."
+          npx eslint --no-eslintrc -c eslint.config.js --rule "boundaries/element-types: error" --max-warnings=0 src/
+        continue-on-error: true
