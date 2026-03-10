@@ -112,15 +112,8 @@ const Editor = () => {
 
   // Undo/Redo functionality using useHistory hook
   const MAX_HISTORY = 50;
-  const {
-    history,
-    historyIndex,
-    canUndo,
-    canRedo,
-    addToHistory,
-    undo,
-    redo,
-  } = useHistory<SimpleResumeData>(resumeData, { maxHistory: MAX_HISTORY, trackInitialState: false });
+  const { history, historyIndex, canUndo, canRedo, addToHistory, undo, redo } =
+    useHistory<SimpleResumeData>(resumeData, { maxHistory: MAX_HISTORY, trackInitialState: false });
 
   // Wrap setResumeData to track history
   const trackedUpdate = useCallback(
@@ -741,6 +734,8 @@ const Editor = () => {
                 Edit Professional Profile
               </h1>
               <p
+                role="status"
+                aria-live="polite"
                 className={`font-medium text-sm flex items-center gap-1 ${
                   saveStatus === 'error'
                     ? 'text-red-600'
@@ -753,31 +748,44 @@ const Editor = () => {
               >
                 {saveStatus === 'saving' && (
                   <>
-                    <span className="material-symbols-outlined text-sm animate-spin">sync</span>
+                    <span
+                      className="material-symbols-outlined text-sm animate-spin"
+                      aria-hidden="true"
+                    >
+                      sync
+                    </span>
                     Saving...
                   </>
                 )}
                 {saveStatus === 'saved' && (
                   <>
-                    <span className="material-symbols-outlined text-sm">check_circle</span>
+                    <span className="material-symbols-outlined text-sm" aria-hidden="true">
+                      check_circle
+                    </span>
                     Saved
                   </>
                 )}
                 {saveStatus === 'error' && (
                   <>
-                    <span className="material-symbols-outlined text-sm">error</span>
+                    <span className="material-symbols-outlined text-sm" aria-hidden="true">
+                      error
+                    </span>
                     Save failed
                   </>
                 )}
                 {saveStatus === 'idle' && lastSaved && (
                   <>
-                    <span className="material-symbols-outlined text-sm">check_circle</span>
+                    <span className="material-symbols-outlined text-sm" aria-hidden="true">
+                      check_circle
+                    </span>
                     Saved {getTimeSince(lastSaved)} ago
                   </>
                 )}
                 {saveStatus === 'idle' && !lastSaved && (
                   <>
-                    <span className="material-symbols-outlined text-sm">edit</span>
+                    <span className="material-symbols-outlined text-sm" aria-hidden="true">
+                      edit
+                    </span>
                     Changes not yet saved
                   </>
                 )}

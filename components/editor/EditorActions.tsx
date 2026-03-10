@@ -61,7 +61,9 @@ export const EditorActions: React.FC<EditorActionsProps> = ({
         className="flex items-center gap-2 px-4 h-10 rounded-lg border border-slate-300 bg-white text-slate-700 font-bold text-sm hover:bg-slate-50 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
         title="Undo (Ctrl+Z)"
       >
-        <span className="material-symbols-outlined text-lg">undo</span>
+        <span className="material-symbols-outlined text-lg" aria-hidden="true">
+          undo
+        </span>
         <span className="hidden sm:inline">Undo</span>
       </button>
       <button
@@ -70,7 +72,9 @@ export const EditorActions: React.FC<EditorActionsProps> = ({
         className="flex items-center gap-2 px-4 h-10 rounded-lg border border-slate-300 bg-white text-slate-700 font-bold text-sm hover:bg-slate-50 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
         title="Redo (Ctrl+Y or Ctrl+Shift+Z)"
       >
-        <span className="material-symbols-outlined text-lg">redo</span>
+        <span className="material-symbols-outlined text-lg" aria-hidden="true">
+          redo
+        </span>
         <span className="hidden sm:inline">Redo</span>
       </button>
       <button
@@ -78,7 +82,9 @@ export const EditorActions: React.FC<EditorActionsProps> = ({
         className="flex items-center gap-2 px-4 h-10 rounded-lg border border-slate-300 bg-white text-slate-700 font-bold text-sm hover:bg-slate-50 transition-colors shadow-sm relative"
         title="View comments"
       >
-        <span className="material-symbols-outlined text-lg">chat_bubble_outline</span>
+        <span className="material-symbols-outlined text-lg" aria-hidden="true">
+          chat_bubble_outline
+        </span>
         <span className="hidden sm:inline">Comments</span>
         {unresolvedCommentCount > 0 && (
           <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
@@ -91,7 +97,9 @@ export const EditorActions: React.FC<EditorActionsProps> = ({
         className="flex items-center gap-2 px-4 h-10 rounded-lg border border-slate-300 bg-white text-slate-700 font-bold text-sm hover:bg-slate-50 transition-colors shadow-sm"
         title="View version history"
       >
-        <span className="material-symbols-outlined text-lg">history</span>
+        <span className="material-symbols-outlined text-lg" aria-hidden="true">
+          history
+        </span>
         <span className="hidden sm:inline">History</span>
       </button>
       <button
@@ -99,7 +107,9 @@ export const EditorActions: React.FC<EditorActionsProps> = ({
         className="flex items-center gap-2 px-4 h-10 rounded-lg border border-slate-300 bg-white text-slate-700 font-bold text-sm hover:bg-slate-50 transition-colors shadow-sm"
         title="Save as new version"
       >
-        <span className="material-symbols-outlined text-lg">save</span>
+        <span className="material-symbols-outlined text-lg" aria-hidden="true">
+          save
+        </span>
         <span className="hidden sm:inline">Save Version</span>
       </button>
       <button
@@ -110,7 +120,7 @@ export const EditorActions: React.FC<EditorActionsProps> = ({
             : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50'
         }`}
       >
-        <span className="material-symbols-outlined text-lg">
+        <span className="material-symbols-outlined text-lg" aria-hidden="true">
           {showPreview ? 'visibility_off' : 'visibility'}
         </span>
         {showPreview ? 'Hide Preview' : 'Preview'}
