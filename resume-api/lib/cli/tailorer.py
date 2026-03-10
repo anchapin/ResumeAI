@@ -63,49 +63,58 @@ class ResumeTailorer:
 
         logger.info(f"Initialized ResumeTailorer with {self.ai_provider}")
 
+    def _init_openai_client(self) -> None:
+        """Initialize OpenAI client."""
+        if not OPENAI_AVAILABLE:
+            raise ImportError("openai package not installed")
+        if not self.api_key:
+            raise ValueError("OPENAI_API_KEY environment variable not set")
+        base_url = os.getenv("OPENAI_BASE_URL")
+        client_kwargs = {"api_key": self.api_key}
+        if base_url:
+            client_kwargs["base_url"] = base_url
+        self.client = openai.OpenAI(**client_kwargs)
+        self._call_ai = self._call_openai
+        if not self.model:
+            self.model = "gpt-4o"
+
+    def _init_claude_client(self) -> None:
+        """Initialize Claude client."""
+        if not ANTHROPIC_AVAILABLE:
+            raise ImportError("anthropic package not installed")
+        if not self.api_key:
+            raise ValueError("ANTHROPIC_API_KEY environment variable not set")
+        base_url = os.getenv("ANTHROPIC_BASE_URL")
+        client_kwargs = {"api_key": self.api_key}
+        if base_url:
+            client_kwargs["base_url"] = base_url
+        self.client = anthropic.Anthropic(**client_kwargs)
+        self._call_ai = self._call_anthropic
+        if not self.model:
+            self.model = "claude-3-5-sonnet-20241022"
+
+    def _init_gemini_client(self) -> None:
+        """Initialize Gemini client (uses OpenAI-compatible API)."""
+        if not OPENAI_AVAILABLE:
+            raise ImportError("openai package not installed (used for Gemini)")
+        if not self.api_key:
+            raise ValueError("GEMINI_API_KEY environment variable not set")
+        self.client = openai.OpenAI(
+            api_key=self.api_key,
+            base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
+        )
+        self._call_ai = self._call_openai
+        if not self.model:
+            self.model = "gemini-1.5-pro"
+
     def _init_ai_client(self):
         """Initialize the AI client based on provider."""
         if self.ai_provider == "openai":
-            if not OPENAI_AVAILABLE:
-                raise ImportError("openai package not installed")
-            if not self.api_key:
-                raise ValueError("OPENAI_API_KEY environment variable not set")
-            base_url = os.getenv("OPENAI_BASE_URL")
-            client_kwargs = {"api_key": self.api_key}
-            if base_url:
-                client_kwargs["base_url"] = base_url
-            self.client = openai.OpenAI(**client_kwargs)
-            self._call_ai = self._call_openai
-            if not self.model:
-                self.model = "gpt-4o"
-
+            self._init_openai_client()
         elif self.ai_provider == "claude":
-            if not ANTHROPIC_AVAILABLE:
-                raise ImportError("anthropic package not installed")
-            if not self.api_key:
-                raise ValueError("ANTHROPIC_API_KEY environment variable not set")
-            base_url = os.getenv("ANTHROPIC_BASE_URL")
-            client_kwargs = {"api_key": self.api_key}
-            if base_url:
-                client_kwargs["base_url"] = base_url
-            self.client = anthropic.Anthropic(**client_kwargs)
-            self._call_ai = self._call_anthropic
-            if not self.model:
-                self.model = "claude-3-5-sonnet-20241022"
-
+            self._init_claude_client()
         elif self.ai_provider == "gemini":
-            # Gemini falls back to OpenAI-compatible client
-            if not OPENAI_AVAILABLE:
-                raise ImportError("openai package not installed (used for Gemini)")
-            if not self.api_key:
-                raise ValueError("GEMINI_API_KEY environment variable not set")
-            self.client = openai.OpenAI(
-                api_key=self.api_key,
-                base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
-            )
-            self._call_ai = self._call_openai
-            if not self.model:
-                self.model = "gemini-1.5-pro"
+            self._init_gemini_client()
 
     def _call_openai(self, prompt: str) -> str:
         """Call OpenAI API."""

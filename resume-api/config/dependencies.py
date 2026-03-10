@@ -71,6 +71,85 @@ async def rate_limit_exceeded_handler(request: Request, exc: RateLimitExceeded):
     )
 
 
+def _check_master_api_key(x_api_key: str) -> bool:
+    """Check if API key matches master API key."""
+    if not settings.master_api_key:
+        return False
+    if is_hashed_key(settings.master_api_key):
+        return verify_api_key(x_api_key, settings.master_api_key)
+    return secrets.compare_digest(x_api_key, settings.master_api_key)
+
+
+def _check_static_api_keys(x_api_key: str) -> bool:
+    """Check if API key matches any static API key from environment."""
+    if not settings.api_keys:
+        return False
+    for key_hash in settings.api_keys:
+        if is_hashed_key(key_hash):
+            if verify_api_key(x_api_key, key_hash):
+                return True
+        elif secrets.compare_digest(x_api_key, key_hash):
+            return True
+    return False
+
+
+def _check_key_expiration(db_key) -> None:
+    """Check if API key has expired and raise exception if so."""
+    if db_key.expires_at:
+        expires_at = db_key.expires_at
+        if expires_at.tzinfo is None:
+            expires_at = expires_at.replace(tzinfo=timezone.utc)
+        if datetime.now(timezone.utc) > expires_at:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="API key has expired",
+            )
+
+
+async def _update_key_usage(db: AsyncSession, db_key) -> None:
+    """Update API key usage statistics."""
+    try:
+        db_key.last_request_at = datetime.now(timezone.utc)
+        db_key.total_requests += 1
+        db_key.requests_today += 1
+        await db.commit()
+    except Exception as e:
+        await db.rollback()
+        logger.warning(f"Failed to update API key usage stats: {e}")
+
+
+async def _check_database_api_keys(
+    db: AsyncSession, x_api_key: str
+) -> bool:
+    """Check if API key exists in database and is valid."""
+    try:
+        from lib.security.key_management import verify_api_key, generate_api_key_prefix
+    except ImportError:
+        return False
+
+    try:
+        key_prefix = generate_api_key_prefix(x_api_key)
+        result = await db.execute(
+            select(APIKey).where(
+                APIKey.key_prefix == key_prefix,
+                APIKey.is_active.is_(True),
+                APIKey.is_revoked.is_(False),
+            )
+        )
+        db_keys = result.scalars().all()
+
+        for db_key in db_keys:
+            if verify_api_key(x_api_key, db_key.key_hash):
+                _check_key_expiration(db_key)
+                await _update_key_usage(db, db_key)
+                return True
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error verifying API key in database: {e}")
+    return False
+
+
 async def get_api_key(
     request: Request,
     x_api_key: str = Header(None),
@@ -94,70 +173,17 @@ async def get_api_key(
             detail="API key is required",
         )
 
-    # 1. Check master API key (plaintext comparison)
-    if settings.master_api_key:
-        if is_hashed_key(settings.master_api_key):
-            if verify_api_key(x_api_key, settings.master_api_key):
-                return x_api_key
-        else:
-            if secrets.compare_digest(x_api_key, settings.master_api_key):
-                return x_api_key
+    # 1. Check master API key
+    if _check_master_api_key(x_api_key):
+        return x_api_key
 
     # 2. Check static user API keys from environment
-    if settings.api_keys:
-        for key_hash in settings.api_keys:
-            if is_hashed_key(key_hash):
-                if verify_api_key(x_api_key, key_hash):
-                    return x_api_key
-            else:
-                if secrets.compare_digest(x_api_key, key_hash):
-                    return x_api_key
+    if _check_static_api_keys(x_api_key):
+        return x_api_key
 
     # 3. Check database for user API keys
-    try:
-        from lib.security.key_management import verify_api_key, generate_api_key_prefix
-
-        key_prefix = generate_api_key_prefix(x_api_key)
-        result = await db.execute(
-            select(APIKey).where(
-                APIKey.key_prefix == key_prefix,
-                APIKey.is_active.is_(True),
-                APIKey.is_revoked.is_(False),
-            )
-        )
-        db_keys = result.scalars().all()
-
-        for db_key in db_keys:
-            if verify_api_key(x_api_key, db_key.key_hash):
-                # Check expiration
-                if db_key.expires_at:
-                    # Handle potential timezone naive datetime from SQLite
-                    expires_at = db_key.expires_at
-                    if expires_at.tzinfo is None:
-                        expires_at = expires_at.replace(tzinfo=timezone.utc)
-
-                    if datetime.now(timezone.utc) > expires_at:
-                        raise HTTPException(
-                            status_code=status.HTTP_403_FORBIDDEN,
-                            detail="API key has expired",
-                        )
-
-                # Update usage stats (try to, but don't fail if DB commit fails)
-                try:
-                    db_key.last_request_at = datetime.now(timezone.utc)
-                    db_key.total_requests += 1
-                    db_key.requests_today += 1
-                    await db.commit()
-                except Exception as e:
-                    await db.rollback()
-                    logger.warning(f"Failed to update API key usage stats: {e}")
-
-                return x_api_key
-    except Exception as e:
-        # Log error but continue to raise 403 if key not found
-        if isinstance(e, HTTPException):
-            raise
-        logger.error(f"Error verifying API key in database: {e}")
+    if await _check_database_api_keys(db, x_api_key):
+        return x_api_key
 
     raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid API key")
 

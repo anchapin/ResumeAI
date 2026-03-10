@@ -309,6 +309,45 @@ async def get_job_status(
     },
     tags=["Jobs"],
 )
+def _validate_job_for_download(job, job_id: str) -> Path:
+    """Validate job state and return PDF path."""
+    if not job:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"Job {job_id} not found"
+        )
+
+    # Check job state
+    state_messages = {
+        JobState.PENDING: "Job is still pending. Check status and try again later.",
+        JobState.PROCESSING: "Job is still processing. Check status and try again later.",
+        JobState.FAILED: f"Job failed: {job.error}",
+        JobState.CANCELLED: "Job was cancelled",
+    }
+    
+    if job.state in state_messages:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=state_messages[job.state],
+        )
+
+    if not job.result or "pdf_path" not in job.result:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Job completed but PDF path not found",
+        )
+
+    pdf_path = job.result["pdf_path"]
+    path_obj = Path(pdf_path)
+
+    if not path_obj.exists():
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="PDF file not found on disk",
+        )
+
+    return path_obj
+
+
 async def download_pdf(
     request: Request,
     job_id: str,
@@ -336,51 +375,8 @@ async def download_pdf(
     try:
         queue = _get_queue()
         job = await queue.get_job(job_id)
+        path_obj = _validate_job_for_download(job, job_id)
 
-        if not job:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail=f"Job {job_id} not found"
-            )
-
-        # Check job state
-        if job.state == JobState.PENDING:
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail="Job is still pending. Check status and try again later.",
-            )
-        elif job.state == JobState.PROCESSING:
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail="Job is still processing. Check status and try again later.",
-            )
-        elif job.state == JobState.FAILED:
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail=f"Job failed: {job.error}",
-            )
-        elif job.state == JobState.CANCELLED:
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail="Job was cancelled",
-            )
-
-        # Get PDF path from result
-        if not job.result or "pdf_path" not in job.result:
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail="Job completed but PDF path not found",
-            )
-
-        pdf_path = job.result["pdf_path"]
-        path_obj = Path(pdf_path)
-
-        if not path_obj.exists():
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail="PDF file not found on disk",
-            )
-
-        # Return PDF file
         return FileResponse(
             path=str(path_obj),
             filename=f"resume_{job_id[:8]}.pdf",

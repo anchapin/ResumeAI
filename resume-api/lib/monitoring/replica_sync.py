@@ -124,6 +124,51 @@ class ReplicationSyncMonitor:
 
         await asyncio.gather(*tasks, return_exceptions=True)
 
+    async def _get_replication_status(self, conn) -> dict:
+        """Get replication status from a replica."""
+        try:
+            result = await conn.execute(text("SHOW SLAVE STATUS"))
+            row = result.fetchone()
+            if row:
+                row_dict = row._mapping if hasattr(row, "_mapping") else {}
+                return row_dict
+        except Exception:
+            pass
+        return {}
+
+    async def _parse_replication_metrics(self, row_dict: dict) -> ReplicationMetrics:
+        """Parse replication metrics from status row."""
+        metrics = ReplicationMetrics(replica_url="")
+        metrics.lag_seconds = row_dict.get("Seconds_Behind_Master")
+        metrics.binlog_position = row_dict.get("Master_Log_Pos")
+        metrics.relay_log_position = row_dict.get("Relay_Log_Pos")
+        metrics.master_log_file = row_dict.get("Master_Log_File")
+        metrics.last_io_error = row_dict.get("Last_IO_Error")
+        metrics.last_sql_error = row_dict.get("Last_SQL_Error")
+
+        if metrics.last_io_error or metrics.last_sql_error:
+            metrics.is_healthy = False
+        return metrics
+
+    async def _get_database_stats(self, conn) -> dict:
+        """Get database statistics from replica."""
+        stats = {}
+        try:
+            result = await conn.execute(text("SHOW STATUS"))
+            rows = result.fetchall()
+            for row in rows:
+                row_dict = row._mapping if hasattr(row, "_mapping") else {}
+                var_name = row_dict.get("Variable_name")
+                if var_name == "Threads_connected":
+                    stats["threads_connected"] = int(row_dict.get("Value", 0))
+                elif var_name == "Questions":
+                    stats["questions"] = int(row_dict.get("Value", 0))
+                elif var_name == "Slow_queries":
+                    stats["slow_queries"] = int(row_dict.get("Value", 0))
+        except Exception:
+            pass
+        return stats
+
     async def _check_replica(self, replica_url: str, engine: AsyncEngine):
         """Check a single replica."""
         try:
@@ -131,43 +176,16 @@ class ReplicationSyncMonitor:
 
             async with engine.connect() as conn:
                 # Get replication status
-                try:
-                    result = await conn.execute(text("SHOW SLAVE STATUS"))
-                    row = result.fetchone()
-
-                    if row:
-                        # Parse MySQL SHOW SLAVE STATUS output
-                        # Field positions vary by MySQL version, use column names
-                        row_dict = row._mapping if hasattr(row, "_mapping") else {}
-
-                        metrics.lag_seconds = row_dict.get("Seconds_Behind_Master")
-                        metrics.binlog_position = row_dict.get("Master_Log_Pos")
-                        metrics.relay_log_position = row_dict.get("Relay_Log_Pos")
-                        metrics.master_log_file = row_dict.get("Master_Log_File")
-                        metrics.last_io_error = row_dict.get("Last_IO_Error")
-                        metrics.last_sql_error = row_dict.get("Last_SQL_Error")
-
-                        # Check for errors
-                        if metrics.last_io_error or metrics.last_sql_error:
-                            metrics.is_healthy = False
-                except Exception:
-                    # Not MySQL or slave not running
-                    pass
+                row_dict = await self._get_replication_status(conn)
+                if row_dict:
+                    metrics = await self._parse_replication_metrics(row_dict)
+                    metrics.replica_url = replica_url
 
                 # Get general stats
-                try:
-                    result = await conn.execute(text("SHOW STATUS"))
-                    rows = result.fetchall()
-                    for row in rows:
-                        row_dict = row._mapping if hasattr(row, "_mapping") else {}
-                        if row_dict.get("Variable_name") == "Threads_connected":
-                            metrics.threads_connected = int(row_dict.get("Value", 0))
-                        elif row_dict.get("Variable_name") == "Questions":
-                            metrics.questions = int(row_dict.get("Value", 0))
-                        elif row_dict.get("Variable_name") == "Slow_queries":
-                            metrics.slow_queries = int(row_dict.get("Value", 0))
-                except Exception:
-                    pass
+                db_stats = await self._get_database_stats(conn)
+                metrics.threads_connected = db_stats.get("threads_connected", 0)
+                metrics.questions = db_stats.get("questions", 0)
+                metrics.slow_queries = db_stats.get("slow_queries", 0)
 
             # Store metrics
             self._store_metrics(metrics)

@@ -680,68 +680,90 @@ class ATSCompatibilityChecker:
         # Return top keywords by frequency
         return [kw for kw, _ in word_count.most_common(30)]
 
+    def _extract_basics_text(self, basics: Dict) -> List[str]:
+        """Extract text from basics section."""
+        parts = []
+        for key_name in ["name", "summary", "headline"]:
+            if basics.get(key_name):
+                parts.append(str(basics[key_name]))
+        return parts
+
+    def _extract_work_text(self, work_list: List) -> List[str]:
+        """Extract text from work experience section."""
+        parts = []
+        for exp in work_list:
+            if isinstance(exp, dict):
+                for key in ["position", "title", "company", "summary", "description"]:
+                    if exp.get(key):
+                        parts.append(str(exp[key]))
+                # Extract from bullets
+                for bullet_key in ["bullets", "highlights"]:
+                    if bullet_key in exp and isinstance(exp[bullet_key], list):
+                        for bullet in exp[bullet_key]:
+                            if isinstance(bullet, dict):
+                                if "text" in bullet:
+                                    parts.append(str(bullet["text"]))
+                            elif isinstance(bullet, str):
+                                parts.append(bullet)
+        return parts
+
+    def _extract_skills_text(self, skills: List) -> List[str]:
+        """Extract text from skills section."""
+        parts = []
+        for skill in skills:
+            if isinstance(skill, dict):
+                if skill.get("name"):
+                    parts.append(str(skill["name"]))
+                if skill.get("keywords"):
+                    parts.extend([str(k) for k in skill["keywords"]])
+            elif isinstance(skill, str):
+                parts.append(skill)
+        return parts
+
+    def _extract_education_text(self, education: List) -> List[str]:
+        """Extract text from education section."""
+        parts = []
+        for edu in education:
+            if isinstance(edu, dict):
+                for key in ["institution", "degree", "studyType", "area"]:
+                    if edu.get(key):
+                        parts.append(str(edu[key]))
+        return parts
+
+    def _extract_projects_text(self, projects: List) -> List[str]:
+        """Extract text from projects section."""
+        parts = []
+        for proj in projects:
+            if isinstance(proj, dict):
+                for key in ["name", "description"]:
+                    if proj.get(key):
+                        parts.append(str(proj[key]))
+        return parts
+
     def _extract_resume_text(self, resume_data: Dict[str, Any]) -> str:
         """Extract all text content from resume data."""
         text_parts = []
 
         # Extract from basics
         basics = resume_data.get("basics", {})
-        for key_name in ["name", "summary", "headline"]:
-            if basics.get(key_name):
-                text_parts.append(str(basics[key_name]))
+        text_parts.extend(self._extract_basics_text(basics))
 
         # Extract from work experience
         for exp_key in ["work", "experience"]:
             if exp_key in resume_data and isinstance(resume_data[exp_key], list):
-                for exp in resume_data[exp_key]:
-                    if isinstance(exp, dict):
-                        for key in [
-                            "position",
-                            "title",
-                            "company",
-                            "summary",
-                            "description",
-                        ]:
-                            if exp.get(key):
-                                text_parts.append(str(exp[key]))
-                        # Extract from bullets
-                        for bullet_key in ["bullets", "highlights"]:
-                            if bullet_key in exp and isinstance(exp[bullet_key], list):
-                                for bullet in exp[bullet_key]:
-                                    if isinstance(bullet, dict):
-                                        if "text" in bullet:
-                                            text_parts.append(str(bullet["text"]))
-                                    elif isinstance(bullet, str):
-                                        text_parts.append(bullet)
+                text_parts.extend(self._extract_work_text(resume_data[exp_key]))
 
         # Extract from skills
-        if "skills" in resume_data:
-            skills = resume_data["skills"]
-            if isinstance(skills, list):
-                for skill in skills:
-                    if isinstance(skill, dict):
-                        if skill.get("name"):
-                            text_parts.append(str(skill["name"]))
-                        if skill.get("keywords"):
-                            text_parts.extend([str(k) for k in skill["keywords"]])
-                    elif isinstance(skill, str):
-                        text_parts.append(skill)
+        if "skills" in resume_data and isinstance(resume_data["skills"], list):
+            text_parts.extend(self._extract_skills_text(resume_data["skills"]))
 
         # Extract from education
         if "education" in resume_data and isinstance(resume_data["education"], list):
-            for edu in resume_data["education"]:
-                if isinstance(edu, dict):
-                    for key in ["institution", "degree", "studyType", "area"]:
-                        if edu.get(key):
-                            text_parts.append(str(edu[key]))
+            text_parts.extend(self._extract_education_text(resume_data["education"]))
 
         # Extract from projects
         if "projects" in resume_data and isinstance(resume_data["projects"], list):
-            for proj in resume_data["projects"]:
-                if isinstance(proj, dict):
-                    for key in ["name", "description"]:
-                        if proj.get(key):
-                            text_parts.append(str(proj[key]))
+            text_parts.extend(self._extract_projects_text(resume_data["projects"]))
 
         return " ".join(text_parts)
 
