@@ -80,6 +80,9 @@ jobs:
   dast:
     name: DAST API Scan (OWASP ZAP)
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
     needs: [dependency-scan]
 
     steps:
@@ -108,6 +111,7 @@ jobs:
         uses: zaproxy/action-api-scan@v0.10.0
         with:
           target: 'http://127.0.0.1:8000/api/v1/health'
+          allow_issue_writing: false
 
       - name: Cleanup
         if: always()
