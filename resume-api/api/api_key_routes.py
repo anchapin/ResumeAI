@@ -152,9 +152,7 @@ class APIKeyCreateRequest(BaseModel):
         1000, ge=10, le=100000, description="Daily request limit"
     )
     expires_in_days: Optional[int] = Field(None, ge=1, le=365, description="Days until expiration")
-    rotation_enabled: Optional[bool] = Field(
-        False, description="Enable automatic key rotation"
-    )
+    rotation_enabled: Optional[bool] = Field(False, description="Enable automatic key rotation")
     rotation_period_days: Optional[int] = Field(
         90, ge=1, le=365, description="Days between automatic rotations"
     )
@@ -555,13 +553,13 @@ async def verify_api_key(
     Verify if an API key is valid and active.
 
     Returns key information if valid.
-    
+
     Supports verification during dual key period (both old and new keys work).
     """
     from lib.security.key_management import verify_api_key
 
     rotation_service = create_rotation_service(db)
-    
+
     # Use the rotation service to verify (supports dual key period)
     key, is_dual_key = await rotation_service.verify_key_with_rotation(api_key)
 
@@ -808,7 +806,7 @@ async def trigger_automatic_rotation(
     This should be called periodically (e.g., via cron job).
     """
     # Check if user is admin
-    if not getattr(current_user, 'is_admin', False):
+    if not getattr(current_user, "is_admin", False):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Admin access required",

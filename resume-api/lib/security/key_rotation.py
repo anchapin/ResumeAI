@@ -32,6 +32,7 @@ logger = logging_config.get_logger(__name__)
 
 class RotationEventType(str, Enum):
     """Event types for API key rotation audit log."""
+
     CREATED = "created"
     ROTATED = "rotated"
     REVOKED = "revoked"
@@ -47,7 +48,7 @@ class KeyRotationService:
 
     def __init__(self, db: AsyncSession):
         """Initialize the key rotation service.
-        
+
         Args:
             db: Database session
         """
@@ -67,7 +68,7 @@ class KeyRotationService:
         user_agent: Optional[str] = None,
     ) -> tuple[APIKey, str]:
         """Create a new API key with optional rotation.
-        
+
         Args:
             user_id: User ID
             name: Key name
@@ -79,7 +80,7 @@ class KeyRotationService:
             rotation_period_days: Days between rotations (if rotation enabled)
             ip_address: Client IP for audit logging
             user_agent: Client user agent for audit logging
-            
+
         Returns:
             Tuple of (APIKey object, plaintext API key)
         """
@@ -154,16 +155,16 @@ class KeyRotationService:
         user_agent: Optional[str] = None,
     ) -> tuple[Optional[APIKey], Optional[str]]:
         """Rotate an API key with optional dual key period.
-        
+
         During the dual key period, both the old and new keys will work.
-        
+
         Args:
             key_id: API key ID to rotate
             user_id: User ID for authorization
             dual_key_period_days: Days to keep old key active alongside new key
             ip_address: Client IP for audit logging
             user_agent: Client user agent for audit logging
-            
+
         Returns:
             Tuple of (new APIKey object, plaintext new API key) or (None, None) if failed
         """
@@ -216,7 +217,7 @@ class KeyRotationService:
         existing_key.previous_key_hash = previous_key_hash if use_dual_key else None
         existing_key.is_rotating = use_dual_key
         existing_key.rotation_enabled = existing_key.rotation_enabled  # Keep rotation setting
-        
+
         if use_dual_key:
             # Set when dual key period ends
             existing_key.next_rotation_at = datetime.now(timezone.utc) + timedelta(
@@ -300,13 +301,13 @@ class KeyRotationService:
         user_agent: Optional[str] = None,
     ) -> bool:
         """Complete the dual key period by revoking the old key.
-        
+
         Args:
             key_id: The new API key ID
             user_id: User ID for authorization
             ip_address: Client IP for audit logging
             user_agent: Client user agent for audit logging
-            
+
         Returns:
             True if successful, False otherwise
         """
@@ -370,10 +371,10 @@ class KeyRotationService:
         plaintext_key: str,
     ) -> tuple[Optional[APIKey], bool]:
         """Verify an API key, supporting dual key period verification.
-        
+
         Args:
             plaintext_key: The plaintext API key to verify
-            
+
         Returns:
             Tuple of (APIKey if valid, whether during dual key period)
         """
@@ -400,7 +401,7 @@ class KeyRotationService:
         # If not found and key has prefix pattern, try to find by previous key hash
         # This supports the dual key period
         key_prefix = plaintext_key[:12]
-        
+
         # Look for keys where this might be a previous key
         result = await self.db.execute(
             select(APIKey).where(
@@ -410,7 +411,7 @@ class KeyRotationService:
             )
         )
         old_key = result.scalar_one_or_none()
-        
+
         if old_key:
             # Check expiration on the old key
             if old_key.expires_at and old_key.expires_at < datetime.now(timezone.utc):
@@ -424,10 +425,10 @@ class KeyRotationService:
         days_ahead: int = 7,
     ) -> List[APIKey]:
         """Get keys that need rotation soon.
-        
+
         Args:
             days_ahead: Number of days ahead to look for keys needing rotation
-            
+
         Returns:
             List of API keys that need rotation
         """
@@ -450,10 +451,10 @@ class KeyRotationService:
         days_before_expiry: int = 7,
     ) -> List[APIKey]:
         """Get keys expiring soon for notification.
-        
+
         Args:
             days_before_expiry: Days before expiration to send notification
-            
+
         Returns:
             List of API keys expiring soon
         """
@@ -474,9 +475,9 @@ class KeyRotationService:
 
     async def process_automatic_rotation(self) -> Dict[str, Any]:
         """Process automatic key rotations.
-        
+
         This should be called periodically (e.g., daily via cron or scheduler).
-        
+
         Returns:
             Dictionary with processing results
         """
@@ -489,7 +490,7 @@ class KeyRotationService:
 
         # 1. Process keys that need rotation
         keys_to_rotate = await self.get_keys_needing_rotation(days_ahead=0)
-        
+
         for key in keys_to_rotate:
             try:
                 new_key, _ = await self.rotate_key(
@@ -511,7 +512,7 @@ class KeyRotationService:
                 APIKey.next_rotation_at <= now,
             )
         )
-        
+
         dual_keys = list(result.scalars().all())
         for key in dual_keys:
             try:
@@ -524,7 +525,7 @@ class KeyRotationService:
 
         # 3. Send expiration notifications
         keys_for_notification = await self.get_keys_for_notification()
-        
+
         for key in keys_for_notification:
             try:
                 await self._send_expiration_notification(key)
@@ -545,14 +546,14 @@ class KeyRotationService:
         user_agent: Optional[str] = None,
     ) -> Optional[APIKey]:
         """Enable automatic rotation for an existing key.
-        
+
         Args:
             key_id: API key ID
             user_id: User ID for authorization
             rotation_period_days: Days between rotations
             ip_address: Client IP for audit logging
             user_agent: Client user agent for audit logging
-            
+
         Returns:
             Updated APIKey or None if not found
         """
@@ -569,9 +570,7 @@ class KeyRotationService:
 
         key.rotation_enabled = True
         key.rotation_period_days = rotation_period_days
-        key.next_rotation_at = datetime.now(timezone.utc) + timedelta(
-            days=rotation_period_days
-        )
+        key.next_rotation_at = datetime.now(timezone.utc) + timedelta(days=rotation_period_days)
 
         await self.db.commit()
         await self.db.refresh(key)
@@ -607,13 +606,13 @@ class KeyRotationService:
         user_agent: Optional[str] = None,
     ) -> Optional[APIKey]:
         """Disable automatic rotation for an existing key.
-        
+
         Args:
             key_id: API key ID
             user_id: User ID for authorization
             ip_address: Client IP for audit logging
             user_agent: Client user agent for audit logging
-            
+
         Returns:
             Updated APIKey or None if not found
         """
@@ -660,11 +659,11 @@ class KeyRotationService:
         user_id: int,
     ) -> Optional[Dict[str, Any]]:
         """Get rotation status for a key.
-        
+
         Args:
             key_id: API key ID
             user_id: User ID for authorization
-            
+
         Returns:
             Dictionary with rotation status or None if not found
         """
@@ -703,7 +702,7 @@ class KeyRotationService:
         event_details: Optional[Dict[str, Any]] = None,
     ) -> None:
         """Log an audit event for API key.
-        
+
         Args:
             api_key_id: API key ID
             user_id: User ID
@@ -736,7 +735,7 @@ class KeyRotationService:
 
     async def _send_expiration_notification(self, key: APIKey) -> None:
         """Send expiration notification for a key.
-        
+
         Args:
             key: APIKey that is expiring
         """
@@ -785,10 +784,10 @@ class KeyRotationService:
 # Helper function to create service
 def create_rotation_service(db: AsyncSession) -> KeyRotationService:
     """Create a KeyRotationService instance.
-    
+
     Args:
         db: Database session
-        
+
     Returns:
         KeyRotationService instance
     """

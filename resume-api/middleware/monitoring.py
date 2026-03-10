@@ -20,12 +20,12 @@ logger = logging_config.get_logger(__name__)
 def extract_trace_id_from_headers(request: Request) -> Optional[str]:
     """
     Extract trace ID from incoming request headers.
-    
+
     Supports:
     - W3C traceparent header (preferred): traceparent: 00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01
     - Jaeger header: uber-trace-id
     - B3 header: X-B3-TraceId
-    
+
     Returns:
         The trace ID if found, None otherwise
     """
@@ -37,7 +37,7 @@ def extract_trace_id_from_headers(request: Request) -> Optional[str]:
         parts = traceparent.split("-")
         if len(parts) >= 2 and len(parts[1]) == 32:
             return parts[1]  # trace_id is the second part
-    
+
     # Try Jaeger header
     uber_trace_id = request.headers.get("uber-trace-id")
     if uber_trace_id:
@@ -46,12 +46,12 @@ def extract_trace_id_from_headers(request: Request) -> Optional[str]:
         parts = uber_trace_id.split(":")
         if parts:
             return parts[0]
-    
+
     # Try B3 header
     b3_trace_id = request.headers.get("X-B3-TraceId")
     if b3_trace_id:
         return b3_trace_id
-    
+
     return None
 
 
@@ -66,11 +66,11 @@ class MonitoringMiddleware(BaseHTTPMiddleware):
 
         # Extract trace ID from incoming request headers (for distributed tracing)
         trace_id = extract_trace_id_from_headers(request)
-        
+
         # If no trace ID from headers and tracing is enabled, generate one
         if not trace_id and getattr(settings, "enable_tracing", False):
             trace_id = uuid.uuid4().hex
-        
+
         # Store trace ID for later use
         request.state.trace_id = trace_id
 
@@ -87,7 +87,7 @@ class MonitoringMiddleware(BaseHTTPMiddleware):
         }
         if trace_id:
             trace_context["trace_id"] = trace_id
-            
+
         with logging_config.RequestContext(**trace_context):
             # Extract API key for user tracking (if present)
             api_key = request.headers.get("X-API-KEY", None)
@@ -163,7 +163,7 @@ class MonitoringMiddleware(BaseHTTPMiddleware):
 
                 # Add request ID to response headers
                 response.headers["X-Request-ID"] = request_id
-                
+
                 # Add trace ID to response headers for distributed tracing
                 if trace_id:
                     response.headers["X-Trace-ID"] = trace_id
