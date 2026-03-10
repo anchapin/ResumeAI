@@ -1,0 +1,112 @@
+---
+# Canary Service - routes traffic to canary pods
+apiVersion: v1
+kind: Service
+metadata:
+  name: resume-api-canary
+  namespace: production
+  labels:
+    app: resume-api
+    version: canary
+spec:
+  type: ClusterIP
+  selector:
+    app: resume-api
+    version: canary
+  ports:
+    - port: 8000
+      targetPort: 8000
+      protocol: TCP
+      name: http
+---
+# NGINX Ingress with Canary Weight Configuration
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: resume-api-canary
+  namespace: production
+  annotations:
+    nginx.ingress.kubernetes.io/canary: "true"
+    nginx.ingress.kubernetes.io/canary-weight: "10"
+    nginx.ingress.kubernetes.io/canary-by-header: "X-Canary"
+    nginx.ingress.kubernetes.io/canary-by-header-value: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "30"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "60"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "60"
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: resume-api.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: resume-api-canary
+                port:
+                  number: 8000
+---
+# Istio VirtualService for Traffic Splitting (alternative to NGINX)
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: resume-api-canary
+  namespace: production
+spec:
+  hosts:
+    - resume-api
+  http:
+    - name: "canary-route"
+      match:
+        - headers:
+            x-canary:
+              exact: "true"
+      route:
+        - destination:
+            host: resume-api-canary.prod.svc.cluster.local
+            port:
+              number: 8000
+          weight: 100
+    - name: "split-traffic"
+      route:
+        - destination:
+            host: resume-api-canary.prod.svc.cluster.local
+            port:
+              number: 8000
+          weight: 10
+        - destination:
+            host: resume-api.prod.svc.cluster.local
+            port:
+              number: 8000
+          weight: 90
+---
+# DestinationRule for canary traffic management
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: resume-api-canary
+  namespace: production
+spec:
+  host: resume-api.prod.svc.cluster.local
+  trafficPolicy:
+    connectionPool:
+      tcp:
+        maxConnections: 100
+      http:
+        h2UpgradePolicy: UPGRADE
+        http1MaxPendingRequests: 100
+        http2MaxRequests: 1000
+    outlierDetection:
+      consecutive5xxErrors: 5
+      interval: 30s
+      baseEjectionTime: 30s
+      maxEjectionPercent: 50
+  subsets:
+    - name: canary
+      labels:
+        version: canary
+    - name: stable
+      labels:
+        version: stable

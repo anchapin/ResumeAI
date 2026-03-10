@@ -1,0 +1,61 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: resume-api-canary
+  namespace: production
+  labels:
+    app: resume-api
+    version: canary
+    role: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: resume-api
+      version: canary
+  template:
+    metadata:
+      labels:
+        app: resume-api
+        version: canary
+        role: backend
+      annotations:
+        canary: "true"
+    spec:
+      containers:
+        - name: resume-api
+          image: anchapin/resume-api:latest
+          ports:
+            - containerPort: 8000
+              name: http
+              protocol: TCP
+          env:
+            - name: ENVIRONMENT
+              value: "production"
+            - name: CANARY
+              value: "true"
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          livenessProbe:
+            httpGet:
+              path: /api/v1/health
+              port: 8000
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /api/v1/health/ready
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 3
+      serviceAccountName: resume-api
