@@ -457,9 +457,7 @@ def _generate_summary(parsed_jd: dict, overall_fit: int, missing: list) -> str:
     return summary
 
 
-def _generate_recommendations(
-    missing: list, ats_check: ATSCheckResponse
-) -> list:
+def _generate_recommendations(missing: list, ats_check: ATSCheckResponse) -> list:
     """Generate top recommendations."""
     recommendations = []
     if missing:
@@ -501,9 +499,7 @@ async def get_jd_insights(
         jd_analysis = _build_jd_analysis(parsed_jd)
         overall_fit = _calculate_fit_score(skills_match, ats_check)
         summary = _generate_summary(parsed_jd, overall_fit, skills_match.missing_skills)
-        top_recommendations = _generate_recommendations(
-            skills_match.missing_skills, ats_check
-        )
+        top_recommendations = _generate_recommendations(skills_match.missing_skills, ats_check)
 
         return JDInsightsResponse(
             jd_analysis=jd_analysis,

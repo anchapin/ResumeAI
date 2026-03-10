@@ -338,7 +338,9 @@ def _validate_basics(basics: dict) -> dict:
     if "url" in basics:
         validated["url"] = validate_url(basics.get("url"))
     if "summary" in basics:
-        validated["summary"] = validate_resume_field(basics["summary"], "Summary", MAX_SUMMARY_LENGTH)
+        validated["summary"] = validate_resume_field(
+            basics["summary"], "Summary", MAX_SUMMARY_LENGTH
+        )
     if "location" in basics and basics["location"]:
         validated["location"] = validate_location(basics["location"])
     return validated

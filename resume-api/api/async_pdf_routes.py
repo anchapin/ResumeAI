@@ -312,9 +312,7 @@ async def get_job_status(
 def _validate_job_for_download(job, job_id: str) -> Path:
     """Validate job state and return PDF path."""
     if not job:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail=f"Job {job_id} not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Job {job_id} not found")
 
     # Check job state
     state_messages = {
@@ -323,7 +321,7 @@ def _validate_job_for_download(job, job_id: str) -> Path:
         JobState.FAILED: f"Job failed: {job.error}",
         JobState.CANCELLED: "Job was cancelled",
     }
-    
+
     if job.state in state_messages:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,

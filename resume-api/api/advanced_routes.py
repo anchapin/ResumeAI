@@ -975,7 +975,7 @@ async def _process_bulk_operation(
         await db.delete(resume)
         await db.flush()
         return True, ""
-    
+
     if operation == "duplicate":
         new_resume = Resume(
             title=f"{resume.title} (Copy)",
@@ -986,7 +986,7 @@ async def _process_bulk_operation(
         for tag in resume.tags:
             new_resume.tags.append(tag)
         return True, ""
-    
+
     if operation == "tag" and tags:
         for tag_name in tags:
             tag = await db.execute(select(Tag).where(Tag.name == tag_name))
@@ -998,7 +998,7 @@ async def _process_bulk_operation(
             if existing_tag not in resume.tags:
                 resume.tags.append(existing_tag)
         return True, ""
-    
+
     return False, "Unknown operation"
 
 
@@ -1032,11 +1032,8 @@ async def bulk_operations(
                     successful.append(resume_id)
                 else:
                     failed.append({"id": resume_id, "error": error})
-                        successful.append(resume_id)
-                    else:
-                        failed.append({"id": resume_id, "error": "No tags provided"})
 
-                elif request.operation == "export":
+                if request.operation == "export":
                     # This would trigger async export job
                     # For now, just mark as successful
                     successful.append(resume_id)
