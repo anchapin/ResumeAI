@@ -954,6 +954,44 @@ async def access_shared_resume(
     response_model=BulkOperationResponse,
     tags=["Resumes"],
 )
+async def _process_bulk_operation(
+    resume: Resume,
+    operation: str,
+    tags: list[str],
+    db: AsyncSession,
+) -> tuple[bool, str]:
+    """Process a single bulk operation on a resume."""
+    if operation == "delete":
+        await db.delete(resume)
+        await db.flush()
+        return True, ""
+    
+    if operation == "duplicate":
+        new_resume = Resume(
+            title=f"{resume.title} (Copy)",
+            data=resume.data,
+        )
+        db.add(new_resume)
+        await db.flush()
+        for tag in resume.tags:
+            new_resume.tags.append(tag)
+        return True, ""
+    
+    if operation == "tag" and tags:
+        for tag_name in tags:
+            tag = await db.execute(select(Tag).where(Tag.name == tag_name))
+            existing_tag = tag.scalar_one_or_none()
+            if not existing_tag:
+                existing_tag = Tag(name=tag_name)
+                db.add(existing_tag)
+                await db.flush()
+            if existing_tag not in resume.tags:
+                resume.tags.append(existing_tag)
+        return True, ""
+    
+    return False, "Unknown operation"
+
+
 async def bulk_operations(
     request: BulkOperationRequest,
     db: AsyncSession = Depends(get_db),
@@ -977,37 +1015,13 @@ async def bulk_operations(
                     failed.append({"id": resume_id, "error": "Resume not found"})
                     continue
 
-                if request.operation == "delete":
-                    await db.delete(resume)
-                    await db.flush()
+                success, error = await _process_bulk_operation(
+                    resume, request.operation, request.tags, db
+                )
+                if success:
                     successful.append(resume_id)
-
-                elif request.operation == "duplicate":
-                    # Create duplicate
-                    new_resume = Resume(
-                        title=f"{resume.title} (Copy)",
-                        data=resume.data,
-                    )
-                    db.add(new_resume)
-                    await db.flush()
-
-                    # Copy tags
-                    for tag in resume.tags:
-                        new_resume.tags.append(tag)
-
-                    successful.append(resume_id)
-
-                elif request.operation == "tag":
-                    if request.tags:
-                        for tag_name in request.tags:
-                            tag = await db.execute(select(Tag).where(Tag.name == tag_name))
-                            existing_tag = tag.scalar_one_or_none()
-                            if not existing_tag:
-                                existing_tag = Tag(name=tag_name)
-                                db.add(existing_tag)
-                                await db.flush()
-                            if existing_tag not in resume.tags:
-                                resume.tags.append(existing_tag)
+                else:
+                    failed.append({"id": resume_id, "error": error})
                         successful.append(resume_id)
                     else:
                         failed.append({"id": resume_id, "error": "No tags provided"})
