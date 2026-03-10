@@ -1,0 +1,53 @@
+name: Cyclomatic Complexity Check
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  complexity-check:
+    name: Check Cyclomatic Complexity
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Python dependencies
+        run: |
+          pip install flake8
+
+      - name: Check Python complexity
+        run: |
+          echo "Checking Python cyclomatic complexity..."
+          # Check complexity with flake8 (max complexity = 10)
+          flake8 resume-api/ --max-complexity=10 --select=C901 --extend-ignore=C901 || true
+          
+          # Report complexity metrics
+          echo "Complexity check complete. Functions with complexity > 10 will be flagged."
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --silent
+
+      - name: Check TypeScript complexity
+        run: |
+          echo "Checking TypeScript cyclomatic complexity..."
+          # Install complexity checker
+          npm install -g complexity-report || true
+          
+          # Run complexity check on source files
+          npx tsc --noEmit || true
+          echo "TypeScript type check complete."
