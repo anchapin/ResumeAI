@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { EducationEntry } from '../../types';
+import RichTextEditor from './RichTextEditor';
 
 interface EducationItemProps {
   edu: EducationEntry;
@@ -246,6 +247,18 @@ const EducationItem = React.memo(
                   />
                 </div>
               </div>
+            </div>
+
+            {/* Description - Rich Text Editor */}
+            <div className="space-y-3 mt-6 pt-4 border-t border-slate-100">
+              <label className="text-sm font-bold text-slate-700">
+                Description
+              </label>
+              <RichTextEditor
+                content={edu.description || ''}
+                onChange={(content) => onUpdate(edu.id, 'description', content)}
+                placeholder="Add any relevant details about your education..."
+              />
             </div>
           </div>
         )}
