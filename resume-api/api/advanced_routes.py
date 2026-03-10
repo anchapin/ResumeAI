@@ -33,6 +33,16 @@ from .models import (
     BulkOperationRequest,
     BulkOperationResponse,
     UserSettingsRequest,
+    # Batch operation models
+    BatchCreateRequest,
+    BatchCreateResponse,
+    BatchUpdateRequest,
+    BatchUpdateResponse,
+    BatchDeleteRequest,
+    BatchDeleteResponse,
+    BatchExportRequest,
+    BatchExportResponse,
+    BatchProgressResponse,
     # Response models
     ResumeMetadata,
     ResumeResponse,
@@ -50,7 +60,7 @@ from database import (
     Tag,
     UserSettings,
 )
-from config.dependencies import AuthorizedAPIKey
+from config.dependencies import AuthorizedAPIKey, rate_limit
 from lib.utils.validators import validate_resume_data
 from lib.utils.cache import cached
 from lib.utils.cache_integration import CacheInvalidationHook
@@ -1055,6 +1065,355 @@ async def bulk_operations(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Bulk operation failed: {str(e)}",
         )
+
+
+# ============ Batch Operations ============
+
+
+@router.post(
+    "/resumes/batch-create",
+    response_model=BatchCreateResponse,
+    status_code=status.HTTP_201_CREATED,
+    tags=["Resumes"],
+)
+@rate_limit("10/minute")  # Stricter rate limit for batch operations
+async def batch_create_resumes(
+    request: BatchCreateRequest,
+    db: AsyncSession = Depends(get_db),
+    auth: AuthorizedAPIKey = Depends(),
+):
+    """
+    Create multiple resumes in a batch.
+
+    This endpoint allows creating up to 50 resumes in a single request.
+    Returns partial success if some resumes fail to create.
+    """
+    successful = []
+    failed = []
+
+    for idx, resume_request in enumerate(request.resumes):
+        try:
+            # Validate and escape resume data
+            resume_dict = resume_request.data.model_dump(exclude_none=True)
+            resume_dict = validate_resume_data(resume_dict)
+
+            # Create resume
+            resume = Resume(
+                title=resume_request.title,
+                data=resume_dict,
+            )
+
+            # Add tags
+            if resume_request.tags:
+                for tag_name in resume_request.tags:
+                    tag = await db.execute(select(Tag).where(Tag.name == tag_name))
+                    existing_tag = tag.scalar_one_or_none()
+                    if not existing_tag:
+                        existing_tag = Tag(name=tag_name)
+                        db.add(existing_tag)
+                        await db.flush()
+                    resume.tags.append(existing_tag)
+
+            db.add(resume)
+            await db.flush()
+
+            # Create initial version
+            version = ResumeVersion(
+                resume_id=resume.id,
+                data=resume_dict,
+                version_number=1,
+                change_description="Initial version",
+            )
+            db.add(version)
+            await db.flush()
+
+            await db.commit()
+            await db.refresh(resume)
+
+            # Load tags for response
+            result = await db.execute(
+                select(Resume).options(selectinload(Resume.tags)).where(Resume.id == resume.id)
+            )
+            resume = result.scalar_one()
+
+            successful.append(
+                ResumeResponse(
+                    id=resume.id,
+                    title=resume.title,
+                    data=ResumeData(**resume.data),
+                    tags=[tag.name for tag in resume.tags],
+                    is_public=resume.is_public,
+                    current_version_id=resume.current_version_id,
+                    created_at=resume.created_at.isoformat(),
+                    updated_at=resume.updated_at.isoformat(),
+                )
+            )
+
+        except Exception as e:
+            await db.rollback()
+            failed.append(
+                {
+                    "index": idx,
+                    "title": (
+                        resume_request.title
+                        if hasattr(resume_request, "title")
+                        else f"Resume {idx}"
+                    ),
+                    "error": str(e),
+                }
+            )
+
+    return BatchCreateResponse(
+        successful=successful,
+        failed=failed,
+        total_created=len(successful),
+        total_failed=len(failed),
+    )
+
+
+@router.put(
+    "/resumes/batch-update",
+    response_model=BatchUpdateResponse,
+    tags=["Resumes"],
+)
+@rate_limit("10/minute")  # Stricter rate limit for batch operations
+async def batch_update_resumes(
+    request: BatchUpdateRequest,
+    db: AsyncSession = Depends(get_db),
+    auth: AuthorizedAPIKey = Depends(),
+):
+    """
+    Update multiple resumes in a batch.
+
+    This endpoint allows updating up to 50 resumes in a single request.
+    Each update request must include the resume ID.
+    Returns partial success if some resumes fail to update.
+    """
+    successful = []
+    failed = []
+
+    for idx, update_request in enumerate(request.resumes):
+        try:
+            # Get resume by ID
+            result = await db.execute(
+                select(Resume)
+                .options(selectinload(Resume.tags))
+                .options(selectinload(Resume.versions))
+                .where(Resume.id == update_request.id)
+            )
+            resume = result.scalar_one_or_none()
+
+            if not resume:
+                failed.append(
+                    {
+                        "index": idx,
+                        "id": update_request.id,
+                        "error": f"Resume with ID {update_request.id} not found",
+                    }
+                )
+                continue
+
+            # Update fields
+            if update_request.title:
+                resume.title = update_request.title
+            if update_request.data:
+                # Validate and escape resume data
+                resume_dict = update_request.data.model_dump(exclude_none=True)
+                resume_dict = validate_resume_data(resume_dict)
+                resume.data = resume_dict
+
+            # Update tags if provided
+            if update_request.tags is not None:
+                resume.tags.clear()
+                for tag_name in update_request.tags:
+                    tag = await db.execute(select(Tag).where(Tag.name == tag_name))
+                    existing_tag = tag.scalar_one_or_none()
+                    if not existing_tag:
+                        existing_tag = Tag(name=tag_name)
+                        db.add(existing_tag)
+                        await db.flush()
+                    resume.tags.append(existing_tag)
+
+            await db.commit()
+            await db.refresh(resume)
+
+            # Get latest version
+            version_result = await db.execute(
+                select(ResumeVersion)
+                .where(ResumeVersion.resume_id == resume.id)
+                .order_by(ResumeVersion.version_number.desc())
+                .limit(1)
+            )
+            current_version = version_result.scalar_one_or_none()
+
+            successful.append(
+                ResumeResponse(
+                    id=resume.id,
+                    title=resume.title,
+                    data=ResumeData(**resume.data),
+                    tags=[tag.name for tag in resume.tags],
+                    is_public=resume.is_public,
+                    current_version_id=current_version.id if current_version else None,
+                    created_at=resume.created_at.isoformat(),
+                    updated_at=resume.updated_at.isoformat(),
+                )
+            )
+
+        except Exception as e:
+            await db.rollback()
+            failed.append(
+                {
+                    "index": idx,
+                    "id": update_request.id if hasattr(update_request, "id") else None,
+                    "error": str(e),
+                }
+            )
+
+    return BatchUpdateResponse(
+        successful=successful,
+        failed=failed,
+        total_updated=len(successful),
+        total_failed=len(failed),
+    )
+
+
+@router.delete(
+    "/resumes/batch-delete",
+    response_model=BatchDeleteResponse,
+    tags=["Resumes"],
+)
+@rate_limit("10/minute")  # Stricter rate limit for batch operations
+async def batch_delete_resumes(
+    request: BatchDeleteRequest,
+    db: AsyncSession = Depends(get_db),
+    auth: AuthorizedAPIKey = Depends(),
+):
+    """
+    Delete multiple resumes in a batch.
+
+    This endpoint allows deleting up to 100 resumes in a single request.
+    Returns partial success if some resumes fail to delete.
+    """
+    successful = []
+    failed = []
+
+    for resume_id in request.resume_ids:
+        try:
+            result = await db.execute(
+                select(Resume).options(selectinload(Resume.tags)).where(Resume.id == resume_id)
+            )
+            resume = result.scalar_one_or_none()
+
+            if not resume:
+                failed.append({"id": resume_id, "error": "Resume not found"})
+                continue
+
+            await db.delete(resume)
+            await db.flush()
+            successful.append(resume_id)
+
+        except Exception as e:
+            await db.rollback()
+            failed.append({"id": resume_id, "error": str(e)})
+
+    await db.commit()
+
+    return BatchDeleteResponse(
+        successful=successful,
+        failed=failed,
+        total_deleted=len(successful),
+        total_failed=len(failed),
+    )
+
+
+@router.post(
+    "/resumes/batch-export",
+    response_model=BatchExportResponse,
+    tags=["Resumes"],
+)
+@rate_limit("5/minute")  # Stricter rate limit for batch export
+async def batch_export_resumes(
+    request: BatchExportRequest,
+    db: AsyncSession = Depends(get_db),
+    auth: AuthorizedAPIKey = Depends(),
+):
+    """
+    Export multiple resumes in a batch.
+
+    This endpoint allows exporting up to 50 resumes in a single request.
+    Returns download URLs for successfully exported resumes.
+    """
+    import uuid
+
+    successful = []
+    failed = []
+    export_job_id = str(uuid.uuid4())
+
+    for resume_id in request.resume_ids:
+        try:
+            result = await db.execute(
+                select(Resume).options(selectinload(Resume.tags)).where(Resume.id == resume_id)
+            )
+            resume = result.scalar_one_or_none()
+
+            if not resume:
+                failed.append({"id": resume_id, "error": "Resume not found"})
+                continue
+
+            # In a real implementation, this would trigger an async export job
+            # and return a job ID for progress tracking
+            # For now, we simulate successful export with a placeholder URL
+            successful.append(
+                {
+                    "id": resume_id,
+                    "title": resume.title,
+                    "format": request.format,
+                    "download_url": f"/api/v1/exports/{export_job_id}/resume_{resume_id}.{request.format}",
+                }
+            )
+
+        except Exception as e:
+            failed.append({"id": resume_id, "error": str(e)})
+
+    return BatchExportResponse(
+        successful=successful,
+        failed=failed,
+        total_exported=len(successful),
+        total_failed=len(failed),
+        export_job_id=export_job_id,
+    )
+
+
+@router.get(
+    "/resumes/batch-export/{job_id}",
+    response_model=BatchProgressResponse,
+    tags=["Resumes"],
+)
+async def get_batch_export_progress(
+    job_id: str,
+    db: AsyncSession = Depends(get_db),
+    auth: AuthorizedAPIKey = Depends(),
+):
+    """
+    Get progress of a batch export job.
+
+    This endpoint allows tracking the progress of a batch export operation.
+    """
+    from datetime import datetime, timezone
+
+    # In a real implementation, this would query a job tracking system
+    # For now, return a mock response
+    return BatchProgressResponse(
+        job_id=job_id,
+        status="completed",
+        total=0,
+        processed=0,
+        successful=0,
+        failed=0,
+        results=None,
+        created_at=datetime.now(timezone.utc).isoformat(),
+        updated_at=datetime.now(timezone.utc).isoformat(),
+    )
 
 
 # ============ User Settings ============
