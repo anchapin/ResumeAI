@@ -317,27 +317,12 @@ async def root():
 # DOCX Export Functions
 
 
-def create_docx_from_resume(resume_data: dict) -> bytes:
-    """
-    Generate a DOCX file from resume data.
-
-    Args:
-        resume_data: Resume data in JSON Resume format
-
-    Returns:
-        DOCX file as bytes
-    """
-    doc = Document()
-
-    # Get basics
-    basics = resume_data.get("basics", {})
-
-    # Title - Name
+def _add_docx_basics(doc: Document, basics: dict) -> None:
+    """Add basic info (name, headline, contact) to DOCX."""
     if basics.get("name"):
         title = doc.add_heading(basics["name"], 0)
         title.alignment = WD_ALIGN_PARAGRAPH.CENTER
 
-    # Headline
     if basics.get("headline"):
         headline = doc.add_paragraph(basics["headline"])
         headline.alignment = WD_ALIGN_PARAGRAPH.CENTER
@@ -356,7 +341,6 @@ def create_docx_from_resume(resume_data: dict) -> bytes:
             location_str = str(location)
         if location_str:
             contact_parts.append(location_str)
-
     if basics.get("url"):
         contact_parts.append(basics["url"])
 
@@ -364,113 +348,148 @@ def create_docx_from_resume(resume_data: dict) -> bytes:
         contact_para = doc.add_paragraph(" | ".join(contact_parts))
         contact_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
 
-    doc.add_paragraph()  # Empty line
+    doc.add_paragraph()
 
-    # Summary
+
+def _add_docx_job_title_company(doc: Document, job: dict) -> None:
+    """Add job title and company to DOCX."""
+    job_title = job.get("position", "")
+    company = job.get("company", "")
+    if job_title or company:
+        job_para = doc.add_paragraph()
+        if job_title:
+            run = job_para.add_run(job_title)
+            run.bold = True
+        if company:
+            if job_title:
+                job_para.add_run(" at ")
+            run = job_para.add_run(company)
+            run.italic = True
+
+
+def _add_docx_job_dates(doc: Document, job: dict) -> None:
+    """Add job dates to DOCX."""
+    dates = []
+    if job.get("startDate"):
+        dates.append(job["startDate"])
+    if job.get("endDate"):
+        dates.append(job["endDate"])
+    elif job.get("current"):
+        dates.append("Present")
+    if dates:
+        date_para = doc.add_paragraph(" - ".join(dates))
+        date_para.runs[0].italic = True
+
+
+def _add_docx_job_entry(doc: Document, job: dict) -> None:
+    """Add a single job entry to DOCX."""
+    _add_docx_job_title_company(doc, job)
+    _add_docx_job_dates(doc, job)
+
+    # Description/Summary
+    if job.get("summary"):
+        doc.add_paragraph(job["summary"])
+
+    # Highlights
+    for highlight in job.get("highlights", []):
+        doc.add_paragraph(highlight, style="List Bullet")
+
+    doc.add_paragraph()
+
+
+def _add_docx_work_experience(doc: Document, work: list) -> None:
+    """Add work experience section to DOCX."""
+    if not work:
+        return
+    doc.add_heading("Experience", level=1)
+    for job in work:
+        _add_docx_job_entry(doc, job)
+
+
+def _add_docx_edu_entry(doc: Document, edu: dict) -> None:
+    """Add a single education entry to DOCX."""
+    # Degree and institution
+    parts = []
+    if edu.get("studyType"):
+        parts.append(edu["studyType"])
+    if edu.get("area"):
+        parts.append(edu["area"])
+    if edu.get("institution"):
+        parts.append(edu["institution"])
+
+    if parts:
+        edu_para = doc.add_paragraph()
+        run = edu_para.add_run(" - ".join(parts[:2]))
+        run.bold = True
+        if len(parts) > 2:
+            edu_para.add_run(f" at {parts[2]}")
+
+    # Dates
+    dates = []
+    if edu.get("startDate"):
+        dates.append(edu["startDate"])
+    if edu.get("endDate"):
+        dates.append(edu["endDate"])
+    if dates:
+        date_para = doc.add_paragraph(" - ".join(dates))
+        date_para.runs[0].italic = True
+
+    doc.add_paragraph()
+
+
+def _add_docx_education(doc: Document, education: list) -> None:
+    """Add education section to DOCX."""
+    if not education:
+        return
+    doc.add_heading("Education", level=1)
+    for edu in education:
+        _add_docx_edu_entry(doc, edu)
+
+
+def _add_docx_skills(doc: Document, skills: list) -> None:
+    """Add skills section to DOCX."""
+    if not skills:
+        return
+    doc.add_heading("Skills", level=1)
+    skill_names = []
+    for skill in skills:
+        if isinstance(skill, dict):
+            name = skill.get("name", "")
+            if name:
+                skill_names.append(name)
+        elif isinstance(skill, str):
+            skill_names.append(skill)
+    if skill_names:
+        doc.add_paragraph(", ".join(skill_names))
+
+
+def create_docx_from_resume(resume_data: dict) -> bytes:
+    """
+    Generate a DOCX file from resume data.
+
+    Args:
+        resume_data: Resume data in JSON Resume format
+
+    Returns:
+        DOCX file as bytes
+    """
+    doc = Document()
+    basics = resume_data.get("basics", {})
+
+    _add_docx_basics(doc, basics)
+
     if basics.get("summary"):
         doc.add_heading("Summary", level=1)
         doc.add_paragraph(basics["summary"])
 
-    # Work Experience
-    work = resume_data.get("work", [])
-    if work:
-        doc.add_heading("Experience", level=1)
-        for job in work:
-            # Job title and company
-            job_title = job.get("position", "")
-            company = job.get("company", "")
-            if job_title or company:
-                job_para = doc.add_paragraph()
-                if job_title:
-                    run = job_para.add_run(job_title)
-                    run.bold = True
-                if company:
-                    if job_title:
-                        job_para.add_run(" at ")
-                    run = job_para.add_run(company)
-                    run.italic = True
-
-            # Dates
-            dates = []
-            if job.get("startDate"):
-                dates.append(job["startDate"])
-            if job.get("endDate"):
-                dates.append(job["endDate"])
-            elif job.get("current"):
-                dates.append("Present")
-
-            if dates:
-                date_para = doc.add_paragraph(" - ".join(dates))
-                date_para.runs[0].italic = True
-
-            # Description/Summary
-            if job.get("summary"):
-                doc.add_paragraph(job["summary"])
-
-            # Highlights
-            highlights = job.get("highlights", [])
-            for highlight in highlights:
-                doc.add_paragraph(highlight, style="List Bullet")
-
-            doc.add_paragraph()  # Empty line between jobs
-
-    # Education
-    education = resume_data.get("education", [])
-    if education:
-        doc.add_heading("Education", level=1)
-        for edu in education:
-            # Degree and institution
-            parts = []
-            if edu.get("studyType"):
-                parts.append(edu["studyType"])
-            if edu.get("area"):
-                parts.append(edu["area"])
-            if edu.get("institution"):
-                parts.append(edu["institution"])
-
-            if parts:
-                edu_para = doc.add_paragraph()
-                run = edu_para.add_run(" - ".join(parts[:2]))
-                run.bold = True
-                if len(parts) > 2:
-                    edu_para.add_run(f" at {parts[2]}")
-
-            # Dates
-            dates = []
-            if edu.get("startDate"):
-                dates.append(edu["startDate"])
-            if edu.get("endDate"):
-                dates.append(edu["endDate"])
-
-            if dates:
-                date_para = doc.add_paragraph(" - ".join(dates))
-                date_para.runs[0].italic = True
-
-            doc.add_paragraph()
-
-    # Skills
-    skills = resume_data.get("skills", [])
-    if skills:
-        doc.add_heading("Skills", level=1)
-
-        # Group skills by category if available
-        skill_names = []
-        for skill in skills:
-            if isinstance(skill, dict):
-                name = skill.get("name", "")
-                if name:
-                    skill_names.append(name)
-            elif isinstance(skill, str):
-                skill_names.append(skill)
-
-        if skill_names:
-            doc.add_paragraph(", ".join(skill_names))
+    _add_docx_work_experience(doc, resume_data.get("work", []))
+    _add_docx_education(doc, resume_data.get("education", []))
+    _add_docx_skills(doc, resume_data.get("skills", []))
 
     # Save to bytes
     docx_bytes = io.BytesIO()
     doc.save(docx_bytes)
     docx_bytes.seek(0)
-
     return docx_bytes.getvalue()
 
 
@@ -568,6 +587,125 @@ def extract_text_from_pdf(file_bytes: bytes) -> str:
     return "\n".join(text_parts)
 
 
+def _extract_contact_info(lines: list) -> tuple:
+    """Extract contact info (name, email, phone) from first lines of resume."""
+    email_pattern = r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b"
+    phone_pattern = r"(\+?1[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}"
+
+    basics = {}
+    name_candidates = []
+
+    for line in lines[:10]:
+        line = line.strip()
+        if not line:
+            continue
+        # Look for email
+        email_match = re.search(email_pattern, line)
+        if email_match and not basics.get("email"):
+            basics["email"] = email_match.group()
+        # Look for phone
+        phone_match = re.search(phone_pattern, line)
+        if phone_match and not basics.get("phone"):
+            basics["phone"] = phone_match.group()
+        # First substantial line is likely the name
+        if not basics.get("name") and 2 < len(line) < 50:
+            if "@" not in line and not re.search(phone_pattern, line):
+                name_candidates.append(line)
+
+    if name_candidates:
+        basics["name"] = name_candidates[0]
+
+    return basics, name_candidates
+
+
+def _detect_section(line_lower: str, line: str) -> str | None:
+    """Detect section from line content."""
+    section_keywords = {
+        "experience": ["experience", "employment", "work history", "professional experience"],
+        "education": ["education", "academic", "degree", "university", "college"],
+        "skills": ["skills", "technical skills", "competencies", "technologies"],
+        "summary": ["summary", "objective", "profile", "about"],
+    }
+
+    for section, keywords in section_keywords.items():
+        if any(kw in line_lower for kw in keywords):
+            if len(line) < 30:
+                return section
+    return None
+
+
+def _parse_work_entries(work_entries: list) -> list:
+    """Parse work experience entries from raw text lines."""
+    if not work_entries:
+        return []
+
+    work = []
+    current_entry = {}
+    for entry in work_entries:
+        # Check if this looks like a date line
+        if re.match(r"\d{4}\s*[-–]\s*\d{4}|\d{4}\s*[-–]\s*present", entry, re.IGNORECASE):
+            if current_entry:
+                work.append(current_entry)
+            current_entry = {
+                "position": "",
+                "company": "",
+                "startDate": "",
+                "endDate": "",
+                "highlights": [],
+            }
+            current_entry["startDate"], current_entry["endDate"] = extract_dates(entry)
+        elif current_entry:
+            if not current_entry.get("company"):
+                current_entry["company"] = entry
+            elif not current_entry.get("position"):
+                current_entry["position"] = entry
+            else:
+                if "highlights" not in current_entry:
+                    current_entry["highlights"] = []
+                current_entry["highlights"].append(entry)
+
+    if current_entry and current_entry.get("company"):
+        work.append(current_entry)
+
+    return work
+
+
+def _parse_education_entries(education_entries: list) -> list:
+    """Parse education entries from raw text lines."""
+    education = []
+    degree_keywords = ["phd", "master", "bachelor", "associate", "degree"]
+
+    for entry in education_entries:
+        edu = {}
+        if any(kw in entry.lower() for kw in degree_keywords):
+            edu["studyType"] = entry
+        else:
+            edu["institution"] = entry
+
+        dates = extract_dates(entry)
+        if dates[0]:
+            edu["startDate"] = dates[0]
+        if dates[1]:
+            edu["endDate"] = dates[1]
+
+        if edu:
+            education.append(edu)
+
+    return education
+
+
+def _parse_skills(skills_list: list) -> list:
+    """Parse skills from raw text lines."""
+    all_skills = []
+    for skill_line in skills_list:
+        parts = re.split(r"[,;|\n]", skill_line)
+        for part in parts:
+            part = part.strip()
+            if part and len(part) < 50:
+                all_skills.append(part)
+    return [{"name": s} for s in all_skills[:20]]
+
+
 def parse_resume_text(text: str) -> dict:
     """
     Parse extracted text into JSON Resume format.
@@ -586,63 +724,20 @@ def parse_resume_text(text: str) -> dict:
         "skills": [],
     }
 
-    # Email pattern
-    email_pattern = r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b"
-    # Phone pattern (various formats)
-    phone_pattern = r"(\+?1[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}"
+    # Extract contact info using helper
+    basics, _ = _extract_contact_info(lines)
+    resume["basics"] = basics
 
-    # Extract contact info from first few lines (usually name at top)
-    name_candidates = []
-    for line in lines[:10]:
-        line = line.strip()
-        if not line:
-            continue
-        # Look for email
-        email_match = re.search(email_pattern, line)
-        if email_match and not resume["basics"].get("email"):
-            resume["basics"]["email"] = email_match.group()
-        # Look for phone
-        phone_match = re.search(phone_pattern, line)
-        if phone_match and not resume["basics"].get("phone"):
-            resume["basics"]["phone"] = phone_match.group()
-        # First substantial line is likely the name
-        if not resume["basics"].get("name") and len(line) > 2 and len(line) < 50:
-            if "@" not in line and not re.search(phone_pattern, line):
-                name_candidates.append(line)
-
-    if name_candidates:
-        resume["basics"]["name"] = name_candidates[0]
-
-    # Detect sections
-    current_section = None
-
-    section_keywords = {
-        "experience": [
-            "experience",
-            "employment",
-            "work history",
-            "professional experience",
-        ],
-        "education": ["education", "academic", "degree", "university", "college"],
-        "skills": ["skills", "technical skills", "competencies", "technologies"],
-        "summary": ["summary", "objective", "profile", "about"],
-    }
-
+    # Detect sections and collect content
     work_entries = []
     education_entries = []
     skills_list = []
     summary_text = []
+    current_section = None
 
     for line in lines:
         line_lower = line.lower().strip()
-
-        # Check for section headers
-        detected_section = None
-        for section, keywords in section_keywords.items():
-            if any(kw in line_lower for kw in keywords):
-                if len(line) < 30:  # Likely a header
-                    detected_section = section
-                    break
+        detected_section = _detect_section(line_lower, line)
 
         if detected_section:
             current_section = detected_section
@@ -658,79 +753,10 @@ def parse_resume_text(text: str) -> dict:
         elif current_section == "summary" and line.strip():
             summary_text.append(line.strip())
 
-    # Build work experience entries
-    if work_entries:
-        # Group consecutive entries into work experiences
-        work = []
-        current_entry = {}
-        for entry in work_entries:
-            # Check if this looks like a date line
-            if re.match(r"\d{4}\s*[-–]\s*\d{4}|\d{4}\s*[-–]\s*present", entry, re.IGNORECASE):
-                if current_entry:
-                    work.append(current_entry)
-                current_entry = {
-                    "position": "",
-                    "company": "",
-                    "startDate": "",
-                    "endDate": "",
-                    "highlights": [],
-                }
-                current_entry["startDate"], current_entry["endDate"] = extract_dates(entry)
-            elif current_entry is not None:
-                if not current_entry.get("company"):
-                    current_entry["company"] = entry
-                elif not current_entry.get("position"):
-                    current_entry["position"] = entry
-                else:
-                    if "highlights" not in current_entry:
-                        current_entry["highlights"] = []
-                    current_entry["highlights"].append(entry)
-
-        if current_entry and current_entry.get("company"):
-            work.append(current_entry)
-
-        if work:
-            resume["work"] = work
-
-    # Build education entries
-    if education_entries:
-        education = []
-        for entry in education_entries:
-            edu = {}
-            # Check for degree
-            degree_keywords = ["phd", "master", "bachelor", "associate", "degree"]
-            if any(kw in entry.lower() for kw in degree_keywords):
-                edu["studyType"] = entry
-            else:
-                edu["institution"] = entry
-
-            # Check for dates
-            dates = extract_dates(entry)
-            if dates[0]:
-                edu["startDate"] = dates[0]
-            if dates[1]:
-                edu["endDate"] = dates[1]
-
-            if edu:
-                education.append(edu)
-
-        if education:
-            resume["education"] = education
-
-    # Build skills section
-    if skills_list:
-        # Parse skills - could be comma-separated or newline-separated
-        all_skills = []
-        for skill_line in skills_list:
-            # Split by common separators
-            parts = re.split(r"[,;|\n]", skill_line)
-            for part in parts:
-                part = part.strip()
-                if part and len(part) < 50:
-                    all_skills.append(part)
-
-        if all_skills:
-            resume["skills"] = [{"name": s} for s in all_skills[:20]]  # Limit to 20
+    # Build sections using helpers
+    resume["work"] = _parse_work_entries(work_entries)
+    resume["education"] = _parse_education_entries(education_entries)
+    resume["skills"] = _parse_skills(skills_list)
 
     # Add summary if found
     if summary_text:
@@ -977,98 +1003,102 @@ async def fetch_linkedin_profile(url: str, api_key: str = None) -> dict:
             raise ValueError(f"Failed to fetch LinkedIn profile: {str(e)}")
 
 
-def parse_linkedin_to_resume(profile_data: dict) -> dict:
-    """Convert LinkedIn profile data to JSON Resume format."""
-    resume = {
-        "basics": {},
-        "work": [],
-        "education": [],
-        "skills": [],
-    }
-
-    # Extract basics
+def _parse_linkedin_basics(profile_data: dict) -> dict:
+    """Extract basics section from LinkedIn profile."""
+    basics = {}
     if profile_data.get("fullName"):
-        resume["basics"]["name"] = profile_data["fullName"]
-
+        basics["name"] = profile_data["fullName"]
     if profile_data.get("headline"):
-        resume["basics"]["headline"] = profile_data["headline"]
-
+        basics["headline"] = profile_data["headline"]
     if profile_data.get("email"):
-        resume["basics"]["email"] = profile_data["email"]
-
+        basics["email"] = profile_data["email"]
     if profile_data.get("phone"):
-        resume["basics"]["phone"] = profile_data["phone"]
-
+        basics["phone"] = profile_data["phone"]
     if profile_data.get("summary"):
-        resume["basics"]["summary"] = profile_data["summary"]
-
-    # Location
+        basics["summary"] = profile_data["summary"]
     if profile_data.get("location"):
         location = profile_data["location"]
         if isinstance(location, dict):
-            resume["basics"]["location"] = {
+            basics["location"] = {
                 "city": location.get("city", ""),
                 "region": location.get("region", ""),
                 "countryCode": location.get("countryCode", ""),
             }
         else:
-            resume["basics"]["location"] = {"address": str(location)}
+            basics["location"] = {"address": str(location)}
+    return basics
+
+
+def _parse_linkedin_job(job: dict) -> dict:
+    """Convert a single LinkedIn job to JSON Resume format."""
+    work_entry = {}
+    if job.get("title"):
+        work_entry["position"] = job["title"]
+    if job.get("companyName"):
+        work_entry["company"] = job["companyName"]
+    if job.get("startDate"):
+        work_entry["startDate"] = job["startDate"]
+    if job.get("endDate"):
+        work_entry["endDate"] = job["endDate"]
+    elif job.get("current"):
+        work_entry["endDate"] = ""
+    if job.get("description"):
+        work_entry["summary"] = job["description"]
+    if job.get("highlights"):
+        work_entry["highlights"] = job["highlights"]
+    return work_entry
+
+
+def _parse_linkedin_education(edu: dict) -> dict:
+    """Convert a single LinkedIn education to JSON Resume format."""
+    edu_entry = {}
+    if edu.get("schoolName"):
+        edu_entry["institution"] = edu["schoolName"]
+    if edu.get("degreeName"):
+        edu_entry["studyType"] = edu["degreeName"]
+    if edu.get("fieldOfStudy"):
+        edu_entry["area"] = edu["fieldOfStudy"]
+    if edu.get("startDate"):
+        edu_entry["startDate"] = edu["startDate"]
+    if edu.get("endDate"):
+        edu_entry["endDate"] = edu["endDate"]
+    return edu_entry
+
+
+def _parse_linkedin_skills(skills_data: list) -> list:
+    """Extract skills from LinkedIn profile."""
+    skills = []
+    for skill in skills_data:
+        if isinstance(skill, str):
+            skills.append({"name": skill})
+        elif isinstance(skill, dict) and skill.get("name"):
+            skills.append({"name": skill["name"]})
+    return skills
+
+
+def parse_linkedin_to_resume(profile_data: dict) -> dict:
+    """Convert LinkedIn profile data to JSON Resume format."""
+    resume = {
+        "basics": _parse_linkedin_basics(profile_data),
+        "work": [],
+        "education": [],
+        "skills": [],
+    }
 
     # Extract work experience
     for job in profile_data.get("experience", []):
-        work_entry = {}
-
-        if job.get("title"):
-            work_entry["position"] = job["title"]
-
-        if job.get("companyName"):
-            work_entry["company"] = job["companyName"]
-
-        if job.get("startDate"):
-            work_entry["startDate"] = job["startDate"]
-
-        if job.get("endDate"):
-            work_entry["endDate"] = job["endDate"]
-        elif job.get("current"):
-            work_entry["endDate"] = ""
-
-        if job.get("description"):
-            work_entry["summary"] = job["description"]
-
-        if job.get("highlights"):
-            work_entry["highlights"] = job["highlights"]
-
+        work_entry = _parse_linkedin_job(job)
         if work_entry:
             resume["work"].append(work_entry)
 
     # Extract education
     for edu in profile_data.get("education", []):
-        edu_entry = {}
-
-        if edu.get("schoolName"):
-            edu_entry["institution"] = edu["schoolName"]
-
-        if edu.get("degreeName"):
-            edu_entry["studyType"] = edu["degreeName"]
-
-        if edu.get("fieldOfStudy"):
-            edu_entry["area"] = edu["fieldOfStudy"]
-
-        if edu.get("startDate"):
-            edu_entry["startDate"] = edu["startDate"]
-
-        if edu.get("endDate"):
-            edu_entry["endDate"] = edu["endDate"]
-
+        edu_entry = _parse_linkedin_education(edu)
         if edu_entry:
             resume["education"].append(edu_entry)
 
     # Extract skills
-    for skill in profile_data.get("skills", []):
-        if isinstance(skill, str):
-            resume["skills"].append({"name": skill})
-        elif isinstance(skill, dict) and skill.get("name"):
-            resume["skills"].append({"name": skill["name"]})
+    resume["skills"] = _parse_linkedin_skills(profile_data.get("skills", []))
 
     return resume
 
@@ -1412,6 +1442,107 @@ async def _parse_linkedin_csv_zip(zip_content: bytes, importer) -> dict:
         raise ValueError(f"Error parsing LinkedIn CSV ZIP: {str(e)}")
 
 
+def _convert_profile_data(profile_row: dict, csv_data: dict) -> dict:
+    """Convert profile CSV data to importer format."""
+    result = {
+        "firstName": profile_row.get("First Name", ""),
+        "lastName": profile_row.get("Last Name", ""),
+        "headline": profile_row.get("Headline", ""),
+        "summary": profile_row.get("Summary", ""),
+        "industry": profile_row.get("Industry", ""),
+        "locationName": profile_row.get("Geo Location", ""),
+    }
+
+    # Handle email addresses
+    if csv_data.get("emails"):
+        email_list = []
+        for email_row in csv_data["emails"]:
+            email = email_row.get("Email Address") or email_row.get("email")
+            if email:
+                is_primary = email_row.get("Primary", "").lower() == "yes"
+                email_list.append({"email": email, "primary": is_primary})
+        if email_list:
+            email_list.sort(key=lambda x: x["primary"], reverse=True)
+            result["emailAddress"] = email_list[0]["email"]
+
+    # Handle phone numbers
+    if csv_data.get("phones"):
+        phone_list = []
+        for phone_row in csv_data["phones"]:
+            number = phone_row.get("Number") or phone_row.get("number")
+            if number:
+                phone_list.append({"phoneNumber": number})
+        if phone_list:
+            result["phoneNumbers"] = phone_list
+
+    return result
+
+
+def _convert_positions_data(positions_data: list) -> list:
+    """Convert positions CSV data to importer format."""
+    positions = []
+    for pos in positions_data:
+        position = {
+            "companyName": pos.get("Company Name", ""),
+            "title": pos.get("Title", ""),
+            "description": pos.get("Description", ""),
+            "location": pos.get("Location", ""),
+            "timePeriod": {
+                "startDate": _parse_linkedin_date(pos.get("Started On", "")),
+                "endDate": _parse_linkedin_date(pos.get("Finished On", "")),
+            },
+        }
+        if position["companyName"]:
+            positions.append(position)
+    return positions
+
+
+def _convert_education_data(education_data: list) -> list:
+    """Convert education CSV data to importer format."""
+    education = []
+    for edu in education_data:
+        field_of_study = edu.get("Field of Study") or edu.get("Activities") or edu.get("Notes") or ""
+        edu_entry = {
+            "schoolName": edu.get("School Name", ""),
+            "degreeName": edu.get("Degree Name", ""),
+            "fieldOfStudy": field_of_study,
+            "timePeriod": {
+                "startDate": {"year": _extract_year(edu.get("Start Date", ""))},
+                "endDate": {"year": _extract_year(edu.get("End Date", ""))},
+            },
+        }
+        if edu_entry["schoolName"]:
+            education.append(edu_entry)
+    return education
+
+
+def _convert_certifications_data(cert_data: list) -> list:
+    """Convert certifications CSV data to importer format."""
+    certifications = []
+    for cert in cert_data:
+        cert_entry = {
+            "name": cert.get("Name", ""),
+            "authority": cert.get("Authority", "") or cert.get("Issuer", ""),
+            "timePeriod": {
+                "startDate": _parse_linkedin_date(cert.get("Started On", "")),
+                "endDate": _parse_linkedin_date(cert.get("Finished On", "")),
+            },
+        }
+        if cert_entry["name"]:
+            certifications.append(cert_entry)
+    return certifications
+
+
+def _convert_skills_data(skills_data: list) -> list:
+    """Convert skills CSV data to importer format."""
+    skills = []
+    for skill_row in skills_data:
+        skill_name = skill_row.get("Name") or skill_row.get("Skill") or skill_row.get("skill")
+        if skill_name:
+            skills.append({"name": skill_name})
+    return skills
+
+
 def _convert_csv_data_to_importer_format(csv_data: dict) -> dict:
     """
     Convert CSV data structure to format expected by LinkedInImporter.
@@ -1427,113 +1558,31 @@ def _convert_csv_data_to_importer_format(csv_data: dict) -> dict:
     """
     result = {}
 
-    # Handle profile data (usually one row with personal info)
+    # Handle profile data
     if "profile" in csv_data and csv_data["profile"]:
-        profile_row = csv_data["profile"][0]
-        # Map Profile.csv columns to importer field names
-        result.update(
-            {
-                "firstName": profile_row.get("First Name", ""),
-                "lastName": profile_row.get("Last Name", ""),
-                "headline": profile_row.get("Headline", ""),
-                "summary": profile_row.get("Summary", ""),
-                "industry": profile_row.get("Industry", ""),
-                "locationName": profile_row.get("Geo Location", ""),
-            }
-        )
-
-        # Handle email addresses (from Email Addresses.csv)
-        if csv_data.get("emails"):
-            email_list = []
-            for email_row in csv_data["emails"]:
-                email = email_row.get("Email Address") or email_row.get("email")
-                if email:
-                    # Prefer confirmed and primary emails
-                    is_primary = email_row.get("Primary", "").lower() == "yes"
-                    email_list.append({"email": email, "primary": is_primary})
-
-            if email_list:
-                # Sort to put primary email first
-                email_list.sort(key=lambda x: x["primary"], reverse=True)
-                result["emailAddress"] = email_list[0]["email"]
-
-        # Handle phone numbers (from PhoneNumbers.csv)
-        if csv_data.get("phones"):
-            phone_list = []
-            for phone_row in csv_data["phones"]:
-                number = phone_row.get("Number") or phone_row.get("number")
-                if number:
-                    phone_list.append({"phoneNumber": number})
-            if phone_list:
-                result["phoneNumbers"] = phone_list
+        result.update(_convert_profile_data(csv_data["profile"][0], csv_data))
 
     # Handle positions (work experience)
     if "positions" in csv_data:
-        positions = []
-        for pos in csv_data["positions"]:
-            position = {
-                "companyName": pos.get("Company Name", ""),
-                "title": pos.get("Title", ""),
-                "description": pos.get("Description", ""),
-                "location": pos.get("Location", ""),
-                "timePeriod": {
-                    "startDate": _parse_linkedin_date(pos.get("Started On", "")),
-                    "endDate": _parse_linkedin_date(pos.get("Finished On", "")),
-                },
-            }
-            if position["companyName"]:  # Only add if company name exists
-                positions.append(position)
+        positions = _convert_positions_data(csv_data["positions"])
         if positions:
             result["positions"] = positions
 
     # Handle education
     if "education" in csv_data:
-        education = []
-        for edu in csv_data["education"]:
-            # Try multiple field names for field of study
-            field_of_study = (
-                edu.get("Field of Study") or edu.get("Activities") or edu.get("Notes") or ""
-            )
-
-            edu_entry = {
-                "schoolName": edu.get("School Name", ""),
-                "degreeName": edu.get("Degree Name", ""),
-                "fieldOfStudy": field_of_study,
-                "timePeriod": {
-                    "startDate": {"year": _extract_year(edu.get("Start Date", ""))},
-                    "endDate": {"year": _extract_year(edu.get("End Date", ""))},
-                },
-            }
-            if edu_entry["schoolName"]:  # Only add if school name exists
-                education.append(edu_entry)
+        education = _convert_education_data(csv_data["education"])
         if education:
             result["educations"] = education
 
     # Handle certifications
     if "certifications" in csv_data:
-        certifications = []
-        for cert in csv_data["certifications"]:
-            cert_entry = {
-                "name": cert.get("Name", ""),
-                "authority": cert.get("Authority", "") or cert.get("Issuer", ""),
-                "timePeriod": {
-                    "startDate": _parse_linkedin_date(cert.get("Started On", "")),
-                    "endDate": _parse_linkedin_date(cert.get("Finished On", "")),
-                },
-            }
-            if cert_entry["name"]:  # Only add if name exists
-                certifications.append(cert_entry)
+        certifications = _convert_certifications_data(csv_data["certifications"])
         if certifications:
             result["certifications"] = certifications
 
     # Handle skills
     if "skills" in csv_data:
-        skills = []
-        for skill_row in csv_data["skills"]:
-            # Try both "Name" and "Skill" as column names
-            skill_name = skill_row.get("Name") or skill_row.get("Skill") or skill_row.get("skill")
-            if skill_name:
-                skills.append({"name": skill_name})
+        skills = _convert_skills_data(csv_data["skills"])
         if skills:
             result["skills"] = skills
 
