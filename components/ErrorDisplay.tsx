@@ -30,6 +30,7 @@ export const ErrorDisplay: React.FC<ErrorDisplayProps> = ({
   autoDismissTime = DEFAULT_AUTO_DISMISS_TIME,
   showDetails = false,
 }) => {
+  const resumeData = useStore((state) => state.resumeData);
   const [isVisible, setIsVisible] = useState(false);
   const [showExpandedDetails, setShowExpandedDetails] = useState(
     showDetails || process.env.NODE_ENV === 'development',
@@ -160,8 +161,6 @@ export const ErrorDisplay: React.FC<ErrorDisplayProps> = ({
 
     return actions;
   };
-
-  const resumeData = useStore((state) => state.resumeData);
 
   const handleAction = async (action: string) => {
     switch (action) {

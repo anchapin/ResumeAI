@@ -321,6 +321,8 @@ function App() {
               )
             }
           />
+          <Route path="/workspace" element={<Navigate to="/my-resumes" replace />} />
+          <Route path="/bulk" element={<Navigate to="/bulk-operations" replace />} />
           <Route
             path="/my-resumes"
             element={
