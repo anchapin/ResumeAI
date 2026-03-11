@@ -1839,7 +1839,7 @@ class TeamActivityResponse(BaseModel):
     user_id: int = Field(..., description="User who performed the action")
     username: str = Field(..., description="Username")
     action: str = Field(..., description="Action type")
-    resource_type: str = Field(..., description="Type of resource (resume, comment)")
+    resource_type: Optional[str] = Field(None, description="Type of resource (resume, comment)")
     resource_id: Optional[int] = Field(None, description="Resource ID")
     description: str = Field(..., description="Activity description")
     created_at: str = Field(..., description="Activity timestamp")
