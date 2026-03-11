@@ -4,7 +4,9 @@ import { testUser, loginUser, registerUser, createResume } from '../e2e/helpers'
 // Skip authenticated tests in CI (backend not available)
 const testAuthenticatedPages = process.env.CI ? test.skip : test;
 
-testAuthenticatedPages.describe('Visual Regression Tests - Authenticated Pages', () => {
+// Only run authenticated tests when not in CI
+if (process.env.CI !== 'true') {
+  testAuthenticatedPages.describe('Visual Regression Tests - Authenticated Pages', () => {
   let testUserInstance: typeof testUser;
 
   testAuthenticatedPages.beforeAll(async ({ browser }) => {
@@ -129,7 +131,7 @@ testAuthenticatedPages.describe('Visual Regression Tests - Authenticated Pages',
 
   test('Template selection page', async ({ page }) => {
     const templatesUrl = ['/templates', '/editor?template=select', '/dashboard?tab=templates'];
-    
+
     for (const url of templatesUrl) {
       const response = await page.goto(url, { waitUntil: 'networkidle' });
       if (response?.status() === 200) {
@@ -142,6 +144,7 @@ testAuthenticatedPages.describe('Visual Regression Tests - Authenticated Pages',
     }
   });
 });
+}
 
 test.describe('Visual Regression Tests - Public Pages', () => {
   test('Login page layout', async ({ page }) => {
@@ -178,7 +181,9 @@ test.describe('Visual Regression Tests - Public Pages', () => {
 // Skip responsive design tests in CI (requires backend auth)
 const testResponsiveDesign = process.env.CI ? test.skip : test;
 
-testResponsiveDesign.describe('Visual Regression Tests - Responsive Design', () => {
+// Only run responsive design tests when not in CI
+if (process.env.CI !== 'true') {
+  testResponsiveDesign.describe('Visual Regression Tests - Responsive Design', () => {
   testResponsiveDesign.use({ viewport: { width: 1920, height: 1080 } });
 
   testResponsiveDesign('Dashboard - Desktop Large', async ({ page }) => {
@@ -218,3 +223,4 @@ testResponsiveDesign.describe('Visual Regression Tests - Responsive Design', () 
     });
   });
 });
+}

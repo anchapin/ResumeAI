@@ -197,7 +197,7 @@ describe('Flaky Test Detection', () => {
 
       const report = generateFlakyTestReport(summary);
       expect(report).toContain('Flaky Test 1');
-      expect(report).toContain('Failure Rate: 50.0%');
+      expect(report).toContain('**Failure Rate**: 50.0%');
       expect(report).toContain('1 PASSED, 1 FAILED');
     });
   });
