@@ -11,6 +11,8 @@ Tests cover:
 
 import pytest
 import pytest_asyncio
+from unittest.mock import patch, MagicMock
+import stripe
 
 from database import (
     Subscription,
@@ -473,3 +475,39 @@ async def test_stripe_service_check_usage_limits_ai_tailoring(test_user_id):
     assert result["allowed"] is True
     assert "limit" in result
     assert "remaining" in result
+
+
+@pytest.mark.asyncio
+async def test_verify_webhook_signature_success():
+    """Test successful webhook signature verification."""
+    from lib.stripe import stripe_service
+
+    payload = b'{"id": "evt_test", "type": "checkout.session.completed"}'
+    signature = "whsec_test_sig"
+    secret = "whsec_test_secret"
+
+    with patch("stripe.Webhook.construct_event") as mock_construct:
+        mock_construct.return_value = {"id": "evt_test", "type": "checkout.session.completed"}
+
+        event = stripe_service.verify_webhook_signature(payload, signature, secret)
+
+        assert event["id"] == "evt_test"
+        mock_construct.assert_called_once_with(payload, signature, secret)
+
+
+@pytest.mark.asyncio
+async def test_verify_webhook_signature_invalid():
+    """Test failed webhook signature verification."""
+    from lib.stripe import stripe_service
+
+    payload = b'invalid'
+    signature = "invalid"
+    secret = "secret"
+
+    with patch("stripe.Webhook.construct_event") as mock_construct:
+        mock_construct.side_effect = stripe.error.SignatureVerificationError(
+            "Invalid signature", "sig_header"
+        )
+
+        with pytest.raises(stripe.error.SignatureVerificationError):
+            stripe_service.verify_webhook_signature(payload, signature, secret)

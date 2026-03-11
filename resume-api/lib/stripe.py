@@ -177,12 +177,7 @@ class StripeService:
         self, payload: bytes, signature: str, webhook_secret: str
     ) -> stripe.Event:
         """Verify Stripe webhook signature."""
-        # TODO(#1008): Implement with Stripe Webhooks API
-        # For now, parse the payload without verification
-        import json
-
-        event_data = json.loads(payload.decode("utf-8"))
-        return stripe.Event.construct_from(event_data, stripe.api_key)
+        return stripe.Webhook.construct_event(payload, signature, webhook_secret)
 
 
 # Singleton instance
