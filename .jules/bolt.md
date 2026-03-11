@@ -20,3 +20,7 @@
 ## 2024-05-26 - HTTP Client Connection Reuse
 **Learning:** Instantiating `httpx.AsyncClient` inside iterative loops (e.g., when making API requests per school or previous company) causes redundant SSL/TCP handshakes, significantly increasing latency and overhead.
 **Action:** Always instantiate HTTP clients (like `httpx.AsyncClient` or `requests.Session`) outside of iterative loops or parallel tasks, and pass the single client instance to helper methods to ensure connection reuse.
+
+## 2026-03-11 - Route Decorator Placement Error
+**Learning:** During previous automated refactors or merges, the FastAPI `@router.post("/insights")` and `@rate_limit("20/minute")` decorators were mistakenly placed on the `_build_ats_check` helper function instead of the `get_jd_insights` endpoint function in `resume-api/api/jd_routes.py`. This caused the `slowapi` rate limiter to throw an `Exception: No "request" or "websocket" argument on function` because `_build_ats_check` doesn't take a `Request` object.
+**Action:** When debugging CI failures involving `slowapi` or route loading errors, always check that route decorators are applied to the correct endpoint function that accepts the `request: Request` parameter.
