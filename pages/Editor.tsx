@@ -29,6 +29,8 @@ import { SkillsSection } from '../components/editor/SkillsSection';
 import { EducationSection } from '../components/editor/EducationSection';
 import { ProjectsSection } from '../components/editor/ProjectsSection';
 import { EditorTabs } from '../components/editor/EditorTabs';
+import { usePdfExport } from '../hooks/usePdfExport';
+import { PdfProgressDialog } from '../components/PdfProgressDialog';
 
 /** Navigation items for the editor header */
 const NAV_ITEMS = ['Dashboard', 'My Resumes', 'Templates', 'Settings'];
@@ -71,7 +73,15 @@ const Editor = () => {
 
   // PDF generation state
   const [selectedVariant, setSelectedVariant] = useState<string>('modern');
-  const [isGeneratingPDF, setIsGeneratingPDF] = useState<boolean>(false);
+  const { 
+    status: exportStatus, 
+    progress: exportProgress, 
+    error: exportError, 
+    eta: exportEta,
+    startExport, 
+    cancelExport, 
+    reset: resetExport 
+  } = usePdfExport();
 
   // LinkedIn import state
   const [showLinkedInImport, setShowLinkedInImport] = useState<boolean>(false);
@@ -144,25 +154,9 @@ const Editor = () => {
 
   // Handle PDF generation
   const handleGeneratePDF = useCallback(async () => {
-    setIsGeneratingPDF(true);
-    try {
-      const currentData = resumeDataRef.current;
-      const pdfBlob = await generatePDF(convertToAPIData(currentData), selectedVariant);
-      const url = URL.createObjectURL(pdfBlob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `resume-${selectedVariant}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-    } catch (err) {
-      console.error('PDF generation failed:', err);
-      showErrorToast(err instanceof Error ? err.message : 'Failed to generate PDF');
-    } finally {
-      setIsGeneratingPDF(false);
-    }
-  }, [selectedVariant]);
+    const currentData = resumeDataRef.current;
+    await startExport(convertToAPIData(currentData), selectedVariant);
+  }, [selectedVariant, startExport]);
 
   // Handle saving current resume as a new version
   const handleSaveVersion = useCallback(async () => {
@@ -866,10 +860,10 @@ const Editor = () => {
               </button>
               <button
                 onClick={handleGeneratePDF}
-                disabled={isGeneratingPDF}
+                disabled={exportStatus === 'submitting' || exportStatus === 'processing'}
                 className="flex items-center gap-2 px-6 h-10 rounded-lg border border-slate-300 bg-white text-slate-700 font-bold text-sm hover:bg-slate-50 transition-colors shadow-sm"
               >
-                {isGeneratingPDF ? 'Generating...' : 'Download PDF'}
+                {(exportStatus === 'submitting' || exportStatus === 'processing') ? 'Generating...' : 'Download PDF'}
               </button>
               <button
                 onClick={handleSaveProfile}
@@ -913,11 +907,20 @@ const Editor = () => {
               variant={selectedVariant}
               splitMode={true}
               onGeneratePDF={handleGeneratePDF}
-              isGeneratingPDF={isGeneratingPDF}
+              isGeneratingPDF={exportStatus === 'submitting' || exportStatus === 'processing'}
             />
           </div>
         )}
       </main>
+
+      <PdfProgressDialog
+        status={exportStatus}
+        progress={exportProgress}
+        error={exportError}
+        eta={exportEta}
+        onCancel={cancelExport}
+        onClose={resetExport}
+      />
 
       {/* LinkedIn Import Dialog */}
       <LinkedInImportDialog
