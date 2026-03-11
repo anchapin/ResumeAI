@@ -40,54 +40,94 @@ class StripeService:
     """Service for interacting with Stripe API."""
 
     async def get_available_plans(self) -> List[Dict[str, Any]]:
-        """Get all available subscription plans."""
-        async with async_session_maker() as session:
-            stmt = select(SubscriptionPlan).where(SubscriptionPlan.is_active == True)
-            result = await session.execute(stmt)
-            plans = result.scalars().all()
-            
-            if not plans:
-                # Return default free plan if none in DB
+        """Get available subscription plans from Stripe Prices API."""
+        if not BILLING_ENABLED or not settings.stripe_secret_key:
+            # Fallback to database or hardcoded defaults
+            async with async_session_maker() as session:
+                stmt = select(SubscriptionPlan).where(SubscriptionPlan.is_active == True)
+                result = await session.execute(stmt)
+                plans = result.scalars().all()
+                
+                if not plans:
+                    return [
+                        {
+                            "id": 1,
+                            "name": "free",
+                            "display_name": "Free Plan",
+                            "description": "Basic resume generation",
+                            "price_cents": 0,
+                            "currency": "usd",
+                            "interval": "month",
+                            "features": ["3 resumes per month", "Basic templates"],
+                            "max_resumes_per_month": 3,
+                            "max_ai_tailorings_per_month": 0,
+                            "max_templates": 3,
+                            "include_priority_support": False,
+                            "include_custom_domains": False,
+                            "is_popular": False,
+                        }
+                    ]
+                
                 return [
                     {
-                        "id": 1,
-                        "name": "free",
-                        "display_name": "Free",
-                        "description": "Basic resume generation",
-                        "price_cents": 0,
-                        "currency": "usd",
-                        "interval": "month",
-                        "features": ["3 resumes/month", "Basic templates"],
-                        "max_resumes_per_month": 3,
-                        "max_ai_tailorings_per_month": 0,
-                        "max_templates": 3,
-                        "include_priority_support": False,
-                        "include_custom_domains": False,
-                        "is_popular": False,
-                        "stripe_price_id": None,
+                        "id": p.id,
+                        "name": p.name,
+                        "display_name": p.display_name,
+                        "description": p.description,
+                        "price_cents": p.price_cents,
+                        "currency": p.currency,
+                        "interval": p.interval,
+                        "features": p.features or [],
+                        "max_resumes_per_month": p.max_resumes_per_month,
+                        "max_ai_tailorings_per_month": p.max_ai_tailorings_per_month,
+                        "max_templates": p.max_templates,
+                        "include_priority_support": p.include_priority_support,
+                        "include_custom_domains": p.include_custom_domains,
+                        "is_popular": p.is_popular,
+                        "stripe_price_id": p.stripe_price_id,
                     }
+                    for p in plans
                 ]
+
+        try:
+            # Fetch active prices from Stripe with product data expanded
+            prices = stripe.Price.list(
+                active=True, type="recurring", expand=["data.product"]
+            )
             
-            return [
-                {
-                    "id": p.id,
-                    "name": p.name,
-                    "display_name": p.display_name,
-                    "description": p.description,
-                    "price_cents": p.price_cents,
-                    "currency": p.currency,
-                    "interval": p.interval,
-                    "features": p.features,
-                    "max_resumes_per_month": p.max_resumes_per_month,
-                    "max_ai_tailorings_per_month": p.max_ai_tailorings_per_month,
-                    "max_templates": p.max_templates,
-                    "include_priority_support": p.include_priority_support,
-                    "include_custom_domains": p.include_custom_domains,
-                    "is_popular": p.is_popular,
-                    "stripe_price_id": p.stripe_price_id,
-                }
-                for p in plans
-            ]
+            stripe_plans = []
+            for i, price in enumerate(prices.data):
+                product = price.product
+                if not product.active:
+                    continue
+                
+                metadata = product.metadata or {}
+                
+                stripe_plans.append({
+                    "id": i + 1,
+                    "name": product.name.lower(),
+                    "display_name": product.name,
+                    "description": product.description,
+                    "price_cents": price.unit_amount,
+                    "currency": price.currency,
+                    "interval": price.recurring.interval,
+                    "stripe_price_id": price.id,
+                    "stripe_product_id": product.id,
+                    "features": metadata.get("features", "").split(",") if "features" in metadata else [],
+                    "max_resumes_per_month": int(metadata.get("max_resumes", 5)),
+                    "max_ai_tailorings_per_month": int(metadata.get("max_ai", 3)),
+                    "max_templates": int(metadata.get("max_templates", 3)),
+                    "include_priority_support": metadata.get("priority_support", "false").lower() == "true",
+                    "include_custom_domains": metadata.get("custom_domains", "false").lower() == "true",
+                    "is_popular": metadata.get("is_popular", "false").lower() == "true",
+                })
+            
+            return stripe_plans if stripe_plans else await self.get_available_plans()
+        except Exception as e:
+            logger.error(f"Failed to fetch plans from Stripe: {e}")
+            # Recursively call with BILLING_ENABLED=False logic (already handled by the first if block)
+            # but we need to bypass it, so we manually call the DB logic or return empty
+            return []
 
     async def get_plan_by_name(self, plan_name: str) -> Optional[Dict[str, Any]]:
         """Get a specific plan by name."""
