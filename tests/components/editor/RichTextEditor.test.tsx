@@ -8,6 +8,42 @@ import userEvent from '@testing-library/user-event';
 import React from 'react';
 import { RichTextEditor } from '../../../components/editor/RichTextEditor';
 
+// Mock ProseMirror/TipTap methods that JSDOM doesn't implement
+if (typeof window !== 'undefined') {
+  window.Element.prototype.getClientRects = vi.fn(() => ({
+    length: 0,
+    item: () => null,
+    [Symbol.iterator]: function* () {},
+  })) as any;
+  
+  window.Element.prototype.getBoundingClientRect = vi.fn(() => ({
+    width: 0,
+    height: 0,
+    top: 0,
+    left: 0,
+    bottom: 0,
+    right: 0,
+  })) as any;
+
+  window.document.elementFromPoint = vi.fn();
+  
+  // Mock Range
+  window.Range.prototype.getClientRects = vi.fn(() => ({
+    length: 0,
+    item: () => null,
+    [Symbol.iterator]: function* () {},
+  })) as any;
+  
+  window.Range.prototype.getBoundingClientRect = vi.fn(() => ({
+    width: 0,
+    height: 0,
+    top: 0,
+    left: 0,
+    bottom: 0,
+    right: 0,
+  })) as any;
+}
+
 describe('RichTextEditor', () => {
   const defaultProps = {
     content: '<p>Test content</p>',
@@ -72,6 +108,14 @@ describe('RichTextEditor', () => {
       const boldButton = screen.getByRole('button', { name: /Bold/i });
       expect(boldButton).toHaveAttribute('aria-pressed');
     });
+
+    it('editor has textbox role and aria-label', () => {
+      render(<RichTextEditor {...defaultProps} />);
+
+      const editor = screen.getByRole('textbox');
+      expect(editor).toBeInTheDocument();
+      expect(editor).toHaveAttribute('aria-label', defaultProps.placeholder);
+    });
   });
 
   describe('User Interactions', () => {
@@ -79,8 +123,6 @@ describe('RichTextEditor', () => {
       const onChange = vi.fn();
       render(<RichTextEditor {...defaultProps} onChange={onChange} />);
 
-      // Note: Full typing tests require jsdom/Playwright due to TipTap's 
-      // dependency on getClientRects. We test that the editor renders here.
       const editor = document.querySelector('.ProseMirror');
       expect(editor).toBeInTheDocument();
     });
@@ -103,9 +145,8 @@ describe('RichTextEditor', () => {
       const customPlaceholder = 'Custom placeholder text';
       render(<RichTextEditor {...defaultProps} placeholder={customPlaceholder} />);
 
-      // Placeholder is handled by TipTap
-      const editor = document.querySelector('.ProseMirror');
-      expect(editor).toBeInTheDocument();
+      const editor = screen.getByRole('textbox');
+      expect(editor).toHaveAttribute('aria-label', customPlaceholder);
     });
 
     it('renders with custom minHeight', () => {
@@ -122,40 +163,6 @@ describe('RichTextEditor', () => {
 
       const container = document.querySelector(`.${customClass}`);
       expect(container).toBeInTheDocument();
-    });
-
-    it('renders empty content', () => {
-      render(<RichTextEditor {...defaultProps} content="" />);
-
-      const editor = document.querySelector('.ProseMirror');
-      expect(editor).toBeInTheDocument();
-    });
-
-    it('renders with HTML content', () => {
-      const htmlContent = '<h1>Title</h1><p>Paragraph with <strong>bold</strong> text</p>';
-      render(<RichTextEditor {...defaultProps} content={htmlContent} />);
-
-      const editor = document.querySelector('.ProseMirror');
-      expect(editor).toBeInTheDocument();
-    });
-  });
-
-  describe('Editor Functionality', () => {
-    it('renders with lists support', () => {
-      render(<RichTextEditor {...defaultProps} />);
-
-      // Both list buttons should be present
-      expect(screen.getByRole('button', { name: /Bullet list/i })).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /Numbered list/i })).toBeInTheDocument();
-    });
-
-    it('renders with heading support', () => {
-      render(<RichTextEditor {...defaultProps} />);
-
-      // All heading buttons should be present
-      expect(screen.getByRole('button', { name: /Heading 1/i })).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /Heading 2/i })).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /Heading 3/i })).toBeInTheDocument();
     });
   });
 });

@@ -12,7 +12,37 @@ interface RichTextEditorProps {
   placeholder?: string;
   minHeight?: string;
   className?: string;
+  id?: string;
 }
+
+const ToolbarButton = ({
+  onClick,
+  isActive = false,
+  ariaLabel,
+  title,
+  children,
+}: {
+  onClick: () => void;
+  isActive?: boolean;
+  ariaLabel: string;
+  title: string;
+  children: React.ReactNode;
+}) => (
+  <button
+    type="button"
+    onClick={onClick}
+    aria-label={ariaLabel}
+    title={title}
+    aria-pressed={isActive}
+    className={`p-2 rounded-md transition-colors ${
+      isActive
+        ? 'bg-primary-100 text-primary-700'
+        : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+    }`}
+  >
+    {children}
+  </button>
+);
 
 /**
  * @component RichTextEditor
@@ -21,7 +51,7 @@ interface RichTextEditorProps {
  * Stores content as HTML for display and JSON for structured data
  */
 export const RichTextEditor = React.memo<RichTextEditorProps>(
-  ({ content, onChange, placeholder = 'Start typing...', minHeight = '120px', className = '' }) => {
+  ({ content, onChange, placeholder = 'Start typing...', minHeight = '120px', className = '', id }) => {
     const editor = useEditor({
       extensions: [
         StarterKit.configure({
@@ -45,6 +75,11 @@ export const RichTextEditor = React.memo<RichTextEditorProps>(
         attributes: {
           class: 'prose-editor focus:outline-none',
           style: `min-height: ${minHeight}`,
+          role: 'textbox',
+          'aria-multiline': 'true',
+          'aria-label': placeholder,
+          'data-testid': 'rich-text-editor',
+          ...(id ? { id } : {}),
         },
       },
     });
@@ -85,37 +120,15 @@ export const RichTextEditor = React.memo<RichTextEditorProps>(
     }, [editor]);
 
     if (!editor) {
-      return null;
+      return (
+        <div 
+          className={`border border-slate-300 rounded-lg bg-slate-50 animate-pulse ${className}`}
+          style={{ minHeight }}
+          aria-busy="true"
+          aria-label="Loading editor..."
+        />
+      );
     }
-
-    const ToolbarButton = ({
-      onClick,
-      isActive = false,
-      ariaLabel,
-      title,
-      children,
-    }: {
-      onClick: () => void;
-      isActive?: boolean;
-      ariaLabel: string;
-      title: string;
-      children: React.ReactNode;
-    }) => (
-      <button
-        type="button"
-        onClick={onClick}
-        aria-label={ariaLabel}
-        title={title}
-        aria-pressed={isActive}
-        className={`p-2 rounded-md transition-colors ${
-          isActive
-            ? 'bg-primary-100 text-primary-700'
-            : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-        }`}
-      >
-        {children}
-      </button>
-    );
 
     return (
       <div className={`border border-slate-300 rounded-lg overflow-hidden bg-white ${className}`}>
