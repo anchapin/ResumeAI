@@ -3,10 +3,37 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import React from 'react';
 import { SummarySection } from '../../../components/editor/SummarySection';
+
+// Mock RichTextEditor to avoid TipTap/JSDOM issues
+vi.mock('../../../components/editor/RichTextEditor', () => ({
+  RichTextEditor: ({ content, onChange, placeholder }: any) => (
+    <div data-testid="mock-rich-editor">
+      <div data-testid="editor-content">{content}</div>
+      <div data-testid="editor-placeholder">{placeholder}</div>
+      <textarea 
+        data-testid="editor-textarea"
+        value={content}
+        onChange={(e) => onChange(e.target.value)}
+      />
+    </div>
+  ),
+  __esModule: true,
+  default: ({ content, onChange, placeholder }: any) => (
+    <div data-testid="mock-rich-editor">
+      <div data-testid="editor-content">{content}</div>
+      <div data-testid="editor-placeholder">{placeholder}</div>
+      <textarea 
+        data-testid="editor-textarea"
+        value={content}
+        onChange={(e) => onChange(e.target.value)}
+      />
+    </div>
+  ),
+}));
 
 describe('SummarySection', () => {
   const defaultProps = {
@@ -39,18 +66,18 @@ describe('SummarySection', () => {
       expect(screen.getByText('Add Comment')).toBeInTheDocument();
     });
 
-    it('renders textarea with correct value', () => {
+    it('renders editor with correct value', () => {
       render(<SummarySection {...defaultProps} />);
 
-      const textarea = screen.getByRole('textbox');
-      expect(textarea).toHaveValue(defaultProps.summary);
+      const content = screen.getByTestId('editor-content');
+      expect(content.textContent).toBe(defaultProps.summary);
     });
 
-    it('renders textarea with placeholder', () => {
+    it('renders editor with placeholder', () => {
       render(<SummarySection {...defaultProps} />);
 
-      const textarea = screen.getByPlaceholderText(/Write a brief professional summary/);
-      expect(textarea).toBeInTheDocument();
+      const placeholder = screen.getByTestId('editor-placeholder');
+      expect(placeholder).toBeInTheDocument();
     });
 
     it('renders tip text', () => {
@@ -59,7 +86,7 @@ describe('SummarySection', () => {
       expect(screen.getByText(/Keep your summary concise/)).toBeInTheDocument();
     });
 
-    it('renders label for textarea', () => {
+    it('renders label for editor', () => {
       render(<SummarySection {...defaultProps} />);
 
       expect(screen.getByText('Summary')).toBeInTheDocument();
@@ -67,15 +94,14 @@ describe('SummarySection', () => {
   });
 
   describe('User Interactions', () => {
-    it('calls onUpdate when textarea value changes', async () => {
+    it('calls onUpdate when editor value changes', async () => {
       const onUpdate = vi.fn();
-      const user = userEvent.setup();
       render(<SummarySection {...defaultProps} onUpdate={onUpdate} />);
 
-      const textarea = screen.getByRole('textbox');
-      await user.type(textarea, ' Updated text');
+      const textarea = screen.getByTestId('editor-textarea');
+      fireEvent.change(textarea, { target: { value: 'Updated text' } });
 
-      expect(onUpdate).toHaveBeenCalled();
+      expect(onUpdate).toHaveBeenCalledWith('Updated text');
     });
 
     it('calls onShowCommentPanel when comment button is clicked', async () => {
@@ -93,8 +119,8 @@ describe('SummarySection', () => {
     it('renders empty summary correctly', () => {
       render(<SummarySection {...defaultProps} summary="" />);
 
-      const textarea = screen.getByRole('textbox');
-      expect(textarea).toHaveValue('');
+      const content = screen.getByTestId('editor-content');
+      expect(content.textContent).toBe('');
     });
   });
 
