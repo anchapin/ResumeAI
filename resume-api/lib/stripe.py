@@ -16,8 +16,17 @@ Provides integration with Stripe API for:
 """
 
 import stripe
+import datetime
 from typing import List, Dict, Any, Optional
+from contextlib import asynccontextmanager
+from sqlalchemy import select, and_
+from sqlalchemy.ext.asyncio import AsyncSession
 from config import settings
+from database import async_session_maker, UserUsage
+from monitoring import logging_config
+
+# Configure logging
+logger = logging_config.get_logger(__name__)
 
 # Billing availability flag
 BILLING_ENABLED = False  # Set to True when Stripe integration is complete
@@ -25,7 +34,6 @@ BILLING_ENABLED = False  # Set to True when Stripe integration is complete
 # Initialize Stripe (only if billing is enabled and key is available)
 if BILLING_ENABLED and settings.stripe_secret_key:
     stripe.api_key = settings.stripe_secret_key
-
 
 class StripeService:
     """Service for interacting with Stripe API."""
@@ -168,10 +176,121 @@ class StripeService:
         # TODO(#1007): Implement with Stripe Payment Methods API
         return {"id": payment_method_id, "detached": True}
 
-    async def check_usage_limits(self, user_id: str, action: str) -> Dict[str, Any]:
+    async def check_usage_limits(
+        self, user_id: str, action: str, db: Optional[AsyncSession] = None
+    ) -> Dict[str, Any]:
         """Check if user has exceeded usage limits."""
-        # TODO(#1011): Implement with database usage tracking
-        return {"allowed": True, "remaining": -1, "limit": -1, "used": 0}
+        # If billing is not enabled, return allowed
+        if not BILLING_ENABLED:
+            return {"allowed": True, "remaining": -1, "limit": -1, "used": 0}
+
+        now = datetime.datetime.now(datetime.timezone.utc)
+        month, year = now.month, now.year
+
+        if db:
+            return await self._check_limits_with_session(db, user_id, action, month, year)
+
+        async with async_session_maker() as session:
+            return await self._check_limits_with_session(session, user_id, action, month, year)
+
+    async def _check_limits_with_session(
+        self, session: AsyncSession, user_id: str, action: str, month: int, year: int
+    ) -> Dict[str, Any]:
+        """Internal helper for limit checking."""
+        # Get current usage
+        try:
+            user_id_int = int(user_id)
+        except (ValueError, TypeError):
+            return {"allowed": True, "remaining": -1, "limit": -1, "used": 0}
+
+        stmt = select(UserUsage).where(
+            and_(
+                UserUsage.user_id == user_id_int,
+                UserUsage.month == month,
+                UserUsage.year == year,
+            )
+        )
+        result = await session.execute(stmt)
+        usage = result.scalar_one_or_none()
+
+        if not usage:
+            usage = UserUsage(user_id=user_id_int, month=month, year=year)
+            usage.resumes_generated = 0
+            usage.ai_tailorings_used = 0
+            session.add(usage)
+            await session.commit()
+            await session.refresh(usage)
+
+        # Get limits based on action
+        # TODO: Integrate with subscription plan data
+        limit = 3
+        used = 0
+
+        if action == "resume_generation":
+            limit = 3  # Free tier limit
+            used = usage.resumes_generated
+        elif action == "ai_tailoring":
+            limit = 5  # Free tier limit
+            used = usage.ai_tailorings_used
+
+        allowed = used < limit
+
+        return {
+            "allowed": allowed,
+            "remaining": max(0, limit - used),
+            "limit": limit,
+            "used": used,
+        }
+
+    async def record_usage(
+        self, user_id: str, action: str, db: Optional[AsyncSession] = None
+    ) -> None:
+        """Record usage of a billable action."""
+        if not BILLING_ENABLED:
+            return
+
+        now = datetime.datetime.now(datetime.timezone.utc)
+        month, year = now.month, now.year
+
+        if db:
+            await self._record_usage_with_session(db, user_id, action, month, year)
+            return
+
+        async with async_session_maker() as session:
+            await self._record_usage_with_session(session, user_id, action, month, year)
+
+    async def _record_usage_with_session(
+        self, session: AsyncSession, user_id: str, action: str, month: int, year: int
+    ) -> None:
+        """Internal helper for recording usage."""
+        try:
+            user_id_int = int(user_id)
+        except (ValueError, TypeError):
+            return
+
+        stmt = select(UserUsage).where(
+            and_(
+                UserUsage.user_id == user_id_int,
+                UserUsage.month == month,
+                UserUsage.year == year,
+            )
+        )
+        result = await session.execute(stmt)
+        usage = result.scalar_one_or_none()
+
+        if not usage:
+            usage = UserUsage(user_id=user_id_int, month=month, year=year)
+            usage.resumes_generated = 0
+            usage.ai_tailorings_used = 0
+            session.add(usage)
+
+        if action == "resume_generation":
+            usage.resumes_generated = (usage.resumes_generated or 0) + 1
+        elif action == "ai_tailoring":
+            usage.ai_tailorings_used = (usage.ai_tailorings_used or 0) + 1
+
+        await session.commit()
+
 
     def verify_webhook_signature(
         self, payload: bytes, signature: str, webhook_secret: str
