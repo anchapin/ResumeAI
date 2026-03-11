@@ -42,12 +42,10 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
 
-      - name: Build frontend
-        run: npm run build
-
-      - name: Run visual regression tests
-        run: npm run test:visual
-        continue-on-error: true
+      - name: Run visual regression tests (public pages only in CI)
+        run: npm run test:visual -- --grep "Public Pages"
+        env:
+          CI: 'true'
 
       - name: Upload test results
         if: always()

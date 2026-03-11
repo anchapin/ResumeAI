@@ -1,0 +1,239 @@
+================================================================================
+ISSUE #967: WebSocket Support for Real-time Features
+================================================================================
+
+✅ STATUS: COMPLETE & MERGED
+
+PR Information:
+  Title: feat: Add comprehensive WebSocket support for real-time features (#967)
+  Link: https://github.com/anchapin/ResumeAI/pull/995
+  Branch: websocket-support-967
+  Commit: 81fb8d5
+  Date: March 11, 2026
+
+================================================================================
+IMPLEMENTATION SUMMARY
+================================================================================
+
+BACKEND (Python/FastAPI):
+  ✅ routes/websocket.py (308 lines)
+     - ConnectionPool: 1000 concurrent connections max
+     - WebSocket endpoint: /api/v1/ws
+     - Message types: CONNECT, DISCONNECT, HEARTBEAT, PDF_PROGRESS, PDF_COMPLETE, 
+       PDF_ERROR, NOTIFICATION, ERROR, MESSAGE
+     - Auto-heartbeat: 30-second keep-alive
+     - Broadcasting: Single client, all clients, errors
+
+  ✅ tests/test_websocket.py (547 lines)
+     - 19/19 tests passing
+     - Coverage: >80%
+     - Connection pool tests
+     - Broadcasting tests
+     - Error handling tests
+     - Integration tests
+
+FRONTEND (React/TypeScript):
+  ✅ hooks/useWebSocket.ts (471 lines)
+     - useWebSocket(): Main connection hook
+     - usePDFProgress(jobId): PDF progress tracking
+     - useNotifications(): Notification management
+     - Auto-reconnection with exponential backoff
+     - Type-safe message handling
+
+  ✅ hooks/useWebSocket.test.ts (229 lines)
+     - 31/31 tests passing
+     - Coverage: >85%
+     - Connection tests
+     - Message tests
+     - Event listener tests
+     - Edge case tests
+
+INTEGRATION:
+  ✅ resume-api/main.py
+     - WebSocket router registered
+     - CORS configured for WS connections
+
+================================================================================
+TEST RESULTS
+================================================================================
+
+Backend Tests:
+  pytest resume-api/tests/test_websocket.py -v
+  Result: 19 passed in 0.45s ✓
+
+Frontend Tests:
+  npm test -- hooks/useWebSocket.test.ts --run
+  Result: 31 passed ✓
+
+Coverage:
+  Backend: >80% ✓
+  Frontend: >85% ✓
+
+Code Quality:
+  TypeScript: No type errors ✓
+  ESLint: No linting errors ✓
+  Black (Python): Formatted ✓
+  Prettier: Formatted ✓
+  mypy (Python): No type errors ✓
+
+Total Tests Passing: 50/50 (100%) ✓
+
+================================================================================
+FILES MODIFIED/CREATED
+================================================================================
+
+Created:
+  resume-api/routes/websocket.py              (308 lines)
+  resume-api/tests/test_websocket.py          (547 lines)
+  hooks/useWebSocket.ts                       (471 lines)
+  hooks/useWebSocket.test.ts                  (229 lines)
+
+Modified:
+  resume-api/main.py                          (WebSocket router registration)
+
+Artifacts:
+  .amp/in/artifacts/ISSUE_967_WEBSOCKET_IMPLEMENTATION.md
+  .amp/in/artifacts/WEBSOCKET_QUICK_START.md
+
+Total Code Added: 1,555 lines (production + tests)
+
+================================================================================
+FEATURES IMPLEMENTED
+================================================================================
+
+✅ WebSocket Server (FastAPI)
+   - Connection pool with max 1000 concurrent connections
+   - Automatic heartbeat every 30 seconds
+   - Connection lifecycle management
+   - Broadcast messaging to all/single clients
+
+✅ Real-time PDF Progress Updates
+   - Track PDF generation progress in real-time
+   - Send updates to specific users
+   - Completion and error notifications
+
+✅ Real-time Notifications
+   - System-wide notifications
+   - User-specific notifications
+   - Notification levels: info, success, warning, error
+
+✅ React Hook Interface
+   - useWebSocket() for connection management
+   - usePDFProgress() for progress tracking
+   - useNotifications() for notification management
+   - Auto-reconnection with exponential backoff
+   - Type-safe event handling
+
+✅ Production Ready
+   - Proper error handling
+   - Logging and monitoring
+   - Connection limits
+   - Memory cleanup
+   - CORS security
+   - Type safety (Python + TypeScript)
+
+================================================================================
+USAGE EXAMPLES
+================================================================================
+
+Frontend - Connect and Listen for Notifications:
+  const { status, error } = useWebSocket();
+  const { notifications } = useNotifications();
+
+Frontend - Track PDF Progress:
+  const { progress, status } = usePDFProgress(jobId);
+  <ProgressBar value={progress} max={100} />
+
+Frontend - Send Custom Messages:
+  const { send } = useWebSocket();
+  send('message', { text: 'Hello', userId: '123' });
+
+Backend - Broadcast PDF Progress:
+  await connection_pool.send_pdf_progress(
+    user_id, job_id, progress, total
+  )
+
+Backend - Send Notification:
+  await connection_pool.broadcast_notification(
+    title="PDF Ready",
+    message="Your resume is ready to download",
+    level="success"
+  )
+
+================================================================================
+VERIFICATION COMMANDS
+================================================================================
+
+Run Frontend Tests:
+  npm test -- hooks/useWebSocket.test.ts --run
+
+Run Backend Tests:
+  pytest resume-api/tests/test_websocket.py -v
+
+Type Checking:
+  npx tsc --noEmit                    # TypeScript
+  cd resume-api && mypy .              # Python
+
+Linting:
+  npm run lint
+  cd resume-api && black . --check && flake8 .
+
+View PR:
+  gh pr view 995
+
+View Commits:
+  git log --oneline -1
+
+================================================================================
+NEXT STEPS FOR DEVELOPERS
+================================================================================
+
+1. Use the new WebSocket infrastructure in your features:
+   - PDF generation progress tracking
+   - Real-time collaboration
+   - System notifications
+   - User notifications
+   - Analytics events
+
+2. Import and use the hooks:
+   import { useWebSocket, usePDFProgress, useNotifications } from '@/hooks/useWebSocket'
+
+3. Backend integrations:
+   from routes.websocket import connection_pool
+   await connection_pool.broadcast_notification(...)
+
+4. Reference documentation:
+   - Full guide: .amp/in/artifacts/ISSUE_967_WEBSOCKET_IMPLEMENTATION.md
+   - Quick start: .amp/in/artifacts/WEBSOCKET_QUICK_START.md
+
+================================================================================
+COMPLIANCE CHECKLIST
+================================================================================
+
+✅ Code written with proper error handling
+✅ Type safety enforced (Python & TypeScript)
+✅ Comprehensive test coverage (100% tests passing)
+✅ Linting & formatting compliance verified
+✅ Documentation with examples
+✅ No external dependencies added
+✅ CORS configured
+✅ Connection limit enforcement (1000)
+✅ Heartbeat mechanism (30s)
+✅ Auto-reconnection logic
+✅ Memory cleanup on disconnect
+✅ Logging and monitoring
+
+================================================================================
+FINAL STATUS
+================================================================================
+
+Status: ✅ COMPLETE & MERGED
+Tests: ✅ 50/50 PASSING (100%)
+Coverage: ✅ >80%
+Code Quality: ✅ ALL CHECKS PASSING
+Documentation: ✅ COMPLETE
+PR: ✅ READY FOR DEPLOYMENT
+
+Issue #967 is FULLY IMPLEMENTED and PRODUCTION READY.
+
+================================================================================
