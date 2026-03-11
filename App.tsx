@@ -240,7 +240,9 @@ function App() {
             path="/login"
             element={
               <Suspense fallback={<PageLoader />}>
-                <Login />
+                <main id="main-content">
+                  <Login />
+                </main>
               </Suspense>
             }
           />
@@ -248,7 +250,9 @@ function App() {
             path="/register"
             element={
               <Suspense fallback={<PageLoader />}>
-                <Register />
+                <main id="main-content">
+                  <Register />
+                </main>
               </Suspense>
             }
           />
@@ -278,7 +282,9 @@ function App() {
                 <Suspense fallback={<JobApplicationsSkeleton />}>
                   <div className="flex min-h-screen bg-[#f6f6f8]">
                     <Sidebar onShowShortcuts={setShowShortcuts} />
-                    <JobApplications />
+                    <main id="main-content" tabIndex={-1} className="flex-1">
+                      <JobApplications />
+                    </main>
                   </div>
                 </Suspense>
               ) : (
@@ -291,7 +297,9 @@ function App() {
             element={
               isAuthenticated ? (
                 <Suspense fallback={<EditorSkeleton />}>
-                  <Editor />
+                  <main id="main-content" tabIndex={-1}>
+                    <Editor />
+                  </main>
                 </Suspense>
               ) : (
                 <Navigate to="/login" replace />
@@ -303,7 +311,9 @@ function App() {
             element={
               isAuthenticated ? (
                 <Suspense fallback={<WorkspaceSkeleton />}>
-                  <Workspace />
+                  <main id="main-content" tabIndex={-1}>
+                    <Workspace />
+                  </main>
                 </Suspense>
               ) : (
                 <Navigate to="/login" replace />
@@ -317,7 +327,9 @@ function App() {
                 <Suspense fallback={<PageLoader />}>
                   <div className="flex min-h-screen bg-[#f6f6f8]">
                     <Sidebar onShowShortcuts={setShowShortcuts} />
-                    <SalaryResearch />
+                    <main id="main-content" tabIndex={-1} className="flex-1">
+                      <SalaryResearch />
+                    </main>
                   </div>
                 </Suspense>
               ) : (
@@ -330,7 +342,9 @@ function App() {
             element={
               isAuthenticated ? (
                 <Suspense fallback={<PageLoader />}>
-                  <InterviewPractice />
+                  <main id="main-content" tabIndex={-1}>
+                    <InterviewPractice />
+                  </main>
                 </Suspense>
               ) : (
                 <Navigate to="/login" replace />
@@ -344,7 +358,9 @@ function App() {
                 <Suspense fallback={<SettingsSkeleton />}>
                   <div className="flex min-h-screen bg-[#f6f6f8]">
                     <Sidebar onShowShortcuts={setShowShortcuts} />
-                    <Settings />
+                    <main id="main-content" tabIndex={-1} className="flex-1">
+                      <Settings />
+                    </main>
                   </div>
                 </Suspense>
               ) : (
@@ -359,7 +375,9 @@ function App() {
                 <Suspense fallback={<PageLoader />}>
                   <div className="flex min-h-screen bg-[#f6f6f8]">
                     <Sidebar onShowShortcuts={setShowShortcuts} />
-                    <Billing />
+                    <main id="main-content" tabIndex={-1} className="flex-1">
+                      <Billing />
+                    </main>
                   </div>
                 </Suspense>
               ) : (
@@ -374,7 +392,9 @@ function App() {
                 <Suspense fallback={<PageLoader />}>
                   <div className="flex min-h-screen bg-[#f6f6f8]">
                     <Sidebar onShowShortcuts={setShowShortcuts} />
-                    <Plans />
+                    <main id="main-content" tabIndex={-1} className="flex-1">
+                      <Plans />
+                    </main>
                   </div>
                 </Suspense>
               ) : (
@@ -389,7 +409,9 @@ function App() {
                 <Suspense fallback={<PageLoader />}>
                   <div className="flex min-h-screen bg-[#f6f6f8]">
                     <Sidebar onShowShortcuts={setShowShortcuts} />
-                    <PaymentMethods />
+                    <main id="main-content" tabIndex={-1} className="flex-1">
+                      <PaymentMethods />
+                    </main>
                   </div>
                 </Suspense>
               ) : (
@@ -404,7 +426,9 @@ function App() {
                 <Suspense fallback={<PageLoader />}>
                   <div className="flex min-h-screen bg-[#f6f6f8]">
                     <Sidebar onShowShortcuts={setShowShortcuts} />
-                    <Invoices />
+                    <main id="main-content" tabIndex={-1} className="flex-1">
+                      <Invoices />
+                    </main>
                   </div>
                 </Suspense>
               ) : (
@@ -419,7 +443,9 @@ function App() {
                 <Suspense fallback={<PageLoader />}>
                   <div className="flex min-h-screen bg-[#f6f6f8]">
                     <Sidebar onShowShortcuts={setShowShortcuts} />
-                    <Webhooks />
+                    <main id="main-content" tabIndex={-1} className="flex-1">
+                      <Webhooks />
+                    </main>
                   </div>
                 </Suspense>
               ) : (
@@ -434,7 +460,9 @@ function App() {
                 <Suspense fallback={<ResumeManagementSkeleton />}>
                   <div className="flex min-h-screen bg-[#f6f6f8]">
                     <Sidebar onShowShortcuts={setShowShortcuts} />
-                    <ResumeManagement />
+                    <main id="main-content" tabIndex={-1} className="flex-1">
+                      <ResumeManagement />
+                    </main>
                   </div>
                 </Suspense>
               ) : (
@@ -447,7 +475,9 @@ function App() {
             path="*"
             element={
               <Suspense fallback={<PageLoader />}>
-                <NotFound />
+                <main id="main-content">
+                  <NotFound />
+                </main>
               </Suspense>
             }
           />
