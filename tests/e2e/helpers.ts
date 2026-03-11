@@ -11,14 +11,16 @@ export async function registerUser(page: Page, user: typeof testUser): Promise<v
   await page.goto('/register');
   await page.waitForLoadState('networkidle');
 
-  await page.fill('input[name="email"]', user.email);
-  await page.fill('input[name="username"]', user.username);
-  await page.fill('input[name="password"]', user.password);
-  await page.fill('input[name="fullName"]', user.fullName);
+  await page.fill('#reg-email', user.email);
+  await page.fill('#reg-username', user.username);
+  await page.fill('#reg-fullname', user.fullName);
+  await page.fill('#reg-password', user.password);
+  await page.fill('#reg-confirm', user.password);
 
   await page.click('button[type="submit"]');
 
-  await expect(page).toHaveURL(/\/dashboard/);
+  // Wait for success message or redirect
+  await expect(page).toHaveURL(/\/login/);
 }
 
 export async function loginUser(page: Page, email: string, password: string): Promise<void> {

@@ -124,7 +124,7 @@ export const useStore = create<AppStore>()(
     (set) => ({
       user: null,
       isAuthenticated: false,
-      isAuthLoading: true,
+      isAuthLoading: false,
       authError: null,
       resumeData: initialResumeData,
       isResumeLoaded: false,

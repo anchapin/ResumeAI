@@ -41,6 +41,7 @@ from routes.auth import router as auth_router
 from routes.github import router as github_router
 from routes.deployment import router as deployment_router
 from routes.feature_flags import router as feature_flags_router
+from routes.websocket import router as websocket_router
 from api.jd_routes import router as jd_router
 from api.api_key_routes import router as api_key_router
 from api.team_routes import router as team_router
@@ -270,9 +271,6 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     )
 
 
-# Add timeout middleware first (must be added before other middleware)
-# This enforces a 30s timeout on all requests
-app.add_middleware(TimeoutMiddleware, timeout_seconds=30)
 
 # Add error handling middleware (must be added before monitoring)
 app.add_middleware(ErrorHandlingMiddleware)
@@ -290,6 +288,9 @@ if getattr(settings, "enable_csrf", True):
 # Add request signing middleware
 if getattr(settings, "enable_request_signing", True):
     app.add_middleware(RequestSigningMiddleware)
+
+# Add timeout middleware last to avoid consuming the request body early
+app.add_middleware(TimeoutMiddleware, timeout_seconds=30)
 
 # Configure CORS with restrictive settings
 # SECURITY: CORS_ORIGINS must be set in production environment
@@ -377,6 +378,9 @@ app.include_router(analytics_router, prefix=settings.api_v1_prefix)
 app.include_router(webhook_router, prefix=settings.api_v1_prefix)
 app.include_router(deployment_router, prefix=settings.api_v1_prefix)
 app.include_router(feature_flags_router, prefix=settings.api_v1_prefix)
+
+# Include WebSocket routes (without prefix for WebSocket compatibility)
+app.include_router(websocket_router)
 
 
 if __name__ == "__main__":

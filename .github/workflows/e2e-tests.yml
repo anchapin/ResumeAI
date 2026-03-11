@@ -58,6 +58,11 @@ jobs:
         env:
           CI: true
 
+      - name: Run Visual Regression tests
+        run: npx playwright test --project=visual-testing
+        env:
+          CI: true
+
       - name: Stop Dev Server
         if: always()
         run: pkill -f "vite" || true
