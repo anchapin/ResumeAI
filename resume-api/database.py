@@ -264,6 +264,28 @@ class EmailVerificationToken(Base):
 
 
 # Analytics models for monitoring and usage tracking
+class UserUsage(Base):
+    """User usage tracking for plan limits."""
+
+    __tablename__ = "user_usage"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+
+    # Usage metrics
+    resumes_generated = Column(Integer, default=0)
+    ai_tailorings_used = Column(Integer, default=0)
+
+    # Month tracking
+    month = Column(Integer, nullable=False)  # 1-12
+    year = Column(Integer, nullable=False)
+
+    # Metadata
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+    __table_args__ = (Index("idx_user_usage_month", "user_id", "year", "month", unique=True),)
+
+
 class UsageAnalytics(Base):
     """Request analytics model for tracking API usage."""
 

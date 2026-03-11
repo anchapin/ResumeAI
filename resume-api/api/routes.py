@@ -73,6 +73,9 @@ TEMPLATES_DIR = LIB_DIR / "templates"
 
 router = APIRouter(prefix="", tags=["Resumes"])
 
+# Fallback user ID for testing/anonymous usage tracking
+FALLBACK_USER_ID = "1"
+
 # Initialize managers
 _variant_manager = None
 
@@ -121,6 +124,25 @@ async def render_pdf(request: Request, body: ResumeRequest, auth: AuthorizedAPIK
         PDF file as binary response
     """
     try:
+        # Usage tracking
+        from lib.stripe import stripe_service
+
+        # Resolve user_id from auth if possible
+        user_id = FALLBACK_USER_ID
+        if auth and hasattr(auth, "user_id"):
+            user_id = str(auth.user_id)
+        elif isinstance(auth, dict) and "user_id" in auth:
+            user_id = str(auth["user_id"])
+        elif isinstance(auth, str) and auth.isdigit():
+            user_id = auth
+        
+        usage = await stripe_service.check_usage_limits(user_id, "resume_generation")
+        if not usage["allowed"]:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Usage limit exceeded. Your current limit is {usage['limit']} resumes per month. Please upgrade your plan.",
+            )
+
         # Convert Pydantic model to dict
         resume_dict = body.resume_data.model_dump(exclude_none=True)
 
@@ -139,6 +161,9 @@ async def render_pdf(request: Request, body: ResumeRequest, auth: AuthorizedAPIK
             generator.generate_pdf, resume_data=resume_dict, variant=body.variant
         )
 
+        # Record usage
+        await stripe_service.record_usage(user_id, "resume_generation")
+
         # Return PDF response
         return Response(
             content=pdf_bytes,
@@ -151,7 +176,7 @@ async def render_pdf(request: Request, body: ResumeRequest, auth: AuthorizedAPIK
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"PDF generation failed: {str(e)}",
+            detail=f"Operation failed: {str(e)}",
         )
 
 
@@ -179,6 +204,25 @@ async def tailor_resume(
     Tailor a resume to match a job description.
     """
     try:
+        # Usage tracking
+        from lib.stripe import stripe_service
+
+        # Resolve user_id from auth if possible
+        user_id = FALLBACK_USER_ID
+        if auth and hasattr(auth, "user_id"):
+            user_id = str(auth.user_id)
+        elif isinstance(auth, dict) and "user_id" in auth:
+            user_id = str(auth["user_id"])
+        elif isinstance(auth, str) and auth.isdigit():
+            user_id = auth
+        
+        usage = await stripe_service.check_usage_limits(user_id, "ai_tailoring")
+        if not usage["allowed"]:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Usage limit exceeded. Your current limit is {usage['limit']} AI tailorings per month. Please upgrade your plan.",
+            )
+
         # Convert Pydantic model to dict
         resume_dict = body.resume_data.model_dump(exclude_none=True)
 
@@ -227,6 +271,9 @@ async def tailor_resume(
             resume_data=tailored_data, keywords=keywords, suggestions=suggestions
         )
 
+        # Record usage
+        await stripe_service.record_usage(user_id, "ai_tailoring")
+
         return result
 
     except ValueError as e:
@@ -234,8 +281,9 @@ async def tailor_resume(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Resume tailoring failed: {str(e)}",
+            detail=f"Operation failed: {str(e)}",
         )
+
 
 
 @router.get(
@@ -549,7 +597,7 @@ async def export_docx(request: Request, body: ResumeRequest, auth: AuthorizedAPI
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"DOCX generation failed: {str(e)}",
+            detail=f"Operation failed: {str(e)}",
         )
 
 
@@ -860,7 +908,7 @@ async def import_pdf(request: Request, file: UploadFile = File(...), auth: Autho
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"PDF import failed: {str(e)}",
+            detail=f"Operation failed: {str(e)}",
         )
 
 
@@ -954,7 +1002,7 @@ async def import_docx(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"DOCX import failed: {str(e)}",
+            detail=f"Operation failed: {str(e)}",
         )
 
 
@@ -1164,7 +1212,7 @@ async def import_linkedin(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"LinkedIn import failed: {str(e)}",
+            detail=f"Operation failed: {str(e)}",
         )
 
 
@@ -1293,12 +1341,10 @@ async def import_linkedin_file(
 
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
-    except HTTPException:
-        raise
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"LinkedIn file import failed: {str(e)}",
+            detail=f"Operation failed: {str(e)}",
         )
 
 
@@ -1841,7 +1887,7 @@ async def generate_cover_letter(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Cover letter generation failed: {str(e)}",
+            detail=f"Operation failed: {str(e)}",
         )
 
 

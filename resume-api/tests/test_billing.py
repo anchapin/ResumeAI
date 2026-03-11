@@ -478,6 +478,49 @@ async def test_stripe_service_check_usage_limits_ai_tailoring(test_user_id):
 
 
 @pytest.mark.asyncio
+async def test_usage_tracking_flow(test_user_id):
+    """Test full usage tracking flow."""
+    from lib.stripe import stripe_service
+    from database import UserUsage, async_session_maker
+    from sqlalchemy import select, and_
+    import datetime
+
+    # Enable billing for test
+    with patch("lib.stripe.BILLING_ENABLED", True):
+        # 1. Record usage
+        await stripe_service.record_usage("1", "resume_generation")
+
+        # 2. Verify usage recorded in DB
+        async with async_session_maker() as session:
+            now = datetime.datetime.now(datetime.UTC)
+            stmt = select(UserUsage).where(
+                and_(
+                    UserUsage.user_id == 1,
+                    UserUsage.month == now.month,
+                    UserUsage.year == now.year,
+                )
+            )
+            result = await session.execute(stmt)
+            usage = result.scalar_one()
+            assert usage.resumes_generated == 1
+
+            # 3. Check limits
+            status = await stripe_service.check_usage_limits("1", "resume_generation")
+            assert status["allowed"] is True
+            assert status["used"] == 1
+            assert status["remaining"] == 2  # 3 - 1
+
+            # 4. Fill up usage
+            usage.resumes_generated = 3
+            await session.commit()
+
+            # 5. Check limit exceeded
+            status = await stripe_service.check_usage_limits("1", "resume_generation")
+            assert status["allowed"] is False
+            assert status["remaining"] == 0
+
+
+@pytest.mark.asyncio
 async def test_verify_webhook_signature_success():
     """Test successful webhook signature verification."""
     from lib.stripe import stripe_service
