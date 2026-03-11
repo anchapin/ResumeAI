@@ -1,0 +1,49 @@
+# Production environment values for resume-api
+replicaCount: 3
+
+image:
+  pullPolicy: IfNotPresent
+  tag: "stable"
+
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+  hosts:
+    - host: api.resumeai.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: resumeapi-tls-prod
+      hosts:
+        - api.resumeai.com
+
+resources:
+  limits:
+    cpu: 2000m
+    memory: 2Gi
+  requests:
+    cpu: 500m
+    memory: 1Gi
+
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 80
+
+env:
+  DEBUG: "false"
+  AI_PROVIDER: "openai"
+  AI_MODEL: "gpt-4o"
+  REQUIRE_API_KEY: "true"
+
+database:
+  host: "postgres-prod.default.svc.cluster.local"
+
+redis:
+  host: "redis-prod.default.svc.cluster.local"

@@ -370,3 +370,37 @@ A GitHub Actions workflow (`.github/workflows/modularization.yml`) runs these ch
 - Push to main/develop branches
 - Pull requests
 
+## Token Efficiency & Stability Mandates (OpenHands)
+
+### 1. Architect/Editor Workflow
+To minimize token usage and prevent "lazy coding" hallucinations, you MUST follow this dual-phase approach for file modifications:
+- **Architect Phase:** Perform a natural language plan first. Explain WHAT needs to change and WHY.
+- **Editor Phase:** Use targeted edits. If you have a `patch` or `replace_in_file` tool, use it with minimal context blocks. Never rewrite entire files if a targeted tool is available.
+
+### 2. Output Truncation Handling
+**CRITICAL:** If a tool output (like `ls` or `view`) is truncated and displays a `<NOTE>` about max output limits, do NOT assume the note text is part of a file path. 
+- **WRONG:** `/path/to/folder<response clipped><NOTE>.../file.txt`
+- **RIGHT:** Recognize the output was too large and re-run the command on a more specific subdirectory.
+
+### 3. High-Density Repository Map (Method 1)
+Use this map to understand the architecture without reading all files:
+<repository_map>
+- Project: ResumeAI
+- /resume-api: Core Python Backend
+- /resume-cli: Python CLI Tool
+- /src: React Frontend Source
+- /components: React UI Components
+- /hooks: Custom React Hooks
+- /pages: Frontend Routes
+</repository_map>
+
+### 4. Ignored Directories
+The following directories are explicitly ignored to prevent output overflows:
+- `node_modules/`
+- `venv/`
+- `.venv/`
+- `dist/`
+- `build/`
+- `__pycache__/`
+- `.git/`
+- `.letta/`
