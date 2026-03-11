@@ -152,7 +152,7 @@ class DeploymentValidator:
     @staticmethod
     def validate_migrations() -> bool:
         """Validate all pending database migrations have been applied."""
-        # TODO: Implement when database is added
+        # TODO(#1010): Implement when database is added
         # For now, always pass
         logger.info("Database migrations validated")
         return True

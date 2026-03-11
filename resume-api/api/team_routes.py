@@ -1250,7 +1250,7 @@ async def add_resume_comment(
     Rate limit: 30 requests per minute per API key.
     """
     try:
-        # TODO: Implement database insert
+        # TODO(#1009): Implement database insert
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Resume {resume_id} not found",
@@ -1295,7 +1295,7 @@ async def list_resume_comments(
     Rate limit: 30 requests per minute per API key.
     """
     try:
-        # TODO: Implement database query
+        # TODO(#1009): Implement database query
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Resume {resume_id} not found",
@@ -1342,7 +1342,7 @@ async def update_resume_comment(
     Rate limit: 30 requests per minute per API key.
     """
     try:
-        # TODO: Implement database update
+        # TODO(#1009): Implement database update
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Resume {resume_id} or comment {comment_id} not found",
@@ -1386,7 +1386,7 @@ async def delete_resume_comment(
     Rate limit: 30 requests per minute per API key.
     """
     try:
-        # TODO: Implement database delete
+        # TODO(#1009): Implement database delete
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Resume {resume_id} or comment {comment_id} not found",
