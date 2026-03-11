@@ -17,7 +17,7 @@ import {
 } from '../utils/api-client';
 import { useStore } from '../store/store';
 import { useHistory } from '../src/hooks/useHistory';
-import { LinkedInImportDialog } from '../components/LinkedInImportDialog';
+import { ResumeImportDialog } from '../components/ResumeImportDialog';
 import ResumePreview from '../components/ResumePreview';
 import VersionHistory from '../components/VersionHistory';
 import CommentPanel from '../components/CommentPanel';
@@ -73,8 +73,8 @@ const Editor = () => {
   const [selectedVariant, setSelectedVariant] = useState<string>('modern');
   const [isGeneratingPDF, setIsGeneratingPDF] = useState<boolean>(false);
 
-  // LinkedIn import state
-  const [showLinkedInImport, setShowLinkedInImport] = useState<boolean>(false);
+  // Resume import state
+  const [showImportDialog, setShowImportDialog] = useState<boolean>(false);
 
   // Real-time preview state
   const [showPreview, setShowPreview] = useState<boolean>(false);
@@ -259,8 +259,8 @@ const Editor = () => {
     }
   }, []);
 
-  // Handle LinkedIn Import
-  const handleLinkedInImport = useCallback(
+  // Handle Resume Import
+  const handleImport = useCallback(
     (importedData: Partial<SimpleResumeData>) => {
       const currentData = resumeDataRef.current;
       const mergedData: SimpleResumeData = {
@@ -600,7 +600,7 @@ const Editor = () => {
     setExpandedProjId(newId);
   }, [trackedUpdate]);
 
-  const handleShowLinkedInImport = useCallback(() => setShowLinkedInImport(true), []);
+  const handleShowImport = useCallback(() => setShowImportDialog(true), []);
   const handleShowCommentPanel = useCallback(() => setShowCommentPanel(true), []);
   const handleShowVersionHistory = useCallback(() => setShowVersionHistory(true), []);
   const handleShowSaveVersionDialog = useCallback(() => setShowSaveVersionDialog(true), []);
@@ -612,7 +612,7 @@ const Editor = () => {
           <ContactInfoSection
             resumeData={resumeData}
             onUpdate={updateContact}
-            onShowLinkedInImport={handleShowLinkedInImport}
+            onShowLinkedInImport={handleShowImport}
             onShowCommentPanel={handleShowCommentPanel}
             unresolvedCommentCount={unresolvedCommentCount}
           />
@@ -913,11 +913,11 @@ const Editor = () => {
         )}
       </main>
 
-      {/* LinkedIn Import Dialog */}
-      <LinkedInImportDialog
-        isOpen={showLinkedInImport}
-        onClose={() => setShowLinkedInImport(false)}
-        onImport={handleLinkedInImport}
+      {/* Resume Import Dialog */}
+      <ResumeImportDialog
+        isOpen={showImportDialog}
+        onClose={() => setShowImportDialog(false)}
+        onImport={handleImport}
       />
 
       {/* Version History Dialog */}

@@ -4,6 +4,8 @@ import { JobApplication } from '../types';
 import StatusBadge from '../components/StatusBadge';
 import DashboardSkeleton from '../components/skeletons/DashboardSkeleton';
 import { Button, Card } from '../components/ui';
+import { ResumeImportDialog } from '../components/ResumeImportDialog';
+import { useStore } from '../store/store';
 import {
   getApplicationStats,
   getApplicationFunnel,
@@ -23,11 +25,25 @@ import {
  * ```
  */
 const Dashboard: React.FC = () => {
+  const navigate = useNavigate();
   const [stats, setStats] = useState<ApplicationStats | null>(null);
   const [funnel, setFunnel] = useState<ApplicationFunnel | null>(null);
   const [recentApps, setRecentApps] = useState<JobApplication[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showImportDialog, setShowImportDialog] = useState(false);
+
+  const setResumeData = useStore((state) => state.setResumeData);
+  const resumeData = useStore((state) => state.resumeData);
+
+  const handleImport = (importedData: any) => {
+    setResumeData({
+      ...resumeData,
+      ...importedData,
+    });
+    setShowImportDialog(false);
+    navigate('/editor');
+  };
 
   useEffect(() => {
     loadDashboardData();
@@ -106,7 +122,18 @@ const Dashboard: React.FC = () => {
     <div className="flex-1 min-h-screen bg-[#f6f6f8] pl-72">
       {/* Header */}
       <header className="h-16 flex items-center justify-between px-8 bg-white/80 backdrop-blur-sm sticky top-0 z-10 border-b border-slate-200">
-        <h2 className="text-slate-800 font-bold text-xl">Job Search Overview</h2>
+        <div className="flex items-center gap-6">
+          <h2 className="text-slate-800 font-bold text-xl">Job Search Overview</h2>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="flex items-center gap-2"
+            onClick={() => setShowImportDialog(true)}
+          >
+            <span className="material-symbols-outlined text-[18px]">upload_file</span>
+            Import Resume
+          </Button>
+        </div>
         <div className="flex items-center gap-4">
           <Button variant="ghost" className="p-2 relative">
             <span className="material-symbols-outlined">notifications</span>
@@ -317,6 +344,12 @@ const Dashboard: React.FC = () => {
           </Card>
         </div>
       </div>
+
+      <ResumeImportDialog
+        isOpen={showImportDialog}
+        onClose={() => setShowImportDialog(false)}
+        onImport={handleImport}
+      />
     </div>
   );
 };
