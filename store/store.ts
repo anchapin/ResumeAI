@@ -8,7 +8,7 @@ import {
   getStorageErrorMessage,
 } from '../utils/storage';
 import { sanitizeInput } from '../utils/security';
-import type { FeatureFlagConfig } from '../lib/feature-flags';
+import type { FeatureFlagConfig } from '../src/lib/feature-flags';
 
 export interface AuthUser {
   id: number;
