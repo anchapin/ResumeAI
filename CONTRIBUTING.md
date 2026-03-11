@@ -290,7 +290,11 @@ For detailed procedures, see [SECRETS_ROTATION.md](SECRETS_ROTATION.md):
 - Database password rotation
 - Emergency rotation (compromised secrets)
 
-### Reporting Secret Compromises
+### Security Policy
+
+Please review our [SECURITY.md](SECURITY.md) for information on how to report security vulnerabilities and our security disclosure policy.
+
+## Reporting Secret Compromises
 
 **If you suspect a secret has been exposed:**
 
@@ -301,6 +305,28 @@ For detailed procedures, see [SECRETS_ROTATION.md](SECRETS_ROTATION.md):
 5. **Verify** no unauthorized access in logs
 
 See [SECRETS_MANAGEMENT.md](SECRETS_MANAGEMENT.md#compromised-secret-response) for details.
+
+## TODO Comments Policy
+
+To maintain code quality and ensure technical debt is tracked, follow these guidelines for `TODO`, `FIXME`, `XXX`, and `HACK` comments:
+
+1.  **Format:** Always include a GitHub issue reference if the task is significant or will take more than a few hours.
+    ```typescript
+    // TODO(#123): Implement caching for this endpoint
+    ```
+    ```python
+    # FIXME(#456): Fix memory leak in PDF generation
+    ```
+
+2.  **Context:** Provide a brief explanation of *why* the comment is there and what needs to be done.
+
+3.  **No Naked TODOs:** Avoid "naked" TODOs without context or issue references in production-ready code.
+    - ❌ `// TODO: fix this`
+    - ✅ `// TODO(#789): Refactor this method to use the new validation service. Current implementation is too complex.`
+
+4.  **Review:** TODO comments should be reviewed regularly. If a feature is implemented, its associated TODOs must be removed.
+
+5.  **Technical Debt:** Legitimate technical debt identified via TODOs should be documented in `tech_debt.json`.
 
 ## Pull Request Checklist
 
