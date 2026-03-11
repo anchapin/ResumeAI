@@ -771,6 +771,12 @@ const Editor = () => {
                       error
                     </span>
                     Save failed
+                    <button
+                      onClick={handleSaveProfile}
+                      className="ml-2 text-primary-600 hover:text-primary-700 underline font-bold"
+                    >
+                      Retry Now
+                    </button>
                   </>
                 )}
                 {saveStatus === 'idle' && lastSaved && (
