@@ -201,9 +201,29 @@ class GlobalErrorHandlerService {
       };
     }
 
-    // Handle timeout errors (including AbortError from AbortController)
+    // Handle storage errors
     const errName = error instanceof Error ? error.name : '';
     const errMessage = error instanceof Error ? error.message : String(error || '');
+
+    if (
+      errName === 'QuotaExceededError' ||
+      errName === 'NS_ERROR_DOM_QUOTA_REACHED' ||
+      errMessage.toLowerCase().includes('quota') ||
+      errMessage.toLowerCase().includes('full')
+    ) {
+      const messageMap = getErrorMessageByType(ErrorType.STORAGE);
+      return {
+        type: ErrorType.STORAGE,
+        message: errMessage,
+        userMessage: messageMap.userMessage,
+        originalError: error instanceof Error ? error : new Error(String(error)),
+        context: { ...additionalContext, quotaExceeded: true },
+        timestamp,
+        id,
+      };
+    }
+
+    // Handle timeout errors (including AbortError from AbortController)
     if (errName === 'TimeoutError' || errName === 'AbortError' || errMessage.includes('timeout')) {
       const messageMap = getErrorMessageByType(ErrorType.TIMEOUT);
       return {
