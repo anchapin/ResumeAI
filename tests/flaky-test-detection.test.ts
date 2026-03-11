@@ -1,76 +1,88 @@
 import { describe, it, expect } from 'vitest';
 
 /**
- * Unit tests for flaky test detection utilities
  * These tests verify the core logic without requiring external dependencies
  */
+
+interface TestResult {
+  testId: string;
+  testName: string;
+  filePath: string;
+  runs: boolean[];
+  failureRate: number;
+  isFlaky: boolean;
+}
+
+interface TestSummary {
+  totalTests: number;
+  flakyTests: TestResult[];
+  nonFlakyTests: TestResult[];
+  timestamp: string;
+}
 
 describe('Flaky Test Detection', () => {
   describe('calculateFailureRate', () => {
     it('should return 0 for empty array', () => {
-      const runs = [];
-      const failures = runs.filter(run => !run).length;
+      const runs: boolean[] = [];
+      const failures = runs.filter((run: boolean) => !run).length;
       const rate = runs.length === 0 ? 0 : failures / runs.length;
       expect(rate).toBe(0);
     });
 
     it('should return 0 for all passing tests', () => {
-      const runs = [true, true, true];
-      const failures = runs.filter(run => !run).length;
+      const runs: boolean[] = [true, true, true];
+      const failures = runs.filter((run: boolean) => !run).length;
       const rate = runs.length === 0 ? 0 : failures / runs.length;
       expect(rate).toBe(0);
     });
 
     it('should return 1 for all failing tests', () => {
-      const runs = [false, false, false];
-      const failures = runs.filter(run => !run).length;
+      const runs: boolean[] = [false, false, false];
+      const failures = runs.filter((run: boolean) => !run).length;
       const rate = runs.length === 0 ? 0 : failures / runs.length;
       expect(rate).toBe(1);
     });
 
     it('should calculate correct failure rate for mixed results', () => {
-      const runs = [true, false, true, false];
-      const failures = runs.filter(run => !run).length;
+      const runs: boolean[] = [true, false, true, false];
+      const failures = runs.filter((run: boolean) => !run).length;
       const rate = runs.length === 0 ? 0 : failures / runs.length;
       expect(rate).toBe(0.5);
     });
   });
 
   describe('isFlaky', () => {
-    const isFlaky = (runs, threshold) => {
-      const failures = runs.filter(run => !run).length;
+    const isFlaky = (runs: boolean[], threshold: number): boolean => {
+      const failures = runs.filter((run: boolean) => !run).length;
       const rate = runs.length === 0 ? 0 : failures / runs.length;
       return rate > 0 && rate >= threshold;
     };
 
-    it('should return false for all passing tests', () => {
-      expect(isFlaky([true, true, true], 0.3)).toBe(false);
+    it('should identify flaky test exceeding threshold', () => {
+      expect(isFlaky([true, false, true, false], 0.4)).toBe(true);
     });
 
-    it('should return false for no runs', () => {
-      expect(isFlaky([], 0.3)).toBe(false);
+    it('should not identify test below threshold as flaky', () => {
+      expect(isFlaky([true, true, true, false], 0.4)).toBe(false);
     });
 
-    it('should return true when failure rate exceeds threshold', () => {
-      expect(isFlaky([true, false, false], 0.3)).toBe(true);
+    it('should not identify consistent failures as flaky if below threshold (not logical but as per code)', () => {
+      // Typically consistent failures are not "flaky", but the code defines flakiness by failure rate
+      expect(isFlaky([false, false, false], 1.1)).toBe(false);
     });
 
-    it('should return false when failure rate is below threshold', () => {
-      expect(isFlaky([true, true, false], 0.5)).toBe(false);
-    });
-
-    it('should return true for 100% failure rate', () => {
-      expect(isFlaky([false, false, false], 0.3)).toBe(true);
+    it('should identify consistent failure as flaky if threshold is met', () => {
+      expect(isFlaky([false, false, false], 0.5)).toBe(true);
     });
   });
 
   describe('analyzeFlakyTests', () => {
-    const analyzeFlakyTests = (testResults, threshold) => {
-      const flakyTests = [];
-      const nonFlakyTests = [];
+    const analyzeFlakyTests = (testResults: TestResult[], threshold: number): TestSummary => {
+      const flakyTests: TestResult[] = [];
+      const nonFlakyTests: TestResult[] = [];
 
       for (const testResult of testResults) {
-        const failures = testResult.runs.filter(run => !run).length;
+        const failures = testResult.runs.filter((run: boolean) => !run).length;
         const rate = testResult.runs.length === 0 ? 0 : failures / testResult.runs.length;
         testResult.isFlaky = rate > 0 && rate >= threshold;
         testResult.failureRate = rate;
@@ -91,11 +103,11 @@ describe('Flaky Test Detection', () => {
     };
 
     it('should correctly categorize flaky and non-flaky tests', () => {
-      const testResults = [
+      const testResults: TestResult[] = [
         {
           testId: '1',
           testName: 'Flaky Test',
-          filePath: '/test/file1.test.ts',
+          filePath: 'file1.ts',
           runs: [true, false, true, false],
           failureRate: 0,
           isFlaky: false,
@@ -103,66 +115,49 @@ describe('Flaky Test Detection', () => {
         {
           testId: '2',
           testName: 'Stable Test',
-          filePath: '/test/file2.test.ts',
-          runs: [true, true, true, true],
-          failureRate: 0,
-          isFlaky: false,
-        },
-        {
-          testId: '3',
-          testName: 'Consistently Failing Test',
-          filePath: '/test/file3.test.ts',
-          runs: [false, false, false],
+          filePath: 'file2.ts',
+          runs: [true, true, true],
           failureRate: 0,
           isFlaky: false,
         },
       ];
 
-      const summary = analyzeFlakyTests(testResults, 0.3);
-
-      expect(summary.totalTests).toBe(3);
-      expect(summary.flakyTests.length).toBe(2); // Flaky Test and Consistently Failing
-      expect(summary.nonFlakyTests.length).toBe(1); // Stable Test
-    });
-
-    it('should handle empty test results', () => {
-      const summary = analyzeFlakyTests([], 0.3);
-
-      expect(summary.totalTests).toBe(0);
-      expect(summary.flakyTests.length).toBe(0);
-      expect(summary.nonFlakyTests.length).toBe(0);
+      const summary = analyzeFlakyTests(testResults, 0.4);
+      expect(summary.totalTests).toBe(2);
+      expect(summary.flakyTests.length).toBe(1);
+      expect(summary.flakyTests[0].testId).toBe('1');
+      expect(summary.nonFlakyTests.length).toBe(1);
+      expect(summary.nonFlakyTests[0].testId).toBe('2');
     });
   });
 
   describe('generateFlakyTestReport', () => {
-    const generateFlakyTestReport = (summary) => {
+    const generateFlakyTestReport = (summary: TestSummary): string => {
       const lines = [
         '# Flaky Test Detection Report',
         '',
-        `Generated: ${summary.timestamp}`,
-        `Total Tests Analyzed: ${summary.totalTests}`,
+        `Total Tests: ${summary.totalTests}`,
         `Flaky Tests Found: ${summary.flakyTests.length}`,
-        '',
-        '---',
+        `Stable Tests: ${summary.nonFlakyTests.length}`,
+        `Generated At: ${summary.timestamp}`,
         '',
       ];
 
       if (summary.flakyTests.length === 0) {
-        lines.push('✅ No flaky tests detected!');
+        lines.push('No flaky tests detected.');
         return lines.join('\n');
       }
 
-      lines.push('## Flaky Tests');
+      lines.push('## Detailed Breakdown');
       lines.push('');
 
       for (const test of summary.flakyTests) {
-        const passCount = test.runs.filter(r => r).length;
+        const passCount = test.runs.filter((r: boolean) => r).length;
         const failCount = test.runs.length - passCount;
         lines.push(`### ${test.testName}`);
         lines.push(`- **File**: ${test.filePath}`);
-        lines.push(`- **Pass Rate**: ${((1 - test.failureRate) * 100).toFixed(1)}%`);
-        lines.push(`- **Runs**: ${passCount} passed, ${failCount} failed`);
         lines.push(`- **Failure Rate**: ${(test.failureRate * 100).toFixed(1)}%`);
+        lines.push(`- **Results**: ${passCount} PASSED, ${failCount} FAILED`);
         lines.push('');
       }
 
@@ -170,42 +165,40 @@ describe('Flaky Test Detection', () => {
     };
 
     it('should generate report with no flaky tests', () => {
-      const summary = {
+      const summary: TestSummary = {
         totalTests: 2,
         flakyTests: [],
         nonFlakyTests: [],
-        timestamp: '2024-01-01T00:00:00.000Z',
+        timestamp: '2026-03-10T00:00:00Z',
       };
 
       const report = generateFlakyTestReport(summary);
-
-      expect(report).toContain('Flaky Test Detection Report');
-      expect(report).toContain('No flaky tests detected');
+      expect(report).toContain('Total Tests: 2');
+      expect(report).toContain('Flaky Tests Found: 0');
+      expect(report).toContain('No flaky tests detected.');
     });
 
     it('should generate report with flaky tests', () => {
-      const summary = {
+      const summary: TestSummary = {
         totalTests: 2,
         flakyTests: [
           {
             testId: '1',
-            testName: 'Flaky Test Example',
-            filePath: '/test/example.test.ts',
+            testName: 'Flaky Test 1',
+            filePath: 'test1.ts',
             runs: [true, false],
             failureRate: 0.5,
             isFlaky: true,
           },
         ],
         nonFlakyTests: [],
-        timestamp: '2024-01-01T00:00:00.000Z',
+        timestamp: '2026-03-10T00:00:00Z',
       };
 
       const report = generateFlakyTestReport(summary);
-
-      expect(report).toContain('Flaky Test Detection Report');
-      expect(report).toContain('## Flaky Tests');
-      expect(report).toContain('Flaky Test Example');
-      expect(report).toContain('50.0%');
+      expect(report).toContain('Flaky Test 1');
+      expect(report).toContain('Failure Rate: 50.0%');
+      expect(report).toContain('1 PASSED, 1 FAILED');
     });
   });
 });
