@@ -57,6 +57,9 @@ All API requests require an API key sent in the `X-API-KEY` header.
 - Resume Tailoring: 30 requests per minute per API key
 - List Variants: 60 requests per minute per API key
 - Cover Letter Generation: 10 requests per minute per API key
+- Team Management: 10 requests per minute per API key
+- Team Collaboration (Sharing/Comments): 20-30 requests per minute per API key
+- Billing Operations: 30 requests per minute per API key
 
 ## Endpoints
 
@@ -286,6 +289,249 @@ Generate a personalized cover letter based on resume and job description using A
 - `closing`: Closing paragraph with call to action
 - `full_text`: Complete cover letter as a single string
 - `metadata`: Additional information including word count
+
+### 5. Billing & Subscriptions
+
+Manage subscription plans, payments, and usage tracking.
+
+#### List Subscription Plans
+
+Get all available subscription plans with pricing and features.
+
+**Endpoint:** `GET /api/v1/billing/plans`
+
+**Response:** `200 OK`
+
+```json
+[
+  {
+    "id": 1,
+    "name": "basic",
+    "display_name": "Basic Plan",
+    "description": "Perfect for individuals getting started",
+    "price_cents": 999,
+    "currency": "USD",
+    "interval": "month",
+    "features": ["5 resumes per month", "3 AI tailorings", "3 templates"],
+    "max_resumes_per_month": 5,
+    "max_ai_tailorings_per_month": 3,
+    "max_templates": 3,
+    "include_priority_support": false,
+    "include_custom_domains": false,
+    "is_popular": false
+  }
+]
+```
+
+#### Get Subscription Details
+
+Get current user subscription status and usage.
+
+**Endpoint:** `GET /api/v1/billing/subscription`
+
+**Headers:**
+- `X-API-KEY`: Your API key
+- `X-User-ID`: User ID (internal)
+
+**Response:** `200 OK`
+
+```json
+{
+  "id": 123,
+  "user_id": "user_456",
+  "status": "active",
+  "plan": {
+    "name": "premium",
+    "display_name": "Premium Plan"
+    // ... plan details
+  },
+  "current_period_end": "2024-12-31T23:59:59Z",
+  "cancel_at_period_end": false,
+  "resumes_generated_this_period": 2,
+  "ai_tailorings_this_period": 5,
+  "created_at": "2024-01-01T10:00:00Z"
+}
+```
+
+#### Create Checkout Session
+
+Create a Stripe checkout session for subscription purchase.
+
+**Endpoint:** `POST /api/v1/billing/checkout`
+
+**Request Body:**
+```json
+{
+  "plan_name": "premium",
+  "success_url": "https://resumeai.app/billing/success",
+  "cancel_url": "https://resumeai.app/billing/cancel",
+  "trial_period_days": 7
+}
+```
+
+**Response:** `200 OK`
+```json
+{
+  "session_id": "cs_test_...",
+  "url": "https://checkout.stripe.com/..."
+}
+```
+
+#### Get Usage Statistics
+
+Check current usage against plan limits.
+
+**Endpoint:** `GET /api/v1/billing/usage`
+
+**Response:** `200 OK`
+```json
+{
+  "resume_generated": {
+    "allowed": true,
+    "limit": 10,
+    "used": 2,
+    "remaining": 8
+  },
+  "ai_tailored": {
+    "allowed": false,
+    "limit": 5,
+    "used": 5,
+    "remaining": 0
+  }
+}
+```
+
+### 6. Team Collaboration
+
+Collaborate with team members by sharing resumes and adding comments.
+
+#### Create Team
+
+Create a new collaboration team.
+
+**Endpoint:** `POST /api/v1/teams/v1/teams`
+
+**Request Body:**
+```json
+{
+  "name": "Product Design Team",
+  "description": "Collaborative space for the design department"
+}
+```
+
+**Response:** `200 OK`
+```json
+{
+  "id": 1,
+  "name": "Product Design Team",
+  "description": "Collaborative space for the design department",
+  "owner_id": 123,
+  "member_count": 1,
+  "resume_count": 0,
+  "created_at": "2024-03-11T10:00:00Z",
+  "updated_at": "2024-03-11T10:00:00Z"
+}
+```
+
+#### Invite Team Member
+
+Invite a user to join your team via email.
+
+**Endpoint:** `POST /api/v1/teams/v1/teams/{team_id}/members`
+
+**Request Body:**
+```json
+{
+  "email": "colleague@example.com",
+  "role": "editor"
+}
+```
+
+**Response:** `200 OK`
+```json
+{
+  "user_id": 456,
+  "email": "colleague@example.com",
+  "username": "jdoe",
+  "role": "editor",
+  "joined_at": "2024-03-11T11:30:00Z"
+}
+```
+
+#### Share Resume with Team
+
+Share a specific resume with all team members.
+
+**Endpoint:** `POST /api/v1/teams/v1/teams/{team_id}/resumes`
+
+**Request Body:**
+```json
+{
+  "resume_id": 789,
+  "permission": "edit"
+}
+```
+
+**Response:** `200 OK`
+```json
+{
+  "message": "Resume has been shared with team 'Product Design Team'"
+}
+```
+
+#### Add Resume Comment
+
+Add a comment to a specific section of a resume.
+
+**Endpoint:** `POST /api/v1/teams/v1/resumes/{resume_id}/comments`
+
+**Request Body:**
+```json
+{
+  "content": "Should we emphasize the React experience more in this section?",
+  "section": "work",
+  "position": { "line": 15 }
+}
+```
+
+**Response:** `200 OK`
+```json
+{
+  "id": 10,
+  "resume_id": 789,
+  "user_id": 123,
+  "username": "alex",
+  "content": "Should we emphasize the React experience more in this section?",
+  "section": "work",
+  "position": { "line": 15 },
+  "is_resolved": false,
+  "created_at": "2024-03-11T12:00:00Z",
+  "updated_at": "2024-03-11T12:00:00Z"
+}
+```
+
+#### Get Team Activity
+
+Get a log of recent actions within the team.
+
+**Endpoint:** `GET /api/v1/teams/v1/teams/{team_id}/activity`
+
+**Response:** `200 OK`
+```json
+[
+  {
+    "id": 50,
+    "team_id": 1,
+    "user_id": 123,
+    "username": "alex",
+    "action": "resume_shared",
+    "resource_type": "resume",
+    "resource_id": 789,
+    "description": "Resume was shared with the team",
+    "created_at": "2024-03-11T12:05:00Z"
+  }
+]
+```
 
 ## Error Handling
 
