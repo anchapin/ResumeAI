@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { ProjectEntry } from '../../types';
+import { RichTextEditor } from './RichTextEditor';
 
 interface ProjectItemProps {
   project: ProjectEntry;
@@ -144,11 +145,11 @@ const ProjectItem = React.memo(
                 >
                   Description
                 </label>
-                <textarea
-                  id={`proj-desc-${project.id}`}
-                  value={project.description}
-                  onChange={(e) => onUpdate(project.id, 'description', e.target.value)}
-                  className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all text-slate-900 h-24 resize-none"
+                <RichTextEditor
+                  content={project.description}
+                  onChange={(value) => onUpdate(project.id, 'description', value)}
+                  placeholder="Describe your project..."
+                  minHeight="100px"
                 />
               </div>
               <div className="space-y-2 md:col-span-2">

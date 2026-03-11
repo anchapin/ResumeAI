@@ -1,4 +1,5 @@
 import React from 'react';
+import { RichTextEditor } from './RichTextEditor';
 
 interface SummarySectionProps {
   summary: string;
@@ -27,12 +28,11 @@ export const SummarySection = React.memo<SummarySectionProps>(
 
         <div className="bg-white rounded-xl border border-slate-200 p-8 space-y-4">
           <label className="text-sm font-bold text-slate-700">Summary</label>
-          <textarea
-            value={summary}
-            onChange={(e) => onUpdate(e.target.value)}
-            rows={8}
-            className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all text-slate-900 resize-none"
+          <RichTextEditor
+            content={summary}
+            onChange={onUpdate}
             placeholder="Write a brief professional summary highlighting your experience, skills, and career goals..."
+            minHeight="160px"
           />
           <p className="text-xs text-slate-500">
             Tip: Keep your summary concise (3-5 sentences) and focused on your unique value

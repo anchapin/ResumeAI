@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { WorkExperience } from '../../types';
+import { RichTextEditor } from './RichTextEditor';
 
 interface ExperienceItemProps {
   exp: WorkExperience;
@@ -199,12 +200,11 @@ const ExperienceItem = React.memo(
                 Achievements & Responsibilities
               </label>
               <div className="bg-slate-50 border border-dashed border-slate-300 rounded-xl p-4">
-                <textarea
-                  id={`exp-description-${exp.id}`}
-                  value={exp.description}
-                  onChange={(e) => onUpdate(exp.id, 'description', e.target.value)}
-                  className="w-full bg-transparent border-none focus:ring-0 p-0 text-sm text-slate-700 resize-none h-20 placeholder-slate-400"
-                  placeholder="Describe your achievements..."
+                <RichTextEditor
+                  content={exp.description}
+                  onChange={(value) => onUpdate(exp.id, 'description', value)}
+                  placeholder="Describe your achievements and responsibilities..."
+                  minHeight="100px"
                 />
                 <div className="flex flex-wrap items-center gap-2 mt-2 pt-2 border-t border-slate-200">
                   <span className="text-xs font-bold text-slate-400 uppercase tracking-wide">
