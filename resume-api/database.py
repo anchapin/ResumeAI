@@ -117,6 +117,8 @@ class Comment(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     resume_id = Column(Integer, ForeignKey("resumes.id"), nullable=False, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)
+    parent_id = Column(Integer, ForeignKey("comments.id"), nullable=True, index=True)
 
     # Comment content
     author_name = Column(String(200), nullable=False)
@@ -125,14 +127,20 @@ class Comment(Base):
 
     # Comment metadata
     section = Column(String(100), nullable=True)  # Section of resume being commented on
+    position = Column(JSON, nullable=True)  # Position information for inline comments
     is_resolved = Column(Boolean, default=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), index=True)
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
     # Relationships
     resume = relationship("Resume", back_populates="comments")
+    user = relationship("User", backref="comments")
+    parent = relationship("Comment", remote_side=[id], backref="replies")
 
-    __table_args__ = (Index("idx_comment_resume_created", "resume_id", "created_at"),)
+    __table_args__ = (
+        Index("idx_comment_resume_created", "resume_id", "created_at"),
+        Index("idx_comment_parent", "parent_id"),
+    )
 
 
 class ResumeShare(Base):
