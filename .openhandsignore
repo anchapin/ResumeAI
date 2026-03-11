@@ -1,0 +1,17 @@
+# OpenHands ignore file to prevent directory listing overflows
+node_modules/
+**/node_modules/
+dist/
+build/
+.git/
+__pycache__/
+**/__pycache__/
+.pytest_cache/
+.letta/
+.act/
+.agents/
+.gemini/
+.jules/
+.Jules/
+.husky/
+.coverage
