@@ -4,6 +4,51 @@ import userEvent from '@testing-library/user-event';
 import React from 'react';
 import Settings from './Settings';
 
+// Mock dependencies
+vi.mock('../utils/security', () => ({
+  secureApiCall: vi.fn().mockResolvedValue({
+    ok: true,
+    json: () => Promise.resolve({ keys: [], total: 0 }),
+    status: 200,
+  }),
+  sanitizeInput: (i: string) => i,
+  getSecurityHeaders: () => ({}),
+}));
+
+vi.mock('react-toastify', () => ({
+  toast: {
+    success: vi.fn(),
+    error: vi.fn(),
+    info: vi.fn(),
+    warning: vi.fn(),
+  },
+}));
+
+// Mock sub-components to avoid their async side-effects
+vi.mock('../components/GitHubSettings', () => ({
+  default: () => <div data-testid="github-settings">GitHub Settings</div>,
+}));
+
+vi.mock('../components/LinkedInSettings', () => ({
+  LinkedInSettings: () => <div data-testid="linkedin-settings">LinkedIn Settings</div>,
+}));
+
+vi.mock('../components/WebhookList', () => ({
+  default: () => <div data-testid="webhook-list">Webhook List</div>,
+}));
+
+vi.mock('../components/WebhookForm', () => ({
+  default: () => <div data-testid="webhook-form">Webhook Form</div>,
+}));
+
+vi.mock('../components/DeliveryLogs', () => ({
+  default: () => <div data-testid="delivery-logs">Delivery Logs</div>,
+}));
+
+vi.mock('../components/LanguageSwitcher', () => ({
+  default: () => <div data-testid="language-switcher">Language Switcher</div>,
+}));
+
 // Mock localStorage
 const localStorageMock = {
   getItem: vi.fn(),
