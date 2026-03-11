@@ -106,6 +106,7 @@ function App() {
   const isLoaded = useStore((state) => state.isResumeLoaded);
   const loadResume = useStore((state) => state.loadResume);
   const setSaveStatus = useStore((state) => state.setSaveStatus);
+  const saveStatus = useStore((state) => state.saveStatus);
   const setResumeError = useStore((state) => state.setResumeError);
   const resumeError = useStore((state) => state.resumeError);
   const showShortcuts = useStore((state) => state.showShortcuts);
@@ -139,6 +140,20 @@ function App() {
       }
     });
   }, [showShortcuts, setShowShortcuts]);
+
+  // Warn users about unsaved changes when saving is in progress
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (saveStatus === 'saving') {
+        e.preventDefault();
+        e.returnValue = ''; // Standard way to trigger the browser confirmation dialog
+        return '';
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [saveStatus]);
 
   // Track page views on route change
   const location = useLocation();
