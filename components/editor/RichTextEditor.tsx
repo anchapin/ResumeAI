@@ -58,6 +58,7 @@ export const RichTextEditor = React.memo<RichTextEditorProps>(
           heading: {
             levels: [1, 2, 3],
           },
+          underline: false, // Disable underline from StarterKit to avoid duplicate extension warning
         }),
         Underline,
         TextAlign.configure({
