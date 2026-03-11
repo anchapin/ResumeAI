@@ -290,7 +290,11 @@ For detailed procedures, see [SECRETS_ROTATION.md](SECRETS_ROTATION.md):
 - Database password rotation
 - Emergency rotation (compromised secrets)
 
-### Reporting Secret Compromises
+### Security Policy
+
+Please review our [SECURITY.md](SECURITY.md) for information on how to report security vulnerabilities and our security disclosure policy.
+
+## Reporting Secret Compromises
 
 **If you suspect a secret has been exposed:**
 
