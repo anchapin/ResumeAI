@@ -10,7 +10,6 @@ import {
 } from '../types';
 import {
   convertToAPIData,
-  generatePDF,
   getVariants,
   listComments,
   updateResume,

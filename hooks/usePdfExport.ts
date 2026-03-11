@@ -5,7 +5,6 @@ import {
   downloadJobResult,
   cancelJob,
   ResumeDataForAPI,
-  JobStatusResponse,
 } from '../utils/api-client';
 
 export type ExportStatus = 'idle' | 'submitting' | 'processing' | 'completed' | 'failed' | 'cancelled';
@@ -34,6 +33,7 @@ export function usePdfExport(): UsePdfExportResult {
   const [eta, setEta] = useState<number | null>(null);
 
   const pollingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pollStatusRef = useRef<(id: string) => Promise<void>>(null);
 
   const clearPolling = useCallback(() => {
     if (pollingTimerRef.current) {
@@ -74,7 +74,11 @@ export function usePdfExport(): UsePdfExportResult {
         } else {
           // Still processing or pending
           setStatus(job.state === 'processing' ? 'processing' : 'submitting');
-          pollingTimerRef.current = setTimeout(() => pollStatus(id), POLLING_INTERVAL);
+          pollingTimerRef.current = setTimeout(() => {
+            if (pollStatusRef.current) {
+              pollStatusRef.current(id);
+            }
+          }, POLLING_INTERVAL);
         }
       } catch (err) {
         console.error('Polling failed:', err);
@@ -85,6 +89,11 @@ export function usePdfExport(): UsePdfExportResult {
     },
     [clearPolling],
   );
+
+  // Set the ref to the pollStatus function
+  useEffect(() => {
+    pollStatusRef.current = pollStatus;
+  }, [pollStatus]);
 
   const startExport = useCallback(
     async (resumeData: ResumeDataForAPI, variant: string = 'modern') => {
