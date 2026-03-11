@@ -1,0 +1,5 @@
+{
+  "body": "## Problem\nTerms like \"Workspace\" and \"Bulk\" don't match common user mental models.\n\n## Impact\n- Cognitive friction\n- Poor match between system and real world (Heuristic #2)\n\n## Tasks\n- [ ] Rename \"Workspace\" to \"My Resumes\" in the sidebar and routes\n- [ ] Rename \"Bulk\" to \"Manage Multi-Resume\" or \"Bulk Operations\"\n- [ ] Update all breadcrumbs and internal links to reflect new naming\n- [ ] Add tooltips explaining the purpose of each section\n",
+  "number": 565,
+  "title": "[UX-05] Simplify & Standardize Navigation Labels"
+}

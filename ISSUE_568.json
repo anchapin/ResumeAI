@@ -1,0 +1,5 @@
+{
+  "body": "## Problem\nGeneric \"Failed to save\" error messages lack a clear recovery path.\n\n## Impact\n- High frustration\n- Poor error diagnosis and recovery (Heuristic #8)\n\n## Tasks\n- [ ] Categorize errors (Storage Full, Network Lost, Server Error)\n- [ ] Add action buttons to error toasts (e.g., \"Retry,\" \"Download Backup\")\n- [ ] Provide a \"Manual Save\" button that appears only when auto-save fails\n",
+  "number": 568,
+  "title": "[UX-08] Add Specific Error Recovery Actions to UI"
+}

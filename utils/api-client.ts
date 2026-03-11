@@ -309,6 +309,81 @@ export async function generatePDF(
   return response.blob();
 }
 
+export interface AsyncPDFJobResponse {
+  job_id: string;
+  status: string;
+  message: string;
+}
+
+export interface JobStatusResponse {
+  job_id: string;
+  state: 'pending' | 'processing' | 'completed' | 'failed' | 'cancelled';
+  progress: number;
+  eta_seconds: number | null;
+  error: string | null;
+  retry_count: number;
+  created_at: string;
+  started_at: string | null;
+  completed_at: string | null;
+  result: Record<string, unknown> | null;
+}
+
+export async function submitAsyncPDFJob(
+  resumeData: ResumeDataForAPI,
+  variant: string = 'modern',
+  priority: 'low' | 'normal' | 'high' | 'critical' = 'normal',
+): Promise<AsyncPDFJobResponse> {
+  const response = await fetchWithTimeout(
+    `${API_URL}/api/v1/render/pdf-async`,
+    {
+      method: 'POST',
+      headers: { ...getHeaders(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ resume_data: resumeData, variant, priority }),
+    },
+    TIMEOUT_CONFIG.STANDARD,
+  );
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ detail: 'Failed to submit PDF job' }));
+    throw new Error(error.detail || 'Failed to submit PDF job');
+  }
+  return response.json();
+}
+
+export async function getJobStatus(jobId: string): Promise<JobStatusResponse> {
+  const response = await fetchWithTimeout(
+    `${API_URL}/api/v1/jobs/${jobId}`,
+    { headers: getHeaders() },
+    TIMEOUT_CONFIG.QUICK,
+  );
+  if (!response.ok) {
+    throw new Error('Failed to get job status');
+  }
+  return response.json();
+}
+
+export async function downloadJobResult(jobId: string): Promise<Blob> {
+  const response = await fetchWithTimeout(
+    `${API_URL}/api/v1/jobs/${jobId}/download`,
+    { headers: getHeaders() },
+    TIMEOUT_CONFIG.PDF_GENERATION,
+  );
+  if (!response.ok) {
+    throw new Error('Failed to download job result');
+  }
+  return response.blob();
+}
+
+export async function cancelJob(jobId: string): Promise<void> {
+  const response = await fetchWithTimeout(
+    `${API_URL}/api/v1/jobs/${jobId}`,
+    { method: 'DELETE', headers: getHeaders() },
+    TIMEOUT_CONFIG.QUICK,
+  );
+  if (!response.ok) {
+    throw new Error('Failed to cancel job');
+  }
+}
+
 export interface VariantMetadata {
   name: string;
   display_name: string;

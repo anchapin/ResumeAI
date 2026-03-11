@@ -32,7 +32,8 @@ export const DEFAULT_SHORTCUTS: KeyboardShortcut[] = [
   { key: 'Ctrl+Shift+P', action: 'Toggle fullscreen', category: 'View' },
   { key: 'Ctrl+1', action: 'Go to Dashboard', category: 'Navigation' },
   { key: 'Ctrl+2', action: 'Go to Editor', category: 'Navigation' },
-  { key: 'Ctrl+3', action: 'Go to Workspace', category: 'Navigation' },
+  { key: 'Ctrl+3', action: 'Go to My Resumes', category: 'Navigation' },
+  { key: 'Ctrl+4', action: 'Go to Bulk Operations', category: 'Navigation' },
 
   // Actions
   { key: 'Ctrl+D', action: 'Duplicate current section', category: 'Edit' },

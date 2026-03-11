@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { SimpleResumeData, LinkedInProfile, GitHubRepository } from '../types';
-import { importFromLinkedInFile } from '../utils/import';
+import { importFromLinkedInFile, importFromPDF, importFromWord } from '../utils/import';
 import {
   connectLinkedIn,
   handleLinkedInCallback,
@@ -8,7 +8,7 @@ import {
 } from '../utils/api-client';
 import { showSuccessToast, showErrorToast } from '../utils/toast';
 
-interface LinkedInImportDialogProps {
+interface ResumeImportDialogProps {
   isOpen: boolean;
   onClose: () => void;
   onImport: (data: Partial<SimpleResumeData>) => void;
@@ -41,21 +41,21 @@ const STEPS: Step[] = [
 ];
 
 /**
- * LinkedIn Import Dialog Component
+ * Resume Import Dialog Component
  *
- * Allows users to import their LinkedIn profile data via OAuth or file upload.
- * Supports both OAuth-based real-time import and file-based import (ZIP, JSON, CSV).
+ * Allows users to import their data via LinkedIn OAuth, LinkedIn export files, or PDF/DOCX resumes.
  */
-export const LinkedInImportDialog: React.FC<LinkedInImportDialogProps> = ({
+export const ResumeImportDialog: React.FC<ResumeImportDialogProps> = ({
   isOpen,
   onClose,
   onImport,
 }) => {
   const [currentStep, setCurrentStep] = useState<Step['id']>('upload');
-  const [importMethod, setImportMethod] = useState<'oauth' | 'file' | null>(null);
+  const [importMethod, setImportMethod] = useState<'oauth' | 'file' | 'resume' | null>(null);
   const [isImporting, setIsImporting] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const resumeInputRef = useRef<HTMLInputElement>(null);
   const folderInputRef = useRef<HTMLInputElement>(null);
 
   // OAuth states
@@ -315,6 +315,73 @@ export const LinkedInImportDialog: React.FC<LinkedInImportDialogProps> = ({
     setIsImporting(false);
   };
 
+  const handleResumeFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const ext = file.name.toLowerCase().split('.').pop();
+    if (ext !== 'pdf' && ext !== 'docx' && ext !== 'doc') {
+      showErrorToast('Please select a valid PDF or Word document.');
+      return;
+    }
+
+    setIsImporting(true);
+    try {
+      const resumeData = ext === 'pdf' ? await importFromPDF(file) : await importFromWord(file);
+
+      const importedData: Partial<SimpleResumeData> = {
+        name: resumeData.basics?.name || '',
+        email: resumeData.basics?.email || '',
+        phone: resumeData.basics?.phone || '',
+        location: resumeData.location?.city || resumeData.location?.region || '',
+        role: resumeData.basics?.label || '',
+        summary: resumeData.basics?.summary || '',
+        skills: resumeData.skills?.map((s) => s.name || '').filter(Boolean) || [],
+        experience:
+          resumeData.work?.map((work) => ({
+            id: Math.random().toString(36).substring(2, 9),
+            company: work.company || '',
+            role: work.position || '',
+            startDate: work.startDate || '',
+            endDate: work.endDate || '',
+            current: !work.endDate,
+            description: work.summary || '',
+            tags: [],
+          })) || [],
+        education:
+          resumeData.education?.map((edu) => ({
+            id: Math.random().toString(36).substring(2, 9),
+            institution: edu.institution || '',
+            area: edu.area || '',
+            studyType: edu.studyType || '',
+            startDate: edu.startDate || '',
+            endDate: edu.endDate || '',
+            courses: edu.courses || [],
+          })) || [],
+        projects:
+          resumeData.projects?.map((proj) => ({
+            id: Math.random().toString(36).substring(2, 9),
+            name: proj.name || '',
+            description: proj.description || '',
+            url: proj.url || '',
+            roles: proj.roles || [],
+            startDate: proj.startDate || '',
+            endDate: proj.endDate || '',
+            highlights: proj.highlights || [],
+          })) || [],
+      };
+
+      onImport(importedData);
+      showSuccessToast('Resume file imported successfully!');
+      onClose();
+    } catch (error) {
+      console.error('Resume import error:', error);
+      showErrorToast(error instanceof Error ? error.message : 'Failed to import resume file.');
+    } finally {
+      setIsImporting(false);
+    }
+  };
+
   // File import handlers (existing functionality)
   const handleFileSelect = async (files: File | FileList) => {
     const fileList =
@@ -535,16 +602,36 @@ export const LinkedInImportDialog: React.FC<LinkedInImportDialogProps> = ({
                       Securely connect your LinkedIn account to import your profile, experience, and
                       skills in real-time.
                     </p>
-                    <div className="flex items-center gap-2 mt-2">
-                      <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs font-medium rounded-full">
-                        Recommended
-                      </span>
-                      <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">
-                        Real-time
-                      </span>
-                    </div>
                   </div>
                   {importMethod === 'oauth' && (
+                    <span className="material-symbols-outlined text-primary-600">
+                      radio_button_checked
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Resume File Option */}
+              <div
+                onClick={() => setImportMethod('resume')}
+                className={`p-6 border-2 rounded-xl cursor-pointer transition-all ${
+                  importMethod === 'resume'
+                    ? 'border-primary-500 bg-primary-50 ring-2 ring-primary-200'
+                    : 'border-slate-200 hover:border-primary-300 hover:bg-slate-50'
+                }`}
+              >
+                <div className="flex items-start gap-4">
+                  <div className="bg-emerald-600 size-12 rounded-lg flex items-center justify-center text-white flex-shrink-0">
+                    <span className="material-symbols-outlined text-2xl">picture_as_pdf</span>
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-bold text-slate-900 mb-1">Upload PDF or Word Resume</h3>
+                    <p className="text-sm text-slate-600">
+                      Upload an existing PDF or Word resume. Our AI will parse the content and
+                      populate your profile automatically.
+                    </p>
+                  </div>
+                  {importMethod === 'resume' && (
                     <span className="material-symbols-outlined text-primary-600">
                       radio_button_checked
                     </span>
@@ -571,10 +658,6 @@ export const LinkedInImportDialog: React.FC<LinkedInImportDialogProps> = ({
                       Upload your LinkedIn data export (ZIP, JSON, or CSV files) to import your
                       profile offline.
                     </p>
-                    <p className="text-xs text-slate-500 mt-2">
-                      Get your export from LinkedIn Settings {'>'} Data Privacy {'>'} Get a copy of
-                      your data
-                    </p>
                   </div>
                   {importMethod === 'file' && (
                     <span className="material-symbols-outlined text-primary-600">
@@ -591,6 +674,8 @@ export const LinkedInImportDialog: React.FC<LinkedInImportDialogProps> = ({
                     handleOAuthConnect();
                   } else if (importMethod === 'file') {
                     fileInputRef.current?.click();
+                  } else if (importMethod === 'resume') {
+                    resumeInputRef.current?.click();
                   }
                 }}
                 disabled={!importMethod || isImporting}
@@ -943,8 +1028,16 @@ export const LinkedInImportDialog: React.FC<LinkedInImportDialogProps> = ({
         className="hidden"
         disabled={isImporting}
       />
+      <input
+        ref={resumeInputRef}
+        type="file"
+        accept=".pdf,.docx,.doc"
+        onChange={handleResumeFileSelect}
+        className="hidden"
+        disabled={isImporting}
+      />
     </div>
   );
 };
 
-export default LinkedInImportDialog;
+export default ResumeImportDialog;

@@ -7,8 +7,9 @@ import { useAuth } from '../hooks/useAuth';
 
 const NAV_ITEMS = [
   { id: Route.DASHBOARD, label: 'Dashboard', icon: 'dashboard', path: '/dashboard' },
-  { id: Route.BULK, label: 'My Resumes', icon: 'description', path: '/bulk' },
+  { id: Route.WORKSPACE, label: 'My Resumes', icon: 'description', path: '/my-resumes' },
   { id: Route.EDITOR, label: 'My Master Profile', icon: 'account_circle', path: '/editor' },
+  { id: Route.BULK, label: 'Bulk Operations', icon: 'manage_accounts', path: '/bulk-operations' },
   { id: Route.APPLICATIONS, label: 'Job Applications', icon: 'work', path: '/applications' },
   {
     id: Route.INTERVIEW_PRACTICE,
@@ -118,15 +119,15 @@ const Sidebar: React.FC<SidebarProps> = React.memo(
         <div className="flex flex-col gap-4">
           <button
             type="button"
-            onClick={() => navigate('/workspace')}
+            onClick={() => navigate('/my-resumes')}
             onMouseEnter={() => prefetch('workspace')}
             data-testid="nav-workspace"
             className="flex w-full items-center justify-center gap-2 rounded-xl h-12 bg-primary-600 text-white text-sm font-bold shadow-lg shadow-primary-600/30 hover:bg-primary-700 hover:shadow-primary-600/40 transition-all transform active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary-600"
           >
             <span className="material-symbols-outlined text-[20px]" aria-hidden="true">
-              add_circle
+              auto_awesome
             </span>
-            <span>New Application</span>
+            <span>Start Tailoring</span>
           </button>
           <div className="border-t border-slate-100 pt-4 flex flex-col gap-2">
             <button
