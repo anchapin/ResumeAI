@@ -1,0 +1,5 @@
+{
+  "body": "## Problem\nUsers struggle with writing Professional Summaries and Job Descriptions.\n\n## Impact\n- Writer's block/fatigue\n- Lack of recognition over recall (Heuristic #6)\n\n## Tasks\n- [ ] Add a \"View Examples\" tooltip/modal for the Summary field\n- [ ] Implement a \"Resume Helper\" sidebar with role-specific phrases\n- [ ] (Optional) Integrate AI text generation for job descriptions\n- [ ] Add placeholder text that suggests actual content (e.g., \"Experienced in [Skill]...\")\n",
+  "number": 563,
+  "title": "[UX-03] Introduce Field-Level Templates and AI Examples"
+}

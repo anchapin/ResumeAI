@@ -307,7 +307,7 @@ function App() {
             }
           />
           <Route
-            path="/workspace"
+            path="/my-resumes"
             element={
               isAuthenticated ? (
                 <Suspense fallback={<WorkspaceSkeleton />}>
@@ -454,7 +454,7 @@ function App() {
             }
           />
           <Route
-            path="/bulk"
+            path="/bulk-operations"
             element={
               isAuthenticated ? (
                 <Suspense fallback={<ResumeManagementSkeleton />}>

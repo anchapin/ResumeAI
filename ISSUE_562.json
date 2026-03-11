@@ -1,0 +1,5 @@
+{
+  "body": "## Problem\nUsers are unsure if their latest changes are safe (Auto-save Feedback).\n\n## Impact\n- High anxiety/uncertainty\n- Lack of visibility of system status (Heuristic #1)\n\n## Tasks\n- [ ] Add a \"Save Status\" component to the Editor header\n- [ ] Display \"Syncing...\" and \"Saved [X] mins ago\" states\n- [ ] Implement `aria-live=\"polite\"` for screen reader announcements of save status\n- [ ] Show a specific \"Offline\" status when the connection is lost\n",
+  "number": 562,
+  "title": "[UX-02] Add Persistent \"Saved\" Status with `aria-live` Support"
+}

@@ -1,0 +1,5 @@
+{
+  "body": "## Problem\nUsers can accidentally close the tab while an auto-save is pending.\n\n## Impact\n- Data loss\n- Poor error prevention (Heuristic #5)\n\n## Tasks\n- [ ] Listen for the `beforeunload` event when `SaveStatus === 'saving'`\n- [ ] Trigger a native browser confirmation dialog: \"Your changes may not be saved.\"\n- [ ] Ensure the event listener is removed when saving is complete or idle\n",
+  "number": 567,
+  "title": "[UX-07] Add \"Unsaved Changes\" Browser Interruption"
+}

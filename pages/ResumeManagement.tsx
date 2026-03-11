@@ -245,7 +245,7 @@ const ResumeManagement: React.FC = () => {
         {/* Header */}
         <header className="h-16 flex items-center justify-between px-8 bg-white/80 backdrop-blur-sm sticky top-0 z-10 border-b border-slate-200">
           <div className="flex items-center gap-4">
-            <h2 className="text-slate-800 font-bold text-xl">My Resumes</h2>
+            <h2 className="text-slate-800 font-bold text-xl">Bulk Operations</h2>
             <span className="text-slate-400 text-sm">({resumes.length} total)</span>
           </div>
           <div className="flex items-center gap-4">

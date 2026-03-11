@@ -1,0 +1,5 @@
+{
+  "body": "## Problem\nManual entry of years of work history is tedious and prone to errors.\n\n## Impact\n- High friction/cognitive load\n- Low efficiency for power users (Heuristic #7)\n\n## Tasks\n- [ ] Integrate a PDF/DOCX resume parsing library (e.g., `resume-parser`)\n- [ ] Add \"Upload Existing Resume\" button to the Dashboard and Editor\n- [ ] Implement a LinkedIn Profile import feature\n- [ ] Map parsed fields to the existing `resumeData` schema\n",
+  "number": 564,
+  "title": "[UX-04] Implement Resume Parser/Import (LinkedIn & PDF)"
+}
