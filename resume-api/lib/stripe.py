@@ -32,7 +32,7 @@ class StripeService:
 
     async def get_available_plans(self) -> List[Dict[str, Any]]:
         """Get all available subscription plans."""
-        # TODO: Implement with Stripe Prices API
+        # TODO(#1007): Implement with Stripe Prices API
         # For now, return hardcoded plans
         return [
             {
@@ -105,7 +105,7 @@ class StripeService:
         self, user_id: str, email: Optional[str] = None
     ) -> Dict[str, str]:
         """Create or get a Stripe customer."""
-        # TODO: Implement with Stripe Customers API
+        # TODO(#1007): Implement with Stripe Customers API
         return {"stripe_customer_id": f"cus_{user_id}"}
 
     async def create_checkout_session(
@@ -117,7 +117,7 @@ class StripeService:
         trial_period_days: int = 0,
     ) -> Dict[str, str]:
         """Create a Stripe checkout session."""
-        # TODO: Implement with Stripe Checkout API
+        # TODO(#1007): Implement with Stripe Checkout API
         return {
             "id": "cs_test_123",
             "url": "https://checkout.stripe.com/c/pay/cs_test_123",
@@ -125,31 +125,31 @@ class StripeService:
 
     async def create_portal_session(self, customer_id: str, return_url: str) -> Dict[str, str]:
         """Create a Stripe billing portal session."""
-        # TODO: Implement with Stripe Billing Portal API
+        # TODO(#1007): Implement with Stripe Billing Portal API
         return {"url": "https://billing.stripe.com/p/session/test_123"}
 
     async def cancel_subscription(self, stripe_subscription_id: str) -> Dict[str, Any]:
         """Cancel a Stripe subscription."""
-        # TODO: Implement with Stripe Subscriptions API
+        # TODO(#1007): Implement with Stripe Subscriptions API
         return {"status": "canceled", "cancel_at_period_end": False}
 
     async def resume_subscription(self, stripe_subscription_id: str) -> Dict[str, Any]:
         """Resume a canceled subscription."""
-        # TODO: Implement with Stripe Subscriptions API
+        # TODO(#1007): Implement with Stripe Subscriptions API
         return {"status": "active", "cancel_at_period_end": False}
 
     async def update_subscription_plan(
         self, stripe_subscription_id: str, new_price_id: str
     ) -> Dict[str, Any]:
         """Update subscription to a different plan."""
-        # TODO: Implement with Stripe Subscriptions API
+        # TODO(#1007): Implement with Stripe Subscriptions API
         return {"status": "active", "plan": new_price_id}
 
     async def attach_payment_method(
         self, payment_method_id: str, customer_id: str
     ) -> Dict[str, Any]:
         """Attach a payment method to a customer."""
-        # TODO: Implement with Stripe Payment Methods API
+        # TODO(#1007): Implement with Stripe Payment Methods API
         return {
             "id": payment_method_id,
             "customer": customer_id,
@@ -160,24 +160,24 @@ class StripeService:
         self, customer_id: str, payment_method_id: str
     ) -> Dict[str, Any]:
         """Set default payment method for a customer."""
-        # TODO: Implement with Stripe Customers API
+        # TODO(#1007): Implement with Stripe Customers API
         return {"id": payment_method_id, "is_default": True}
 
     async def detach_payment_method(self, payment_method_id: str) -> Dict[str, Any]:
         """Detach a payment method from a customer."""
-        # TODO: Implement with Stripe Payment Methods API
+        # TODO(#1007): Implement with Stripe Payment Methods API
         return {"id": payment_method_id, "detached": True}
 
     async def check_usage_limits(self, user_id: str, action: str) -> Dict[str, Any]:
         """Check if user has exceeded usage limits."""
-        # TODO: Implement with database usage tracking
+        # TODO(#1011): Implement with database usage tracking
         return {"allowed": True, "remaining": -1, "limit": -1, "used": 0}
 
     def verify_webhook_signature(
         self, payload: bytes, signature: str, webhook_secret: str
     ) -> stripe.Event:
         """Verify Stripe webhook signature."""
-        # TODO: Implement with Stripe Webhooks API
+        # TODO(#1008): Implement with Stripe Webhooks API
         # For now, parse the payload without verification
         import json
 

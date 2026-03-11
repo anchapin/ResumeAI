@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import React from 'react';
 import Settings from './Settings';
@@ -41,20 +41,28 @@ describe('Settings Component', () => {
   });
 
   describe('Component Rendering', () => {
-    it('renders without crashing', () => {
-      const { container } = render(<Settings />);
-      expect(container).toBeInTheDocument();
+    it('renders without crashing', async () => {
+      let container: HTMLElement;
+      await act(async () => {
+        const result = render(<Settings />);
+        container = result.container;
+      });
+      expect(container!).toBeInTheDocument();
     });
 
-    it('renders main header with title "Settings"', () => {
-      render(<Settings />);
+    it('renders main header with title "Settings"', async () => {
+      await act(async () => {
+        render(<Settings />);
+      });
       const header = screen.getByRole('heading', { name: 'Settings' });
       expect(header).toBeInTheDocument();
       expect(header).toHaveClass('text-slate-800', 'font-bold', 'text-xl');
     });
 
-    it('renders notification bell icon', () => {
-      render(<Settings />);
+    it('renders notification bell icon', async () => {
+      await act(async () => {
+        render(<Settings />);
+      });
       const icons = screen.getAllByText(/notifications/i);
       expect(icons.length).toBeGreaterThan(0);
       const notificationIcon = icons.find((icon) =>
@@ -63,8 +71,10 @@ describe('Settings Component', () => {
       expect(notificationIcon).toBeInTheDocument();
     });
 
-    it('renders user avatar in header', () => {
-      render(<Settings />);
+    it('renders user avatar in header', async () => {
+      await act(async () => {
+        render(<Settings />);
+      });
       const avatars = document.querySelectorAll('.bg-cover.bg-center');
       expect(avatars.length).toBeGreaterThan(0);
       expect(avatars[0]).toHaveStyle({
@@ -72,37 +82,47 @@ describe('Settings Component', () => {
       });
     });
 
-    it('has red notification badge on bell icon', () => {
-      render(<Settings />);
+    it('has red notification badge on bell icon', async () => {
+      await act(async () => {
+        render(<Settings />);
+      });
       const badge = document.querySelector('.bg-red-500');
       expect(badge).toBeInTheDocument();
     });
   });
 
   describe('Profile Information Section', () => {
-    it('renders Profile Information section', () => {
-      render(<Settings />);
+    it('renders Profile Information section', async () => {
+      await act(async () => {
+        render(<Settings />);
+      });
       const heading = screen.getByRole('heading', { name: 'Profile Information' });
       expect(heading).toBeInTheDocument();
       expect(heading).toHaveClass('text-lg', 'font-bold', 'text-slate-900');
     });
 
-    it('renders profile section description', () => {
-      render(<Settings />);
+    it('renders profile section description', async () => {
+      await act(async () => {
+        render(<Settings />);
+      });
       const description = screen.getByText('Update your personal details and public profile');
       expect(description).toBeInTheDocument();
       expect(description).toHaveClass('text-sm', 'text-slate-500');
     });
 
-    it('renders profile avatar with edit overlay', () => {
-      render(<Settings />);
+    it('renders profile avatar with edit overlay', async () => {
+      await act(async () => {
+        render(<Settings />);
+      });
       const avatars = document.querySelectorAll('.bg-cover.bg-center');
       expect(avatars.length).toBeGreaterThan(1);
       expect(avatars[1]).toHaveClass('w-20', 'h-20', 'rounded-full');
     });
 
-    it('renders First Name input with default value "Alex"', () => {
-      render(<Settings />);
+    it('renders First Name input with default value "Alex"', async () => {
+      await act(async () => {
+        render(<Settings />);
+      });
       const inputs = screen.getAllByRole('textbox') as HTMLInputElement[];
       const firstNameInput = inputs.find((input) => input.value === 'Alex');
 
@@ -111,8 +131,10 @@ describe('Settings Component', () => {
       expect(firstNameInput).toHaveAttribute('type', 'text');
     });
 
-    it('renders Last Name input with default value "Rivera"', () => {
-      render(<Settings />);
+    it('renders Last Name input with default value "Rivera"', async () => {
+      await act(async () => {
+        render(<Settings />);
+      });
       const inputs = screen.getAllByRole('textbox') as HTMLInputElement[];
       const lastNameInput = inputs.find((input) => input.value === 'Rivera');
 
@@ -121,8 +143,10 @@ describe('Settings Component', () => {
       expect(lastNameInput).toHaveAttribute('type', 'text');
     });
 
-    it('renders Email Address input with default value', () => {
-      render(<Settings />);
+    it('renders Email Address input with default value', async () => {
+      await act(async () => {
+        render(<Settings />);
+      });
       const inputs = screen.getAllByRole('textbox') as HTMLInputElement[];
       const emailInput = inputs.find((input) => input.value === 'alex.rivera@example.com');
 
@@ -131,8 +155,10 @@ describe('Settings Component', () => {
       expect(emailInput).toHaveAttribute('type', 'email');
     });
 
-    it('renders Save Changes button', () => {
-      render(<Settings />);
+    it('renders Save Changes button', async () => {
+      await act(async () => {
+        render(<Settings />);
+      });
       const saveButton = screen.getByRole('button', { name: 'Save Changes' });
       expect(saveButton).toBeInTheDocument();
       expect(saveButton).toHaveClass(
@@ -146,8 +172,10 @@ describe('Settings Component', () => {
       );
     });
 
-    it('all profile inputs have correct styling classes', () => {
-      render(<Settings />);
+    it('all profile inputs have correct styling classes', async () => {
+      await act(async () => {
+        render(<Settings />);
+      });
       const inputs = screen.getAllByRole('textbox') as HTMLInputElement[];
       expect(inputs.length).toBeGreaterThanOrEqual(3);
 
@@ -167,81 +195,103 @@ describe('Settings Component', () => {
   describe('Profile Form Interactions', () => {
     it('allows typing in First Name input', async () => {
       const user = userEvent.setup();
-      render(<Settings />);
+      await act(async () => {
+        render(<Settings />);
+      });
       const inputs = screen.getAllByRole('textbox') as HTMLInputElement[];
       const firstNameInput = inputs.find((input) => input.value === 'Alex');
 
       if (!firstNameInput) {
         throw new Error('Input not found');
       }
-      await user.clear(firstNameInput);
-      await user.type(firstNameInput, 'John');
+      await act(async () => {
+        await user.clear(firstNameInput);
+        await user.type(firstNameInput, 'John');
+      });
 
       expect(firstNameInput).toHaveValue('John');
     });
 
     it('allows typing in Last Name input', async () => {
       const user = userEvent.setup();
-      render(<Settings />);
+      await act(async () => {
+        render(<Settings />);
+      });
       const inputs = screen.getAllByRole('textbox') as HTMLInputElement[];
       const lastNameInput = inputs.find((input) => input.value === 'Rivera');
 
       if (!lastNameInput) {
         throw new Error('Input not found');
       }
-      await user.clear(lastNameInput);
-      await user.type(lastNameInput, 'Doe');
+      await act(async () => {
+        await user.clear(lastNameInput);
+        await user.type(lastNameInput, 'Doe');
+      });
 
       expect(lastNameInput).toHaveValue('Doe');
     });
 
     it('allows typing in Email input', async () => {
       const user = userEvent.setup();
-      render(<Settings />);
+      await act(async () => {
+        render(<Settings />);
+      });
       const inputs = screen.getAllByRole('textbox') as HTMLInputElement[];
       const emailInput = inputs.find((input) => input.value === 'alex.rivera@example.com');
 
       if (!emailInput) {
         throw new Error('Input not found');
       }
-      await user.clear(emailInput);
-      await user.type(emailInput, 'john.doe@example.com');
+      await act(async () => {
+        await user.clear(emailInput);
+        await user.type(emailInput, 'john.doe@example.com');
+      });
 
       expect(emailInput).toHaveValue('john.doe@example.com');
     });
 
     it('allows typing in Last Name input', async () => {
       const user = userEvent.setup();
-      render(<Settings />);
+      await act(async () => {
+        render(<Settings />);
+      });
       const inputs = screen.getAllByRole('textbox') as HTMLInputElement[];
       const lastNameInput = inputs.find((input) => input.value === 'Rivera');
 
       if (!lastNameInput) {
         throw new Error('Input not found');
       }
-      await user.clear(lastNameInput);
-      await user.type(lastNameInput, 'Doe');
+      await act(async () => {
+        await user.clear(lastNameInput);
+        await user.type(lastNameInput, 'Doe');
+      });
 
       expect(lastNameInput).toHaveValue('Doe');
     });
 
     it('allows typing in Email input', async () => {
       const user = userEvent.setup();
-      render(<Settings />);
+      await act(async () => {
+        render(<Settings />);
+      });
       const inputs = screen.getAllByRole('textbox') as HTMLInputElement[];
       const emailInput = inputs.find((input) => input.value === 'alex.rivera@example.com');
 
       if (!emailInput) {
         throw new Error('Input not found');
       }
-      await user.clear(emailInput);
-      await user.type(emailInput, 'john.doe@example.com');
+      await act(async () => {
+        await user.clear(emailInput);
+        await user.type(emailInput, 'john.doe@example.com');
+      });
 
       expect(emailInput).toHaveValue('john.doe@example.com');
     });
 
-    it('profile avatar shows edit icon on hover', () => {
-      render(<Settings />);
+    it('profile avatar shows edit icon on hover', async () => {
+      await act(async () => {
+        render(<Settings />);
+      });
       const avatars = document.querySelectorAll('.bg-cover.bg-center');
       const profileAvatar = avatars[1];
       const editIcon = profileAvatar?.querySelector('.material-symbols-outlined');
@@ -252,10 +302,14 @@ describe('Settings Component', () => {
 
     it('Save Changes button is clickable', async () => {
       const user = userEvent.setup();
-      render(<Settings />);
+      await act(async () => {
+        render(<Settings />);
+      });
       const saveButton = screen.getByRole('button', { name: 'Save Changes' });
 
-      await user.click(saveButton);
+      await act(async () => {
+        await user.click(saveButton);
+      });
 
       // Note: Currently this button doesn't have onClick handler
       // This test verifies the button is interactive
@@ -264,20 +318,26 @@ describe('Settings Component', () => {
   });
 
   describe('App Preferences Section', () => {
-    it('renders App Preferences section', () => {
-      render(<Settings />);
+    it('renders App Preferences section', async () => {
+      await act(async () => {
+        render(<Settings />);
+      });
       const heading = screen.getByRole('heading', { name: 'App Preferences' });
       expect(heading).toBeInTheDocument();
     });
 
-    it('renders preferences section description', () => {
-      render(<Settings />);
+    it('renders preferences section description', async () => {
+      await act(async () => {
+        render(<Settings />);
+      });
       const description = screen.getByText('Manage your workspace and notification settings');
       expect(description).toBeInTheDocument();
     });
 
-    it('renders Email Notifications toggle with label', () => {
-      render(<Settings />);
+    it('renders Email Notifications toggle with label', async () => {
+      await act(async () => {
+        render(<Settings />);
+      });
       const label = screen.getByText('Email Notifications');
       expect(label).toBeInTheDocument();
 
@@ -285,8 +345,10 @@ describe('Settings Component', () => {
       expect(description).toBeInTheDocument();
     });
 
-    it('renders Dark Mode toggle with label', () => {
-      render(<Settings />);
+    it('renders Dark Mode toggle with label', async () => {
+      await act(async () => {
+        render(<Settings />);
+      });
       const label = screen.getByText('Dark Mode');
       expect(label).toBeInTheDocument();
 
@@ -294,8 +356,10 @@ describe('Settings Component', () => {
       expect(description).toBeInTheDocument();
     });
 
-    it('renders Auto-Save toggle with label', () => {
-      render(<Settings />);
+    it('renders Auto-Save toggle with label', async () => {
+      await act(async () => {
+        render(<Settings />);
+      });
       const label = screen.getByText('Auto-Save');
       expect(label).toBeInTheDocument();
 
@@ -305,24 +369,30 @@ describe('Settings Component', () => {
   });
 
   describe('Preference Toggle Interactions', () => {
-    it('Email Notifications toggle is checked by default', () => {
-      render(<Settings />);
+    it('Email Notifications toggle is checked by default', async () => {
+      await act(async () => {
+        render(<Settings />);
+      });
       const toggles = screen.getAllByRole('checkbox');
       const emailToggle = toggles[0];
 
       expect(emailToggle).toBeChecked();
     });
 
-    it('Dark Mode toggle is unchecked by default', () => {
-      render(<Settings />);
+    it('Dark Mode toggle is unchecked by default', async () => {
+      await act(async () => {
+        render(<Settings />);
+      });
       const toggles = screen.getAllByRole('checkbox');
       const darkModeToggle = toggles[1];
 
       expect(darkModeToggle).not.toBeChecked();
     });
 
-    it('Auto-Save toggle is checked by default', () => {
-      render(<Settings />);
+    it('Auto-Save toggle is checked by default', async () => {
+      await act(async () => {
+        render(<Settings />);
+      });
       const toggles = screen.getAllByRole('checkbox');
       const autoSaveToggle = toggles[2];
 
@@ -331,51 +401,69 @@ describe('Settings Component', () => {
 
     it('Email Notifications toggle can be unchecked', async () => {
       const user = userEvent.setup();
-      render(<Settings />);
+      await act(async () => {
+        render(<Settings />);
+      });
       const toggles = screen.getAllByRole('checkbox');
       const emailToggle = toggles[0];
 
-      await user.click(emailToggle);
+      await act(async () => {
+        await user.click(emailToggle);
+      });
 
       expect(emailToggle).not.toBeChecked();
     });
 
     it('Email Notifications toggle can be checked again', async () => {
       const user = userEvent.setup();
-      render(<Settings />);
+      await act(async () => {
+        render(<Settings />);
+      });
       const toggles = screen.getAllByRole('checkbox');
       const emailToggle = toggles[0];
 
-      await user.click(emailToggle); // Uncheck
-      await user.click(emailToggle); // Re-check
+      await act(async () => {
+        await user.click(emailToggle); // Uncheck
+        await user.click(emailToggle); // Re-check
+      });
 
       expect(emailToggle).toBeChecked();
     });
 
     it('Dark Mode toggle can be checked', async () => {
       const user = userEvent.setup();
-      render(<Settings />);
+      await act(async () => {
+        render(<Settings />);
+      });
       const toggles = screen.getAllByRole('checkbox');
       const darkModeToggle = toggles[1];
 
-      await user.click(darkModeToggle);
+      await act(async () => {
+        await user.click(darkModeToggle);
+      });
 
       expect(darkModeToggle).toBeChecked();
     });
 
     it('Auto-Save toggle can be unchecked', async () => {
       const user = userEvent.setup();
-      render(<Settings />);
+      await act(async () => {
+        render(<Settings />);
+      });
       const toggles = screen.getAllByRole('checkbox');
       const autoSaveToggle = toggles[2];
 
-      await user.click(autoSaveToggle);
+      await act(async () => {
+        await user.click(autoSaveToggle);
+      });
 
       expect(autoSaveToggle).not.toBeChecked();
     });
 
-    it('all toggle switches have correct styling structure', () => {
-      render(<Settings />);
+    it('all toggle switches have correct styling structure', async () => {
+      await act(async () => {
+        render(<Settings />);
+      });
       const toggles = screen.getAllByRole('checkbox');
 
       toggles.forEach((toggle) => {
@@ -385,22 +473,28 @@ describe('Settings Component', () => {
   });
 
   describe('Danger Zone Section', () => {
-    it('renders Danger Zone section', () => {
-      render(<Settings />);
+    it('renders Danger Zone section', async () => {
+      await act(async () => {
+        render(<Settings />);
+      });
       const heading = screen.getByRole('heading', { name: 'Danger Zone' });
       expect(heading).toBeInTheDocument();
       expect(heading).toHaveClass('text-lg', 'font-bold', 'text-red-700');
     });
 
-    it('renders danger zone description', () => {
-      render(<Settings />);
+    it('renders danger zone description', async () => {
+      await act(async () => {
+        render(<Settings />);
+      });
       const description = screen.getByText('Irreversible actions for your account');
       expect(description).toBeInTheDocument();
       expect(description).toHaveClass('text-sm', 'text-red-600/70');
     });
 
-    it('renders Delete Account option', () => {
-      render(<Settings />);
+    it('renders Delete Account option', async () => {
+      await act(async () => {
+        render(<Settings />);
+      });
       // "Delete Account" appears twice - once as heading, once as button
       const deleteTexts = screen.getAllByText('Delete Account');
       expect(deleteTexts.length).toBe(2);
@@ -409,8 +503,10 @@ describe('Settings Component', () => {
       expect(deleteDescription).toBeInTheDocument();
     });
 
-    it('renders Delete Account button', () => {
-      render(<Settings />);
+    it('renders Delete Account button', async () => {
+      await act(async () => {
+        render(<Settings />);
+      });
       const deleteButton = screen.getByRole('button', { name: 'Delete Account' });
       expect(deleteButton).toBeInTheDocument();
       expect(deleteButton).toHaveClass(
@@ -425,8 +521,10 @@ describe('Settings Component', () => {
       );
     });
 
-    it('Delete Account button has hover effect styling', () => {
-      render(<Settings />);
+    it('Delete Account button has hover effect styling', async () => {
+      await act(async () => {
+        render(<Settings />);
+      });
       const deleteButton = screen.getByRole('button', { name: 'Delete Account' });
 
       expect(deleteButton).toHaveClass('hover:bg-red-50', 'transition-colors');
@@ -434,21 +532,27 @@ describe('Settings Component', () => {
   });
 
   describe('Section Styling and Layout', () => {
-    it('main container has correct background and layout', () => {
-      render(<Settings />);
+    it('main container has correct background and layout', async () => {
+      await act(async () => {
+        render(<Settings />);
+      });
       const container = document.querySelector('.flex-1.min-h-screen');
       expect(container).toBeInTheDocument();
       expect(container).toHaveClass('bg-[#f6f6f8]', 'pl-72');
     });
 
-    it('header is sticky at top', () => {
-      render(<Settings />);
+    it('header is sticky at top', async () => {
+      await act(async () => {
+        render(<Settings />);
+      });
       const header = document.querySelector('header');
       expect(header).toHaveClass('sticky', 'top-0', 'z-10');
     });
 
-    it('all sections have correct container styling', () => {
-      render(<Settings />);
+    it('all sections have correct container styling', async () => {
+      await act(async () => {
+        render(<Settings />);
+      });
       const sections = document.querySelectorAll('section');
 
       sections.forEach((section) => {
@@ -462,22 +566,28 @@ describe('Settings Component', () => {
       });
     });
 
-    it('content has max-width constraint', () => {
-      render(<Settings />);
+    it('content has max-width constraint', async () => {
+      await act(async () => {
+        render(<Settings />);
+      });
       const content = document.querySelector('.max-w-\\[1000px\\]');
       expect(content).toBeInTheDocument();
     });
 
-    it('sections are vertically spaced', () => {
-      render(<Settings />);
+    it('sections are vertically spaced', async () => {
+      await act(async () => {
+        render(<Settings />);
+      });
       const content = document.querySelector('.max-w-\\[1000px\\]');
       expect(content).toHaveClass('space-y-8');
     });
   });
 
   describe('Accessibility', () => {
-    it('all form inputs have associated labels', () => {
-      render(<Settings />);
+    it('all form inputs have associated labels', async () => {
+      await act(async () => {
+        render(<Settings />);
+      });
 
       const firstNameLabel = screen.getByText('First Name');
       const lastNameLabel = screen.getByText('Last Name');
@@ -498,21 +608,27 @@ describe('Settings Component', () => {
       expect(emailInput).toBeInTheDocument();
     });
 
-    it('checkboxes are properly labeled by their parent structure', () => {
-      render(<Settings />);
+    it('checkboxes are properly labeled by their parent structure', async () => {
+      await act(async () => {
+        render(<Settings />);
+      });
       const toggles = screen.getAllByRole('checkbox');
       expect(toggles.length).toBe(3);
     });
 
-    it('buttons are identifiable by their text content', () => {
-      render(<Settings />);
+    it('buttons are identifiable by their text content', async () => {
+      await act(async () => {
+        render(<Settings />);
+      });
 
       expect(screen.getByRole('button', { name: 'Save Changes' })).toBeInTheDocument();
       expect(screen.getByRole('button', { name: 'Delete Account' })).toBeInTheDocument();
     });
 
-    it('notifications icon has proper aria labeling through text content', () => {
-      render(<Settings />);
+    it('notifications icon has proper aria labeling through text content', async () => {
+      await act(async () => {
+        render(<Settings />);
+      });
       const icons = screen.getAllByText(/notifications/i);
       const notificationIcon = icons.find((icon) =>
         icon.classList.contains('material-symbols-outlined'),
@@ -522,14 +638,18 @@ describe('Settings Component', () => {
   });
 
   describe('Component Structure', () => {
-    it('contains exactly 3 main sections', () => {
-      render(<Settings />);
+    it('contains exactly 3 main sections', async () => {
+      await act(async () => {
+        render(<Settings />);
+      });
       const sections = document.querySelectorAll('section');
       expect(sections.length).toBeGreaterThanOrEqual(3);
     });
 
-    it('renders all form-related buttons/inputs correctly', () => {
-      render(<Settings />);
+    it('renders all form-related buttons/inputs correctly', async () => {
+      await act(async () => {
+        render(<Settings />);
+      });
 
       // 3 text inputs
       const textInputs = screen.getAllByRole('textbox');
@@ -544,8 +664,10 @@ describe('Settings Component', () => {
       expect(buttons.length).toBeGreaterThanOrEqual(3);
     });
 
-    it('all headings are properly structured', () => {
-      render(<Settings />);
+    it('all headings are properly structured', async () => {
+      await act(async () => {
+        render(<Settings />);
+      });
 
       const settingsHeading = screen.getByRole('heading', { name: 'Settings' });
       expect(settingsHeading).toBeInTheDocument();
@@ -562,8 +684,10 @@ describe('Settings Component', () => {
   });
 
   describe('Default Values Consistency', () => {
-    it('profile form has consistent default values', () => {
-      render(<Settings />);
+    it('profile form has consistent default values', async () => {
+      await act(async () => {
+        render(<Settings />);
+      });
 
       const inputs = screen.getAllByRole('textbox') as HTMLInputElement[];
       const firstNameInput = inputs.find((input) => input.value === 'Alex');
@@ -575,8 +699,10 @@ describe('Settings Component', () => {
       expect(emailInput?.value).toBe('alex.rivera@example.com');
     });
 
-    it('toggles have correct initial states', () => {
-      render(<Settings />);
+    it('toggles have correct initial states', async () => {
+      await act(async () => {
+        render(<Settings />);
+      });
       const toggles = screen.getAllByRole('checkbox');
 
       // Email Notifications: checked
@@ -591,8 +717,10 @@ describe('Settings Component', () => {
   });
 
   describe('Responsive Design Classes', () => {
-    it('name inputs use responsive grid layout', () => {
-      render(<Settings />);
+    it('name inputs use responsive grid layout', async () => {
+      await act(async () => {
+        render(<Settings />);
+      });
 
       const firstNameLabel = screen.getByText('First Name').parentElement;
       const lastNameLabel = screen.getByText('Last Name').parentElement;
@@ -602,8 +730,10 @@ describe('Settings Component', () => {
       expect(gridContainer).toHaveClass('grid', 'grid-cols-1', 'md:grid-cols-2');
     });
 
-    it('form inputs maintain responsive sizing', () => {
-      render(<Settings />);
+    it('form inputs maintain responsive sizing', async () => {
+      await act(async () => {
+        render(<Settings />);
+      });
       const inputs = screen.getAllByRole('textbox') as HTMLInputElement[];
 
       inputs.slice(0, 3).forEach((input) => {
