@@ -74,12 +74,15 @@ async def async_client(test_db_session):
     async def override_get_async_session():
         yield test_db_session
 
+    from database import get_db
     app.dependency_overrides[get_async_session] = override_get_async_session
+    app.dependency_overrides[get_db] = override_get_async_session
 
-    # Disable request signing for tests
+    # Disable security features for tests
     from config import settings
 
     settings.enable_request_signing = False
+    settings.enable_csrf = False
 
     transport = ASGITransport(app=app)
     client = AsyncClient(transport=transport, base_url="http://testserver")

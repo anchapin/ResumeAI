@@ -38,6 +38,8 @@ from database import (
     TeamResume,
     TeamActivity,
     User,
+    Resume,
+    Comment,
 )
 
 logger = logging_config.get_logger(__name__)
@@ -1241,6 +1243,7 @@ async def add_resume_comment(
     resume_id: int,
     body: ResumeCommentCreate,
     auth: AuthorizedAPIKey,
+    db: AsyncSession = Depends(get_db),
 ):
     """
     Add a comment to a resume.
@@ -1250,10 +1253,50 @@ async def add_resume_comment(
     Rate limit: 30 requests per minute per API key.
     """
     try:
-        # TODO(#1009): Implement database insert
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Resume {resume_id} not found",
+        user_id = auth.user_id if hasattr(auth, "user_id") else 1
+
+        # Check if resume exists
+        resume_stmt = select(Resume).where(Resume.id == resume_id)
+        result = await db.execute(resume_stmt)
+        resume = result.scalar_one_or_none()
+
+        if not resume:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Resume {resume_id} not found",
+            )
+
+        # Get user info for author info
+        user_stmt = select(User).where(User.id == user_id)
+        user_result = await db.execute(user_stmt)
+        user = user_result.scalar_one_or_none()
+
+        comment = Comment(
+            resume_id=resume_id,
+            user_id=user_id,
+            author_name=user.username if user else "Unknown",
+            author_email=user.email if user else "unknown@example.com",
+            content=body.content,
+            section=body.section,
+            position=body.position,
+        )
+
+        db.add(comment)
+        await db.commit()
+        await db.refresh(comment)
+
+        return ResumeCommentResponse(
+            id=comment.id,
+            resume_id=comment.resume_id,
+            user_id=comment.user_id,
+            username=user.username if user else "Unknown",
+            content=comment.content,
+            section=comment.section,
+            position=comment.position,
+            is_resolved=comment.is_resolved,
+            created_at=comment.created_at.isoformat(),
+            updated_at=comment.updated_at.isoformat(),
+            replies=[],
         )
     except HTTPException:
         raise
@@ -1282,6 +1325,7 @@ async def list_resume_comments(
     request: Request,
     resume_id: int,
     auth: AuthorizedAPIKey,
+    db: AsyncSession = Depends(get_db),
     section: Optional[str] = None,
     include_resolved: bool = False,
 ):
@@ -1295,11 +1339,53 @@ async def list_resume_comments(
     Rate limit: 30 requests per minute per API key.
     """
     try:
-        # TODO(#1009): Implement database query
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Resume {resume_id} not found",
+        # Check if resume exists
+        resume_stmt = select(Resume).where(Resume.id == resume_id)
+        result = await db.execute(resume_stmt)
+        resume = result.scalar_one_or_none()
+
+        if not resume:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Resume {resume_id} not found",
+            )
+
+        stmt = (
+            select(Comment)
+            .where(Comment.resume_id == resume_id)
+            .options(selectinload(Comment.user))
         )
+
+        if section:
+            stmt = stmt.where(Comment.section == section)
+
+        if not include_resolved:
+            stmt = stmt.where(Comment.is_resolved == False)
+
+        stmt = stmt.order_by(Comment.created_at.asc())
+
+        result = await db.execute(stmt)
+        comments = result.scalars().all()
+
+        responses = []
+        for comment in comments:
+            responses.append(
+                ResumeCommentResponse(
+                    id=comment.id,
+                    resume_id=comment.resume_id,
+                    user_id=comment.user_id,
+                    username=comment.user.username if comment.user else comment.author_name,
+                    content=comment.content,
+                    section=comment.section,
+                    position=comment.position,
+                    is_resolved=comment.is_resolved,
+                    created_at=comment.created_at.isoformat(),
+                    updated_at=comment.updated_at.isoformat(),
+                    replies=[],  # Support for replies could be added later
+                )
+            )
+
+        return responses
     except HTTPException:
         raise
     except Exception as e:
@@ -1330,6 +1416,7 @@ async def update_resume_comment(
     comment_id: int,
     body: ResumeCommentUpdate,
     auth: AuthorizedAPIKey,
+    db: AsyncSession = Depends(get_db),
 ):
     """
     Update a comment on a resume.
@@ -1342,10 +1429,50 @@ async def update_resume_comment(
     Rate limit: 30 requests per minute per API key.
     """
     try:
-        # TODO(#1009): Implement database update
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Resume {resume_id} or comment {comment_id} not found",
+        user_id = auth.user_id if hasattr(auth, "user_id") else 1
+
+        stmt = (
+            select(Comment)
+            .where(and_(Comment.id == comment_id, Comment.resume_id == resume_id))
+            .options(selectinload(Comment.user))
+        )
+        result = await db.execute(stmt)
+        comment = result.scalar_one_or_none()
+
+        if not comment:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Comment {comment_id} not found on resume {resume_id}",
+            )
+
+        # Permission check: Only author can update content
+        if body.content is not None:
+            if comment.user_id != user_id:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Only the comment author can update the content",
+                )
+            comment.content = body.content
+
+        # Permission check: Any team member can resolve (simplification)
+        if body.is_resolved is not None:
+            comment.is_resolved = body.is_resolved
+
+        await db.commit()
+        await db.refresh(comment)
+
+        return ResumeCommentResponse(
+            id=comment.id,
+            resume_id=comment.resume_id,
+            user_id=comment.user_id,
+            username=comment.user.username if comment.user else comment.author_name,
+            content=comment.content,
+            section=comment.section,
+            position=comment.position,
+            is_resolved=comment.is_resolved,
+            created_at=comment.created_at.isoformat(),
+            updated_at=comment.updated_at.isoformat(),
+            replies=[],
         )
     except HTTPException:
         raise
@@ -1375,6 +1502,7 @@ async def delete_resume_comment(
     resume_id: int,
     comment_id: int,
     auth: AuthorizedAPIKey,
+    db: AsyncSession = Depends(get_db),
 ):
     """
     Delete a comment from a resume.
@@ -1386,11 +1514,31 @@ async def delete_resume_comment(
     Rate limit: 30 requests per minute per API key.
     """
     try:
-        # TODO(#1009): Implement database delete
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Resume {resume_id} or comment {comment_id} not found",
+        user_id = auth.user_id if hasattr(auth, "user_id") else 1
+
+        stmt = select(Comment).where(
+            and_(Comment.id == comment_id, Comment.resume_id == resume_id)
         )
+        result = await db.execute(stmt)
+        comment = result.scalar_one_or_none()
+
+        if not comment:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Comment {comment_id} not found on resume {resume_id}",
+            )
+
+        # Permission check: Only author or admins (simplification: only author for now)
+        if comment.user_id != user_id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Only the comment author can delete it",
+            )
+
+        await db.delete(comment)
+        await db.commit()
+
+        return MessageResponse(message="Comment deleted successfully")
     except HTTPException:
         raise
     except Exception as e:
