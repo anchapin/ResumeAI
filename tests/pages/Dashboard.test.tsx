@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, within } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import '@testing-library/jest-dom';
 import Dashboard from '../../pages/Dashboard';
 import {
@@ -92,28 +93,44 @@ describe('Dashboard Component', () => {
   });
 
   it('renders without crashing', async () => {
-    const { container } = render(<Dashboard />);
+    const { container } = render(
+      <MemoryRouter>
+        <Dashboard />
+      </MemoryRouter>
+    );
     await screen.findByText('Job Search Overview');
     expect(container).toBeInTheDocument();
   });
 
   describe('Header Section', () => {
     it('renders the main header with correct title', async () => {
-      render(<Dashboard />);
+      render(
+        <MemoryRouter>
+          <Dashboard />
+        </MemoryRouter>
+      );
       const title = await screen.findByText('Job Search Overview');
       expect(title).toBeInTheDocument();
       expect(title).toHaveClass('text-slate-800', 'font-bold', 'text-xl');
     });
 
     it('renders notifications button', async () => {
-      render(<Dashboard />);
+      render(
+        <MemoryRouter>
+          <Dashboard />
+        </MemoryRouter>
+      );
       await screen.findByText('Job Search Overview');
       const notificationButton = screen.getByText('notifications').closest('button');
       expect(notificationButton).toBeInTheDocument();
     });
 
     it('renders user avatar in header', async () => {
-      render(<Dashboard />);
+      render(
+        <MemoryRouter>
+          <Dashboard />
+        </MemoryRouter>
+      );
       await screen.findByText('Job Search Overview');
       const avatarDiv = screen
         .getByText('notifications')
@@ -125,26 +142,42 @@ describe('Dashboard Component', () => {
 
   describe('Statistics Cards', () => {
     it('renders three statistics cards', async () => {
-      render(<Dashboard />);
+      render(
+        <MemoryRouter>
+          <Dashboard />
+        </MemoryRouter>
+      );
       await screen.findByText('Applications Sent');
       expect(screen.getByText('Interview Rate')).toBeInTheDocument();
       expect(screen.getByText('Pending Responses')).toBeInTheDocument();
     });
 
     it('renders Applications Sent card with correct data', async () => {
-      render(<Dashboard />);
+      render(
+        <MemoryRouter>
+          <Dashboard />
+        </MemoryRouter>
+      );
       await screen.findByText('Applications Sent');
       expect(screen.getByText('25')).toBeInTheDocument();
     });
 
     it('renders Interview Rate card with correct data', async () => {
-      render(<Dashboard />);
+      render(
+        <MemoryRouter>
+          <Dashboard />
+        </MemoryRouter>
+      );
       await screen.findByText('Interview Rate');
       expect(screen.getByText('32%')).toBeInTheDocument();
     });
 
     it('renders Pending Responses card with correct data', async () => {
-      render(<Dashboard />);
+      render(
+        <MemoryRouter>
+          <Dashboard />
+        </MemoryRouter>
+      );
       await screen.findByText('Pending Responses');
       // The pending count is the number of applications in 'applied' status
       expect(screen.getByText('15')).toBeInTheDocument();
@@ -153,13 +186,21 @@ describe('Dashboard Component', () => {
 
   describe('Recent Applications Table', () => {
     it('renders the Recent Applications section header', async () => {
-      render(<Dashboard />);
+      render(
+        <MemoryRouter>
+          <Dashboard />
+        </MemoryRouter>
+      );
       await screen.findByText('Recent Applications');
       expect(screen.getByRole('button', { name: 'View all' })).toBeInTheDocument();
     });
 
     it('renders the table with correct headers', async () => {
-      render(<Dashboard />);
+      render(
+        <MemoryRouter>
+          <Dashboard />
+        </MemoryRouter>
+      );
       await screen.findByText('Company');
       expect(screen.getByText('Role')).toBeInTheDocument();
       expect(screen.getByText('Status')).toBeInTheDocument();
@@ -167,7 +208,11 @@ describe('Dashboard Component', () => {
     });
 
     it('renders recent applications data', async () => {
-      render(<Dashboard />);
+      render(
+        <MemoryRouter>
+          <Dashboard />
+        </MemoryRouter>
+      );
       await screen.findByText('Google');
       expect(screen.getByText('Software Engineer')).toBeInTheDocument();
       expect(screen.getByText('Stripe')).toBeInTheDocument();
@@ -177,7 +222,11 @@ describe('Dashboard Component', () => {
     });
 
     it('renders status badges for each application', async () => {
-      render(<Dashboard />);
+      render(
+        <MemoryRouter>
+          <Dashboard />
+        </MemoryRouter>
+      );
       await screen.findByText('Google');
       const statusBadges = screen.getAllByTestId('status-badge');
       expect(statusBadges.length).toBe(3);
@@ -186,21 +235,33 @@ describe('Dashboard Component', () => {
 
   describe('Application Funnel Chart', () => {
     it('renders the Application Funnel section header', async () => {
-      render(<Dashboard />);
+      render(
+        <MemoryRouter>
+          <Dashboard />
+        </MemoryRouter>
+      );
       await screen.findByText('Application Funnel');
       const funnelHeader = screen.getByText('Application Funnel');
       expect(funnelHeader).toBeInTheDocument();
     });
 
     it('renders the chart container', async () => {
-      render(<Dashboard />);
+      render(
+        <MemoryRouter>
+          <Dashboard />
+        </MemoryRouter>
+      );
       await screen.findByTestId('responsive-container');
       const chartContainer = screen.getByTestId('responsive-container');
       expect(chartContainer).toBeInTheDocument();
     });
 
     it('renders chart labels with correct data', async () => {
-      render(<Dashboard />);
+      render(
+        <MemoryRouter>
+          <Dashboard />
+        </MemoryRouter>
+      );
       await screen.findByText('Application Funnel');
       const appliedElements = screen.getAllByText('Applied');
       expect(appliedElements.length).toBeGreaterThan(0);
@@ -211,14 +272,22 @@ describe('Dashboard Component', () => {
     });
 
     it('renders the chart container', async () => {
-      render(<Dashboard />);
+      render(
+        <MemoryRouter>
+          <Dashboard />
+        </MemoryRouter>
+      );
       await screen.findByText('Application Funnel');
       const chartContainer = screen.getByTestId('responsive-container');
       expect(chartContainer).toBeInTheDocument();
     });
 
     it('renders chart labels with correct data', async () => {
-      render(<Dashboard />);
+      render(
+        <MemoryRouter>
+          <Dashboard />
+        </MemoryRouter>
+      );
       await screen.findByText('Application Funnel');
 
       // Check for funnel stages - using getAllByText to handle duplicates
@@ -240,7 +309,11 @@ describe('Dashboard Component', () => {
 
   describe('Layout and Styling', () => {
     it('has correct main container classes', async () => {
-      render(<Dashboard />);
+      render(
+        <MemoryRouter>
+          <Dashboard />
+        </MemoryRouter>
+      );
       await screen.findByText('Job Search Overview');
       // Find the main container div that has the flex-1 class
       const mainContainer = screen.getByText('Job Search Overview').closest('div');
@@ -248,7 +321,11 @@ describe('Dashboard Component', () => {
     });
 
     it('has the sidebar offset class (pl-72)', async () => {
-      render(<Dashboard />);
+      render(
+        <MemoryRouter>
+          <Dashboard />
+        </MemoryRouter>
+      );
       await screen.findByText('Job Search Overview');
 
       // The main container should have the pl-72 class for sidebar offset
@@ -259,7 +336,11 @@ describe('Dashboard Component', () => {
 
   describe('Component Integration', () => {
     it('properly integrates all dashboard elements', async () => {
-      render(<Dashboard />);
+      render(
+        <MemoryRouter>
+          <Dashboard />
+        </MemoryRouter>
+      );
       await screen.findByText('Application Funnel');
       expect(screen.getByText('Job Search Overview')).toBeInTheDocument();
       expect(screen.getByText('Applications Sent')).toBeInTheDocument();
@@ -268,7 +349,11 @@ describe('Dashboard Component', () => {
     });
 
     it('displays correct initial data', async () => {
-      render(<Dashboard />);
+      render(
+        <MemoryRouter>
+          <Dashboard />
+        </MemoryRouter>
+      );
       await screen.findByText('Application Funnel');
       expect(screen.getByText('25')).toBeInTheDocument(); // Applications sent
       expect(screen.getByText('32%')).toBeInTheDocument(); // Interview rate
