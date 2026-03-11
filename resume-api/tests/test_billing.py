@@ -11,7 +11,7 @@ Tests cover:
 
 import pytest
 import pytest_asyncio
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch, MagicMock, AsyncMock
 import stripe
 
 from database import (
@@ -24,6 +24,7 @@ from database import (
     engine,
 )
 from main import app
+from config import settings
 
 
 @pytest_asyncio.fixture(scope="function", autouse=True)
@@ -36,16 +37,43 @@ async def setup_database():
         await conn.run_sync(Base.metadata.drop_all)
 
 
+@pytest.fixture(autouse=True)
+def disable_security_middleware(monkeypatch):
+    """Disable CSRF and Request Signing middleware for tests."""
+    monkeypatch.setattr("config.settings.enable_csrf", False)
+    monkeypatch.setattr("config.settings.enable_request_signing", False)
+
+
 @pytest_asyncio.fixture
 async def test_user_id():
-    """Test user ID fixture."""
-    return "test_user_123"
+    """Test user ID fixture (numeric string as required by UserUsage model)."""
+    return "1"
 
 
 @pytest_asyncio.fixture
 async def setup_subscription_plans():
     """Create test subscription plans."""
     async with async_session_maker() as session:
+        # Create free plan
+        free_plan = SubscriptionPlan(
+            name="free",
+            display_name="Free Plan",
+            description="Basic resume generation",
+            price_cents=0,
+            currency="USD",
+            interval="month",
+            stripe_price_id=None,
+            stripe_product_id=None,
+            features=["3 resumes per month", "Basic templates"],
+            max_resumes_per_month=3,
+            max_ai_tailorings_per_month=0,
+            max_templates=3,
+            include_priority_support=False,
+            include_custom_domains=False,
+            is_active=True,
+            is_popular=False,
+        )
+
         # Create basic plan
         basic_plan = SubscriptionPlan(
             name="basic",
@@ -92,16 +120,12 @@ async def setup_subscription_plans():
             is_popular=True,
         )
 
+        session.add(free_plan)
         session.add(basic_plan)
         session.add(premium_plan)
         await session.commit()
 
-        yield {"basic": basic_plan, "premium": premium_plan}
-
-        # Cleanup
-        await session.delete(basic_plan)
-        await session.delete(premium_plan)
-        await session.commit()
+        yield {"free": free_plan, "basic": basic_plan, "premium": premium_plan}
 
 
 @pytest.mark.asyncio
@@ -111,13 +135,12 @@ async def test_list_plans(setup_subscription_plans):
 
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
-        response = await ac.get("/api/billing/plans")
+        response = await ac.get(f"{settings.api_v1_prefix}/billing/plans")
 
         assert response.status_code == 200
         data = response.json()
 
         assert isinstance(data, list)
-        # The API returns 3 plans: free, basic, premium
         assert len(data) == 3
 
         plan_names = [p["name"] for p in data]
@@ -133,16 +156,15 @@ async def test_get_plan_by_name(setup_subscription_plans):
 
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
-        response = await ac.get("/api/billing/plans/premium")
+        response = await ac.get(f"{settings.api_v1_prefix}/billing/plans/premium")
 
         assert response.status_code == 200
         data = response.json()
 
         assert data["name"] == "premium"
-        # The API returns "Premium" not "Premium Plan"
-        assert data["display_name"] == "Premium"
+        assert data["display_name"] == "Premium Plan"
         assert data["price_cents"] == 1999
-        assert data["is_popular"] is False
+        assert data["is_popular"] is True
 
 
 @pytest.mark.asyncio
@@ -152,7 +174,7 @@ async def test_get_plan_not_found():
 
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
-        response = await ac.get("/api/billing/plans/nonexistent")
+        response = await ac.get(f"{settings.api_v1_prefix}/billing/plans/nonexistent")
 
         assert response.status_code == 404
 
@@ -164,7 +186,9 @@ async def test_get_subscription_inactive(test_user_id):
 
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
-        response = await ac.get("/api/billing/subscription", headers={"X-User-ID": test_user_id})
+        response = await ac.get(
+            f"{settings.api_v1_prefix}/billing/subscription", headers={"X-User-ID": test_user_id}
+        )
 
         assert response.status_code == 200
         data = response.json()
@@ -180,7 +204,9 @@ async def test_get_usage(test_user_id):
 
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
-        response = await ac.get("/api/billing/usage", headers={"X-User-ID": test_user_id})
+        response = await ac.get(
+            f"{settings.api_v1_prefix}/billing/usage", headers={"X-User-ID": test_user_id}
+        )
 
         assert response.status_code == 200
         data = response.json()
@@ -190,7 +216,7 @@ async def test_get_usage(test_user_id):
 
         # Free tier should have limits
         assert data["resume_generated"]["allowed"] is True
-        assert data["ai_tailored"]["allowed"] is True
+        assert data["ai_tailored"]["allowed"] is False  # Free tier has 0 ai tailoring limit
 
 
 @pytest.mark.asyncio
@@ -201,7 +227,7 @@ async def test_check_usage_limit_allowed(test_user_id):
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         response = await ac.post(
-            "/api/billing/usage/check?action=resume_generated",
+            f"{settings.api_v1_prefix}/billing/usage/check?action=resume_generation",
             headers={"X-User-ID": test_user_id},
         )
 
@@ -209,9 +235,8 @@ async def test_check_usage_limit_allowed(test_user_id):
         data = response.json()
 
         assert data["allowed"] is True
-        # The implementation returns -1 for unlimited/not configured
-        assert "limit" in data
-        assert "remaining" in data
+        assert data["limit"] == 3
+        assert data["remaining"] == 3
 
 
 @pytest.mark.asyncio
@@ -222,7 +247,7 @@ async def test_checkout_session_missing_user_id():
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         response = await ac.post(
-            "/api/billing/checkout",
+            f"{settings.api_v1_prefix}/billing/checkout",
             json={
                 "plan_name": "basic",
                 "success_url": "http://localhost:3000/success",
@@ -234,13 +259,44 @@ async def test_checkout_session_missing_user_id():
 
 
 @pytest.mark.asyncio
+async def test_create_checkout_session_success(test_user_id, setup_subscription_plans):
+    """Test successful checkout session creation."""
+    from httpx import AsyncClient, ASGITransport
+
+    with patch("stripe.Customer.create") as mock_customer_create, patch(
+        "stripe.checkout.Session.create"
+    ) as mock_session_create:
+        mock_customer_create.return_value = MagicMock(id="cus_test_123")
+        mock_session_create.return_value = MagicMock(id="cs_test_123", url="http://stripe.com/test")
+
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as ac:
+            response = await ac.post(
+                f"{settings.api_v1_prefix}/billing/checkout",
+                json={
+                    "plan_name": "basic",
+                    "success_url": "http://localhost:3000/success",
+                    "cancel_url": "http://localhost:3000/cancel",
+                },
+                headers={"X-User-ID": test_user_id},
+            )
+
+            assert response.status_code == 200
+            data = response.json()
+            assert data["session_id"] == "cs_test_123"
+            assert data["url"] == "http://stripe.com/test"
+
+
+@pytest.mark.asyncio
 async def test_list_invoices_empty(test_user_id):
     """Test listing invoices for user with no invoices."""
     from httpx import AsyncClient, ASGITransport
 
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
-        response = await ac.get("/api/billing/invoices", headers={"X-User-ID": test_user_id})
+        response = await ac.get(
+            f"{settings.api_v1_prefix}/billing/invoices", headers={"X-User-ID": test_user_id}
+        )
 
         assert response.status_code == 200
         data = response.json()
@@ -256,7 +312,10 @@ async def test_list_payment_methods_empty(test_user_id):
 
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
-        response = await ac.get("/api/billing/payment-methods", headers={"X-User-ID": test_user_id})
+        response = await ac.get(
+            f"{settings.api_v1_prefix}/billing/payment-methods",
+            headers={"X-User-ID": test_user_id},
+        )
 
         assert response.status_code == 200
         data = response.json()
@@ -273,7 +332,8 @@ async def test_add_payment_method_missing_user_id():
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         response = await ac.post(
-            "/api/billing/payment-methods", json={"payment_method_id": "pm_test_123"}
+            f"{settings.api_v1_prefix}/billing/payment-methods",
+            json={"payment_method_id": "pm_test_123"},
         )
 
         assert response.status_code == 401
@@ -286,7 +346,9 @@ async def test_cancel_subscription_no_subscription(test_user_id):
 
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
-        response = await ac.post("/api/billing/cancel", headers={"X-User-ID": test_user_id})
+        response = await ac.post(
+            f"{settings.api_v1_prefix}/billing/cancel", headers={"X-User-ID": test_user_id}
+        )
 
         assert response.status_code == 404
 
@@ -298,7 +360,9 @@ async def test_resume_subscription_no_subscription(test_user_id):
 
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
-        response = await ac.post("/api/billing/resume", headers={"X-User-ID": test_user_id})
+        response = await ac.post(
+            f"{settings.api_v1_prefix}/billing/resume", headers={"X-User-ID": test_user_id}
+        )
 
         assert response.status_code == 404
 
@@ -311,7 +375,7 @@ async def test_upgrade_subscription_no_subscription(test_user_id):
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         response = await ac.post(
-            "/api/billing/upgrade?new_plan_name=premium",
+            f"{settings.api_v1_prefix}/billing/upgrade?new_plan_name=premium",
             headers={"X-User-ID": test_user_id},
         )
 
@@ -326,7 +390,7 @@ async def test_portal_session_no_subscription(test_user_id):
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         response = await ac.post(
-            "/api/billing/portal",
+            f"{settings.api_v1_prefix}/billing/portal",
             json={"return_url": "http://localhost:3000/settings"},
             headers={"X-User-ID": test_user_id},
         )
@@ -456,12 +520,13 @@ async def test_stripe_service_check_usage_limits_free_tier(test_user_id):
     """Test usage limit check for free tier user."""
     from lib.stripe import stripe_service
 
-    result = await stripe_service.check_usage_limits(test_user_id, "resume_generated")
+    # Mock billing enabled
+    with patch("lib.stripe.BILLING_ENABLED", True):
+        result = await stripe_service.check_usage_limits(test_user_id, "resume_generation")
 
-    # The implementation returns -1 for unlimited/not configured
-    assert result["allowed"] is True
-    assert "limit" in result
-    assert "remaining" in result
+        assert result["allowed"] is True
+        assert result["limit"] == 3
+        assert result["remaining"] == 3
 
 
 @pytest.mark.asyncio
@@ -469,28 +534,47 @@ async def test_stripe_service_check_usage_limits_ai_tailoring(test_user_id):
     """Test AI tailoring usage limit check for free tier user."""
     from lib.stripe import stripe_service
 
-    result = await stripe_service.check_usage_limits(test_user_id, "ai_tailored")
+    # Mock billing enabled
+    with patch("lib.stripe.BILLING_ENABLED", True):
+        result = await stripe_service.check_usage_limits(test_user_id, "ai_tailoring")
 
-    # The implementation returns -1 for unlimited/not configured
-    assert result["allowed"] is True
-    assert "limit" in result
-    assert "remaining" in result
+        # Free tier has 0 limit for AI tailoring
+        assert result["allowed"] is False
+        assert result["limit"] == 0
+        assert result["remaining"] == 0
 
 
 @pytest.mark.asyncio
 async def test_usage_tracking_flow(test_user_id):
     """Test full usage tracking flow."""
     from lib.stripe import stripe_service
-    from database import UserUsage, async_session_maker
+    from database import UserUsage, async_session_maker, Subscription, SubscriptionPlan
     from sqlalchemy import select, and_
     import datetime
 
     # Enable billing for test
     with patch("lib.stripe.BILLING_ENABLED", True):
-        # 1. Record usage
+        # 1. Setup a user with a plan that has limits
+        async with async_session_maker() as session:
+            plan = SubscriptionPlan(
+                name="limited_plan",
+                display_name="Limited Plan",
+                price_cents=500,
+                max_resumes_per_month=3,
+                max_ai_tailorings_per_month=2,
+            )
+            session.add(plan)
+            await session.commit()
+            await session.refresh(plan)
+
+            sub = Subscription(user_id="1", plan_id=plan.id, status="active")
+            session.add(sub)
+            await session.commit()
+
+        # 2. Record usage
         await stripe_service.record_usage("1", "resume_generation")
 
-        # 2. Verify usage recorded in DB
+        # 3. Verify usage recorded in DB
         async with async_session_maker() as session:
             now = datetime.datetime.now(datetime.UTC)
             stmt = select(UserUsage).where(
@@ -504,17 +588,17 @@ async def test_usage_tracking_flow(test_user_id):
             usage = result.scalar_one()
             assert usage.resumes_generated == 1
 
-            # 3. Check limits
+            # 4. Check limits
             status = await stripe_service.check_usage_limits("1", "resume_generation")
             assert status["allowed"] is True
             assert status["used"] == 1
             assert status["remaining"] == 2  # 3 - 1
 
-            # 4. Fill up usage
+            # 5. Fill up usage
             usage.resumes_generated = 3
             await session.commit()
 
-            # 5. Check limit exceeded
+            # 6. Check limit exceeded
             status = await stripe_service.check_usage_limits("1", "resume_generation")
             assert status["allowed"] is False
             assert status["remaining"] == 0
