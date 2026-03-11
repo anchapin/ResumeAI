@@ -1,7 +1,11 @@
 import { test, expect, Page } from '@playwright/test';
 import { testUser, loginUser, registerUser, createResume } from '../e2e/helpers';
 
+// Skip authenticated tests in CI (backend not available)
 test.describe('Visual Regression Tests - Authenticated Pages', () => {
+  // Skip all tests in this block when running in CI
+  test.skip(process.env.CI === 'true', 'Backend not available in CI');
+  
   let testUserInstance: typeof testUser;
 
   test.beforeAll(async ({ browser }) => {
@@ -126,7 +130,7 @@ test.describe('Visual Regression Tests - Authenticated Pages', () => {
 
   test('Template selection page', async ({ page }) => {
     const templatesUrl = ['/templates', '/editor?template=select', '/dashboard?tab=templates'];
-    
+
     for (const url of templatesUrl) {
       const response = await page.goto(url, { waitUntil: 'networkidle' });
       if (response?.status() === 200) {
@@ -172,7 +176,11 @@ test.describe('Visual Regression Tests - Public Pages', () => {
   });
 });
 
+// Skip responsive design tests in CI (requires backend auth)
 test.describe('Visual Regression Tests - Responsive Design', () => {
+  // Skip all tests in this block when running in CI
+  test.skip(process.env.CI === 'true', 'Backend not available in CI');
+  
   test.use({ viewport: { width: 1920, height: 1080 } });
 
   test('Dashboard - Desktop Large', async ({ page }) => {
