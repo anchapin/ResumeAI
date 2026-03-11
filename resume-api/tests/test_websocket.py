@@ -295,8 +295,10 @@ async def test_websocket_connection_heartbeat():
 
 
 @pytest.mark.asyncio
-async def test_send_pdf_progress():
+async def test_send_pdf_progress(monkeypatch):
     """Test PDF progress notification."""
+    from routes import websocket as ws_module
+
     pool = ConnectionPool()
     messages_received = []
 
@@ -307,24 +309,22 @@ async def test_send_pdf_progress():
     ws = MockWebSocket()
     await pool.connect("conn_1", ws, "user_1")
 
-    # Note: We need to temporarily replace the global connection_pool
-    original_pool = globals()["connection_pool"]
-    globals()["connection_pool"] = pool
+    # Mock the global connection pool
+    monkeypatch.setattr(ws_module, "connection_pool", pool)
 
-    try:
-        count = await send_pdf_progress("user_1", "job_1", 50, "Processing...")
+    count = await ws_module.send_pdf_progress("user_1", "job_1", 50, "Processing...")
 
-        assert count == 1
-        assert len(messages_received) == 1
-        assert messages_received[0]["type"] == MessageType.PDF_PROGRESS
-        assert messages_received[0]["data"]["progress"] == 50
-    finally:
-        globals()["connection_pool"] = original_pool
+    assert count == 1
+    assert len(messages_received) == 1
+    assert messages_received[0]["type"] == MessageType.PDF_PROGRESS
+    assert messages_received[0]["data"]["progress"] == 50
 
 
 @pytest.mark.asyncio
-async def test_send_pdf_complete():
+async def test_send_pdf_complete(monkeypatch):
     """Test PDF completion notification."""
+    from routes import websocket as ws_module
+
     pool = ConnectionPool()
     messages_received = []
 
@@ -335,22 +335,20 @@ async def test_send_pdf_complete():
     ws = MockWebSocket()
     await pool.connect("conn_1", ws, "user_1")
 
-    original_pool = globals()["connection_pool"]
-    globals()["connection_pool"] = pool
+    monkeypatch.setattr(ws_module, "connection_pool", pool)
 
-    try:
-        count = await send_pdf_complete("user_1", "job_1", "http://example.com/pdf")
+    count = await ws_module.send_pdf_complete("user_1", "job_1", "http://example.com/pdf")
 
-        assert count == 1
-        assert len(messages_received) == 1
-        assert messages_received[0]["type"] == MessageType.PDF_COMPLETE
-    finally:
-        globals()["connection_pool"] = original_pool
+    assert count == 1
+    assert len(messages_received) == 1
+    assert messages_received[0]["type"] == MessageType.PDF_COMPLETE
 
 
 @pytest.mark.asyncio
-async def test_send_pdf_error():
+async def test_send_pdf_error(monkeypatch):
     """Test PDF error notification."""
+    from routes import websocket as ws_module
+
     pool = ConnectionPool()
     messages_received = []
 
@@ -361,21 +359,19 @@ async def test_send_pdf_error():
     ws = MockWebSocket()
     await pool.connect("conn_1", ws, "user_1")
 
-    original_pool = globals()["connection_pool"]
-    globals()["connection_pool"] = pool
+    monkeypatch.setattr(ws_module, "connection_pool", pool)
 
-    try:
-        count = await send_pdf_error("user_1", "job_1", "Generation failed")
+    count = await ws_module.send_pdf_error("user_1", "job_1", "Generation failed")
 
-        assert count == 1
-        assert messages_received[0]["type"] == MessageType.PDF_ERROR
-    finally:
-        globals()["connection_pool"] = original_pool
+    assert count == 1
+    assert messages_received[0]["type"] == MessageType.PDF_ERROR
 
 
 @pytest.mark.asyncio
-async def test_send_notification():
+async def test_send_notification(monkeypatch):
     """Test generic notification."""
+    from routes import websocket as ws_module
+
     pool = ConnectionPool()
     messages_received = []
 
@@ -386,17 +382,13 @@ async def test_send_notification():
     ws = MockWebSocket()
     await pool.connect("conn_1", ws, "user_1")
 
-    original_pool = globals()["connection_pool"]
-    globals()["connection_pool"] = pool
+    monkeypatch.setattr(ws_module, "connection_pool", pool)
 
-    try:
-        count = await send_notification("user_1", "Test", "Test message", "info")
+    count = await ws_module.send_notification("user_1", "Test", "Test message", "info")
 
-        assert count == 1
-        assert messages_received[0]["type"] == MessageType.NOTIFICATION
-        assert messages_received[0]["data"]["title"] == "Test"
-    finally:
-        globals()["connection_pool"] = original_pool
+    assert count == 1
+    assert messages_received[0]["type"] == MessageType.NOTIFICATION
+    assert messages_received[0]["data"]["title"] == "Test"
 
 
 # ============================================================================
@@ -411,9 +403,7 @@ async def test_websocket_endpoint_connection(websocket_client):
     from starlette.testclient import TestClient
 
     with TestClient(app) as client:
-        with client.websocket_connect(
-            "/ws/resume/pdf?user_id=test_user"
-        ) as websocket:
+        with client.websocket_connect("/ws/resume/pdf?user_id=test_user") as websocket:
             # Receive connection confirmation
             data = websocket.receive_json()
             assert data["type"] == MessageType.CONNECT
@@ -426,9 +416,7 @@ async def test_websocket_heartbeat(websocket_client):
     from starlette.testclient import TestClient
 
     with TestClient(app) as client:
-        with client.websocket_connect(
-            "/ws/resume/pdf?user_id=test_user"
-        ) as websocket:
+        with client.websocket_connect("/ws/resume/pdf?user_id=test_user") as websocket:
             # Skip connection message
             websocket.receive_json()
 
@@ -447,9 +435,7 @@ async def test_websocket_error_handling(websocket_client):
 
     with TestClient(app) as client:
         # Valid connection
-        with client.websocket_connect(
-            "/ws/resume/pdf?user_id=test_user"
-        ) as websocket:
+        with client.websocket_connect("/ws/resume/pdf?user_id=test_user") as websocket:
             data = websocket.receive_json()
             assert data["type"] == MessageType.CONNECT
 
@@ -481,8 +467,10 @@ def test_message_types():
 
 
 @pytest.mark.asyncio
-async def test_pdf_progress_clamping():
+async def test_pdf_progress_clamping(monkeypatch):
     """Test progress percentage is clamped to 0-100."""
+    from routes import websocket as ws_module
+
     pool = ConnectionPool()
     messages_received = []
 
@@ -493,17 +481,13 @@ async def test_pdf_progress_clamping():
     ws = MockWebSocket()
     await pool.connect("conn_1", ws, "user_1")
 
-    original_pool = globals()["connection_pool"]
-    globals()["connection_pool"] = pool
+    monkeypatch.setattr(ws_module, "connection_pool", pool)
 
-    try:
-        # Test over 100
-        await send_pdf_progress("user_1", "job_1", 150, "Test")
-        assert messages_received[-1]["data"]["progress"] == 100
+    # Test over 100
+    await ws_module.send_pdf_progress("user_1", "job_1", 150, "Test")
+    assert messages_received[-1]["data"]["progress"] == 100
 
-        # Test under 0
-        messages_received.clear()
-        await send_pdf_progress("user_1", "job_1", -50, "Test")
-        assert messages_received[-1]["data"]["progress"] == 0
-    finally:
-        globals()["connection_pool"] = original_pool
+    # Test under 0
+    messages_received.clear()
+    await ws_module.send_pdf_progress("user_1", "job_1", -50, "Test")
+    assert messages_received[-1]["data"]["progress"] == 0

@@ -41,6 +41,7 @@ from routes.auth import router as auth_router
 from routes.github import router as github_router
 from routes.deployment import router as deployment_router
 from routes.feature_flags import router as feature_flags_router
+from routes.websocket import router as websocket_router
 from api.jd_routes import router as jd_router
 from api.api_key_routes import router as api_key_router
 from api.team_routes import router as team_router
@@ -377,6 +378,9 @@ app.include_router(analytics_router, prefix=settings.api_v1_prefix)
 app.include_router(webhook_router, prefix=settings.api_v1_prefix)
 app.include_router(deployment_router, prefix=settings.api_v1_prefix)
 app.include_router(feature_flags_router, prefix=settings.api_v1_prefix)
+
+# Include WebSocket routes (without prefix for WebSocket compatibility)
+app.include_router(websocket_router)
 
 
 if __name__ == "__main__":

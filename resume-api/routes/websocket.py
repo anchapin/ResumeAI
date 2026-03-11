@@ -61,9 +61,7 @@ class ConnectionPool:
         self.user_connections: Dict[str, Set[str]] = {}
         self.lock = asyncio.Lock()
 
-    async def connect(
-        self, connection_id: str, websocket: WebSocket, user_id: str
-    ) -> None:
+    async def connect(self, connection_id: str, websocket: WebSocket, user_id: str) -> None:
         """
         Register a new connection.
 
