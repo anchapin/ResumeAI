@@ -2,14 +2,13 @@ import { test, expect, Page } from '@playwright/test';
 import { testUser, loginUser, registerUser, createResume } from '../e2e/helpers';
 
 // Skip authenticated tests in CI (backend not available)
-const testAuthenticatedPages = process.env.CI ? test.skip : test;
-
-// Only run authenticated tests when not in CI
-if (process.env.CI !== 'true') {
-  testAuthenticatedPages.describe('Visual Regression Tests - Authenticated Pages', () => {
+test.describe('Visual Regression Tests - Authenticated Pages', () => {
+  // Skip all tests in this block when running in CI
+  test.skip(process.env.CI === 'true', 'Backend not available in CI');
+  
   let testUserInstance: typeof testUser;
 
-  testAuthenticatedPages.beforeAll(async ({ browser }) => {
+  test.beforeAll(async ({ browser }) => {
     // Create a stable test user for visual tests
     testUserInstance = {
       email: 'visual-test-user@example.com',
@@ -27,7 +26,7 @@ if (process.env.CI !== 'true') {
     await page.close();
   });
 
-  testAuthenticatedPages.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({ page }) => {
     await loginUser(page, testUserInstance.email, testUserInstance.password);
   });
 
@@ -144,7 +143,6 @@ if (process.env.CI !== 'true') {
     }
   });
 });
-}
 
 test.describe('Visual Regression Tests - Public Pages', () => {
   test('Login page layout', async ({ page }) => {
@@ -179,14 +177,13 @@ test.describe('Visual Regression Tests - Public Pages', () => {
 });
 
 // Skip responsive design tests in CI (requires backend auth)
-const testResponsiveDesign = process.env.CI ? test.skip : test;
+test.describe('Visual Regression Tests - Responsive Design', () => {
+  // Skip all tests in this block when running in CI
+  test.skip(process.env.CI === 'true', 'Backend not available in CI');
+  
+  test.use({ viewport: { width: 1920, height: 1080 } });
 
-// Only run responsive design tests when not in CI
-if (process.env.CI !== 'true') {
-  testResponsiveDesign.describe('Visual Regression Tests - Responsive Design', () => {
-  testResponsiveDesign.use({ viewport: { width: 1920, height: 1080 } });
-
-  testResponsiveDesign('Dashboard - Desktop Large', async ({ page }) => {
+  test('Dashboard - Desktop Large', async ({ page }) => {
     await loginUser(page, 'visual-test-user@example.com', 'VisualTest123!');
     await page.goto('/dashboard');
     await page.waitForLoadState('networkidle');
@@ -197,9 +194,9 @@ if (process.env.CI !== 'true') {
     });
   });
 
-  testResponsiveDesign.use({ viewport: { width: 768, height: 1024 } });
+  test.use({ viewport: { width: 768, height: 1024 } });
 
-  testResponsiveDesign('Dashboard - Tablet', async ({ page }) => {
+  test('Dashboard - Tablet', async ({ page }) => {
     await loginUser(page, 'visual-test-user@example.com', 'VisualTest123!');
     await page.goto('/dashboard');
     await page.waitForLoadState('networkidle');
@@ -210,9 +207,9 @@ if (process.env.CI !== 'true') {
     });
   });
 
-  testResponsiveDesign.use({ viewport: { width: 375, height: 667 } });
+  test.use({ viewport: { width: 375, height: 667 } });
 
-  testResponsiveDesign('Dashboard - Mobile', async ({ page }) => {
+  test('Dashboard - Mobile', async ({ page }) => {
     await loginUser(page, 'visual-test-user@example.com', 'VisualTest123!');
     await page.goto('/dashboard');
     await page.waitForLoadState('networkidle');
@@ -223,4 +220,3 @@ if (process.env.CI !== 'true') {
     });
   });
 });
-}
