@@ -12,6 +12,7 @@ interface RichTextEditorProps {
   placeholder?: string;
   minHeight?: string;
   className?: string;
+  id?: string;
 }
 
 /**
@@ -21,7 +22,7 @@ interface RichTextEditorProps {
  * Stores content as HTML for display and JSON for structured data
  */
 export const RichTextEditor = React.memo<RichTextEditorProps>(
-  ({ content, onChange, placeholder = 'Start typing...', minHeight = '120px', className = '' }) => {
+  ({ content, onChange, placeholder = 'Start typing...', minHeight = '120px', className = '', id }) => {
     const editor = useEditor({
       extensions: [
         StarterKit.configure({
@@ -45,6 +46,10 @@ export const RichTextEditor = React.memo<RichTextEditorProps>(
         attributes: {
           class: 'prose-editor focus:outline-none',
           style: `min-height: ${minHeight}`,
+          role: 'textbox',
+          'aria-multiline': 'true',
+          'aria-label': placeholder,
+          ...(id ? { id } : {}),
         },
       },
     });
