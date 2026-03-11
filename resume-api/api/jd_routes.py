@@ -332,19 +332,6 @@ async def check_ats_compatibility(
         )
 
 
-@router.post(
-    "/insights",
-    response_model=JDInsightsResponse,
-    responses={
-        400: {"model": ErrorResponse},
-        401: {"model": ErrorResponse},
-        403: {"model": ErrorResponse},
-        429: {"model": ErrorResponse},
-        500: {"model": ErrorResponse},
-    },
-    tags=["Job Description"],
-)
-@rate_limit("20/minute")
 def _build_ats_check(resume_dict: dict, job_description: str) -> ATSCheckResponse:
     """Build ATS check response from compatibility results."""
     ats_result = check_ats_compatibility(
@@ -468,6 +455,19 @@ def _generate_recommendations(missing: list, ats_check: ATSCheckResponse) -> lis
     return list(dict.fromkeys(recommendations))[:5]
 
 
+@router.post(
+    "/insights",
+    response_model=JDInsightsResponse,
+    responses={
+        400: {"model": ErrorResponse},
+        401: {"model": ErrorResponse},
+        403: {"model": ErrorResponse},
+        429: {"model": ErrorResponse},
+        500: {"model": ErrorResponse},
+    },
+    tags=["Job Description"],
+)
+@rate_limit("20/minute")
 async def get_jd_insights(
     request: Request,
     body: JDInsightsRequest,
