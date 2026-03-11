@@ -335,7 +335,7 @@ export function createFlakyTestPlugin(config: Partial<FlakyTestConfig>) {
     }),
     configResolved(_config: unknown) {
       // Store config for later use
-      (global as unknown).__flakyTestConfig = defaultConfig;
+      (global as any).__flakyTestConfig = defaultConfig;
     },
   };
 }
