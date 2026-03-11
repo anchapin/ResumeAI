@@ -22,10 +22,11 @@ describe('Feature Flags Types', () => {
         'ai_tailoring',
         'new_resume_editor',
         'linkedin_import',
-        'pdf_import',
-        'github_import',
+        'pdf_export_optimization',
         'advanced_analytics',
-        'beta_features',
+        'new_pricing_page',
+        'dark_mode',
+        'realtime_collaboration',
       ];
       
       keys.forEach(key => {
