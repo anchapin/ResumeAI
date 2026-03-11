@@ -337,11 +337,11 @@ async def create_checkout_session(
     subscription = result.scalar_one_or_none()
 
     if subscription:
-        subscription.stripe_customer_id = customer.stripe_customer_id
+        subscription.stripe_customer_id = customer["stripe_customer_id"]
     else:
         subscription = Subscription(
             user_id=user_id,
-            stripe_customer_id=customer.stripe_customer_id,
+            stripe_customer_id=customer["stripe_customer_id"],
             status="inactive",
         )
         db.add(subscription)
@@ -350,14 +350,14 @@ async def create_checkout_session(
 
     # Create checkout session
     checkout = await stripe_service.create_checkout_session(
-        stripe_customer_id=customer.stripe_customer_id,
+        customer_id=customer["stripe_customer_id"],
         price_id=plan["stripe_price_id"],
         success_url=request.success_url,
         cancel_url=request.cancel_url,
         trial_period_days=request.trial_period_days,
     )
 
-    return CheckoutSessionResponse(session_id=checkout.session_id, url=checkout.url)
+    return CheckoutSessionResponse(session_id=checkout["id"], url=checkout["url"])
 
 
 @router.post("/portal", response_model=PortalSessionResponse)
@@ -563,13 +563,13 @@ async def add_payment_method(
     # Attach to Stripe customer
     pm_data = await stripe_service.attach_payment_method(
         payment_method_id=request.payment_method_id,
-        stripe_customer_id=subscription.stripe_customer_id,
+        customer_id=subscription.stripe_customer_id,
     )
 
     # Set as default if requested
     if request.set_as_default:
         await stripe_service.set_default_payment_method(
-            stripe_customer_id=subscription.stripe_customer_id,
+            customer_id=subscription.stripe_customer_id,
             payment_method_id=request.payment_method_id,
         )
 

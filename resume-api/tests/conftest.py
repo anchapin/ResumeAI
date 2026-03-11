@@ -35,7 +35,10 @@ from config.security import hash_password, encrypt_token
 @pytest_asyncio.fixture(scope="function")
 async def test_db_engine():
     """Create test database engine."""
-    engine = create_async_engine("sqlite+aiosqlite:///:memory:", echo=False)
+    # Use a real file for sqlite to avoid in-memory issues between engines
+    import os
+    db_path = "test_resumeai.db"
+    engine = create_async_engine(f"sqlite+aiosqlite:///{db_path}", echo=False)
 
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
@@ -43,6 +46,8 @@ async def test_db_engine():
     yield engine
 
     await engine.dispose()
+    if os.path.exists(db_path):
+        os.remove(db_path)
 
 
 @pytest_asyncio.fixture(scope="function")
@@ -74,12 +79,32 @@ async def async_client(test_db_session):
     async def override_get_async_session():
         yield test_db_session
 
+    from database import get_async_session, get_db
+    from unittest.mock import MagicMock
+    
     app.dependency_overrides[get_async_session] = override_get_async_session
+    app.dependency_overrides[get_db] = override_get_async_session
+    
+    # Mock auth to return a user_id
+    mock_auth = MagicMock()
+    mock_auth.user_id = test_db_session._test_user_id if hasattr(test_db_session, "_test_user_id") else 1
+    
+    from config.dependencies import get_api_key
+    app.dependency_overrides[get_api_key] = lambda: mock_auth
 
-    # Disable request signing for tests
+    # Mock StripeService session
+    from lib.stripe import stripe_service
+    import lib.stripe
+    lib.stripe.mock_async_session = test_db_session
+    
+    # Set fallback user_id for usage tracking in routes
+    import api.routes
+    api.routes.FALLBACK_USER_ID = str(mock_auth.user_id)
+    # Disable security features for tests
     from config import settings
 
     settings.enable_request_signing = False
+    settings.enable_csrf = False
 
     transport = ASGITransport(app=app)
     client = AsyncClient(transport=transport, base_url="http://testserver")
@@ -125,6 +150,7 @@ async def test_user(test_db_session):
     test_db_session.add(user)
     await test_db_session.commit()
     await test_db_session.refresh(user)
+    test_db_session._test_user_id = user.id
     return user
 
 
@@ -142,6 +168,7 @@ async def admin_user(test_db_session):
     test_db_session.add(user)
     await test_db_session.commit()
     await test_db_session.refresh(user)
+    test_db_session._test_user_id = user.id
     return user
 
 
@@ -159,6 +186,7 @@ async def disabled_user(test_db_session):
     test_db_session.add(user)
     await test_db_session.commit()
     await test_db_session.refresh(user)
+    test_db_session._test_user_id = user.id
     return user
 
 
