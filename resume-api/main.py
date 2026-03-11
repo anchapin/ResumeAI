@@ -270,9 +270,6 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     )
 
 
-# Add timeout middleware first (must be added before other middleware)
-# This enforces a 30s timeout on all requests
-app.add_middleware(TimeoutMiddleware, timeout_seconds=30)
 
 # Add error handling middleware (must be added before monitoring)
 app.add_middleware(ErrorHandlingMiddleware)
@@ -290,6 +287,9 @@ if getattr(settings, "enable_csrf", True):
 # Add request signing middleware
 if getattr(settings, "enable_request_signing", True):
     app.add_middleware(RequestSigningMiddleware)
+
+# Add timeout middleware last to avoid consuming the request body early
+app.add_middleware(TimeoutMiddleware, timeout_seconds=30)
 
 # Configure CORS with restrictive settings
 # SECURITY: CORS_ORIGINS must be set in production environment

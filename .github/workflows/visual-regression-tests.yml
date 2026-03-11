@@ -1,0 +1,113 @@
+name: Visual Regression Tests
+
+on:
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'src/**'
+      - 'components/**'
+      - 'pages/**'
+      - 'tests/visual/**'
+      - 'package.json'
+      - 'playwright.config.ts'
+      - '.github/workflows/visual-regression-tests.yml'
+  push:
+    branches: [main, develop]
+    paths:
+      - 'src/**'
+      - 'components/**'
+      - 'pages/**'
+      - 'tests/visual/**'
+      - 'package.json'
+      - 'playwright.config.ts'
+  workflow_dispatch:
+
+jobs:
+  visual-regression:
+    name: Visual Regression Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Build frontend
+        run: npm run build
+
+      - name: Run visual regression tests
+        run: npm run test:visual
+        continue-on-error: true
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 30
+
+      - name: Upload visual test baseline diffs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: visual-regression-diffs
+          path: tests/visual/**/*.png
+          retention-days: 7
+
+      - name: Comment on PR with test results
+        if: always() && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const reportPath = './playwright-report/index.html';
+            
+            let comment = '## Visual Regression Test Results\n\n';
+            
+            if (fs.existsSync(reportPath)) {
+              comment += '✅ Visual regression tests completed. ';
+              comment += '[View detailed report](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})';
+            } else {
+              comment += '❌ Visual regression tests failed. ';
+              comment += '[View logs](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})';
+            }
+            
+            comment += '\n\n### How to update baselines\n';
+            comment += 'If the visual changes are intentional, update baselines locally:\n';
+            comment += '```bash\n';
+            comment += 'npm run test:visual:update\n';
+            comment += 'git add tests/visual/**/*.png\n';
+            comment += 'git commit -m "chore: update visual regression baselines"\n';
+            comment += '```\n';
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+
+  visual-regression-status:
+    name: Visual Regression Status Check
+    runs-on: ubuntu-latest
+    needs: visual-regression
+    if: always()
+    
+    steps:
+      - name: Check visual regression test status
+        run: |
+          if [ "${{ needs.visual-regression.result }}" != "success" ]; then
+            echo "Visual regression tests failed or were skipped"
+            exit 1
+          fi

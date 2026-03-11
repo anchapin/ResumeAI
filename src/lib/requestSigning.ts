@@ -128,7 +128,7 @@ export async function signedFetch(endpoint: string, options: RequestInit = {}): 
   return fetch(`${API_URL}${endpoint}`, {
     ...options,
     headers,
-    body: bodyStr || options.body,
+    body: bodyStr || undefined,
     credentials: 'include',
   });
 }

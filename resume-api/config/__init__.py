@@ -57,6 +57,10 @@ class Settings(BaseSettings):
     jwt_algorithm: str = "HS256"
     jwt_access_token_expire_minutes: int = 30
 
+    # Authentication & Encryption
+    secret_key: Optional[str] = None
+    token_encryption_key: Optional[str] = None
+
     # Rate Limiting Configuration
     enable_rate_limiting: bool = True
     rate_limit_pdf: str = "10/minute"  # PDF generation is expensive

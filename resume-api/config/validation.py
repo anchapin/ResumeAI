@@ -66,7 +66,9 @@ class SecretValidator:
 
         Raises MissingSecretError if required variables are missing.
         """
-        debug = os.getenv("DEBUG", "false").lower() == "true"
+        from config import settings
+
+        debug = settings.debug
         required = SecretValidator.REQUIRED_IN_DEVELOPMENT
 
         if not debug:
@@ -74,19 +76,17 @@ class SecretValidator:
 
         missing: List[str] = []
         for var in required:
-            if not os.getenv(var):
+            # Check settings object for the value (converted to lowercase for attribute access)
+            if not getattr(settings, var.lower(), None):
                 missing.append(var)
 
-        # Check for at least one AI provider
-        ai_providers = {
-            "OPENAI_API_KEY": "OpenAI",
-            "ANTHROPIC_API_KEY": "Anthropic",
-            "GEMINI_API_KEY": "Google Gemini",
-        }
-
-        has_provider = any(os.getenv(var) for var in ai_providers.keys())
+        # Check for at least one AI provider in settings
+        has_provider = any(
+            getattr(settings, var.lower(), None)
+            for var in ["OPENAI_API_KEY", "ANTHROPIC_API_KEY", "GEMINI_API_KEY"]
+        )
         if not has_provider:
-            missing.extend(ai_providers.keys())
+            missing.extend(["OPENAI_API_KEY", "ANTHROPIC_API_KEY", "GEMINI_API_KEY"])
 
         if missing:
             raise MissingSecretError(
