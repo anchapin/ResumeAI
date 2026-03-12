@@ -85,11 +85,11 @@ export default [
       'prefer-const': 'warn',
       'no-prototype-builtins': 'warn',
       'no-useless-assignment': 'warn',
-      // Complexity rules (threshold 20 for cyclomatic complexity)
-      'complexity': ['warn', 20],
-      // Max parameters rule (max 5 parameters per function)
+      // Complexity rules (threshold 20 for cyclomatic complexity) - enforced as error
+      'complexity': ['error', 20],
+      // Max parameters rule (max 5 parameters per function) - enforced as error
       '@typescript-eslint/no-misused-promises': 'off',
-      'max-params': ['warn', 5],
+      'max-params': ['error', 5],
       // Module boundary rules
       'boundaries/element-types': ['warn', {
         default: 'disallow',

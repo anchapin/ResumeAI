@@ -27,11 +27,11 @@ jobs:
       - name: Check Python complexity
         run: |
           echo "Checking Python cyclomatic complexity..."
-          # Check complexity with flake8 (max complexity = 10)
-          flake8 resume-api/ --max-complexity=10 --select=C901 --extend-ignore=C901 || true
+          # Check complexity with flake8 (max complexity = 10) - fail on violations
+          flake8 resume-api/ --max-complexity=10 --select=C901
           
           # Report complexity metrics
-          echo "Complexity check complete. Functions with complexity > 10 will be flagged."
+          echo "Complexity check complete. Functions must have complexity <= 10."
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -45,9 +45,6 @@ jobs:
       - name: Check TypeScript complexity
         run: |
           echo "Checking TypeScript cyclomatic complexity..."
-          # Install complexity checker
-          npm install -g complexity-report || true
-          
-          # Run complexity check on source files
-          npx tsc --noEmit || true
-          echo "TypeScript type check complete."
+          # Run ESLint to enforce complexity rules - will fail on violations
+          npm run lint
+          echo "TypeScript complexity check complete. All functions must have complexity <= 20."

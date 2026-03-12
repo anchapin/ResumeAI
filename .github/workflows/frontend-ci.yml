@@ -69,8 +69,9 @@ jobs:
         run: npm run test:a11y
         continue-on-error: true
 
-      - name: Run linting
+      - name: Run linting (enforces complexity rules as errors)
         run: npm run lint
+        continue-on-error: false
 
       - name: Check for duplicate code
         run: npm run duplicate:check
