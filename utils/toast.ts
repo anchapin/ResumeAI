@@ -1,4 +1,8 @@
+import React from 'react';
 import { toast, ToastOptions } from 'react-toastify';
+import ActionableToast from '../src/utils/ActionableToast';
+import { ToastAction } from '../src/types/toast';
+import { ErrorType } from './errorMessages';
 
 // Default toast options for consistent styling
 const defaultOptions: ToastOptions = {
@@ -85,4 +89,56 @@ export const showToast = (
     default:
       return showInfoToast(message, options);
   }
+};
+
+/**
+ * Display an actionable error toast with retry/download options
+ * @param message - The error message to display
+ * @param errorType - The type of error (determines action button)
+ * @param onAction - Optional callback for the action button (retry, etc.)
+ */
+export const showActionableError = (
+  message: string,
+  errorType: ErrorType,
+  onAction?: () => void,
+) => {
+  // Determine actions based on error type
+  const actions: ToastAction[] = [];
+
+  if (errorType === ErrorType.NETWORK || errorType === ErrorType.TIMEOUT) {
+    actions.push({
+      label: 'Retry',
+      onClick: () => {
+        if (onAction) onAction();
+      },
+      className: 'bg-blue-500 text-white hover:bg-blue-600',
+    });
+  } else if (errorType === ErrorType.STORAGE) {
+    actions.push({
+      label: 'Download Backup',
+      onClick: () => {
+        // Trigger download - handled by component
+        if (onAction) onAction();
+      },
+      className: 'bg-green-500 text-white hover:bg-green-600',
+    });
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (toast as any).error(message, {
+    component: () =>
+      React.createElement(ActionableToast, {
+        toastProps: {
+          closeToast: () => {},
+          toastId: 0,
+          isIn: true,
+          style: {},
+          props: { message, actions },
+        },
+        message,
+        actions,
+      }),
+    autoClose: false, // Keep actionable toasts open until user dismisses
+    closeOnClick: false,
+  });
 };
