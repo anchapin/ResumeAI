@@ -23,9 +23,8 @@ export function createMockFn<T extends (...args: any[]) => any>(): MockedFunctio
 export function createMockFnWithDefault<T extends (...args: any[]) => any>(
   defaultValue: Awaited<ReturnType<T>>,
 ): MockedFunction<T> {
-  const mock = vi.fn<Parameters<T>, Promise<Awaited<ReturnType<T>>>>();
-  mock.mockResolvedValue(defaultValue);
-  return mock as MockedFunction<T>;
+  const mock = vi.fn(() => Promise.resolve(defaultValue)) as MockedFunction<T>;
+  return mock;
 }
 
 /**
@@ -33,7 +32,7 @@ export function createMockFnWithDefault<T extends (...args: any[]) => any>(
  * @example
  * const mockApi = createAsyncMock<string>(data);
  */
-export function createAsyncMock<T>(value: T): Mock<[], Promise<T>> {
+export function createAsyncMock<T>(value: T): Mock<() => Promise<T>> {
   return vi.fn(async () => value);
 }
 
@@ -45,9 +44,9 @@ export function createAsyncMock<T>(value: T): Mock<[], Promise<T>> {
 export function createFailingMock<T extends (...args: any[]) => any>(
   error: Error,
 ): MockedFunction<T> {
-  const mock = vi.fn<Parameters<T>, Promise<never>>();
+  const mock = vi.fn() as MockedFunction<T>;
   mock.mockRejectedValue(error);
-  return mock as MockedFunction<T>;
+  return mock;
 }
 
 /**
@@ -70,7 +69,7 @@ export function createMethodSpy<T extends object, K extends keyof T>(
   obj: T,
   method: K,
 ): Mock {
-  return vi.spyOn(obj, method as any);
+  return vi.spyOn(obj, method as any) as unknown as Mock;
 }
 
 /**
