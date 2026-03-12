@@ -2,11 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { SimpleResumeData } from '../types';
 import { mockResumeData } from '../__mocks__/resume';
-import {
-  loadResumeData,
-  StorageError,
-  getStorageErrorMessage,
-} from '../utils/storage';
+import { loadResumeData, StorageError, getStorageErrorMessage } from '../utils/storage';
 import { sanitizeInput } from '../utils/security';
 import type { FeatureFlagConfig } from '../src/lib/feature-flags';
 
@@ -37,6 +33,7 @@ interface AppState {
   showShortcuts: boolean;
   globalLoading: boolean;
   featureFlags: FeatureFlagConfig | null;
+  autoSaveFailed: boolean;
 }
 
 interface AppActions {
@@ -55,6 +52,9 @@ interface AppActions {
   toggleShortcuts: () => void;
   setGlobalLoading: (isLoading: boolean) => void;
   setFeatureFlags: (flags: FeatureFlagConfig | null) => void;
+  markAutoSaveFailed: () => void;
+  clearAutoSaveFailed: () => void;
+  manualSave: () => Promise<boolean>;
 }
 
 type AppStore = AppState & AppActions;
@@ -137,6 +137,7 @@ export const useStore = create<AppStore>()(
       showShortcuts: false,
       globalLoading: false,
       featureFlags: null,
+      autoSaveFailed: false,
       setUser: (user) => set({ user, isAuthenticated: !!user }),
       setAuthLoading: (isAuthLoading) => set({ isAuthLoading }),
       setAuthError: (authError) => set({ authError }),
@@ -179,6 +180,34 @@ export const useStore = create<AppStore>()(
       toggleTheme: () => set((state) => ({ theme: state.theme === 'light' ? 'dark' : 'light' })),
       setShowShortcuts: (showShortcuts) => set({ showShortcuts }),
       toggleShortcuts: () => set((state) => ({ showShortcuts: !state.showShortcuts })),
+      markAutoSaveFailed: () =>
+        set({
+          autoSaveFailed: true,
+          saveStatus: 'error',
+        }),
+      clearAutoSaveFailed: () =>
+        set({
+          autoSaveFailed: false,
+          saveStatus: 'saved',
+        }),
+      manualSave: async () => {
+        try {
+          set({ saveStatus: 'saving' });
+          // Import saveResumeData at top of file if not already present
+          const { saveResumeData } = await import('../utils/storage');
+          const state = useStore.getState();
+          await saveResumeData(state.resumeData);
+          set({
+            saveStatus: 'saved',
+            lastSaved: new Date(),
+            autoSaveFailed: false,
+          });
+          return true;
+        } catch (error) {
+          set({ saveStatus: 'error', autoSaveFailed: true });
+          return false;
+        }
+      },
     }),
     {
       name: 'resumeai-storage',
