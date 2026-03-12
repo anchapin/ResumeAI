@@ -7,6 +7,7 @@ limitation by using alternative paths when necessary.
 """
 
 import os
+import subprocess
 import tempfile
 from pathlib import Path
 
@@ -25,8 +26,13 @@ def is_ecryptfs_path(path: str) -> bool:
         True if path is on ecryptfs, False otherwise
     """
     try:
-        # Get the filesystem type for the path
-        result = os.popen(f'df -Th "{path}" 2>/dev/null').read()
+        # Get the filesystem type for the path securely without shell execution
+        result = subprocess.run(
+            ["df", "-Th", path],
+            capture_output=True,
+            text=True,
+            check=False,
+        ).stdout
         return "ecryptfs" in result.lower()
     except Exception:
         return False

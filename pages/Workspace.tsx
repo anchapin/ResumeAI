@@ -1,3 +1,4 @@
+/* eslint-disable complexity */
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
@@ -486,9 +487,9 @@ const Workspace: React.FC = () => {
               aria-hidden="true"
               className="material-symbols-outlined text-primary-600"
             >
-              auto_awesome
+              description
             </span>
-            <h1 className="font-bold text-slate-800 text-lg">Tailored Resume Workspace</h1>
+            <h1 className="font-bold text-slate-800 text-lg">My Resumes</h1>
           </div>
         </div>
         <div className="flex items-center gap-3">
@@ -578,7 +579,7 @@ const Workspace: React.FC = () => {
         <div className="w-full lg:w-[480px] bg-white border-r border-slate-200 flex flex-col flex-shrink-0 z-10 shadow-lg lg:shadow-none">
           <div className="p-6 border-b border-slate-100">
             <nav className="flex items-center gap-2 mb-2 text-sm">
-              <span className="text-slate-400 font-medium">Applications</span>
+              <span className="text-slate-400 font-medium">My Resumes</span>
               <span
                 role="img"
                 aria-hidden="true"
@@ -586,9 +587,9 @@ const Workspace: React.FC = () => {
               >
                 chevron_right
               </span>
-              <span className="text-slate-800 font-bold">New Application</span>
+              <span className="text-slate-800 font-bold">New Resume</span>
             </nav>
-            <h2 className="text-2xl font-bold text-slate-900">New Application</h2>
+            <h2 className="text-2xl font-bold text-slate-900">New Resume</h2>
           </div>
 
           <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-6">

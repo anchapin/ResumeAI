@@ -79,7 +79,7 @@ describe('Workspace Component', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByText('Tailored Resume Workspace')).toBeInTheDocument();
+        expect(screen.getAllByText('My Resumes')[0]).toBeInTheDocument();
       });
     });
 

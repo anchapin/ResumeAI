@@ -85,8 +85,8 @@ export const ERROR_MESSAGES: Record<ErrorType, ErrorMessageMap> = {
   },
   [ErrorType.STORAGE]: {
     title: 'Storage Error',
-    userMessage: 'An error occurred while saving your data locally.',
-    suggestion: 'Try clearing some browser space or check your browser settings.',
+    userMessage: 'Unable to save your data locally.',
+    suggestion: 'Your browser storage might be full. Try downloading a backup of your data.',
     icon: 'storage',
     severity: 'critical',
   },
@@ -190,6 +190,8 @@ export function getActionLabel(type: ErrorType): string | null {
     case ErrorType.NETWORK:
     case ErrorType.TIMEOUT:
       return 'Retry';
+    case ErrorType.STORAGE:
+      return 'Download Backup';
     case ErrorType.SERVER:
     case ErrorType.UNKNOWN:
       return 'Report Issue';
