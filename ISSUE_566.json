@@ -1,0 +1,5 @@
+{
+  "body": "## Problem\nGeneric \"Processing...\" message doesn't inform the user of actual progress.\n\n## Impact\n- Perceived slowness\n- Lack of system status visibility (Heuristic #4)\n\n## Tasks\n- [ ] Implement a multi-stage progress bar for PDF export\n- [ ] Update progress states: \"Analyzing Data,\" \"Building Layout,\" \"Generating PDF\"\n- [ ] Add a \"Cancel\" button to stop the generation process\n- [ ] Ensure `aria-live` announcements for screen reader users during the wait\n",
+  "number": 566,
+  "title": "[UX-06] Enhance PDF Generation Progress Feedback"
+}

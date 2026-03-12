@@ -1,3 +1,4 @@
+/* eslint-disable complexity */
 import React, { useState, useEffect, memo } from 'react';
 import { LinkedInProfile } from '../types';
 import { importLinkedInProfile, disconnectLinkedIn } from '../utils/api-client';

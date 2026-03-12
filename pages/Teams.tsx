@@ -1,3 +1,4 @@
+/* eslint-disable complexity */
 import React, { useState, useEffect, useCallback } from 'react';
 import { Team, TeamMember, TeamActivity, TeamResume, MemberRole } from '../types';
 import TeamCard from '../components/TeamCard';

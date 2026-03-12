@@ -1,0 +1,72 @@
+{
+  "timestamp": "2026-03-12T10:10:15.265Z",
+  "total": 1564,
+  "passed": 1544,
+  "failed": 0,
+  "slow": 198,
+  "slowPercentage": "12.7",
+  "avgDuration": 49,
+  "threshold": 100,
+  "slowTests": [
+    {
+      "name": "App Component Error Handling should auto-dismiss error messages after 5 seconds",
+      "status": "pass",
+      "duration": 5029.392433999999,
+      "slow": true
+    },
+    {
+      "name": "App Component State Persistence should debounce saves to avoid rapid updates",
+      "status": "pass",
+      "duration": 1518.954604999999,
+      "slow": true
+    },
+    {
+      "name": "Login Component Edge cases handles long passwords",
+      "status": "pass",
+      "duration": 1126.4927209999996,
+      "slow": true
+    },
+    {
+      "name": "Accessibility Tests - WCAG 2.1 App Component should not have any accessibility violations",
+      "status": "pass",
+      "duration": 1074.2072699999999,
+      "slow": true
+    },
+    {
+      "name": "App Component State Persistence should save resume data to localStorage when data changes",
+      "status": "pass",
+      "duration": 1033.435094999999,
+      "slow": true
+    },
+    {
+      "name": "SettingsSkeleton Component renders with correct structure",
+      "status": "pass",
+      "duration": 886.21649,
+      "slow": true
+    },
+    {
+      "name": "JobApplicationsSkeleton Component renders with correct structure",
+      "status": "pass",
+      "duration": 803.4010010000002,
+      "slow": true
+    },
+    {
+      "name": "TeamsSkeleton Component renders with correct structure",
+      "status": "pass",
+      "duration": 800.5941450000003,
+      "slow": true
+    },
+    {
+      "name": "Editor Component Interaction calls onBack when back button is clicked",
+      "status": "pass",
+      "duration": 735.673366,
+      "slow": true
+    },
+    {
+      "name": "EditorSkeleton Component renders with correct structure",
+      "status": "pass",
+      "duration": 733.0378149999999,
+      "slow": true
+    }
+  ]
+}

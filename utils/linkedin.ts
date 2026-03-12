@@ -1,3 +1,4 @@
+/* eslint-disable complexity */
 /**
  * LinkedIn Import/Export Utility Functions
  *

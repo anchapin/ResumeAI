@@ -86,7 +86,7 @@ export default [
       'no-prototype-builtins': 'warn',
       'no-useless-assignment': 'warn',
       // Complexity rules (threshold 20 for cyclomatic complexity)
-      'complexity': ['warn', 20],
+      'complexity': ['error', 20],
       // Max parameters rule (max 5 parameters per function)
       '@typescript-eslint/no-misused-promises': 'off',
       'max-params': ['warn', 5],

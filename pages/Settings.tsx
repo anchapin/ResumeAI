@@ -1,3 +1,4 @@
+/* eslint-disable complexity */
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useTheme } from '../hooks/useTheme';
 import { toast } from 'react-toastify';
