@@ -79,7 +79,8 @@ describe('Workspace Component', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByText('Tailored Resume Workspace')).toBeInTheDocument();
+        expect(screen.getAllByText('My Resumes').length).toBeGreaterThan(0);
+        expect(screen.getAllByText('New Resume').length).toBeGreaterThan(0);
       });
     });
 

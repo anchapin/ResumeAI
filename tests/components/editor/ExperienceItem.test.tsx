@@ -216,7 +216,7 @@ describe('ExperienceItem', () => {
       const user = userEvent.setup();
       render(<ExperienceItem {...defaultProps} isExpanded={true} onRemoveTag={onRemoveTag} />);
 
-      const removeButtons = screen.getAllByRole('button', { name: /close/i });
+      const removeButtons = screen.getAllByRole('button', { name: /remove tag/i });
       // First two should be for removing tags
       await user.click(removeButtons[0]);
 
