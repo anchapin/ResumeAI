@@ -28,6 +28,73 @@ interface JobApplicationData {
   jobDescription?: string;
 }
 
+// Validate string input - extracted for complexity reduction
+const validateStringInput = (
+  input: string,
+  options: StringOptions,
+): string => {
+  if (typeof input !== 'string') {
+    throw new Error('Input must be a string');
+  }
+
+  // Sanitize string input
+  const sanitized: string = sanitizeString(input) as string;
+
+  // Apply length constraints
+  if (options.maxLength && sanitized.length > options.maxLength) {
+    throw new Error(`Input exceeds maximum length of ${options.maxLength}`);
+  }
+
+  if (options.minLength && sanitized.length < options.minLength) {
+    throw new Error(`Input is shorter than minimum length of ${options.minLength}`);
+  }
+
+  // Check for malicious patterns
+  if (!isValidString(sanitized, options.pattern)) {
+    throw new Error('Input contains invalid characters or patterns');
+  }
+
+  return sanitized;
+};
+
+// Validate email input - extracted for complexity reduction
+const validateEmailInput = (input: string): string => {
+  // Trim whitespace before validation
+  const trimmedEmail = input.trim();
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(trimmedEmail)) {
+    throw new Error('Invalid email format');
+  }
+
+  // Return sanitized but preserve trimmed value
+  return sanitizeString(trimmedEmail);
+};
+
+// Validate number input - extracted for complexity reduction
+const validateNumberInput = (
+  input: unknown,
+  options: NumberOptions,
+): number => {
+  let numInput = input;
+  if (typeof numInput === 'string') {
+    numInput = parseFloat(numInput);
+  }
+
+  if (isNaN(numInput as number)) {
+    throw new Error('Input must be a valid number');
+  }
+
+  if (options.min !== undefined && (numInput as number) < options.min) {
+    throw new Error(`Number must be greater than or equal to ${options.min}`);
+  }
+
+  if (options.max !== undefined && (numInput as number) > options.max) {
+    throw new Error(`Number must be less than or equal to ${options.max}`);
+  }
+
+  return numInput as number;
+};
+
 // Input validation functions
 /**
  * Validates and sanitizes input based on type and options
@@ -42,7 +109,7 @@ const validateInput = (
   type: string = 'string',
   options: StringOptions | NumberOptions | ArrayOptions = {},
 ): unknown => {
-  // For object type, we need to handle null differently (null is not a valid object)
+  // For object type, we need to handle null differently
   if (type === 'object') {
     if (input === null || input === undefined) {
       throw new Error('Input must be an object');
@@ -84,69 +151,14 @@ const validateInput = (
   }
 
   switch (type) {
-    case 'string': {
-      if (typeof input !== 'string') {
-        throw new Error('Input must be a string');
-      }
+    case 'string':
+      return validateStringInput(input as string, options as StringOptions);
 
-      // Sanitize string input
-      const sanitized: string = sanitizeString(input) as string;
+    case 'email':
+      return validateEmailInput(input as string);
 
-      // Apply length constraints
-      const stringOpts = options as StringOptions;
-      if (stringOpts.maxLength && sanitized.length > stringOpts.maxLength) {
-        throw new Error(`Input exceeds maximum length of ${stringOpts.maxLength}`);
-      }
-
-      if (stringOpts.minLength && sanitized.length < stringOpts.minLength) {
-        throw new Error(`Input is shorter than minimum length of ${stringOpts.minLength}`);
-      }
-
-      // Check for malicious patterns
-      if (!isValidString(sanitized, stringOpts.pattern)) {
-        throw new Error('Input contains invalid characters or patterns');
-      }
-
-      return sanitized;
-    }
-
-    case 'email': {
-      if (typeof input !== 'string') {
-        throw new Error('Email must be a string');
-      }
-
-      // Trim whitespace before validation - the test expects sanitized emails with whitespace
-      const trimmedEmail = input.trim();
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(trimmedEmail)) {
-        throw new Error('Invalid email format');
-      }
-
-      // Return sanitized but preserve trimmed value
-      return sanitizeString(trimmedEmail);
-    }
-
-    case 'number': {
-      let numInput = input;
-      if (typeof numInput === 'string') {
-        numInput = parseFloat(numInput);
-      }
-
-      if (isNaN(numInput as number)) {
-        throw new Error('Input must be a valid number');
-      }
-
-      const numberOpts = options as NumberOptions;
-      if (numberOpts.min !== undefined && (numInput as number) < numberOpts.min) {
-        throw new Error(`Number must be greater than or equal to ${numberOpts.min}`);
-      }
-
-      if (numberOpts.max !== undefined && (numInput as number) > numberOpts.max) {
-        throw new Error(`Number must be less than or equal to ${numberOpts.max}`);
-      }
-
-      return numInput;
-    }
+    case 'number':
+      return validateNumberInput(input, options as NumberOptions);
 
     default:
       return input;
@@ -338,6 +350,9 @@ const validateJobApplicationData = (jobData: JobApplicationData | null): boolean
 
 export {
   validateInput,
+  validateStringInput,
+  validateEmailInput,
+  validateNumberInput,
   sanitizeString,
   isValidString,
   validateResumeData,
