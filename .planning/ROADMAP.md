@@ -26,6 +26,13 @@
 3. Manual Save button appears contextually when auto-save fails
 4. All error states handled gracefully with recovery paths
 
+**Plans:** 2 plans
+
+**Plan list:**
+
+- [ ] 01-error-recovery-actions-01-PLAN.md — Toast type integration and showActionableError utility
+- [ ] 02-error-recovery-actions-02-PLAN.md — Store autoSaveFailed state and ManualSaveButton component
+
 **Dependencies:** None
 
 **Out of Scope:** Real-time notifications, error history log
