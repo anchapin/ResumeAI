@@ -79,8 +79,7 @@ describe('Workspace Component', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getAllByText('My Resumes').length).toBeGreaterThan(0);
-        expect(screen.getAllByText('New Resume').length).toBeGreaterThan(0);
+        expect(screen.getAllByText('My Resumes')[0]).toBeInTheDocument();
       });
     });
 

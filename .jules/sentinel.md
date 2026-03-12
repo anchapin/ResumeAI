@@ -15,3 +15,8 @@
 **Vulnerability:** `sanitize_html` stripped quoted event handlers (`onload="..."`) but missed unquoted ones (`onerror=alert(1)`), allowing XSS via unquoted attributes.
 **Learning:** Regex-based HTML sanitizers must account for all valid HTML syntax variations (quoted, single-quoted, unquoted). Simple patterns often miss edge cases.
 **Prevention:** Use multi-pass regex validation or dedicated parsing libraries. Ensure test cases cover all attribute quoting styles.
+
+## 2024-05-18 - [Command Injection via os.popen]
+**Vulnerability:** The `is_ecryptfs_path` function in `resume-api/lib/utils/ecryptfs_utils.py` used `os.popen` to execute a shell command with unsanitized user input (`path`), leading to a critical command injection vulnerability.
+**Learning:** Shell-based command execution (`os.popen`, `os.system`, `subprocess.run(shell=True)`) combined with string interpolation is inherently dangerous and must be avoided.
+**Prevention:** Always use `subprocess.run` (or similar) with an argument list rather than a single string, and ensure `shell=False` (which is the default) to prevent the shell from interpreting meta-characters.
