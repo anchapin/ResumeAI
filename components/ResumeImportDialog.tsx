@@ -1,4 +1,3 @@
-/* eslint-disable complexity */
 import React, { useState, useRef, useEffect } from 'react';
 import { SimpleResumeData, LinkedInProfile, GitHubRepository } from '../types';
 import { importFromLinkedInFile, importFromPDF, importFromWord } from '../utils/import';
@@ -19,7 +18,6 @@ import {
   buildImportedDataFromOAuth,
 } from './linkedin-import-helpers';
 import {
-  UploadStep,
   ImportStep,
   ProjectsStep,
   CompleteStep,
@@ -42,6 +40,7 @@ export const ResumeImportDialog: React.FC<ResumeImportDialogProps> = ({
   onClose,
   onImport,
 }) => {
+  // eslint-disable-next-line complexity
   const [currentStep, setCurrentStep] = useState<Step['id']>('upload');
   const [importMethod, setImportMethod] = useState<'oauth' | 'file' | 'resume' | null>(null);
   const [isImporting, setIsImporting] = useState(false);
@@ -222,6 +221,7 @@ export const ResumeImportDialog: React.FC<ResumeImportDialogProps> = ({
     setIsImporting(false);
   };
 
+  // eslint-disable-next-line complexity
   const handleResumeFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -377,6 +377,7 @@ export const ResumeImportDialog: React.FC<ResumeImportDialogProps> = ({
         </div>
 
         {/* Progress Steps */}
+        {/* eslint-disable-next-line complexity */}
         <div className="px-6 py-4 border-b border-slate-200 bg-slate-50">
           <div className="flex items-center justify-between">
             {STEPS.map((step, idx) => (
