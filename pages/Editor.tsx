@@ -9,19 +9,16 @@ import {
   Comment,
   ResumeVersion,
 } from '../types';
-import {
-  convertToAPIData,
-  getVariants,
-  listComments,
-  updateResume,
-} from '../utils/api-client';
+import { convertToAPIData, getVariants, listComments, updateResume } from '../utils/api-client';
 import { useStore } from '../store/store';
 import { useHistory } from '../src/hooks/useHistory';
 import ResumeImportDialog from '../components/ResumeImportDialog';
 import ResumePreview from '../components/ResumePreview';
 import VersionHistory from '../components/VersionHistory';
 import CommentPanel from '../components/CommentPanel';
-import { showSuccessToast, showErrorToast } from '../utils/toast';
+import ManualSaveButton from '../components/ManualSaveButton';
+import { showSuccessToast, showErrorToast, showActionableError } from '../utils/toast';
+import { ErrorType } from '../utils/errorMessages';
 import { ContactInfoSection } from '../components/editor/ContactInfoSection';
 import { SummarySection } from '../components/editor/SummarySection';
 import { ExperienceSection } from '../components/editor/ExperienceSection';
@@ -73,14 +70,14 @@ const Editor = () => {
 
   // PDF generation state
   const [selectedVariant, setSelectedVariant] = useState<string>('modern');
-  const { 
-    status: exportStatus, 
-    progress: exportProgress, 
-    error: exportError, 
+  const {
+    status: exportStatus,
+    progress: exportProgress,
+    error: exportError,
     eta: exportEta,
-    startExport, 
-    cancelExport, 
-    reset: resetExport 
+    startExport,
+    cancelExport,
+    reset: resetExport,
   } = usePdfExport();
 
   // Resume import state
@@ -243,13 +240,33 @@ const Editor = () => {
 
   // Handle Save Profile
   const handleSaveProfile = useCallback(async () => {
+    const manualSave = useStore.getState().manualSave;
     try {
-      const currentData = resumeDataRef.current;
-      localStorage.setItem('resume_draft', JSON.stringify(currentData));
-      alert('Profile saved successfully!');
+      const success = await manualSave();
+      if (success) {
+        showSuccessToast('Profile saved successfully!');
+      } else {
+        // manualSave returned false - save failed and autoSaveFailed is now true
+        // Show actionable error toast based on error type
+        const saveStatus = useStore.getState().saveStatus;
+        if (saveStatus === 'error') {
+          // Create a local retry function to avoid circular reference
+          const retrySave = async () => {
+            const retrySuccess = await manualSave();
+            if (retrySuccess) {
+              showSuccessToast('Profile saved successfully!');
+            }
+          };
+          showActionableError(
+            'Failed to save your resume. You can try again or download a backup.',
+            ErrorType.STORAGE,
+            retrySave,
+          );
+        }
+      }
     } catch (err) {
       console.error('Save failed:', err);
-      alert('Failed to save profile. Please try again.');
+      showErrorToast('Failed to save profile. Please try again.');
     }
   }, []);
 
@@ -863,7 +880,9 @@ const Editor = () => {
                 disabled={exportStatus === 'submitting' || exportStatus === 'processing'}
                 className="flex items-center gap-2 px-6 h-10 rounded-lg border border-slate-300 bg-white text-slate-700 font-bold text-sm hover:bg-slate-50 transition-colors shadow-sm"
               >
-                {(exportStatus === 'submitting' || exportStatus === 'processing') ? 'Generating...' : 'Download PDF'}
+                {exportStatus === 'submitting' || exportStatus === 'processing'
+                  ? 'Generating...'
+                  : 'Download PDF'}
               </button>
               <button
                 onClick={handleSaveProfile}
@@ -921,6 +940,9 @@ const Editor = () => {
         onCancel={cancelExport}
         onClose={resetExport}
       />
+
+      {/* Manual Save Button - appears when auto-save fails */}
+      <ManualSaveButton />
 
       {/* Resume Import Dialog */}
       <ResumeImportDialog
