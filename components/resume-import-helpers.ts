@@ -7,7 +7,7 @@
  * and providing reusable, testable logic.
  */
 
-import { SimpleResumeData, GitHubRepository, LinkedInProfile } from '../types';
+import { SimpleResumeData, GitHubRepository, LinkedInProfile, ProjectEntry } from '../types';
 import { showErrorToast } from '../utils/toast';
 
 // ============================================================================
@@ -212,7 +212,7 @@ export const buildLinkedInFileImportData = (resumeData: any): Partial<SimpleResu
 export const buildGithubProjectData = (
   repoId: number,
   githubRepos: GitHubRepository[],
-): Partial<SimpleResumeData>['projects'][0] => {
+): ProjectEntry => {
   const repo = githubRepos.find((r) => r.id === repoId);
   return {
     id: `gh-${repoId}`,

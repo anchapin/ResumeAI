@@ -21,7 +21,7 @@ export interface AuthUser {
 
 export type Theme = 'light' | 'dark';
 
-export type SaveStatus = 'idle' | 'saving' | 'saved' | 'error';
+export type SaveStatus = 'idle' | 'saving' | 'saved' | 'error' | 'offline';
 
 interface AppState {
   user: AuthUser | null;
@@ -31,6 +31,7 @@ interface AppState {
   resumeData: SimpleResumeData;
   isResumeLoaded: boolean;
   saveStatus: SaveStatus;
+  lastSaved: Date | null;
   resumeError: string | null;
   theme: Theme;
   showShortcuts: boolean;
@@ -46,6 +47,7 @@ interface AppActions {
   setResumeData: (data: SimpleResumeData | ((prev: SimpleResumeData) => SimpleResumeData)) => void;
   loadResume: () => Promise<void>;
   setSaveStatus: (status: SaveStatus) => void;
+  setLastSaved: (date: Date | null) => void;
   setResumeError: (error: string | null) => void;
   setTheme: (theme: Theme) => void;
   toggleTheme: () => void;
@@ -129,6 +131,7 @@ export const useStore = create<AppStore>()(
       resumeData: initialResumeData,
       isResumeLoaded: false,
       saveStatus: 'idle' as SaveStatus,
+      lastSaved: null as Date | null,
       resumeError: null,
       theme: 'light' as Theme,
       showShortcuts: false,
@@ -170,6 +173,7 @@ export const useStore = create<AppStore>()(
         }
       },
       setSaveStatus: (saveStatus) => set({ saveStatus }),
+      setLastSaved: (lastSaved) => set({ lastSaved }),
       setResumeError: (resumeError) => set({ resumeError }),
       setTheme: (theme) => set({ theme }),
       toggleTheme: () => set((state) => ({ theme: state.theme === 'light' ? 'dark' : 'light' })),
@@ -193,6 +197,7 @@ export const selectAuthError = (state: AppStore) => state.authError;
 export const selectResumeData = (state: AppStore) => state.resumeData;
 export const selectResumeLoaded = (state: AppStore) => state.isResumeLoaded;
 export const selectSaveStatus = (state: AppStore) => state.saveStatus;
+export const selectLastSaved = (state: AppStore) => state.lastSaved;
 export const selectResumeError = (state: AppStore) => state.resumeError;
 
 export const selectTheme = (state: AppStore) => state.theme;

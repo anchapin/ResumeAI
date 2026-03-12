@@ -17,7 +17,7 @@ import {
 } from '../utils/api-client';
 import { useStore } from '../store/store';
 import { useHistory } from '../src/hooks/useHistory';
-import { ResumeImportDialog } from '../components/ResumeImportDialog';
+import ResumeImportDialog from '../components/ResumeImportDialog';
 import ResumePreview from '../components/ResumePreview';
 import VersionHistory from '../components/VersionHistory';
 import CommentPanel from '../components/CommentPanel';
