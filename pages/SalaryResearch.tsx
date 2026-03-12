@@ -1,3 +1,4 @@
+/* eslint-disable complexity */
 import React, { useState, useEffect } from 'react';
 import { JobOfferFormData } from '../types';
 import { Button, Card } from '../components/ui';

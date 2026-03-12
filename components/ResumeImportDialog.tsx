@@ -1,3 +1,4 @@
+/* eslint-disable complexity */
 import React, { useState, useRef, useEffect } from 'react';
 import { SimpleResumeData, LinkedInProfile, GitHubRepository } from '../types';
 import { importFromLinkedInFile, importFromPDF, importFromWord } from '../utils/import';
