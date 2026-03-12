@@ -7,8 +7,8 @@
 
 ### Error Recovery
 
-- [ ] **ERR-01**: User sees categorized error messages (Storage Full, Network Lost, Server Error)
-- [ ] **ERR-02**: User can retry failed operations via action buttons in error toasts
+- [x] **ERR-01**: User sees categorized error messages (Storage Full, Network Lost, Server Error)
+- [x] **ERR-02**: User can retry failed operations via action buttons in error toasts
 - [ ] **ERR-03**: User can download backup when save fails due to storage issues
 - [ ] **ERR-04**: User sees "Manual Save" button only when auto-save fails
 
@@ -24,8 +24,8 @@
 
 | Requirement | Phase   | Status  |
 | ----------- | ------- | ------- |
-| ERR-01      | Phase 1 | Pending |
-| ERR-02      | Phase 1 | Pending |
+| ERR-01      | Phase 1 | Complete |
+| ERR-02      | Phase 1 | Complete |
 | ERR-03      | Phase 1 | Pending |
 | ERR-04      | Phase 1 | Pending |
 
