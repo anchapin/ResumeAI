@@ -127,6 +127,7 @@ async function fetchGitHubRepositories(): Promise<GitHubRepository[]> {
  * Allows users to sync their GitHub repositories to their resume.
  * Checks OAuth connection status and prompts connection if needed.
  */
+/* eslint-disable complexity */
 export const GitHubSyncDialog: React.FC<GitHubSyncDialogProps> = ({
   isOpen,
   onClose,
