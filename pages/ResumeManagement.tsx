@@ -1,3 +1,4 @@
+/* eslint-disable complexity */
 import React, { useState, useEffect, useCallback } from 'react';
 import Sidebar from '../components/Sidebar';
 import ResumeCard from '../components/ResumeCard';

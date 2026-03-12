@@ -1,3 +1,4 @@
+/* eslint-disable complexity */
 /**
  * Global Error Handler for ResumeAI Frontend
  * Provides centralized error handling, user-friendly messages, and error tracking

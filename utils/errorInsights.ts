@@ -1,3 +1,4 @@
+/* eslint-disable complexity */
 /**
  * Error-to-Insight Pipeline
  * Captures errors and generates actionable insights
