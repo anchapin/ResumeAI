@@ -1,3 +1,4 @@
+import { vi } from 'vitest';
 import { ResumeData } from '@/types';
 
 // MSW-based test utilities
@@ -11,18 +12,18 @@ export interface TestContext {
 }
 
 export interface MockAPIClient {
-  createResume: (resume: Partial<any>) => Promise<APIResponse>;
-  getResume: (id: string, options?: any) => Promise<APIResponse>;
-  updateResume: (id: string, resume: Partial<any>) => Promise<APIResponse>;
+  createResume: (resume: Partial<ResumeData>) => Promise<APIResponse>;
+  getResume: (id: string, options?: GetResumeOptions) => Promise<APIResponse>;
+  updateResume: (id: string, resume: Partial<ResumeData>) => Promise<APIResponse>;
   deleteResume: (id: string) => Promise<APIResponse>;
   listResumes: () => Promise<APIResponse>;
   cloneResume: (id: string, newTitle: string) => Promise<APIResponse>;
-  generatePDF: (resume: Partial<any>, options?: any) => Promise<APIResponse>;
-  generatePreview: (resume: Partial<any>) => Promise<APIResponse>;
+  generatePDF: (resume: Partial<ResumeData>, options?: PDFOptions) => Promise<APIResponse>;
+  generatePreview: (resume: Partial<ResumeData>) => Promise<APIResponse>;
   downloadPDF: (pdfId: string) => Promise<APIResponse>;
-  initiateOAuth: (provider: string, options?: any) => Promise<APIResponse>;
-  handleOAuthCallback: (provider: string, params: any) => Promise<APIResponse>;
-  storeOAuthToken: (provider: string, token: any) => Promise<APIResponse>;
+  initiateOAuth: (provider: string, options?: OAuthOptions) => Promise<APIResponse>;
+  handleOAuthCallback: (provider: string, params: OAuthCallbackParams) => Promise<APIResponse>;
+  storeOAuthToken: (provider: string, token: OAuthToken) => Promise<APIResponse>;
   refreshOAuthToken: (provider: string, oldToken: string) => Promise<APIResponse>;
   revokeOAuthToken: (provider: string) => Promise<APIResponse>;
   getOAuthUserProfile: (provider: string) => Promise<APIResponse>;
@@ -33,9 +34,45 @@ export interface MockAPIClient {
   generateVariants: (resumeData: ResumeData) => Promise<APIResponse>;
 }
 
+export interface GetResumeOptions {
+  timeout?: number;
+  [key: string]: unknown;
+}
+
+export interface PDFOptions {
+  format?: string;
+  theme?: string;
+  [key: string]: unknown;
+}
+
+export interface OAuthOptions {
+  scopes?: string[];
+  [key: string]: unknown;
+}
+
+export interface OAuthCallbackParams {
+  error?: string;
+  state?: string;
+  code?: string;
+  [key: string]: unknown;
+}
+
+export interface OAuthToken {
+  accessToken: string;
+  refreshToken?: string;
+  expiresAt?: number;
+}
+
+export interface PDFCacheEntry {
+  id: string;
+  format: string;
+  theme: string;
+  size: number;
+}
+
 export interface APIResponse {
   status: number;
-  data?: any;
+  data?: ResumeData | Record<string, unknown>;
   error?: string;
   headers?: Record<string, string>;
   cached?: boolean;
@@ -58,8 +95,8 @@ export async function setupTestAPI(): Promise<TestContext> {
 export async function cleanupTestAPI(context: TestContext): Promise<void> {
   // Clear any test data
   await context.apiClient.listResumes().then((res) => {
-    if (res.data?.length) {
-      res.data.forEach((resume: any) => {
+    if (res.data && Array.isArray(res.data)) {
+      (res.data as ResumeData[]).forEach((resume) => {
         context.apiClient.deleteResume(resume.id);
       });
     }
@@ -70,27 +107,26 @@ export async function cleanupTestAPI(context: TestContext): Promise<void> {
  * Create mock API client for testing
  */
 function createMockAPIClient(): MockAPIClient {
-  const storage: Map<string, any> = new Map();
-  const pdfCache: Map<string, any> = new Map();
+  const storage: Map<string, Partial<ResumeData>> = new Map();
+  const pdfCache: Map<string, PDFCacheEntry> = new Map();
   const renderPdfCache: Map<string, string> = new Map();
-  let restorationCount = 0;
 
   return {
-    async createResume(resume: Partial<any>) {
+    async createResume(resume: Partial<ResumeData>) {
       if (!resume.basics?.name) {
         return { status: 400, error: 'Resume name (basics.name) is required' };
       }
 
       const id = 'resume-' + Date.now() + '-' + Math.random();
-      const created = { ...resume, id, createdAt: new Date().toISOString() };
+      const created: ResumeData = { ...resume as ResumeData, id, createdAt: new Date().toISOString() };
       storage.set(id, created);
 
       return { status: 201, data: created };
     },
 
-    async getResume(id: string, options?: any) {
+    async getResume(id: string, options?: GetResumeOptions) {
       if (options?.timeout) {
-        await new Promise((resolve) => setTimeout(resolve, options.timeout + 100));
+        await new Promise((resolve) => setTimeout(resolve, (options.timeout ?? 0) + 100));
       }
 
       const resume = storage.get(id);
@@ -140,7 +176,7 @@ function createMockAPIClient(): MockAPIClient {
       return { status: 201, data: cloned };
     },
 
-    async generatePDF(resume: Partial<any>, options?: any) {
+    async generatePDF(resume: Partial<ResumeData>, options?: PDFOptions) {
       if (!resume.basics?.name) {
         return { status: 400, error: 'Invalid resume data' };
       }
@@ -151,7 +187,7 @@ function createMockAPIClient(): MockAPIClient {
         return { status: 200, data: cached, cached: true };
       }
 
-      const pdf = {
+      const pdf: PDFCacheEntry = {
         id: 'pdf-' + Date.now(),
         format: options?.format || 'pdf',
         theme: options?.theme || 'standard',
@@ -162,7 +198,7 @@ function createMockAPIClient(): MockAPIClient {
       return { status: 200, data: pdf };
     },
 
-    async generatePreview(resume: Partial<any>) {
+    async generatePreview(resume: Partial<ResumeData>) {
       if (!resume.basics?.name) {
         return { status: 400, error: 'Invalid resume data' };
       }
@@ -188,7 +224,7 @@ function createMockAPIClient(): MockAPIClient {
       };
     },
 
-    async initiateOAuth(provider: string, options?: any) {
+    async initiateOAuth(provider: string, options?: OAuthOptions) {
       if (!['github', 'google', 'linkedin'].includes(provider)) {
         return { status: 400, error: 'Invalid provider' };
       }
@@ -203,7 +239,7 @@ function createMockAPIClient(): MockAPIClient {
       };
     },
 
-    async handleOAuthCallback(provider: string, params: any) {
+    async handleOAuthCallback(provider: string, params: OAuthCallbackParams) {
       if (params.error) {
         return { status: 403, error: 'User denied permission' };
       }
@@ -229,8 +265,8 @@ function createMockAPIClient(): MockAPIClient {
       };
     },
 
-    async storeOAuthToken(provider: string, token: any) {
-      storage.set(`oauth-${provider}`, token);
+    async storeOAuthToken(provider: string, token: OAuthToken) {
+      storage.set(`oauth-${provider}`, token as Partial<ResumeData>);
       return { status: 200, data: { stored: true } };
     },
 
@@ -392,7 +428,7 @@ function createMockAPIClient(): MockAPIClient {
 /**
  * Create a mock resume for testing
  */
-export function createMockResume(title: string, overrides?: any): Partial<ResumeData> {
+export function createMockResume(title: string, overrides?: Partial<ResumeData>): Partial<ResumeData> {
   return {
     title,
     basics: {
@@ -435,7 +471,7 @@ export function createMockResume(title: string, overrides?: any): Partial<Resume
  * Create a test factory for generating test data
  */
 export class TestDataFactory {
-  static generateResume(overrides?: Partial<any>): any {
+  static generateResume(overrides?: Partial<ResumeData>): ResumeData {
     return {
       id: 'test-' + Date.now(),
       basics: {
@@ -447,16 +483,16 @@ export class TestDataFactory {
       education: [],
       skills: [],
       ...overrides,
-    };
+    } as ResumeData;
   }
 
-  static generateMultipleResumes(count: number): any[] {
+  static generateMultipleResumes(count: number): ResumeData[] {
     return Array.from({ length: count }, (_, i) =>
       this.generateResume({
         basics: {
           ...this.generateResume().basics,
           name: `Test User ${i + 1}`,
-        },
+        } as ResumeData['basics'],
       }),
     );
   }
@@ -504,9 +540,10 @@ export const mockResumeData = {
 };
 
 export function setupApiMocks() {
-  global.fetch = () =>
+  global.fetch = vi.fn(() =>
     Promise.resolve({
       ok: true,
       json: () => Promise.resolve(mockPdfResponse),
-    }) as any;
+    }),
+  ) as unknown as typeof fetch;
 }
