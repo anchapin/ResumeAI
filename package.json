@@ -29,7 +29,7 @@
     "build:performance": "node scripts/build-performance.mjs",
     "deps:n1": "node scripts/detect-n-plus-1.mjs",
     "docs": "typedoc --out docs --entryPoints components/ pages/ utils/ hooks/ --excludeNotDocumented --excludeInternal --theme default",
-    "lint": "eslint . --ext .ts,.tsx",
+    "lint": "eslint . --ext .ts,.tsx --no-cache",
     "lint:fix": "eslint . --ext .ts,.tsx --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",

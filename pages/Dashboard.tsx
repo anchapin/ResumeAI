@@ -5,7 +5,7 @@ import { JobApplication } from '../types';
 import StatusBadge from '../components/StatusBadge';
 import DashboardSkeleton from '../components/skeletons/DashboardSkeleton';
 import { Button, Card } from '../components/ui';
-import { ResumeImportDialog } from '../components/ResumeImportDialog';
+import ResumeImportDialog from '../components/ResumeImportDialog';
 import { useStore } from '../store/store';
 import {
   getApplicationStats,
