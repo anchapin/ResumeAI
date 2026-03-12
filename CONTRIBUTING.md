@@ -339,3 +339,95 @@ To maintain code quality and ensure technical debt is tracked, follow these guid
 - [ ] No unused variables or imports
 - [ ] **No secrets, API keys, or sensitive data committed**
 - [ ] All environment variables in `.env.example`
+
+## Testing
+
+### Type-Safe Mock Utilities
+
+We provide type-safe mock utilities in `tests/mocks/factories.ts` that you should use instead of loose typing patterns.
+
+#### Importing Mock Factories
+
+```typescript
+import {
+  createMockWorkItem,
+  createMockEducationItem,
+  createMockProject,
+  createMockSkill,
+  createMockApiSuccess,
+  createMockApiError,
+  createMockComponent,
+  createMockStore,
+  createMockEventHandler,
+  generateMockWorkItems,
+  generateMockEducationItems,
+} from '@/tests/mocks/factories';
+```
+
+#### Using Mock Factories
+
+**Creating work experience:**
+```typescript
+const workItem = createMockWorkItem({
+  name: 'Senior Software Engineer',
+  description: '10+ years of experience',
+});
+```
+
+**Creating education:**
+```typescript
+const educationItem = createMockEducationItem({
+  name: 'MIT',
+  description: 'Bachelor of Science',
+});
+```
+
+**Mocking API responses:**
+```typescript
+const response = createMockApiSuccess({ id: '1' }, 200);
+const error = createMockApiError('Not found', 404);
+```
+
+**Mocking React components:**
+```typescript
+const MockRichTextEditor = createMockComponent<RichTextEditorProps>('RichTextEditor');
+```
+
+**Mocking stores:**
+```typescript
+const mockStore = createMockStore({
+  resumes: [],
+  selectedId: null,
+  isLoading: false,
+});
+```
+
+**Mocking event handlers:**
+```typescript
+const { handler, calls, mock } = createMockEventHandler<FormData>();
+handler(formData);
+// Use calls to verify invocation
+expect(calls).toHaveLength(1);
+expect(calls[0].args[0]).toEqual(formData);
+```
+
+### Avoiding `any` in Tests
+
+- **DO NOT** use `any` type in test files
+- Use specific types from `@/types` or `unknown` with type guards
+- Use the mock factories above for common patterns
+- If you need a custom mock, create a typed factory function
+
+#### ❌ Bad
+```typescript
+const mock: any = { name: 'test' };
+vi.spyOn(obj, 'method').mockImplementation((x: any) => x);
+```
+
+#### ✅ Good
+```typescript
+const mock: MockResumeData = { name: 'test' };
+vi.spyOn(obj, 'method').mockImplementation((x: MockResumeData) => x);
+```
+
+See `tests/mocks/factories.ts` for the complete API.
