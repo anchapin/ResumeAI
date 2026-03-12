@@ -274,9 +274,9 @@ describe('App Component', () => {
       expect(screen.queryByTestId('dashboard-page')).not.toBeInTheDocument();
     });
 
-    it('should render Workspace at /workspace route', async () => {
+    it('should render My Resumes at /my-resumes route', async () => {
       render(
-        <MemoryRouter initialEntries={['/workspace']}>
+        <MemoryRouter initialEntries={['/my-resumes']}>
           <App />
         </MemoryRouter>,
       );
@@ -310,9 +310,9 @@ describe('App Component', () => {
       });
     });
 
-    it('should render Bulk at /bulk route', async () => {
+    it('should render Bulk Operations at /bulk-operations route', async () => {
       render(
-        <MemoryRouter initialEntries={['/bulk']}>
+        <MemoryRouter initialEntries={['/bulk-operations']}>
           <App />
         </MemoryRouter>,
       );
@@ -466,7 +466,7 @@ describe('App Component', () => {
 
       await waitFor(() => {
         expect(
-          screen.getByText('An error occurred while saving your data locally.'),
+          screen.getByText('Unable to save your data locally.'),
         ).toBeInTheDocument();
       });
     });
@@ -487,7 +487,7 @@ describe('App Component', () => {
 
       await waitFor(() => {
         expect(
-          screen.getByText('An error occurred while saving your data locally.'),
+          screen.getByText('Unable to save your data locally.'),
         ).toBeInTheDocument();
       });
     });
@@ -508,7 +508,7 @@ describe('App Component', () => {
 
       await waitFor(() => {
         expect(
-          screen.getByText('An error occurred while saving your data locally.'),
+          screen.getByText('Unable to save your data locally.'),
         ).toBeInTheDocument();
       });
     });
@@ -529,14 +529,14 @@ describe('App Component', () => {
 
       // Wait for error to appear
       expect(
-        screen.getByText('An error occurred while saving your data locally.'),
+        screen.getByText('Unable to save your data locally.'),
       ).toBeInTheDocument();
 
       // Wait for auto-dismiss (5 seconds + buffer for slower systems)
       await waitFor(
         () => {
           expect(
-            screen.queryByText('An error occurred while saving your data locally.'),
+            screen.queryByText('Unable to save your data locally.'),
           ).not.toBeInTheDocument();
         },
         { timeout: 7000 },
@@ -561,7 +561,7 @@ describe('App Component', () => {
 
       await waitFor(() => {
         expect(
-          screen.getByText('An error occurred while saving your data locally.'),
+          screen.getByText('Unable to save your data locally.'),
         ).toBeInTheDocument();
       });
 
@@ -570,7 +570,7 @@ describe('App Component', () => {
 
       await waitFor(() => {
         expect(
-          screen.queryByText('An error occurred while saving your data locally.'),
+          screen.queryByText('Unable to save your data locally.'),
         ).not.toBeInTheDocument();
       });
     });
@@ -706,9 +706,9 @@ describe('App Component', () => {
   });
 
   describe('Workspace Integration', () => {
-    it('should render Workspace at /workspace route', async () => {
+    it('should render My Resumes at /my-resumes route', async () => {
       render(
-        <MemoryRouter initialEntries={['/workspace']}>
+        <MemoryRouter initialEntries={['/my-resumes']}>
           <App />
         </MemoryRouter>,
       );
@@ -729,18 +729,18 @@ describe('App Component', () => {
       expect(screen.getByTestId('applications-page')).toBeInTheDocument();
 
       render(
-        <MemoryRouter initialEntries={['/bulk']}>
+        <MemoryRouter initialEntries={['/bulk-operations']}>
           <App />
         </MemoryRouter>,
       );
       expect(screen.getByTestId('bulk-page')).toBeInTheDocument();
 
       render(
-        <MemoryRouter initialEntries={['/salary-research']}>
+        <MemoryRouter initialEntries={['/my-resumes']}>
           <App />
         </MemoryRouter>,
       );
-      expect(screen.getByTestId('salary-page')).toBeInTheDocument();
+      expect(screen.getByTestId('workspace-page')).toBeInTheDocument();
 
       render(
         <MemoryRouter initialEntries={['/dashboard']}>
@@ -1105,7 +1105,7 @@ describe('App Component', () => {
       );
 
       const errorMessage = await screen.findByText(
-        'An error occurred while saving your data locally.',
+        'Unable to save your data locally.',
       );
       expect(errorMessage).toBeInTheDocument();
 
@@ -1114,7 +1114,7 @@ describe('App Component', () => {
 
       await waitFor(() => {
         expect(
-          screen.queryByText('An error occurred while saving your data locally.'),
+          screen.queryByText('Unable to save your data locally.'),
         ).not.toBeInTheDocument();
       });
     });
@@ -1135,7 +1135,7 @@ describe('App Component', () => {
 
       await waitFor(() => {
         expect(
-          screen.getByText('An error occurred while saving your data locally.'),
+          screen.getByText('Unable to save your data locally.'),
         ).toBeInTheDocument();
       });
     });
@@ -1153,7 +1153,7 @@ describe('App Component', () => {
 
       await waitFor(() => {
         expect(
-          screen.getByText('An error occurred while saving your data locally.'),
+          screen.getByText('Unable to save your data locally.'),
         ).toBeInTheDocument();
       });
     });
@@ -1162,7 +1162,7 @@ describe('App Component', () => {
   describe('Suspense Boundaries', () => {
     it('should handle lazy loaded components', async () => {
       render(
-        <MemoryRouter initialEntries={['/workspace']}>
+        <MemoryRouter initialEntries={['/my-resumes']}>
           <App />
         </MemoryRouter>,
       );

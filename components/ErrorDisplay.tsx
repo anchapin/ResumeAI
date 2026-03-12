@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { ErrorContext, ErrorType } from '../utils/errorHandler';
 import { getErrorMessageByType, getErrorSuggestion } from '../utils/errorMessages';
+import { useStore } from '../store/store';
 
 // Default auto-dismiss time for error messages in milliseconds
 const DEFAULT_AUTO_DISMISS_TIME = 5000;
@@ -30,6 +31,7 @@ export const ErrorDisplay: React.FC<ErrorDisplayProps> = ({
   autoDismissTime = DEFAULT_AUTO_DISMISS_TIME,
   showDetails = false,
 }) => {
+  const resumeData = useStore((state) => state.resumeData);
   const [isVisible, setIsVisible] = useState(false);
   const [showExpandedDetails, setShowExpandedDetails] = useState(
     showDetails || process.env.NODE_ENV === 'development',
@@ -84,6 +86,8 @@ export const ErrorDisplay: React.FC<ErrorDisplayProps> = ({
         return 'cloud_off';
       case ErrorType.VALIDATION:
         return 'warning';
+      case ErrorType.STORAGE:
+        return 'storage';
       default:
         return 'error';
     }
@@ -100,6 +104,7 @@ export const ErrorDisplay: React.FC<ErrorDisplayProps> = ({
       case ErrorType.NETWORK:
       case ErrorType.TIMEOUT:
       case ErrorType.SERVER:
+      case ErrorType.STORAGE:
         return 'critical'; // Dark red
       default:
         return 'error';
@@ -122,6 +127,8 @@ export const ErrorDisplay: React.FC<ErrorDisplayProps> = ({
         return 'Server Error';
       case ErrorType.VALIDATION:
         return 'Validation Error';
+      case ErrorType.STORAGE:
+        return 'Storage Error';
       default:
         return 'Error';
     }
@@ -139,6 +146,9 @@ export const ErrorDisplay: React.FC<ErrorDisplayProps> = ({
         break;
       case ErrorType.AUTH:
         actions.push({ label: 'Sign In', action: 'signin', icon: 'login' });
+        break;
+      case ErrorType.STORAGE:
+        actions.push({ label: 'Download Backup', action: 'download_backup', icon: 'download' });
         break;
       case ErrorType.SERVER:
       case ErrorType.UNKNOWN:
@@ -165,12 +175,32 @@ export const ErrorDisplay: React.FC<ErrorDisplayProps> = ({
         handleDismiss();
         window.location.href = '/login';
         break;
+      case 'download_backup':
+        handleDownloadBackup();
+        break;
       case 'report':
         await reportError();
         break;
       case 'support':
         window.open('https://support.resumeai.com', '_blank');
         break;
+    }
+  };
+
+  const handleDownloadBackup = () => {
+    try {
+      const dataStr = JSON.stringify(resumeData, null, 2);
+      const dataBlob = new Blob([dataStr], { type: 'application/json' });
+      const url = URL.createObjectURL(dataBlob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `resume-backup-${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Failed to download backup:', err);
     }
   };
 

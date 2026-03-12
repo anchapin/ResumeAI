@@ -1,0 +1,5 @@
+{
+  "body": "## Problem\nMandatory registration before trying the product (Registration Blocker).\n\n## Impact\n- High drop-off rate for casual users\n- Low user control/freedom (Heuristic #3)\n\n## Tasks\n- [ ] Modify `/editor` route to allow unauthenticated access\n- [ ] Save guest resume data to `localStorage` exclusively\n- [ ] Add a \"Save for Later\" CTA that prompts for account creation\n- [ ] Ensure \"Download PDF\" prompts for account creation or guest-email capture\n- [ ] Add session migration (merge Guest data into User account after sign-up)\n",
+  "number": 561,
+  "title": "[UX-01] Implement \"Guest Mode\" for the Resume Editor"
+}
