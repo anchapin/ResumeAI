@@ -90,14 +90,10 @@ interface ActivityFeedProps {
 const ActivityFeed: React.FC<ActivityFeedProps> = React.memo(({ activities, loading }) => {
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-8" role="status" aria-live="polite">
-        <span
-          className="material-symbols-outlined animate-spin text-primary-600 text-4xl"
-          aria-hidden="true"
-        >
+      <div className="flex items-center justify-center py-8">
+        <span className="material-symbols-outlined animate-spin text-primary-600 text-4xl">
           progress_activity
         </span>
-        <span className="sr-only">Loading activity feed...</span>
       </div>
     );
   }
@@ -105,9 +101,7 @@ const ActivityFeed: React.FC<ActivityFeedProps> = React.memo(({ activities, load
   if (activities.length === 0) {
     return (
       <div className="text-center py-8 bg-slate-50 rounded-xl">
-        <span className="material-symbols-outlined text-slate-300 text-6xl mb-4" aria-hidden="true">
-          history
-        </span>
+        <span className="material-symbols-outlined text-slate-300 text-6xl mb-4">history</span>
         <p className="text-slate-500 font-medium mb-2">No activity yet</p>
         <p className="text-slate-400 text-sm">Recent team actions will appear here</p>
       </div>
@@ -130,12 +124,7 @@ const ActivityFeed: React.FC<ActivityFeedProps> = React.memo(({ activities, load
             <div key={activity.id} className={`relative flex gap-4 ${isLast ? '' : 'mb-4'}`}>
               {/* Timeline dot */}
               <div className="w-10 h-10 rounded-full bg-white border-2 border-slate-200 flex items-center justify-center flex-shrink-0 z-10">
-                <span
-                  className={`material-symbols-outlined text-[20px] ${color}`}
-                  aria-hidden="true"
-                >
-                  {icon}
-                </span>
+                <span className={`material-symbols-outlined text-[20px] ${color}`}>{icon}</span>
               </div>
 
               {/* Activity content */}

@@ -518,81 +518,6 @@ async def get_jd_insights(
         )
 
 
-# ⚡ Bolt Optimization: Use a static global tuple for tech terms to avoid
-# allocating an 80-element list on every function call.
-TECH_TERMS_TUPLE = (
-    "python",
-    "javascript",
-    "typescript",
-    "java",
-    "go",
-    "rust",
-    "c++",
-    "c#",
-    "ruby",
-    "php",
-    "swift",
-    "kotlin",
-    "scala",
-    "sql",
-    "html",
-    "css",
-    "react",
-    "vue",
-    "angular",
-    "node.js",
-    "nodejs",
-    "django",
-    "flask",
-    "fastapi",
-    "spring",
-    "rails",
-    "next.js",
-    "express",
-    "tensorflow",
-    "pytorch",
-    "keras",
-    "pandas",
-    "numpy",
-    "scikit-learn",
-    "kubernetes",
-    "docker",
-    "aws",
-    "azure",
-    "gcp",
-    "google cloud",
-    "postgres",
-    "postgresql",
-    "mysql",
-    "mongodb",
-    "redis",
-    "elasticsearch",
-    "graphql",
-    "rest",
-    "api",
-    "microservices",
-    "devops",
-    "ci/cd",
-    "git",
-    "github",
-    "gitlab",
-    "jenkins",
-    "terraform",
-    "ansible",
-    "machine learning",
-    "ml",
-    "ai",
-    "llm",
-    "nlp",
-    "data science",
-    "agile",
-    "scrum",
-    "leadership",
-    "communication",
-    "teamwork",
-)
-
-
 def _extract_resume_skills(resume_data: Dict[str, Any]) -> List[str]:
     """Extract skills from resume data."""
     skills = []
@@ -609,9 +534,6 @@ def _extract_resume_skills(resume_data: Dict[str, Any]) -> List[str]:
             elif isinstance(skill, str):
                 skills.append(skill.lower())
 
-    # ⚡ Bolt Optimization: Batch text for a single pass of tech term extraction
-    text_blocks = []
-
     # Extract from work experience
     work = resume_data.get("work", []) or resume_data.get("experience", [])
     for job in work:
@@ -620,12 +542,13 @@ def _extract_resume_skills(resume_data: Dict[str, Any]) -> List[str]:
             bullets = job.get("bullets", []) or job.get("highlights", [])
             for bullet in bullets:
                 text = bullet.get("text", "") if isinstance(bullet, dict) else str(bullet)
-                text_blocks.append(text)
+                # Extract potential skills from text
+                skills.extend(_extract_tech_terms(text))
 
             # Check description/summary
             description = job.get("summary", "") or job.get("description", "")
             if description:
-                text_blocks.append(description)
+                skills.extend(_extract_tech_terms(description))
 
     # Extract from projects
     projects = resume_data.get("projects", [])
@@ -633,18 +556,7 @@ def _extract_resume_skills(resume_data: Dict[str, Any]) -> List[str]:
         if isinstance(proj, dict):
             description = proj.get("description", "")
             if description:
-                text_blocks.append(description)
-
-    # Batch process all text blocks
-    if text_blocks:
-        joined_text = " | ".join(text_blocks).lower()
-        # Find all terms in the single joined string
-        found = [term for term in TECH_TERMS_TUPLE if term in joined_text]
-        # To preserve the original order of appearance in the text, we must search the text for the matched terms
-        # and sort them by their first occurrence index.
-        if found:
-            found.sort(key=lambda x: joined_text.find(x))
-            skills.extend(found)
+                skills.extend(_extract_tech_terms(description))
 
     # Remove duplicates and return
     return list(dict.fromkeys(skills))
@@ -652,8 +564,83 @@ def _extract_resume_skills(resume_data: Dict[str, Any]) -> List[str]:
 
 def _extract_tech_terms(text: str) -> List[str]:
     """Extract technology terms from text."""
+    tech_terms = [
+        "python",
+        "javascript",
+        "typescript",
+        "java",
+        "go",
+        "rust",
+        "c++",
+        "c#",
+        "ruby",
+        "php",
+        "swift",
+        "kotlin",
+        "scala",
+        "sql",
+        "html",
+        "css",
+        "react",
+        "vue",
+        "angular",
+        "node.js",
+        "nodejs",
+        "django",
+        "flask",
+        "fastapi",
+        "spring",
+        "rails",
+        "next.js",
+        "express",
+        "tensorflow",
+        "pytorch",
+        "keras",
+        "pandas",
+        "numpy",
+        "scikit-learn",
+        "kubernetes",
+        "docker",
+        "aws",
+        "azure",
+        "gcp",
+        "google cloud",
+        "postgres",
+        "postgresql",
+        "mysql",
+        "mongodb",
+        "redis",
+        "elasticsearch",
+        "graphql",
+        "rest",
+        "api",
+        "microservices",
+        "devops",
+        "ci/cd",
+        "git",
+        "github",
+        "gitlab",
+        "jenkins",
+        "terraform",
+        "ansible",
+        "machine learning",
+        "ml",
+        "ai",
+        "llm",
+        "nlp",
+        "data science",
+        "agile",
+        "scrum",
+        "leadership",
+        "communication",
+        "teamwork",
+    ]
+
     text_lower = text.lower()
-    found = [term for term in TECH_TERMS_TUPLE if term in text_lower]
-    if found:
-        found.sort(key=lambda x: text_lower.find(x))
+    found = []
+
+    for term in tech_terms:
+        if term in text_lower:
+            found.append(term)
+
     return found
