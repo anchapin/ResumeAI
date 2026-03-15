@@ -18,7 +18,7 @@ export interface MockOptions<T> {
 /**
  * Creates a partial mock with optional overrides
  */
-export function createMock<T>(defaults: T, options?: MockOptions<T>): Partial<T> {
+export function createMock<T extends object>(defaults: T, options?: MockOptions<T>): Partial<T> {
   const { overrides = {}, omit = [] } = options || {};
   
   const result: Partial<T> = {};
@@ -260,7 +260,7 @@ export function createMockChangeEvent<T = HTMLInputElement>(
     target: {
       ...(overrides?.target || {}),
       value,
-      name: overrides?.target?.name,
+      name: (overrides?.target as any)?.name,
       type: 'text',
     } as T,
   } as unknown as React.ChangeEvent<T>;
