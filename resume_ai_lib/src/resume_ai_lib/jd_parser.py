@@ -342,6 +342,17 @@ class JobDescriptionParser:
         r"^(?:[•\-\*]|\d+[\.\)]|(?:[A-Z][a-zA-Z]+)\s*[:\-])\s*(.+)$"
     )
 
+    # ⚡ Bolt: Pre-compile experience levels into combined regex patterns
+    # Using negative lookbehind/lookahead for letters ensures word-boundary-like matching
+    # that doesn't break when indicators contain non-word characters (like "sr." or "5+").
+    _COMPILED_EXPERIENCE_LEVELS = {
+        level: re.compile(
+            rf"(?<![a-zA-Z])(?:{'|'.join(re.escape(ind) for ind in indicators)})(?![a-zA-Z])",
+            re.IGNORECASE
+        )
+        for level, indicators in EXPERIENCE_LEVELS.items()
+    }
+
     def parse(self, job_description: str) -> ParsedJobDescription:
         """Parse a job description into structured data."""
         result = ParsedJobDescription()
@@ -516,11 +527,11 @@ class JobDescriptionParser:
         return int(float(value) * multiplier)
 
     def _extract_experience_level(self, text: str) -> Optional[str]:
-        text_lower = text.lower()
-        for level, indicators in self.EXPERIENCE_LEVELS.items():
-            for indicator in indicators:
-                if indicator in text_lower:
-                    return level
+        # ⚡ Bolt: Use pre-compiled combined regex for faster evaluation
+        priority_order = ["executive", "lead", "senior", "mid", "entry"]
+        for level in priority_order:
+            if self._COMPILED_EXPERIENCE_LEVELS[level].search(text):
+                return level
         return None
 
     def _extract_experience_years(self, text: str) -> Optional[Tuple[int, int]]:

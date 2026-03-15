@@ -172,9 +172,9 @@ const validateInput = (
  * @param str - The string to sanitize
  * @returns The sanitized string, or original input if not a string
  */
-const sanitizeString = (str: unknown): string => {
+const sanitizeString = (str: unknown): string | unknown => {
   if (typeof str !== 'string') {
-    return String(str);
+    return str;
   }
 
   // Remove potentially dangerous characters/patterns
@@ -191,7 +191,7 @@ const sanitizeString = (str: unknown): string => {
     .replace(/"/g, '"')
     .replace(/&#x27;/g, "'");
 
-    return result as string;
+  return result;
 };
 
 // Validate string against a pattern

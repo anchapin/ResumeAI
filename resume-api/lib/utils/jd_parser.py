@@ -400,6 +400,17 @@ class JobDescriptionParser:
     # Matches bullet points, numbered lists, and key: value pairs
     SECTION_ITEM_PATTERN = re.compile(r"^(?:[•\-\*]|\d+[\.\)]|(?:[A-Z][a-zA-Z]+)\s*[:\-])\s*(.+)$")
 
+    # ⚡ Bolt: Pre-compile experience levels into combined regex patterns
+    # Using negative lookbehind/lookahead for letters ensures word-boundary-like matching
+    # that doesn't break when indicators contain non-word characters (like "sr." or "5+").
+    _COMPILED_EXPERIENCE_LEVELS = {
+        level: re.compile(
+            rf"(?<![a-zA-Z])(?:{'|'.join(re.escape(ind) for ind in indicators)})(?![a-zA-Z])",
+            re.IGNORECASE
+        )
+        for level, indicators in EXPERIENCE_LEVELS.items()
+    }
+
     def __init__(self):
         """Initialize the job description parser."""
         pass
@@ -664,19 +675,14 @@ class JobDescriptionParser:
 
     def _extract_experience_level(self, text: str) -> Optional[str]:
         """Determine experience level from JD."""
-        text_lower = text.lower()
-
+        # ⚡ Bolt: Use pre-compiled combined regex instead of O(N*M) loop
         # Check for explicit level mentions in priority order (highest to lowest)
         # This ensures "Senior" is detected before "Associate" etc.
         priority_order = ["executive", "lead", "senior", "mid", "entry"]
 
         for level in priority_order:
-            indicators = self.EXPERIENCE_LEVELS.get(level, [])
-            for indicator in indicators:
-                # Use word boundary to avoid false matches
-                pattern = rf"\b{re.escape(indicator)}\b"
-                if re.search(pattern, text_lower):
-                    return level
+            if self._COMPILED_EXPERIENCE_LEVELS[level].search(text):
+                return level
 
         return None
 

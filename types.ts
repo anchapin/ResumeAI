@@ -25,34 +25,7 @@ export interface JobApplication {
   status: 'Applied' | 'Interview' | 'Offer' | 'Rejected';
   dateApplied: string;
   logo: string;
-  // Additional fields used in components
-  company_name?: string;
-  job_title?: string;
-  location?: string;
-  priority?: string;
-  date_applied?: string;
-  follow_up_date?: string;
-  salary_min?: number;
-  salary_max?: number;
-  salary_period?: string;
-  archived?: boolean;
-  // Extended status types from applications-api
-  application_status?: string;
 }
-
-// Re-export application status types
-export type ApplicationStatus =
-  | 'draft'
-  | 'applied'
-  | 'screening'
-  | 'interviewing'
-  | 'offer'
-  | 'accepted'
-  | 'rejected'
-  | 'withdrawn'
-  | 'archived';
-
-export type ApplicationPriority = 'low' | 'medium' | 'high' | 'urgent';
 
 // JSON Resume standard format (matches backend API models)
 export interface Location {

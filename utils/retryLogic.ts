@@ -9,7 +9,6 @@ export interface RetryConfig {
   maxDelay?: number; // milliseconds
   backoffMultiplier?: number;
   jitterFraction?: number; // 0-1, percentage of delay to add as jitter
-  timeoutMs?: number; // timeout for the request in milliseconds
 }
 
 const DEFAULT_CONFIG: Required<RetryConfig> = {
@@ -18,7 +17,6 @@ const DEFAULT_CONFIG: Required<RetryConfig> = {
   maxDelay: 10000, // 10 seconds
   backoffMultiplier: 2,
   jitterFraction: 0.1, // 10% jitter
-  timeoutMs: 30000, // 30 seconds
 };
 
 // Status codes that should trigger retry
