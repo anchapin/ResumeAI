@@ -77,7 +77,7 @@ interface AppState {
   coverLetterError: string | null;
   // Job description state
   jobDescriptionUrl: string;
-  parsedJobDescription: ParsedJobDescription | null;
+  parsedJobDescription: Record<string, unknown> | null;
   // Tailoring state
   tailoredResume: SimpleResumeData | null;
   tailoringChanges: TailoringChange[];
@@ -115,8 +115,6 @@ interface AppActions {
   // Job description actions
   setCurrentJobDescription: (description: string) => void;
   setJobDescriptionUrl: (url: string) => void;
-  setParsedJobDescription: (parsed: ParsedJobDescription | null) => void;
-  // Tailoring actions
   setIsTailoring: (isTailoring: boolean) => void;
   setTailoringError: (error: string | null) => void;
   setTailoredResume: (resume: SimpleResumeData | null) => void;
@@ -285,8 +283,6 @@ export const useStore = create<AppStore>()(
       // Job description actions
       setCurrentJobDescription: (currentJobDescription) => set({ currentJobDescription }),
       setJobDescriptionUrl: (jobDescriptionUrl) => set({ jobDescriptionUrl }),
-      setParsedJobDescription: (parsedJobDescription) => set({ parsedJobDescription }),
-      // Tailoring actions
       setIsTailoring: (isTailoring) => set({ isTailoring }),
       setTailoringError: (tailoringError) => set({ tailoringError }),
       setTailoredResume: (tailoredResume) => set({ tailoredResume }),
@@ -306,7 +302,7 @@ export const useStore = create<AppStore>()(
             if (state.tailoredResume) {
               const updatedResume = { ...state.tailoredResume };
               if (change.section === 'summary') {
-                updatedResume.summary = change.newValue || change.originalValue || change.proposed || '';
+                updatedResume.summary = change.proposed;
               }
               // Other sections would need similar handling
               return { tailoringChanges: changes, tailoredResume: updatedResume };
@@ -347,6 +343,7 @@ export const useStore = create<AppStore>()(
             resumeData: { ...state.resumeData },
             label,
             description: label,
+>>>>>>> origin/main
             type: type as VersionSnapshot['type'],
           };
           const history = [snapshot, ...state.versionHistory].slice(0, 20);
@@ -366,6 +363,7 @@ export const useStore = create<AppStore>()(
             resumeData: { ...state.resumeData },
             label: `Before restore: ${snapshot.label}`,
             description: `Before restore: ${snapshot.label}`,
+>>>>>>> origin/main
             type: 'auto-before-restore',
           };
           const history = [beforeRestore, ...state.versionHistory].slice(0, 20);
