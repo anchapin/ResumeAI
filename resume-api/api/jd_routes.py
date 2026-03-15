@@ -534,6 +534,10 @@ def _extract_resume_skills(resume_data: Dict[str, Any]) -> List[str]:
             elif isinstance(skill, str):
                 skills.append(skill.lower())
 
+    # ⚡ Bolt: Batch process input texts by joining them into a single string
+    # to optimize performance without breaking functionality
+    text_parts = []
+
     # Extract from work experience
     work = resume_data.get("work", []) or resume_data.get("experience", [])
     for job in work:
@@ -542,13 +546,13 @@ def _extract_resume_skills(resume_data: Dict[str, Any]) -> List[str]:
             bullets = job.get("bullets", []) or job.get("highlights", [])
             for bullet in bullets:
                 text = bullet.get("text", "") if isinstance(bullet, dict) else str(bullet)
-                # Extract potential skills from text
-                skills.extend(_extract_tech_terms(text))
+                if text:
+                    text_parts.append(text)
 
             # Check description/summary
             description = job.get("summary", "") or job.get("description", "")
             if description:
-                skills.extend(_extract_tech_terms(description))
+                text_parts.append(description)
 
     # Extract from projects
     projects = resume_data.get("projects", [])
@@ -556,15 +560,18 @@ def _extract_resume_skills(resume_data: Dict[str, Any]) -> List[str]:
         if isinstance(proj, dict):
             description = proj.get("description", "")
             if description:
-                skills.extend(_extract_tech_terms(description))
+                text_parts.append(description)
+
+    if text_parts:
+        combined_text = " ".join(text_parts)
+        skills.extend(_extract_tech_terms(combined_text))
 
     # Remove duplicates and return
     return list(dict.fromkeys(skills))
 
 
-def _extract_tech_terms(text: str) -> List[str]:
-    """Extract technology terms from text."""
-    tech_terms = [
+_TECH_TERMS = tuple(
+    [
         "python",
         "javascript",
         "typescript",
@@ -635,12 +642,11 @@ def _extract_tech_terms(text: str) -> List[str]:
         "communication",
         "teamwork",
     ]
+)
 
+
+def _extract_tech_terms(text: str) -> List[str]:
+    """Extract technology terms from text."""
     text_lower = text.lower()
-    found = []
-
-    for term in tech_terms:
-        if term in text_lower:
-            found.append(term)
-
-    return found
+    # ⚡ Bolt: Fast iteration using tuple instead of recreating list
+    return [term for term in _TECH_TERMS if term in text_lower]
