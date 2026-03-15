@@ -12,7 +12,3 @@
 ## 2026-03-11 - Material Symbol Ligature Accessibility
 **Learning:** Material Symbol icons implemented as text ligatures (e.g., <span ...>close</span>) require aria-hidden='true' to prevent screen readers from announcing the ligature text ('close').
 **Action:** Always add aria-hidden='true' to ligature-based icon elements and ensure the parent interactive element has a descriptive aria-label.
-
-## $(date +%Y-%m-%d) - Add Accessible Loading State to ActivityFeed
-**Learning:** Icon-only loading states (like simple Material Symbol spinners) are completely invisible to screen readers unless explicitly given an accessible role and text. Also, declarative empty states using Material Symbols need to be hidden from screen readers to prevent redundant reading.
-**Action:** Always wrap loading spinners in a `div` with `role="status"` and `aria-live="polite"`, include `.sr-only` descriptive text inside it, and mark decorative ligature icons with `aria-hidden="true"`.
