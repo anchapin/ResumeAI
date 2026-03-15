@@ -56,7 +56,9 @@ const EducationItem = React.memo(
             <div
               className={`p-1 rounded-full transition-transform duration-200 ${isExpanded ? 'rotate-180 bg-slate-100 text-slate-900' : 'text-slate-400 group-hover:bg-slate-100 group-hover:text-slate-600'}`}
             >
-              <span className="material-symbols-outlined">expand_more</span>
+              <span className="material-symbols-outlined" aria-hidden="true">
+                expand_more
+              </span>
             </div>
             <div>
               <h3 className="font-bold text-slate-900 text-lg">{edu.institution}</h3>
@@ -70,7 +72,9 @@ const EducationItem = React.memo(
               className="p-2 text-slate-400 hover:bg-slate-50 hover:text-slate-700 rounded-lg"
               aria-label="Edit education"
             >
-              <span className="material-symbols-outlined text-[20px]">edit</span>
+              <span className="material-symbols-outlined text-[20px]" aria-hidden="true">
+                edit
+              </span>
             </button>
 
             {isDeleting ? (
@@ -86,7 +90,12 @@ const EducationItem = React.memo(
                   className="p-1.5 text-red-600 hover:bg-red-50 rounded-md transition-colors"
                   aria-label="Confirm delete"
                 >
-                  <span className="material-symbols-outlined text-[18px] font-bold">check</span>
+                  <span
+                    className="material-symbols-outlined text-[18px] font-bold"
+                    aria-hidden="true"
+                  >
+                    check
+                  </span>
                 </button>
                 <div className="w-px h-4 bg-slate-200 mx-0.5"></div>
                 <button
@@ -98,7 +107,9 @@ const EducationItem = React.memo(
                   className="p-1.5 text-slate-400 hover:bg-slate-100 rounded-md transition-colors"
                   aria-label="Cancel delete"
                 >
-                  <span className="material-symbols-outlined text-[18px]">close</span>
+                  <span className="material-symbols-outlined text-[18px]" aria-hidden="true">
+                    close
+                  </span>
                 </button>
               </div>
             ) : (
@@ -112,7 +123,9 @@ const EducationItem = React.memo(
                 className="p-2 text-slate-400 hover:bg-red-50 hover:text-red-500 rounded-lg transition-colors"
                 aria-label="Delete education"
               >
-                <span className="material-symbols-outlined text-[20px]">delete</span>
+                <span className="material-symbols-outlined text-[20px]" aria-hidden="true">
+                  delete
+                </span>
               </button>
             )}
           </div>
@@ -225,7 +238,9 @@ const EducationItem = React.memo(
                         className="hover:text-primary-900"
                         aria-label={`Remove course ${course}`}
                       >
-                        <span className="material-symbols-outlined text-[14px]">close</span>
+                        <span className="material-symbols-outlined text-[14px]" aria-hidden="true">
+                          close
+                        </span>
                       </button>
                     </span>
                   ))}
@@ -251,9 +266,7 @@ const EducationItem = React.memo(
 
             {/* Description - Rich Text Editor */}
             <div className="space-y-3 mt-6 pt-4 border-t border-slate-100">
-              <label className="text-sm font-bold text-slate-700">
-                Description
-              </label>
+              <label className="text-sm font-bold text-slate-700">Description</label>
               <RichTextEditor
                 content={edu.description || ''}
                 onChange={(content) => onUpdate(edu.id, 'description', content)}
