@@ -4,7 +4,7 @@
  */
 
 import React from 'react';
-import type { WorkItem, EducationItem, Project, Skill } from '@/types';
+import type { WorkItem, EducationItem, ProjectItem, Skill } from '@/types';
 
 // ============================================
 // Base Mock Types
@@ -18,7 +18,7 @@ export interface MockOptions<T> {
 /**
  * Creates a partial mock with optional overrides
  */
-export function createMock<T>(defaults: T, options?: MockOptions<T>): Partial<T> {
+export function createMock<T extends object>(defaults: T, options?: MockOptions<T>): Partial<T> {
   const { overrides = {}, omit = [] } = options || {};
   
   const result: Partial<T> = {};
@@ -44,10 +44,11 @@ export function createMockWorkItem(overrides?: Partial<WorkItem>): WorkItem {
   const now = new Date().toISOString();
   
   return {
-    name: 'Software Engineer',
-    description: 'Built awesome things',
+    company: 'Tech Corp',
+    position: 'Software Engineer',
     startDate: '2020-01',
     endDate: now,
+    summary: 'Built awesome things',
     highlights: ['Achievement 1', 'Achievement 2'],
     ...overrides,
   };
@@ -55,15 +56,16 @@ export function createMockWorkItem(overrides?: Partial<WorkItem>): WorkItem {
 
 export function createMockEducationItem(overrides?: Partial<EducationItem>): EducationItem {
   return {
-    name: 'University of Technology',
-    description: 'Bachelor of Science in Computer Science',
+    institution: 'University of Technology',
+    area: 'Computer Science',
+    studyType: 'Bachelor of Science',
     startDate: '2016-09',
     endDate: '2020-05',
     ...overrides,
   };
 }
 
-export function createMockProject(overrides?: Partial<Project>): Project {
+export function createMockProject(overrides?: Partial<ProjectItem>): ProjectItem {
   return {
     name: 'Awesome Project',
     description: 'A really cool project',
@@ -258,7 +260,7 @@ export function createMockChangeEvent<T = HTMLInputElement>(
     target: {
       ...(overrides?.target || {}),
       value,
-      name: overrides?.target?.name,
+      name: (overrides?.target as any)?.name,
       type: 'text',
     } as T,
   } as unknown as React.ChangeEvent<T>;
@@ -299,8 +301,8 @@ export function delay(ms: number): Promise<void> {
 export function generateMockWorkItems(count: number): WorkItem[] {
   return Array.from({ length: count }, (_, i) => 
     createMockWorkItem({
-      name: `Position ${i + 1}`,
-      description: `Description ${i + 1}`,
+      company: `Company ${i + 1}`,
+      position: `Position ${i + 1}`,
     })
   );
 }
@@ -311,8 +313,8 @@ export function generateMockWorkItems(count: number): WorkItem[] {
 export function generateMockEducationItems(count: number): EducationItem[] {
   return Array.from({ length: count }, (_, i) => 
     createMockEducationItem({
-      name: `School ${i + 1}`,
-      description: `Degree ${i + 1}`,
+      institution: `University ${i + 1}`,
+      area: `Degree ${i + 1}`,
     })
   );
 }

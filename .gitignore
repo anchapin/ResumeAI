@@ -48,3 +48,9 @@ bin/
 # Dependency reports
 .unused-deps-report.json
 .deps-audit.json
+
+# Planning artifacts
+.planning/
+
+# Accidental npm install output files
+resume-api/=*

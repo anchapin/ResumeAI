@@ -19,6 +19,7 @@ describe('Retry Logic', () => {
       maxDelay: 10000,
       backoffMultiplier: 2,
       jitterFraction: 0.1,
+    timeoutMs: 30000,
     };
 
     it('calculates exponential backoff correctly', () => {

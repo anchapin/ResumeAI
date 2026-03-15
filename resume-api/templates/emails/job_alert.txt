@@ -1,0 +1,16 @@
+New Jobs Matching "{alert_name}"
+
+Hi {user_name},
+
+We found {job_count} new job{plural} matching your alert:
+
+{job_list}
+
+---
+
+View all jobs: {view_all_url}
+Manage your alerts: {manage_alerts_url}
+Unsubscribe: {unsubscribe_url}
+
+---
+{company_name}

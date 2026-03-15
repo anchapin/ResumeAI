@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { SimpleResumeData } from '../types';
+import { SimpleResumeData, ParsedJobDescription } from '../types';
 import { mockResumeData } from '../__mocks__/resume';
 import {
   loadResumeData,
@@ -9,6 +9,38 @@ import {
 } from '../utils/storage';
 import { sanitizeInput } from '../utils/security';
 import type { FeatureFlagConfig } from '../src/lib/feature-flags';
+
+/**
+ * Tailoring change type for resume tailoring feature
+ */
+export interface TailoringChange {
+  id: string;
+  type: 'add' | 'remove' | 'modify';
+  section: string;
+  field: string;
+  originalValue: string;
+  newValue: string;
+  // Legacy aliases for backward compatibility
+  original?: string;
+  proposed?: string;
+  reason: string;
+  author?: string;
+  accepted: boolean;
+  rejected: boolean;
+  timestamp: string | Date;
+}
+
+/**
+ * Version snapshot type for version history feature
+ */
+export interface VersionSnapshot {
+  id: string;
+  type: 'manual' | 'auto' | 'ai_tailoring' | 'auto-before-restore';
+  timestamp: string | Date;
+  resumeData: SimpleResumeData;
+  description: string;
+  label?: string;
+}
 
 export interface AuthUser {
   id: number;
@@ -83,7 +115,6 @@ interface AppActions {
   // Job description actions
   setCurrentJobDescription: (description: string) => void;
   setJobDescriptionUrl: (url: string) => void;
-  // Tailoring actions
   setIsTailoring: (isTailoring: boolean) => void;
   setTailoringError: (error: string | null) => void;
   setTailoredResume: (resume: SimpleResumeData | null) => void;
@@ -252,7 +283,6 @@ export const useStore = create<AppStore>()(
       // Job description actions
       setCurrentJobDescription: (currentJobDescription) => set({ currentJobDescription }),
       setJobDescriptionUrl: (jobDescriptionUrl) => set({ jobDescriptionUrl }),
-      // Tailoring actions
       setIsTailoring: (isTailoring) => set({ isTailoring }),
       setTailoringError: (tailoringError) => set({ tailoringError }),
       setTailoredResume: (tailoredResume) => set({ tailoredResume }),
@@ -312,6 +342,8 @@ export const useStore = create<AppStore>()(
             timestamp: new Date(),
             resumeData: { ...state.resumeData },
             label,
+            description: label,
+>>>>>>> origin/main
             type: type as VersionSnapshot['type'],
           };
           const history = [snapshot, ...state.versionHistory].slice(0, 20);
@@ -330,6 +362,8 @@ export const useStore = create<AppStore>()(
             timestamp: new Date(),
             resumeData: { ...state.resumeData },
             label: `Before restore: ${snapshot.label}`,
+            description: `Before restore: ${snapshot.label}`,
+>>>>>>> origin/main
             type: 'auto-before-restore',
           };
           const history = [beforeRestore, ...state.versionHistory].slice(0, 20);
