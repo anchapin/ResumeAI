@@ -10,6 +10,26 @@ import {
 import { sanitizeInput } from '../utils/security';
 import type { FeatureFlagConfig } from '../src/lib/feature-flags';
 
+export interface TailoringChange {
+  id: string;
+  section: 'summary' | 'experience' | 'education' | 'skills' | 'projects';
+  field: string;
+  original: string;
+  proposed: string;
+  reason: string;
+  accepted: boolean;
+  author: 'ai' | 'manual';
+  timestamp: Date;
+}
+
+export interface VersionSnapshot {
+  id: string;
+  timestamp: Date;
+  resumeData: SimpleResumeData;
+  label: string;
+  type: 'manual' | 'auto-before-ai' | 'auto-periodic' | 'auto-before-restore';
+}
+
 export interface AuthUser {
   id: number;
   email: string;
@@ -37,6 +57,24 @@ interface AppState {
   showShortcuts: boolean;
   globalLoading: boolean;
   featureFlags: FeatureFlagConfig | null;
+  // Cover letter state
+  currentJobDescription: string;
+  coverLetter: string;
+  coverLetterTone: string;
+  isGeneratingCoverLetter: boolean;
+  coverLetterError: string | null;
+  // Job description state
+  jobDescriptionUrl: string;
+  parsedJobDescription: Record<string, unknown> | null;
+  // Tailoring state
+  tailoredResume: SimpleResumeData | null;
+  tailoringChanges: TailoringChange[];
+  isTailoring: boolean;
+  tailoringError: string | null;
+  tailoringKeywords: string[];
+  tailoringSuggestions: string[];
+  // Version history state
+  versionHistory: VersionSnapshot[];
 }
 
 interface AppActions {
@@ -55,6 +93,30 @@ interface AppActions {
   toggleShortcuts: () => void;
   setGlobalLoading: (isLoading: boolean) => void;
   setFeatureFlags: (flags: FeatureFlagConfig | null) => void;
+  // Cover letter actions
+  setCoverLetter: (coverLetter: string) => void;
+  setCoverLetterTone: (tone: string) => void;
+  setIsGeneratingCoverLetter: (isGenerating: boolean) => void;
+  setCoverLetterError: (error: string | null) => void;
+  clearCoverLetter: () => void;
+  // Job description actions
+  setCurrentJobDescription: (description: string) => void;
+  setJobDescriptionUrl: (url: string) => void;
+  // Tailoring actions
+  setIsTailoring: (isTailoring: boolean) => void;
+  setTailoringError: (error: string | null) => void;
+  setTailoredResume: (resume: SimpleResumeData | null) => void;
+  setTailoringChanges: (changes: TailoringChange[]) => void;
+  setTailoringKeywords: (keywords: string[]) => void;
+  setTailoringSuggestions: (suggestions: string[]) => void;
+  acceptTailoringChange: (index: number) => void;
+  rejectTailoringChange: (index: number) => void;
+  applyTailoring: () => void;
+  clearTailoring: () => void;
+  // Version history actions
+  takeSnapshot: (label: string, type?: string) => void;
+  restoreSnapshot: (id: string) => void;
+  clearVersionHistory: () => void;
 }
 
 type AppStore = AppState & AppActions;
@@ -137,6 +199,24 @@ export const useStore = create<AppStore>()(
       showShortcuts: false,
       globalLoading: false,
       featureFlags: null,
+      // Cover letter state
+      currentJobDescription: '',
+      coverLetter: '',
+      coverLetterTone: 'professional',
+      isGeneratingCoverLetter: false,
+      coverLetterError: null,
+      // Job description state
+      jobDescriptionUrl: '',
+      parsedJobDescription: null,
+      // Tailoring state
+      tailoredResume: null,
+      tailoringChanges: [],
+      isTailoring: false,
+      tailoringError: null,
+      tailoringKeywords: [],
+      tailoringSuggestions: [],
+      // Version history state
+      versionHistory: [],
       setUser: (user) => set({ user, isAuthenticated: !!user }),
       setAuthLoading: (isAuthLoading) => set({ isAuthLoading }),
       setAuthError: (authError) => set({ authError }),
@@ -179,6 +259,96 @@ export const useStore = create<AppStore>()(
       toggleTheme: () => set((state) => ({ theme: state.theme === 'light' ? 'dark' : 'light' })),
       setShowShortcuts: (showShortcuts) => set({ showShortcuts }),
       toggleShortcuts: () => set((state) => ({ showShortcuts: !state.showShortcuts })),
+      // Cover letter actions
+      setCoverLetter: (coverLetter) => set({ coverLetter }),
+      setCoverLetterTone: (coverLetterTone) => set({ coverLetterTone }),
+      setIsGeneratingCoverLetter: (isGeneratingCoverLetter) => set({ isGeneratingCoverLetter }),
+      setCoverLetterError: (coverLetterError) => set({ coverLetterError }),
+      clearCoverLetter: () => set({ coverLetter: '', coverLetterError: null }),
+      // Job description actions
+      setCurrentJobDescription: (currentJobDescription) => set({ currentJobDescription }),
+      setJobDescriptionUrl: (jobDescriptionUrl) => set({ jobDescriptionUrl }),
+      // Tailoring actions
+      setIsTailoring: (isTailoring) => set({ isTailoring }),
+      setTailoringError: (tailoringError) => set({ tailoringError }),
+      setTailoredResume: (tailoredResume) => set({ tailoredResume }),
+      setTailoringChanges: (tailoringChanges) => set({ tailoringChanges }),
+      setTailoringKeywords: (tailoringKeywords) => set({ tailoringKeywords }),
+      setTailoringSuggestions: (tailoringSuggestions) => set({ tailoringSuggestions }),
+      acceptTailoringChange: (index) =>
+        set((state) => {
+          const changes = [...state.tailoringChanges];
+          if (changes[index]) {
+            changes[index] = { ...changes[index], accepted: true };
+            // Apply the change to tailoredResume
+            const change = changes[index];
+            if (state.tailoredResume) {
+              const updatedResume = { ...state.tailoredResume };
+              if (change.section === 'summary') {
+                updatedResume.summary = change.proposed;
+              }
+              // Other sections would need similar handling
+              return { tailoringChanges: changes, tailoredResume: updatedResume };
+            }
+          }
+          return { tailoringChanges: changes };
+        }),
+      rejectTailoringChange: (index) =>
+        set((state) => {
+          const changes = [...state.tailoringChanges];
+          if (changes[index]) {
+            changes[index] = { ...changes[index], accepted: false };
+          }
+          return { tailoringChanges: changes };
+        }),
+      applyTailoring: () =>
+        set((state) => {
+          if (state.tailoredResume) {
+            return { resumeData: state.tailoredResume, tailoredResume: null };
+          }
+          return {};
+        }),
+      clearTailoring: () =>
+        set({
+          tailoredResume: null,
+          tailoringChanges: [],
+          tailoringError: null,
+          tailoringKeywords: [],
+          tailoringSuggestions: [],
+          isTailoring: false,
+        }),
+      // Version history actions
+      takeSnapshot: (label, type = 'manual') =>
+        set((state) => {
+          const snapshot: VersionSnapshot = {
+            id: `snapshot-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+            timestamp: new Date(),
+            resumeData: { ...state.resumeData },
+            label,
+            type: type as VersionSnapshot['type'],
+          };
+          const history = [snapshot, ...state.versionHistory].slice(0, 20);
+          return { versionHistory: history };
+        }),
+      restoreSnapshot: (id) =>
+        set((state) => {
+          const snapshot = state.versionHistory.find((s) => s.id === id);
+          if (!snapshot) {
+            console.warn(`Snapshot ${id} not found`);
+            return {};
+          }
+          // Create a snapshot before restoring
+          const beforeRestore: VersionSnapshot = {
+            id: `snapshot-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+            timestamp: new Date(),
+            resumeData: { ...state.resumeData },
+            label: `Before restore: ${snapshot.label}`,
+            type: 'auto-before-restore',
+          };
+          const history = [beforeRestore, ...state.versionHistory].slice(0, 20);
+          return { resumeData: snapshot.resumeData, versionHistory: history };
+        }),
+      clearVersionHistory: () => set({ versionHistory: [] }),
     }),
     {
       name: 'resumeai-storage',
