@@ -1783,3 +1783,7 @@ export async function getBillingUsage(): Promise<BillingUsage> {
   if (!response.ok) throw new Error('Failed to get billing usage');
   return response.json();
 }
+
+// Re-export fetchWithRetry for use by other modules
+export { fetchWithRetry } from './retryLogic';
+export type { RetryConfig } from './retryLogic';

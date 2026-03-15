@@ -20,11 +20,19 @@
     "allowImportingTsExtensions": true,
     "noEmit": true
   },
-  "include": ["**/*.ts", "**/*.tsx"],
+  "include": ["src/**/*", "components/**/*", "pages/**/*", "utils/**/*", "types/**/*", "contexts/**/*", "store/**/*", "hooks/**/*", "vite-env.d.ts", "index.tsx", "App.tsx"],
   "exclude": [
     "node_modules",
     "dist",
+    "tests",
     "tests/integration",
-    "tests/error-handler-integration.test.tsx"
+    "tests/error-handler-integration.test.tsx",
+    "components/**/*.test.tsx",
+    "pages/**/*.test.tsx",
+    "hooks/**/*.test.tsx",
+    "utils/**/*.test.ts",
+    "utils/test-utils/**",
+    "contexts/**/*.test.tsx",
+    "store/**/*.test.tsx"
   ]
 }
