@@ -1537,6 +1537,17 @@ class JDAnalysisRequest(BaseModel):
     )
 
 
+class JDFetchRequest(BaseModel):
+    """Request to fetch a job description from a URL."""
+
+    url: str = Field(
+        ...,
+        min_length=10,
+        max_length=2048,
+        description="URL to fetch job description from",
+    )
+
+
 class JDAnalysisResponse(BaseModel):
     """Response with parsed job description data."""
 
@@ -1550,18 +1561,13 @@ class JDAnalysisResponse(BaseModel):
     requirements: List[str] = Field(default_factory=list, description="Job requirements")
     qualifications: List[str] = Field(default_factory=list, description="Preferred qualifications")
     responsibilities: List[str] = Field(default_factory=list, description="Job responsibilities")
-    skills: List[str] = Field(default_factory=list, description="Required skills")
-    experience_level: Optional[str] = Field(
-        None, description="Experience level (entry, mid, senior, lead, executive)"
-    )
-    experience_years: Optional[Tuple[int, int]] = Field(
-        None, description="Years of experience range (min, max)"
-    )
-    education_requirements: List[str] = Field(
-        default_factory=list, description="Education requirements"
-    )
-    benefits: List[str] = Field(default_factory=list, description="Benefits offered")
-    keywords: List[str] = Field(default_factory=list, description="Top keywords")
+
+
+class JDFetchResponse(BaseModel):
+    """Response with fetched and parsed job description."""
+
+    text: str = Field(..., description="Raw job description text")
+    parsed: Optional[JDAnalysisResponse] = Field(None, description="Parsed job description data")
 
 
 class SkillsMatchRequest(BaseModel):
