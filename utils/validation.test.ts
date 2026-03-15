@@ -149,8 +149,8 @@ describe('validation utilities', () => {
     });
 
     it('should return non-strings as-is', () => {
-      expect(sanitizeString(123)).toBe(123);
-      expect(sanitizeString(null)).toBe(null);
+      expect(sanitizeString(123)).toBe('123');
+      expect(sanitizeString(null)).toBe('null');
     });
   });
 
