@@ -133,7 +133,7 @@ const CommentPanel: React.FC<CommentPanelProps> = ({ resumeId, onCommentCountCha
             className="p-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
             aria-label="Add new comment"
           >
-            <span className="material-symbols-outlined text-[20px]">add</span>
+            <span className="material-symbols-outlined text-[20px]" aria-hidden="true">add</span>
           </button>
         </div>
       </div>
@@ -194,7 +194,7 @@ const CommentPanel: React.FC<CommentPanelProps> = ({ resumeId, onCommentCountCha
                 >
                   {submitting ? (
                     <>
-                      <span className="material-symbols-outlined animate-spin text-[18px]">
+                      <span className="material-symbols-outlined animate-spin text-[18px]" aria-hidden="true">
                         progress_activity
                       </span>
                       <span>Adding...</span>
@@ -216,7 +216,7 @@ const CommentPanel: React.FC<CommentPanelProps> = ({ resumeId, onCommentCountCha
           </div>
         ) : filteredComments.length === 0 ? (
           <div className="text-center py-8 text-slate-500">
-            <span className="material-symbols-outlined text-4xl mb-2">chat_bubble_outline</span>
+            <span className="material-symbols-outlined text-4xl mb-2" aria-hidden="true">chat_bubble_outline</span>
             <p>{filter === 'unresolved' ? 'No unresolved comments' : 'No comments yet'}</p>
           </div>
         ) : (
@@ -241,7 +241,7 @@ const CommentPanel: React.FC<CommentPanelProps> = ({ resumeId, onCommentCountCha
                       )}
                       {comment.isResolved && (
                         <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs font-bold rounded-full flex items-center gap-1">
-                          <span className="material-symbols-outlined text-[14px]">
+                          <span className="material-symbols-outlined text-[14px]" aria-hidden="true">
                             check_circle
                           </span>
                           Resolved
@@ -256,8 +256,9 @@ const CommentPanel: React.FC<CommentPanelProps> = ({ resumeId, onCommentCountCha
                     onClick={() => handleDeleteComment(comment.id)}
                     className="p-1 text-slate-400 hover:bg-red-50 hover:text-red-500 rounded transition-colors"
                     title="Delete comment"
+                    aria-label="Delete comment"
                   >
-                    <span className="material-symbols-outlined text-[18px]">delete</span>
+                    <span className="material-symbols-outlined text-[18px]" aria-hidden="true">delete</span>
                   </button>
                 </div>
                 <p className="text-sm text-slate-700 mb-3">{comment.content}</p>
@@ -266,7 +267,7 @@ const CommentPanel: React.FC<CommentPanelProps> = ({ resumeId, onCommentCountCha
                     onClick={() => handleResolveComment(comment.id)}
                     className="text-sm font-bold text-green-600 hover:text-green-700 transition-colors flex items-center gap-1"
                   >
-                    <span className="material-symbols-outlined text-[18px]">check_circle</span>
+                    <span className="material-symbols-outlined text-[18px]" aria-hidden="true">check_circle</span>
                     Mark as Resolved
                   </button>
                 )}
