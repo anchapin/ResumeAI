@@ -1,3 +1,0 @@
-"""
-Writing Assistant Tests Package.
-"""

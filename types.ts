@@ -73,7 +73,6 @@ export interface ProjectItem {
   startDate?: string;
   endDate?: string;
   highlights?: string[];
-  keywords?: string[];
 }
 
 export interface BasicInfo {
@@ -878,32 +877,6 @@ export interface VersionComparisonData {
 export interface JobDescription {
   summary?: string;
   highlights?: string[];
-}
-
-/**
- * Parsed job description with extracted structured data
- */
-export interface ParsedJobDescription {
-  title?: string;
-  company?: string;
-  location?: string;
-  remote?: boolean;
-  employmentType?: string;
-  experienceLevel?: string;
-  requiredSkills: string[];
-  preferredSkills: string[];
-  responsibilities: string[];
-  qualifications: string[];
-  benefits: string[];
-  requirements?: string[];
-  salaryRange?: {
-    min: number;
-    max: number;
-    currency: string;
-  };
-  keywords: string[];
-  rawText: string;
-  summary?: string; // Legacy field for backward compatibility
 }
 
 export interface ATSScoreResult {

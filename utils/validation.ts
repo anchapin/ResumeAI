@@ -1,4 +1,4 @@
-/* eslint-disable complexity */
+ 
 /**
  * Client-side validation utilities for ResumeAI application
  */

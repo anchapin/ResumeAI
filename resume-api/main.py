@@ -47,6 +47,8 @@ from api.api_key_routes import router as api_key_router
 from api.team_routes import router as team_router
 from api.analytics_routes import router as analytics_router
 from api.webhook_routes import router as webhook_router
+from api.ats_routes import router as ats_router
+from api.tracking_routes import tracking_router
 
 # Get logger
 logger = logging_config.get_logger(__name__)
@@ -74,7 +76,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         # Content Security Policy
         csp = (
             "default-src 'self'; "
-            "script-src 'self' 'unsafe-inline'; "
+            "script-src 'self' 'unsafe-inline' 'unsafe-eval'; "
             "style-src 'self' 'unsafe-inline'; "
             "img-src 'self' data: https:; "
             "font-src 'self' data:; "
@@ -271,6 +273,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     )
 
 
+
 # Add error handling middleware (must be added before monitoring)
 app.add_middleware(ErrorHandlingMiddleware)
 
@@ -377,6 +380,8 @@ app.include_router(analytics_router, prefix=settings.api_v1_prefix)
 app.include_router(webhook_router, prefix=settings.api_v1_prefix)
 app.include_router(deployment_router, prefix=settings.api_v1_prefix)
 app.include_router(feature_flags_router, prefix=settings.api_v1_prefix)
+app.include_router(ats_router, prefix=settings.api_v1_prefix)
+app.include_router(tracking_router, prefix=settings.api_v1_prefix)
 
 # Include WebSocket routes (without prefix for WebSocket compatibility)
 app.include_router(websocket_router)

@@ -58,9 +58,9 @@ export function initSentry() {
     dsn: config.dsn,
     environment: config.environment,
     release: config.release,
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+     
     sampleRate: config.sampleRate,
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+     
     tracesSampleRate: config.tracesSampleRate,
     
     // Ignore certain errors

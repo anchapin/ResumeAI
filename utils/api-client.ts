@@ -84,10 +84,6 @@ import {
   sleep,
   RetryError,
 } from './retryLogic';
-
-// Re-export retry utilities for external use
-export { fetchWithRetry, isRetryableStatus, calculateBackoffDelay, sleep };
-export type { RetryConfig, RetryError } from './retryLogic';
 import { signedFetch } from '../src/lib/requestSigning';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';

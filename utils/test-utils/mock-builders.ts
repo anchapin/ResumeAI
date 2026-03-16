@@ -25,7 +25,7 @@ export class ApiClientMockBuilder {
     name: string,
     value: Awaited<ReturnType<T>>,
   ): this {
-    const mock = vi.fn();
+    const mock = vi.fn<Parameters<T>, Promise<Awaited<ReturnType<T>>>>();
     mock.mockResolvedValue(value);
     this.mocks[name] = mock;
     return this;
@@ -35,7 +35,7 @@ export class ApiClientMockBuilder {
     name: string,
     error: Error,
   ): this {
-    const mock = vi.fn();
+    const mock = vi.fn<Parameters<T>, Promise<never>>();
     mock.mockRejectedValue(error);
     this.mocks[name] = mock;
     return this;
@@ -94,8 +94,8 @@ export class ResponseMockBuilder {
   };
 
   status(code: number): this {
-    (this.response as any).status = code;
-    (this.response as any).ok = code >= 200 && code < 300;
+    this.response.status = code;
+    this.response.ok = code >= 200 && code < 300;
     return this;
   }
 

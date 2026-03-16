@@ -16,23 +16,23 @@ from urllib.parse import urlparse
 from pathlib import Path
 
 # LaTeX special characters that need escaping
-LATEX_SPECIAL_CHARS = {
-    "\\": "\\textbackslash{}",
-    "{": "\\{",
-    "}": "\\}",
-    "$": "\\$",
-    "%": "\\%",
-    "#": "\\#",
-    "&": "\\&",
-    "_": "\\_",
-    "^": "\\textasciicircum{}",
-    "~": "\\textasciitilde{}",
-}
+LATEX_SPECIAL_CHARS = [
+    (chr(92), r"\textbackslash{}"),  # Process backslash FIRST
+    ("{", r"\{"),  # Then braces (no trailing {} to avoid interfering with backslash escape)
+    ("}", r"\}"),
+    ("$", r"\$"),
+    ("%", r"\%"),
+    ("#", r"\#"),
+    ("&", r"\&"),
+    ("_", r"\_"),
+    ("^", r"\textasciicircum{}"),
+    ("~", r"\textasciitilde{}"),
+]
 
 # Validation patterns
 EMAIL_PATTERN = re.compile(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
 URL_PATTERN = re.compile(r"^(https?://|ftp://)?[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(/.*)?$", re.IGNORECASE)
-PHONE_PATTERN = re.compile(r"^[\d\s\-\+\(\)]{7,20}$")
+PHONE_PATTERN = re.compile(r"^[\d\s\-\+\(\)xX]{7,20}$")
 
 # Maximum field lengths
 MAX_STRING_LENGTH = 1000
@@ -88,10 +88,17 @@ def escape_latex(text: Optional[str]) -> Optional[str]:
     if not text:
         return text
 
-    # Process in order: backslash first to avoid double-escaping
-    result = text
-    for char, escaped in LATEX_SPECIAL_CHARS.items():
+    # Use placeholder to avoid double-escaping braces in \textbackslash{}
+    # 1. First, escape backslash to a placeholder
+    BACKSLASH_PLACEHOLDER = "\x00"  # Null character as placeholder
+    result = text.replace("\\", BACKSLASH_PLACEHOLDER)
+    
+    # 2. Then escape all other special characters
+    for char, escaped in LATEX_SPECIAL_CHARS[1:]:  # Skip backslash (index 0)
         result = result.replace(char, escaped)
+    
+    # 3. Finally, replace placeholder with actual backslash escape
+    result = result.replace(BACKSLASH_PLACEHOLDER, r"\textbackslash{}")
 
     return result
 
@@ -272,7 +279,14 @@ def sanitize_html(text: Optional[str]) -> Optional[str]:
     # 2. Unquoted attributes: onX=Y (matches until space, >, or end of string)
     text = re.sub(r"on\w+\s*=\s*[^>\s]+", "", text, flags=re.IGNORECASE)
 
-    # Remove javascript: and data: URLs
+    # Remove javascript: and data: URLs - must handle href attributes properly
+    # Match href="javascript:..." or href='javascript:...' and replace with #
+    text = re.sub(
+        r'href\s*=\s*["\']javascript:[^"\']*["\']',
+        'href="#"',
+        text,
+        flags=re.IGNORECASE
+    )
     text = re.sub(r"javascript\s*:", "", text, flags=re.IGNORECASE)
     text = re.sub(r"data\s*:", "", text, flags=re.IGNORECASE)
 

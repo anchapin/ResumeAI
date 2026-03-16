@@ -15,13 +15,6 @@ interface NotificationsBellProps {
 export const NotificationsBell: React.FC<NotificationsBellProps> = ({ onOpenPanel }) => {
   const [unreadCount, setUnreadCount] = useState(0);
 
-  useEffect(() => {
-    loadUnreadCount();
-    // Poll for updates every 30 seconds
-    const interval = setInterval(loadUnreadCount, 30000);
-    return () => clearInterval(interval);
-  }, []);
-
   const loadUnreadCount = async () => {
     try {
       const data = await getUnreadNotificationCount();
@@ -30,6 +23,13 @@ export const NotificationsBell: React.FC<NotificationsBellProps> = ({ onOpenPane
       console.error('Failed to load unread count:', err);
     }
   };
+
+  useEffect(() => {
+    loadUnreadCount();
+    // Poll for updates every 30 seconds
+    const interval = setInterval(loadUnreadCount, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   const handleClick = () => {
     onOpenPanel?.();

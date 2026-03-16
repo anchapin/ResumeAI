@@ -110,6 +110,37 @@ class ResumeVersion(Base):
     __table_args__ = (Index("idx_version_number", "resume_id", "version_number"),)
 
 
+class ATSHistory(Base):
+    """ATS score history for tracking resume ATS compatibility over time."""
+
+    __tablename__ = "ats_history"
+
+    id = Column(Integer, primary_key=True, index=True)
+    resume_id = Column(Integer, ForeignKey("resumes.id"), nullable=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)
+
+    # ATS Analysis results
+    file_type = Column(String(20), nullable=False)
+    ats_score = Column(Integer, nullable=False, index=True)
+    is_parseable = Column(Boolean, default=True)
+    word_count = Column(Integer, default=0)
+    issues = Column(JSON, nullable=True)  # Store issues as JSON
+    parsed_text_preview = Column(Text, nullable=True)  # First 500 chars for preview
+
+    # Analysis metadata
+    analysis_time_ms = Column(Float, default=0)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), index=True)
+
+    # Relationships
+    resume = relationship("Resume", foreign_keys=[resume_id])
+    user = relationship("User", backref="ats_history")
+
+    __table_args__ = (
+        Index("idx_ats_history_user_score", "user_id", "ats_score"),
+        Index("idx_ats_history_resume_time", "resume_id", "created_at"),
+    )
+
+
 class Comment(Base):
     """Comment model for collaboration features."""
 
