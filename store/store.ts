@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { SimpleResumeData } from '../types';
+import { SimpleResumeData, ParsedJobDescription } from '../types';
 import { mockResumeData } from '../__mocks__/resume';
 import {
   loadResumeData,

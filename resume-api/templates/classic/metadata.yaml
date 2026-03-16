@@ -1,0 +1,40 @@
+name: classic
+display_name: Classic Traditional
+description: A traditional, ATS-friendly resume template with a conservative layout. Perfect for formal industries like law, finance, government, and academia. Features centered headers, clear section dividers, and professional typography.
+format: latex
+output_formats:
+  - pdf
+category: classic
+style: traditional
+author: ResumeAI Team
+version: 1.0.0
+features:
+  - ats_friendly
+  - traditional_layout
+  - conservative_design
+  - formal_industries
+  - centered_header
+recommended_for:
+  - lawyers
+  - finance_professionals
+  - government
+  - academia
+  - executives
+  - conservative_industries
+font_options:
+  - Times New Roman
+  - Georgia
+  - Garamond
+color_schemes:
+  - name: classic_black
+    primary: [0, 0, 0]
+    accent: [25, 25, 112]
+    secondary: [64, 64, 64]
+  - name: navy_traditional
+    primary: [0, 0, 51]
+    accent: [0, 51, 102]
+    secondary: [102, 102, 102]
+  - name: charcoal_formal
+    primary: [34, 34, 34]
+    accent: [68, 68, 68]
+    secondary: [119, 119, 119]
