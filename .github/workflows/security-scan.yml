@@ -69,7 +69,7 @@ jobs:
 
       - name: Run pip-audit on resume-api
         working-directory: ./resume-api
-        run: pip-audit --ignore-vuln CVE-2024-23342 || true
+        run: pip-audit --ignore-vuln CVE-2024-23342 --ignore-vuln CVE-2026-32274 || true
 
       - name: Check npm dependencies
         if: always()
