@@ -8,35 +8,8 @@
 const fs = require('fs');
 const path = require('path');
 const zlib = require('zlib');
-const { execSync } = require('child_process');
 
-const distDir = path.join(process.cwd(), 'dist');
-
-// Auto-switch to ecryptfs-safe path if needed
-function ensureSafePath() {
-  const currentDir = process.cwd();
-  const homePath = require('os').homedir();
-  
-  // Check if we're in home directory with ecryptfs
-  if (currentDir.startsWith(homePath)) {
-    try {
-      const dfOutput = execSync('df -Th .', { encoding: 'utf8' });
-      if (dfOutput.includes('ecryptfs')) {
-        // Check if symlink exists and switch
-        const symlinkPath = '/tmp/ResumeAI';
-        if (fs.existsSync(symlinkPath)) {
-          console.log('🔄 Switching to ecryptfs-safe path: /tmp/ResumeAI');
-          process.chdir(symlinkPath);
-        }
-      }
-    } catch (e) {
-      // Ignore errors, continue with current path
-    }
-  }
-}
-
-// Run path check on startup
-ensureSafePath();
+const distDir = path.join(__dirname, '../dist');
 
 function getFileSize(filePath) {
   const stats = fs.statSync(filePath);

@@ -71,7 +71,7 @@ jobs:
       - name: Run pip-audit
         working-directory: ./resume-api
         run: |
-          pip-audit --ignore-vuln CVE-2024-23342 --ignore-vuln CVE-2026-32274 \
+          pip-audit --ignore-vuln CVE-2024-23342 \
             --ignore-vuln CVE-2025-69223 \
             --ignore-vuln CVE-2025-69224 \
             --ignore-vuln CVE-2025-69228 \
@@ -89,7 +89,6 @@ jobs:
             --ignore-vuln CVE-2026-26007 \
             --ignore-vuln CVE-2025-62800 \
             --ignore-vuln CVE-2026-28804 \
-            --ignore-vuln CVE-2026-32274 \
             --strict
 
       - name: Run tests with coverage (60% minimum)

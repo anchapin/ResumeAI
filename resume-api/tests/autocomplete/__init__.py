@@ -1,3 +1,0 @@
-"""
-Auto-Complete Tests Package.
-"""
