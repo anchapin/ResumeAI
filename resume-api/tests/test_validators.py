@@ -63,6 +63,7 @@ class TestLatexEscaping:
 
     def test_escape_backslash(self):
         """Test escaping of backslash."""
+        # Backslash is processed LAST, so braces in \textbackslash{} won't be double-escaped
         assert escape_latex("C:\\folder\\file") == "C:\\textbackslash{}folder\\textbackslash{}file"
 
     def test_escape_multiple_special_chars(self):
