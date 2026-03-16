@@ -87,7 +87,7 @@ jobs:
           pip install -r requirements.txt
           pip install pip-audit
           # Install black==26.1.0 AFTER requirements.txt to override any version from requirements
-          pip install black==26.3.1
+          pip install black==26.1.0
 
       - name: Run pip-audit
         run: pip-audit --ignore-vuln CVE-2024-23342
