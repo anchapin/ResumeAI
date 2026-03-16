@@ -343,7 +343,6 @@ export const useStore = create<AppStore>()(
             resumeData: { ...state.resumeData },
             label,
             description: label,
->>>>>>> origin/main
             type: type as VersionSnapshot['type'],
           };
           const history = [snapshot, ...state.versionHistory].slice(0, 20);
@@ -363,7 +362,6 @@ export const useStore = create<AppStore>()(
             resumeData: { ...state.resumeData },
             label: `Before restore: ${snapshot.label}`,
             description: `Before restore: ${snapshot.label}`,
->>>>>>> origin/main
             type: 'auto-before-restore',
           };
           const history = [beforeRestore, ...state.versionHistory].slice(0, 20);
