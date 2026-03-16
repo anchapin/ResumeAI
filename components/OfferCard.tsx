@@ -1,4 +1,4 @@
-/* eslint-disable complexity */
+ 
 import React from 'react';
 import { JobOffer } from '../types';
 import { Card } from './ui';

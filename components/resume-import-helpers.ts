@@ -1,4 +1,4 @@
-/* eslint-disable complexity */
+ 
 /**
  * Resume Import Dialog Helper Functions
  *

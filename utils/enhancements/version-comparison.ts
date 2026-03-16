@@ -1,4 +1,4 @@
-/* eslint-disable complexity */
+ 
 /**
  * Version Comparison Module
  *
