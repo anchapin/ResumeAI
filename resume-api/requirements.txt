@@ -1,6 +1,6 @@
 # FastAPI and Web Server
 fastapi==0.135.1
-uvicorn[standard]==0.41.0
+uvicorn[standard]==0.42.0
 python-multipart==0.0.22
 
 # Data Validation
@@ -17,7 +17,7 @@ PyYAML==6.0.3
 httpx==0.28.1
 
 # OpenAI Support (optional, for AI tailoring)
-openai==2.26.0
+openai==2.28.0
 
 # Anthropic Support (optional, for Claude AI)
 anthropic==0.84.0
