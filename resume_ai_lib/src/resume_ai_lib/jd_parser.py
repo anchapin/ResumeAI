@@ -348,7 +348,7 @@ class JobDescriptionParser:
     _COMPILED_EXPERIENCE_LEVELS = {
         level: re.compile(
             rf"(?<![a-zA-Z])(?:{'|'.join(re.escape(ind) for ind in indicators)})(?![a-zA-Z])",
-            re.IGNORECASE
+            re.IGNORECASE,
         )
         for level, indicators in EXPERIENCE_LEVELS.items()
     }
@@ -607,7 +607,11 @@ class JobDescriptionParser:
 
         section_text = f"{skills_section} {requirements_section}"
 
-        for word in self.CAPITALIZED_PATTERN.findall(section_text):
+        # ⚡ Bolt Optimization: Use finditer instead of findall to evaluate matches lazily.
+        # This avoids matching the entire string upfront, saving CPU and memory when
+        # we can break early (at 50 skills).
+        for match in self.CAPITALIZED_PATTERN.finditer(section_text):
+            word = match.group(0)
             if len(word) > 2:
                 word_lower = word.lower()
                 if (
