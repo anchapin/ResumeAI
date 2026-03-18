@@ -48,7 +48,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     return (
       <button ref={ref} className={combinedClassName} disabled={disabled || isLoading} {...props}>
         {isLoading && (
-          <span className="material-symbols-outlined animate-spin text-[20px]">
+          <span className="material-symbols-outlined animate-spin text-[20px]" aria-hidden="true">
             progress_activity
           </span>
         )}
