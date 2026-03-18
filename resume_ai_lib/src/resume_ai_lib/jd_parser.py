@@ -457,7 +457,9 @@ class JobDescriptionParser:
         for line in lines[:10]:
             line = line.strip()
             if line and len(line) > 5 and len(line) < 100:
-                if not re.search(r"^\d+|\s+(Street|Ave|Road|Blvd|CA|NY|TX|USA)$", line):
+                if not re.search(
+                    r"^\d+|\s{1,10}(Street|Ave|Road|Blvd|CA|NY|TX|USA)$", line
+                ):
                     return line
 
         return None
@@ -477,15 +479,15 @@ class JobDescriptionParser:
 
     def _extract_location(self, text: str) -> Optional[str]:
         patterns = [
-            r"(?:location|based|office)\s*[:\-]?\s*([^\n]+)",
-            r"(?:located|location)\s+(?:in|at)\s+([A-Z][a-zA-Z]+(?:\s*,\s*[A-Z]{2})?)",
+            r"(?:location|based|office)\s{0,10}[:\-]?\s{0,10}([^\n]+)",
+            r"(?:located|location)\s{1,10}(?:in|at)\s{1,10}([A-Z][a-zA-Z]+(?:\s{0,5},\s{0,5}[A-Z]{2})?)",
         ]
 
         for pattern in patterns:
             match = re.search(pattern, text, re.IGNORECASE)
             if match:
                 location = match.group(1).strip()
-                location = re.sub(r"\s*\([^)]*\)", "", location)
+                location = re.sub(r"\s{0,10}\([^)]*\)", "", location)
                 return location[:100]
 
         return None
@@ -607,9 +609,6 @@ class JobDescriptionParser:
 
         section_text = f"{skills_section} {requirements_section}"
 
-        # ⚡ Bolt Optimization: Use finditer instead of findall to evaluate matches lazily.
-        # This avoids matching the entire string upfront, saving CPU and memory when
-        # we can break early (at 50 skills).
         for match in self.CAPITALIZED_PATTERN.finditer(section_text):
             word = match.group(0)
             if len(word) > 2:

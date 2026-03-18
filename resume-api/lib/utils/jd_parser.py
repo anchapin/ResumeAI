@@ -563,7 +563,8 @@ class JobDescriptionParser:
                 continue
             # Skip lines that look like contact info or locations
             if re.search(
-                r"^\d+|\s+(Street|Ave|Road|Blvd|CA|NY|TX|USA)|@|\d{3}[-.]\d{3}", line
+                r"^\d+|\s{1,10}(Street|Ave|Road|Blvd|CA|NY|TX|USA)|@|\d{3}[-.]\d{3}",
+                line,
             ):
                 continue
             # Skip section headers
@@ -604,8 +605,8 @@ class JobDescriptionParser:
         """Extract location from JD."""
         # Look for explicit location mentions
         patterns = [
-            r"(?:location|based|office)\s*[:\-]?\s*([^\n]+)",
-            r"(?:located|location)\s+(?:in|at)\s+([A-Z][a-zA-Z]+(?:\s*,\s*[A-Z]{2})?)",
+            r"(?:location|based|office)\s{0,10}[:\-]?\s{0,10}([^\n]+)",
+            r"(?:located|location)\s{1,10}(?:in|at)\s{1,10}([A-Z][a-zA-Z]+(?:\s{0,5},\s{0,5}[A-Z]{2})?)",
         ]
 
         for pattern in patterns:
@@ -614,7 +615,7 @@ class JobDescriptionParser:
                 location = match.group(1).strip()
                 # Clean up location
                 location = re.sub(
-                    r"\s*\([^)]*\)", "", location
+                    r"\s{0,10}\([^)]*\)", "", location
                 )  # Remove parentheticals
                 return location[:100]  # Limit length
 
@@ -768,9 +769,6 @@ class JobDescriptionParser:
         # Also extract capitalized words that might be skills
         section_text = f"{skills_section} {requirements_section} {full_text}"
 
-        # ⚡ Bolt Optimization: Use finditer instead of findall to evaluate matches lazily.
-        # This avoids matching the entire string upfront, saving CPU and memory when
-        # we can break early (at 50 skills).
         for match in self.CAPITALIZED_PATTERN.finditer(section_text):
             word = match.group(0)
             if len(word) > 2:
