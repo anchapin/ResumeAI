@@ -71,24 +71,6 @@ router = APIRouter(prefix="/advanced", tags=["Advanced"])
 # ============ Resume CRUD with Versioning ============
 
 
-async def _get_or_create_tags(db: AsyncSession, tag_names: List[str]) -> List[Tag]:
-    if not tag_names:
-        return []
-
-    # Fetch existing tags in one query
-    result = await db.execute(select(Tag).where(Tag.name.in_(tag_names)))
-    existing_tags = result.scalars().all()
-    existing_tag_names = {tag.name for tag in existing_tags}
-
-    # Create missing tags
-    new_tags = [Tag(name=name) for name in tag_names if name not in existing_tag_names]
-    if new_tags:
-        db.add_all(new_tags)
-        await db.flush()
-
-    return existing_tags + new_tags
-
-
 @router.post(
     "/resumes",
     response_model=ResumeResponse,
@@ -118,8 +100,14 @@ async def create_resume(
 
         # Add tags
         if request.tags:
-            tags = await _get_or_create_tags(db, request.tags)
-            resume.tags.extend(tags)
+            for tag_name in request.tags:
+                tag = await db.execute(select(Tag).where(Tag.name == tag_name))
+                existing_tag = tag.scalar_one_or_none()
+                if not existing_tag:
+                    existing_tag = Tag(name=tag_name)
+                    db.add(existing_tag)
+                    await db.flush()
+                resume.tags.append(existing_tag)
 
         db.add(resume)
         await db.flush()
@@ -313,8 +301,14 @@ async def update_resume(
         # Update tags if provided
         if request.tags is not None:
             resume.tags.clear()
-            tags = await _get_or_create_tags(db, request.tags)
-            resume.tags.extend(tags)
+            for tag_name in request.tags:
+                tag = await db.execute(select(Tag).where(Tag.name == tag_name))
+                existing_tag = tag.scalar_one_or_none()
+                if not existing_tag:
+                    existing_tag = Tag(name=tag_name)
+                    db.add(existing_tag)
+                    await db.flush()
+                resume.tags.append(existing_tag)
 
         # Create new version if data changed
         if request.data:
@@ -965,6 +959,11 @@ async def access_shared_resume(
 # ============ Bulk Operations ============
 
 
+@router.post(
+    "/resumes/bulk",
+    response_model=BulkOperationResponse,
+    tags=["Resumes"],
+)
 async def _process_bulk_operation(
     resume: Resume,
     operation: str,
@@ -989,20 +988,20 @@ async def _process_bulk_operation(
         return True, ""
 
     if operation == "tag" and tags:
-        new_tags = await _get_or_create_tags(db, tags)
-        for t in new_tags:
-            if t not in resume.tags:
-                resume.tags.append(t)
+        for tag_name in tags:
+            tag = await db.execute(select(Tag).where(Tag.name == tag_name))
+            existing_tag = tag.scalar_one_or_none()
+            if not existing_tag:
+                existing_tag = Tag(name=tag_name)
+                db.add(existing_tag)
+                await db.flush()
+            if existing_tag not in resume.tags:
+                resume.tags.append(existing_tag)
         return True, ""
 
     return False, "Unknown operation"
 
 
-@router.post(
-    "/resumes/bulk",
-    response_model=BulkOperationResponse,
-    tags=["Resumes"],
-)
 async def bulk_operations(
     request: BulkOperationRequest,
     db: AsyncSession = Depends(get_db),
@@ -1103,8 +1102,14 @@ async def batch_create_resumes(
 
             # Add tags
             if resume_request.tags:
-                tags = await _get_or_create_tags(db, resume_request.tags)
-                resume.tags.extend(tags)
+                for tag_name in resume_request.tags:
+                    tag = await db.execute(select(Tag).where(Tag.name == tag_name))
+                    existing_tag = tag.scalar_one_or_none()
+                    if not existing_tag:
+                        existing_tag = Tag(name=tag_name)
+                        db.add(existing_tag)
+                        await db.flush()
+                    resume.tags.append(existing_tag)
 
             db.add(resume)
             await db.flush()
@@ -1217,8 +1222,14 @@ async def batch_update_resumes(
             # Update tags if provided
             if update_request.tags is not None:
                 resume.tags.clear()
-                tags = await _get_or_create_tags(db, update_request.tags)
-                resume.tags.extend(tags)
+                for tag_name in update_request.tags:
+                    tag = await db.execute(select(Tag).where(Tag.name == tag_name))
+                    existing_tag = tag.scalar_one_or_none()
+                    if not existing_tag:
+                        existing_tag = Tag(name=tag_name)
+                        db.add(existing_tag)
+                        await db.flush()
+                    resume.tags.append(existing_tag)
 
             await db.commit()
             await db.refresh(resume)
