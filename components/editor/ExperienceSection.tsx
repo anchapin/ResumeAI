@@ -52,9 +52,7 @@ export const ExperienceSection = React.memo<ExperienceSectionProps>(
               className="flex items-center gap-1 text-sm font-bold text-slate-500 hover:text-primary-600 transition-colors"
               title="Add comment to this section"
             >
-              <span aria-hidden="true" className="material-symbols-outlined text-[18px]">
-                chat_bubble_outline
-              </span>
+              <span className="material-symbols-outlined text-[18px]">chat_bubble_outline</span>
               <span>Add Comment</span>
             </button>
             <span className="text-sm font-medium text-slate-500">
@@ -65,9 +63,7 @@ export const ExperienceSection = React.memo<ExperienceSectionProps>(
 
         {experiences.length > 1 && (
           <div className="flex items-center gap-2 text-xs text-slate-400 bg-slate-50 px-3 py-2 rounded-lg">
-            <span aria-hidden="true" className="material-symbols-outlined text-[16px]">
-              drag_indicator
-            </span>
+            <span className="material-symbols-outlined text-[16px]">drag_indicator</span>
             <span>Drag and drop to reorder experience entries</span>
           </div>
         )}
@@ -100,10 +96,7 @@ export const ExperienceSection = React.memo<ExperienceSectionProps>(
           onClick={onAdd}
           className="w-full flex items-center justify-center gap-2 border-2 border-dashed border-primary-200 rounded-xl py-6 text-primary-600 font-bold hover:bg-primary-50/50 hover:border-primary-300 transition-all group"
         >
-          <span
-            aria-hidden="true"
-            className="material-symbols-outlined group-hover:scale-110 transition-transform"
-          >
+          <span className="material-symbols-outlined group-hover:scale-110 transition-transform">
             add_box
           </span>
           Add New Work Experience

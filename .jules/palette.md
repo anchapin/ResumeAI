@@ -15,6 +15,3 @@
 ## 2026-03-11 - Material Symbol Ligature Screen Reader Noise
 **Learning:** Even within an interactive element with a proper `aria-label`, the ligature text (e.g., "delete") of a Material Symbol `<span>` is sometimes still announced by certain screen readers, causing repetitive or confusing announcements.
 **Action:** Always add `aria-hidden="true"` to Material Symbol `<span>` elements acting as ligatures to strictly enforce their decorative status and let the parent interactive element handle the accessible name.
-## 2026-03-20 - Testing Ligature Icons with ARIA labels
-**Learning:** When adding `aria-hidden="true"` to Material Symbol icons, tests relying on the icon's ligature text for accessibility queries (like `getByRole('button', { name: /close/i })`) will fail because the ligature text is no longer accessible.
-**Action:** When hiding icon ligatures from screen readers, also add an explicit `aria-label` to the parent button and update any related tests to query using the new explicit label.
