@@ -20,3 +20,9 @@
 **Vulnerability:** The `is_ecryptfs_path` function in `resume-api/lib/utils/ecryptfs_utils.py` used `os.popen` to execute a shell command with unsanitized user input (`path`), leading to a critical command injection vulnerability.
 **Learning:** Shell-based command execution (`os.popen`, `os.system`, `subprocess.run(shell=True)`) combined with string interpolation is inherently dangerous and must be avoided.
 **Prevention:** Always use `subprocess.run` (or similar) with an argument list rather than a single string, and ensure `shell=False` (which is the default) to prevent the shell from interpreting meta-characters.
+
+## 2024-05-18 - [Missing Timeout in Subprocess Execution]
+
+**Vulnerability:** The `subprocess.run` calls executing `resume-cli` in `server.py` lacked a timeout parameter. A complex or malicious payload could cause the process to hang indefinitely, leading to resource exhaustion and a Denial of Service (DoS).
+**Learning:** External process executions without timeouts are a common vector for DoS attacks, especially when processing user-supplied data (like resume JSON).
+**Prevention:** Always specify a strict `timeout` parameter when invoking external commands via `subprocess.run` to ensure the process eventually terminates and releases server resources.
