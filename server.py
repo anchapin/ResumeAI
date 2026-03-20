@@ -525,6 +525,7 @@ async def v1_render_pdf(request: V1RenderPdfRequest):
                 ],
                 capture_output=True,
                 text=True,
+                timeout=15,
             )
 
             if result.returncode != 0:
@@ -545,6 +546,9 @@ async def v1_render_pdf(request: V1RenderPdfRequest):
                 },
             )
 
+    except subprocess.TimeoutExpired:
+        print("PDF Generation Exception: resume-cli process timed out")
+        raise HTTPException(status_code=504, detail="PDF generation timed out")
     except Exception as e:
         print(f"PDF Generation Exception: {str(e)}")
         raise HTTPException(status_code=500, detail=f"PDF generation failed: {str(e)}")
@@ -582,6 +586,7 @@ async def v1_render_markdown(request: V1RenderPdfRequest):
                 ],
                 capture_output=True,
                 text=True,
+                timeout=15,
             )
 
             raw_output = result.stdout if result.returncode == 0 else ""
@@ -603,6 +608,9 @@ async def v1_render_markdown(request: V1RenderPdfRequest):
 
             return {"markdown": markdown}
 
+    except subprocess.TimeoutExpired:
+        print("Markdown Generation Exception: resume-cli process timed out")
+        raise HTTPException(status_code=504, detail="Markdown generation timed out")
     except Exception as e:
         print(f"Markdown Generation Exception: {str(e)}")
         raise HTTPException(
@@ -652,6 +660,7 @@ async def v1_tailor(request: V1TailorRequest):
                 ],
                 capture_output=True,
                 text=True,
+                timeout=15,
             )
 
             raw_output = result.stdout if result.returncode == 0 else ""
@@ -678,6 +687,9 @@ async def v1_tailor(request: V1TailorRequest):
             "markdown": markdown_preview,
         }
 
+    except subprocess.TimeoutExpired:
+        print("Tailoring Exception: resume-cli process timed out")
+        raise HTTPException(status_code=504, detail="Tailoring timed out")
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Resume tailoring failed: {str(e)}"
