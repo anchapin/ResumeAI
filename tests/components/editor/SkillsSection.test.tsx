@@ -84,7 +84,7 @@ describe('SkillsSection', () => {
       render(<SkillsSection {...defaultProps} onRemoveSkill={onRemoveSkill} />);
 
       // Find all buttons with name "close" - these are the skill remove buttons
-      const closeButtons = screen.getAllByRole('button', { name: /close/i });
+      const closeButtons = screen.getAllByRole('button', { name: /Remove React skill/i });
       // The first close button should be for the first skill (React)
       await user.click(closeButtons[0]);
 
