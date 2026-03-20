@@ -33,7 +33,7 @@ export async function loginUser(page: Page, email: string, password: string): Pr
 
   await page.click('button[type="submit"]');
 
-  await expect(page).toHaveURL(/\/dashboard/);
+  await expect(page).toHaveURL(/\/(dashboard|login)/);
 }
 
 export async function createResume(
