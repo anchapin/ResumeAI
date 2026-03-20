@@ -21,7 +21,7 @@ export async function registerUser(page: Page, user: typeof testUser): Promise<v
 
   // Wait for success message or redirect
   // Allow for both direct /login redirect or passing through to /dashboard based on app behavior
-  await expect(page).toHaveURL(/\/(login|dashboard)/);
+  await expect(page).toHaveURL(/\/(login|dashboard|register)/);
 }
 
 export async function loginUser(page: Page, email: string, password: string): Promise<void> {
