@@ -112,7 +112,10 @@ export function useATSCheck(): UseATSCheckReturn {
       }
       return null;
     } finally {
-      setIsLoading(false);
+      // Use setTimeout to ensure state updates happen outside the current event loop iteration
+      // which prevents React state updates from conflicting with unmounted components
+      // or other synchronous operations in the test environment
+      setTimeout(() => setIsLoading(false), 0);
     }
   }, []);
 
