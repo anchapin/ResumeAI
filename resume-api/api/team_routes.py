@@ -119,7 +119,9 @@ async def create_team(
 
         await db.refresh(team)
 
-        member_count_stmt = select(func.count(TeamMember.id)).where(TeamMember.team_id == team.id)
+        member_count_stmt = select(func.count(TeamMember.id)).where(
+            TeamMember.team_id == team.id
+        )
         result = await db.execute(member_count_stmt)
         member_count = result.scalar() or 0
 
@@ -131,10 +133,14 @@ async def create_team(
             member_count=member_count,
             resume_count=0,
             created_at=(
-                team.created_at.isoformat() if team.created_at else datetime.utcnow().isoformat()
+                team.created_at.isoformat()
+                if team.created_at
+                else datetime.utcnow().isoformat()
             ),
             updated_at=(
-                team.updated_at.isoformat() if team.updated_at else datetime.utcnow().isoformat()
+                team.updated_at.isoformat()
+                if team.updated_at
+                else datetime.utcnow().isoformat()
             ),
         )
     except Exception as e:
@@ -183,19 +189,37 @@ async def list_teams(
         result = await db.execute(stmt)
         teams = result.scalars().all()
 
-        team_responses = []
-        for team in teams:
-            member_count_stmt = select(func.count(TeamMember.id)).where(
-                TeamMember.team_id == team.id
+        # ⚡ Bolt Optimization: Eliminate N+1 query problem by bulk fetching
+        # member and resume counts for all teams using in_ and group_by
+        team_ids = [team.id for team in teams]
+        member_counts = {}
+        resume_counts = {}
+
+        if team_ids:
+            # Bulk fetch member counts
+            member_count_stmt = (
+                select(TeamMember.team_id, func.count(TeamMember.id))
+                .where(TeamMember.team_id.in_(team_ids))
+                .group_by(TeamMember.team_id)
             )
             result = await db.execute(member_count_stmt)
-            member_count = result.scalar() or 0
+            for team_id, count in result.all():
+                member_counts[team_id] = count
 
-            resume_count_stmt = select(func.count(TeamResume.id)).where(
-                TeamResume.team_id == team.id
+            # Bulk fetch resume counts
+            resume_count_stmt = (
+                select(TeamResume.team_id, func.count(TeamResume.id))
+                .where(TeamResume.team_id.in_(team_ids))
+                .group_by(TeamResume.team_id)
             )
             result = await db.execute(resume_count_stmt)
-            resume_count = result.scalar() or 0
+            for team_id, count in result.all():
+                resume_counts[team_id] = count
+
+        team_responses = []
+        for team in teams:
+            member_count = member_counts.get(team.id, 0)
+            resume_count = resume_counts.get(team.id, 0)
 
             team_responses.append(
                 TeamResponse(
@@ -303,7 +327,9 @@ async def get_team(
                 )
             )
 
-        resume_count_stmt = select(func.count(TeamResume.id)).where(TeamResume.team_id == team.id)
+        resume_count_stmt = select(func.count(TeamResume.id)).where(
+            TeamResume.team_id == team.id
+        )
         result = await db.execute(resume_count_stmt)
         resume_count = result.scalar() or 0
 
@@ -315,10 +341,14 @@ async def get_team(
             members=member_responses,
             resume_count=resume_count,
             created_at=(
-                team.created_at.isoformat() if team.created_at else datetime.utcnow().isoformat()
+                team.created_at.isoformat()
+                if team.created_at
+                else datetime.utcnow().isoformat()
             ),
             updated_at=(
-                team.updated_at.isoformat() if team.updated_at else datetime.utcnow().isoformat()
+                team.updated_at.isoformat()
+                if team.updated_at
+                else datetime.utcnow().isoformat()
             ),
         )
     except HTTPException:
@@ -406,11 +436,15 @@ async def update_team(
         await db.commit()
         await db.refresh(team)
 
-        member_count_stmt = select(func.count(TeamMember.id)).where(TeamMember.team_id == team.id)
+        member_count_stmt = select(func.count(TeamMember.id)).where(
+            TeamMember.team_id == team.id
+        )
         result = await db.execute(member_count_stmt)
         member_count = result.scalar() or 0
 
-        resume_count_stmt = select(func.count(TeamResume.id)).where(TeamResume.team_id == team.id)
+        resume_count_stmt = select(func.count(TeamResume.id)).where(
+            TeamResume.team_id == team.id
+        )
         result = await db.execute(resume_count_stmt)
         resume_count = result.scalar() or 0
 
@@ -422,10 +456,14 @@ async def update_team(
             member_count=member_count,
             resume_count=resume_count,
             created_at=(
-                team.created_at.isoformat() if team.created_at else datetime.utcnow().isoformat()
+                team.created_at.isoformat()
+                if team.created_at
+                else datetime.utcnow().isoformat()
             ),
             updated_at=(
-                team.updated_at.isoformat() if team.updated_at else datetime.utcnow().isoformat()
+                team.updated_at.isoformat()
+                if team.updated_at
+                else datetime.utcnow().isoformat()
             ),
         )
     except HTTPException:
@@ -489,7 +527,9 @@ async def delete_team(
         await db.delete(team)
         await db.commit()
 
-        return MessageResponse(message=f"Team '{team.name}' has been deleted successfully")
+        return MessageResponse(
+            message=f"Team '{team.name}' has been deleted successfully"
+        )
     except HTTPException:
         raise
     except Exception as e:
@@ -752,8 +792,6 @@ async def get_team_member(
     Rate limit: 30 requests per minute per API key.
     """
     try:
-        user_id = auth.user_id if hasattr(auth, "user_id") else 1
-
         team_stmt = select(Team).where(Team.id == team_id)
         result = await db.execute(team_stmt)
         team = result.scalar_one_or_none()
@@ -789,7 +827,9 @@ async def get_team_member(
             username=member.user.username,
             role=member.role,
             joined_at=(
-                member.joined_at.isoformat() if member.joined_at else datetime.utcnow().isoformat()
+                member.joined_at.isoformat()
+                if member.joined_at
+                else datetime.utcnow().isoformat()
             ),
         )
     except HTTPException:
@@ -900,7 +940,9 @@ async def update_member_role(
             username=member.user.username,
             role=member.role,
             joined_at=(
-                member.joined_at.isoformat() if member.joined_at else datetime.utcnow().isoformat()
+                member.joined_at.isoformat()
+                if member.joined_at
+                else datetime.utcnow().isoformat()
             ),
         )
     except HTTPException:
@@ -1111,7 +1153,9 @@ async def share_resume_with_team(
 
         await db.commit()
 
-        return MessageResponse(message=f"Resume has been shared with team '{team.name}'")
+        return MessageResponse(
+            message=f"Resume has been shared with team '{team.name}'"
+        )
     except HTTPException:
         raise
     except Exception as e:
@@ -1207,7 +1251,9 @@ async def unshare_resume_from_team(
 
         await db.commit()
 
-        return MessageResponse(message=f"Resume has been unshared from team '{team.name}'")
+        return MessageResponse(
+            message=f"Resume has been unshared from team '{team.name}'"
+        )
     except HTTPException:
         raise
     except Exception as e:
@@ -1374,7 +1420,9 @@ async def list_resume_comments(
                     id=comment.id,
                     resume_id=comment.resume_id,
                     user_id=comment.user_id,
-                    username=comment.user.username if comment.user else comment.author_name,
+                    username=comment.user.username
+                    if comment.user
+                    else comment.author_name,
                     content=comment.content,
                     section=comment.section,
                     position=comment.position,
