@@ -15,6 +15,3 @@
 ## 2026-03-11 - Material Symbol Ligature Screen Reader Noise
 **Learning:** Even within an interactive element with a proper `aria-label`, the ligature text (e.g., "delete") of a Material Symbol `<span>` is sometimes still announced by certain screen readers, causing repetitive or confusing announcements.
 **Action:** Always add `aria-hidden="true"` to Material Symbol `<span>` elements acting as ligatures to strictly enforce their decorative status and let the parent interactive element handle the accessible name.
-## 2024-05-24 - Dynamic ARIA labels for list item actions
-**Learning:** Generic icon buttons inside repeatable lists (e.g., notifications or list items) must use dynamic `aria-label`s containing the item's specific context (e.g., `aria-label={`Mark "${item.title}" as read`}`) to ensure screen readers can differentiate the actions, alongside `aria-hidden="true"` on the inner icon or SVG.
-**Action:** Always include item-specific context in ARIA labels for repeated list actions, rather than generic labels like "Delete" or "Mark as read". Ensure the inner visual element (SVG or icon) has `aria-hidden="true"`.

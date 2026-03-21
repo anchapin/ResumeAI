@@ -22,7 +22,7 @@ jobs:
           cache: 'npm'
       
       - name: Install dependencies
-        run: npm install --legacy-peer-deps --silent
+        run: npm ci --silent
       
       - name: Check circular dependencies
         run: |
