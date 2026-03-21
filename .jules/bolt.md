@@ -31,7 +31,3 @@
 ## 2024-05-24 - Batch string processing and static lookups for text extraction
 **Learning:** Calling a text extraction function (like `_extract_tech_terms`) in a loop over many small fragments (bullets, summaries) causes significant overhead and excessive lowercasing operations. Iterating over a long list of static tech terms `N` times for `M` text fragments creates an O(N*M) bottleneck.
 **Action:** When extracting data from multiple string fields, accumulate them into a single list, `.join()` them into one large string, and process it once. Hoist the static list of terms to the module level as a `frozenset` or `tuple` to prevent recreating it on every function call. This yields a >2x speedup for complex resumes without altering behavior.
-
-## 2024-03-21 - Eliminate N+1 Query in Teams Listing
-**Learning:** In SQLAlchemy, filtering boolean columns with `not Column` to satisfy the `ruff` E712 lint rule breaks expression translation and causes runtime test failures (`assert 0 == 1`).
-**Action:** When evaluating boolean columns as false in SQLAlchemy queries, ignore the `E712` linter error or use `Column.is_(False)` instead of `not Column`.
