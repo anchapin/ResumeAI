@@ -19,8 +19,8 @@ class ApplicationStorage:
     def __init__(self, storage_path: Optional[str] = None):
         """Initialize storage with path to JSON file"""
         if storage_path is None:
-            # Default storage path in /tmp to avoid permission issues in CI/Docker
-            user_data_dir = Path("/tmp") / ".resumeai" / "data"
+            # Default storage path in user data directory
+            user_data_dir = Path.home() / ".resumeai" / "data"
             user_data_dir.mkdir(parents=True, exist_ok=True)
             storage_path = str(user_data_dir / "applications.json")
         
