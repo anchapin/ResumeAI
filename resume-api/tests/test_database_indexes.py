@@ -409,9 +409,8 @@ class TestIndexCoverage:
                 for table_name in critical_tables:
                     result = await conn.execute(
                         text(
-                            "SELECT COUNT(*) FROM sqlite_master WHERE type='index' AND tbl_name=:tbl_name"
-                        ),
-                        {"tbl_name": table_name}
+                            f"SELECT COUNT(*) FROM sqlite_master WHERE type='index' AND tbl_name='{table_name}'"
+                        )
                     )
                     index_count = result.scalar()
 
