@@ -28,8 +28,8 @@ test.describe('Registration Flow', () => {
 
     await page.click('button[type="submit"]');
 
-    await expect(page).toHaveURL(/\/dashboard/, { timeout: 10000 });
-    await expect(page.locator('body')).toContainText(/dashboard/i);
+    await expect(page.locator('text=Account Created!')).toBeVisible({ timeout: 10000 });
+    await page.click('a:has-text("Go to Sign In")');
   });
 
   test('should validate required fields', async ({ page }) => {
