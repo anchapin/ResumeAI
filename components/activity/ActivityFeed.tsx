@@ -41,10 +41,11 @@ export const NotificationsBell: React.FC<NotificationsBellProps> = ({ onOpenPane
   return (
     <button
       onClick={handleClick}
-      className="relative p-2 text-gray-400 hover:text-gray-600 transition"
+      className="relative p-2 text-gray-400 hover:text-gray-600 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded-lg"
       title="Notifications"
+      aria-label={unreadCount > 0 ? `Notifications, ${unreadCount} unread` : "Notifications, no unread"}
     >
-      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
       </svg>
       {unreadCount > 0 && (
@@ -177,7 +178,7 @@ export const NotificationsPanel: React.FC<NotificationsPanelProps> = ({
           {unreadCount > 0 && (
             <button
               onClick={handleMarkAllRead}
-              className="text-sm text-blue-600 hover:text-blue-800"
+              className="text-sm text-blue-600 hover:text-blue-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded px-1"
             >
               Mark all read
             </button>
@@ -185,9 +186,10 @@ export const NotificationsPanel: React.FC<NotificationsPanelProps> = ({
           {onClose && (
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-600"
+              className="text-gray-400 hover:text-gray-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded p-1"
+              aria-label="Close notifications panel"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
@@ -238,20 +240,22 @@ export const NotificationsPanel: React.FC<NotificationsPanelProps> = ({
                     {!notification.is_read && (
                       <button
                         onClick={() => handleMarkRead(notification.id)}
-                        className="text-gray-400 hover:text-blue-600 p-1"
+                        className="text-gray-400 hover:text-blue-600 p-1 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
                         title="Mark as read"
+                        aria-label={`Mark "${notification.title}" as read`}
                       >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                         </svg>
                       </button>
                     )}
                     <button
                       onClick={() => handleDelete(notification.id)}
-                      className="text-gray-400 hover:text-red-600 p-1"
+                      className="text-gray-400 hover:text-red-600 p-1 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
                       title="Delete"
+                      aria-label={`Delete notification: "${notification.title}"`}
                     >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                       </svg>
                     </button>
