@@ -20,3 +20,8 @@
 **Vulnerability:** The `is_ecryptfs_path` function in `resume-api/lib/utils/ecryptfs_utils.py` used `os.popen` to execute a shell command with unsanitized user input (`path`), leading to a critical command injection vulnerability.
 **Learning:** Shell-based command execution (`os.popen`, `os.system`, `subprocess.run(shell=True)`) combined with string interpolation is inherently dangerous and must be avoided.
 **Prevention:** Always use `subprocess.run` (or similar) with an argument list rather than a single string, and ensure `shell=False` (which is the default) to prevent the shell from interpreting meta-characters.
+
+## 2024-05-18 - [LaTeX Injection in Jinja2]
+**Vulnerability:** Jinja2's `autoescape=select_autoescape(['tex'])` defaults to HTML escaping, leaving LaTeX special characters like `\` unescaped, leading to potential command injection.
+**Learning:** Jinja2 requires custom autoescape logic for non-HTML formats. Relying on manual filters is fragile.
+**Prevention:** Use `autoescape=False` and a custom `finalize` function to enforce escaping on all variable outputs.
