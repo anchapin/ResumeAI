@@ -25,3 +25,8 @@
 **Vulnerability:** Jinja2's `autoescape=select_autoescape(['tex'])` defaults to HTML escaping, leaving LaTeX special characters like `\` unescaped, leading to potential command injection.
 **Learning:** Jinja2 requires custom autoescape logic for non-HTML formats. Relying on manual filters is fragile.
 **Prevention:** Use `autoescape=False` and a custom `finalize` function to enforce escaping on all variable outputs.
+
+## 2024-05-18 - Docker appuser Permissions
+**Vulnerability:** Missing `-m` flag in `useradd` command inside `Dockerfile`.
+**Learning:** Without `-m`, `useradd` does not create a home directory for the newly created user, causing `PermissionError`s when tools expect access to a local home directory structure (like `.resumeai`).
+**Prevention:** Use `useradd -m` when creating runtime users in Docker images to guarantee home directory presence.
