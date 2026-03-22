@@ -50,7 +50,7 @@ class ResumeGenerator:
         # Create a custom Jinja2 environment for LaTeX
         self.jinja_env = Environment(
             loader=FileSystemLoader(str(self.templates_dir)),
-            autoescape=False,
+            autoescape=select_autoescape(["tex"]),
             block_start_string="\\BLOCK{",
             block_end_string="}",
             variable_start_string="\\VAR{",

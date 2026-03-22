@@ -70,7 +70,7 @@ RUN pip install --no-cache-dir --no-compile --disable-pip-version-check \
 COPY . .
 
 # Create non-root user for security (UID 1000 for compatibility)
-RUN groupadd -r appuser && useradd -m -r -g appuser -u 1000 appuser && \
+RUN groupadd -r appuser && useradd -r -g appuser -u 1000 appuser && \
     chown -R appuser:appuser /app
 
 USER appuser
