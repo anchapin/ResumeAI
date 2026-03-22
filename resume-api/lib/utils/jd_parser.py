@@ -403,10 +403,10 @@ class JobDescriptionParser:
     # ⚡ Bolt: Pre-compile experience levels into combined regex patterns
     # Using negative lookbehind/lookahead for letters ensures word-boundary-like matching
     # that doesn't break when indicators contain non-word characters (like "sr." or "5+").
+    # We compile for lowercase search to optimize performance since text is lowercased anyway.
     _COMPILED_EXPERIENCE_LEVELS = {
         level: re.compile(
-            rf"(?<![a-zA-Z])(?:{'|'.join(re.escape(ind) for ind in indicators)})(?![a-zA-Z])",
-            re.IGNORECASE
+            rf"(?<![a-z])(?:{'|'.join(re.escape(ind.lower()) for ind in indicators)})(?![a-z])"
         )
         for level, indicators in EXPERIENCE_LEVELS.items()
     }
@@ -445,7 +445,9 @@ class JobDescriptionParser:
         result.salary_currency = salary_info.get("currency", "USD")
         result.salary_period = salary_info.get("period", "yearly")
 
-        result.experience_level = self._extract_experience_level(text)
+        # ⚡ Bolt: Pre-computing lowercased text once for regex searches that don't need case sensitivity
+        text_lower = text.lower()
+        result.experience_level = self._extract_experience_level(text_lower)
         result.experience_years = self._extract_experience_years(text)
 
         # Extract section content
@@ -576,19 +578,22 @@ class JobDescriptionParser:
 
         return None
 
+    # ⚡ Bolt: Pre-compiled combined regex for company extraction
+    _COMPANY_PATTERN = re.compile(
+        r"(?:(?:company|employer)\s*[:\-]\s*([^\n]+)|"
+        r"^([A-Z][a-zA-Z]+)\s+is\s+(?:looking|hiring)|"
+        r"join\s+([A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+)*)\s+(?:as|in|for)|"
+        r"at\s+([A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+)*)\s+(?:we|our))",
+        re.IGNORECASE | re.MULTILINE,
+    )
+
     def _extract_company(self, text: str) -> Optional[str]:
         """Extract company name from JD."""
-        patterns = [
-            r"(?:company|employer)\s*[:\-]\s*([^\n]+)",
-            r"^([A-Z][a-zA-Z]+)\s+is\s+(?:looking|hiring)",  # "TechCorp is looking"
-            r"join\s+([A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+)*)\s+(?:as|in|for)",
-            r"at\s+([A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+)*)\s+(?:we|our)",
-        ]
-
-        for pattern in patterns:
-            match = re.search(pattern, text, re.IGNORECASE | re.MULTILINE)
-            if match:
-                return match.group(1).strip()
+        match = self._COMPANY_PATTERN.search(text)
+        if match:
+            for group in match.groups():
+                if group is not None:
+                    return group.strip()
 
         return None
 
@@ -673,15 +678,15 @@ class JobDescriptionParser:
 
         return int(float(value) * multiplier)
 
-    def _extract_experience_level(self, text: str) -> Optional[str]:
-        """Determine experience level from JD."""
+    def _extract_experience_level(self, text_lower: str) -> Optional[str]:
+        """Determine experience level from JD (using pre-lowercased text)."""
         # ⚡ Bolt: Use pre-compiled combined regex instead of O(N*M) loop
         # Check for explicit level mentions in priority order (highest to lowest)
         # This ensures "Senior" is detected before "Associate" etc.
         priority_order = ["executive", "lead", "senior", "mid", "entry"]
 
         for level in priority_order:
-            if self._COMPILED_EXPERIENCE_LEVELS[level].search(text):
+            if self._COMPILED_EXPERIENCE_LEVELS[level].search(text_lower):
                 return level
 
         return None
@@ -813,8 +818,13 @@ class JobDescriptionParser:
 
     def _extract_keywords(self, text: str) -> List[str]:
         """Extract important keywords from the JD."""
-        words = self.WORD_PATTERN.findall(text.lower())
-        word_count = Counter(word for word in words if word not in self.STOP_WORDS)
+        text_lower = text.lower()
+        # ⚡ Bolt: Use finditer lazily instead of findall buffering to save memory/allocation overhead
+        word_count = Counter(
+            match.group()
+            for match in self.WORD_PATTERN.finditer(text_lower)
+            if match.group() not in self.STOP_WORDS
+        )
         return [kw for kw, _ in word_count.most_common(30)]
 
 
