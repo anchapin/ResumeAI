@@ -5,7 +5,6 @@
  */
 
 import React, { useState, useCallback } from 'react';
-import { useATSCheck, ATSCheckResult, ATSIssue } from '../../src/hooks/useATSCheck';
 
 
 interface ATSAwareScore {
