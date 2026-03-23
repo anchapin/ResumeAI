@@ -11,7 +11,9 @@ from datetime import datetime
 
 from sqlalchemy import (
     inspect,
-    text,
+    select,
+    func,
+    table as sa_table,
 )
 from sqlalchemy.ext.asyncio import AsyncEngine
 
@@ -173,7 +175,8 @@ class SchemaManager:
         """Get row count for a table."""
         try:
             async with self.engine.connect() as conn:
-                result = await conn.execute(text(f"SELECT COUNT(*) FROM {table_name}"))
+                stmt = select(func.count()).select_from(sa_table(table_name))
+                result = await conn.execute(stmt)
                 return result.scalar()
         except Exception as e:
             logger.debug(f"Could not get row count for {table_name}: {e}")
