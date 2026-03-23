@@ -9,6 +9,11 @@ export default defineConfig({
     exclude: ['node_modules', 'dist', '.idea', '.git', '.cache', 'tests/e2e/**', 'tests/visual/**'],
     // Worker configuration to prevent timeouts
     pool: 'forks',
+    poolOptions: {
+      forks: {
+        singleFork: true,
+      },
+    },
     // Increase timeout for slow tests
     testTimeout: 30000,
     hookTimeout: 30000,
