@@ -31,3 +31,7 @@
 ## 2024-05-24 - Batch string processing and static lookups for text extraction
 **Learning:** Calling a text extraction function (like `_extract_tech_terms`) in a loop over many small fragments (bullets, summaries) causes significant overhead and excessive lowercasing operations. Iterating over a long list of static tech terms `N` times for `M` text fragments creates an O(N*M) bottleneck.
 **Action:** When extracting data from multiple string fields, accumulate them into a single list, `.join()` them into one large string, and process it once. Hoist the static list of terms to the module level as a `frozenset` or `tuple` to prevent recreating it on every function call. This yields a >2x speedup for complex resumes without altering behavior.
+
+## 2024-06-12 - Python Regex Lazy Iteration and Pre-lowercasing
+**Learning:** Using `re.findall()` creates an in-memory list of all matches which is slow for large texts or frequent loops. `re.finditer()` evaluates lazily and avoids this memory overhead. Furthermore, `re.IGNORECASE` forces the regex engine to perform case-insensitive matching which is significantly slower than pre-lowercasing the input string once (`text.lower()`) and compiling the regex to only match lowercase characters.
+**Action:** When extracting data or counting frequencies using regex, prefer `re.finditer()`. When performing case-insensitive searches over large texts, pre-lowercase the text and compile a lowercase-only regex pattern instead of using `re.IGNORECASE`.
