@@ -112,15 +112,20 @@ const VersionHistory: React.FC<VersionHistoryProps> = ({ resumeId, onRestore }) 
                 className="px-4 py-2 bg-primary-600 text-white text-sm font-bold rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
               >
                 {restoring === version.id ? (
-                  <>
-                    <span className="material-symbols-outlined animate-spin text-[18px]">
+                  <span role="status" aria-live="polite" className="flex items-center gap-2">
+                    <span
+                      className="material-symbols-outlined animate-spin text-[18px]"
+                      aria-hidden="true"
+                    >
                       progress_activity
                     </span>
                     <span>Restoring...</span>
-                  </>
+                  </span>
                 ) : (
                   <>
-                    <span className="material-symbols-outlined text-[18px]">restore</span>
+                    <span className="material-symbols-outlined text-[18px]" aria-hidden="true">
+                      restore
+                    </span>
                     <span>Restore</span>
                   </>
                 )}
