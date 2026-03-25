@@ -3,6 +3,7 @@
 import io
 import re
 import time
+from typing import Optional, Union, Any
 
 from lib.ats.models import (
     ATSCheckResult,
@@ -63,7 +64,7 @@ class ATSAnalyzer:
         # Aligned columns detection (multiple spaces before text)
         self.aligned_col_pattern = re.compile(r' {2,}[A-Za-z]')
     
-    def analyze(self, file_content: bytes, filename: str) -> ATSCheckResult:
+    def analyze(self, file_content: Union[bytes, Any], filename: str) -> ATSCheckResult:
         """Analyze a resume file for ATS compatibility
         
         Args:
@@ -220,11 +221,7 @@ class ATSAnalyzer:
     def _has_table_structure(self, text: str) -> bool:
         """Detect if text likely contains table structure"""
         lines = text.split('\n')
-        total_lines = len(lines)
-        if not total_lines:
-            return False
-
-        threshold = total_lines * 0.2
+        threshold = len(lines) * 0.2
         table_indicators = 0
         
         for line in lines:
