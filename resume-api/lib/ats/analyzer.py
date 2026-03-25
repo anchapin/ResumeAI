@@ -3,7 +3,6 @@
 import io
 import re
 import time
-from typing import Optional
 
 from lib.ats.models import (
     ATSCheckResult,
@@ -60,12 +59,15 @@ class ATSAnalyzer:
             r'^[^\n]{0,30}\n[^\n]{0,30}\n[^\n]{0,30}\n[^\n]{0,30}\n',
             re.MULTILINE
         )
+
+        # Aligned columns detection (multiple spaces before text)
+        self.aligned_col_pattern = re.compile(r' {2,}[A-Za-z]')
     
     def analyze(self, file_content: bytes, filename: str) -> ATSCheckResult:
         """Analyze a resume file for ATS compatibility
         
         Args:
-            file_content: Raw file bytes
+            file_content: Raw file bytes or file-like object
             filename: Name of the file (for extension detection)
             
         Returns:
@@ -73,6 +75,10 @@ class ATSAnalyzer:
         """
         start_time = time.time()
         
+        # Ensure we have bytes if a file-like object is passed
+        if hasattr(file_content, 'read'):
+            file_content = file_content.read()
+
         # Determine file type
         file_type = self._get_file_type(filename)
         
@@ -214,6 +220,11 @@ class ATSAnalyzer:
     def _has_table_structure(self, text: str) -> bool:
         """Detect if text likely contains table structure"""
         lines = text.split('\n')
+        total_lines = len(lines)
+        if not total_lines:
+            return False
+
+        threshold = total_lines * 0.2
         table_indicators = 0
         
         for line in lines:
@@ -221,11 +232,14 @@ class ATSAnalyzer:
             if '|' in line or '\t' in line:
                 table_indicators += 1
             # Check for aligned columns (multiple spaces between text)
-            if re.search(r' {2,}[A-Za-z]', line):
+            if self.aligned_col_pattern.search(line):
                 table_indicators += 1
-        
-        # If significant portion of lines have table indicators
-        return table_indicators > len(lines) * 0.2 if lines else False
+
+            # If significant portion of lines have table indicators
+            if table_indicators > threshold:
+                return True
+
+        return False
     
     def _extract_from_docx(self, file_content: bytes, issues: list[ATSIssue]) -> tuple[str, list[ATSIssue]]:
         """Extract text from DOCX"""
