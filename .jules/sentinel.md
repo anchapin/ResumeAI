@@ -20,3 +20,7 @@
 **Vulnerability:** The `is_ecryptfs_path` function in `resume-api/lib/utils/ecryptfs_utils.py` used `os.popen` to execute a shell command with unsanitized user input (`path`), leading to a critical command injection vulnerability.
 **Learning:** Shell-based command execution (`os.popen`, `os.system`, `subprocess.run(shell=True)`) combined with string interpolation is inherently dangerous and must be avoided.
 **Prevention:** Always use `subprocess.run` (or similar) with an argument list rather than a single string, and ensure `shell=False` (which is the default) to prevent the shell from interpreting meta-characters.
+## 2026-03-25 - [SQL Injection via String Interpolation in SQLAlchemy text()]
+**Vulnerability:** The `_get_table_row_count` function in `resume-api/lib/db/schema_manager.py` used an f-string to interpolate `table_name` directly into a `text()` SQL query. This is a critical SQL injection vulnerability if `table_name` can be influenced by user input.
+**Learning:** String interpolation or f-strings inside SQLAlchemy's `text()` function are inherently dangerous and bypass parameterized query protections. For dynamic identifiers like table or column names, SQLAlchemy's core constructs (e.g., `select()`, `table()`, `func`) must be used instead.
+**Prevention:** Avoid passing Python f-strings or string interpolation directly into `text()`. Use SQLAlchemy core constructs like `select(func.count()).select_from(table(table_name))` for dynamic identifiers, and parameterized bindings for values.
