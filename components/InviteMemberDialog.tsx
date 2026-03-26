@@ -105,12 +105,12 @@ const InviteMemberDialog: React.FC<InviteMemberDialogProps> = ({
         className="flex-1 px-4 py-3 rounded-lg bg-primary-600 text-white font-bold hover:bg-primary-700 transition-colors shadow-lg shadow-primary-600/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
       >
         {isInviting ? (
-          <>
-            <span className="material-symbols-outlined animate-spin text-[18px]">
+          <span role="status" aria-live="polite" className="flex items-center gap-2">
+            <span className="material-symbols-outlined animate-spin text-[18px]" aria-hidden="true">
               progress_activity
             </span>
             <span>Sending...</span>
-          </>
+          </span>
         ) : (
           <>
             <span className="material-symbols-outlined text-[18px]">send</span>
