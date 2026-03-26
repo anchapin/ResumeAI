@@ -170,7 +170,9 @@ async def list_resumes(
     Returns paginated list of resumes with metadata.
     """
     try:
-        query = select(Resume).options(selectinload(Resume.tags))
+        from sqlalchemy import func
+        subq = select(func.count(ResumeVersion.id)).where(ResumeVersion.resume_id == Resume.id).scalar_subquery()
+        query = select(Resume, subq.label("version_count")).options(selectinload(Resume.tags))
 
         # Apply filters
         if search:
@@ -181,7 +183,7 @@ async def list_resumes(
         query = query.order_by(Resume.updated_at.desc()).offset(skip).limit(limit)
 
         result = await db.execute(query)
-        resumes = result.scalars().all()
+        resumes_with_counts = result.all()
 
         return [
             ResumeMetadata(
@@ -191,9 +193,9 @@ async def list_resumes(
                 is_public=resume.is_public,
                 created_at=resume.created_at.isoformat(),
                 updated_at=resume.updated_at.isoformat(),
-                version_count=len(resume.versions),
+                version_count=version_count,
             )
-            for resume in resumes
+            for resume, version_count in resumes_with_counts
         ]
     except Exception as e:
         raise HTTPException(
