@@ -172,8 +172,11 @@ class SchemaManager:
     async def _get_table_row_count(self, table_name: str) -> Optional[int]:
         """Get row count for a table."""
         try:
+            from sqlalchemy import select, func, table
+            target_table = table(table_name)
+            stmt = select(func.count()).select_from(target_table)
             async with self.engine.connect() as conn:
-                result = await conn.execute(text(f"SELECT COUNT(*) FROM {table_name}"))
+                result = await conn.execute(stmt)
                 return result.scalar()
         except Exception as e:
             logger.debug(f"Could not get row count for {table_name}: {e}")
