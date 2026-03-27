@@ -308,17 +308,15 @@ class BatchMigrationManager:
         total_migrated = 0
         offset = 0
 
+        from sqlalchemy import select, table, column
+
+        target_table = table(table_name, column(id_column))
+
         while True:
             # Get batch of IDs
             async with self.primary_engine.begin() as conn:
-                result = await conn.execute(
-                    text(f"""
-                        SELECT {id_column} FROM {table_name}
-                        ORDER BY {id_column}
-                        LIMIT :limit OFFSET :offset
-                    """),
-                    {"limit": self.batch_size, "offset": offset},
-                )
+                stmt = select(column(id_column)).select_from(target_table).order_by(column(id_column)).limit(self.batch_size).offset(offset)
+                result = await conn.execute(stmt)
                 rows = result.fetchall()
 
             if not rows:
