@@ -21,12 +21,7 @@ class ApplicationStorage:
         if storage_path is None:
             # Default storage path in user data directory
             user_data_dir = Path.home() / ".resumeai" / "data"
-            try:
-                user_data_dir.mkdir(parents=True, exist_ok=True)
-            except PermissionError:
-                # Fallback to /tmp if home directory is not writable (e.g. Docker container)
-                user_data_dir = Path("/tmp") / ".resumeai" / "data"
-                user_data_dir.mkdir(parents=True, exist_ok=True)
+            user_data_dir.mkdir(parents=True, exist_ok=True)
             storage_path = str(user_data_dir / "applications.json")
         
         self.storage_path = storage_path
