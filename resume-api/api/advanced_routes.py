@@ -171,8 +171,9 @@ async def list_resumes(
     """
     try:
         from sqlalchemy import func
+        from sqlalchemy.orm import noload
         subq = select(func.count(ResumeVersion.id)).where(ResumeVersion.resume_id == Resume.id).scalar_subquery()
-        query = select(Resume, subq.label("version_count")).options(selectinload(Resume.tags))
+        query = select(Resume, subq.label("version_count")).options(selectinload(Resume.tags), noload(Resume.versions))
 
         # Apply filters
         if search:
