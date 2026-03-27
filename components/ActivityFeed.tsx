@@ -90,8 +90,8 @@ interface ActivityFeedProps {
 const ActivityFeed: React.FC<ActivityFeedProps> = React.memo(({ activities, loading }) => {
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-8">
-        <span className="material-symbols-outlined animate-spin text-primary-600 text-4xl">
+      <div className="flex items-center justify-center py-8" role="status" aria-label="Loading activity feed">
+        <span className="material-symbols-outlined animate-spin text-primary-600 text-4xl" aria-hidden="true">
           progress_activity
         </span>
       </div>
@@ -124,7 +124,7 @@ const ActivityFeed: React.FC<ActivityFeedProps> = React.memo(({ activities, load
             <div key={activity.id} className={`relative flex gap-4 ${isLast ? '' : 'mb-4'}`}>
               {/* Timeline dot */}
               <div className="w-10 h-10 rounded-full bg-white border-2 border-slate-200 flex items-center justify-center flex-shrink-0 z-10">
-                <span className={`material-symbols-outlined text-[20px] ${color}`}>{icon}</span>
+                <span className={`material-symbols-outlined text-[20px] ${color}`} aria-hidden="true">{icon}</span>
               </div>
 
               {/* Activity content */}
