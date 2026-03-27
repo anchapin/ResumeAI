@@ -100,14 +100,23 @@ async def create_resume(
 
         # Add tags
         if request.tags:
+            # ⚡ Bolt: Bulk query to eliminate N+1 tag lookups
+            result = await db.execute(select(Tag).where(Tag.name.in_(request.tags)))
+            existing_tags = {t.name: t for t in result.scalars().all()}
+
+            new_tags_added = False
             for tag_name in request.tags:
-                tag = await db.execute(select(Tag).where(Tag.name == tag_name))
-                existing_tag = tag.scalar_one_or_none()
-                if not existing_tag:
-                    existing_tag = Tag(name=tag_name)
-                    db.add(existing_tag)
-                    await db.flush()
-                resume.tags.append(existing_tag)
+                if tag_name in existing_tags:
+                    resume.tags.append(existing_tags[tag_name])
+                else:
+                    new_tag = Tag(name=tag_name)
+                    db.add(new_tag)
+                    existing_tags[tag_name] = new_tag
+                    resume.tags.append(new_tag)
+                    new_tags_added = True
+
+            if new_tags_added:
+                await db.flush()
 
         db.add(resume)
         await db.flush()
@@ -301,14 +310,24 @@ async def update_resume(
         # Update tags if provided
         if request.tags is not None:
             resume.tags.clear()
-            for tag_name in request.tags:
-                tag = await db.execute(select(Tag).where(Tag.name == tag_name))
-                existing_tag = tag.scalar_one_or_none()
-                if not existing_tag:
-                    existing_tag = Tag(name=tag_name)
-                    db.add(existing_tag)
+            if request.tags:
+                # ⚡ Bolt: Bulk query to eliminate N+1 tag lookups
+                result = await db.execute(select(Tag).where(Tag.name.in_(request.tags)))
+                existing_tags = {t.name: t for t in result.scalars().all()}
+
+                new_tags_added = False
+                for tag_name in request.tags:
+                    if tag_name in existing_tags:
+                        resume.tags.append(existing_tags[tag_name])
+                    else:
+                        new_tag = Tag(name=tag_name)
+                        db.add(new_tag)
+                        existing_tags[tag_name] = new_tag
+                        resume.tags.append(new_tag)
+                        new_tags_added = True
+
+                if new_tags_added:
                     await db.flush()
-                resume.tags.append(existing_tag)
 
         # Create new version if data changed
         if request.data:
@@ -988,15 +1007,26 @@ async def _process_bulk_operation(
         return True, ""
 
     if operation == "tag" and tags:
+        # ⚡ Bolt: Bulk query to eliminate N+1 tag lookups
+        result = await db.execute(select(Tag).where(Tag.name.in_(tags)))
+        existing_tags = {t.name: t for t in result.scalars().all()}
+
+        new_tags_added = False
         for tag_name in tags:
-            tag = await db.execute(select(Tag).where(Tag.name == tag_name))
-            existing_tag = tag.scalar_one_or_none()
-            if not existing_tag:
-                existing_tag = Tag(name=tag_name)
-                db.add(existing_tag)
-                await db.flush()
-            if existing_tag not in resume.tags:
-                resume.tags.append(existing_tag)
+            tag_to_add = None
+            if tag_name in existing_tags:
+                tag_to_add = existing_tags[tag_name]
+            else:
+                tag_to_add = Tag(name=tag_name)
+                db.add(tag_to_add)
+                existing_tags[tag_name] = tag_to_add
+                new_tags_added = True
+
+            if tag_to_add not in resume.tags:
+                resume.tags.append(tag_to_add)
+
+        if new_tags_added:
+            await db.flush()
         return True, ""
 
     return False, "Unknown operation"
@@ -1102,14 +1132,23 @@ async def batch_create_resumes(
 
             # Add tags
             if resume_request.tags:
+                # ⚡ Bolt: Bulk query to eliminate N+1 tag lookups
+                result = await db.execute(select(Tag).where(Tag.name.in_(resume_request.tags)))
+                existing_tags = {t.name: t for t in result.scalars().all()}
+
+                new_tags_added = False
                 for tag_name in resume_request.tags:
-                    tag = await db.execute(select(Tag).where(Tag.name == tag_name))
-                    existing_tag = tag.scalar_one_or_none()
-                    if not existing_tag:
-                        existing_tag = Tag(name=tag_name)
-                        db.add(existing_tag)
-                        await db.flush()
-                    resume.tags.append(existing_tag)
+                    if tag_name in existing_tags:
+                        resume.tags.append(existing_tags[tag_name])
+                    else:
+                        new_tag = Tag(name=tag_name)
+                        db.add(new_tag)
+                        existing_tags[tag_name] = new_tag
+                        resume.tags.append(new_tag)
+                        new_tags_added = True
+
+                if new_tags_added:
+                    await db.flush()
 
             db.add(resume)
             await db.flush()
@@ -1222,14 +1261,24 @@ async def batch_update_resumes(
             # Update tags if provided
             if update_request.tags is not None:
                 resume.tags.clear()
-                for tag_name in update_request.tags:
-                    tag = await db.execute(select(Tag).where(Tag.name == tag_name))
-                    existing_tag = tag.scalar_one_or_none()
-                    if not existing_tag:
-                        existing_tag = Tag(name=tag_name)
-                        db.add(existing_tag)
+                if update_request.tags:
+                    # ⚡ Bolt: Bulk query to eliminate N+1 tag lookups
+                    result = await db.execute(select(Tag).where(Tag.name.in_(update_request.tags)))
+                    existing_tags = {t.name: t for t in result.scalars().all()}
+
+                    new_tags_added = False
+                    for tag_name in update_request.tags:
+                        if tag_name in existing_tags:
+                            resume.tags.append(existing_tags[tag_name])
+                        else:
+                            new_tag = Tag(name=tag_name)
+                            db.add(new_tag)
+                            existing_tags[tag_name] = new_tag
+                            resume.tags.append(new_tag)
+                            new_tags_added = True
+
+                    if new_tags_added:
                         await db.flush()
-                    resume.tags.append(existing_tag)
 
             await db.commit()
             await db.refresh(resume)
