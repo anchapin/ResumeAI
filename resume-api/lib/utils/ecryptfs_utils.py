@@ -28,10 +28,11 @@ def is_ecryptfs_path(path: str) -> bool:
     try:
         # Get the filesystem type for the path securely without shell execution
         result = subprocess.run(
-            ["df", "-Th", path],
+            ["df", "-Th", "--", path],
             capture_output=True,
             text=True,
             check=False,
+            timeout=15,
         ).stdout
         return "ecryptfs" in result.lower()
     except Exception:

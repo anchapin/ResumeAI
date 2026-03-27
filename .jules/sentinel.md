@@ -20,3 +20,7 @@
 **Vulnerability:** The `is_ecryptfs_path` function in `resume-api/lib/utils/ecryptfs_utils.py` used `os.popen` to execute a shell command with unsanitized user input (`path`), leading to a critical command injection vulnerability.
 **Learning:** Shell-based command execution (`os.popen`, `os.system`, `subprocess.run(shell=True)`) combined with string interpolation is inherently dangerous and must be avoided.
 **Prevention:** Always use `subprocess.run` (or similar) with an argument list rather than a single string, and ensure `shell=False` (which is the default) to prevent the shell from interpreting meta-characters.
+## 2024-03-27 - Prepend user-supplied variables with `--` and add timeouts in `subprocess.run`
+**Vulnerability:** Found a potential Denial of Service (DoS) and argument injection vulnerability in `subprocess.run` calls where user-supplied paths were appended without `--` and lacked a timeout (e.g., `["df", "-Th", path]`).
+**Learning:** Argument injection can happen if a variable starts with a hyphen. Command hanging indefinitely can cause resource exhaustion (DoS).
+**Prevention:** Always prepend user variables with `--` in shell commands to prevent them from being interpreted as options, and enforce a strict timeout parameter (e.g., `timeout=15`) on external process executions.
