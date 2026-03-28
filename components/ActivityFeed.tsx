@@ -90,8 +90,15 @@ interface ActivityFeedProps {
 const ActivityFeed: React.FC<ActivityFeedProps> = React.memo(({ activities, loading }) => {
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-8">
-        <span className="material-symbols-outlined animate-spin text-primary-600 text-4xl">
+      <div
+        className="flex items-center justify-center py-8"
+        role="status"
+        aria-label="Loading activity feed"
+      >
+        <span
+          className="material-symbols-outlined animate-spin text-primary-600 text-4xl"
+          aria-hidden="true"
+        >
           progress_activity
         </span>
       </div>

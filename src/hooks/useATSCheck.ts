@@ -94,7 +94,7 @@ export function useATSCheck(): UseATSCheckReturn {
         ...data,
         issues: data.issues.map((issue) => ({
           ...issue,
-          severity: issue.severity?.toUpperCase() as 'CRITICAL' | 'WARNING' | 'INFO' | undefined,
+          severity: (issue.severity?.toLowerCase() as 'critical' | 'warning' | 'info') || 'info',
         })),
       };
       

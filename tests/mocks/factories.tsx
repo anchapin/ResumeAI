@@ -4,7 +4,7 @@
  */
 
 import React from 'react';
-import type { WorkItem, EducationItem, Project, Skill } from '@/types';
+import type { WorkItem, EducationItem, ProjectItem as Project, Skill } from '@/types';
 
 // ============================================
 // Base Mock Types
@@ -24,7 +24,7 @@ export function createMock<T>(defaults: T, options?: MockOptions<T>): Partial<T>
   const result: Partial<T> = {};
   
   // Apply defaults for non-omitted keys
-  (Object.keys(defaults) as (keyof T)[])
+  (Object.keys(defaults as object) as (keyof T)[])
     .filter(key => !omit.includes(key))
     .forEach(key => {
       result[key] = defaults[key];
@@ -44,8 +44,9 @@ export function createMockWorkItem(overrides?: Partial<WorkItem>): WorkItem {
   const now = new Date().toISOString();
   
   return {
-    name: 'Software Engineer',
-    description: 'Built awesome things',
+    company: 'Awesome Corp',
+    position: 'Software Engineer',
+    summary: 'Built awesome things',
     startDate: '2020-01',
     endDate: now,
     highlights: ['Achievement 1', 'Achievement 2'],
@@ -55,8 +56,9 @@ export function createMockWorkItem(overrides?: Partial<WorkItem>): WorkItem {
 
 export function createMockEducationItem(overrides?: Partial<EducationItem>): EducationItem {
   return {
-    name: 'University of Technology',
-    description: 'Bachelor of Science in Computer Science',
+    institution: 'University of Technology',
+    area: 'Computer Science',
+    studyType: 'Bachelor of Science',
     startDate: '2016-09',
     endDate: '2020-05',
     ...overrides,
@@ -68,7 +70,6 @@ export function createMockProject(overrides?: Partial<Project>): Project {
     name: 'Awesome Project',
     description: 'A really cool project',
     highlights: ['Built from scratch', 'Used modern tech'],
-    keywords: ['React', 'TypeScript'],
     ...overrides,
   };
 }
@@ -254,13 +255,13 @@ export function createMockChangeEvent<T = HTMLInputElement>(
   overrides?: Partial<React.ChangeEvent<T>>
 ): React.ChangeEvent<T> {
   return {
-    ...createMockFormEvent(overrides),
+    ...createMockFormEvent(overrides as any),
     target: {
       ...(overrides?.target || {}),
       value,
-      name: overrides?.target?.name,
+      name: (overrides?.target as any)?.name,
       type: 'text',
-    } as T,
+    } as unknown as T,
   } as unknown as React.ChangeEvent<T>;
 }
 
@@ -299,8 +300,8 @@ export function delay(ms: number): Promise<void> {
 export function generateMockWorkItems(count: number): WorkItem[] {
   return Array.from({ length: count }, (_, i) => 
     createMockWorkItem({
-      name: `Position ${i + 1}`,
-      description: `Description ${i + 1}`,
+      position: `Position ${i + 1}`,
+      summary: `Description ${i + 1}`,
     })
   );
 }
@@ -311,8 +312,8 @@ export function generateMockWorkItems(count: number): WorkItem[] {
 export function generateMockEducationItems(count: number): EducationItem[] {
   return Array.from({ length: count }, (_, i) => 
     createMockEducationItem({
-      name: `School ${i + 1}`,
-      description: `Degree ${i + 1}`,
+      institution: `School ${i + 1}`,
+      area: `Degree ${i + 1}`,
     })
   );
 }
