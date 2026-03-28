@@ -77,13 +77,13 @@ describe('useATSCheck', () => {
     });
   });
 
-  it('should normalize issue severity types to uppercase', async () => {
-    const responseWithLowercase = {
+  it('should normalize issue severity types to lowercase', async () => {
+    const responseWithUppercase = {
       ...mockATSSuccessResponse,
       issues: [
         {
           type: 'two_column_layout',
-          severity: 'critical', // lowercase - should be normalized to CRITICAL
+          severity: 'CRITICAL', // uppercase - should be normalized to critical
           element: 'two_column_layout',
           description: 'Test issue',
           fix: 'Test fix'
@@ -93,7 +93,7 @@ describe('useATSCheck', () => {
 
     vi.mocked(fetch).mockResolvedValue({
       ok: true,
-      json: async () => responseWithLowercase
+      json: async () => responseWithUppercase
     } as Response);
 
     const { result } = renderHook(() => useATSCheck());
@@ -105,7 +105,7 @@ describe('useATSCheck', () => {
     });
 
     await waitFor(() => {
-      expect(result.current.result?.issues[0].severity).toBe('CRITICAL');
+      expect(result.current.result?.issues[0].severity).toBe('critical');
     });
   });
 
