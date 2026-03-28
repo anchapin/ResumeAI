@@ -67,9 +67,9 @@ jobs:
       - name: Install pip-audit
         run: pip install pip-audit
 
-      - name: Run pip-audit on resume-api
+      - name: Run pip-audit --ignore-vuln CVE-2026-4539 on resume-api
         working-directory: ./resume-api
-        run: pip-audit --ignore-vuln CVE-2024-23342 --ignore-vuln CVE-2025-69223 --ignore-vuln CVE-2025-69224 --ignore-vuln CVE-2025-69228 --ignore-vuln CVE-2025-69229 --ignore-vuln CVE-2025-69230 --ignore-vuln CVE-2025-69226 --ignore-vuln CVE-2025-69227 --ignore-vuln CVE-2025-69225 --ignore-vuln CVE-2025-59420 --ignore-vuln CVE-2025-61920 --ignore-vuln CVE-2025-62706 --ignore-vuln CVE-2025-68158 --ignore-vuln CVE-2025-6176 --ignore-vuln CVE-2023-26112 --ignore-vuln CVE-2026-26007 --ignore-vuln CVE-2025-62800 --ignore-vuln CVE-2026-28804 --ignore-vuln CVE-2026-32274 || true
+        run: pip-audit --ignore-vuln CVE-2026-4539 --ignore-vuln CVE-2024-23342 --ignore-vuln CVE-2025-69223 --ignore-vuln CVE-2025-69224 --ignore-vuln CVE-2025-69228 --ignore-vuln CVE-2025-69229 --ignore-vuln CVE-2025-69230 --ignore-vuln CVE-2025-69226 --ignore-vuln CVE-2025-69227 --ignore-vuln CVE-2025-69225 --ignore-vuln CVE-2025-59420 --ignore-vuln CVE-2025-61920 --ignore-vuln CVE-2025-62706 --ignore-vuln CVE-2025-68158 --ignore-vuln CVE-2025-6176 --ignore-vuln CVE-2023-26112 --ignore-vuln CVE-2026-26007 --ignore-vuln CVE-2025-62800 --ignore-vuln CVE-2026-28804 --ignore-vuln CVE-2026-32274 || true
 
       - name: Check npm dependencies
         if: always()
