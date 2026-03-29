@@ -100,13 +100,18 @@ async def create_resume(
 
         # Add tags
         if request.tags:
+            # ⚡ Bolt Optimization: Replace iterative database queries within the loop
+            # with a single bulk query for O(1) retrieval during association.
+            existing_tags_result = await db.execute(select(Tag).where(Tag.name.in_(request.tags)))
+            existing_tags = {t.name: t for t in existing_tags_result.scalars().all()}
+
             for tag_name in request.tags:
-                tag = await db.execute(select(Tag).where(Tag.name == tag_name))
-                existing_tag = tag.scalar_one_or_none()
+                existing_tag = existing_tags.get(tag_name)
                 if not existing_tag:
                     existing_tag = Tag(name=tag_name)
                     db.add(existing_tag)
                     await db.flush()
+                    existing_tags[tag_name] = existing_tag
                 resume.tags.append(existing_tag)
 
         db.add(resume)
@@ -301,14 +306,23 @@ async def update_resume(
         # Update tags if provided
         if request.tags is not None:
             resume.tags.clear()
-            for tag_name in request.tags:
-                tag = await db.execute(select(Tag).where(Tag.name == tag_name))
-                existing_tag = tag.scalar_one_or_none()
-                if not existing_tag:
-                    existing_tag = Tag(name=tag_name)
-                    db.add(existing_tag)
-                    await db.flush()
-                resume.tags.append(existing_tag)
+
+            # ⚡ Bolt Optimization: Replace iterative database queries within the loop
+            # with a single bulk query for O(1) retrieval during association.
+            if request.tags:
+                existing_tags_result = await db.execute(
+                    select(Tag).where(Tag.name.in_(request.tags))
+                )
+                existing_tags = {t.name: t for t in existing_tags_result.scalars().all()}
+
+                for tag_name in request.tags:
+                    existing_tag = existing_tags.get(tag_name)
+                    if not existing_tag:
+                        existing_tag = Tag(name=tag_name)
+                        db.add(existing_tag)
+                        await db.flush()
+                        existing_tags[tag_name] = existing_tag
+                    resume.tags.append(existing_tag)
 
         # Create new version if data changed
         if request.data:
@@ -1102,13 +1116,20 @@ async def batch_create_resumes(
 
             # Add tags
             if resume_request.tags:
+                # ⚡ Bolt Optimization: Replace iterative database queries within the loop
+                # with a single bulk query for O(1) retrieval during association.
+                existing_tags_result = await db.execute(
+                    select(Tag).where(Tag.name.in_(resume_request.tags))
+                )
+                existing_tags = {t.name: t for t in existing_tags_result.scalars().all()}
+
                 for tag_name in resume_request.tags:
-                    tag = await db.execute(select(Tag).where(Tag.name == tag_name))
-                    existing_tag = tag.scalar_one_or_none()
+                    existing_tag = existing_tags.get(tag_name)
                     if not existing_tag:
                         existing_tag = Tag(name=tag_name)
                         db.add(existing_tag)
                         await db.flush()
+                        existing_tags[tag_name] = existing_tag
                     resume.tags.append(existing_tag)
 
             db.add(resume)
@@ -1222,14 +1243,23 @@ async def batch_update_resumes(
             # Update tags if provided
             if update_request.tags is not None:
                 resume.tags.clear()
-                for tag_name in update_request.tags:
-                    tag = await db.execute(select(Tag).where(Tag.name == tag_name))
-                    existing_tag = tag.scalar_one_or_none()
-                    if not existing_tag:
-                        existing_tag = Tag(name=tag_name)
-                        db.add(existing_tag)
-                        await db.flush()
-                    resume.tags.append(existing_tag)
+
+                # ⚡ Bolt Optimization: Replace iterative database queries within the loop
+                # with a single bulk query for O(1) retrieval during association.
+                if update_request.tags:
+                    existing_tags_result = await db.execute(
+                        select(Tag).where(Tag.name.in_(update_request.tags))
+                    )
+                    existing_tags = {t.name: t for t in existing_tags_result.scalars().all()}
+
+                    for tag_name in update_request.tags:
+                        existing_tag = existing_tags.get(tag_name)
+                        if not existing_tag:
+                            existing_tag = Tag(name=tag_name)
+                            db.add(existing_tag)
+                            await db.flush()
+                            existing_tags[tag_name] = existing_tag
+                        resume.tags.append(existing_tag)
 
             await db.commit()
             await db.refresh(resume)
