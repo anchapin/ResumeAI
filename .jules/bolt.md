@@ -31,3 +31,7 @@
 ## 2024-05-24 - Batch string processing and static lookups for text extraction
 **Learning:** Calling a text extraction function (like `_extract_tech_terms`) in a loop over many small fragments (bullets, summaries) causes significant overhead and excessive lowercasing operations. Iterating over a long list of static tech terms `N` times for `M` text fragments creates an O(N*M) bottleneck.
 **Action:** When extracting data from multiple string fields, accumulate them into a single list, `.join()` them into one large string, and process it once. Hoist the static list of terms to the module level as a `frozenset` or `tuple` to prevent recreating it on every function call. This yields a >2x speedup for complex resumes without altering behavior.
+
+## 2024-05-18 - Eliminating N+1 Query in Tag Creation
+**Learning:** Found N+1 query patterns when creating multiple tags in SQLAlchemy routes (e.g., `resume-api/api/advanced_routes.py` and `batch-create`). Looping over a list of items and executing individual database queries inside the loop for existence checks causes serious performance bottlenecks.
+**Action:** Replaced iterative lookups with a bulk fetch using `Tag.name.in_(tag_names)`. Mapped the results to a dictionary for O(1) checks during association, reducing queries to a constant factor and significantly improving database round-trip performance.
