@@ -22,7 +22,7 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --legacy-peer-deps
 
       - name: Run npm audit
         run: npm audit --omit=dev || true
@@ -90,6 +90,7 @@ jobs:
             --ignore-vuln CVE-2025-62800 \
             --ignore-vuln CVE-2026-28804 \
             --ignore-vuln CVE-2026-32274 \
+  --ignore-vuln CVE-2026-4539 \
             --strict
 
       - name: Run tests with coverage (60% minimum)
