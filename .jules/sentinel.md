@@ -20,3 +20,7 @@
 **Vulnerability:** The `is_ecryptfs_path` function in `resume-api/lib/utils/ecryptfs_utils.py` used `os.popen` to execute a shell command with unsanitized user input (`path`), leading to a critical command injection vulnerability.
 **Learning:** Shell-based command execution (`os.popen`, `os.system`, `subprocess.run(shell=True)`) combined with string interpolation is inherently dangerous and must be avoided.
 **Prevention:** Always use `subprocess.run` (or similar) with an argument list rather than a single string, and ensure `shell=False` (which is the default) to prevent the shell from interpreting meta-characters.
+## 2024-05-24 - Remove unsafe-eval from Content Security Policy
+**Vulnerability:** The Content Security Policy (CSP) in `resume-api/main.py` explicitly allowed `'unsafe-eval'` in the `script-src` directive, creating a Cross-Site Scripting (XSS) risk by permitting dynamic code execution via `eval()`.
+**Learning:** Default or overly permissive CSP configurations often include `'unsafe-eval'` during early development for convenience, but they must be hardened before production to prevent injection attacks.
+**Prevention:** Strictly omit `'unsafe-eval'` from all `script-src` CSP directives and ensure frontend code does not rely on dynamic evaluation functions.
