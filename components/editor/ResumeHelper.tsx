@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { showSuccessToast } from '../../utils/toast';
 
 interface RolePhrases {
   role: string;
@@ -130,7 +129,7 @@ export const ResumeHelper: React.FC<ResumeHelperProps> = ({ onSelectPhrase, onCl
       <div className="p-4 border-t border-slate-100 bg-slate-50/50">
         <button 
           className="w-full py-2 bg-primary-600 text-white rounded-lg text-xs font-bold hover:bg-primary-700 transition-colors flex items-center justify-center gap-2 shadow-lg shadow-primary-600/20"
-          onClick={() => showSuccessToast("AI generation coming soon!")}
+          onClick={() => alert("AI generation coming soon!")}
         >
           <span className="material-symbols-outlined text-[18px]">psychology</span>
           Generate with AI

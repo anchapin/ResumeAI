@@ -246,10 +246,10 @@ const Editor = () => {
     try {
       const currentData = resumeDataRef.current;
       localStorage.setItem('resume_draft', JSON.stringify(currentData));
-      showSuccessToast('Profile saved successfully!');
+      alert('Profile saved successfully!');
     } catch (err) {
       console.error('Save failed:', err);
-      showErrorToast('Failed to save profile. Please try again.');
+      alert('Failed to save profile. Please try again.');
     }
   }, []);
 

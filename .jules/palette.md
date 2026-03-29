@@ -15,3 +15,6 @@
 ## 2026-03-11 - Material Symbol Ligature Screen Reader Noise
 **Learning:** Even within an interactive element with a proper `aria-label`, the ligature text (e.g., "delete") of a Material Symbol `<span>` is sometimes still announced by certain screen readers, causing repetitive or confusing announcements.
 **Action:** Always add `aria-hidden="true"` to Material Symbol `<span>` elements acting as ligatures to strictly enforce their decorative status and let the parent interactive element handle the accessible name.
+## 2025-05-18 - Added `aria-pressed` to comment filter buttons
+**Learning:** Filter buttons that act as toggleable states need an `aria-pressed` attribute so screen readers know which filter is currently active.
+**Action:** Add `aria-pressed={isActive}` to toggleable buttons going forward.

@@ -109,6 +109,7 @@ const CommentPanel: React.FC<CommentPanelProps> = ({ resumeId, onCommentCountCha
           <div className="flex items-center bg-slate-100 rounded-lg p-1">
             <button
               onClick={() => setFilter('all')}
+              aria-pressed={filter === 'all'}
               className={`px-3 py-1.5 text-sm font-bold rounded-md transition-colors ${
                 filter === 'all'
                   ? 'bg-white text-slate-900 shadow-sm'
@@ -119,6 +120,7 @@ const CommentPanel: React.FC<CommentPanelProps> = ({ resumeId, onCommentCountCha
             </button>
             <button
               onClick={() => setFilter('unresolved')}
+              aria-pressed={filter === 'unresolved'}
               className={`px-3 py-1.5 text-sm font-bold rounded-md transition-colors ${
                 filter === 'unresolved'
                   ? 'bg-white text-slate-900 shadow-sm'
