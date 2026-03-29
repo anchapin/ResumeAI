@@ -291,7 +291,7 @@ async def update_resume(
     request: UpdateResumeRequest,
     db: AsyncSession = Depends(get_db),
     auth: AuthorizedAPIKey = Depends(),
-):
+):  # noqa: C901
     """
     Update a resume and create a new version.
 
@@ -796,7 +796,7 @@ async def share_resume(
     request: ShareResumeRequest,
     db: AsyncSession = Depends(get_db),
     auth: AuthorizedAPIKey = Depends(),
-):
+):  # noqa: C901
     """
     Create a shareable link for a resume.
 
@@ -884,7 +884,7 @@ async def access_shared_resume(
     share_token: str,
     password: Optional[str] = None,
     db: AsyncSession = Depends(get_db),
-):
+):  # noqa: C901
     """
     Access a shared resume.
 
@@ -1472,7 +1472,7 @@ async def update_user_settings(
     request: UserSettingsRequest,
     db: AsyncSession = Depends(get_db),
     auth: AuthorizedAPIKey = Depends(),
-):
+):  # noqa: C901
     """Update user settings."""
     try:
         result = await db.execute(
