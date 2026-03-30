@@ -89,12 +89,12 @@ export function useATSCheck(): UseATSCheckReturn {
 
       const data: ATSCheckResult = await response.json();
       
-      // Normalize severity types to uppercase for component compatibility
+      // Normalize severity types to lowercase for component compatibility
       const normalizedData: ATSCheckResult = {
         ...data,
         issues: data.issues.map((issue) => ({
           ...issue,
-          severity: issue.severity?.toUpperCase() as 'CRITICAL' | 'WARNING' | 'INFO' | undefined,
+          severity: (issue.severity?.toLowerCase() || 'info') as IssueSeverity,
         })),
       };
       
