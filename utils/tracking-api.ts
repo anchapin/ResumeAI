@@ -4,8 +4,7 @@
  * API client for job application tracking (notes, reminders, timeline).
  */
 
-import { API_URL } from './config';
-import { fetchWithRetry } from './api-client';
+import { api } from '../src/lib/requestSigning';
 
 export type TrackingApplicationStatus = 
   | 'applied'
@@ -92,76 +91,56 @@ const API_PREFIX = '/api/v1/applications';
 
 export async function getApplications(status?: TrackingApplicationStatus): Promise<TrackingApplication[]> {
   const params = status ? `?status=${status}` : '';
-  const response = await fetchWithRetry(`${API_URL}${API_PREFIX}${params}`);
+  const response = await api.get(`${API_PREFIX}${params}`);
   return response.json();
 }
 
 export async function getApplication(id: string): Promise<TrackingApplication> {
-  const response = await fetchWithRetry(`${API_URL}${API_PREFIX}/${id}`);
+  const response = await api.get(`${API_PREFIX}/${id}`);
   return response.json();
 }
 
 export async function createApplication(data: CreateApplicationData): Promise<TrackingApplication> {
-  const response = await fetchWithRetry(`${API_URL}${API_PREFIX}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data),
-  });
+  const response = await api.post(`${API_PREFIX}`, data);
   return response.json();
 }
 
 export async function updateApplication(id: string, data: UpdateApplicationData): Promise<TrackingApplication> {
-  const response = await fetchWithRetry(`${API_URL}${API_PREFIX}/${id}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data),
-  });
+  const response = await api.put(`${API_PREFIX}/${id}`, data);
   return response.json();
 }
 
 export async function deleteApplication(id: string): Promise<void> {
-  await fetchWithRetry(`${API_URL}${API_PREFIX}/${id}`, {
-    method: 'DELETE',
-  });
+  await api.delete(`${API_PREFIX}/${id}`);
 }
 
 export async function addNote(appId: string, data: CreateNoteData): Promise<TrackingApplication> {
-  const response = await fetchWithRetry(`${API_URL}${API_PREFIX}/${appId}/notes`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data),
-  });
+  const response = await api.post(`${API_PREFIX}/${appId}/notes`, data);
   return response.json();
 }
 
 export async function addReminder(appId: string, data: CreateReminderData): Promise<TrackingApplication> {
-  const response = await fetchWithRetry(`${API_URL}${API_PREFIX}/${appId}/reminders`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data),
-  });
+  const response = await api.post(`${API_PREFIX}/${appId}/reminders`, data);
   return response.json();
 }
 
 export async function getApplicationTimeline(appId: string): Promise<TimelineEvent[]> {
-  const response = await fetchWithRetry(`${API_URL}${API_PREFIX}/${appId}/timeline`);
+  const response = await api.get(`${API_PREFIX}/${appId}/timeline`);
   return response.json();
 }
 
 export async function getAllTimeline(): Promise<TimelineEvent[]> {
-  const response = await fetchWithRetry(`${API_URL}${API_PREFIX}/timeline/all`);
+  const response = await api.get(`${API_PREFIX}/timeline/all`);
   return response.json();
 }
 
 export async function getDueReminders(): Promise<DueReminder[]> {
-  const response = await fetchWithRetry(`${API_URL}${API_PREFIX}/reminders/due`);
+  const response = await api.get(`${API_PREFIX}/reminders/due`);
   return response.json();
 }
 
 export async function triggerReminder(appId: string, reminderId: string): Promise<void> {
-  await fetchWithRetry(`${API_URL}${API_PREFIX}/reminders/${appId}/${reminderId}/trigger`, {
-    method: 'POST',
-  });
+  await api.post(`${API_PREFIX}/reminders/${appId}/${reminderId}/trigger`);
 }
 
 // Status configuration for UI
