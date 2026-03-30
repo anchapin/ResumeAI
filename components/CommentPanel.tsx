@@ -1,285 +1,345 @@
-import React, { useState, useEffect } from 'react';
-import { Comment } from '../types';
-import { listComments, createComment, resolveComment, deleteComment } from '../utils/api-client';
-import { showSuccessToast, showErrorToast } from '../utils/toast';
+import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useAuthStore } from '../store/store';
+import { formatDistanceToNow } from '../utils/date-formatter';
+import { Comment, CommentFilter } from '../types';
 
 interface CommentPanelProps {
-  resumeId: number;
-  onCommentCountChange?: (count: number) => void;
+  comments: Comment[];
+  onAddComment: (text: string, elementId?: string) => void;
+  onResolveComment: (id: string) => void;
+  onDeleteComment: (id: string) => void;
+  onReplyToComment?: (parentId: string, text: string) => void;
+  isOpen: boolean;
+  onClose: () => void;
+  activeElementId?: string | null;
 }
 
-/**
- * Comment panel component for collaboration
- */
-const CommentPanel: React.FC<CommentPanelProps> = ({ resumeId, onCommentCountChange }) => {
-  const [comments, setComments] = useState<Comment[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [showNewComment, setShowNewComment] = useState(false);
+export const CommentPanel: React.FC<CommentPanelProps> = ({
+  comments = [], // Provide default empty array
+  onAddComment,
+  onResolveComment,
+  onDeleteComment,
+  onReplyToComment,
+  isOpen,
+  onClose,
+  activeElementId = null,
+}) => {
+  const { t } = useTranslation();
+  const { user } = useAuthStore();
   const [newComment, setNewComment] = useState('');
-  const [newCommentSection, setNewCommentSection] = useState('');
-  const [submitting, setSubmitting] = useState(false);
-  const [filter, setFilter] = useState<'all' | 'unresolved'>('all');
-
-  useEffect(() => {
-    loadComments();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [resumeId]);
-
-  // Notify parent of unresolved comment count whenever comments change
-  useEffect(() => {
-    if (onCommentCountChange) {
-      const unresolvedCount = comments.filter((c) => !c.isResolved).length;
-      onCommentCountChange(unresolvedCount);
-    }
-  }, [comments, onCommentCountChange]);
-
-  const loadComments = async () => {
-    try {
-      setLoading(true);
-      const data = await listComments(resumeId);
-      setComments(data);
-    } catch (error) {
-      showErrorToast('Failed to load comments');
-      console.error(error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSubmitComment = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newComment.trim()) return;
-
-    try {
-      setSubmitting(true);
-      await createComment(resumeId, {
-        authorName: 'Current User', // In a real app, this would come from user session
-        authorEmail: 'user@example.com',
-        content: newComment,
-        section: newCommentSection || undefined,
-      });
-      showSuccessToast('Comment added');
-      setNewComment('');
-      setNewCommentSection('');
-      setShowNewComment(false);
-      await loadComments();
-    } catch (error) {
-      showErrorToast('Failed to add comment');
-      console.error(error);
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const handleResolveComment = async (commentId: number) => {
-    try {
-      await resolveComment(commentId);
-      showSuccessToast('Comment resolved');
-      await loadComments();
-    } catch (error) {
-      showErrorToast('Failed to resolve comment');
-      console.error(error);
-    }
-  };
-
-  const handleDeleteComment = async (commentId: number) => {
-    if (!confirm('Are you sure you want to delete this comment?')) {
-      return;
-    }
-
-    try {
-      await deleteComment(commentId);
-      showSuccessToast('Comment deleted');
-      await loadComments();
-    } catch (error) {
-      showErrorToast('Failed to delete comment');
-      console.error(error);
-    }
-  };
-
-  const filteredComments = comments.filter((comment) =>
-    filter === 'unresolved' ? !comment.isResolved : true,
+  const [replyText, setReplyText] = useState<{ [key: string]: string }>({});
+  const [filter, setFilter] = useState<CommentFilter>('all');
+  const [expandedReplies, setExpandedReplies] = useState<Set<string>>(
+    new Set(),
   );
 
+  if (!isOpen) return null;
+
+  // Safety check for user
+  const currentUserId = user?.id || 'anonymous';
+  const currentUserName = user?.name || 'Anonymous User';
+
+  const filteredComments = comments.filter((comment) => {
+    if (!comment) return false;
+
+    // Filter by element if one is active
+    if (activeElementId && comment.elementId !== activeElementId) {
+      return false;
+    }
+
+    // Filter by status
+    if (filter === 'unresolved') return !comment.resolved;
+    return true;
+  });
+
+  const handleAddComment = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newComment.trim()) {
+      onAddComment(newComment.trim(), activeElementId || undefined);
+      setNewComment('');
+    }
+  };
+
+  const handleAddReply = (parentId: string) => {
+    const text = replyText[parentId];
+    if (text?.trim() && onReplyToComment) {
+      onReplyToComment(parentId, text.trim());
+      setReplyText((prev) => ({ ...prev, [parentId]: '' }));
+
+      // Automatically expand replies when adding one
+      setExpandedReplies((prev) => {
+        const next = new Set(prev);
+        next.add(parentId);
+        return next;
+      });
+    }
+  };
+
+  const toggleReplies = (commentId: string) => {
+    setExpandedReplies((prev) => {
+      const next = new Set(prev);
+      if (next.has(commentId)) {
+        next.delete(commentId);
+      } else {
+        next.add(commentId);
+      }
+      return next;
+    });
+  };
+
   return (
-    <div className="bg-white rounded-xl border border-slate-200 shadow-sm">
-      <div className="p-4 border-b border-slate-200 flex items-center justify-between">
-        <h3 className="font-bold text-slate-900">Comments ({filteredComments.length})</h3>
-        <div className="flex items-center gap-2">
-          <div className="flex items-center bg-slate-100 rounded-lg p-1">
-            <button
-              onClick={() => setFilter('all')}
-              aria-pressed={filter === 'all'}
-              className={`px-3 py-1.5 text-sm font-bold rounded-md transition-colors ${
-                filter === 'all'
-                  ? 'bg-white text-slate-900 shadow-sm'
-                  : 'text-slate-500 hover:text-slate-900'
-              }`}
-            >
-              All
-            </button>
-            <button
-              onClick={() => setFilter('unresolved')}
-              aria-pressed={filter === 'unresolved'}
-              className={`px-3 py-1.5 text-sm font-bold rounded-md transition-colors ${
-                filter === 'unresolved'
-                  ? 'bg-white text-slate-900 shadow-sm'
-                  : 'text-slate-500 hover:text-slate-900'
-              }`}
-            >
-              Unresolved
-            </button>
-          </div>
-          <button
-            onClick={() => setShowNewComment(!showNewComment)}
-            className="p-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
-            aria-label="Add new comment"
-          >
-            <span className="material-symbols-outlined text-[20px]" aria-hidden="true">add</span>
-          </button>
-        </div>
+    <div className="fixed right-0 top-0 h-full w-80 bg-white shadow-xl border-l border-gray-200 flex flex-col z-50 transition-transform duration-300 ease-in-out">
+      <div className="p-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">
+        <h2 className="text-lg font-semibold text-gray-800">
+          {activeElementId ? t('comments.section') : t('comments.title')}
+          <span className="ml-2 px-2 py-0.5 bg-blue-100 text-blue-800 text-xs rounded-full">
+            {filteredComments.length}
+          </span>
+        </h2>
+        <button
+          onClick={onClose}
+          className="text-gray-500 hover:text-gray-700 hover:bg-gray-200 p-1 rounded-full transition-colors"
+          aria-label={t('common.close')}
+        >
+          <span className="material-symbols-outlined" aria-hidden="true">
+            close
+          </span>
+        </button>
       </div>
 
-      {showNewComment && (
-        <div className="p-4 border-b border-slate-200 bg-slate-50">
-          <form onSubmit={handleSubmitComment}>
-            <div className="space-y-3">
-              <div>
-                <label
-                  htmlFor="comment-section"
-                  className="block text-sm font-bold text-slate-700 mb-1"
-                >
-                  Section (optional)
-                </label>
-                <input
-                  id="comment-section"
-                  type="text"
-                  value={newCommentSection}
-                  onChange={(e) => setNewCommentSection(e.target.value)}
-                  placeholder="e.g., Work Experience, Skills"
-                  className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all text-sm"
-                />
-              </div>
-              <div>
-                <label
-                  htmlFor="comment-content"
-                  className="block text-sm font-bold text-slate-700 mb-1"
-                >
-                  Comment
-                </label>
-                <textarea
-                  id="comment-content"
-                  value={newComment}
-                  onChange={(e) => setNewComment(e.target.value)}
-                  placeholder="Add your comment..."
-                  rows={3}
-                  className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all text-sm resize-none"
-                  required
-                />
-              </div>
-              <div className="flex justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowNewComment(false);
-                    setNewComment('');
-                    setNewCommentSection('');
-                  }}
-                  className="px-4 py-2 text-sm font-bold text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={submitting || !newComment.trim()}
-                  className="px-4 py-2 bg-primary-600 text-white text-sm font-bold rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                >
-                  {submitting ? (
-                    <>
-                      <span className="material-symbols-outlined animate-spin text-[18px]" aria-hidden="true">
-                        progress_activity
-                      </span>
-                      <span>Adding...</span>
-                    </>
-                  ) : (
-                    'Add Comment'
-                  )}
-                </button>
-              </div>
-            </div>
-          </form>
-        </div>
-      )}
+      <div className="p-3 border-b border-gray-200 flex space-x-2 bg-white">
+        <button
+          onClick={() => setFilter('all')}
+          aria-pressed={filter === 'all'}
+          className={`flex-1 py-1.5 px-3 text-sm font-medium rounded-md transition-colors ${
+            filter === 'all'
+              ? 'bg-blue-50 text-blue-700 shadow-sm border border-blue-200'
+              : 'bg-white text-gray-600 border border-gray-300 hover:bg-gray-50'
+          }`}
+        >
+          {t('comments.filterAll')}
+        </button>
+        <button
+          onClick={() => setFilter('unresolved')}
+          aria-pressed={filter === 'unresolved'}
+          className={`flex-1 py-1.5 px-3 text-sm font-medium rounded-md transition-colors flex justify-center items-center ${
+            filter === 'unresolved'
+              ? 'bg-blue-50 text-blue-700 shadow-sm border border-blue-200'
+              : 'bg-white text-gray-600 border border-gray-300 hover:bg-gray-50'
+          }`}
+        >
+          <span className="w-2 h-2 rounded-full bg-yellow-400 mr-2"></span>
+          {t('comments.filterUnresolved')}
+        </button>
+      </div>
 
-      <div className="p-4">
-        {loading ? (
-          <div className="flex items-center justify-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
-          </div>
-        ) : filteredComments.length === 0 ? (
-          <div className="text-center py-8 text-slate-500">
-            <span className="material-symbols-outlined text-4xl mb-2" aria-hidden="true">chat_bubble_outline</span>
-            <p>{filter === 'unresolved' ? 'No unresolved comments' : 'No comments yet'}</p>
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
+        {filteredComments.length === 0 ? (
+          <div className="text-center text-gray-500 py-8 px-4 bg-white rounded-lg border border-dashed border-gray-200">
+            <span className="material-symbols-outlined text-4xl text-gray-300 mb-2">
+              chat_bubble
+            </span>
+            <p className="text-sm">{t('comments.noComments')}</p>
+            {activeElementId && (
+              <p className="text-xs text-gray-400 mt-1">
+                {t('comments.noCommentsSection')}
+              </p>
+            )}
           </div>
         ) : (
-          <div className="space-y-4">
-            {filteredComments.map((comment) => (
-              <div
-                key={comment.id}
-                className={`p-4 rounded-lg border transition-all ${
-                  comment.isResolved
-                    ? 'bg-slate-50 border-slate-200 opacity-75'
-                    : 'bg-white border-slate-200 shadow-sm'
-                }`}
-              >
-                <div className="flex items-start justify-between gap-3 mb-2">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="font-bold text-slate-900 text-sm">{comment.authorName}</span>
-                      {comment.section && (
-                        <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-bold rounded-full">
-                          {comment.section}
-                        </span>
-                      )}
-                      {comment.isResolved && (
-                        <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs font-bold rounded-full flex items-center gap-1">
-                          <span className="material-symbols-outlined text-[14px]" aria-hidden="true">
-                            check_circle
-                          </span>
-                          Resolved
-                        </span>
-                      )}
-                    </div>
-                    <span className="text-xs text-slate-400">
-                      {new Date(comment.createdAt).toLocaleString()}
+          filteredComments.map((comment) => (
+            <div
+              key={comment.id}
+              className={`p-3 rounded-lg border ${
+                comment.resolved
+                  ? 'bg-gray-50 border-gray-200 opacity-75'
+                  : 'bg-white border-blue-100 shadow-sm'
+              }`}
+            >
+              <div className="flex justify-between items-start mb-2">
+                <div className="flex items-center">
+                  <div className="w-6 h-6 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-xs font-bold mr-2">
+                    {comment.authorName.charAt(0).toUpperCase()}
+                  </div>
+                  <div>
+                    <span className="font-medium text-sm text-gray-900">
+                      {comment.authorName}
+                    </span>
+                    <span className="text-xs text-gray-500 ml-2">
+                      {formatDistanceToNow(new Date(comment.timestamp))}
                     </span>
                   </div>
+                </div>
+                {comment.resolved && (
+                  <span className="px-2 py-0.5 bg-green-100 text-green-800 text-[10px] uppercase font-bold rounded-full">
+                    {t('comments.resolvedStatus')}
+                  </span>
+                )}
+              </div>
+
+              <p className="text-sm text-gray-700 mt-1 whitespace-pre-wrap break-words">
+                {comment.text}
+              </p>
+
+              {/* Replies Section */}
+              {comment.replies && comment.replies.length > 0 && (
+                <div className="mt-3 pl-3 border-l-2 border-gray-200">
                   <button
-                    onClick={() => handleDeleteComment(comment.id)}
-                    className="p-1 text-slate-400 hover:bg-red-50 hover:text-red-500 rounded transition-colors"
-                    title="Delete comment"
-                    aria-label="Delete comment"
+                    onClick={() => toggleReplies(comment.id)}
+                    className="text-xs text-blue-600 hover:text-blue-800 font-medium flex items-center mb-2"
                   >
-                    <span className="material-symbols-outlined text-[18px]" aria-hidden="true">delete</span>
+                    <span
+                      className="material-symbols-outlined text-[14px] mr-1"
+                      aria-hidden="true"
+                    >
+                      {expandedReplies.has(comment.id)
+                        ? 'expand_less'
+                        : 'expand_more'}
+                    </span>
+                    {expandedReplies.has(comment.id)
+                      ? t('comments.hideReplies')
+                      : t('comments.showReplies', {
+                          count: comment.replies.length,
+                        })}
+                  </button>
+
+                  {expandedReplies.has(comment.id) && (
+                    <div className="space-y-3 mt-2">
+                      {comment.replies.map((reply) => (
+                        <div key={reply.id} className="bg-gray-50 p-2 rounded">
+                          <div className="flex justify-between items-start">
+                            <span className="font-medium text-xs text-gray-900">
+                              {reply.authorName}
+                            </span>
+                            <span className="text-[10px] text-gray-500">
+                              {formatDistanceToNow(new Date(reply.timestamp))}
+                            </span>
+                          </div>
+                          <p className="text-xs text-gray-700 mt-1">
+                            {reply.text}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Reply Input */}
+              {onReplyToComment && !comment.resolved && (
+                <div className="mt-3 flex items-center space-x-2">
+                  <input
+                    type="text"
+                    value={replyText[comment.id] || ''}
+                    onChange={(e) =>
+                      setReplyText((prev) => ({
+                        ...prev,
+                        [comment.id]: e.target.value,
+                      }))
+                    }
+                    placeholder={t('comments.replyPlaceholder')}
+                    className="flex-1 text-xs px-2 py-1.5 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleAddReply(comment.id);
+                      }
+                    }}
+                  />
+                  <button
+                    onClick={() => handleAddReply(comment.id)}
+                    disabled={!replyText[comment.id]?.trim()}
+                    className="p-1.5 text-blue-600 disabled:text-gray-400 hover:bg-blue-50 rounded"
+                    aria-label={t('comments.submitReply')}
+                  >
+                    <span
+                      className="material-symbols-outlined text-[16px]"
+                      aria-hidden="true"
+                    >
+                      send
+                    </span>
                   </button>
                 </div>
-                <p className="text-sm text-slate-700 mb-3">{comment.content}</p>
-                {!comment.isResolved && (
+              )}
+
+              <div className="flex justify-end space-x-2 mt-3 pt-2 border-t border-gray-100">
+                {!comment.resolved && (
                   <button
-                    onClick={() => handleResolveComment(comment.id)}
-                    className="text-sm font-bold text-green-600 hover:text-green-700 transition-colors flex items-center gap-1"
+                    onClick={() => onResolveComment(comment.id)}
+                    className="text-xs font-medium text-green-600 hover:text-green-700 hover:bg-green-50 px-2 py-1 rounded flex items-center transition-colors"
                   >
-                    <span className="material-symbols-outlined text-[18px]" aria-hidden="true">check_circle</span>
-                    Mark as Resolved
+                    <span
+                      className="material-symbols-outlined text-[14px] mr-1"
+                      aria-hidden="true"
+                    >
+                      check_circle
+                    </span>
+                    {t('common.resolve')}
+                  </button>
+                )}
+                {(comment.authorId === currentUserId ||
+                  user?.role === 'admin') && (
+                  <button
+                    onClick={() => onDeleteComment(comment.id)}
+                    className="text-xs font-medium text-red-600 hover:text-red-700 hover:bg-red-50 px-2 py-1 rounded flex items-center transition-colors"
+                  >
+                    <span
+                      className="material-symbols-outlined text-[14px] mr-1"
+                      aria-hidden="true"
+                    >
+                      delete
+                    </span>
+                    {t('common.delete')}
                   </button>
                 )}
               </div>
-            ))}
-          </div>
+            </div>
+          ))
         )}
+      </div>
+
+      <div className="p-4 border-t border-gray-200 bg-white">
+        <form onSubmit={handleAddComment} className="flex flex-col space-y-2">
+          {activeElementId && (
+            <div className="text-xs text-blue-600 flex items-center bg-blue-50 p-1.5 rounded-md border border-blue-100">
+              <span
+                className="material-symbols-outlined text-[14px] mr-1"
+                aria-hidden="true"
+              >
+                info
+              </span>
+              {t('comments.commentingOnSection')}
+            </div>
+          )}
+          <textarea
+            value={newComment}
+            onChange={(e) => setNewComment(e.target.value)}
+            placeholder={t('comments.addPlaceholder')}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none text-sm transition-shadow"
+            rows={3}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                handleAddComment(e);
+              }
+            }}
+          />
+          <button
+            type="submit"
+            disabled={!newComment.trim()}
+            className="w-full bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium transition-colors flex justify-center items-center"
+          >
+            <span className="material-symbols-outlined mr-2" aria-hidden="true">
+              add_comment
+            </span>
+            {t('comments.submit')}
+          </button>
+          <p className="text-[10px] text-gray-400 text-center mt-1">
+            {t('comments.pressEnter')}
+          </p>
+        </form>
       </div>
     </div>
   );
 };
-
-export default CommentPanel;
