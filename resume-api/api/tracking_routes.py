@@ -6,7 +6,6 @@ FastAPI endpoints for job application tracking (ANA-09 to ANA-12).
 
 from datetime import datetime
 from typing import List, Optional
-from uuid import UUID
 
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, Field

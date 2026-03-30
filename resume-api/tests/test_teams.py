@@ -11,16 +11,12 @@ Tests cover:
 
 import pytest
 import pytest_asyncio
-from datetime import datetime
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 from httpx import AsyncClient, ASGITransport
 
 from main import app
 from database import (
     Team,
     TeamMember,
-    TeamResume,
     TeamActivity,
     User,
     Resume,

@@ -1,8 +1,6 @@
 """Tests for ATS analyzer module"""
 
-import pytest
 from io import BytesIO
-from pathlib import Path
 
 from lib.ats.analyzer import ATSAnalyzer
 from lib.ats.models import ATSCheckResult, ATSIssue, IssueSeverity, IssueType

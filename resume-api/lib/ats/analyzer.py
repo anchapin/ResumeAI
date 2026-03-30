@@ -3,7 +3,6 @@
 import io
 import re
 import time
-from typing import Optional
 
 from lib.ats.models import (
     ATSCheckResult,

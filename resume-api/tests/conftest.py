@@ -79,7 +79,7 @@ async def async_client(test_db_session):
     async def override_get_async_session():
         yield test_db_session
 
-    from database import get_async_session, get_db
+    from database import get_db
     from unittest.mock import MagicMock
     
     app.dependency_overrides[get_async_session] = override_get_async_session
@@ -93,7 +93,6 @@ async def async_client(test_db_session):
     app.dependency_overrides[get_api_key] = lambda: mock_auth
 
     # Mock StripeService session
-    from lib.stripe import stripe_service
     import lib.stripe
     lib.stripe.mock_async_session = test_db_session
     

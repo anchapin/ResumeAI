@@ -118,7 +118,7 @@ def profile(name: Optional[str] = None):
                 try:
                     result = await func(*args, **kwargs)
                     return result
-                except Exception as e:
+                except Exception:
                     success = "error"
                     raise
                 finally:
@@ -159,7 +159,7 @@ def profile(name: Optional[str] = None):
                 try:
                     result = func(*args, **kwargs)
                     return result
-                except Exception as e:
+                except Exception:
                     success = "error"
                     raise
                 finally:
@@ -209,7 +209,7 @@ def profile_context(name: str):
 
     try:
         yield
-    except Exception as e:
+    except Exception:
         success = "error"
         raise
     finally:
@@ -256,7 +256,7 @@ async def async_profile_context(name: str):
 
     try:
         yield
-    except Exception as e:
+    except Exception:
         success = "error"
         raise
     finally:

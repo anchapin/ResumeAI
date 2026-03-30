@@ -13,14 +13,11 @@ import asyncio
 import json
 import uuid
 from datetime import datetime
-from typing import Dict, Set, Optional, Any, Callable
+from typing import Dict, Set, Optional, Any
 from enum import Enum
 
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect, status, Depends
-from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect, status
 
-from database import get_async_session, User
-from config.dependencies import get_current_user
 from monitoring import logging_config
 
 # Get logger
@@ -84,7 +81,7 @@ class ConnectionPool:
             self.user_connections.setdefault(user_id, set()).add(connection_id)
 
         logger.info(
-            f"WebSocket connected",
+            "WebSocket connected",
             extra={
                 "connection_id": connection_id,
                 "user_id": user_id,
@@ -115,7 +112,7 @@ class ConnectionPool:
                     del self.user_connections[user_id]
 
         logger.info(
-            f"WebSocket disconnected",
+            "WebSocket disconnected",
             extra={
                 "connection_id": connection_id,
                 "user_id": user_id,
@@ -157,7 +154,7 @@ class ConnectionPool:
                     sent_count += 1
                 except Exception as e:
                     logger.warning(
-                        f"Failed to send message to connection",
+                        "Failed to send message to connection",
                         extra={
                             "connection_id": connection_id,
                             "error": str(e),
@@ -196,7 +193,7 @@ class ConnectionPool:
             return True
         except Exception as e:
             logger.warning(
-                f"Failed to send message to connection",
+                "Failed to send message to connection",
                 extra={
                     "connection_id": connection_id,
                     "error": str(e),
@@ -267,12 +264,12 @@ class WebSocketConnection:
         try:
             await self.websocket.send_text(message)
             logger.debug(
-                f"WebSocket message sent",
+                "WebSocket message sent",
                 extra={"connection_id": self.connection_id},
             )
         except Exception as e:
             logger.error(
-                f"Failed to send WebSocket message",
+                "Failed to send WebSocket message",
                 extra={
                     "connection_id": self.connection_id,
                     "error": str(e),
@@ -330,7 +327,7 @@ async def websocket_resume_endpoint(websocket: WebSocket, connection_type: str):
     try:
         await websocket.accept()
         logger.info(
-            f"WebSocket connection accepted",
+            "WebSocket connection accepted",
             extra={"connection_id": connection_id, "type": connection_type},
         )
 
@@ -372,7 +369,7 @@ async def websocket_resume_endpoint(websocket: WebSocket, connection_type: str):
                 pass
             except Exception as e:
                 logger.error(
-                    f"Heartbeat error",
+                    "Heartbeat error",
                     extra={"connection_id": connection_id, "error": str(e)},
                 )
 
@@ -384,7 +381,7 @@ async def websocket_resume_endpoint(websocket: WebSocket, connection_type: str):
             while True:
                 data = await websocket.receive_json()
                 logger.debug(
-                    f"WebSocket message received",
+                    "WebSocket message received",
                     extra={
                         "connection_id": connection_id,
                         "message_type": data.get("type"),
@@ -402,7 +399,7 @@ async def websocket_resume_endpoint(websocket: WebSocket, connection_type: str):
 
         except WebSocketDisconnect:
             logger.info(
-                f"WebSocket disconnected",
+                "WebSocket disconnected",
                 extra={"connection_id": connection_id},
             )
         finally:
@@ -423,7 +420,7 @@ async def websocket_resume_endpoint(websocket: WebSocket, connection_type: str):
 
     except Exception as e:
         logger.error(
-            f"WebSocket error",
+            "WebSocket error",
             extra={
                 "connection_id": connection_id,
                 "error": str(e),

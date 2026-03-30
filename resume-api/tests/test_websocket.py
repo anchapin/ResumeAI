@@ -15,22 +15,15 @@ import pytest_asyncio
 import json
 import asyncio
 from datetime import datetime
-from httpx import AsyncClient
 
-from fastapi import WebSocketDisconnect, status
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 
 from main import app
 from database import Base, get_async_session
 from routes.websocket import (
-    connection_pool,
     ConnectionPool,
     WebSocketConnection,
     MessageType,
-    send_pdf_progress,
-    send_pdf_complete,
-    send_pdf_error,
-    send_notification,
 )
 
 
@@ -78,7 +71,6 @@ async def websocket_client(test_db_session):
 
     app.dependency_overrides[get_async_session] = override_get_async_session
 
-    from fastapi.testclient import TestClient
     from httpx import ASGITransport, AsyncClient as HttpxAsyncClient
 
     async with HttpxAsyncClient(

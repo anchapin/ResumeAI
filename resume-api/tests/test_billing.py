@@ -11,7 +11,7 @@ Tests cover:
 
 import pytest
 import pytest_asyncio
-from unittest.mock import patch, MagicMock, AsyncMock
+from unittest.mock import patch, MagicMock
 import stripe
 
 from database import (

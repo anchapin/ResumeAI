@@ -4,7 +4,6 @@ ATS Optimizer Module
 Provides ATS-aware job matching and optimization suggestions.
 """
 
-from typing import Optional
 from dataclasses import dataclass
 
 

@@ -2,12 +2,10 @@
 ATS Compatibility Check API Routes.
 """
 
-import io
 from datetime import datetime
 from typing import Optional
 from fastapi import APIRouter, File, HTTPException, Query, UploadFile, status
 from pydantic import BaseModel
-from config.dependencies import AuthorizedAPIKey, limiter
 from config import settings
 from lib.ats import ATSAnalyzer
 from monitoring import logging_config
