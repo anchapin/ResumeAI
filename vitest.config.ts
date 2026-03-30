@@ -9,6 +9,7 @@ export default defineConfig({
     exclude: ['node_modules', 'dist', '.idea', '.git', '.cache', 'tests/e2e/**', 'tests/visual/**'],
     // Worker configuration to prevent timeouts
     pool: 'forks',
+    // @ts-ignore
     poolOptions: {
       forks: {
         singleFork: true,

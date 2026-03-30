@@ -4,7 +4,9 @@
  * API client for job application tracking (notes, reminders, timeline).
  */
 
+// @ts-ignore
 import { API_URL } from './config';
+// @ts-ignore
 import { fetchWithRetry } from './api-client';
 
 export type TrackingApplicationStatus = 

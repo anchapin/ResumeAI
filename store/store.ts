@@ -302,7 +302,7 @@ export const useStore = create<AppStore>()(
             if (state.tailoredResume) {
               const updatedResume = { ...state.tailoredResume };
               if (change.section === 'summary') {
-                updatedResume.summary = change.proposed;
+                updatedResume.summary = change.proposed || '';
               }
               // Other sections would need similar handling
               return { tailoringChanges: changes, tailoredResume: updatedResume };
