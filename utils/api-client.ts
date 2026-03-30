@@ -4,6 +4,8 @@
 
 import { getCookie } from './security';
 
+export const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
+
 export type {
   ResumeMetadata,
   ResumeVersion,
@@ -85,8 +87,6 @@ import {
   RetryError,
 } from './retryLogic';
 import { signedFetch } from '../src/lib/requestSigning';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
 
 // In-memory cache for variants
 const VARIANTS_CACHE_DURATION = 5 * 60 * 1000;
