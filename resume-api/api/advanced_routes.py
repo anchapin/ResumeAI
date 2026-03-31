@@ -922,6 +922,7 @@ async def access_shared_resume(
                     status_code=status.HTTP_401_UNAUTHORIZED,
                     detail="Password required",
                 )
+
             import hashlib
 
             password_hash = hashlib.sha256(password.encode()).hexdigest()
@@ -1112,6 +1113,19 @@ async def batch_create_resumes(
     successful = []
     failed = []
 
+    # ⚡ Bolt: Collect all unique tags across the batch to prevent N+1 queries per resume
+    all_requested_tags = set()
+    for resume_request in request.resumes:
+        if resume_request.tags:
+            all_requested_tags.update(resume_request.tags)
+
+    existing_tags_dict = {}
+    if all_requested_tags:
+        tag_results = await db.execute(
+            select(Tag).where(Tag.name.in_(list(all_requested_tags)))
+        )
+        existing_tags_dict = {t.name: t for t in tag_results.scalars().all()}
+
     for idx, resume_request in enumerate(request.resumes):
         try:
             # Validate and escape resume data
@@ -1126,11 +1140,6 @@ async def batch_create_resumes(
 
             # Add tags
             if resume_request.tags:
-                # ⚡ Bolt: Prevent N+1 query by doing a single bulk lookup
-                tag_results = await db.execute(
-                    select(Tag).where(Tag.name.in_(resume_request.tags))
-                )
-                existing_tags_dict = {t.name: t for t in tag_results.scalars().all()}
                 for tag_name in resume_request.tags:
                     existing_tag = existing_tags_dict.get(tag_name)
                     if not existing_tag:
@@ -1220,6 +1229,19 @@ async def batch_update_resumes(
     successful = []
     failed = []
 
+    # ⚡ Bolt: Collect all unique tags across the batch to prevent N+1 queries per resume
+    all_requested_tags = set()
+    for update_request in request.resumes:
+        if update_request.tags:
+            all_requested_tags.update(update_request.tags)
+
+    existing_tags_dict = {}
+    if all_requested_tags:
+        tag_results = await db.execute(
+            select(Tag).where(Tag.name.in_(list(all_requested_tags)))
+        )
+        existing_tags_dict = {t.name: t for t in tag_results.scalars().all()}
+
     for idx, update_request in enumerate(request.resumes):
         try:
             # Get resume by ID
@@ -1254,13 +1276,6 @@ async def batch_update_resumes(
             if update_request.tags is not None:
                 resume.tags.clear()
                 if update_request.tags:
-                    # ⚡ Bolt: Prevent N+1 query by doing a single bulk lookup
-                    tag_results = await db.execute(
-                        select(Tag).where(Tag.name.in_(update_request.tags))
-                    )
-                    existing_tags_dict = {
-                        t.name: t for t in tag_results.scalars().all()
-                    }
                     for tag_name in update_request.tags:
                         existing_tag = existing_tags_dict.get(tag_name)
                         if not existing_tag:
