@@ -20,6 +20,8 @@ export async function registerUser(page: Page, user: typeof testUser): Promise<v
   await page.click('button[type="submit"]');
 
   // Wait for success message or redirect
+  await expect(page.getByText('Account Created!')).toBeVisible();
+  await page.click('text=Go to Sign In');
   await expect(page).toHaveURL(/\/login/);
 }
 
