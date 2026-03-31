@@ -4,7 +4,7 @@
  */
 
 import React from 'react';
-import type { WorkItem, EducationItem, Project, Skill } from '@/types';
+import type { WorkItem, EducationItem, ProjectItem, Skill } from '@/types';
 
 // ============================================
 // Base Mock Types
@@ -63,9 +63,9 @@ export function createMockEducationItem(overrides?: Partial<EducationItem>): Edu
   };
 }
 
-export function createMockProject(overrides?: Partial<Project>): Project {
+export function createMockProjectItem(overrides?: Partial<ProjectItem>): ProjectItem {
   return {
-    name: 'Awesome Project',
+    name: 'Awesome ProjectItem',
     description: 'A really cool project',
     highlights: ['Built from scratch', 'Used modern tech'],
     keywords: ['React', 'TypeScript'],

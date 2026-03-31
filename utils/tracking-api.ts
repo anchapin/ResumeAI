@@ -4,7 +4,7 @@
  * API client for job application tracking (notes, reminders, timeline).
  */
 
-import { API_URL } from './config';
+import { API_URL } from '../src/config';
 import { fetchWithRetry } from './api-client';
 
 export type TrackingApplicationStatus = 

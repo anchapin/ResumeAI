@@ -6,7 +6,7 @@ import {
   markNotificationAsRead,
   markAllNotificationsAsRead,
   deleteNotification,
-} from '../../utils/activity-notifications-api';
+} from '../../src/utils/tracking-api';
 
 interface NotificationsBellProps {
   onOpenPanel?: () => void;
@@ -285,7 +285,7 @@ export const ActivityFeed: React.FC<ActivityFeedProps> = ({ teamId, limit = 50 }
     setError(null);
     try {
       // Import dynamically to avoid circular dependency
-      const { getTeamActivity } = await import('../../utils/activity-notifications-api');
+      const { getTeamActivity } = await import('../../src/utils/tracking-api');
       const data = await getTeamActivity(teamId, limit);
       setActivities(data);
     } catch (err) {
