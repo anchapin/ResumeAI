@@ -46,9 +46,9 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     const combinedClassName = `${baseStyles} ${variants[variant]} ${sizes[size]} ${className}`;
 
     return (
-      <button ref={ref} className={combinedClassName} disabled={disabled || isLoading} {...props}>
+      <button ref={ref} className={combinedClassName} disabled={disabled || isLoading} aria-busy={isLoading} {...props}>
         {isLoading && (
-          <span className="material-symbols-outlined animate-spin text-[20px]">
+          <span className="material-symbols-outlined animate-spin text-[20px]" aria-hidden="true">
             progress_activity
           </span>
         )}

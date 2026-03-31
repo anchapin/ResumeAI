@@ -36,13 +36,13 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
           </select>
           <div className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
             {rightIcon || (
-              <span className="material-symbols-outlined text-[20px]">unfold_more</span>
+              <span className="material-symbols-outlined text-[20px]" aria-hidden="true">unfold_more</span>
             )}
           </div>
         </div>
         {error && (
           <p className="text-xs font-medium text-red-500 px-1 mt-1 flex items-center gap-1.5">
-            <span className="material-symbols-outlined text-[14px]">error</span>
+            <span className="material-symbols-outlined text-[14px]" aria-hidden="true">error</span>
             {error}
           </p>
         )}
