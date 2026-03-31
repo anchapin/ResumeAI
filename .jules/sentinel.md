@@ -20,3 +20,8 @@
 **Vulnerability:** The `is_ecryptfs_path` function in `resume-api/lib/utils/ecryptfs_utils.py` used `os.popen` to execute a shell command with unsanitized user input (`path`), leading to a critical command injection vulnerability.
 **Learning:** Shell-based command execution (`os.popen`, `os.system`, `subprocess.run(shell=True)`) combined with string interpolation is inherently dangerous and must be avoided.
 **Prevention:** Always use `subprocess.run` (or similar) with an argument list rather than a single string, and ensure `shell=False` (which is the default) to prevent the shell from interpreting meta-characters.
+
+## 2026-03-31 - [Argument Injection via missing --]
+**Vulnerability:** The `is_ecryptfs_path` function in `resume-api/lib/utils/ecryptfs_utils.py` passed the user-supplied `path` directly to `df` without a `--` separator, allowing argument injection if the path started with a hyphen.
+**Learning:** Even when avoiding `shell=True`, user-supplied strings passed as command arguments can be interpreted as options/flags by the executable.
+**Prevention:** Always use `--` to separate options from positional arguments when passing user input to command-line utilities.
