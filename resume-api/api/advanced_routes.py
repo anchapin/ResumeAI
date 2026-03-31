@@ -100,13 +100,18 @@ async def create_resume(
 
         # Add tags
         if request.tags:
+            # ⚡ Bolt: Prevent N+1 query by doing a single bulk lookup
+            tag_results = await db.execute(
+                select(Tag).where(Tag.name.in_(request.tags))
+            )
+            existing_tags_dict = {t.name: t for t in tag_results.scalars().all()}
             for tag_name in request.tags:
-                tag = await db.execute(select(Tag).where(Tag.name == tag_name))
-                existing_tag = tag.scalar_one_or_none()
+                existing_tag = existing_tags_dict.get(tag_name)
                 if not existing_tag:
                     existing_tag = Tag(name=tag_name)
                     db.add(existing_tag)
                     await db.flush()
+                    existing_tags_dict[tag_name] = existing_tag
                 resume.tags.append(existing_tag)
 
         db.add(resume)
@@ -220,7 +225,9 @@ async def get_resume(
     """
     try:
         result = await db.execute(
-            select(Resume).options(selectinload(Resume.tags)).where(Resume.id == resume_id)
+            select(Resume)
+            .options(selectinload(Resume.tags))
+            .where(Resume.id == resume_id)
         )
         resume = result.scalar_one_or_none()
 
@@ -301,14 +308,20 @@ async def update_resume(
         # Update tags if provided
         if request.tags is not None:
             resume.tags.clear()
-            for tag_name in request.tags:
-                tag = await db.execute(select(Tag).where(Tag.name == tag_name))
-                existing_tag = tag.scalar_one_or_none()
-                if not existing_tag:
-                    existing_tag = Tag(name=tag_name)
-                    db.add(existing_tag)
-                    await db.flush()
-                resume.tags.append(existing_tag)
+            if request.tags:
+                # ⚡ Bolt: Prevent N+1 query by doing a single bulk lookup
+                tag_results = await db.execute(
+                    select(Tag).where(Tag.name.in_(request.tags))
+                )
+                existing_tags_dict = {t.name: t for t in tag_results.scalars().all()}
+                for tag_name in request.tags:
+                    existing_tag = existing_tags_dict.get(tag_name)
+                    if not existing_tag:
+                        existing_tag = Tag(name=tag_name)
+                        db.add(existing_tag)
+                        await db.flush()
+                        existing_tags_dict[tag_name] = existing_tag
+                    resume.tags.append(existing_tag)
 
         # Create new version if data changed
         if request.data:
@@ -822,7 +835,9 @@ async def share_resume(
         if request.password:
             import hashlib
 
-            share.share_password_hash = hashlib.sha256(request.password.encode()).hexdigest()
+            share.share_password_hash = hashlib.sha256(
+                request.password.encode()
+            ).hexdigest()
 
         db.add(share)
 
@@ -837,7 +852,9 @@ async def share_resume(
         await db.commit()
 
         # Construct share URL
-        share_url = f"{os.getenv('FRONTEND_URL', 'http://localhost:5173')}/share/{share_token}"
+        share_url = (
+            f"{os.getenv('FRONTEND_URL', 'http://localhost:5173')}/share/{share_token}"
+        )
 
         return ShareResumeResponse(
             share_token=share_token,
@@ -873,7 +890,9 @@ async def access_shared_resume(
     """
     try:
         # Get share
-        result = await db.execute(select(ResumeShare).where(ResumeShare.share_token == share_token))
+        result = await db.execute(
+            select(ResumeShare).where(ResumeShare.share_token == share_token)
+        )
         share = result.scalar_one_or_none()
 
         if not share:
@@ -918,7 +937,9 @@ async def access_shared_resume(
 
         # Get resume
         result = await db.execute(
-            select(Resume).options(selectinload(Resume.tags)).where(Resume.id == share.resume_id)
+            select(Resume)
+            .options(selectinload(Resume.tags))
+            .where(Resume.id == share.resume_id)
         )
         resume = result.scalar_one_or_none()
 
@@ -988,13 +1009,16 @@ async def _process_bulk_operation(
         return True, ""
 
     if operation == "tag" and tags:
+        # ⚡ Bolt: Prevent N+1 query by doing a single bulk lookup
+        tag_results = await db.execute(select(Tag).where(Tag.name.in_(tags)))
+        existing_tags_dict = {t.name: t for t in tag_results.scalars().all()}
         for tag_name in tags:
-            tag = await db.execute(select(Tag).where(Tag.name == tag_name))
-            existing_tag = tag.scalar_one_or_none()
+            existing_tag = existing_tags_dict.get(tag_name)
             if not existing_tag:
                 existing_tag = Tag(name=tag_name)
                 db.add(existing_tag)
                 await db.flush()
+                existing_tags_dict[tag_name] = existing_tag
             if existing_tag not in resume.tags:
                 resume.tags.append(existing_tag)
         return True, ""
@@ -1102,13 +1126,18 @@ async def batch_create_resumes(
 
             # Add tags
             if resume_request.tags:
+                # ⚡ Bolt: Prevent N+1 query by doing a single bulk lookup
+                tag_results = await db.execute(
+                    select(Tag).where(Tag.name.in_(resume_request.tags))
+                )
+                existing_tags_dict = {t.name: t for t in tag_results.scalars().all()}
                 for tag_name in resume_request.tags:
-                    tag = await db.execute(select(Tag).where(Tag.name == tag_name))
-                    existing_tag = tag.scalar_one_or_none()
+                    existing_tag = existing_tags_dict.get(tag_name)
                     if not existing_tag:
                         existing_tag = Tag(name=tag_name)
                         db.add(existing_tag)
                         await db.flush()
+                        existing_tags_dict[tag_name] = existing_tag
                     resume.tags.append(existing_tag)
 
             db.add(resume)
@@ -1129,7 +1158,9 @@ async def batch_create_resumes(
 
             # Load tags for response
             result = await db.execute(
-                select(Resume).options(selectinload(Resume.tags)).where(Resume.id == resume.id)
+                select(Resume)
+                .options(selectinload(Resume.tags))
+                .where(Resume.id == resume.id)
             )
             resume = result.scalar_one()
 
@@ -1222,14 +1253,22 @@ async def batch_update_resumes(
             # Update tags if provided
             if update_request.tags is not None:
                 resume.tags.clear()
-                for tag_name in update_request.tags:
-                    tag = await db.execute(select(Tag).where(Tag.name == tag_name))
-                    existing_tag = tag.scalar_one_or_none()
-                    if not existing_tag:
-                        existing_tag = Tag(name=tag_name)
-                        db.add(existing_tag)
-                        await db.flush()
-                    resume.tags.append(existing_tag)
+                if update_request.tags:
+                    # ⚡ Bolt: Prevent N+1 query by doing a single bulk lookup
+                    tag_results = await db.execute(
+                        select(Tag).where(Tag.name.in_(update_request.tags))
+                    )
+                    existing_tags_dict = {
+                        t.name: t for t in tag_results.scalars().all()
+                    }
+                    for tag_name in update_request.tags:
+                        existing_tag = existing_tags_dict.get(tag_name)
+                        if not existing_tag:
+                            existing_tag = Tag(name=tag_name)
+                            db.add(existing_tag)
+                            await db.flush()
+                            existing_tags_dict[tag_name] = existing_tag
+                        resume.tags.append(existing_tag)
 
             await db.commit()
             await db.refresh(resume)
@@ -1297,7 +1336,9 @@ async def batch_delete_resumes(
     for resume_id in request.resume_ids:
         try:
             result = await db.execute(
-                select(Resume).options(selectinload(Resume.tags)).where(Resume.id == resume_id)
+                select(Resume)
+                .options(selectinload(Resume.tags))
+                .where(Resume.id == resume_id)
             )
             resume = result.scalar_one_or_none()
 
@@ -1349,7 +1390,9 @@ async def batch_export_resumes(
     for resume_id in request.resume_ids:
         try:
             result = await db.execute(
-                select(Resume).options(selectinload(Resume.tags)).where(Resume.id == resume_id)
+                select(Resume)
+                .options(selectinload(Resume.tags))
+                .where(Resume.id == resume_id)
             )
             resume = result.scalar_one_or_none()
 
@@ -1500,7 +1543,9 @@ async def update_user_settings(
         await db.refresh(settings)
 
         # Invalidate cache
-        await CacheInvalidationHook({"user", "settings", f"user:{user_identifier}"}).invalidate()
+        await CacheInvalidationHook(
+            {"user", "settings", f"user:{user_identifier}"}
+        ).invalidate()
 
         return UserSettingsResponse(
             keyboard_shortcuts_enabled=settings.keyboard_shortcuts_enabled,

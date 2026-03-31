@@ -31,3 +31,7 @@
 ## 2024-05-24 - Batch string processing and static lookups for text extraction
 **Learning:** Calling a text extraction function (like `_extract_tech_terms`) in a loop over many small fragments (bullets, summaries) causes significant overhead and excessive lowercasing operations. Iterating over a long list of static tech terms `N` times for `M` text fragments creates an O(N*M) bottleneck.
 **Action:** When extracting data from multiple string fields, accumulate them into a single list, `.join()` them into one large string, and process it once. Hoist the static list of terms to the module level as a `frozenset` or `tuple` to prevent recreating it on every function call. This yields a >2x speedup for complex resumes without altering behavior.
+
+## $(date +%Y-%m-%d) - Prevent N+1 queries in SQLAlchemy loops
+**Learning:** Looping over an array of items and querying the database for each item (e.g., `select(Tag).where(Tag.name == tag_name)`) results in N+1 queries, severely impacting backend API performance on bulk/batch operations.
+**Action:** Always replace loop-based entity lookups with a single bulk query using `Model.attribute.in_(list_of_values)`, mapping the results to a dictionary for O(1) retrieval during the association loop.
