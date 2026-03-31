@@ -20,13 +20,6 @@ export async function registerUser(page: Page, user: typeof testUser): Promise<v
   await page.click('button[type="submit"]');
 
   // Wait for success message or redirect
-  try {
-    await expect(page.getByText('Account Created!')).toBeVisible({ timeout: 5000 });
-    await page.click('text=Go to Sign In');
-  } catch (error) {
-    // If the success message is not found, maybe it redirected directly
-    // or it's a different flow, we will fall through to expect login
-  }
   await expect(page).toHaveURL(/\/login/);
 }
 
