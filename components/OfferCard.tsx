@@ -20,13 +20,18 @@ const STATUS_COLORS: Record<JobOffer['status'], { bg: string; text: string; bord
   rejected: { bg: 'bg-red-50', text: 'text-red-700', border: 'border-red-200' },
 };
 
+const currencyFormatterCache: Record<string, Intl.NumberFormat> = {};
+
 const formatCurrency = (amount: number, currency: string = 'USD') => {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: currency,
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(amount);
+  if (!currencyFormatterCache[currency]) {
+    currencyFormatterCache[currency] = new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: currency,
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    });
+  }
+  return currencyFormatterCache[currency].format(amount);
 };
 
 /**

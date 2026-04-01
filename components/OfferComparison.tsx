@@ -7,13 +7,18 @@ interface OfferComparisonProps {
   onExport?: (format: 'pdf' | 'csv' | 'json') => void;
 }
 
+const currencyFormatterCache: Record<string, Intl.NumberFormat> = {};
+
 const formatCurrency = (amount: number, currency: string = 'USD') => {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: currency,
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(amount);
+  if (!currencyFormatterCache[currency]) {
+    currencyFormatterCache[currency] = new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: currency,
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    });
+  }
+  return currencyFormatterCache[currency].format(amount);
 };
 
 /**
