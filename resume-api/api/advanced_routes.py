@@ -61,6 +61,7 @@ from database import (
     UserSettings,
 )
 from config.dependencies import AuthorizedAPIKey, rate_limit
+from config.security import hash_password, verify_password
 from lib.utils.validators import validate_resume_data
 from lib.utils.cache import cached
 from lib.utils.cache_integration import CacheInvalidationHook
@@ -833,11 +834,7 @@ async def share_resume(
 
         # Hash password if provided
         if request.password:
-            import hashlib
-
-            share.share_password_hash = hashlib.sha256(
-                request.password.encode()
-            ).hexdigest()
+            share.share_password_hash = hash_password(request.password)
 
         db.add(share)
 
@@ -923,10 +920,16 @@ async def access_shared_resume(
                     detail="Password required",
                 )
 
-            import hashlib
+            # Support both new bcrypt hashes (start with $2) and legacy SHA256 hashes
+            if share.share_password_hash.startswith("$2"):
+                is_valid = verify_password(password, share.share_password_hash)
+            else:
+                import hashlib
 
-            password_hash = hashlib.sha256(password.encode()).hexdigest()
-            if password_hash != share.share_password_hash:
+                legacy_hash = hashlib.sha256(password.encode()).hexdigest()
+                is_valid = legacy_hash == share.share_password_hash
+
+            if not is_valid:
                 raise HTTPException(
                     status_code=status.HTTP_401_UNAUTHORIZED,
                     detail="Invalid password",
