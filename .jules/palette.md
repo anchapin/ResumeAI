@@ -15,3 +15,6 @@
 ## 2026-03-11 - Material Symbol Ligature Screen Reader Noise
 **Learning:** Even within an interactive element with a proper `aria-label`, the ligature text (e.g., "delete") of a Material Symbol `<span>` is sometimes still announced by certain screen readers, causing repetitive or confusing announcements.
 **Action:** Always add `aria-hidden="true"` to Material Symbol `<span>` elements acting as ligatures to strictly enforce their decorative status and let the parent interactive element handle the accessible name.
+## 2024-04-01 - Fix Material Symbol Accessibility in Loading Buttons
+**Learning:** Decorative Material Symbols (like `progress_activity`) need explicit `aria-hidden="true"` otherwise screen readers repeatedly announce the ligature text alongside button labels during loading states.
+**Action:** Always apply `aria-hidden="true"` to icon components/ligatures within interactive elements, and pair visual loading states with structural changes like `aria-busy={isLoading}` on the parent.
