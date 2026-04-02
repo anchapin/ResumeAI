@@ -283,7 +283,7 @@ async function main() {
     allDeps: results
   };
   
-  const reportPath = join(PROJECT_ROOT, '.heavy-deps-report.json');
+  const reportPath = join(PROJECT_ROOT, 'heavy-deps-report.json');
   const { writeFileSync } = await import('fs');
   writeFileSync(reportPath, JSON.stringify(report, null, 2));
   console.log(`\nDetailed report saved to ${reportPath}`);
