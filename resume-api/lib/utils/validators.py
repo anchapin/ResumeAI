@@ -247,7 +247,7 @@ def validate_list_length(
 # Pre-compiled regex patterns for HTML sanitization
 # Pre-compiling these patterns provides a significant speedup (~3x)
 # by avoiding redundant regex compilation and evaluation in a nested loop.
-_SCRIPT_PATTERN = re.compile(r"<script[^>]*>.*?</script\s*>", flags=re.IGNORECASE | re.DOTALL)
+_SCRIPT_PATTERN = re.compile(r"<script[^>]*>.*?</script\s*[^>]*>", flags=re.IGNORECASE | re.DOTALL)
 _DANGEROUS_TAGS_PATTERNS = [
     (
         re.compile(rf"<{tag}[^>]*>.*?</{tag}>", flags=re.IGNORECASE | re.DOTALL),
