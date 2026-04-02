@@ -31,6 +31,11 @@
 ## 2024-05-24 - Batch string processing and static lookups for text extraction
 **Learning:** Calling a text extraction function (like `_extract_tech_terms`) in a loop over many small fragments (bullets, summaries) causes significant overhead and excessive lowercasing operations. Iterating over a long list of static tech terms `N` times for `M` text fragments creates an O(N*M) bottleneck.
 **Action:** When extracting data from multiple string fields, accumulate them into a single list, `.join()` them into one large string, and process it once. Hoist the static list of terms to the module level as a `frozenset` or `tuple` to prevent recreating it on every function call. This yields a >2x speedup for complex resumes without altering behavior.
+
 ## 2025-04-03 - Fix N+1 Query in Tag Processing
 **Learning:** In SQLAlchemy, iteratively selecting individual rows within a loop (like processing tags for a resume) creates an N+1 query bottleneck. While `selectinload` helps with eager loading relationships, it doesn't prevent this issue when validating or linking new input arrays against existing records.
 **Action:** Always pre-fetch existing records for an input array using `Model.attribute.in_(list_of_values)` outside the loop. Map the results to a dictionary for O(1) retrieval during association, and immediately add any newly created entities back to the lookup dictionary within the loop to prevent `IntegrityError` if the input contains duplicates.
+
+## 2024-05-27 - Regex Cross-Matching Risk in Tag Sanitization
+**Learning:** Consolidating start and end HTML tag patterns into a single regex with a shared group (like `<(?:iframe|form|input)[^>]*>.*?</(?:iframe|form|input)>`) is a critical security and functionality bug because it allows cross-matching (e.g., `<input>...</form>`), leading to data loss.
+**Action:** When stripping multiple different HTML tags via regex, always iterate over a list of pre-compiled individual tag patterns (e.g., one for `iframe`, one for `form`) rather than merging them into a single cross-matching OR pattern.
