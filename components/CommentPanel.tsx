@@ -109,7 +109,8 @@ const CommentPanel: React.FC<CommentPanelProps> = ({ resumeId, onCommentCountCha
           <div className="flex items-center bg-slate-100 rounded-lg p-1">
             <button
               onClick={() => setFilter('all')}
-              className={`px-3 py-1.5 text-sm font-bold rounded-md transition-colors ${
+              aria-pressed={filter === 'all'}
+              className={`px-3 py-1.5 text-sm font-bold rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 ${
                 filter === 'all'
                   ? 'bg-white text-slate-900 shadow-sm'
                   : 'text-slate-500 hover:text-slate-900'
@@ -119,7 +120,8 @@ const CommentPanel: React.FC<CommentPanelProps> = ({ resumeId, onCommentCountCha
             </button>
             <button
               onClick={() => setFilter('unresolved')}
-              className={`px-3 py-1.5 text-sm font-bold rounded-md transition-colors ${
+              aria-pressed={filter === 'unresolved'}
+              className={`px-3 py-1.5 text-sm font-bold rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 ${
                 filter === 'unresolved'
                   ? 'bg-white text-slate-900 shadow-sm'
                   : 'text-slate-500 hover:text-slate-900'
@@ -130,7 +132,7 @@ const CommentPanel: React.FC<CommentPanelProps> = ({ resumeId, onCommentCountCha
           </div>
           <button
             onClick={() => setShowNewComment(!showNewComment)}
-            className="p-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+            className="p-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2"
             aria-label="Add new comment"
           >
             <span className="material-symbols-outlined text-[20px]" aria-hidden="true">add</span>
