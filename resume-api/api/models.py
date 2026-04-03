@@ -2154,3 +2154,5 @@ class QueueStatsResponse(BaseModel):
                 "worker_running": True,
             }
         }
+
+ResumeRequest.model_rebuild()
