@@ -26,3 +26,8 @@
 **Vulnerability:** The `_get_table_row_count` method in `resume-api/lib/db/schema_manager.py` used a Python f-string within `sqlalchemy.text()` to build a SQL query dynamically (`text(f"SELECT COUNT(*) FROM {table_name}")`), creating a direct vector for SQL injection if `table_name` is user-controlled.
 **Learning:** `sqlalchemy.text()` does NOT sanitize variables passed into it via Python string formatting (like f-strings or `.format()`). Using standard string concatenation in database execution is inherently dangerous.
 **Prevention:** To safely use dynamic identifiers (like table or column names), use SQLAlchemy core objects like `table()` or `column()` combined with `select()`. For dynamic values, use parameterized named bindings (e.g., `text('... WHERE col=:val'), {'val': var}`).
+
+## 2024-05-19 - [Command Injection/Argument Injection via subprocess.run without -- and missing timeout]
+**Vulnerability:** The `is_ecryptfs_path` function in `resume-api/lib/utils/ecryptfs_utils.py` used `subprocess.run` to execute `df` with unsanitized user input (`path`), leading to potential argument injection. Without `--`, an attacker could pass a path starting with `-` to inject arguments. Furthermore, the missing `timeout` parameter exposed the application to Denial of Service via resource exhaustion.
+**Learning:** Even when avoiding `shell=True`, passing unvalidated user inputs to command line arguments is dangerous. Furthermore, synchronous external command execution must always specify a `timeout` to avoid blocking the application.
+**Prevention:** Always include `--` to separate command line options from arguments. Always include a strict `timeout` parameter and handle `subprocess.TimeoutExpired` when executing external commands via `subprocess.run`.
