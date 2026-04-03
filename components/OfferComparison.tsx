@@ -1,20 +1,12 @@
 import React, { useState } from 'react';
 import { OfferComparison as OfferComparisonType } from '../types';
 import { showSuccessToast } from '../utils/toast';
+import { formatCurrency } from '../utils/currency';
 
 interface OfferComparisonProps {
   comparison: OfferComparisonType;
   onExport?: (format: 'pdf' | 'csv' | 'json') => void;
 }
-
-const formatCurrency = (amount: number, currency: string = 'USD') => {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: currency,
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(amount);
-};
 
 /**
  * Offer Comparison Component

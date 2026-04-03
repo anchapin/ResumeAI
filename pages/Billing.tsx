@@ -11,6 +11,7 @@ import {
   resumeSubscription,
   createPortalSession,
 } from '../utils/api-client';
+import { formatCurrency } from '../utils/currency';
 
 const Billing: React.FC = () => {
   const location = useLocation();
@@ -127,12 +128,7 @@ const Billing: React.FC = () => {
   };
 
   const formatPrice = (cents: number, currency: string) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: currency,
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(cents / 100);
+    return formatCurrency(cents / 100, currency);
   };
 
   const getUsageProgress = (usage: BillingUsage, key: 'resume_generated' | 'ai_tailored') => {

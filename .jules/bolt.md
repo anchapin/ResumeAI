@@ -39,3 +39,7 @@
 ## 2024-05-27 - Regex Cross-Matching Risk in Tag Sanitization
 **Learning:** Consolidating start and end HTML tag patterns into a single regex with a shared group (like `<(?:iframe|form|input)[^>]*>.*?</(?:iframe|form|input)>`) is a critical security and functionality bug because it allows cross-matching (e.g., `<input>...</form>`), leading to data loss.
 **Action:** When stripping multiple different HTML tags via regex, always iterate over a list of pre-compiled individual tag patterns (e.g., one for `iframe`, one for `form`) rather than merging them into a single cross-matching OR pattern.
+
+## 2024-05-28 - Caching Intl.NumberFormat
+**Learning:** `Intl.NumberFormat` instantiation is notoriously slow in JavaScript, and performing it repeatedly inside component render cycles or array mapping loops causes severe performance degradation, especially for tables displaying large amounts of currency data.
+**Action:** Always extract `Intl.NumberFormat` instantiations to a module-level cached dictionary indexed by locale/currency options. Ensure the cache key accounts for any dynamic format options (like `minimumFractionDigits`) to prevent bugs where different formats receive the same cached instance.

@@ -2,6 +2,7 @@
 import React from 'react';
 import { JobOffer } from '../types';
 import { Card } from './ui';
+import { formatCurrency } from '../utils/currency';
 
 interface OfferCardProps {
   offer: JobOffer;
@@ -18,15 +19,6 @@ const STATUS_COLORS: Record<JobOffer['status'], { bg: string; text: string; bord
   negotiating: { bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200' },
   accepted: { bg: 'bg-green-50', text: 'text-green-700', border: 'border-green-200' },
   rejected: { bg: 'bg-red-50', text: 'text-red-700', border: 'border-red-200' },
-};
-
-const formatCurrency = (amount: number, currency: string = 'USD') => {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: currency,
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(amount);
 };
 
 /**

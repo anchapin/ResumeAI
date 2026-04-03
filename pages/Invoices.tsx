@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Invoice, listInvoices } from '../utils/api-client';
+import { formatCurrency } from '../utils/currency';
 
 const Invoices: React.FC = () => {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
@@ -54,10 +55,7 @@ const Invoices: React.FC = () => {
   };
 
   const formatAmount = (cents: number, currency: string) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: currency,
-    }).format(cents / 100);
+    return formatCurrency(cents / 100, currency, true);
   };
 
   const handleDownload = (invoice: Invoice) => {
