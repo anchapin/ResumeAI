@@ -39,3 +39,7 @@
 ## 2024-05-27 - Regex Cross-Matching Risk in Tag Sanitization
 **Learning:** Consolidating start and end HTML tag patterns into a single regex with a shared group (like `<(?:iframe|form|input)[^>]*>.*?</(?:iframe|form|input)>`) is a critical security and functionality bug because it allows cross-matching (e.g., `<input>...</form>`), leading to data loss.
 **Action:** When stripping multiple different HTML tags via regex, always iterate over a list of pre-compiled individual tag patterns (e.g., one for `iframe`, one for `form`) rather than merging them into a single cross-matching OR pattern.
+
+## 2024-06-16 - Prevent repeated Intl.NumberFormat instantiation in loops
+**Learning:** Instantiating `Intl.NumberFormat` repeatedly inside React render cycles (e.g. for `formatCurrency` in `OfferComparison.tsx` and `SalaryResearch.tsx`) is surprisingly expensive and can noticeably degrade rendering performance of lists and large comparison tables.
+**Action:** Extract standard formatting functions into a centralized utility (`utils/formatters.ts`) and cache the `Intl.NumberFormat` instances using a key that captures configuration variants like currency and fraction digits (e.g., `USD-0-0`). This avoids constant recreation of the formatter object and improves rendering efficiency.
