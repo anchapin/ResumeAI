@@ -26,3 +26,8 @@
 **Vulnerability:** The `_get_table_row_count` method in `resume-api/lib/db/schema_manager.py` used a Python f-string within `sqlalchemy.text()` to build a SQL query dynamically (`text(f"SELECT COUNT(*) FROM {table_name}")`), creating a direct vector for SQL injection if `table_name` is user-controlled.
 **Learning:** `sqlalchemy.text()` does NOT sanitize variables passed into it via Python string formatting (like f-strings or `.format()`). Using standard string concatenation in database execution is inherently dangerous.
 **Prevention:** To safely use dynamic identifiers (like table or column names), use SQLAlchemy core objects like `table()` or `column()` combined with `select()`. For dynamic values, use parameterized named bindings (e.g., `text('... WHERE col=:val'), {'val': var}`).
+
+## 2026-05-18 - [Argument Injection via subprocess.run]
+**Vulnerability:** The `is_ecryptfs_path` function in `resume-api/lib/utils/ecryptfs_utils.py` passed user-provided variables directly as arguments to `subprocess.run(["df", "-Th", path])`. If the path started with a hyphen (e.g., `-P`), it would be interpreted as a command flag, leading to an argument injection vulnerability.
+**Learning:** Even when avoiding `shell=True` and using argument lists, variables passed to system commands can cause injection vulnerabilities if they are interpreted as options by the external executable.
+**Prevention:** Always prepend a variable that is meant to be a positional argument with `--` (end-of-options indicator) when passing it to commands that support it (like most POSIX commands), e.g., `["df", "-Th", "--", path]`.
