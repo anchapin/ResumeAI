@@ -173,30 +173,36 @@ async def list_teams(
     try:
         user_id = auth.user_id if hasattr(auth, "user_id") else 1
 
+        member_count_subquery = (
+            select(func.count(TeamMember.id))
+            .where(TeamMember.team_id == Team.id)
+            .correlate(Team)
+            .scalar_subquery()
+            .label("member_count")
+        )
+
+        resume_count_subquery = (
+            select(func.count(TeamResume.id))
+            .where(TeamResume.team_id == Team.id)
+            .correlate(Team)
+            .scalar_subquery()
+            .label("resume_count")
+        )
+
         stmt = (
-            select(Team)
+            select(Team, member_count_subquery, resume_count_subquery)
             .join(TeamMember, Team.id == TeamMember.team_id)
             .where(TeamMember.user_id == user_id)
             .options(selectinload(Team.members))
         )
 
         result = await db.execute(stmt)
-        teams = result.scalars().all()
+        teams_with_counts = result.all()
 
         team_responses = []
-        for team in teams:
-            member_count_stmt = select(func.count(TeamMember.id)).where(
-                TeamMember.team_id == team.id
-            )
-            result = await db.execute(member_count_stmt)
-            member_count = result.scalar() or 0
-
-            resume_count_stmt = select(func.count(TeamResume.id)).where(
-                TeamResume.team_id == team.id
-            )
-            result = await db.execute(resume_count_stmt)
-            resume_count = result.scalar() or 0
-
+        # ⚡ Bolt: Fixed N+1 query by replacing iterative db.execute inside loop
+        # with scalar subqueries inside the initial statement
+        for team, member_count, resume_count in teams_with_counts:
             team_responses.append(
                 TeamResponse(
                     id=team.id,
