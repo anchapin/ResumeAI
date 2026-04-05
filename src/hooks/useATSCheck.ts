@@ -69,7 +69,7 @@ export function useATSCheck(): UseATSCheckReturn {
       formData.append('file', file);
 
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+      const timeoutId = (typeof window !== 'undefined' ? window : globalThis).setTimeout(() => controller.abort(), 10000); // 10 second timeout
 
       const response = await fetch(`${API_URL}/api/ats/check`, {
         method: 'POST',
@@ -80,7 +80,7 @@ export function useATSCheck(): UseATSCheckReturn {
         },
       });
 
-      clearTimeout(timeoutId);
+      (typeof window !== 'undefined' ? window : globalThis).clearTimeout(timeoutId as any);
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
