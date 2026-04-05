@@ -39,3 +39,7 @@
 ## 2024-05-27 - Regex Cross-Matching Risk in Tag Sanitization
 **Learning:** Consolidating start and end HTML tag patterns into a single regex with a shared group (like `<(?:iframe|form|input)[^>]*>.*?</(?:iframe|form|input)>`) is a critical security and functionality bug because it allows cross-matching (e.g., `<input>...</form>`), leading to data loss.
 **Action:** When stripping multiple different HTML tags via regex, always iterate over a list of pre-compiled individual tag patterns (e.g., one for `iframe`, one for `form`) rather than merging them into a single cross-matching OR pattern.
+
+## 2025-04-05 - Fix N+1 Query in Teams Listing
+**Learning:** Iteratively querying for `member_count` and `resume_count` for each team inside a loop creates an N+1 query issue. Replacing these with `scalar_subquery()` mapped as labeled columns in the initial query prevents the repetitive database roundtrips, significantly improving performance. However, explicitly adding `.correlate(Team)` to the subquery is critical to avoid `InvalidRequestError` "returned no FROM clauses due to auto-correlation" errors in SQLAlchemy.
+**Action:** Always pre-fetch aggregates (like counts) using `scalar_subquery().correlate(Model)` combined with the main initial query instead of iterating through list results and running separate queries per row.
