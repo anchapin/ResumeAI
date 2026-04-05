@@ -106,7 +106,7 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
               title="Duplicate Resume"
               aria-label="Duplicate Resume"
             >
-              <span className="material-symbols-outlined text-[20px]">content_copy</span>
+              <span className="material-symbols-outlined text-[20px]" aria-hidden="true">content_copy</span>
             </Button>
 
             {isDeleting ? (

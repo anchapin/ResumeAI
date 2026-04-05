@@ -14,3 +14,7 @@
 ## 2026-03-09 - Ensure aria-hidden for ligature icons
 **Learning:** Adding `aria-label`s to buttons is critical, but when the button uses an icon font like Material Symbols that relies on text ligatures (e.g., `close`, `history`, `edit`), screen readers will read the ligature text aloud. This creates a confusing experience (e.g. reading "Close close" or just "Close" when it should be "Close form").
 **Action:** When adding `aria-label` to an icon-only button that uses ligature icons, always ensure the inner `<span>` element containing the ligature text has `aria-hidden="true"`.
+
+## 2026-04-05 - Dynamic ARIA labels for stateful buttons
+**Learning:** Found multiple instances (ShareDialog, ErrorDisplay) where copy buttons changed their visual state (icon from `content_copy` to `check` and sometimes text to "Copied!") but left the `aria-label` static (e.g., "Copy share link"). Screen reader users would hear the same label despite the action succeeding. Additionally, ligature text like `content_copy` was not hidden, causing confusing announcements.
+**Action:** When implementing interactive buttons that change state (e.g., copy to clipboard), dynamically update the `aria-label` and `title` attributes (e.g., from 'Copy' to 'Copied') to provide immediate, accessible feedback. Always hide the inner Material Symbol `<span>` with `aria-hidden="true"`.
