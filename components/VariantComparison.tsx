@@ -73,6 +73,7 @@ const VariantComparison: React.FC = () => {
         <div className="flex items-center gap-2">
           <button
             onClick={() => setCompareMode('side-by-side')}
+            aria-pressed={compareMode === 'side-by-side'}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
               compareMode === 'side-by-side'
                 ? 'bg-primary-600 text-white'
@@ -83,6 +84,7 @@ const VariantComparison: React.FC = () => {
           </button>
           <button
             onClick={() => setCompareMode('diff')}
+            aria-pressed={compareMode === 'diff'}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
               compareMode === 'diff'
                 ? 'bg-primary-600 text-white'
@@ -104,6 +106,7 @@ const VariantComparison: React.FC = () => {
             <button
               key={variant.id}
               onClick={() => toggleVariant(variant.id)}
+              aria-pressed={selectedVariants.includes(variant.id)}
               className={`flex items-center gap-3 px-4 py-3 rounded-lg border-2 transition-all ${
                 selectedVariants.includes(variant.id)
                   ? 'border-primary-500 bg-primary-50'
