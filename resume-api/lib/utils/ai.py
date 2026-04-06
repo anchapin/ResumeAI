@@ -12,6 +12,7 @@ import logging
 import re
 from typing import Dict, Any, List, Optional
 from abc import ABC, abstractmethod
+from collections import Counter
 
 from .circuit_breaker import (
     CircuitBreakerOpen,
@@ -53,30 +54,10 @@ class AITailoringUtils:
     Utilities for AI-powered resume tailoring.
     """
 
-    @staticmethod
-    def extract_keywords(text: str) -> List[str]:
-        """
-        Extract keywords from text using simple NLP techniques.
-
-        Args:
-            text: Text to extract keywords from
-
-        Returns:
-            List of extracted keywords
-        """
-        # Convert to lowercase
-        text = text.lower()
-
-        # Remove punctuation
-        text = re.sub(r"[^\w\s]", " ", text)
-
-        # Split into words
-        words = text.split()
-
-        # Filter for meaningful keywords
-        # - Length > 2 characters
-        # - Not common stop words
-        stop_words = {
+    # ⚡ Bolt Optimization: Pre-compile regex and use frozenset for O(1) lookups
+    PUNCTUATION_PATTERN = re.compile(r"[^\w\s]")
+    STOP_WORDS = frozenset(
+        {
             "the",
             "and",
             "for",
@@ -125,18 +106,36 @@ class AITailoringUtils:
             "company",
             "position",
         }
+    )
 
-        keywords = [word for word in words if len(word) > 2 and word not in stop_words]
+    @classmethod
+    def extract_keywords(cls, text: str) -> List[str]:
+        """
+        Extract keywords from text using simple NLP techniques.
 
-        # Count frequency and sort
-        word_freq = {}
-        for word in keywords:
-            word_freq[word] = word_freq.get(word, 0) + 1
+        Args:
+            text: Text to extract keywords from
+
+        Returns:
+            List of extracted keywords
+        """
+        # Convert to lowercase
+        text = text.lower()
+
+        # Remove punctuation
+        text = cls.PUNCTUATION_PATTERN.sub(" ", text)
+
+        # Split into words
+        words = text.split()
+
+        # Filter for meaningful keywords
+        # - Length > 2 characters
+        # - Not common stop words
+        # ⚡ Bolt Optimization: Use collections.Counter for fast C-level counting
+        word_count = Counter(word for word in words if len(word) > 2 and word not in cls.STOP_WORDS)
 
         # Return sorted by frequency (top 20)
-        sorted_keywords = sorted(word_freq.items(), key=lambda x: x[1], reverse=True)
-
-        return [word for word, freq in sorted_keywords[:20]]
+        return [word for word, _ in word_count.most_common(20)]
 
     @staticmethod
     def calculate_match_score(resume_data: Dict[str, Any], keywords: List[str]) -> float:
