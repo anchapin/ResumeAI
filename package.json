@@ -75,7 +75,7 @@
     "@vitest/coverage-istanbul": "^4.1.2",
     "@vitest/coverage-v8": "^4.1.2",
     "axe-core": "^4.11.1",
-    "eslint": "^10.1.0",
+    "eslint": "^10.2.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-boundaries": "^6.0.2",
     "eslint-plugin-complexity": "^1.0.2",
