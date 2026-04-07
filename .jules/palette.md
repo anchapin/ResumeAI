@@ -18,3 +18,6 @@
 ## 2026-04-02 - Custom Tab Component Accessibility
 **Learning:** Custom tab implementations (like comment filter buttons) often lack necessary focus rings and active state announcements for screen readers. Using just active classes (e.g. `bg-white`) is not sufficient for keyboard navigation or screen reader context.
 **Action:** Always add explicit `focus-visible:ring` classes to ensure tab elements are navigable by keyboard. Use the `aria-pressed` or `aria-current` attributes to correctly announce the active tab to assistive technologies.
+## 2024-05-23 - Material Symbol Ligature Screen Reader Noise in Complex Interactive Cards
+**Learning:** In complex interactive components like `ResumeCard`, multiple `material-symbols-outlined` span elements acting as ligatures (e.g., "update", "share", "edit", "content_copy", "check", "close", "delete", "history") can create significant noise for screen reader users, even when the parent interactive elements have proper `aria-label`s.
+**Action:** Always add `aria-hidden="true"` to all Material Symbol span elements acting as ligatures, regardless of whether they are standalone or inside `Button` components with `aria-label`s, to strictly enforce their decorative status and prevent redundant screen reader announcements.
