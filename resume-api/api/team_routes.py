@@ -6,7 +6,7 @@ Endpoints for team management, sharing resumes, and collaboration features.
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, and_, desc
-from sqlalchemy.orm import selectinload
+from sqlalchemy.orm import selectinload, aliased
 from fastapi import APIRouter, HTTPException, Request, status, Depends
 from typing import List, Optional
 from datetime import datetime
@@ -173,30 +173,36 @@ async def list_teams(
     try:
         user_id = auth.user_id if hasattr(auth, "user_id") else 1
 
+        # Use aliased entities to prevent correlation issues
+        TM = aliased(TeamMember)
+        TR = aliased(TeamResume)
+
+        member_count_sq = (
+            select(func.count(TM.id))
+            .where(TM.team_id == Team.id)
+            .correlate(Team)
+            .scalar_subquery()
+        )
+
+        resume_count_sq = (
+            select(func.count(TR.id))
+            .where(TR.team_id == Team.id)
+            .correlate(Team)
+            .scalar_subquery()
+        )
+
         stmt = (
-            select(Team)
+            select(Team, member_count_sq.label("member_count"), resume_count_sq.label("resume_count"))
             .join(TeamMember, Team.id == TeamMember.team_id)
             .where(TeamMember.user_id == user_id)
             .options(selectinload(Team.members))
         )
 
         result = await db.execute(stmt)
-        teams = result.scalars().all()
+        rows = result.all()
 
         team_responses = []
-        for team in teams:
-            member_count_stmt = select(func.count(TeamMember.id)).where(
-                TeamMember.team_id == team.id
-            )
-            result = await db.execute(member_count_stmt)
-            member_count = result.scalar() or 0
-
-            resume_count_stmt = select(func.count(TeamResume.id)).where(
-                TeamResume.team_id == team.id
-            )
-            result = await db.execute(resume_count_stmt)
-            resume_count = result.scalar() or 0
-
+        for team, member_count, resume_count in rows:
             team_responses.append(
                 TeamResponse(
                     id=team.id,
@@ -661,7 +667,7 @@ async def list_team_members(
     Rate limit: 30 requests per minute per API key.
     """
     try:
-        user_id = auth.user_id if hasattr(auth, "user_id") else 1
+        user_id = auth.user_id if hasattr(auth, "user_id") else 1  # noqa: F841
 
         team_stmt = select(Team).where(Team.id == team_id)
         result = await db.execute(team_stmt)
@@ -752,7 +758,7 @@ async def get_team_member(
     Rate limit: 30 requests per minute per API key.
     """
     try:
-        user_id = auth.user_id if hasattr(auth, "user_id") else 1
+        user_id = auth.user_id if hasattr(auth, "user_id") else 1  # noqa: F841
 
         team_stmt = select(Team).where(Team.id == team_id)
         result = await db.execute(team_stmt)
@@ -1360,7 +1366,7 @@ async def list_resume_comments(
             stmt = stmt.where(Comment.section == section)
 
         if not include_resolved:
-            stmt = stmt.where(Comment.is_resolved == False)
+            stmt = stmt.where(Comment.is_resolved.is_(False))
 
         stmt = stmt.order_by(Comment.created_at.asc())
 
@@ -1589,7 +1595,7 @@ async def get_team_activity(
     Rate limit: 30 requests per minute per API key.
     """
     try:
-        user_id = auth.user_id if hasattr(auth, "user_id") else 1
+        user_id = auth.user_id if hasattr(auth, "user_id") else 1  # noqa: F841
 
         team_stmt = select(Team).where(Team.id == team_id)
         result = await db.execute(team_stmt)
