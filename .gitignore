@@ -48,3 +48,4 @@ bin/
 # Dependency reports
 .unused-deps-report.json
 .deps-audit.json
+venv/
