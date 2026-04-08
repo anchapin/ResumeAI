@@ -10,6 +10,7 @@ resilient AI service calls with automatic fallback.
 
 import logging
 import re
+import collections
 from typing import Dict, Any, List, Optional
 from abc import ABC, abstractmethod
 
@@ -53,8 +54,18 @@ class AITailoringUtils:
     Utilities for AI-powered resume tailoring.
     """
 
-    @staticmethod
-    def extract_keywords(text: str) -> List[str]:
+    # ⚡ Bolt: extracted stop words to a class-level frozenset
+    _STOP_WORDS = frozenset([
+        "the", "and", "for", "are", "but", "not", "you", "all", "can", "her",
+        "was", "one", "our", "out", "has", "have", "been", "this", "that",
+        "with", "they", "from", "which", "will", "would", "about", "should",
+        "could", "their", "your", "also", "more", "into", "than", "some",
+        "such", "only", "over", "most", "work", "experience", "looking",
+        "team", "role", "join", "company", "position"
+    ])
+
+    @classmethod
+    def extract_keywords(cls, text: str) -> List[str]:
         """
         Extract keywords from text using simple NLP techniques.
 
@@ -76,67 +87,11 @@ class AITailoringUtils:
         # Filter for meaningful keywords
         # - Length > 2 characters
         # - Not common stop words
-        stop_words = {
-            "the",
-            "and",
-            "for",
-            "are",
-            "but",
-            "not",
-            "you",
-            "all",
-            "can",
-            "her",
-            "was",
-            "one",
-            "our",
-            "out",
-            "has",
-            "have",
-            "been",
-            "this",
-            "that",
-            "with",
-            "they",
-            "from",
-            "which",
-            "will",
-            "would",
-            "about",
-            "should",
-            "could",
-            "their",
-            "your",
-            "also",
-            "more",
-            "into",
-            "than",
-            "some",
-            "such",
-            "only",
-            "over",
-            "most",
-            "work",
-            "experience",
-            "looking",
-            "team",
-            "role",
-            "join",
-            "company",
-            "position",
-        }
+        keywords = (word for word in words if len(word) > 2 and word not in cls._STOP_WORDS)
 
-        keywords = [word for word in words if len(word) > 2 and word not in stop_words]
-
-        # Count frequency and sort
-        word_freq = {}
-        for word in keywords:
-            word_freq[word] = word_freq.get(word, 0) + 1
-
-        # Return sorted by frequency (top 20)
-        sorted_keywords = sorted(word_freq.items(), key=lambda x: x[1], reverse=True)
-
-        return [word for word, freq in sorted_keywords[:20]]
+        # Count frequency and return top 20
+        # ⚡ Bolt: using collections.Counter instead of manual loop and sort
+        return [word for word, _ in collections.Counter(keywords).most_common(20)]
 
     @staticmethod
     def calculate_match_score(resume_data: Dict[str, Any], keywords: List[str]) -> float:
@@ -166,8 +121,9 @@ class AITailoringUtils:
         score = matches / len(keywords)
         return round(score, 2)
 
-    @staticmethod
+    @classmethod
     def generate_improvement_suggestions(
+        cls,
         resume_data: Dict[str, Any],
         job_description: str,
         keywords: Optional[List[str]] = None,
@@ -184,7 +140,7 @@ class AITailoringUtils:
             List of improvement suggestions
         """
         if keywords is None:
-            keywords = AITailoringUtils.extract_keywords(job_description)
+            keywords = cls.extract_keywords(job_description)
 
         suggestions = []
 
@@ -241,8 +197,8 @@ class AITailoringUtils:
 
         return suggestions[:5]
 
-    @staticmethod
-    def prioritize_experience(resume_data: Dict[str, Any], job_description: str) -> Dict[str, Any]:
+    @classmethod
+    def prioritize_experience(cls, resume_data: Dict[str, Any], job_description: str) -> Dict[str, Any]:
         """
         Prioritize work experience entries based on job relevance.
 
@@ -253,7 +209,7 @@ class AITailoringUtils:
         Returns:
             Resume data with reordered experience
         """
-        keywords = AITailoringUtils.extract_keywords(job_description)
+        keywords = cls.extract_keywords(job_description)
 
         if "work" not in resume_data or not isinstance(resume_data["work"], list):
             return resume_data
