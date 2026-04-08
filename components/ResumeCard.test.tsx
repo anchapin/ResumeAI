@@ -93,7 +93,7 @@ describe('ResumeCard', () => {
       />,
     );
 
-    const editButton = screen.getByTitle('Edit Resume');
+    const editButton = screen.getByTitle(`Edit ${mockResume.title}`);
     fireEvent.click(editButton);
 
     expect(onEdit).toHaveBeenCalledTimes(1);
@@ -113,7 +113,7 @@ describe('ResumeCard', () => {
       />,
     );
 
-    const duplicateButton = screen.getByTitle('Duplicate Resume');
+    const duplicateButton = screen.getByTitle(`Duplicate ${mockResume.title}`);
     fireEvent.click(duplicateButton);
 
     expect(onDuplicate).toHaveBeenCalledTimes(1);
@@ -133,12 +133,12 @@ describe('ResumeCard', () => {
       />,
     );
 
-    const deleteButton = screen.getByTitle('Delete Resume');
+    const deleteButton = screen.getByTitle(`Delete ${mockResume.title}`);
     fireEvent.click(deleteButton);
 
     expect(onDelete).not.toHaveBeenCalled();
 
-    const confirmButton = screen.getByTitle('Confirm Delete');
+    const confirmButton = screen.getByTitle(`Confirm Delete ${mockResume.title}`);
     fireEvent.click(confirmButton);
 
     expect(onDelete).toHaveBeenCalledTimes(1);
@@ -158,14 +158,14 @@ describe('ResumeCard', () => {
       />,
     );
 
-    const deleteButton = screen.getByTitle('Delete Resume');
+    const deleteButton = screen.getByTitle(`Delete ${mockResume.title}`);
     fireEvent.click(deleteButton);
 
-    const cancelButton = screen.getByTitle('Cancel Delete');
+    const cancelButton = screen.getByTitle(`Cancel Delete ${mockResume.title}`);
     fireEvent.click(cancelButton);
 
     expect(onDelete).not.toHaveBeenCalled();
-    expect(screen.getByTitle('Delete Resume')).toBeInTheDocument();
+    expect(screen.getByTitle(`Delete ${mockResume.title}`)).toBeInTheDocument();
   });
 
   it('manages focus between delete and confirm buttons', () => {
@@ -181,16 +181,16 @@ describe('ResumeCard', () => {
       />,
     );
 
-    const deleteButton = screen.getByTitle('Delete Resume');
+    const deleteButton = screen.getByTitle(`Delete ${mockResume.title}`);
     fireEvent.click(deleteButton);
 
-    const confirmButton = screen.getByTitle('Confirm Delete');
+    const confirmButton = screen.getByTitle(`Confirm Delete ${mockResume.title}`);
     expect(document.activeElement).toBe(confirmButton);
 
-    const cancelButton = screen.getByTitle('Cancel Delete');
+    const cancelButton = screen.getByTitle(`Cancel Delete ${mockResume.title}`);
     fireEvent.click(cancelButton);
 
-    const restoredDeleteButton = screen.getByTitle('Delete Resume');
+    const restoredDeleteButton = screen.getByTitle(`Delete ${mockResume.title}`);
     expect(document.activeElement).toBe(restoredDeleteButton);
   });
 
@@ -208,7 +208,7 @@ describe('ResumeCard', () => {
       />,
     );
 
-    const shareButton = screen.getByTitle('Share Resume');
+    const shareButton = screen.getByTitle(`Share ${mockResume.title}`);
     fireEvent.click(shareButton);
 
     expect(onShare).toHaveBeenCalledTimes(1);
