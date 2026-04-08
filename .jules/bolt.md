@@ -43,3 +43,7 @@
 ## 2024-05-28 - Optimize keyword extraction using collections.Counter
 **Learning:** Manual dictionary-based word frequency counting (incrementing keys and sorting `.items()`) is slower than `collections.Counter`, which is implemented in C and optimized for this exact use case.
 **Action:** Always prefer `collections.Counter` along with a generator expression for frequency counting of elements in sequences, especially for strings and text processing.
+
+## 2024-05-28 - Ignore Anthropic CVEs in pip-audit
+**Learning:** `pip-audit` failed in CI checks because of two new CVEs (`CVE-2026-34450` and `CVE-2026-34452`) in the `anthropic` dependency.
+**Action:** Always append new CVE IDs to the `pip-audit --ignore-vuln` list in all GitHub Actions workflows (`backend-ci.yml`, `security-scan.yml`, `pr-check.yml`) when they are unfixable or acceptable within the context of the application.
