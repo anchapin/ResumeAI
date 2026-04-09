@@ -73,7 +73,9 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
             <div className="flex-1">
               <h3 className="font-bold text-slate-900 text-lg mb-1">{resume.title}</h3>
               <div className="flex items-center gap-2 text-sm text-slate-500">
-                <span className="material-symbols-outlined text-[16px]">update</span>
+                <span className="material-symbols-outlined text-[16px]" aria-hidden="true">
+                  update
+                </span>
                 <span>Last updated {formatDate(resume.updatedAt)}</span>
               </div>
             </div>
@@ -85,28 +87,34 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
               variant="ghost"
               size="icon"
               onClick={onShare}
-              title="Share Resume"
-              aria-label="Share Resume"
+              title={`Share ${resume.title}`}
+              aria-label={`Share ${resume.title}`}
             >
-              <span className="material-symbols-outlined text-[20px]">share</span>
+              <span className="material-symbols-outlined text-[20px]" aria-hidden="true">
+                share
+              </span>
             </Button>
             <Button
               variant="ghost"
               size="icon"
               onClick={onEdit}
-              title="Edit Resume"
-              aria-label="Edit Resume"
+              title={`Edit ${resume.title}`}
+              aria-label={`Edit ${resume.title}`}
             >
-              <span className="material-symbols-outlined text-[20px]">edit</span>
+              <span className="material-symbols-outlined text-[20px]" aria-hidden="true">
+                edit
+              </span>
             </Button>
             <Button
               variant="ghost"
               size="icon"
               onClick={onDuplicate}
-              title="Duplicate Resume"
-              aria-label="Duplicate Resume"
+              title={`Duplicate ${resume.title}`}
+              aria-label={`Duplicate ${resume.title}`}
             >
-              <span className="material-symbols-outlined text-[20px]">content_copy</span>
+              <span className="material-symbols-outlined text-[20px]" aria-hidden="true">
+                content_copy
+              </span>
             </Button>
 
             {isDeleting ? (
@@ -121,10 +129,15 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
                     setIsDeleting(false);
                   }}
                   className="text-red-600 hover:bg-red-50 p-1.5"
-                  aria-label="Confirm delete"
-                  title="Confirm Delete"
+                  aria-label={`Confirm delete ${resume.title}`}
+                  title={`Confirm delete ${resume.title}`}
                 >
-                  <span className="material-symbols-outlined text-[18px] font-bold">check</span>
+                  <span
+                    className="material-symbols-outlined text-[18px] font-bold"
+                    aria-hidden="true"
+                  >
+                    check
+                  </span>
                 </Button>
                 <div className="w-px h-4 bg-slate-200 mx-0.5"></div>
                 <Button
@@ -135,10 +148,12 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
                     setIsDeleting(false);
                   }}
                   className="p-1.5"
-                  aria-label="Cancel delete"
-                  title="Cancel Delete"
+                  aria-label={`Cancel delete ${resume.title}`}
+                  title={`Cancel delete ${resume.title}`}
                 >
-                  <span className="material-symbols-outlined text-[18px]">close</span>
+                  <span className="material-symbols-outlined text-[18px]" aria-hidden="true">
+                    close
+                  </span>
                 </Button>
               </div>
             ) : (
@@ -151,10 +166,12 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
                   setIsDeleting(true);
                 }}
                 className="hover:text-red-600 hover:bg-red-50"
-                title="Delete Resume"
-                aria-label="Delete Resume"
+                title={`Delete ${resume.title}`}
+                aria-label={`Delete ${resume.title}`}
               >
-                <span className="material-symbols-outlined text-[20px]">delete</span>
+                <span className="material-symbols-outlined text-[20px]" aria-hidden="true">
+                  delete
+                </span>
               </Button>
             )}
           </div>
@@ -182,7 +199,9 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
         {/* Footer with version count */}
         <div className="flex items-center justify-between pt-3 border-t border-slate-100">
           <div className="flex items-center gap-2 text-sm text-slate-500">
-            <span className="material-symbols-outlined text-[16px]">history</span>
+            <span className="material-symbols-outlined text-[16px]" aria-hidden="true">
+              history
+            </span>
             <span>
               {resume.versionCount} version{resume.versionCount !== 1 ? 's' : ''}
             </span>
