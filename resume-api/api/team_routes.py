@@ -174,37 +174,36 @@ async def list_teams(
         user_id = auth.user_id if hasattr(auth, "user_id") else 1
 
         stmt = (
-            select(Team)
+            select(
+                Team,
+                select(func.count(TeamMember.id))
+                .where(TeamMember.team_id == Team.id)
+                .correlate(Team)
+                .scalar_subquery()
+                .label("member_count"),
+                select(func.count(TeamResume.id))
+                .where(TeamResume.team_id == Team.id)
+                .correlate(Team)
+                .scalar_subquery()
+                .label("resume_count"),
+            )
             .join(TeamMember, Team.id == TeamMember.team_id)
             .where(TeamMember.user_id == user_id)
-            .options(selectinload(Team.members))
         )
 
         result = await db.execute(stmt)
-        teams = result.scalars().all()
+        rows = result.all()
 
         team_responses = []
-        for team in teams:
-            member_count_stmt = select(func.count(TeamMember.id)).where(
-                TeamMember.team_id == team.id
-            )
-            result = await db.execute(member_count_stmt)
-            member_count = result.scalar() or 0
-
-            resume_count_stmt = select(func.count(TeamResume.id)).where(
-                TeamResume.team_id == team.id
-            )
-            result = await db.execute(resume_count_stmt)
-            resume_count = result.scalar() or 0
-
+        for team, member_count, resume_count in rows:
             team_responses.append(
                 TeamResponse(
                     id=team.id,
                     name=team.name,
                     description=team.description,
                     owner_id=team.owner_id,
-                    member_count=member_count,
-                    resume_count=resume_count,
+                    member_count=member_count or 0,
+                    resume_count=resume_count or 0,
                     created_at=(
                         team.created_at.isoformat()
                         if team.created_at
