@@ -12,6 +12,7 @@ import logging
 import re
 from typing import Dict, Any, List, Optional
 from abc import ABC, abstractmethod
+from collections import Counter
 
 from .circuit_breaker import (
     CircuitBreakerOpen,
@@ -34,6 +35,17 @@ except ImportError:
     AIProviderManager = None
     ProviderType = None
     ProviderStatus = None
+
+
+_PUNCTUATION_RE = re.compile(r"[^\w\s]")
+
+STOP_WORDS = frozenset({
+    "the", "and", "for", "are", "but", "not", "you", "all", "can", "her",
+    "was", "one", "our", "out", "has", "have", "been", "this", "that", "with",
+    "they", "from", "which", "will", "would", "about", "should", "could", "their",
+    "your", "also", "more", "into", "than", "some", "such", "only", "over", "most",
+    "work", "experience", "looking", "team", "role", "join", "company", "position"
+})
 
 
 class AIProvider(ABC):
@@ -68,7 +80,7 @@ class AITailoringUtils:
         text = text.lower()
 
         # Remove punctuation
-        text = re.sub(r"[^\w\s]", " ", text)
+        text = _PUNCTUATION_RE.sub(" ", text)
 
         # Split into words
         words = text.split()
@@ -76,67 +88,10 @@ class AITailoringUtils:
         # Filter for meaningful keywords
         # - Length > 2 characters
         # - Not common stop words
-        stop_words = {
-            "the",
-            "and",
-            "for",
-            "are",
-            "but",
-            "not",
-            "you",
-            "all",
-            "can",
-            "her",
-            "was",
-            "one",
-            "our",
-            "out",
-            "has",
-            "have",
-            "been",
-            "this",
-            "that",
-            "with",
-            "they",
-            "from",
-            "which",
-            "will",
-            "would",
-            "about",
-            "should",
-            "could",
-            "their",
-            "your",
-            "also",
-            "more",
-            "into",
-            "than",
-            "some",
-            "such",
-            "only",
-            "over",
-            "most",
-            "work",
-            "experience",
-            "looking",
-            "team",
-            "role",
-            "join",
-            "company",
-            "position",
-        }
+        keywords = [word for word in words if len(word) > 2 and word not in STOP_WORDS]
 
-        keywords = [word for word in words if len(word) > 2 and word not in stop_words]
-
-        # Count frequency and sort
-        word_freq = {}
-        for word in keywords:
-            word_freq[word] = word_freq.get(word, 0) + 1
-
-        # Return sorted by frequency (top 20)
-        sorted_keywords = sorted(word_freq.items(), key=lambda x: x[1], reverse=True)
-
-        return [word for word, freq in sorted_keywords[:20]]
+        # Use Counter.most_common for faster frequency counting and sorting
+        return [word for word, _ in Counter(keywords).most_common(20)]
 
     @staticmethod
     def calculate_match_score(resume_data: Dict[str, Any], keywords: List[str]) -> float:
