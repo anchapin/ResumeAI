@@ -183,19 +183,26 @@ async def list_teams(
         result = await db.execute(stmt)
         teams = result.scalars().all()
 
+        team_ids = [team.id for team in teams]
+
+        member_counts = {}
+        resume_counts = {}
+
+        if team_ids:
+            member_count_stmt = select(TeamMember.team_id, func.count(TeamMember.id)).where(TeamMember.team_id.in_(team_ids)).group_by(TeamMember.team_id)
+            member_count_result = await db.execute(member_count_stmt)
+            for team_id, count in member_count_result.all():
+                member_counts[team_id] = count
+
+            resume_count_stmt = select(TeamResume.team_id, func.count(TeamResume.id)).where(TeamResume.team_id.in_(team_ids)).group_by(TeamResume.team_id)
+            resume_count_result = await db.execute(resume_count_stmt)
+            for team_id, count in resume_count_result.all():
+                resume_counts[team_id] = count
+
         team_responses = []
         for team in teams:
-            member_count_stmt = select(func.count(TeamMember.id)).where(
-                TeamMember.team_id == team.id
-            )
-            result = await db.execute(member_count_stmt)
-            member_count = result.scalar() or 0
-
-            resume_count_stmt = select(func.count(TeamResume.id)).where(
-                TeamResume.team_id == team.id
-            )
-            result = await db.execute(resume_count_stmt)
-            resume_count = result.scalar() or 0
+            member_count = member_counts.get(team.id, 0)
+            resume_count = resume_counts.get(team.id, 0)
 
             team_responses.append(
                 TeamResponse(
