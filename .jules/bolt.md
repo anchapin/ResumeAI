@@ -39,3 +39,7 @@
 ## 2024-05-27 - Regex Cross-Matching Risk in Tag Sanitization
 **Learning:** Consolidating start and end HTML tag patterns into a single regex with a shared group (like `<(?:iframe|form|input)[^>]*>.*?</(?:iframe|form|input)>`) is a critical security and functionality bug because it allows cross-matching (e.g., `<input>...</form>`), leading to data loss.
 **Action:** When stripping multiple different HTML tags via regex, always iterate over a list of pre-compiled individual tag patterns (e.g., one for `iframe`, one for `form`) rather than merging them into a single cross-matching OR pattern.
+
+## 2024-05-28 - Optimize N+1 Query in Teams Listing
+**Learning:** Iterating over a list of records and making separate `COUNT` queries for each record (e.g., `member_count` and `resume_count` for each team in `list_teams`) leads to an N+1 query bottleneck.
+**Action:** Always pre-fetch aggregates for collections by using a single query with a `GROUP BY` clause and an `IN` condition on the collection of IDs. Map the results into a dictionary for O(1) retrieval during the loop to dramatically reduce database round-trips.
