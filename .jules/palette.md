@@ -18,3 +18,6 @@
 ## 2026-04-02 - Custom Tab Component Accessibility
 **Learning:** Custom tab implementations (like comment filter buttons) often lack necessary focus rings and active state announcements for screen readers. Using just active classes (e.g. `bg-white`) is not sufficient for keyboard navigation or screen reader context.
 **Action:** Always add explicit `focus-visible:ring` classes to ensure tab elements are navigable by keyboard. Use the `aria-pressed` or `aria-current` attributes to correctly announce the active tab to assistive technologies.
+## 2026-04-12 - Material Symbols ARIA Hidden Validation
+**Learning:** Decorative Material Symbol icons, such as check/close marks inside pros and cons lists or star icons in recommendation banners, continue to require `aria-hidden="true"` to prevent redundant screen reader announcements, especially when their parent elements have adequate semantic text content.
+**Action:** Consistently apply `aria-hidden="true"` to all Material Symbols acting as ligatures for decorative purposes alongside visible text.
