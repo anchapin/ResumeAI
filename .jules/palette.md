@@ -18,3 +18,7 @@
 ## 2026-04-02 - Custom Tab Component Accessibility
 **Learning:** Custom tab implementations (like comment filter buttons) often lack necessary focus rings and active state announcements for screen readers. Using just active classes (e.g. `bg-white`) is not sufficient for keyboard navigation or screen reader context.
 **Action:** Always add explicit `focus-visible:ring` classes to ensure tab elements are navigable by keyboard. Use the `aria-pressed` or `aria-current` attributes to correctly announce the active tab to assistive technologies.
+
+## 2026-04-13 - Label in Name WCAG compliance
+**Learning:** Adding an `aria-label` that doesn't contain the visible text of an element violates WCAG 2.5.3 (Label in Name), as it breaks voice recognition commands.
+**Action:** Always ensure that if an element has visible text, any `aria-label` added to it includes that visible text as part of its string.
