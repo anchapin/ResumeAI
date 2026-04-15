@@ -18,3 +18,7 @@
 ## 2026-04-02 - Custom Tab Component Accessibility
 **Learning:** Custom tab implementations (like comment filter buttons) often lack necessary focus rings and active state announcements for screen readers. Using just active classes (e.g. `bg-white`) is not sufficient for keyboard navigation or screen reader context.
 **Action:** Always add explicit `focus-visible:ring` classes to ensure tab elements are navigable by keyboard. Use the `aria-pressed` or `aria-current` attributes to correctly announce the active tab to assistive technologies.
+
+## 2024-05-18 - Dynamically updating aria-labels on buttons with changing text
+**Learning:** When interactive elements (like a "Copy" button) visually change their text (e.g., to "Copied!") upon interaction, the `aria-label` and `title` attributes must also dynamically update to match the new visible text. This ensures compliance with WCAG 2.5.3 (Label in Name) and provides immediate, accessible feedback to screen reader users about the state change.
+**Action:** Always bind the `aria-label` and `title` of buttons to the exact same dynamic state variables used for their visible text content when the button provides immediate interaction feedback.
