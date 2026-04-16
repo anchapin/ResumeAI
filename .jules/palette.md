@@ -18,3 +18,6 @@
 ## 2026-04-02 - Custom Tab Component Accessibility
 **Learning:** Custom tab implementations (like comment filter buttons) often lack necessary focus rings and active state announcements for screen readers. Using just active classes (e.g. `bg-white`) is not sufficient for keyboard navigation or screen reader context.
 **Action:** Always add explicit `focus-visible:ring` classes to ensure tab elements are navigable by keyboard. Use the `aria-pressed` or `aria-current` attributes to correctly announce the active tab to assistive technologies.
+## 2024-05-24 - Missing aria-hidden in ResumeCard
+**Learning:** The `ResumeCard` component contained numerous interactive buttons with Material Symbol ligatures but without `aria-hidden="true"`. Even with `aria-label` present on parent buttons, some screen readers will announce the visible ligature text redundantly.
+**Action:** Always verify that every Material Symbol ligature (`<span className="material-symbols-outlined">`) includes `aria-hidden="true"` to ensure a clean, noise-free experience for screen reader users, relying strictly on parent `aria-label`s or accompanying visible text for context.
