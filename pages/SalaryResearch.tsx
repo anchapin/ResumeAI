@@ -1,4 +1,3 @@
- 
 import React, { useState, useEffect } from 'react';
 import { JobOfferFormData } from '../types';
 import { Button, Card } from '../components/ui';
@@ -22,14 +21,10 @@ import { OfferCard } from '../components/OfferCard';
 import { OfferComparison } from '../components/OfferComparison';
 import { PrioritySliders } from '../components/PrioritySliders';
 import { toast } from 'react-toastify';
+import { formatCurrencyValue } from '../utils/formatters';
 
 const formatCurrency = (amount: number, currency: string = 'USD') => {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: currency,
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(amount);
+  return formatCurrencyValue(amount, currency, 0, 0);
 };
 
 /**
