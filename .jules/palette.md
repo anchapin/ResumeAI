@@ -18,3 +18,7 @@
 ## 2026-04-02 - Custom Tab Component Accessibility
 **Learning:** Custom tab implementations (like comment filter buttons) often lack necessary focus rings and active state announcements for screen readers. Using just active classes (e.g. `bg-white`) is not sufficient for keyboard navigation or screen reader context.
 **Action:** Always add explicit `focus-visible:ring` classes to ensure tab elements are navigable by keyboard. Use the `aria-pressed` or `aria-current` attributes to correctly announce the active tab to assistive technologies.
+
+## 2024-05-25 - Notifications aria label
+**Learning:** Notifications button often lack `aria-label` attribute but have decorative span elements for `material-symbols-outlined`. The decorative span elements should have `aria-hidden="true"` and the parent element should have `aria-label`.
+**Action:** Always add `aria-label="Notifications"` to the parent button and `aria-hidden="true"` to the decorative span element.
