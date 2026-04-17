@@ -1,4 +1,3 @@
- 
 import React from 'react';
 import { JobOffer } from '../types';
 import { Card } from './ui';
@@ -13,6 +12,8 @@ interface OfferCardProps {
   disabled?: boolean;
 }
 
+import { formatCurrencyValue } from '../utils/formatters';
+
 const STATUS_COLORS: Record<JobOffer['status'], { bg: string; text: string; border: string }> = {
   pending: { bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200' },
   negotiating: { bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200' },
@@ -21,12 +22,7 @@ const STATUS_COLORS: Record<JobOffer['status'], { bg: string; text: string; bord
 };
 
 const formatCurrency = (amount: number, currency: string = 'USD') => {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: currency,
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(amount);
+  return formatCurrencyValue(amount, currency, 0, 0);
 };
 
 /**

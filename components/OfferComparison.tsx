@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { OfferComparison as OfferComparisonType } from '../types';
 import { showSuccessToast } from '../utils/toast';
+import { formatCurrencyValue } from '../utils/formatters';
 
 interface OfferComparisonProps {
   comparison: OfferComparisonType;
@@ -8,12 +9,7 @@ interface OfferComparisonProps {
 }
 
 const formatCurrency = (amount: number, currency: string = 'USD') => {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: currency,
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(amount);
+  return formatCurrencyValue(amount, currency, 0, 0);
 };
 
 /**

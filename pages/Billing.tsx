@@ -1,4 +1,3 @@
- 
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import {
@@ -11,6 +10,7 @@ import {
   resumeSubscription,
   createPortalSession,
 } from '../utils/api-client';
+import { formatCurrencyValue } from '../utils/formatters';
 
 const Billing: React.FC = () => {
   const location = useLocation();
@@ -127,12 +127,7 @@ const Billing: React.FC = () => {
   };
 
   const formatPrice = (cents: number, currency: string) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: currency,
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(cents / 100);
+    return formatCurrencyValue(cents / 100, currency, 0, 0);
   };
 
   const getUsageProgress = (usage: BillingUsage, key: 'resume_generated' | 'ai_tailored') => {

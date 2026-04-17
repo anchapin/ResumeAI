@@ -6,6 +6,7 @@ import {
   createCheckoutSession,
   CheckoutSessionRequest,
 } from '../utils/api-client';
+import { formatCurrencyValue } from '../utils/formatters';
 
 const Plans: React.FC = () => {
   const [plans, setPlans] = useState<BillingPlan[]>([]);
@@ -49,12 +50,7 @@ const Plans: React.FC = () => {
   };
 
   const formatPrice = (cents: number, currency: string) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: currency,
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(cents / 100);
+    return formatCurrencyValue(cents / 100, currency, 0, 0);
   };
 
   if (loading) {
