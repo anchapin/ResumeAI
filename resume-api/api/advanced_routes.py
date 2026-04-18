@@ -1022,10 +1022,16 @@ async def bulk_operations(
         successful = []
         failed = []
 
+        # Pre-fetch resumes to avoid N+1 queries
+        if request.resume_ids:
+            resumes_result = await db.execute(select(Resume).where(Resume.id.in_(request.resume_ids)))
+            resumes_dict = {r.id: r for r in resumes_result.scalars().all()}
+        else:
+            resumes_dict = {}
+
         for resume_id in request.resume_ids:
             try:
-                result = await db.execute(select(Resume).where(Resume.id == resume_id))
-                resume = result.scalar_one_or_none()
+                resume = resumes_dict.get(resume_id)
 
                 if not resume:
                     failed.append({"id": resume_id, "error": "Resume not found"})
@@ -1197,16 +1203,23 @@ async def batch_update_resumes(
     successful = []
     failed = []
 
+    # Pre-fetch all resumes by ID to avoid N+1
+    update_ids = [r.id for r in request.resumes if hasattr(r, "id") and r.id is not None]
+    if update_ids:
+        resumes_result = await db.execute(
+            select(Resume)
+            .options(selectinload(Resume.tags))
+            .options(selectinload(Resume.versions))
+            .where(Resume.id.in_(update_ids))
+        )
+        resumes_dict = {r.id: r for r in resumes_result.scalars().all()}
+    else:
+        resumes_dict = {}
+
     for idx, update_request in enumerate(request.resumes):
         try:
             # Get resume by ID
-            result = await db.execute(
-                select(Resume)
-                .options(selectinload(Resume.tags))
-                .options(selectinload(Resume.versions))
-                .where(Resume.id == update_request.id)
-            )
-            resume = result.scalar_one_or_none()
+            resume = resumes_dict.get(update_request.id)
 
             if not resume:
                 failed.append(
@@ -1304,12 +1317,18 @@ async def batch_delete_resumes(
     successful = []
     failed = []
 
+    # Pre-fetch all resumes by ID to avoid N+1
+    if request.resume_ids:
+        resumes_result = await db.execute(
+            select(Resume).options(selectinload(Resume.tags)).where(Resume.id.in_(request.resume_ids))
+        )
+        resumes_dict = {r.id: r for r in resumes_result.scalars().all()}
+    else:
+        resumes_dict = {}
+
     for resume_id in request.resume_ids:
         try:
-            result = await db.execute(
-                select(Resume).options(selectinload(Resume.tags)).where(Resume.id == resume_id)
-            )
-            resume = result.scalar_one_or_none()
+            resume = resumes_dict.get(resume_id)
 
             if not resume:
                 failed.append({"id": resume_id, "error": "Resume not found"})
@@ -1356,12 +1375,18 @@ async def batch_export_resumes(
     failed = []
     export_job_id = str(uuid.uuid4())
 
+    # Pre-fetch all resumes by ID to avoid N+1
+    if request.resume_ids:
+        resumes_result = await db.execute(
+            select(Resume).options(selectinload(Resume.tags)).where(Resume.id.in_(request.resume_ids))
+        )
+        resumes_dict = {r.id: r for r in resumes_result.scalars().all()}
+    else:
+        resumes_dict = {}
+
     for resume_id in request.resume_ids:
         try:
-            result = await db.execute(
-                select(Resume).options(selectinload(Resume.tags)).where(Resume.id == resume_id)
-            )
-            resume = result.scalar_one_or_none()
+            resume = resumes_dict.get(resume_id)
 
             if not resume:
                 failed.append({"id": resume_id, "error": "Resume not found"})
