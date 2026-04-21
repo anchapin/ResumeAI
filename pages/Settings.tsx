@@ -1,4 +1,3 @@
- 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useTheme } from '../hooks/useTheme';
 import { toast } from 'react-toastify';
@@ -346,8 +345,13 @@ const Settings: React.FC = () => {
       <header className="h-16 flex items-center justify-between px-8 bg-white/80 backdrop-blur-sm sticky top-0 z-10 border-b border-slate-200">
         <h2 className="text-slate-800 font-bold text-xl">Settings</h2>
         <div className="flex items-center gap-4">
-          <button className="p-2 text-slate-400 hover:text-slate-600 transition-colors relative">
-            <span className="material-symbols-outlined">notifications</span>
+          <button
+            className="p-2 text-slate-400 hover:text-slate-600 transition-colors relative"
+            aria-label="Notifications"
+          >
+            <span className="material-symbols-outlined" aria-hidden="true">
+              notifications
+            </span>
             <div className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></div>
           </button>
           <div
@@ -878,8 +882,11 @@ const Settings: React.FC = () => {
               <button
                 onClick={handleCloseCreateModal}
                 className="p-2 text-slate-400 hover:text-slate-600 transition-colors"
+                aria-label="Close dialog"
               >
-                <span className="material-symbols-outlined">close</span>
+                <span className="material-symbols-outlined" aria-hidden="true">
+                  close
+                </span>
               </button>
             </div>
 
@@ -1054,8 +1061,11 @@ const Settings: React.FC = () => {
                   setEditingWebhook(undefined);
                 }}
                 className="p-2 text-slate-400 hover:text-slate-600 transition-colors"
+                aria-label="Close dialog"
               >
-                <span className="material-symbols-outlined">close</span>
+                <span className="material-symbols-outlined" aria-hidden="true">
+                  close
+                </span>
               </button>
             </div>
 
