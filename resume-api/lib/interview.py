@@ -6,10 +6,17 @@ and response evaluation.
 """
 
 import uuid
+import re
 from typing import Dict, Any, List, Optional
 from dataclasses import dataclass, field
 from datetime import datetime
 import random
+
+# Pre-compiled regex patterns for performance optimization
+_STAR_PATTERN = re.compile(r"situation|task|action|result|i |my ")
+_STRUCTURE_PATTERN_1 = re.compile(r"first|second|finally|additionally|however")
+_STRUCTURE_PATTERN_2 = re.compile(r"because|therefore|result|outcome|learned")
+_SPECIFICITY_PATTERN = re.compile(r"for example|for instance|specifically|exactly")
 
 
 @dataclass
@@ -332,10 +339,7 @@ class MockInterviewGenerator:
         # Check for STAR method in behavioral questions
         if question.category == "behavioral":
             answer_lower = answer.lower()
-            if not any(
-                word in answer_lower
-                for word in ["situation", "task", "action", "result", "i ", "my "]
-            ):
+            if not _STAR_PATTERN.search(answer_lower):
                 return "Consider using the STAR method (Situation, Task, Action, Result) to structure your answer."
 
         return "Great answer! You provided good detail and structure. Keep practicing to refine your delivery."
@@ -353,23 +357,14 @@ class MockInterviewGenerator:
 
         # Structure indicators
         answer_lower = answer.lower()
-        if any(
-            word in answer_lower
-            for word in ["first", "second", "finally", "additionally", "however"]
-        ):
+        if _STRUCTURE_PATTERN_1.search(answer_lower):
             score += 10
 
-        if any(
-            word in answer_lower
-            for word in ["because", "therefore", "result", "outcome", "learned"]
-        ):
+        if _STRUCTURE_PATTERN_2.search(answer_lower):
             score += 10
 
         # Specificity
-        if any(
-            word in answer_lower
-            for word in ["for example", "for instance", "specifically", "exactly"]
-        ):
+        if _SPECIFICITY_PATTERN.search(answer_lower):
             score += 10
 
         return min(100.0, score)
