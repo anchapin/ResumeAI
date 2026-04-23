@@ -14,3 +14,7 @@
 ## 2026-03-09 - Ensure aria-hidden for ligature icons
 **Learning:** Adding `aria-label`s to buttons is critical, but when the button uses an icon font like Material Symbols that relies on text ligatures (e.g., `close`, `history`, `edit`), screen readers will read the ligature text aloud. This creates a confusing experience (e.g. reading "Close close" or just "Close" when it should be "Close form").
 **Action:** When adding `aria-label` to an icon-only button that uses ligature icons, always ensure the inner `<span>` element containing the ligature text has `aria-hidden="true"`.
+
+## 2024-04-23 - Accessible Custom Tabs
+**Learning:** Custom tab buttons styled with classes (e.g. `border-b-2`) don't naturally convey their active state to screen readers. Relying purely on visual cues like primary colors or borders is an accessibility anti-pattern.
+**Action:** When implementing custom toggle or tab buttons, always include `aria-current="true"` (for tabs) or `aria-pressed="true"` (for toggles) on the active element. Also ensure they have explicit `:focus-visible` styles (`focus-visible:outline-none focus-visible:ring-2`) to support keyboard navigation without breaking mouse click aesthetics.
