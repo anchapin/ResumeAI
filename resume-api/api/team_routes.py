@@ -184,53 +184,39 @@ async def list_teams(
         teams = result.scalars().all()
 
         team_responses = []
-        if teams:
-            # ⚡ Bolt: Fix N+1 query problem by batch fetching member and resume counts for all teams at once
-            team_ids = [t.id for t in teams]
-
-            # Fetch all member counts in a single query
-            member_counts_stmt = (
-                select(TeamMember.team_id, func.count(TeamMember.id))
-                .where(TeamMember.team_id.in_(team_ids))
-                .group_by(TeamMember.team_id)
+        for team in teams:
+            member_count_stmt = select(func.count(TeamMember.id)).where(
+                TeamMember.team_id == team.id
             )
-            member_counts_result = await db.execute(member_counts_stmt)
-            member_counts_map = dict(member_counts_result.all())
+            result = await db.execute(member_count_stmt)
+            member_count = result.scalar() or 0
 
-            # Fetch all resume counts in a single query
-            resume_counts_stmt = (
-                select(TeamResume.team_id, func.count(TeamResume.id))
-                .where(TeamResume.team_id.in_(team_ids))
-                .group_by(TeamResume.team_id)
+            resume_count_stmt = select(func.count(TeamResume.id)).where(
+                TeamResume.team_id == team.id
             )
-            resume_counts_result = await db.execute(resume_counts_stmt)
-            resume_counts_map = dict(resume_counts_result.all())
+            result = await db.execute(resume_count_stmt)
+            resume_count = result.scalar() or 0
 
-            for team in teams:
-                # ⚡ Bolt: O(1) hash map lookup instead of O(n) queries
-                member_count = member_counts_map.get(team.id, 0)
-                resume_count = resume_counts_map.get(team.id, 0)
-
-                team_responses.append(
-                    TeamResponse(
-                        id=team.id,
-                        name=team.name,
-                        description=team.description,
-                        owner_id=team.owner_id,
-                        member_count=member_count,
-                        resume_count=resume_count,
-                        created_at=(
-                            team.created_at.isoformat()
-                            if team.created_at
-                            else datetime.utcnow().isoformat()
-                        ),
-                        updated_at=(
-                            team.updated_at.isoformat()
-                            if team.updated_at
-                            else datetime.utcnow().isoformat()
-                        ),
-                    )
+            team_responses.append(
+                TeamResponse(
+                    id=team.id,
+                    name=team.name,
+                    description=team.description,
+                    owner_id=team.owner_id,
+                    member_count=member_count,
+                    resume_count=resume_count,
+                    created_at=(
+                        team.created_at.isoformat()
+                        if team.created_at
+                        else datetime.utcnow().isoformat()
+                    ),
+                    updated_at=(
+                        team.updated_at.isoformat()
+                        if team.updated_at
+                        else datetime.utcnow().isoformat()
+                    ),
                 )
+            )
 
         return team_responses
     except Exception as e:
