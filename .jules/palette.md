@@ -18,3 +18,6 @@
 ## 2026-04-02 - Custom Tab Component Accessibility
 **Learning:** Custom tab implementations (like comment filter buttons) often lack necessary focus rings and active state announcements for screen readers. Using just active classes (e.g. `bg-white`) is not sufficient for keyboard navigation or screen reader context.
 **Action:** Always add explicit `focus-visible:ring` classes to ensure tab elements are navigable by keyboard. Use the `aria-pressed` or `aria-current` attributes to correctly announce the active tab to assistive technologies.
+## 2024-05-20 - Adding dynamic screen reader announcements for zoom levels
+**Learning:** When creating zoom controls (like Zoom In/Out buttons) that update a visual percentage indicator, screen reader users miss the feedback of the new zoom level unless the percentage display is marked as a live region.
+**Action:** Always add `aria-live="polite"` and `aria-atomic="true"` to the display elements that show dynamically updating values controlled by adjacent buttons, ensuring the new value is announced upon interaction.
