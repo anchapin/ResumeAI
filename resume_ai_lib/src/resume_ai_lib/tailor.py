@@ -119,6 +119,10 @@ class ResumeTailorer:
         # Extract keywords from job description
         keywords = self.extract_keywords(job_description)
 
+        # Performance optimization: pre-calculate lowercased keywords once
+        # instead of repeating .lower() for every keyword in every experience item loop.
+        keywords_lower = [k.lower() for k in keywords]
+
         # Match and score experience
         tailored_data = resume_data.copy()
 
@@ -138,14 +142,14 @@ class ResumeTailorer:
                 if isinstance(exp, dict):
                     exp["_tailored"] = True
                     # Calculate relevance score based on keyword matching
-                    exp["_relevance_score"] = self._calculate_relevance(exp, keywords)
+                    exp["_relevance_score"] = self._calculate_relevance(exp, keywords_lower)
 
         # Also handle "work" field (JSON Resume format)
         if "work" in tailored_data and isinstance(tailored_data["work"], list):
             for exp in tailored_data["work"]:
                 if isinstance(exp, dict):
                     exp["_tailored"] = True
-                    exp["_relevance_score"] = self._calculate_relevance(exp, keywords)
+                    exp["_relevance_score"] = self._calculate_relevance(exp, keywords_lower)
 
         # Use AI to enhance the resume if client is available
         if self.client:
@@ -162,7 +166,7 @@ class ResumeTailorer:
         return tailored_data
 
     def _calculate_relevance(
-        self, experience: Dict[str, Any], keywords: List[str]
+        self, experience: Dict[str, Any], keywords_lower: List[str]
     ) -> float:
         """Calculate relevance score for an experience entry based on keywords."""
         score = 0.0
@@ -186,12 +190,12 @@ class ResumeTailorer:
 
         text_to_check = f"{title} {role} {company} {description}"
 
-        for keyword in keywords:
-            if keyword.lower() in text_to_check:
+        for keyword in keywords_lower:
+            if keyword in text_to_check:
                 score += 1.0
 
         # Normalize to 0-1 range
-        max_score = max(len(keywords), 1)
+        max_score = max(len(keywords_lower), 1)
         return min(score / max_score, 1.0)
 
     def _ai_tailor(
@@ -515,6 +519,10 @@ class MockResumeTailorer(ResumeTailorer):
         """Mock tailoring - adds metadata and relevance scores."""
         keywords = self.extract_keywords(job_description)
 
+        # Performance optimization: pre-calculate lowercased keywords once
+        # instead of repeating .lower() for every keyword in every experience item loop.
+        keywords_lower = [k.lower() for k in keywords]
+
         tailored_data = resume_data.copy()
         tailored_data["_tailored"] = True
         tailored_data["_tailored_for"] = {
@@ -529,7 +537,7 @@ class MockResumeTailorer(ResumeTailorer):
                     if isinstance(exp, dict):
                         exp["_tailored"] = True
                         exp["_relevance_score"] = self._calculate_relevance(
-                            exp, keywords
+                            exp, keywords_lower
                         )
 
         return tailored_data
