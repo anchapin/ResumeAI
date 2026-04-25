@@ -268,20 +268,30 @@ const ResumePreview = React.memo<ResumePreviewProps>(
             {/* Zoom Controls */}
             <button
               onClick={() => setPreviewZoom(Math.max(0.5, previewZoom - 0.1))}
-              className="p-1.5 hover:bg-slate-100 rounded text-slate-500"
+              className="p-1.5 hover:bg-slate-100 rounded text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
               title="Zoom Out"
+              aria-label="Zoom Out"
             >
-              <span className="material-symbols-outlined text-lg">remove</span>
+              <span className="material-symbols-outlined text-lg" aria-hidden="true">
+                remove
+              </span>
             </button>
-            <span className="text-xs font-medium text-slate-600 min-w-[3rem] text-center">
+            <span
+              className="text-xs font-medium text-slate-600 min-w-[3rem] text-center"
+              aria-live="polite"
+              aria-atomic="true"
+            >
               {Math.round(previewZoom * 100)}%
             </span>
             <button
               onClick={() => setPreviewZoom(Math.min(2.0, previewZoom + 0.1))}
-              className="p-1.5 hover:bg-slate-100 rounded text-slate-500"
+              className="p-1.5 hover:bg-slate-100 rounded text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
               title="Zoom In"
+              aria-label="Zoom In"
             >
-              <span className="material-symbols-outlined text-lg">add</span>
+              <span className="material-symbols-outlined text-lg" aria-hidden="true">
+                add
+              </span>
             </button>
 
             <div className="h-4 w-px bg-slate-300 mx-2"></div>
@@ -291,10 +301,10 @@ const ResumePreview = React.memo<ResumePreviewProps>(
               <button
                 onClick={onGeneratePDF}
                 disabled={isGeneratingPDF}
-                className="flex items-center gap-1 px-3 py-1.5 bg-primary-600 text-white text-xs font-bold rounded hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center gap-1 px-3 py-1.5 bg-primary-600 text-white text-xs font-bold rounded hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
                 title="Download PDF"
               >
-                <span className="material-symbols-outlined text-sm">
+                <span className="material-symbols-outlined text-sm" aria-hidden="true">
                   {isGeneratingPDF ? 'hourglass_empty' : 'download'}
                 </span>
                 {isGeneratingPDF ? 'Generating...' : 'PDF'}
