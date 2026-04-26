@@ -39,7 +39,8 @@ export const OfferComparison: React.FC<OfferComparisonProps> = ({ comparison, on
       <div className="flex gap-2 border-b border-slate-200">
         <button
           onClick={() => setActiveTab('overview')}
-          className={`px-4 py-2 font-medium text-sm transition-colors ${
+          aria-current={activeTab === 'overview' ? 'page' : undefined}
+          className={`px-4 py-2 font-medium text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 rounded-sm ${
             activeTab === 'overview'
               ? 'text-primary-600 border-b-2 border-primary-600'
               : 'text-slate-600 hover:text-slate-900'
@@ -49,7 +50,8 @@ export const OfferComparison: React.FC<OfferComparisonProps> = ({ comparison, on
         </button>
         <button
           onClick={() => setActiveTab('details')}
-          className={`px-4 py-2 font-medium text-sm transition-colors ${
+          aria-current={activeTab === 'details' ? 'page' : undefined}
+          className={`px-4 py-2 font-medium text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 rounded-sm ${
             activeTab === 'details'
               ? 'text-primary-600 border-b-2 border-primary-600'
               : 'text-slate-600 hover:text-slate-900'
@@ -59,7 +61,8 @@ export const OfferComparison: React.FC<OfferComparisonProps> = ({ comparison, on
         </button>
         <button
           onClick={() => setActiveTab('analysis')}
-          className={`px-4 py-2 font-medium text-sm transition-colors ${
+          aria-current={activeTab === 'analysis' ? 'page' : undefined}
+          className={`px-4 py-2 font-medium text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 rounded-sm ${
             activeTab === 'analysis'
               ? 'text-primary-600 border-b-2 border-primary-600'
               : 'text-slate-600 hover:text-slate-900'

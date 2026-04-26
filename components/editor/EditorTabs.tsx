@@ -17,7 +17,8 @@ export const EditorTabs = React.memo<EditorTabsProps>(({ activeTab, onTabChange 
             <button
               key={tab}
               onClick={() => onTabChange(tab)}
-              className={`pb-3 pt-2 text-sm font-bold border-b-[3px] transition-colors ${
+              aria-current={active ? 'page' : undefined}
+              className={`pb-3 pt-2 text-sm font-bold border-b-[3px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 rounded-sm ${
                 active
                   ? 'border-primary-600 text-slate-900'
                   : 'border-transparent text-slate-500 hover:text-primary-600 hover:border-slate-200'
