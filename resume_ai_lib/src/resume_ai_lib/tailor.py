@@ -187,7 +187,7 @@ class ResumeTailorer:
         text_to_check = f"{title} {role} {company} {description}"
 
         for keyword in keywords:
-            if keyword.lower() in text_to_check:
+            if keyword in text_to_check:
                 score += 1.0
 
         # Normalize to 0-1 range
