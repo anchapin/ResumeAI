@@ -1304,12 +1304,26 @@ async def batch_delete_resumes(
     successful = []
     failed = []
 
+    try:
+        # Fetch all resumes in a single query to avoid N+1
+        result = await db.execute(
+            select(Resume).options(selectinload(Resume.tags)).where(Resume.id.in_(request.resume_ids))
+        )
+        resumes = result.scalars().all()
+        resumes_by_id = {r.id: r for r in resumes}
+    except Exception as e:
+        # If the initial fetch fails, mark everything as failed
+        failed = [{"id": resume_id, "error": str(e)} for resume_id in request.resume_ids]
+        return BatchDeleteResponse(
+            successful=[],
+            failed=failed,
+            total_deleted=0,
+            total_failed=len(failed),
+        )
+
     for resume_id in request.resume_ids:
         try:
-            result = await db.execute(
-                select(Resume).options(selectinload(Resume.tags)).where(Resume.id == resume_id)
-            )
-            resume = result.scalar_one_or_none()
+            resume = resumes_by_id.get(resume_id)
 
             if not resume:
                 failed.append({"id": resume_id, "error": "Resume not found"})
@@ -1356,12 +1370,26 @@ async def batch_export_resumes(
     failed = []
     export_job_id = str(uuid.uuid4())
 
+    try:
+        # Fetch all resumes in a single query to avoid N+1
+        result = await db.execute(
+            select(Resume).options(selectinload(Resume.tags)).where(Resume.id.in_(request.resume_ids))
+        )
+        resumes = result.scalars().all()
+        resumes_by_id = {r.id: r for r in resumes}
+    except Exception as e:
+        failed = [{"id": resume_id, "error": str(e)} for resume_id in request.resume_ids]
+        return BatchExportResponse(
+            successful=[],
+            failed=failed,
+            total_exported=0,
+            total_failed=len(failed),
+            export_job_id=export_job_id,
+        )
+
     for resume_id in request.resume_ids:
         try:
-            result = await db.execute(
-                select(Resume).options(selectinload(Resume.tags)).where(Resume.id == resume_id)
-            )
-            resume = result.scalar_one_or_none()
+            resume = resumes_by_id.get(resume_id)
 
             if not resume:
                 failed.append({"id": resume_id, "error": "Resume not found"})
@@ -1378,7 +1406,6 @@ async def batch_export_resumes(
                     "download_url": f"/api/v1/exports/{export_job_id}/resume_{resume_id}.{request.format}",
                 }
             )
-
         except Exception as e:
             failed.append({"id": resume_id, "error": str(e)})
 
