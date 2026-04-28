@@ -26,3 +26,7 @@
 **Vulnerability:** The `_get_table_row_count` method in `resume-api/lib/db/schema_manager.py` used a Python f-string within `sqlalchemy.text()` to build a SQL query dynamically (`text(f"SELECT COUNT(*) FROM {table_name}")`), creating a direct vector for SQL injection if `table_name` is user-controlled.
 **Learning:** `sqlalchemy.text()` does NOT sanitize variables passed into it via Python string formatting (like f-strings or `.format()`). Using standard string concatenation in database execution is inherently dangerous.
 **Prevention:** To safely use dynamic identifiers (like table or column names), use SQLAlchemy core objects like `table()` or `column()` combined with `select()`. For dynamic values, use parameterized named bindings (e.g., `text('... WHERE col=:val'), {'val': var}`).
+## 2024-05-18 - [SQL Injection in Database Migration Helpers]
+**Vulnerability:** A SQL injection vulnerability was found in the database migration helpers where table and column names were concatenated into a raw SQL query using f-strings inside `sqlalchemy.text()`.
+**Learning:** Even internal admin or migration tools must not use string concatenation for dynamic SQL queries. SQLAlchemy core objects like `table`, `column` and `select` must be used.
+**Prevention:** Always use SQLAlchemy's safe construction methods and avoid string interpolation with `sqlalchemy.text()`.
