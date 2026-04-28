@@ -26,3 +26,9 @@
 **Vulnerability:** The `_get_table_row_count` method in `resume-api/lib/db/schema_manager.py` used a Python f-string within `sqlalchemy.text()` to build a SQL query dynamically (`text(f"SELECT COUNT(*) FROM {table_name}")`), creating a direct vector for SQL injection if `table_name` is user-controlled.
 **Learning:** `sqlalchemy.text()` does NOT sanitize variables passed into it via Python string formatting (like f-strings or `.format()`). Using standard string concatenation in database execution is inherently dangerous.
 **Prevention:** To safely use dynamic identifiers (like table or column names), use SQLAlchemy core objects like `table()` or `column()` combined with `select()`. For dynamic values, use parameterized named bindings (e.g., `text('... WHERE col=:val'), {'val': var}`).
+
+## 2024-05-18 - [Weak Password Hashing in Shared Resumes]
+
+**Vulnerability:** The `share_resume` and `get_shared_resume` endpoints in `resume-api/api/advanced_routes.py` used `hashlib.sha256` for password hashing. This fast, unsalted algorithm leaves passwords vulnerable to rainbow table attacks and fast offline brute-forcing.
+**Learning:** Even for secondary authentication features like resume sharing, strong hashing algorithms must be used. Fast hashes like SHA-256 are designed for speed, not security against modern hardware.
+**Prevention:** Always use the project's standardized hashing utilities (like `hash_password` and `verify_password` in `config.security` which use `bcrypt`) for any stored passwords or authentication tokens.
