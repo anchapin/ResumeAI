@@ -1304,24 +1304,35 @@ async def batch_delete_resumes(
     successful = []
     failed = []
 
-    for resume_id in request.resume_ids:
-        try:
-            result = await db.execute(
-                select(Resume).options(selectinload(Resume.tags)).where(Resume.id == resume_id)
-            )
-            resume = result.scalar_one_or_none()
+    try:
+        # Fetch all requested resumes in a single query to prevent N+1 queries
+        result = await db.execute(
+            select(Resume).options(selectinload(Resume.tags)).where(Resume.id.in_(request.resume_ids))
+        )
+        resumes = result.scalars().all()
+        # Map resumes by ID for O(1) lookup to maintain order and handle missing records
+        resumes_by_id = {resume.id: resume for resume in resumes}
+
+        for resume_id in request.resume_ids:
+            resume = resumes_by_id.get(resume_id)
 
             if not resume:
                 failed.append({"id": resume_id, "error": "Resume not found"})
                 continue
 
-            await db.delete(resume)
-            await db.flush()
-            successful.append(resume_id)
+            try:
+                await db.delete(resume)
+                await db.flush()
+                successful.append(resume_id)
+            except Exception as e:
+                await db.rollback()
+                failed.append({"id": resume_id, "error": str(e)})
 
-        except Exception as e:
-            await db.rollback()
-            failed.append({"id": resume_id, "error": str(e)})
+    except Exception as e:
+        await db.rollback()
+        for resume_id in request.resume_ids:
+            if resume_id not in successful and not any(f["id"] == resume_id for f in failed):
+                failed.append({"id": resume_id, "error": str(e)})
 
     await db.commit()
 
@@ -1356,12 +1367,17 @@ async def batch_export_resumes(
     failed = []
     export_job_id = str(uuid.uuid4())
 
-    for resume_id in request.resume_ids:
-        try:
-            result = await db.execute(
-                select(Resume).options(selectinload(Resume.tags)).where(Resume.id == resume_id)
-            )
-            resume = result.scalar_one_or_none()
+    try:
+        # Fetch all requested resumes in a single query to prevent N+1 queries
+        result = await db.execute(
+            select(Resume).options(selectinload(Resume.tags)).where(Resume.id.in_(request.resume_ids))
+        )
+        resumes = result.scalars().all()
+        # Map resumes by ID for O(1) lookup to maintain order and handle missing records
+        resumes_by_id = {resume.id: resume for resume in resumes}
+
+        for resume_id in request.resume_ids:
+            resume = resumes_by_id.get(resume_id)
 
             if not resume:
                 failed.append({"id": resume_id, "error": "Resume not found"})
@@ -1379,7 +1395,8 @@ async def batch_export_resumes(
                 }
             )
 
-        except Exception as e:
+    except Exception as e:
+        for resume_id in request.resume_ids:
             failed.append({"id": resume_id, "error": str(e)})
 
     return BatchExportResponse(
