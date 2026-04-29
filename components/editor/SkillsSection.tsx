@@ -41,8 +41,9 @@ export const SkillsSection = React.memo<SkillsSectionProps>(
                   <button
                     onClick={() => onRemoveSkill(skill)}
                     className="hover:text-primary-900 ml-1"
+                    aria-label={`Remove ${skill}`}
                   >
-                    <span className="material-symbols-outlined text-[16px]">close</span>
+                    <span className="material-symbols-outlined text-[16px]" aria-hidden="true">close</span>
                   </button>
                 </span>
               ))}
