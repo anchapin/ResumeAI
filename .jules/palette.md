@@ -18,6 +18,3 @@
 ## 2026-04-02 - Custom Tab Component Accessibility
 **Learning:** Custom tab implementations (like comment filter buttons) often lack necessary focus rings and active state announcements for screen readers. Using just active classes (e.g. `bg-white`) is not sufficient for keyboard navigation or screen reader context.
 **Action:** Always add explicit `focus-visible:ring` classes to ensure tab elements are navigable by keyboard. Use the `aria-pressed` or `aria-current` attributes to correctly announce the active tab to assistive technologies.
-## 2026-05-01 - Dynamic Aria Labels on State Changing Elements
-**Learning:** Interactive elements that temporarily change state upon interaction (such as a 'Copy' button transforming to 'Copied') need dynamic `aria-label` updates. If an interactive button uses a ligature icon and text but relies solely on an `aria-label` for its accessible name, that label must dynamically update (e.g. from 'Copy share link' to 'Share link copied') so screen readers accurately announce the success feedback.
-**Action:** When implementing or modifying buttons that provide temporary visual feedback (like 'Copied' states), ensure any explicit `aria-label` or `title` updates synchronously with the component's state to provide identical feedback to assistive technologies.

@@ -165,7 +165,7 @@ const ShareDialog: React.FC<ShareDialogProps> = ({ isOpen, resumeId, onClose }) 
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
                 aria-label={showPassword ? 'Hide password' : 'Show password'}
               >
-                <span className="material-symbols-outlined text-[20px]" aria-hidden="true">
+                <span className="material-symbols-outlined text-[20px]">
                   {showPassword ? 'visibility_off' : 'visibility'}
                 </span>
               </button>
@@ -179,19 +179,14 @@ const ShareDialog: React.FC<ShareDialogProps> = ({ isOpen, resumeId, onClose }) 
           >
             {loading ? (
               <>
-                <span
-                  className="material-symbols-outlined animate-spin text-[18px]"
-                  aria-hidden="true"
-                >
+                <span className="material-symbols-outlined animate-spin text-[18px]">
                   progress_activity
                 </span>
                 <span>Creating link...</span>
               </>
             ) : (
               <>
-                <span className="material-symbols-outlined text-[18px]" aria-hidden="true">
-                  share
-                </span>
+                <span className="material-symbols-outlined text-[18px]">share</span>
                 <span>Create Share Link</span>
               </>
             )}
@@ -201,9 +196,7 @@ const ShareDialog: React.FC<ShareDialogProps> = ({ isOpen, resumeId, onClose }) 
         <div className="space-y-4">
           <div className="p-4 bg-green-50 border border-green-200 rounded-lg" role="alert">
             <div className="flex items-center gap-2 text-green-800">
-              <span className="material-symbols-outlined text-[24px]" aria-hidden="true">
-                check_circle
-              </span>
+              <span className="material-symbols-outlined text-[24px]">check_circle</span>
               <span className="font-bold">Share link created!</span>
             </div>
           </div>
@@ -219,10 +212,10 @@ const ShareDialog: React.FC<ShareDialogProps> = ({ isOpen, resumeId, onClose }) 
               />
               <button
                 onClick={handleCopyLink}
-                aria-label={copied ? 'Share link copied' : 'Copy share link'}
+                aria-label="Copy share link"
                 className="px-4 py-2.5 bg-primary-600 text-white font-bold rounded-lg hover:bg-primary-700 transition-colors flex items-center gap-2"
               >
-                <span className="material-symbols-outlined text-[20px]" aria-hidden="true">
+                <span className="material-symbols-outlined text-[20px]">
                   {copied ? 'check' : 'content_copy'}
                 </span>
                 {copied ? 'Copied!' : 'Copy'}
@@ -232,10 +225,7 @@ const ShareDialog: React.FC<ShareDialogProps> = ({ isOpen, resumeId, onClose }) 
 
           <div className="space-y-2 text-sm text-slate-600">
             <div className="flex items-center gap-2">
-              <span
-                className="material-symbols-outlined text-[20px] text-slate-400"
-                aria-hidden="true"
-              >
+              <span className="material-symbols-outlined text-[20px] text-slate-400">
                 verified_user
               </span>
               <span>
@@ -245,10 +235,7 @@ const ShareDialog: React.FC<ShareDialogProps> = ({ isOpen, resumeId, onClose }) 
             </div>
             {shareLink.expiresAt && (
               <div className="flex items-center gap-2">
-                <span
-                  className="material-symbols-outlined text-[20px] text-slate-400"
-                  aria-hidden="true"
-                >
+                <span className="material-symbols-outlined text-[20px] text-slate-400">
                   schedule
                 </span>
                 <span>
@@ -261,10 +248,7 @@ const ShareDialog: React.FC<ShareDialogProps> = ({ isOpen, resumeId, onClose }) 
             )}
             {shareLink.maxViews && (
               <div className="flex items-center gap-2">
-                <span
-                  className="material-symbols-outlined text-[20px] text-slate-400"
-                  aria-hidden="true"
-                >
+                <span className="material-symbols-outlined text-[20px] text-slate-400">
                   visibility
                 </span>
                 <span>
