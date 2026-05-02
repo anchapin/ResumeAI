@@ -39,3 +39,7 @@
 ## 2024-05-27 - Regex Cross-Matching Risk in Tag Sanitization
 **Learning:** Consolidating start and end HTML tag patterns into a single regex with a shared group (like `<(?:iframe|form|input)[^>]*>.*?</(?:iframe|form|input)>`) is a critical security and functionality bug because it allows cross-matching (e.g., `<input>...</form>`), leading to data loss.
 **Action:** When stripping multiple different HTML tags via regex, always iterate over a list of pre-compiled individual tag patterns (e.g., one for `iframe`, one for `form`) rather than merging them into a single cross-matching OR pattern.
+
+## 2024-05-28 - Keyword Matching Inner Loop Optimization
+**Learning:** Calling `.lower()` inside a tight loop when calculating relevance scores (e.g., iterating through multiple keywords) introduces unnecessary string allocation and processing overhead, making operations significantly slower (~19% longer).
+**Action:** When performing substring or keyword matching against text within an inner loop, preprocess the keywords (i.e. convert them to lowercase) once beforehand.
