@@ -18,3 +18,7 @@
 ## 2026-04-02 - Custom Tab Component Accessibility
 **Learning:** Custom tab implementations (like comment filter buttons) often lack necessary focus rings and active state announcements for screen readers. Using just active classes (e.g. `bg-white`) is not sufficient for keyboard navigation or screen reader context.
 **Action:** Always add explicit `focus-visible:ring` classes to ensure tab elements are navigable by keyboard. Use the `aria-pressed` or `aria-current` attributes to correctly announce the active tab to assistive technologies.
+
+## 2024-05-02 - Accessible Ligature-Based Icons
+**Learning:** Decorative icon fonts like `material-symbols-outlined` announce their textual ligature (e.g., "share" or "content_copy") to screen readers if `aria-hidden="true"` is not explicitly applied. This creates noisy, redundant announcements when the icon is used alongside an explicit `aria-label` or visible text on the parent interactive element.
+**Action:** Always verify that ligature-based icon spans have `aria-hidden="true"` applied so they remain purely decorative for assistive technologies, allowing the parent element's accessible name to dictate the interaction context.
