@@ -117,7 +117,9 @@ class ResumeTailorer:
         logger.info("Tailoring resume for job description")
 
         # Extract keywords from job description
-        keywords = self.extract_keywords(job_description)
+        # Performance optimization: Lowercase keywords once here to avoid
+        # redundant string allocations during scoring in the inner loop.
+        keywords = [k.lower() for k in self.extract_keywords(job_description)]
 
         # Match and score experience
         tailored_data = resume_data.copy()
@@ -187,7 +189,7 @@ class ResumeTailorer:
         text_to_check = f"{title} {role} {company} {description}"
 
         for keyword in keywords:
-            if keyword.lower() in text_to_check:
+            if keyword in text_to_check:
                 score += 1.0
 
         # Normalize to 0-1 range
@@ -513,7 +515,9 @@ class MockResumeTailorer(ResumeTailorer):
         job_description: str,
     ) -> Dict[str, Any]:
         """Mock tailoring - adds metadata and relevance scores."""
-        keywords = self.extract_keywords(job_description)
+        # Performance optimization: Lowercase keywords once here to avoid
+        # redundant string allocations during scoring in the inner loop.
+        keywords = [k.lower() for k in self.extract_keywords(job_description)]
 
         tailored_data = resume_data.copy()
         tailored_data["_tailored"] = True
