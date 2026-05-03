@@ -39,3 +39,7 @@
 ## 2024-05-27 - Regex Cross-Matching Risk in Tag Sanitization
 **Learning:** Consolidating start and end HTML tag patterns into a single regex with a shared group (like `<(?:iframe|form|input)[^>]*>.*?</(?:iframe|form|input)>`) is a critical security and functionality bug because it allows cross-matching (e.g., `<input>...</form>`), leading to data loss.
 **Action:** When stripping multiple different HTML tags via regex, always iterate over a list of pre-compiled individual tag patterns (e.g., one for `iframe`, one for `form`) rather than merging them into a single cross-matching OR pattern.
+
+## 2024-05-28 - Regex Iteration Over Multiple Finds
+**Learning:** For tasks involving checking if keywords from a string exist in another string, extracting words via `re.findall` and comparing them manually in a python loop involves high temporary object overhead. Extracting static tuples/frozensets, checking existence with a `seen = set()`, and using `re.finditer` with an early termination loop drastically improves time bounds from O(N) linear lookups to O(1). However, be careful not to remove safe checks like `.lower()` on arguments if the function expects dynamic input.
+**Action:** Always prefer `seen = set()` for O(1) deduplication, `re.finditer` with early `break` over `re.findall` if there's a quota, and pre-compile any reused regex and lookup lists into module level constants.
