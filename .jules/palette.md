@@ -18,3 +18,6 @@
 ## 2026-04-02 - Custom Tab Component Accessibility
 **Learning:** Custom tab implementations (like comment filter buttons) often lack necessary focus rings and active state announcements for screen readers. Using just active classes (e.g. `bg-white`) is not sufficient for keyboard navigation or screen reader context.
 **Action:** Always add explicit `focus-visible:ring` classes to ensure tab elements are navigable by keyboard. Use the `aria-pressed` or `aria-current` attributes to correctly announce the active tab to assistive technologies.
+## 2026-05-03 - ReferenceError: window is not defined in Vitest
+**Learning:** Found a `ReferenceError: window is not defined` in `tests/hooks/useATSCheck.test.ts`. The error happens when rendering a hook using `@testing-library/react` because the test file does not import the `vitest.setup.ts` correctly or specify a DOM environment via a docblock comment like `// @vitest-environment jsdom`.
+**Action:** When creating tests for hooks or UI components, ensure that `@testing-library/react` features have access to a DOM. You can add `// @vitest-environment jsdom` at the top of the test file or modify the test to mock DOM globals.
