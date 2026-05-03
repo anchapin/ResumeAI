@@ -12,6 +12,24 @@ from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
+# ⚡ Bolt: Pre-compiled tuples, sets, and regexes for faster keyword extraction
+_TECH_KEYWORDS = (
+    "python", "javascript", "typescript", "java", "go", "rust", "c++", "c#",
+    "ruby", "php", "swift", "kotlin", "scala", "haskell", "sql", "react",
+    "vue", "angular", "node.js", "django", "flask", "fastapi", "spring",
+    "rails", "laravel", "next.js", "nuxt", "express", "tensorflow",
+    "pytorch", "keras", "pandas", "numpy", "scikit", "kubernetes",
+    "docker", "aws", "azure", "gcp", "google cloud", "postgres",
+    "postgresql", "mysql", "mongodb", "redis", "sqlite", "elasticsearch",
+    "dynamodb", "cassandra", "graphql", "rest", "api", "microservices",
+    "devops", "ci/cd", "machine learning", "ml", "ai", "llm", "nlp",
+    "git", "github", "gitlab", "jenkins", "circleci", "terraform",
+    "ansible", "nginx", "linux",
+)
+_COMMON_WORDS = frozenset(["and", "the", "for", "with", "from", "this", "that"])
+_CAPITALIZED_WORD_RE = re.compile(r"\b[A-Z][a-zA-Z]{2,}\b")
+
+
 # Try to import AI libraries
 try:
     import anthropic
@@ -165,30 +183,26 @@ class ResumeTailorer:
         self, experience: Dict[str, Any], keywords: List[str]
     ) -> float:
         """Calculate relevance score for an experience entry based on keywords."""
-        score = 0.0
+        # ⚡ Bolt: Delay lowercasing and use efficient joining to avoid multiple string allocations
+        parts = [
+            str(experience.get("title", "")),
+            str(experience.get("role", "")),
+            str(experience.get("company", ""))
+        ]
 
-        # Check title
-        title = experience.get("title", "").lower()
-        role = experience.get("role", "").lower()
-        company = experience.get("company", "").lower()
+        bullets = experience.get("bullets")
+        if isinstance(bullets, list):
+            for b in bullets:
+                parts.append(str(b.get("text", "")) if isinstance(b, dict) else str(b))
+        else:
+            desc = experience.get("description")
+            if isinstance(desc, str):
+                parts.append(desc)
 
-        # Check description/bullets
-        description = ""
-        if isinstance(experience.get("bullets"), list):
-            description = " ".join(
-                [
-                    b.get("text", "") if isinstance(b, dict) else str(b)
-                    for b in experience["bullets"]
-                ]
-            ).lower()
-        elif isinstance(experience.get("description"), str):
-            description = experience["description"].lower()
+        text_to_check = " ".join(parts).lower()
 
-        text_to_check = f"{title} {role} {company} {description}"
-
-        for keyword in keywords:
-            if keyword.lower() in text_to_check:
-                score += 1.0
+        # ⚡ Bolt: Fast generator sum. Re-add .lower() for robustness
+        score = sum(1.0 for k in keywords if k.lower() in text_to_check)
 
         # Normalize to 0-1 range
         max_score = max(len(keywords), 1)
@@ -342,104 +356,30 @@ Return ONLY valid JSON, nothing else."""
     def _regex_extract_keywords(self, job_description: str) -> List[str]:
         """Extract keywords using regex patterns."""
 
-        # Common tech keywords to look for
-        tech_keywords = [
-            "python",
-            "javascript",
-            "typescript",
-            "java",
-            "go",
-            "rust",
-            "c++",
-            "c#",
-            "ruby",
-            "php",
-            "swift",
-            "kotlin",
-            "scala",
-            "haskell",
-            "sql",
-            "react",
-            "vue",
-            "angular",
-            "node.js",
-            "django",
-            "flask",
-            "fastapi",
-            "spring",
-            "rails",
-            "laravel",
-            "next.js",
-            "nuxt",
-            "express",
-            "tensorflow",
-            "pytorch",
-            "keras",
-            "pandas",
-            "numpy",
-            "scikit",
-            "kubernetes",
-            "docker",
-            "aws",
-            "azure",
-            "gcp",
-            "google cloud",
-            "postgres",
-            "postgresql",
-            "mysql",
-            "mongodb",
-            "redis",
-            "sqlite",
-            "elasticsearch",
-            "dynamodb",
-            "cassandra",
-            "graphql",
-            "rest",
-            "api",
-            "microservices",
-            "devops",
-            "ci/cd",
-            "machine learning",
-            "ml",
-            "ai",
-            "llm",
-            "nlp",
-            "git",
-            "github",
-            "gitlab",
-            "jenkins",
-            "circleci",
-            "terraform",
-            "ansible",
-            "nginx",
-            "linux",
-        ]
-
         job_lower = job_description.lower()
-        found_keywords = []
 
-        for keyword in tech_keywords:
+        # ⚡ Bolt: Fast path using a set for O(1) deduplication and early termination
+        found_keywords = []
+        seen = set()
+
+        for keyword in _TECH_KEYWORDS:
             if keyword in job_lower:
                 found_keywords.append(keyword)
+                seen.add(keyword)
 
-        # Also extract any other capitalized words that might be technologies
-        capitalized = re.findall(r"\b[A-Z][a-zA-Z]{2,}\b", job_description)
-        for word in capitalized:
-            word_lower = word.lower()
-            if word_lower not in found_keywords and len(word) > 3:
-                # Add common ones
-                if word_lower not in [
-                    "and",
-                    "the",
-                    "for",
-                    "with",
-                    "from",
-                    "this",
-                    "that",
-                ]:
+        # ⚡ Bolt: Use finditer for lazy evaluation instead of findall
+        for match in _CAPITALIZED_WORD_RE.finditer(job_description):
+            word = match.group()
+            if len(word) > 3:
+                word_lower = word.lower()
+                if word_lower not in seen and word_lower not in _COMMON_WORDS:
                     found_keywords.append(word_lower)
+                    seen.add(word_lower)
+                    # ⚡ Bolt: Early termination once we hit the limit
+                    if len(found_keywords) >= 50:
+                        break
 
-        return list(dict.fromkeys(found_keywords))[:50]
+        return found_keywords[:50]
 
     def suggest_improvements(
         self,
