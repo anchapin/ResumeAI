@@ -26,3 +26,7 @@
 **Vulnerability:** The `_get_table_row_count` method in `resume-api/lib/db/schema_manager.py` used a Python f-string within `sqlalchemy.text()` to build a SQL query dynamically (`text(f"SELECT COUNT(*) FROM {table_name}")`), creating a direct vector for SQL injection if `table_name` is user-controlled.
 **Learning:** `sqlalchemy.text()` does NOT sanitize variables passed into it via Python string formatting (like f-strings or `.format()`). Using standard string concatenation in database execution is inherently dangerous.
 **Prevention:** To safely use dynamic identifiers (like table or column names), use SQLAlchemy core objects like `table()` or `column()` combined with `select()`. For dynamic values, use parameterized named bindings (e.g., `text('... WHERE col=:val'), {'val': var}`).
+## 2026-05-03 - Removed `unsafe-eval` from CSP in FastAPI middleware
+**Vulnerability:** The FastAPI `SecurityHeadersMiddleware` in `resume-api/main.py` included `'unsafe-eval'` in the `script-src` directive of the Content Security Policy (CSP).
+**Learning:** Permitting `unsafe-eval` allows the execution of strings as code (e.g., using `eval()`, `setTimeout(string)`, or `new Function(string)`), which severely weakens the CSP and creates a significant Cross-Site Scripting (XSS) risk if any user input is improperly handled.
+**Prevention:** Strictly avoid adding `'unsafe-eval'` to the CSP `script-src` directive. Ensure the application is designed to not rely on dynamic evaluation of code.
