@@ -18,3 +18,6 @@
 ## 2026-04-02 - Custom Tab Component Accessibility
 **Learning:** Custom tab implementations (like comment filter buttons) often lack necessary focus rings and active state announcements for screen readers. Using just active classes (e.g. `bg-white`) is not sufficient for keyboard navigation or screen reader context.
 **Action:** Always add explicit `focus-visible:ring` classes to ensure tab elements are navigable by keyboard. Use the `aria-pressed` or `aria-current` attributes to correctly announce the active tab to assistive technologies.
+## 2026-05-03 - CI Failures Not Palette's Job
+**Learning:** Found CI pip-audit failures caused by Python dependencies (like anthropic, pytest, python-multipart). Fixing backend CI failures is outside the scope of the Palette persona which focuses on UI and accessibility.
+**Action:** When acting as Palette, ignore backend build / CI issues unless they directly block the frontend changes.
