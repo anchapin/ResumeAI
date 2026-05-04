@@ -39,3 +39,7 @@
 ## 2024-05-27 - Regex Cross-Matching Risk in Tag Sanitization
 **Learning:** Consolidating start and end HTML tag patterns into a single regex with a shared group (like `<(?:iframe|form|input)[^>]*>.*?</(?:iframe|form|input)>`) is a critical security and functionality bug because it allows cross-matching (e.g., `<input>...</form>`), leading to data loss.
 **Action:** When stripping multiple different HTML tags via regex, always iterate over a list of pre-compiled individual tag patterns (e.g., one for `iframe`, one for `form`) rather than merging them into a single cross-matching OR pattern.
+
+## 2024-06-13 - Keyword Case Manipulation Optimization
+**Learning:** In text-scoring loops inside `resume_ai_lib/src/resume_ai_lib/tailor.py` (`_calculate_relevance`), repeatedly converting keyword terms to lowercase `keyword.lower()` for every element check inside an already nested block caused severe overhead due to redundant memory allocation for string casing ops, expanding the workload exponentially across multiple string fragments.
+**Action:** When calculating match scores using static lookup lists against parsed text entries, explicitly pre-compute case manipulations and build optimized `lower()` list copies at the top-most function level, passing the transformed lookup array down to the internal scoring logic to eliminate redundant runtime conversions.
