@@ -118,6 +118,8 @@ class ResumeTailorer:
 
         # Extract keywords from job description
         keywords = self.extract_keywords(job_description)
+        # ⚡ Bolt Optimization: Pre-lowercase keywords once to avoid redundant O(N) conversions inside inner loops
+        keywords_lower = [k.lower() for k in keywords if k]
 
         # Match and score experience
         tailored_data = resume_data.copy()
@@ -138,14 +140,14 @@ class ResumeTailorer:
                 if isinstance(exp, dict):
                     exp["_tailored"] = True
                     # Calculate relevance score based on keyword matching
-                    exp["_relevance_score"] = self._calculate_relevance(exp, keywords)
+                    exp["_relevance_score"] = self._calculate_relevance(exp, keywords_lower)
 
         # Also handle "work" field (JSON Resume format)
         if "work" in tailored_data and isinstance(tailored_data["work"], list):
             for exp in tailored_data["work"]:
                 if isinstance(exp, dict):
                     exp["_tailored"] = True
-                    exp["_relevance_score"] = self._calculate_relevance(exp, keywords)
+                    exp["_relevance_score"] = self._calculate_relevance(exp, keywords_lower)
 
         # Use AI to enhance the resume if client is available
         if self.client:
@@ -186,8 +188,9 @@ class ResumeTailorer:
 
         text_to_check = f"{title} {role} {company} {description}"
 
+        # Note: keywords should be pre-lowercased before being passed to this method
         for keyword in keywords:
-            if keyword.lower() in text_to_check:
+            if keyword in text_to_check:
                 score += 1.0
 
         # Normalize to 0-1 range
@@ -514,6 +517,8 @@ class MockResumeTailorer(ResumeTailorer):
     ) -> Dict[str, Any]:
         """Mock tailoring - adds metadata and relevance scores."""
         keywords = self.extract_keywords(job_description)
+        # ⚡ Bolt Optimization: Pre-lowercase keywords to avoid redundant conversions
+        keywords_lower = [k.lower() for k in keywords if k]
 
         tailored_data = resume_data.copy()
         tailored_data["_tailored"] = True
@@ -529,7 +534,7 @@ class MockResumeTailorer(ResumeTailorer):
                     if isinstance(exp, dict):
                         exp["_tailored"] = True
                         exp["_relevance_score"] = self._calculate_relevance(
-                            exp, keywords
+                            exp, keywords_lower
                         )
 
         return tailored_data
