@@ -18,3 +18,7 @@
 ## 2026-04-02 - Custom Tab Component Accessibility
 **Learning:** Custom tab implementations (like comment filter buttons) often lack necessary focus rings and active state announcements for screen readers. Using just active classes (e.g. `bg-white`) is not sufficient for keyboard navigation or screen reader context.
 **Action:** Always add explicit `focus-visible:ring` classes to ensure tab elements are navigable by keyboard. Use the `aria-pressed` or `aria-current` attributes to correctly announce the active tab to assistive technologies.
+
+## 2024-05-24 - Password Strength Meter Accessibility
+**Learning:** Dynamic visual indicators (like password strength meters) and progress bars need semantic roles and live regions to be perceivable by screen readers. Furthermore, template literal strings in JSX must use backticks, otherwise variables won't interpolate, leading to broken visual styles.
+**Action:** Always use `role="progressbar"` with appropriate `aria-valuenow`/`aria-valuetext` attributes for visual bars, and wrap dynamic text feedback in `aria-live="polite"` containers so users are notified of state changes without losing focus.
