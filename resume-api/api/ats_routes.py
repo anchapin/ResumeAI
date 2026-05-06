@@ -5,7 +5,7 @@ ATS Compatibility Check API Routes.
 import io
 from datetime import datetime
 from typing import Optional
-from fastapi import APIRouter, File, HTTPException, Query, UploadFile, status
+from fastapi import APIRouter, File, HTTPException, Query, UploadFile, status, Request
 from pydantic import BaseModel
 from config.dependencies import AuthorizedAPIKey, limiter
 from config import settings
@@ -60,7 +60,10 @@ async def check_rate_limit():
     summary="Check ATS Compatibility",
     description="Upload a resume to analyze its ATS compatibility score and detect issues"
 )
+@limiter.limit("10/minute")
 async def check_ats_compatibility(
+    request: Request,
+    auth: AuthorizedAPIKey,
     file: UploadFile = File(..., description="Resume file (PDF, DOCX, or TXT)")
 ):
     """
@@ -141,7 +144,10 @@ async def health_check():
     summary="Bulk ATS Compatibility Check",
     description="Upload multiple resumes to analyze their ATS compatibility"
 )
+@limiter.limit("2/minute")
 async def check_ats_compatibility_bulk(
+    request: Request,
+    auth: AuthorizedAPIKey,
     files: list[UploadFile] = File(..., description="Multiple resume files (PDF, DOCX, or TXT)")
 ):
     """
@@ -225,7 +231,10 @@ class ATSHistoryResponse(BaseModel):
     summary="Get ATS Score History",
     description="Get the history of ATS checks for the current user"
 )
+@limiter.limit("20/minute")
 async def get_ats_history(
+    request: Request,
+    auth: AuthorizedAPIKey,
     limit: int = Query(10, ge=1, le=100, description="Number of results to return"),
     resume_id: Optional[int] = Query(None, description="Filter by specific resume"),
     skip_db: bool = Query(False, description="Skip database storage (for testing)")
@@ -252,7 +261,10 @@ async def get_ats_history(
     summary="Save ATS Check to History",
     description="Save an ATS check result to history"
 )
+@limiter.limit("20/minute")
 async def save_ats_history(
+    request: Request,
+    auth: AuthorizedAPIKey,
     file_type: str,
     ats_score: int,
     is_parseable: bool,
