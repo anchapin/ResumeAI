@@ -14,3 +14,6 @@
 ## 2026-03-09 - Ensure aria-hidden for ligature icons
 **Learning:** Adding `aria-label`s to buttons is critical, but when the button uses an icon font like Material Symbols that relies on text ligatures (e.g., `close`, `history`, `edit`), screen readers will read the ligature text aloud. This creates a confusing experience (e.g. reading "Close close" or just "Close" when it should be "Close form").
 **Action:** When adding `aria-label` to an icon-only button that uses ligature icons, always ensure the inner `<span>` element containing the ligature text has `aria-hidden="true"`.
+## 2026-05-06 - Activity Feed Icon Accessibility
+**Learning:** Icon-only SVG buttons in notification panels and activity feeds frequently omit `aria-label`s, preventing screen readers from announcing their purpose. Even if the icon is visually obvious (like a bell or an 'x' for closing), screen readers need explicit labels. Additionally, the inner `<svg>` element should receive `aria-hidden="true"` so that the screen reader reads the button's label instead of attempting to interpret the SVG markup.
+**Action:** Always verify that buttons containing only icons (e.g., SVG or font icons) have an explicitly defined `aria-label` describing their action, and apply `aria-hidden="true"` to the icon element itself.
