@@ -14,3 +14,7 @@
 ## 2026-03-09 - Ensure aria-hidden for ligature icons
 **Learning:** Adding `aria-label`s to buttons is critical, but when the button uses an icon font like Material Symbols that relies on text ligatures (e.g., `close`, `history`, `edit`), screen readers will read the ligature text aloud. This creates a confusing experience (e.g. reading "Close close" or just "Close" when it should be "Close form").
 **Action:** When adding `aria-label` to an icon-only button that uses ligature icons, always ensure the inner `<span>` element containing the ligature text has `aria-hidden="true"`.
+
+## 2026-05-06 - Always Check Ligature Icons
+**Learning:** Found multiple instances where the `aria-hidden="true"` attribute was missing from ligature icons inside interactive elements (`components/ResumeCard.tsx`), despite a previous learning about this issue. The omission causes screen readers to read the literal text of the icon (e.g., "edit", "share", "delete", "content_copy") even when the parent button already has a descriptive `aria-label`. This redundancy can make navigation confusing.
+**Action:** When working on UI components that use Material Symbols or similar ligature-based icon fonts, especially inside interactive elements like `<button>` or `<a>`, make it a habit to proactively audit all `<span className="material-symbols-outlined">` tags to ensure they include `aria-hidden="true"`. Do not assume it was added globally.
