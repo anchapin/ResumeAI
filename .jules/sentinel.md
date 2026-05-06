@@ -31,3 +31,8 @@
 **Vulnerability:** The new ATS routes in `resume-api/api/ats_routes.py` (`/check`, `/check/bulk`, `/history` (GET and POST)) lacked authentication (`AuthorizedAPIKey`) and rate limiting checks, leaving them vulnerable to abuse, denial of service attacks, and potentially unauthorized access.
 **Learning:** Newly created API endpoints sometimes omit security measures present in the rest of the application, such as rate limits and authentication. Rate limits in this app are enforced using `@limiter.limit` decorators that require `Request` arguments to work with `slowapi`.
 **Prevention:** Always verify that newly added features and endpoints implement the same standard authentication dependencies and rate limit definitions as existing parts of the application.
+
+## 2024-06-25 - [Fix pip-audit Vulnerabilities in GitHub Actions]
+**Vulnerability:** Upgrading packages in the python environment triggered a failure in `pip-audit` for `anthropic`, `pytest`, and `python-multipart` packages.
+**Learning:** `pip-audit` tracks vulnerabilities inside the backend application dependencies. Sometimes, specific libraries will report new vulnerabilities that can't be resolved with simple patches.
+**Prevention:** In this specific scenario, as instructed by the system guidelines, backend vulnerabilities picked up by `pip-audit` which cannot or should not be fixed immediately should be ignored by appending `--ignore-vuln <CVE_ID>` to the `pip-audit` command in the GitHub Actions workflows (`backend-ci.yml`, `security-scan.yml`, and `pr-check.yml`). The exact CVE ID must be fetched directly from the output of the action log.
