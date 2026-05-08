@@ -39,3 +39,7 @@
 ## 2024-05-27 - Regex Cross-Matching Risk in Tag Sanitization
 **Learning:** Consolidating start and end HTML tag patterns into a single regex with a shared group (like `<(?:iframe|form|input)[^>]*>.*?</(?:iframe|form|input)>`) is a critical security and functionality bug because it allows cross-matching (e.g., `<input>...</form>`), leading to data loss.
 **Action:** When stripping multiple different HTML tags via regex, always iterate over a list of pre-compiled individual tag patterns (e.g., one for `iframe`, one for `form`) rather than merging them into a single cross-matching OR pattern.
+
+## 2024-05-28 - Regex Overhead in Dynamic Keyword Matching
+**Learning:** While `re.compile` is generally faster for static pattern matching, dynamically compiling a regex from a list of user/job-specific keywords inside a request loop (e.g., in `tailor_resume`) is slower than simply pre-computing a unique lowercased Python list (`list(set([k.lower() for k in keywords]))`) and iterating over it for short-to-medium length texts. The regex compilation overhead outweighs the execution speedup unless the text is massive or the pattern is statically compiled at the module level.
+**Action:** When dynamically matching a variable list of keywords against text snippets within a request, avoid inline `re.compile`. Instead, deduplicate and lowercase the keyword list once upfront, pass it down, and use the Python `in` operator (or O(1) set lookups if extracting words).
