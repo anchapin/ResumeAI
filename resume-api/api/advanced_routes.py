@@ -51,6 +51,7 @@ from .models import (
     ResumeData,
     UserSettingsResponse,
 )
+from config.security import hash_password, verify_password
 from database import (
     get_db,
     Resume,
@@ -824,9 +825,7 @@ async def share_resume(
 
         # Hash password if provided
         if request.password:
-            import hashlib
-
-            share.share_password_hash = hashlib.sha256(request.password.encode()).hexdigest()
+            share.share_password_hash = hash_password(request.password)
 
         db.add(share)
 
@@ -907,10 +906,7 @@ async def access_shared_resume(
                     status_code=status.HTTP_401_UNAUTHORIZED,
                     detail="Password required",
                 )
-            import hashlib
-
-            password_hash = hashlib.sha256(password.encode()).hexdigest()
-            if password_hash != share.share_password_hash:
+            if not verify_password(password, share.share_password_hash):
                 raise HTTPException(
                     status_code=status.HTTP_401_UNAUTHORIZED,
                     detail="Invalid password",

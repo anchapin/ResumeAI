@@ -26,3 +26,9 @@
 **Vulnerability:** The `_get_table_row_count` method in `resume-api/lib/db/schema_manager.py` used a Python f-string within `sqlalchemy.text()` to build a SQL query dynamically (`text(f"SELECT COUNT(*) FROM {table_name}")`), creating a direct vector for SQL injection if `table_name` is user-controlled.
 **Learning:** `sqlalchemy.text()` does NOT sanitize variables passed into it via Python string formatting (like f-strings or `.format()`). Using standard string concatenation in database execution is inherently dangerous.
 **Prevention:** To safely use dynamic identifiers (like table or column names), use SQLAlchemy core objects like `table()` or `column()` combined with `select()`. For dynamic values, use parameterized named bindings (e.g., `text('... WHERE col=:val'), {'val': var}`).
+
+## 2026-05-18 - [Insecure Password Hashing using raw SHA-256]
+
+**Vulnerability:** The `share_resume` functionality in `resume-api/api/advanced_routes.py` was directly utilizing raw `hashlib.sha256().hexdigest()` to hash passwords instead of using a properly secured key-stretching algorithm (like bcrypt) via the standardized `config.security` utility functions.
+**Learning:** Using fast cryptographic hashes (like SHA-256 or MD5) directly for password hashing is insecure because they are designed for speed and are thus susceptible to fast brute-force or dictionary attacks. Furthermore, bypassing the central `config.security` utilities circumvents the project's standardized cryptographic configurations (like salting and adaptive work factors).
+**Prevention:** Always use the dedicated password management utilities `config.security.hash_password` and `config.security.verify_password` to securely hash and verify passwords in the backend instead of using raw `hashlib` functions.
