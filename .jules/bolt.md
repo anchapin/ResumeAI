@@ -39,3 +39,7 @@
 ## 2024-05-27 - Regex Cross-Matching Risk in Tag Sanitization
 **Learning:** Consolidating start and end HTML tag patterns into a single regex with a shared group (like `<(?:iframe|form|input)[^>]*>.*?</(?:iframe|form|input)>`) is a critical security and functionality bug because it allows cross-matching (e.g., `<input>...</form>`), leading to data loss.
 **Action:** When stripping multiple different HTML tags via regex, always iterate over a list of pre-compiled individual tag patterns (e.g., one for `iframe`, one for `form`) rather than merging them into a single cross-matching OR pattern.
+
+## 2024-05-28 - Backend N+1 Queries Elimination using Batch Select
+**Learning:** Querying the database to find the count of items related to a list of models individually in a loop leads to N+1 querying. This creates a large performance bottleneck when dealing with big sets of data.
+**Action:** Use batch processing by doing a `select().where(Model.team_id.in_(list_ids)).group_by(Model.team_id)` to execute a single query instead of executing one per item. Return the results in a dictionary where you can retrieve them in O(1) time.
