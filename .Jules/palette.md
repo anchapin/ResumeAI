@@ -14,3 +14,7 @@
 ## 2026-03-09 - Ensure aria-hidden for ligature icons
 **Learning:** Adding `aria-label`s to buttons is critical, but when the button uses an icon font like Material Symbols that relies on text ligatures (e.g., `close`, `history`, `edit`), screen readers will read the ligature text aloud. This creates a confusing experience (e.g. reading "Close close" or just "Close" when it should be "Close form").
 **Action:** When adding `aria-label` to an icon-only button that uses ligature icons, always ensure the inner `<span>` element containing the ligature text has `aria-hidden="true"`.
+
+## 2026-05-10 - Copy Feedback in Transient UI Components
+**Learning:** Found that `ErrorDisplay` had a copy button for the Error ID that did not use a dynamic `aria-label` nor `aria-hidden` on the inner ligature icon, unlike the copy buttons in the persistent UI (`ShareDialog`, `Settings`). This lack of feedback meant screen reader users weren't informed when the Error ID was copied successfully.
+**Action:** Always ensure that copy-to-clipboard buttons located in transient UI elements (such as Error Messages, Toasts, or Modals) receive the exact same level of dynamic accessibility enhancements (updating `aria-label`s and `aria-hidden` icons) as buttons located in permanent UI sections, for consistent screen reader assurance.
