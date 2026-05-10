@@ -184,18 +184,31 @@ async def list_teams(
         teams = result.scalars().all()
 
         team_responses = []
-        for team in teams:
-            member_count_stmt = select(func.count(TeamMember.id)).where(
-                TeamMember.team_id == team.id
-            )
-            result = await db.execute(member_count_stmt)
-            member_count = result.scalar() or 0
+        if not teams:
+            return team_responses
 
-            resume_count_stmt = select(func.count(TeamResume.id)).where(
-                TeamResume.team_id == team.id
-            )
-            result = await db.execute(resume_count_stmt)
-            resume_count = result.scalar() or 0
+        team_ids = [team.id for team in teams]
+
+        # Pre-fetch counts to avoid N+1 queries
+        member_count_stmt = (
+            select(TeamMember.team_id, func.count(TeamMember.id))
+            .where(TeamMember.team_id.in_(team_ids))
+            .group_by(TeamMember.team_id)
+        )
+        result = await db.execute(member_count_stmt)
+        member_counts = {row[0]: row[1] for row in result.all()}
+
+        resume_count_stmt = (
+            select(TeamResume.team_id, func.count(TeamResume.id))
+            .where(TeamResume.team_id.in_(team_ids))
+            .group_by(TeamResume.team_id)
+        )
+        result = await db.execute(resume_count_stmt)
+        resume_counts = {row[0]: row[1] for row in result.all()}
+
+        for team in teams:
+            member_count = member_counts.get(team.id, 0)
+            resume_count = resume_counts.get(team.id, 0)
 
             team_responses.append(
                 TeamResponse(
