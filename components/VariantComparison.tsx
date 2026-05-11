@@ -73,7 +73,8 @@ const VariantComparison: React.FC = () => {
         <div className="flex items-center gap-2">
           <button
             onClick={() => setCompareMode('side-by-side')}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+            aria-pressed={compareMode === 'side-by-side'}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-1 ${
               compareMode === 'side-by-side'
                 ? 'bg-primary-600 text-white'
                 : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
@@ -83,7 +84,8 @@ const VariantComparison: React.FC = () => {
           </button>
           <button
             onClick={() => setCompareMode('diff')}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+            aria-pressed={compareMode === 'diff'}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-1 ${
               compareMode === 'diff'
                 ? 'bg-primary-600 text-white'
                 : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
@@ -104,7 +106,8 @@ const VariantComparison: React.FC = () => {
             <button
               key={variant.id}
               onClick={() => toggleVariant(variant.id)}
-              className={`flex items-center gap-3 px-4 py-3 rounded-lg border-2 transition-all ${
+              aria-pressed={selectedVariants.includes(variant.id)}
+              className={`flex items-center gap-3 px-4 py-3 rounded-lg border-2 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-1 ${
                 selectedVariants.includes(variant.id)
                   ? 'border-primary-500 bg-primary-50'
                   : 'border-slate-200 hover:border-slate-300'
