@@ -1304,23 +1304,28 @@ async def batch_delete_resumes(
     successful = []
     failed = []
 
+    # Pre-fetch all requested resumes in a single query
+    result = await db.execute(
+        select(Resume)
+        .options(selectinload(Resume.tags))
+        .where(Resume.id.in_(request.resume_ids))
+    )
+    resumes_by_id = {r.id: r for r in result.scalars().all()}
+
     for resume_id in request.resume_ids:
         try:
-            result = await db.execute(
-                select(Resume).options(selectinload(Resume.tags)).where(Resume.id == resume_id)
-            )
-            resume = result.scalar_one_or_none()
+            async with db.begin_nested():
+                resume = resumes_by_id.get(resume_id)
 
-            if not resume:
-                failed.append({"id": resume_id, "error": "Resume not found"})
-                continue
+                if not resume:
+                    failed.append({"id": resume_id, "error": "Resume not found"})
+                    continue
 
-            await db.delete(resume)
-            await db.flush()
-            successful.append(resume_id)
+                await db.delete(resume)
+                await db.flush()
+                successful.append(resume_id)
 
         except Exception as e:
-            await db.rollback()
             failed.append({"id": resume_id, "error": str(e)})
 
     await db.commit()
@@ -1356,12 +1361,17 @@ async def batch_export_resumes(
     failed = []
     export_job_id = str(uuid.uuid4())
 
+    # Pre-fetch all requested resumes in a single query
+    result = await db.execute(
+        select(Resume)
+        .options(selectinload(Resume.tags))
+        .where(Resume.id.in_(request.resume_ids))
+    )
+    resumes_by_id = {r.id: r for r in result.scalars().all()}
+
     for resume_id in request.resume_ids:
         try:
-            result = await db.execute(
-                select(Resume).options(selectinload(Resume.tags)).where(Resume.id == resume_id)
-            )
-            resume = result.scalar_one_or_none()
+            resume = resumes_by_id.get(resume_id)
 
             if not resume:
                 failed.append({"id": resume_id, "error": "Resume not found"})
