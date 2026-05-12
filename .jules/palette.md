@@ -18,3 +18,7 @@
 ## 2026-04-02 - Custom Tab Component Accessibility
 **Learning:** Custom tab implementations (like comment filter buttons) often lack necessary focus rings and active state announcements for screen readers. Using just active classes (e.g. `bg-white`) is not sufficient for keyboard navigation or screen reader context.
 **Action:** Always add explicit `focus-visible:ring` classes to ensure tab elements are navigable by keyboard. Use the `aria-pressed` or `aria-current` attributes to correctly announce the active tab to assistive technologies.
+
+## 2024-05-13 - [Dynamic State Announcement]
+**Learning:** When building custom controls that dynamically update a visual indicator (like the zoom percentage in the ResumePreview component), purely visual text updates are ignored by screen readers unless specifically marked.
+**Action:** Always add `aria-live="polite"` and `aria-atomic="true"` to the container element that displays dynamically updating state (e.g., zoom percentages, progress text) so that screen readers announce the new state to users automatically without shifting focus.
