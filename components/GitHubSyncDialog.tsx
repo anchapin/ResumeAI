@@ -1,4 +1,3 @@
- 
 import React, { useState, useEffect, useCallback } from 'react';
 import { toast } from 'react-toastify';
 import { secureApiCall, getAuthToken } from '../utils/security';
@@ -127,7 +126,7 @@ async function fetchGitHubRepositories(): Promise<GitHubRepository[]> {
  * Allows users to sync their GitHub repositories to their resume.
  * Checks OAuth connection status and prompts connection if needed.
  */
- 
+
 export const GitHubSyncDialog: React.FC<GitHubSyncDialogProps> = ({
   isOpen,
   onClose,
@@ -294,8 +293,11 @@ export const GitHubSyncDialog: React.FC<GitHubSyncDialogProps> = ({
             onClick={onClose}
             className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
             disabled={isSyncing || isConnecting}
+            aria-label="Close dialog"
           >
-            <span className="material-symbols-outlined">close</span>
+            <span className="material-symbols-outlined" aria-hidden="true">
+              close
+            </span>
           </button>
         </div>
 
@@ -391,8 +393,17 @@ export const GitHubSyncDialog: React.FC<GitHubSyncDialogProps> = ({
                     <div
                       key={repo.id}
                       onClick={() => toggleRepository(repo.id)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          toggleRepository(repo.id);
+                        }
+                      }}
+                      role="checkbox"
+                      aria-checked={selectedRepositories.has(repo.id)}
+                      tabIndex={0}
                       className={`
-                      p-4 rounded-lg border-2 cursor-pointer transition-all
+                      p-4 rounded-lg border-2 cursor-pointer transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500
                       ${
                         selectedRepositories.has(repo.id)
                           ? 'border-primary-500 bg-primary-50'
