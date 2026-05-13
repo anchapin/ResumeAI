@@ -1094,68 +1094,71 @@ async def batch_create_resumes(
     successful = []
     failed = []
 
+    # Pre-fetch all requested tags outside the loop to avoid N+1 query pattern
+    all_tags = set()
+    for resume_req in request.resumes:
+        if resume_req.tags:
+            all_tags.update(resume_req.tags)
+
+    existing_tags_dict = {}
+    if all_tags:
+        existing_tags_result = await db.execute(select(Tag).where(Tag.name.in_(list(all_tags))))
+        existing_tags_dict = {t.name: t for t in existing_tags_result.scalars().all()}
+
     for idx, resume_request in enumerate(request.resumes):
         try:
-            # Validate and escape resume data
-            resume_dict = resume_request.data.model_dump(exclude_none=True)
-            resume_dict = validate_resume_data(resume_dict)
+            async with db.begin_nested():
+                # Validate and escape resume data
+                resume_dict = resume_request.data.model_dump(exclude_none=True)
+                resume_dict = validate_resume_data(resume_dict)
 
-            # Create resume
-            resume = Resume(
-                title=resume_request.title,
-                data=resume_dict,
-            )
-
-            # Add tags
-            if resume_request.tags:
-                existing_tags_result = await db.execute(select(Tag).where(Tag.name.in_(resume_request.tags)))
-                existing_tags_dict = {t.name: t for t in existing_tags_result.scalars().all()}
-                for tag_name in resume_request.tags:
-                    existing_tag = existing_tags_dict.get(tag_name)
-                    if not existing_tag:
-                        existing_tag = Tag(name=tag_name)
-                        db.add(existing_tag)
-                        await db.flush()
-                        existing_tags_dict[tag_name] = existing_tag
-                    resume.tags.append(existing_tag)
-
-            db.add(resume)
-            await db.flush()
-
-            # Create initial version
-            version = ResumeVersion(
-                resume_id=resume.id,
-                data=resume_dict,
-                version_number=1,
-                change_description="Initial version",
-            )
-            db.add(version)
-            await db.flush()
-
-            await db.commit()
-            await db.refresh(resume)
-
-            # Load tags for response
-            result = await db.execute(
-                select(Resume).options(selectinload(Resume.tags)).where(Resume.id == resume.id)
-            )
-            resume = result.scalar_one()
-
-            successful.append(
-                ResumeResponse(
-                    id=resume.id,
-                    title=resume.title,
-                    data=ResumeData(**resume.data),
-                    tags=[tag.name for tag in resume.tags],
-                    is_public=resume.is_public,
-                    current_version_id=resume.current_version_id,
-                    created_at=resume.created_at.isoformat(),
-                    updated_at=resume.updated_at.isoformat(),
+                # Create resume
+                resume = Resume(
+                    title=resume_request.title,
+                    data=resume_dict,
                 )
-            )
+
+                # Add tags
+                if resume_request.tags:
+                    for tag_name in resume_request.tags:
+                        existing_tag = existing_tags_dict.get(tag_name)
+                        if not existing_tag:
+                            existing_tag = Tag(name=tag_name)
+                            db.add(existing_tag)
+                            await db.flush()
+                            existing_tags_dict[tag_name] = existing_tag
+                        resume.tags.append(existing_tag)
+
+                db.add(resume)
+                await db.flush()
+
+                # Create initial version
+                version = ResumeVersion(
+                    resume_id=resume.id,
+                    data=resume_dict,
+                    version_number=1,
+                    change_description="Initial version",
+                )
+                db.add(version)
+                await db.flush()
+
+                # Fetch tags correctly for response within the savepoint
+                await db.flush()
+
+                successful.append(
+                    ResumeResponse(
+                        id=resume.id,
+                        title=resume.title,
+                        data=ResumeData(**resume.data),
+                        tags=[tag.name for tag in resume.tags],
+                        is_public=resume.is_public,
+                        current_version_id=version.id,
+                        created_at=resume.created_at.isoformat(),
+                        updated_at=resume.updated_at.isoformat(),
+                    )
+                )
 
         except Exception as e:
-            await db.rollback()
             failed.append(
                 {
                     "index": idx,
@@ -1167,6 +1170,8 @@ async def batch_create_resumes(
                     "error": str(e),
                 }
             )
+
+    await db.commit()
 
     return BatchCreateResponse(
         successful=successful,
@@ -1197,77 +1202,90 @@ async def batch_update_resumes(
     successful = []
     failed = []
 
+    # Get all tags needed
+    all_tags = set()
+    for update_req in request.resumes:
+        if update_req.tags is not None:
+            all_tags.update(update_req.tags)
+
+    existing_tags_dict = {}
+    if all_tags:
+        existing_tags_result = await db.execute(select(Tag).where(Tag.name.in_(list(all_tags))))
+        existing_tags_dict = {t.name: t for t in existing_tags_result.scalars().all()}
+
+    # Get all resumes needed (so we can iterate without N+1)
+    resume_ids = [r.id for r in request.resumes]
+    resumes_by_id = {}
+    if resume_ids:
+        resumes_result = await db.execute(
+            select(Resume)
+            .options(selectinload(Resume.tags))
+            .options(selectinload(Resume.versions))
+            .where(Resume.id.in_(resume_ids))
+        )
+        resumes_by_id = {r.id: r for r in resumes_result.scalars().all()}
+
     for idx, update_request in enumerate(request.resumes):
         try:
-            # Get resume by ID
-            result = await db.execute(
-                select(Resume)
-                .options(selectinload(Resume.tags))
-                .options(selectinload(Resume.versions))
-                .where(Resume.id == update_request.id)
-            )
-            resume = result.scalar_one_or_none()
+            async with db.begin_nested():
+                resume = resumes_by_id.get(update_request.id)
 
-            if not resume:
-                failed.append(
-                    {
-                        "index": idx,
-                        "id": update_request.id,
-                        "error": f"Resume with ID {update_request.id} not found",
-                    }
+                if not resume:
+                    failed.append(
+                        {
+                            "index": idx,
+                            "id": update_request.id,
+                            "error": f"Resume with ID {update_request.id} not found",
+                        }
+                    )
+                    continue
+
+                # Update fields
+                if update_request.title:
+                    resume.title = update_request.title
+                if update_request.data:
+                    # Validate and escape resume data
+                    resume_dict = update_request.data.model_dump(exclude_none=True)
+                    resume_dict = validate_resume_data(resume_dict)
+                    resume.data = resume_dict
+
+                # Update tags if provided
+                if update_request.tags is not None:
+                    resume.tags.clear()
+                    for tag_name in update_request.tags:
+                        existing_tag = existing_tags_dict.get(tag_name)
+                        if not existing_tag:
+                            existing_tag = Tag(name=tag_name)
+                            db.add(existing_tag)
+                            await db.flush()
+                            existing_tags_dict[tag_name] = existing_tag
+                        resume.tags.append(existing_tag)
+
+                await db.flush()
+
+                # Get latest version
+                version_result = await db.execute(
+                    select(ResumeVersion)
+                    .where(ResumeVersion.resume_id == resume.id)
+                    .order_by(ResumeVersion.version_number.desc())
+                    .limit(1)
                 )
-                continue
+                current_version = version_result.scalar_one_or_none()
 
-            # Update fields
-            if update_request.title:
-                resume.title = update_request.title
-            if update_request.data:
-                # Validate and escape resume data
-                resume_dict = update_request.data.model_dump(exclude_none=True)
-                resume_dict = validate_resume_data(resume_dict)
-                resume.data = resume_dict
-
-            # Update tags if provided
-            if update_request.tags is not None:
-                resume.tags.clear()
-                existing_tags_result = await db.execute(select(Tag).where(Tag.name.in_(update_request.tags)))
-                existing_tags_dict = {t.name: t for t in existing_tags_result.scalars().all()}
-                for tag_name in update_request.tags:
-                    existing_tag = existing_tags_dict.get(tag_name)
-                    if not existing_tag:
-                        existing_tag = Tag(name=tag_name)
-                        db.add(existing_tag)
-                        await db.flush()
-                        existing_tags_dict[tag_name] = existing_tag
-                    resume.tags.append(existing_tag)
-
-            await db.commit()
-            await db.refresh(resume)
-
-            # Get latest version
-            version_result = await db.execute(
-                select(ResumeVersion)
-                .where(ResumeVersion.resume_id == resume.id)
-                .order_by(ResumeVersion.version_number.desc())
-                .limit(1)
-            )
-            current_version = version_result.scalar_one_or_none()
-
-            successful.append(
-                ResumeResponse(
-                    id=resume.id,
-                    title=resume.title,
-                    data=ResumeData(**resume.data),
-                    tags=[tag.name for tag in resume.tags],
-                    is_public=resume.is_public,
-                    current_version_id=current_version.id if current_version else None,
-                    created_at=resume.created_at.isoformat(),
-                    updated_at=resume.updated_at.isoformat(),
+                successful.append(
+                    ResumeResponse(
+                        id=resume.id,
+                        title=resume.title,
+                        data=ResumeData(**resume.data),
+                        tags=[tag.name for tag in resume.tags],
+                        is_public=resume.is_public,
+                        current_version_id=current_version.id if current_version else None,
+                        created_at=resume.created_at.isoformat(),
+                        updated_at=resume.updated_at.isoformat(),
+                    )
                 )
-            )
 
         except Exception as e:
-            await db.rollback()
             failed.append(
                 {
                     "index": idx,
@@ -1275,6 +1293,8 @@ async def batch_update_resumes(
                     "error": str(e),
                 }
             )
+
+    await db.commit()
 
     return BatchUpdateResponse(
         successful=successful,
