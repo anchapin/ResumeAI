@@ -14,3 +14,7 @@
 ## 2026-03-09 - Ensure aria-hidden for ligature icons
 **Learning:** Adding `aria-label`s to buttons is critical, but when the button uses an icon font like Material Symbols that relies on text ligatures (e.g., `close`, `history`, `edit`), screen readers will read the ligature text aloud. This creates a confusing experience (e.g. reading "Close close" or just "Close" when it should be "Close form").
 **Action:** When adding `aria-label` to an icon-only button that uses ligature icons, always ensure the inner `<span>` element containing the ligature text has `aria-hidden="true"`.
+
+## 2026-03-09 - Accessible Custom Checkbox Cards
+**Learning:** When using custom `div` elements as selectable list items or cards instead of native inputs, keyboard users and screen readers lose functionality. This is a recurring issue where `onClick` is added to a `div` without corresponding accessibility attributes.
+**Action:** When implementing custom interactive cards that act as checkboxes, always ensure they have `role="checkbox"`, `aria-checked`, `tabIndex={0}`, explicit `:focus-visible` styles, and an `onKeyDown` handler that triggers the action on 'Enter' and ' ' (Space) keys.
