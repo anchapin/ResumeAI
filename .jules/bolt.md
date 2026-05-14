@@ -39,3 +39,7 @@
 ## 2024-05-27 - Regex Cross-Matching Risk in Tag Sanitization
 **Learning:** Consolidating start and end HTML tag patterns into a single regex with a shared group (like `<(?:iframe|form|input)[^>]*>.*?</(?:iframe|form|input)>`) is a critical security and functionality bug because it allows cross-matching (e.g., `<input>...</form>`), leading to data loss.
 **Action:** When stripping multiple different HTML tags via regex, always iterate over a list of pre-compiled individual tag patterns (e.g., one for `iframe`, one for `form`) rather than merging them into a single cross-matching OR pattern.
+
+## 2026-05-14 - SQLAlchemy N+1 Batch Update Avoidance
+**Learning:** In SQLAlchemy, updating multiple records in a batch inside a loop using pre-fetched objects (via `.in_()` to resolve N+1 queries) fails with a `MissingGreenlet` error if `await db.commit()` or `await db.rollback()` is called inside the loop, because committing expires the fetched objects prematurely.
+**Action:** Always prefetch existing records outside the loop and map them to a dictionary (`{r.id: r}`). Then, wrap the inner operations in `async with db.begin_nested():` to utilize savepoints. This safely handles partial row-level failures (and implicit rollbacks) while allowing a single `await db.commit()` at the very end of the batch iteration block to persist everything.
