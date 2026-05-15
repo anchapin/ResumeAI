@@ -18,3 +18,6 @@
 ## 2026-04-02 - Custom Tab Component Accessibility
 **Learning:** Custom tab implementations (like comment filter buttons) often lack necessary focus rings and active state announcements for screen readers. Using just active classes (e.g. `bg-white`) is not sufficient for keyboard navigation or screen reader context.
 **Action:** Always add explicit `focus-visible:ring` classes to ensure tab elements are navigable by keyboard. Use the `aria-pressed` or `aria-current` attributes to correctly announce the active tab to assistive technologies.
+## 2026-05-15 - Password Strength Meter Accessibility
+**Learning:** Visual indicators of password strength often rely purely on CSS colors and widths, which are invisible to screen readers. Furthermore, as the strength changes dynamically on input, assistive technologies are not notified of the change.
+**Action:** Always add `role="progressbar"`, `aria-valuenow`, `aria-valuemin`, and `aria-valuemax` to the visual strength bar. Also, wrap the text label in an `aria-live="polite"` and `aria-atomic="true"` container so the updated strength is announced.
