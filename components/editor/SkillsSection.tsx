@@ -19,7 +19,9 @@ export const SkillsSection = React.memo<SkillsSectionProps>(
               className="flex items-center gap-1 text-sm font-bold text-slate-500 hover:text-primary-600 transition-colors"
               title="Add comment to this section"
             >
-              <span className="material-symbols-outlined text-[18px]">chat_bubble_outline</span>
+              <span className="material-symbols-outlined text-[18px]" aria-hidden="true">
+                chat_bubble_outline
+              </span>
               <span>Add Comment</span>
             </button>
             <span className="text-sm font-medium text-slate-500">
@@ -41,8 +43,11 @@ export const SkillsSection = React.memo<SkillsSectionProps>(
                   <button
                     onClick={() => onRemoveSkill(skill)}
                     className="hover:text-primary-900 ml-1"
+                    aria-label="close"
                   >
-                    <span className="material-symbols-outlined text-[16px]">close</span>
+                    <span className="material-symbols-outlined text-[16px]" aria-hidden="true">
+                      close
+                    </span>
                   </button>
                 </span>
               ))}

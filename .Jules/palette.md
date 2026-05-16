@@ -14,3 +14,7 @@
 ## 2026-03-09 - Ensure aria-hidden for ligature icons
 **Learning:** Adding `aria-label`s to buttons is critical, but when the button uses an icon font like Material Symbols that relies on text ligatures (e.g., `close`, `history`, `edit`), screen readers will read the ligature text aloud. This creates a confusing experience (e.g. reading "Close close" or just "Close" when it should be "Close form").
 **Action:** When adding `aria-label` to an icon-only button that uses ligature icons, always ensure the inner `<span>` element containing the ligature text has `aria-hidden="true"`.
+
+## 2026-05-16 - Add aria-label to buttons with aria-hidden icons
+**Learning:** When adding `aria-hidden="true"` to ligature icons (like `material-symbols-outlined`) to fix screen reader accessibility, ensure you add a corresponding `aria-label` (e.g., `aria-label="close"`) to the parent interactive element (like `<button>`). Frontend unit tests in this repository heavily rely on `screen.getByRole` matching the accessible name, and hiding the ligature text without providing an ARIA label will break test assertions.
+**Action:** When hiding icon elements that are the sole child of a button, always add a descriptive `aria-label` to the parent button, both for actual screen reader accessibility and to maintain test stability.
