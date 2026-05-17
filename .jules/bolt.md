@@ -39,3 +39,6 @@
 ## 2024-05-27 - Regex Cross-Matching Risk in Tag Sanitization
 **Learning:** Consolidating start and end HTML tag patterns into a single regex with a shared group (like `<(?:iframe|form|input)[^>]*>.*?</(?:iframe|form|input)>`) is a critical security and functionality bug because it allows cross-matching (e.g., `<input>...</form>`), leading to data loss.
 **Action:** When stripping multiple different HTML tags via regex, always iterate over a list of pre-compiled individual tag patterns (e.g., one for `iframe`, one for `form`) rather than merging them into a single cross-matching OR pattern.
+## 2026-05-17 - TypeScript Error with React.memo on React.FC
+**Learning:** When adding `React.memo` to wrap a functional component that is explicitly typed with `React.FC<Props>`, TypeScript throws a compilation error because `React.memo` returns a `NamedExoticComponent` rather than a standard function.
+**Action:** When applying `React.memo()` to an existing `React.FC` component to optimize re-renders, remove the `: React.FC<Props>` variable annotation and type the inline function parameters directly (e.g., `({ prop1 }: ComponentProps) =>`) to prevent TypeScript compilation errors.
