@@ -14,3 +14,6 @@
 ## 2026-03-09 - Ensure aria-hidden for ligature icons
 **Learning:** Adding `aria-label`s to buttons is critical, but when the button uses an icon font like Material Symbols that relies on text ligatures (e.g., `close`, `history`, `edit`), screen readers will read the ligature text aloud. This creates a confusing experience (e.g. reading "Close close" or just "Close" when it should be "Close form").
 **Action:** When adding `aria-label` to an icon-only button that uses ligature icons, always ensure the inner `<span>` element containing the ligature text has `aria-hidden="true"`.
+## 2026-05-17 - Visual Progress Bars Accessibility
+**Learning:** Found an issue where the `PasswordStrengthMeter` visual progress bar lacked screen reader accessibility. Purely visual indicators (like width styling on a `div`) need ARIA roles and live regions to communicate state changes to assistive technologies.
+**Action:** When implementing visual progress bars or dynamically updating strength meters, assign `role="progressbar"` and the corresponding `aria-valuenow`, `aria-valuemin`, and `aria-valuemax` attributes to the visual indicator container. Wrap text announcements in an `aria-live="polite"` and `aria-atomic="true"` container to ensure screen readers announce updates dynamically.
