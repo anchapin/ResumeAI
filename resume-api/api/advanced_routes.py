@@ -1108,7 +1108,9 @@ async def batch_create_resumes(
 
             # Add tags
             if resume_request.tags:
-                existing_tags_result = await db.execute(select(Tag).where(Tag.name.in_(resume_request.tags)))
+                existing_tags_result = await db.execute(
+                    select(Tag).where(Tag.name.in_(resume_request.tags))
+                )
                 existing_tags_dict = {t.name: t for t in existing_tags_result.scalars().all()}
                 for tag_name in resume_request.tags:
                     existing_tag = existing_tags_dict.get(tag_name)
@@ -1230,7 +1232,9 @@ async def batch_update_resumes(
             # Update tags if provided
             if update_request.tags is not None:
                 resume.tags.clear()
-                existing_tags_result = await db.execute(select(Tag).where(Tag.name.in_(update_request.tags)))
+                existing_tags_result = await db.execute(
+                    select(Tag).where(Tag.name.in_(update_request.tags))
+                )
                 existing_tags_dict = {t.name: t for t in existing_tags_result.scalars().all()}
                 for tag_name in update_request.tags:
                     existing_tag = existing_tags_dict.get(tag_name)
@@ -1304,23 +1308,26 @@ async def batch_delete_resumes(
     successful = []
     failed = []
 
+    # Pre-fetch all requested resumes to avoid N+1 queries
+    result = await db.execute(
+        select(Resume).options(selectinload(Resume.tags)).where(Resume.id.in_(request.resume_ids))
+    )
+    resumes_by_id = {r.id: r for r in result.scalars().all()}
+
     for resume_id in request.resume_ids:
         try:
-            result = await db.execute(
-                select(Resume).options(selectinload(Resume.tags)).where(Resume.id == resume_id)
-            )
-            resume = result.scalar_one_or_none()
+            resume = resumes_by_id.get(resume_id)
 
             if not resume:
                 failed.append({"id": resume_id, "error": "Resume not found"})
                 continue
 
-            await db.delete(resume)
-            await db.flush()
+            async with db.begin_nested():
+                await db.delete(resume)
+                await db.flush()
             successful.append(resume_id)
 
         except Exception as e:
-            await db.rollback()
             failed.append({"id": resume_id, "error": str(e)})
 
     await db.commit()
@@ -1356,12 +1363,15 @@ async def batch_export_resumes(
     failed = []
     export_job_id = str(uuid.uuid4())
 
+    # Pre-fetch all requested resumes to avoid N+1 queries
+    result = await db.execute(
+        select(Resume).options(selectinload(Resume.tags)).where(Resume.id.in_(request.resume_ids))
+    )
+    resumes_by_id = {r.id: r for r in result.scalars().all()}
+
     for resume_id in request.resume_ids:
         try:
-            result = await db.execute(
-                select(Resume).options(selectinload(Resume.tags)).where(Resume.id == resume_id)
-            )
-            resume = result.scalar_one_or_none()
+            resume = resumes_by_id.get(resume_id)
 
             if not resume:
                 failed.append({"id": resume_id, "error": "Resume not found"})
