@@ -14,3 +14,7 @@
 ## 2026-03-09 - Ensure aria-hidden for ligature icons
 **Learning:** Adding `aria-label`s to buttons is critical, but when the button uses an icon font like Material Symbols that relies on text ligatures (e.g., `close`, `history`, `edit`), screen readers will read the ligature text aloud. This creates a confusing experience (e.g. reading "Close close" or just "Close" when it should be "Close form").
 **Action:** When adding `aria-label` to an icon-only button that uses ligature icons, always ensure the inner `<span>` element containing the ligature text has `aria-hidden="true"`.
+
+## 2026-05-18 - Announcing Dynamic Content Changes Next to Controls
+**Learning:** Found an issue where the zoom percentage display text inside the resume preview viewer updated visually when zoom controls were clicked, but the change was not announced to screen readers. This leaves users navigating via keyboard/screen reader unaware that their action successfully changed the view state.
+**Action:** Always add `aria-live="polite"` and `aria-atomic="true"` to text or span elements that display dynamically updating values (like a zoom percentage, page number, or strength meter) adjacent to the interactive controls that modify them.
