@@ -22,7 +22,6 @@ from database import (
     GitHubConnection,
     GitHubOAuthState,
     RefreshToken,
-    get_async_session,
 )
 from config.jwt_utils import create_access_token, create_refresh_token
 from config.security import hash_password, encrypt_token
@@ -37,6 +36,7 @@ async def test_db_engine():
     """Create test database engine."""
     # Use a real file for sqlite to avoid in-memory issues between engines
     import os
+
     db_path = "test_resumeai.db"
     engine = create_async_engine(f"sqlite+aiosqlite:///{db_path}", echo=False)
 
@@ -81,24 +81,28 @@ async def async_client(test_db_session):
 
     from database import get_async_session, get_db
     from unittest.mock import MagicMock
-    
+
     app.dependency_overrides[get_async_session] = override_get_async_session
     app.dependency_overrides[get_db] = override_get_async_session
-    
+
     # Mock auth to return a user_id
     mock_auth = MagicMock()
-    mock_auth.user_id = test_db_session._test_user_id if hasattr(test_db_session, "_test_user_id") else 1
-    
+    mock_auth.user_id = (
+        test_db_session._test_user_id if hasattr(test_db_session, "_test_user_id") else 1
+    )
+
     from config.dependencies import get_api_key
+
     app.dependency_overrides[get_api_key] = lambda: mock_auth
 
     # Mock StripeService session
-    from lib.stripe import stripe_service
     import lib.stripe
+
     lib.stripe.mock_async_session = test_db_session
-    
+
     # Set fallback user_id for usage tracking in routes
     import api.routes
+
     api.routes.FALLBACK_USER_ID = str(mock_auth.user_id)
     # Disable security features for tests
     from config import settings

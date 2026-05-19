@@ -463,14 +463,11 @@ class TestDatabaseReplicasIntegration:
     async def test_replica_pool_initialization(self):
         """Test replica pool initialization."""
         # Would test with actual database URLs
-        pass
 
     async def test_read_write_separation(self):
         """Test read/write query separation."""
         # Would test with actual database queries
-        pass
 
     async def test_failover_to_primary(self):
         """Test failover to primary when replica fails."""
         # Would test by simulating replica failure
-        pass

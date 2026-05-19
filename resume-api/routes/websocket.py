@@ -13,14 +13,11 @@ import asyncio
 import json
 import uuid
 from datetime import datetime
-from typing import Dict, Set, Optional, Any, Callable
+from typing import Dict, Set, Optional, Any
 from enum import Enum
 
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect, status, Depends
-from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect, status
 
-from database import get_async_session, User
-from config.dependencies import get_current_user
 from monitoring import logging_config
 
 # Get logger

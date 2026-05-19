@@ -4,7 +4,6 @@ Standalone test script for validators (no pytest required).
 Tests input validation and LaTeX escaping.
 """
 
-import sys
 import importlib.util
 
 # Import validators directly

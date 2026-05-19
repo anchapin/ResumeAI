@@ -135,7 +135,7 @@ async def render_pdf(request: Request, body: ResumeRequest, auth: AuthorizedAPIK
             user_id = str(auth["user_id"])
         elif isinstance(auth, str) and auth.isdigit():
             user_id = auth
-        
+
         usage = await stripe_service.check_usage_limits(user_id, "resume_generation")
         if not usage["allowed"]:
             raise HTTPException(
@@ -215,7 +215,7 @@ async def tailor_resume(
             user_id = str(auth["user_id"])
         elif isinstance(auth, str) and auth.isdigit():
             user_id = auth
-        
+
         usage = await stripe_service.check_usage_limits(user_id, "ai_tailoring")
         if not usage["allowed"]:
             raise HTTPException(
@@ -283,7 +283,6 @@ async def tailor_resume(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Operation failed: {str(e)}",
         )
-
 
 
 @router.get(

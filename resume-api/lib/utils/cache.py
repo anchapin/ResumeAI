@@ -89,39 +89,32 @@ class CacheBackendInterface(ABC):
     @abstractmethod
     async def get(self, key: str) -> Optional[Any]:
         """Get value from cache"""
-        pass
 
     @abstractmethod
     async def set(
         self, key: str, value: Any, ttl_seconds: int, tags: Optional[Set[str]] = None
     ) -> bool:
         """Set value in cache"""
-        pass
 
     @abstractmethod
     async def delete(self, key: str) -> bool:
         """Delete key from cache"""
-        pass
 
     @abstractmethod
     async def delete_by_tags(self, tags: Set[str]) -> int:
         """Delete all keys with given tags"""
-        pass
 
     @abstractmethod
     async def clear(self) -> bool:
         """Clear entire cache"""
-        pass
 
     @abstractmethod
     async def exists(self, key: str) -> bool:
         """Check if key exists"""
-        pass
 
     @abstractmethod
     async def get_stats(self) -> Dict[str, Any]:
         """Get cache statistics"""
-        pass
 
 
 class InMemoryCache(CacheBackendInterface):

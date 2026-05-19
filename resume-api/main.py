@@ -273,7 +273,6 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     )
 
 
-
 # Add error handling middleware (must be added before monitoring)
 app.add_middleware(ErrorHandlingMiddleware)
 

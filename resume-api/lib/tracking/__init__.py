@@ -38,7 +38,7 @@ from .storage import ApplicationStorage
 
 __all__ = [
     "ApplicationTracker",
-    "AutoFillService", 
+    "AutoFillService",
     "ApplicationAnalytics",
     "ExternalSyncService",
     # New application tracking models

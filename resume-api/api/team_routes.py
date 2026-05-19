@@ -1360,7 +1360,7 @@ async def list_resume_comments(
             stmt = stmt.where(Comment.section == section)
 
         if not include_resolved:
-            stmt = stmt.where(Comment.is_resolved == False)
+            stmt = stmt.where(Comment.is_resolved is False)
 
         stmt = stmt.order_by(Comment.created_at.asc())
 
@@ -1516,9 +1516,7 @@ async def delete_resume_comment(
     try:
         user_id = auth.user_id if hasattr(auth, "user_id") else 1
 
-        stmt = select(Comment).where(
-            and_(Comment.id == comment_id, Comment.resume_id == resume_id)
-        )
+        stmt = select(Comment).where(and_(Comment.id == comment_id, Comment.resume_id == resume_id))
         result = await db.execute(stmt)
         comment = result.scalar_one_or_none()
 

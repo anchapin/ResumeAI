@@ -20,8 +20,6 @@ logger = logging.getLogger(__name__)
 class TokenEncryptionError(Exception):
     """Exception raised for token encryption/decryption errors."""
 
-    pass
-
 
 class TokenEncryption:
     """
