@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { OfferComparison } from '/app/components/OfferComparison';
+import { OfferComparison } from '../../components/OfferComparison';
 
 const mockComparison = {
   id: 'comp_1',
