@@ -110,7 +110,7 @@ jobs:
       - name: Run OWASP ZAP API scan
         uses: zaproxy/action-api-scan@v0.10.0
         with:
-          target: 'http://127.0.0.1:8000/api/v1/health'
+          target: "http://127.0.0.1:8000/openapi.json"
           allow_issue_writing: false
 
       - name: Cleanup
