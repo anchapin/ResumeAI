@@ -28,19 +28,21 @@ Object.defineProperty(globalThis, 'import', {
 // For browser tests, import tests/mocks/msw-setup.ts which handles this properly
 // This setup file handles Node.js test environment (server-side rendering tests)
 
-Object.defineProperty(window, 'matchMedia', {
-  writable: true,
-  value: vi.fn().mockImplementation((query) => ({
-    matches: false,
-    media: query,
-    onchange: null,
-    addListener: vi.fn(), // deprecated
-    removeListener: vi.fn(), // deprecated
-    addEventListener: vi.fn(),
-    removeEventListener: vi.fn(),
-    dispatchEvent: vi.fn(),
-  })),
-});
+if (typeof window !== 'undefined') {
+  Object.defineProperty(window, 'matchMedia', {
+    writable: true,
+    value: vi.fn().mockImplementation((query) => ({
+      matches: false,
+      media: query,
+      onchange: null,
+      addListener: vi.fn(), // deprecated
+      removeListener: vi.fn(), // deprecated
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    })),
+  });
+}
 
 // Polyfill DataTransfer for tests
 if (typeof DataTransfer === 'undefined') {
@@ -57,4 +59,24 @@ if (typeof DataTransfer === 'undefined') {
     types = [];
   }
   (global as any).DataTransfer = DataTransfer;
+}
+
+// Polyfill FormData for tests if it's missing in jsdom
+if (typeof FormData === 'undefined') {
+  class MockFormData {
+    append = vi.fn();
+    delete = vi.fn();
+    get = vi.fn();
+    getAll = vi.fn();
+    has = vi.fn();
+    set = vi.fn();
+    forEach = vi.fn();
+    entries = vi.fn();
+    keys = vi.fn();
+    values = vi.fn();
+  }
+  (global as any).FormData = MockFormData;
+  if (typeof window !== 'undefined') {
+    (window as any).FormData = MockFormData;
+  }
 }

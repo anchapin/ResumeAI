@@ -46,7 +46,7 @@ describe('useATSCheck', () => {
 
     const { result } = renderHook(() => useATSCheck());
     
-    const mockFile = new File(['test content'], 'resume.pdf', { type: 'application/pdf' });
+    const mockFile = { name: 'resume.pdf', type: 'application/pdf', size: 1024, text: async () => 'test content' } as any;
     
     act(() => {
       result.current.checkResume(mockFile);
@@ -63,7 +63,7 @@ describe('useATSCheck', () => {
 
     const { result } = renderHook(() => useATSCheck());
     
-    const mockFile = new File(['test content'], 'resume.pdf', { type: 'application/pdf' });
+    const mockFile = { name: 'resume.pdf', type: 'application/pdf', size: 1024, text: async () => 'test content' } as any;
     
     await act(async () => {
       await result.current.checkResume(mockFile);
@@ -98,7 +98,7 @@ describe('useATSCheck', () => {
 
     const { result } = renderHook(() => useATSCheck());
     
-    const mockFile = new File(['test content'], 'resume.pdf', { type: 'application/pdf' });
+    const mockFile = { name: 'resume.pdf', type: 'application/pdf', size: 1024, text: async () => 'test content' } as any;
     
     await act(async () => {
       await result.current.checkResume(mockFile);
@@ -118,7 +118,7 @@ describe('useATSCheck', () => {
 
     const { result } = renderHook(() => useATSCheck());
     
-    const mockFile = new File(['test content'], 'resume.pdf', { type: 'application/pdf' });
+    const mockFile = { name: 'resume.pdf', type: 'application/pdf', size: 1024, text: async () => 'test content' } as any;
     
     await act(async () => {
       await result.current.checkResume(mockFile);
@@ -135,7 +135,7 @@ describe('useATSCheck', () => {
 
     const { result } = renderHook(() => useATSCheck());
     
-    const mockFile = new File(['test content'], 'resume.pdf', { type: 'application/pdf' });
+    const mockFile = { name: 'resume.pdf', type: 'application/pdf', size: 1024, text: async () => 'test content' } as any;
     
     await act(async () => {
       await result.current.checkResume(mockFile);
@@ -157,7 +157,7 @@ describe('useATSCheck', () => {
 
     const { result } = renderHook(() => useATSCheck());
     
-    const mockFile = new File(['test content'], 'resume.pdf', { type: 'application/pdf' });
+    const mockFile = { name: 'resume.pdf', type: 'application/pdf', size: 1024, text: async () => 'test content' } as any;
     
     // First attempt fails
     await act(async () => {
