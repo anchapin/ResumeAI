@@ -18,3 +18,6 @@
 ## 2026-04-02 - Custom Tab Component Accessibility
 **Learning:** Custom tab implementations (like comment filter buttons) often lack necessary focus rings and active state announcements for screen readers. Using just active classes (e.g. `bg-white`) is not sufficient for keyboard navigation or screen reader context.
 **Action:** Always add explicit `focus-visible:ring` classes to ensure tab elements are navigable by keyboard. Use the `aria-pressed` or `aria-current` attributes to correctly announce the active tab to assistive technologies.
+## 2026-05-19 - Accessible Tab Implementations
+**Learning:** Custom tabbed interfaces built with simple buttons (like in OfferComparison) lack critical screen reader context, making navigation confusing.
+**Action:** Always wrap custom tabs in a container with `role="tablist"` and add `role="tab"`, `aria-selected={condition}`, and explicit keyboard focus styles (`focus-visible:ring-2`) to each tab element.
