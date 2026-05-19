@@ -304,7 +304,6 @@ class ATSCompatibilityChecker:
 
     def __init__(self):
         """Initialize the ATS compatibility checker."""
-        pass
 
     def check_compatibility(
         self,

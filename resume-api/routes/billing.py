@@ -176,8 +176,6 @@ class UsageCheckResponse(BaseModel):
 class WebhookRequest(BaseModel):
     """Webhook payload (raw)."""
 
-    pass
-
 
 # ========== Helper Functions ==========
 

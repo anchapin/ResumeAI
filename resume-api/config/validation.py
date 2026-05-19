@@ -13,8 +13,6 @@ from typing import List
 class MissingSecretError(Exception):
     """Raised when required environment variable is missing."""
 
-    pass
-
 
 class SecretValidator:
     """Validates required secrets and environment variables."""

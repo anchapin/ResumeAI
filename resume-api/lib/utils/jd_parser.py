@@ -406,14 +406,13 @@ class JobDescriptionParser:
     _COMPILED_EXPERIENCE_LEVELS = {
         level: re.compile(
             rf"(?<![a-zA-Z])(?:{'|'.join(re.escape(ind) for ind in indicators)})(?![a-zA-Z])",
-            re.IGNORECASE
+            re.IGNORECASE,
         )
         for level, indicators in EXPERIENCE_LEVELS.items()
     }
 
     def __init__(self):
         """Initialize the job description parser."""
-        pass
 
     def parse(self, job_description: str) -> ParsedJobDescription:
         """

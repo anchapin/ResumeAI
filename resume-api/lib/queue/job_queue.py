@@ -123,37 +123,30 @@ class JobQueue(ABC):
     @abstractmethod
     async def enqueue(self, job: Job) -> str:
         """Enqueue a job. Returns job_id."""
-        pass
 
     @abstractmethod
     async def dequeue(self, timeout: int = 0) -> Optional[Job]:
         """Dequeue the next job. Returns None if queue is empty."""
-        pass
 
     @abstractmethod
     async def get_job(self, job_id: str) -> Optional[Job]:
         """Get job by ID."""
-        pass
 
     @abstractmethod
     async def update_job(self, job: Job) -> None:
         """Update job status."""
-        pass
 
     @abstractmethod
     async def get_jobs_by_state(self, state: JobState) -> List[Job]:
         """Get all jobs in a specific state."""
-        pass
 
     @abstractmethod
     async def cancel_job(self, job_id: str) -> bool:
         """Cancel a job. Returns True if successful."""
-        pass
 
     @abstractmethod
     async def clear_completed_jobs(self, older_than_days: int = 7) -> int:
         """Clear completed jobs older than N days. Returns count deleted."""
-        pass
 
 
 class LocalQueue(JobQueue):

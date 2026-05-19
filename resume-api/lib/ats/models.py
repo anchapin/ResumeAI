@@ -7,6 +7,7 @@ from typing import Optional
 
 class IssueSeverity(str, Enum):
     """Severity levels for ATS issues"""
+
     CRITICAL = "critical"
     WARNING = "warning"
     INFO = "info"
@@ -14,6 +15,7 @@ class IssueSeverity(str, Enum):
 
 class IssueType(str, Enum):
     """Types of ATS compatibility issues"""
+
     IMAGES = "images"
     TABLES = "tables"
     TEXT_IN_HEADER_FOOTER = "text_in_header_footer"
@@ -29,13 +31,14 @@ class IssueType(str, Enum):
 @dataclass
 class ATSIssue:
     """Represents a single ATS compatibility issue"""
+
     issue_type: IssueType
     severity: IssueSeverity
     element: str
     description: str
     page: Optional[int] = None
     fix: str = ""
-    
+
     def to_dict(self) -> dict:
         return {
             "type": self.issue_type.value,
@@ -43,13 +46,14 @@ class ATSIssue:
             "element": self.element,
             "description": self.description,
             "page": self.page,
-            "fix": self.fix
+            "fix": self.fix,
         }
 
 
 @dataclass
 class ATSCheckResult:
     """Result of ATS compatibility check"""
+
     file_type: str
     ats_score: int
     is_parseable: bool
@@ -57,7 +61,7 @@ class ATSCheckResult:
     issues: list[ATSIssue] = field(default_factory=list)
     parsed_text: str = ""
     calculation_time_ms: float = 0.0
-    
+
     def to_dict(self) -> dict:
         return {
             "file_type": self.file_type,
@@ -66,5 +70,5 @@ class ATSCheckResult:
             "word_count": self.word_count,
             "issues": [issue.to_dict() for issue in self.issues],
             "parsed_text": self.parsed_text,
-            "calculation_time_ms": self.calculation_time_ms
+            "calculation_time_ms": self.calculation_time_ms,
         }

@@ -2155,4 +2155,5 @@ class QueueStatsResponse(BaseModel):
             }
         }
 
+
 ResumeRequest.model_rebuild()

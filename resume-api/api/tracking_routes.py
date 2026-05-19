@@ -6,7 +6,6 @@ FastAPI endpoints for job application tracking (ANA-09 to ANA-12).
 
 from datetime import datetime
 from typing import List, Optional
-from uuid import UUID
 
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, Field
@@ -23,6 +22,7 @@ storage = ApplicationStorage()
 # Pydantic models for requests/responses
 class ApplicationCreate(BaseModel):
     """Request model for creating an application"""
+
     job_title: str = Field(..., min_length=1, description="Job title")
     company: str = Field(..., min_length=1, description="Company name")
     job_url: Optional[str] = Field(None, description="URL to job posting")
@@ -32,6 +32,7 @@ class ApplicationCreate(BaseModel):
 
 class ApplicationUpdate(BaseModel):
     """Request model for updating an application"""
+
     job_title: Optional[str] = None
     company: Optional[str] = None
     job_url: Optional[str] = None
@@ -41,17 +42,20 @@ class ApplicationUpdate(BaseModel):
 
 class NoteCreate(BaseModel):
     """Request model for adding a note"""
+
     content: str = Field(..., min_length=1, description="Note content")
 
 
 class ReminderCreate(BaseModel):
     """Request model for adding a reminder"""
+
     message: str = Field(..., min_length=1, description="Reminder message")
     remind_at: str = Field(..., description="When to remind (ISO format)")
 
 
 class TimelineEventResponse(BaseModel):
     """Response model for timeline events"""
+
     id: str
     event_type: str
     description: str
@@ -61,6 +65,7 @@ class TimelineEventResponse(BaseModel):
 
 class ReminderResponse(BaseModel):
     """Response model for reminders"""
+
     id: str
     message: str
     remind_at: str
@@ -70,6 +75,7 @@ class ReminderResponse(BaseModel):
 
 class NoteResponse(BaseModel):
     """Response model for notes"""
+
     id: str
     content: str
     created_at: str
@@ -77,6 +83,7 @@ class NoteResponse(BaseModel):
 
 class ApplicationResponse(BaseModel):
     """Response model for applications"""
+
     id: str
     job_title: str
     company: str
@@ -101,11 +108,7 @@ def application_to_response(app: Application) -> ApplicationResponse:
         status=app.status.value,
         applied_date=app.applied_date.isoformat() if app.applied_date else None,
         notes=[
-            NoteResponse(
-                id=n.id,
-                content=n.content,
-                created_at=n.created_at.isoformat()
-            )
+            NoteResponse(id=n.id, content=n.content, created_at=n.created_at.isoformat())
             for n in app.notes
         ],
         attachments=app.attachments,
@@ -115,7 +118,7 @@ def application_to_response(app: Application) -> ApplicationResponse:
                 message=r.message,
                 remind_at=r.remind_at.isoformat(),
                 triggered=r.triggered,
-                created_at=r.created_at.isoformat()
+                created_at=r.created_at.isoformat(),
             )
             for r in app.reminders
         ],
@@ -125,23 +128,21 @@ def application_to_response(app: Application) -> ApplicationResponse:
                 event_type=t.event_type.value,
                 description=t.description,
                 timestamp=t.timestamp.isoformat(),
-                metadata=t.metadata
+                metadata=t.metadata,
             )
             for t in app.timeline
         ],
         created_at=app.created_at.isoformat(),
-        updated_at=app.updated_at.isoformat()
+        updated_at=app.updated_at.isoformat(),
     )
 
 
 # API Endpoints
 @tracking_router.get("", response_model=List[ApplicationResponse])
-async def get_applications(
-    status: Optional[str] = Query(None, description="Filter by status")
-):
+async def get_applications(status: Optional[str] = Query(None, description="Filter by status")):
     """
     Get all applications, optionally filtered by status.
-    
+
     Query params:
     - status: Filter by application status (applied, interviewing, rejected, offered, withdrawn, pending)
     """
@@ -157,11 +158,11 @@ async def get_applications(
 async def create_application(application: ApplicationCreate):
     """
     Create a new job application.
-    
+
     Required fields:
     - job_title: Job title
     - company: Company name
-    
+
     Optional fields:
     - job_url: URL to job posting
     - status: Application status (default: pending)
@@ -174,12 +175,16 @@ async def create_application(application: ApplicationCreate):
             company=application.company,
             job_url=application.job_url,
             status=ApplicationStatus(application.status),
-            applied_date=datetime.fromisoformat(application.applied_date) if application.applied_date else None
+            applied_date=(
+                datetime.fromisoformat(application.applied_date)
+                if application.applied_date
+                else None
+            ),
         )
-        
+
         # Save to storage
         saved_app = storage.add_application(app)
-        
+
         return application_to_response(saved_app)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -200,7 +205,7 @@ async def get_application(app_id: str):
 async def update_application(app_id: str, updates: ApplicationUpdate):
     """
     Update an existing application.
-    
+
     Can update:
     - job_title
     - company
@@ -210,14 +215,14 @@ async def update_application(app_id: str, updates: ApplicationUpdate):
     """
     # Filter out None values
     update_dict = {k: v for k, v in updates.model_dump().items() if v is not None}
-    
+
     if not update_dict:
         raise HTTPException(status_code=400, detail="No fields to update")
-    
+
     updated_app = storage.update_application(app_id, update_dict)
     if not updated_app:
         raise HTTPException(status_code=404, detail="Application not found")
-    
+
     return application_to_response(updated_app)
 
 
@@ -252,7 +257,7 @@ async def add_reminder(app_id: str, reminder: ReminderCreate):
         remind_at = datetime.fromisoformat(reminder.remind_at)
     except ValueError:
         raise HTTPException(status_code=400, detail="Invalid remind_at format. Use ISO format.")
-    
+
     app = storage.add_reminder(app_id, reminder.message, remind_at)
     if not app:
         raise HTTPException(status_code=404, detail="Application not found")
@@ -271,7 +276,7 @@ async def get_all_timeline():
             event_type=e.event_type.value,
             description=e.description,
             timestamp=e.timestamp.isoformat(),
-            metadata=e.metadata
+            metadata=e.metadata,
         )
         for e in events
     ]
@@ -285,7 +290,7 @@ async def get_application_timeline(app_id: str):
     app = storage.get_application(app_id)
     if not app:
         raise HTTPException(status_code=404, detail="Application not found")
-    
+
     events = storage.get_timeline(app_id)
     return [
         TimelineEventResponse(
@@ -293,7 +298,7 @@ async def get_application_timeline(app_id: str):
             event_type=e.event_type.value,
             description=e.description,
             timestamp=e.timestamp.isoformat(),
-            metadata=e.metadata
+            metadata=e.metadata,
         )
         for e in events
     ]
@@ -311,11 +316,7 @@ async def get_due_reminders():
             "application_id": app.id,
             "job_title": app.job_title,
             "company": app.company,
-            "reminder": {
-                "id": r.id,
-                "message": r.message,
-                "remind_at": r.remind_at.isoformat()
-            }
+            "reminder": {"id": r.id, "message": r.message, "remind_at": r.remind_at.isoformat()},
         }
         for app, r in due_reminders
     ]

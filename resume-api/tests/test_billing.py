@@ -11,7 +11,7 @@ Tests cover:
 
 import pytest
 import pytest_asyncio
-from unittest.mock import patch, MagicMock, AsyncMock
+from unittest.mock import patch, MagicMock
 import stripe
 
 from database import (
@@ -263,9 +263,10 @@ async def test_create_checkout_session_success(test_user_id, setup_subscription_
     """Test successful checkout session creation."""
     from httpx import AsyncClient, ASGITransport
 
-    with patch("stripe.Customer.create") as mock_customer_create, patch(
-        "stripe.checkout.Session.create"
-    ) as mock_session_create:
+    with (
+        patch("stripe.Customer.create") as mock_customer_create,
+        patch("stripe.checkout.Session.create") as mock_session_create,
+    ):
         mock_customer_create.return_value = MagicMock(id="cus_test_123")
         mock_session_create.return_value = MagicMock(id="cs_test_123", url="http://stripe.com/test")
 
@@ -627,7 +628,7 @@ async def test_verify_webhook_signature_invalid():
     """Test failed webhook signature verification."""
     from lib.stripe import stripe_service
 
-    payload = b'invalid'
+    payload = b"invalid"
     signature = "invalid"
     secret = "secret"
 

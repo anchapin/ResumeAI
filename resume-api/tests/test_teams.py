@@ -11,16 +11,12 @@ Tests cover:
 
 import pytest
 import pytest_asyncio
-from datetime import datetime
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 from httpx import AsyncClient, ASGITransport
 
 from main import app
 from database import (
     Team,
     TeamMember,
-    TeamResume,
     TeamActivity,
     User,
     Resume,
@@ -37,7 +33,7 @@ async def setup_database():
     """Create database tables before each test."""
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
-    
+
     # Create test users
     async with async_session_maker() as session:
         user1 = User(
@@ -65,7 +61,7 @@ async def setup_database():
         await session.commit()
 
     yield
-    
+
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
 
@@ -104,7 +100,7 @@ async def test_create_team():
         response = await ac.post(
             f"{settings.api_v1_prefix}/teams/v1/teams",
             json={"name": "Engineering Team", "description": "The engineering department"},
-            headers={"X-API-KEY": "test-key"}
+            headers={"X-API-KEY": "test-key"},
         )
 
         assert response.status_code == 200
@@ -130,8 +126,7 @@ async def test_list_teams():
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         response = await ac.get(
-            f"{settings.api_v1_prefix}/teams/v1/teams",
-            headers={"X-API-KEY": "test-key"}
+            f"{settings.api_v1_prefix}/teams/v1/teams", headers={"X-API-KEY": "test-key"}
         )
 
         assert response.status_code == 200
@@ -154,8 +149,7 @@ async def test_get_team_details():
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         response = await ac.get(
-            f"{settings.api_v1_prefix}/teams/v1/teams/1",
-            headers={"X-API-KEY": "test-key"}
+            f"{settings.api_v1_prefix}/teams/v1/teams/1", headers={"X-API-KEY": "test-key"}
         )
 
         assert response.status_code == 200
@@ -181,7 +175,7 @@ async def test_update_team():
         response = await ac.put(
             f"{settings.api_v1_prefix}/teams/v1/teams/1",
             json={"name": "New Name", "description": "New Description"},
-            headers={"X-API-KEY": "test-key"}
+            headers={"X-API-KEY": "test-key"},
         )
 
         assert response.status_code == 200
@@ -204,8 +198,7 @@ async def test_delete_team():
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         response = await ac.delete(
-            f"{settings.api_v1_prefix}/teams/v1/teams/1",
-            headers={"X-API-KEY": "test-key"}
+            f"{settings.api_v1_prefix}/teams/v1/teams/1", headers={"X-API-KEY": "test-key"}
         )
 
         assert response.status_code == 200
@@ -228,7 +221,7 @@ async def test_invite_member():
         response = await ac.post(
             f"{settings.api_v1_prefix}/teams/v1/teams/1/members",
             json={"email": "user2@example.com", "role": "editor"},
-            headers={"X-API-KEY": "test-key"}
+            headers={"X-API-KEY": "test-key"},
         )
 
         assert response.status_code == 200
@@ -253,7 +246,7 @@ async def test_share_resume(test_resume):
         response = await ac.post(
             f"{settings.api_v1_prefix}/teams/v1/teams/1/resumes",
             json={"resume_id": 100, "permission": "edit"},
-            headers={"X-API-KEY": "test-key"}
+            headers={"X-API-KEY": "test-key"},
         )
 
         assert response.status_code == 200
@@ -268,7 +261,7 @@ async def test_add_comment(test_resume):
         response = await ac.post(
             f"{settings.api_v1_prefix}/teams/v1/resumes/100/comments",
             json={"content": "Great summary!", "section": "basics"},
-            headers={"X-API-KEY": "test-key"}
+            headers={"X-API-KEY": "test-key"},
         )
 
         assert response.status_code == 200
@@ -295,7 +288,7 @@ async def test_list_comments(test_resume):
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         response = await ac.get(
             f"{settings.api_v1_prefix}/teams/v1/resumes/100/comments",
-            headers={"X-API-KEY": "test-key"}
+            headers={"X-API-KEY": "test-key"},
         )
 
         assert response.status_code == 200
@@ -313,7 +306,7 @@ async def test_get_team_activity():
         await session.flush()
         member = TeamMember(team_id=1, user_id=1, role="owner")
         session.add(member)
-        
+
         activity = TeamActivity(
             team_id=1,
             user_id=1,
@@ -326,8 +319,7 @@ async def test_get_team_activity():
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         response = await ac.get(
-            f"{settings.api_v1_prefix}/teams/v1/teams/1/activity",
-            headers={"X-API-KEY": "test-key"}
+            f"{settings.api_v1_prefix}/teams/v1/teams/1/activity", headers={"X-API-KEY": "test-key"}
         )
 
         assert response.status_code == 200

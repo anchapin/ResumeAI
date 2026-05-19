@@ -18,7 +18,6 @@ Provides integration with Stripe API for:
 import stripe
 import datetime
 from typing import List, Dict, Any, Optional
-from contextlib import asynccontextmanager
 from sqlalchemy import select, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -36,6 +35,7 @@ BILLING_ENABLED = True  # Set to True when Stripe integration is complete
 if settings.stripe_secret_key:
     stripe.api_key = settings.stripe_secret_key
 
+
 class StripeService:
     """Service for interacting with Stripe API."""
 
@@ -47,7 +47,7 @@ class StripeService:
                 stmt = select(SubscriptionPlan).where(SubscriptionPlan.is_active == True)
                 result = await session.execute(stmt)
                 plans = result.scalars().all()
-                
+
                 if not plans:
                     return [
                         {
@@ -67,7 +67,7 @@ class StripeService:
                             "is_popular": False,
                         }
                     ]
-                
+
                 return [
                     {
                         "id": p.id,
@@ -91,37 +91,45 @@ class StripeService:
 
         try:
             # Fetch active prices from Stripe with product data expanded
-            prices = stripe.Price.list(
-                active=True, type="recurring", expand=["data.product"]
-            )
-            
+            prices = stripe.Price.list(active=True, type="recurring", expand=["data.product"])
+
             stripe_plans = []
             for i, price in enumerate(prices.data):
                 product = price.product
                 if not product.active:
                     continue
-                
+
                 metadata = product.metadata or {}
-                
-                stripe_plans.append({
-                    "id": i + 1,
-                    "name": product.name.lower(),
-                    "display_name": product.name,
-                    "description": product.description,
-                    "price_cents": price.unit_amount,
-                    "currency": price.currency,
-                    "interval": price.recurring.interval,
-                    "stripe_price_id": price.id,
-                    "stripe_product_id": product.id,
-                    "features": metadata.get("features", "").split(",") if "features" in metadata else [],
-                    "max_resumes_per_month": int(metadata.get("max_resumes", 5)),
-                    "max_ai_tailorings_per_month": int(metadata.get("max_ai", 3)),
-                    "max_templates": int(metadata.get("max_templates", 3)),
-                    "include_priority_support": metadata.get("priority_support", "false").lower() == "true",
-                    "include_custom_domains": metadata.get("custom_domains", "false").lower() == "true",
-                    "is_popular": metadata.get("is_popular", "false").lower() == "true",
-                })
-            
+
+                stripe_plans.append(
+                    {
+                        "id": i + 1,
+                        "name": product.name.lower(),
+                        "display_name": product.name,
+                        "description": product.description,
+                        "price_cents": price.unit_amount,
+                        "currency": price.currency,
+                        "interval": price.recurring.interval,
+                        "stripe_price_id": price.id,
+                        "stripe_product_id": product.id,
+                        "features": (
+                            metadata.get("features", "").split(",")
+                            if "features" in metadata
+                            else []
+                        ),
+                        "max_resumes_per_month": int(metadata.get("max_resumes", 5)),
+                        "max_ai_tailorings_per_month": int(metadata.get("max_ai", 3)),
+                        "max_templates": int(metadata.get("max_templates", 3)),
+                        "include_priority_support": metadata.get(
+                            "priority_support", "false"
+                        ).lower()
+                        == "true",
+                        "include_custom_domains": metadata.get("custom_domains", "false").lower()
+                        == "true",
+                        "is_popular": metadata.get("is_popular", "false").lower() == "true",
+                    }
+                )
+
             return stripe_plans if stripe_plans else await self.get_available_plans()
         except Exception as e:
             logger.error(f"Failed to fetch plans from Stripe: {e}")
@@ -145,22 +153,19 @@ class StripeService:
             stmt = select(Subscription).where(Subscription.user_id == str(user_id))
             result = await session.execute(stmt)
             subscription = result.scalar_one_or_none()
-            
+
             if subscription and subscription.stripe_customer_id:
                 return {"stripe_customer_id": subscription.stripe_customer_id}
-            
+
             # Create new customer in Stripe
-            customer = stripe.Customer.create(
-                email=email,
-                metadata={"user_id": user_id}
-            )
-            
+            customer = stripe.Customer.create(email=email, metadata={"user_id": user_id})
+
             if not subscription:
                 subscription = Subscription(user_id=str(user_id), stripe_customer_id=customer.id)
                 session.add(subscription)
             else:
                 subscription.stripe_customer_id = customer.id
-            
+
             await session.commit()
             return {"stripe_customer_id": customer.id}
 
@@ -185,9 +190,13 @@ class StripeService:
             mode="subscription",
             success_url=success_url,
             cancel_url=cancel_url,
-            subscription_data={
-                "trial_period_days": trial_period_days,
-            } if trial_period_days > 0 else None,
+            subscription_data=(
+                {
+                    "trial_period_days": trial_period_days,
+                }
+                if trial_period_days > 0
+                else None
+            ),
         )
         return {
             "id": session.id,
@@ -231,7 +240,7 @@ class StripeService:
         """Update subscription to a different plan."""
         subscription = stripe.Subscription.retrieve(stripe_subscription_id)
         item_id = subscription["items"]["data"][0].id
-        
+
         updated_subscription = stripe.Subscription.modify(
             stripe_subscription_id,
             items=[
@@ -299,7 +308,9 @@ class StripeService:
     ) -> Dict[str, Any]:
         """Internal helper for limit checking."""
         # Normalize action names
-        action = "resume_generation" if action in ["resume_generation", "resume_generated"] else action
+        action = (
+            "resume_generation" if action in ["resume_generation", "resume_generated"] else action
+        )
         action = "ai_tailoring" if action in ["ai_tailoring", "ai_tailored"] else action
 
         # Get current usage
@@ -327,20 +338,19 @@ class StripeService:
             await session.refresh(usage)
 
         # Get user's current subscription and plan
-        sub_stmt = select(Subscription).options(selectinload(Subscription.plan)).where(
-            and_(
-                Subscription.user_id == str(user_id),
-                Subscription.status == "active"
-            )
+        sub_stmt = (
+            select(Subscription)
+            .options(selectinload(Subscription.plan))
+            .where(and_(Subscription.user_id == str(user_id), Subscription.status == "active"))
         )
         sub_result = await session.execute(sub_stmt)
         subscription = sub_result.scalar_one_or_none()
-        
+
         # Default limits (Free plan)
         limit = 3
         if action == "ai_tailoring":
             limit = 0
-            
+
         if subscription and subscription.plan:
             plan = subscription.plan
             if action == "resume_generation":
@@ -391,7 +401,9 @@ class StripeService:
     ) -> None:
         """Internal helper for recording usage."""
         # Normalize action names
-        action = "resume_generation" if action in ["resume_generation", "resume_generated"] else action
+        action = (
+            "resume_generation" if action in ["resume_generation", "resume_generated"] else action
+        )
         action = "ai_tailoring" if action in ["ai_tailoring", "ai_tailored"] else action
 
         try:
@@ -421,7 +433,6 @@ class StripeService:
             usage.ai_tailorings_used = (usage.ai_tailorings_used or 0) + 1
 
         await session.commit()
-
 
     def verify_webhook_signature(
         self, payload: bytes, signature: str, webhook_secret: str
