@@ -70,10 +70,12 @@ const VariantComparison: React.FC = () => {
             Compare different versions of your tailored resumes
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2" role="tablist" aria-label="Comparison modes">
           <button
+            role="tab"
+            aria-selected={compareMode === 'side-by-side'}
             onClick={() => setCompareMode('side-by-side')}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 ${
               compareMode === 'side-by-side'
                 ? 'bg-primary-600 text-white'
                 : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
@@ -82,8 +84,10 @@ const VariantComparison: React.FC = () => {
             Side by Side
           </button>
           <button
+            role="tab"
+            aria-selected={compareMode === 'diff'}
             onClick={() => setCompareMode('diff')}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 ${
               compareMode === 'diff'
                 ? 'bg-primary-600 text-white'
                 : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
@@ -103,8 +107,10 @@ const VariantComparison: React.FC = () => {
           {variants.map((variant) => (
             <button
               key={variant.id}
+              role="checkbox"
+              aria-checked={selectedVariants.includes(variant.id)}
               onClick={() => toggleVariant(variant.id)}
-              className={`flex items-center gap-3 px-4 py-3 rounded-lg border-2 transition-all ${
+              className={`flex items-center gap-3 px-4 py-3 rounded-lg border-2 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 ${
                 selectedVariants.includes(variant.id)
                   ? 'border-primary-500 bg-primary-50'
                   : 'border-slate-200 hover:border-slate-300'
@@ -118,7 +124,12 @@ const VariantComparison: React.FC = () => {
                 }`}
               >
                 {selectedVariants.includes(variant.id) && (
-                  <span className="material-symbols-outlined text-white text-[14px]">check</span>
+                  <span
+                    className="material-symbols-outlined text-white text-[14px]"
+                    aria-hidden="true"
+                  >
+                    check
+                  </span>
                 )}
               </div>
               <div className="text-left">
@@ -173,7 +184,9 @@ const VariantComparison: React.FC = () => {
             <h3 className="text-lg font-bold text-slate-900 mb-4">Key Differences</h3>
             <div className="space-y-4">
               <div className="flex items-start gap-4 p-4 bg-green-50 rounded-lg border border-green-200">
-                <span className="material-symbols-outlined text-green-600">add</span>
+                <span className="material-symbols-outlined text-green-600" aria-hidden="true">
+                  add
+                </span>
                 <div>
                   <h4 className="font-bold text-green-800">
                     Added in {selectedVariantObjects[1].name}
@@ -185,7 +198,9 @@ const VariantComparison: React.FC = () => {
                 </div>
               </div>
               <div className="flex items-start gap-4 p-4 bg-amber-50 rounded-lg border border-amber-200">
-                <span className="material-symbols-outlined text-amber-600">edit</span>
+                <span className="material-symbols-outlined text-amber-600" aria-hidden="true">
+                  edit
+                </span>
                 <div>
                   <h4 className="font-bold text-amber-800">Modified</h4>
                   <ul className="text-sm text-amber-700 mt-1 space-y-1">
@@ -199,15 +214,19 @@ const VariantComparison: React.FC = () => {
         )
       ) : (
         <div className="bg-slate-50 rounded-xl p-8 text-center">
-          <span className="material-symbols-outlined text-4xl text-slate-300">compare</span>
+          <span className="material-symbols-outlined text-4xl text-slate-300" aria-hidden="true">
+            compare
+          </span>
           <p className="text-slate-500 mt-4">Select exactly 2 variants to compare</p>
         </div>
       )}
 
       {/* Generate New Variant */}
       <div className="flex justify-end">
-        <button className="flex items-center gap-2 px-6 py-3 rounded-lg bg-primary-600 text-white font-bold hover:bg-primary-700 transition-colors shadow-lg shadow-primary-600/20">
-          <span className="material-symbols-outlined">add</span>
+        <button className="flex items-center gap-2 px-6 py-3 rounded-lg bg-primary-600 text-white font-bold hover:bg-primary-700 transition-colors shadow-lg shadow-primary-600/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2">
+          <span className="material-symbols-outlined" aria-hidden="true">
+            add
+          </span>
           Generate New Variant
         </button>
       </div>
