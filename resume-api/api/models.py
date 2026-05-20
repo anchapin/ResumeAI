@@ -34,7 +34,7 @@ PHONE_PATTERN = re.compile(r"^[\d\s\-\+\(\)]{7,20}$")
 
 
 # Pre-compiled regex patterns for HTML sanitization
-SCRIPT_PATTERN = re.compile(r"<script[^>]*>.*?</script\s*>", flags=re.IGNORECASE | re.DOTALL)
+SCRIPT_PATTERN = re.compile(r"<script[^>]*>.*?</script[^>]*>", flags=re.IGNORECASE | re.DOTALL)
 DANGEROUS_TAGS_PATTERN = [
     re.compile(f"<{tag}[^>]*>.*?</{tag}>", flags=re.IGNORECASE | re.DOTALL)
     for tag in ["iframe", "object", "embed", "form", "input", "button"]
