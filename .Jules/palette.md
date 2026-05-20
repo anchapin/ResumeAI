@@ -14,3 +14,7 @@
 ## 2026-03-09 - Ensure aria-hidden for ligature icons
 **Learning:** Adding `aria-label`s to buttons is critical, but when the button uses an icon font like Material Symbols that relies on text ligatures (e.g., `close`, `history`, `edit`), screen readers will read the ligature text aloud. This creates a confusing experience (e.g. reading "Close close" or just "Close" when it should be "Close form").
 **Action:** When adding `aria-label` to an icon-only button that uses ligature icons, always ensure the inner `<span>` element containing the ligature text has `aria-hidden="true"`.
+
+## 2026-05-20 - Accessible Custom Checkboxes and Tabs
+**Learning:** When building custom tabbed interfaces or selection cards that function as checkboxes, standard `<button>` semantics aren't enough. Screen readers need explicit roles (`tab` or `checkbox`) and state indicators (`aria-selected` or `aria-checked`) to announce them correctly. Also, remember to hide ligature icons with `aria-hidden="true"`.
+**Action:** Always assign `role="tab"` and `aria-selected` to custom tabs within a `role="tablist"`, and use `role="checkbox"` with `aria-checked` for selectable cards. Hide decorative material icons with `aria-hidden="true"`.
