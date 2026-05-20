@@ -18,3 +18,7 @@
 ## 2026-04-02 - Custom Tab Component Accessibility
 **Learning:** Custom tab implementations (like comment filter buttons) often lack necessary focus rings and active state announcements for screen readers. Using just active classes (e.g. `bg-white`) is not sufficient for keyboard navigation or screen reader context.
 **Action:** Always add explicit `focus-visible:ring` classes to ensure tab elements are navigable by keyboard. Use the `aria-pressed` or `aria-current` attributes to correctly announce the active tab to assistive technologies.
+## $(date +%Y-%m-%d) - Variant Comparison Accessibility
+
+**Learning:** When building complex custom interfaces like variant comparisons, simple toggle buttons and visual icons often lack structural semantics. Google Material Icons (ligatures) will be read literally by screen readers unless hidden, and custom tabs/checkboxes need specific roles to announce their state properly.
+**Action:** Always add `aria-hidden="true"` to ligature-based icons. Wrap custom tab interfaces in a `role="tablist"` and give individual buttons `role="tab"` and `aria-selected` to reflect their active state.
