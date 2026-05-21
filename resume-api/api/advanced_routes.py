@@ -1108,7 +1108,9 @@ async def batch_create_resumes(
 
             # Add tags
             if resume_request.tags:
-                existing_tags_result = await db.execute(select(Tag).where(Tag.name.in_(resume_request.tags)))
+                existing_tags_result = await db.execute(
+                    select(Tag).where(Tag.name.in_(resume_request.tags))
+                )
                 existing_tags_dict = {t.name: t for t in existing_tags_result.scalars().all()}
                 for tag_name in resume_request.tags:
                     existing_tag = existing_tags_dict.get(tag_name)
@@ -1230,7 +1232,9 @@ async def batch_update_resumes(
             # Update tags if provided
             if update_request.tags is not None:
                 resume.tags.clear()
-                existing_tags_result = await db.execute(select(Tag).where(Tag.name.in_(update_request.tags)))
+                existing_tags_result = await db.execute(
+                    select(Tag).where(Tag.name.in_(update_request.tags))
+                )
                 existing_tags_dict = {t.name: t for t in existing_tags_result.scalars().all()}
                 for tag_name in update_request.tags:
                     existing_tag = existing_tags_dict.get(tag_name)
@@ -1304,23 +1308,40 @@ async def batch_delete_resumes(
     successful = []
     failed = []
 
+    try:
+        # Pre-fetch all resumes to avoid N+1 queries
+        result = await db.execute(
+            select(Resume)
+            .options(selectinload(Resume.tags))
+            .where(Resume.id.in_(request.resume_ids))
+        )
+        resumes = result.scalars().all()
+        resume_dict = {resume.id: resume for resume in resumes}
+    except Exception as e:
+        # If the fetch fails entirely, fail all requested IDs
+        for resume_id in request.resume_ids:
+            failed.append({"id": resume_id, "error": f"Failed to fetch: {str(e)}"})
+        return BatchDeleteResponse(
+            successful=[],
+            failed=failed,
+            total_deleted=0,
+            total_failed=len(failed),
+        )
+
     for resume_id in request.resume_ids:
+        if resume_id not in resume_dict:
+            failed.append({"id": resume_id, "error": "Resume not found"})
+            continue
+
+        resume = resume_dict[resume_id]
+
         try:
-            result = await db.execute(
-                select(Resume).options(selectinload(Resume.tags)).where(Resume.id == resume_id)
-            )
-            resume = result.scalar_one_or_none()
-
-            if not resume:
-                failed.append({"id": resume_id, "error": "Resume not found"})
-                continue
-
-            await db.delete(resume)
-            await db.flush()
+            async with db.begin_nested():
+                await db.delete(resume)
+                await db.flush()
             successful.append(resume_id)
-
         except Exception as e:
-            await db.rollback()
+            # We don't need to await db.rollback() because begin_nested() handles rollback of the savepoint
             failed.append({"id": resume_id, "error": str(e)})
 
     await db.commit()
