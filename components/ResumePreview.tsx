@@ -270,8 +270,9 @@ const ResumePreview = React.memo<ResumePreviewProps>(
               onClick={() => setPreviewZoom(Math.max(0.5, previewZoom - 0.1))}
               className="p-1.5 hover:bg-slate-100 rounded text-slate-500"
               title="Zoom Out"
+              aria-label="Zoom out"
             >
-              <span className="material-symbols-outlined text-lg">remove</span>
+              <span className="material-symbols-outlined text-lg" aria-hidden="true">remove</span>
             </button>
             <span className="text-xs font-medium text-slate-600 min-w-[3rem] text-center">
               {Math.round(previewZoom * 100)}%
@@ -280,8 +281,9 @@ const ResumePreview = React.memo<ResumePreviewProps>(
               onClick={() => setPreviewZoom(Math.min(2.0, previewZoom + 0.1))}
               className="p-1.5 hover:bg-slate-100 rounded text-slate-500"
               title="Zoom In"
+              aria-label="Zoom in"
             >
-              <span className="material-symbols-outlined text-lg">add</span>
+              <span className="material-symbols-outlined text-lg" aria-hidden="true">add</span>
             </button>
 
             <div className="h-4 w-px bg-slate-300 mx-2"></div>
