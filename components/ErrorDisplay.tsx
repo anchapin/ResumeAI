@@ -1,4 +1,3 @@
- 
 import React, { useState, useEffect } from 'react';
 import { ErrorContext, ErrorType } from '../utils/errorHandler';
 import { getErrorMessageByType, getErrorSuggestion } from '../utils/errorMessages';
@@ -280,8 +279,9 @@ ${error.context ? `\nContext: ${JSON.stringify(error.context, null, 2)}` : ''}
                 onClick={copyErrorId}
                 className="hover:opacity-100 opacity-50 transition-opacity"
                 title="Copy Error ID"
+                aria-label={copied ? 'Error ID copied' : 'Copy Error ID'}
               >
-                <span className="material-symbols-outlined text-[12px]">
+                <span className="material-symbols-outlined text-[12px]" aria-hidden="true">
                   {copied ? 'check' : 'content_copy'}
                 </span>
               </button>
