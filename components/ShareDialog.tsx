@@ -212,10 +212,10 @@ const ShareDialog: React.FC<ShareDialogProps> = ({ isOpen, resumeId, onClose }) 
               />
               <button
                 onClick={handleCopyLink}
-                aria-label="Copy share link"
+                aria-label={copied ? 'Share link copied' : 'Copy share link'}
                 className="px-4 py-2.5 bg-primary-600 text-white font-bold rounded-lg hover:bg-primary-700 transition-colors flex items-center gap-2"
               >
-                <span className="material-symbols-outlined text-[20px]">
+                <span className="material-symbols-outlined text-[20px]" aria-hidden="true">
                   {copied ? 'check' : 'content_copy'}
                 </span>
                 {copied ? 'Copied!' : 'Copy'}
