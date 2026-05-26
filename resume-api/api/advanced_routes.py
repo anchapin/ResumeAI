@@ -172,7 +172,7 @@ async def list_resumes(
     Returns paginated list of resumes with metadata.
     """
     try:
-        query = select(Resume).options(selectinload(Resume.tags))
+        query = select(Resume).options(selectinload(Resume.tags)).options(selectinload(Resume.versions))
 
         # Apply filters
         if search:
