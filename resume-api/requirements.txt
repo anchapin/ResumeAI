@@ -1,5 +1,5 @@
 # FastAPI and Web Server
-fastapi==0.115.6
+fastapi==0.115.8
 uvicorn[standard]==0.42.0
 python-multipart==0.0.27
 
