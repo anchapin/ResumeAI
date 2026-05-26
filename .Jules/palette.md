@@ -14,3 +14,7 @@
 ## 2026-03-09 - Ensure aria-hidden for ligature icons
 **Learning:** Adding `aria-label`s to buttons is critical, but when the button uses an icon font like Material Symbols that relies on text ligatures (e.g., `close`, `history`, `edit`), screen readers will read the ligature text aloud. This creates a confusing experience (e.g. reading "Close close" or just "Close" when it should be "Close form").
 **Action:** When adding `aria-label` to an icon-only button that uses ligature icons, always ensure the inner `<span>` element containing the ligature text has `aria-hidden="true"`.
+
+## 2026-05-26 - Custom Tabbed Interfaces Accessibility
+**Learning:** Custom tabbed interfaces (e.g., using standalone `<button>` elements) require specific ARIA attributes for full accessibility. Specifically, the container needs `role="tablist"`, and individual tabs need `role="tab"`, `aria-selected`, `tabIndex`, and `aria-controls` binding them to `role="tabpanel"` containers with `id` and `aria-labelledby`.
+**Action:** When implementing custom tabbed interfaces (e.g., using standalone `<button>` elements), ensure full accessibility by wrapping the tabs in a container with `role="tablist"`, assigning `role="tab"`, `aria-selected={condition}`, `aria-controls`, `tabIndex`, and visible focus styles to the individual tab elements, and mapping them to corresponding `role="tabpanel"` containers.

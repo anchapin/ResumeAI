@@ -36,33 +36,79 @@ export const OfferComparison: React.FC<OfferComparisonProps> = ({ comparison, on
   return (
     <div className="space-y-6">
       {/* Tabs */}
-      <div className="flex gap-2 border-b border-slate-200">
+      <div
+        className="flex gap-2 border-b border-slate-200"
+        role="tablist"
+        aria-label="Offer comparison views"
+      >
         <button
+          role="tab"
+          aria-selected={activeTab === 'overview'}
+          aria-controls="panel-overview"
+          id="tab-overview"
+          tabIndex={activeTab === 'overview' ? 0 : -1}
           onClick={() => setActiveTab('overview')}
-          className={`px-4 py-2 font-medium text-sm transition-colors ${
+          onKeyDown={(e) => {
+            if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+              e.preventDefault();
+              document.getElementById('tab-details')?.focus();
+            } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+              e.preventDefault();
+              document.getElementById('tab-analysis')?.focus();
+            }
+          }}
+          className={`px-4 py-2 font-medium text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 rounded-t-lg ${
             activeTab === 'overview'
-              ? 'text-primary-600 border-b-2 border-primary-600'
-              : 'text-slate-600 hover:text-slate-900'
+              ? 'text-primary-600 border-b-2 border-primary-600 bg-primary-50'
+              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
           }`}
         >
           Overview
         </button>
         <button
+          role="tab"
+          aria-selected={activeTab === 'details'}
+          aria-controls="panel-details"
+          id="tab-details"
+          tabIndex={activeTab === 'details' ? 0 : -1}
           onClick={() => setActiveTab('details')}
-          className={`px-4 py-2 font-medium text-sm transition-colors ${
+          onKeyDown={(e) => {
+            if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+              e.preventDefault();
+              document.getElementById('tab-analysis')?.focus();
+            } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+              e.preventDefault();
+              document.getElementById('tab-overview')?.focus();
+            }
+          }}
+          className={`px-4 py-2 font-medium text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 rounded-t-lg ${
             activeTab === 'details'
-              ? 'text-primary-600 border-b-2 border-primary-600'
-              : 'text-slate-600 hover:text-slate-900'
+              ? 'text-primary-600 border-b-2 border-primary-600 bg-primary-50'
+              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
           }`}
         >
           Details
         </button>
         <button
+          role="tab"
+          aria-selected={activeTab === 'analysis'}
+          aria-controls="panel-analysis"
+          id="tab-analysis"
+          tabIndex={activeTab === 'analysis' ? 0 : -1}
           onClick={() => setActiveTab('analysis')}
-          className={`px-4 py-2 font-medium text-sm transition-colors ${
+          onKeyDown={(e) => {
+            if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+              e.preventDefault();
+              document.getElementById('tab-overview')?.focus();
+            } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+              e.preventDefault();
+              document.getElementById('tab-details')?.focus();
+            }
+          }}
+          className={`px-4 py-2 font-medium text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 rounded-t-lg ${
             activeTab === 'analysis'
-              ? 'text-primary-600 border-b-2 border-primary-600'
-              : 'text-slate-600 hover:text-slate-900'
+              ? 'text-primary-600 border-b-2 border-primary-600 bg-primary-50'
+              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
           }`}
         >
           Analysis
@@ -71,7 +117,12 @@ export const OfferComparison: React.FC<OfferComparisonProps> = ({ comparison, on
 
       {/* Overview Tab */}
       {activeTab === 'overview' && (
-        <div className="space-y-6">
+        <div
+          className="space-y-6"
+          role="tabpanel"
+          id="panel-overview"
+          aria-labelledby="tab-overview"
+        >
           {/* Recommendation Banner */}
           <div className="bg-gradient-to-r from-primary-500 to-primary-600 rounded-xl p-6 text-white">
             <div className="flex items-start gap-4">
@@ -174,7 +225,7 @@ export const OfferComparison: React.FC<OfferComparisonProps> = ({ comparison, on
 
       {/* Details Tab */}
       {activeTab === 'details' && (
-        <div className="space-y-6">
+        <div className="space-y-6" role="tabpanel" id="panel-details" aria-labelledby="tab-details">
           {/* Side-by-side Comparison */}
           <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
             <table className="w-full">
@@ -301,7 +352,12 @@ export const OfferComparison: React.FC<OfferComparisonProps> = ({ comparison, on
 
       {/* Analysis Tab */}
       {activeTab === 'analysis' && (
-        <div className="space-y-6">
+        <div
+          className="space-y-6"
+          role="tabpanel"
+          id="panel-analysis"
+          aria-labelledby="tab-analysis"
+        >
           {comparison.scores.map((score) => {
             const offer = comparison.offers.find((o) => o.id === score.offerId);
             if (!offer) return null;
