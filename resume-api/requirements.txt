@@ -1,5 +1,5 @@
 # FastAPI and Web Server
-fastapi==0.115.8
+fastapi==0.115.11
 uvicorn[standard]==0.42.0
 python-multipart==0.0.27
 
@@ -70,6 +70,7 @@ psutil==7.2.2
 
 # Database (SQLAlchemy async)
 sqlalchemy==2.0.48
+starlette==0.45.3
 aiosqlite==0.22.1
 
 # PDF Parsing (for import feature)
