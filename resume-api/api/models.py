@@ -56,7 +56,7 @@ def sanitize_html(text: Optional[str]) -> Optional[str]:
         text = re.sub(f"<{tag}[^>]*/?>", "", text, flags=re.IGNORECASE)
 
     # Remove event handlers (onclick, onerror, etc.)
-    text = re.sub(r'on\w+\s*=\s*["\'][^"\']*["\']', "", text, flags=re.IGNORECASE)
+    text = re.sub(r'on\w+\s*=\s*(?:["\'][^"\']*["\']|[^>\s]+)', "", text, flags=re.IGNORECASE)
 
     # Remove javascript: and data: URLs
     text = re.sub(r"javascript\s*:", "", text, flags=re.IGNORECASE)
@@ -2154,5 +2154,6 @@ class QueueStatsResponse(BaseModel):
                 "worker_running": True,
             }
         }
+
 
 ResumeRequest.model_rebuild()
