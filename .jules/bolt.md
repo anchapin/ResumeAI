@@ -39,3 +39,7 @@
 ## 2024-05-27 - Regex Cross-Matching Risk in Tag Sanitization
 **Learning:** Consolidating start and end HTML tag patterns into a single regex with a shared group (like `<(?:iframe|form|input)[^>]*>.*?</(?:iframe|form|input)>`) is a critical security and functionality bug because it allows cross-matching (e.g., `<input>...</form>`), leading to data loss.
 **Action:** When stripping multiple different HTML tags via regex, always iterate over a list of pre-compiled individual tag patterns (e.g., one for `iframe`, one for `form`) rather than merging them into a single cross-matching OR pattern.
+
+## 2026-05-28 - Pre-compiling regexes in HTML sanitization
+**Learning:** Dynamic regex compilation within frequent text validation pipelines like `sanitize_html` creates significant performance overhead. Although Python caches recently used regexes, calling `re.sub` with string patterns repeatedly still incurs measurable overhead compared to using module-level pre-compiled `re.Pattern` objects.
+**Action:** When validating or sanitizing user input across multiple fields, always hoist regex patterns to module-level constants and use `Pattern.sub()` instead of `re.sub()`.
