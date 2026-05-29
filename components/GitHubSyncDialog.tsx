@@ -1,4 +1,3 @@
- 
 import React, { useState, useEffect, useCallback } from 'react';
 import { toast } from 'react-toastify';
 import { secureApiCall, getAuthToken } from '../utils/security';
@@ -127,7 +126,7 @@ async function fetchGitHubRepositories(): Promise<GitHubRepository[]> {
  * Allows users to sync their GitHub repositories to their resume.
  * Checks OAuth connection status and prompts connection if needed.
  */
- 
+
 export const GitHubSyncDialog: React.FC<GitHubSyncDialogProps> = ({
   isOpen,
   onClose,
@@ -291,11 +290,14 @@ export const GitHubSyncDialog: React.FC<GitHubSyncDialogProps> = ({
             </div>
           </div>
           <button
+            aria-label="Close dialog"
             onClick={onClose}
             className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
             disabled={isSyncing || isConnecting}
           >
-            <span className="material-symbols-outlined">close</span>
+            <span aria-hidden="true" className="material-symbols-outlined">
+              close
+            </span>
           </button>
         </div>
 
