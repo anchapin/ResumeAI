@@ -110,7 +110,8 @@ def test_xss_attempt():
         )
 
         # Check that script tags were removed
-        if "<script>" not in resume.basics.name:
+        name = resume.basics.name or ""
+        if "<script>" not in name:
             print(f"✓ Script tags removed from name: '{resume.basics.name}'")
             assert True
         else:

@@ -26,3 +26,8 @@
 **Vulnerability:** The `_get_table_row_count` method in `resume-api/lib/db/schema_manager.py` used a Python f-string within `sqlalchemy.text()` to build a SQL query dynamically (`text(f"SELECT COUNT(*) FROM {table_name}")`), creating a direct vector for SQL injection if `table_name` is user-controlled.
 **Learning:** `sqlalchemy.text()` does NOT sanitize variables passed into it via Python string formatting (like f-strings or `.format()`). Using standard string concatenation in database execution is inherently dangerous.
 **Prevention:** To safely use dynamic identifiers (like table or column names), use SQLAlchemy core objects like `table()` or `column()` combined with `select()`. For dynamic values, use parameterized named bindings (e.g., `text('... WHERE col=:val'), {'val': var}`).
+
+## 2026-05-28 - [HIGH] XSS Vulnerabilities in HTML Sanitizer Regex
+**Vulnerability:** The HTML sanitizer's regular expressions for blocking `onclick` and `<script>` tags were flawed. They failed to match `script` tags with whitespace before the closing bracket (`</script >`), unquoted event handlers (`onclick=alert(1)`), and incorrectly partially stripped quoted event handlers (`onclick="alert(1)"` becoming `xss')"`).
+**Learning:** The codebase had duplicated sanitization logic in `api/models.py` and `lib/utils/validators.py`. Using basic regex parsing for HTML is inherently brittle and prone to catastrophic backtracking or bypasses due to HTML's leniency with quotes and whitespaces.
+**Prevention:** Pre-compile correctly structured regex patterns handling all quote cases `(?:"[^"]*"|'[^']*'|[^>\s]+)`. More broadly, avoid duplicating security-critical sanitization code across the repository.

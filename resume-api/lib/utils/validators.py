@@ -255,7 +255,7 @@ _DANGEROUS_TAGS_PATTERNS = [
     )
     for tag in ["iframe", "object", "embed", "form", "input", "button"]
 ]
-_ON_EVENT_PATTERN = re.compile(r'on\w+\s*=\s*(?:["\'][^"\']*["\']|[^>\s]+)', flags=re.IGNORECASE)
+_ON_EVENT_PATTERN = re.compile(r'on\w+\s*=\s*(?:"[^"]*"|\'[^\']*\'|[^>\s]+)', flags=re.IGNORECASE)
 _HREF_JS_PATTERN = re.compile(r'href\s*=\s*["\']javascript:[^"\']*["\']', flags=re.IGNORECASE)
 _JS_DATA_PATTERN = re.compile(r"(?:javascript|data)\s*:", flags=re.IGNORECASE)
 
