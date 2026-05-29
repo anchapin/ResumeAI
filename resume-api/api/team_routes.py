@@ -177,25 +177,16 @@ async def list_teams(
             select(Team)
             .join(TeamMember, Team.id == TeamMember.team_id)
             .where(TeamMember.user_id == user_id)
-            .options(selectinload(Team.members))
+            .options(selectinload(Team.members), selectinload(Team.shared_resumes))
         )
 
         result = await db.execute(stmt)
-        teams = result.scalars().all()
+        teams = result.scalars().unique().all()
 
         team_responses = []
         for team in teams:
-            member_count_stmt = select(func.count(TeamMember.id)).where(
-                TeamMember.team_id == team.id
-            )
-            result = await db.execute(member_count_stmt)
-            member_count = result.scalar() or 0
-
-            resume_count_stmt = select(func.count(TeamResume.id)).where(
-                TeamResume.team_id == team.id
-            )
-            result = await db.execute(resume_count_stmt)
-            resume_count = result.scalar() or 0
+            member_count = len(team.members) if team.members else 0
+            resume_count = len(team.shared_resumes) if team.shared_resumes else 0
 
             team_responses.append(
                 TeamResponse(

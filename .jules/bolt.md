@@ -39,3 +39,6 @@
 ## 2024-05-27 - Regex Cross-Matching Risk in Tag Sanitization
 **Learning:** Consolidating start and end HTML tag patterns into a single regex with a shared group (like `<(?:iframe|form|input)[^>]*>.*?</(?:iframe|form|input)>`) is a critical security and functionality bug because it allows cross-matching (e.g., `<input>...</form>`), leading to data loss.
 **Action:** When stripping multiple different HTML tags via regex, always iterate over a list of pre-compiled individual tag patterns (e.g., one for `iframe`, one for `form`) rather than merging them into a single cross-matching OR pattern.
+## 2026-05-29 - Avoiding N+1 Queries with SQLAlchemy Length Evaluation
+**Learning:** The codebase previously exhibited N+1 queries by executing separate `COUNT` queries for each parent item when counting child records. We found a massive speedup (~6.2s to ~0.76s for 50 items) by prefetching the relationships using `selectinload` and evaluating lengths in Python using `len()`.
+**Action:** When counting one-to-many child entities for multiple parent entities in SQLAlchemy, prefer eager loading using `selectinload` and computing lengths in memory over N+1 database queries, ensuring `.unique()` is applied to the base query result if a join was used.
