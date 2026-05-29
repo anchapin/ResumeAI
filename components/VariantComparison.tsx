@@ -207,7 +207,9 @@ const VariantComparison: React.FC = () => {
       {/* Generate New Variant */}
       <div className="flex justify-end">
         <button className="flex items-center gap-2 px-6 py-3 rounded-lg bg-primary-600 text-white font-bold hover:bg-primary-700 transition-colors shadow-lg shadow-primary-600/20">
-          <span className="material-symbols-outlined">add</span>
+          <span aria-hidden="true" className="material-symbols-outlined">
+            add
+          </span>
           Generate New Variant
         </button>
       </div>
