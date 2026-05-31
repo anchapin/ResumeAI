@@ -8,6 +8,44 @@ and match them against resume content.
 import re
 from typing import Any, Dict, List, Set
 
+_STOP_WORDS = frozenset(
+    [
+        "and",
+        "the",
+        "for",
+        "with",
+        "from",
+        "this",
+        "that",
+        "will",
+        "have",
+        "has",
+        "are",
+        "been",
+        "being",
+        "more",
+        "some",
+        "other",
+        "all",
+        "new",
+        "use",
+        "using",
+        "work",
+        "years",
+        "experience",
+        "knowledge",
+        "skills",
+        "ability",
+        "strong",
+        "excellent",
+        "plus",
+        "must",
+        "required",
+    ]
+)
+
+_CAPITALIZED_WORD_PATTERN = re.compile(r"\b[A-Z][a-zA-Z]{3,}\b")
+
 
 class KeywordExtractor:
     """
@@ -158,56 +196,18 @@ class KeywordExtractor:
             if keyword in text_lower:
                 found_keywords.append(keyword)
 
-        # Also extract capitalized words that might be technologies
-        capitalized = re.findall(r"\b[A-Z][a-zA-Z]{2,}\b", text)
-        for word in capitalized:
+        # ⚡ Bolt Optimization: Use a set for O(1) deduplication instead of O(N) list searches
+        seen = set(found_keywords)
+
+        # Also extract capitalized words that might be technologies using pre-compiled regex
+        for word in _CAPITALIZED_WORD_PATTERN.findall(text):
             word_lower = word.lower()
-            if word_lower not in found_keywords and len(word) > 3:
-                # Skip common words
-                if word_lower not in [
-                    "and",
-                    "the",
-                    "for",
-                    "with",
-                    "from",
-                    "this",
-                    "that",
-                    "will",
-                    "have",
-                    "has",
-                    "are",
-                    "been",
-                    "being",
-                    "more",
-                    "some",
-                    "other",
-                    "all",
-                    "new",
-                    "use",
-                    "using",
-                    "work",
-                    "years",
-                    "experience",
-                    "knowledge",
-                    "skills",
-                    "ability",
-                    "strong",
-                    "excellent",
-                    "plus",
-                    "must",
-                    "required",
-                ]:
-                    found_keywords.append(word_lower)
+            # ⚡ Bolt Optimization: Replace O(N) list lookup with O(1) set lookup
+            if word_lower not in seen and word_lower not in _STOP_WORDS:
+                seen.add(word_lower)
+                found_keywords.append(word_lower)
 
-        # Remove duplicates while preserving order
-        seen = set()
-        unique_keywords = []
-        for kw in found_keywords:
-            if kw not in seen:
-                seen.add(kw)
-                unique_keywords.append(kw)
-
-        return unique_keywords[:50]
+        return found_keywords[:50]
 
     def categorize_keywords(self, keywords: List[str]) -> Dict[str, List[str]]:
         """
