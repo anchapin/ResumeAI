@@ -1,0 +1,4 @@
+## $(date +%Y-%m-%d) - Prevent SQL Injection with SQLAlchemy text() and f-strings
+**Vulnerability:** A critical SQL injection vulnerability was found in `resume-api/lib/db/migration_helpers.py` within `BatchMigrationManager.migrate_table_in_batches`. The table name and ID column string parameters were passed directly into a raw SQL query using Python f-strings inside a `text()` block, bypassing SQLAlchemy's input sanitation.
+**Learning:** Even internal tooling or database administration functions must use parameterized identifiers. F-strings should never be used to construct dynamic SQL within `text()`, as it enables trivial SQL injection when processing untrusted or dynamic inputs.
+**Prevention:** Always use SQLAlchemy's native expression language for dynamic table or column references, such as `table("name", column("id"))` combined with `select()`, instead of raw SQL strings. This ensures identifiers are safely quoted and escaped by the database engine.
