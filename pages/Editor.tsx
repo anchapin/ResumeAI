@@ -1,4 +1,3 @@
- 
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -9,12 +8,7 @@ import {
   Comment,
   ResumeVersion,
 } from '../types';
-import {
-  convertToAPIData,
-  getVariants,
-  listComments,
-  updateResume,
-} from '../utils/api-client';
+import { convertToAPIData, getVariants, listComments, updateResume } from '../utils/api-client';
 import { useStore } from '../store/store';
 import { useHistory } from '../src/hooks/useHistory';
 import ResumeImportDialog from '../components/ResumeImportDialog';
@@ -73,14 +67,14 @@ const Editor = () => {
 
   // PDF generation state
   const [selectedVariant, setSelectedVariant] = useState<string>('modern');
-  const { 
-    status: exportStatus, 
-    progress: exportProgress, 
-    error: exportError, 
+  const {
+    status: exportStatus,
+    progress: exportProgress,
+    error: exportError,
     eta: exportEta,
-    startExport, 
-    cancelExport, 
-    reset: resetExport 
+    startExport,
+    cancelExport,
+    reset: resetExport,
   } = usePdfExport();
 
   // Resume import state
@@ -799,7 +793,9 @@ const Editor = () => {
                 className="flex items-center gap-2 px-4 h-10 rounded-lg border border-slate-300 bg-white text-slate-700 font-bold text-sm hover:bg-slate-50 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
                 title="Undo (Ctrl+Z)"
               >
-                <span className="material-symbols-outlined text-lg">undo</span>
+                <span className="material-symbols-outlined text-lg" aria-hidden="true">
+                  undo
+                </span>
                 <span className="hidden sm:inline">Undo</span>
               </button>
               {/* Redo Button */}
@@ -809,7 +805,9 @@ const Editor = () => {
                 className="flex items-center gap-2 px-4 h-10 rounded-lg border border-slate-300 bg-white text-slate-700 font-bold text-sm hover:bg-slate-50 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
                 title="Redo (Ctrl+Y or Ctrl+Shift+Z)"
               >
-                <span className="material-symbols-outlined text-lg">redo</span>
+                <span className="material-symbols-outlined text-lg" aria-hidden="true">
+                  redo
+                </span>
                 <span className="hidden sm:inline">Redo</span>
               </button>
               {/* Comments Button */}
@@ -818,7 +816,9 @@ const Editor = () => {
                 className="flex items-center gap-2 px-4 h-10 rounded-lg border border-slate-300 bg-white text-slate-700 font-bold text-sm hover:bg-slate-50 transition-colors shadow-sm relative"
                 title="View comments"
               >
-                <span className="material-symbols-outlined text-lg">chat_bubble_outline</span>
+                <span className="material-symbols-outlined text-lg" aria-hidden="true">
+                  chat_bubble_outline
+                </span>
                 <span className="hidden sm:inline">Comments</span>
                 {unresolvedCommentCount > 0 && (
                   <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
@@ -832,7 +832,9 @@ const Editor = () => {
                 className="flex items-center gap-2 px-4 h-10 rounded-lg border border-slate-300 bg-white text-slate-700 font-bold text-sm hover:bg-slate-50 transition-colors shadow-sm"
                 title="View version history"
               >
-                <span className="material-symbols-outlined text-lg">history</span>
+                <span className="material-symbols-outlined text-lg" aria-hidden="true">
+                  history
+                </span>
                 <span className="hidden sm:inline">History</span>
               </button>
               {/* Save Version Button */}
@@ -841,7 +843,9 @@ const Editor = () => {
                 className="flex items-center gap-2 px-4 h-10 rounded-lg border border-slate-300 bg-white text-slate-700 font-bold text-sm hover:bg-slate-50 transition-colors shadow-sm"
                 title="Save as new version"
               >
-                <span className="material-symbols-outlined text-lg">save</span>
+                <span className="material-symbols-outlined text-lg" aria-hidden="true">
+                  save
+                </span>
                 <span className="hidden sm:inline">Save Version</span>
               </button>
               {/* Preview Toggle Button */}
@@ -853,7 +857,7 @@ const Editor = () => {
                     : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50'
                 }`}
               >
-                <span className="material-symbols-outlined text-lg">
+                <span className="material-symbols-outlined text-lg" aria-hidden="true">
                   {showPreview ? 'visibility_off' : 'visibility'}
                 </span>
                 {showPreview ? 'Hide Preview' : 'Preview'}
@@ -863,7 +867,9 @@ const Editor = () => {
                 disabled={exportStatus === 'submitting' || exportStatus === 'processing'}
                 className="flex items-center gap-2 px-6 h-10 rounded-lg border border-slate-300 bg-white text-slate-700 font-bold text-sm hover:bg-slate-50 transition-colors shadow-sm"
               >
-                {(exportStatus === 'submitting' || exportStatus === 'processing') ? 'Generating...' : 'Download PDF'}
+                {exportStatus === 'submitting' || exportStatus === 'processing'
+                  ? 'Generating...'
+                  : 'Download PDF'}
               </button>
               <button
                 onClick={handleSaveProfile}
@@ -935,14 +941,22 @@ const Editor = () => {
           <div className="bg-white rounded-2xl shadow-2xl w-full max-max-2xl max-h-[80vh] overflow-hidden flex flex-col">
             <div className="flex items-center justify-between p-6 border-b border-slate-200">
               <div className="flex items-center gap-3">
-                <span className="material-symbols-outlined text-primary-600 text-2xl">history</span>
+                <span
+                  className="material-symbols-outlined text-primary-600 text-2xl"
+                  aria-hidden="true"
+                >
+                  history
+                </span>
                 <h2 className="text-xl font-bold text-slate-900">Version History</h2>
               </div>
               <button
                 onClick={() => setShowVersionHistory(false)}
                 className="p-2 text-slate-400 hover:bg-slate-100 rounded-lg transition-colors"
+                aria-label="Close version history"
               >
-                <span className="material-symbols-outlined text-2xl">close</span>
+                <span className="material-symbols-outlined text-2xl" aria-hidden="true">
+                  close
+                </span>
               </button>
             </div>
             <div className="flex-1 overflow-y-auto p-6">
@@ -958,14 +972,22 @@ const Editor = () => {
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
             <div className="flex items-center justify-between p-6 border-b border-slate-200">
               <div className="flex items-center gap-3">
-                <span className="material-symbols-outlined text-primary-600 text-2xl">save</span>
+                <span
+                  className="material-symbols-outlined text-primary-600 text-2xl"
+                  aria-hidden="true"
+                >
+                  save
+                </span>
                 <h2 className="text-xl font-bold text-slate-900">Save as Version</h2>
               </div>
               <button
                 onClick={() => setShowSaveVersionDialog(false)}
                 className="p-2 text-slate-400 hover:bg-slate-100 rounded-lg transition-colors"
+                aria-label="Close save version dialog"
               >
-                <span className="material-symbols-outlined text-2xl">close</span>
+                <span className="material-symbols-outlined text-2xl" aria-hidden="true">
+                  close
+                </span>
               </button>
             </div>
             <div className="p-6">
@@ -1036,7 +1058,10 @@ const Editor = () => {
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
             <div className="flex items-center justify-between p-6 border-b border-slate-200">
               <div className="flex items-center gap-3">
-                <span className="material-symbols-outlined text-primary-600 text-2xl">
+                <span
+                  className="material-symbols-outlined text-primary-600 text-2xl"
+                  aria-hidden="true"
+                >
                   chat_bubble_outline
                 </span>
                 <div>
@@ -1052,8 +1077,11 @@ const Editor = () => {
               <button
                 onClick={() => setShowCommentPanel(false)}
                 className="p-2 text-slate-400 hover:bg-slate-100 rounded-lg transition-colors"
+                aria-label="Close comments panel"
               >
-                <span className="material-symbols-outlined text-2xl">close</span>
+                <span className="material-symbols-outlined text-2xl" aria-hidden="true">
+                  close
+                </span>
               </button>
             </div>
             <div className="flex-1 overflow-y-auto">
