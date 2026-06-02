@@ -32,7 +32,7 @@ EMAIL_PATTERN = re.compile(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
 URL_PATTERN = re.compile(r"^(https?://|ftp://)?[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(/.*)?$", re.IGNORECASE)
 PHONE_PATTERN = re.compile(r"^[\d\s\-\+\(\)]{7,20}$")
 
-_SCRIPT_PATTERN = re.compile(r"<script[^>]*>.*?</script>", flags=re.IGNORECASE | re.DOTALL)
+_SCRIPT_PATTERN = re.compile(r"<script[^>]*>.*?</script\s*[^>]*>", flags=re.IGNORECASE | re.DOTALL)
 _DANGEROUS_TAGS_PATTERNS = [
     (
         re.compile(rf"<{tag}[^>]*>.*?</{tag}>", flags=re.IGNORECASE | re.DOTALL),
@@ -40,7 +40,7 @@ _DANGEROUS_TAGS_PATTERNS = [
     )
     for tag in ["iframe", "object", "embed", "form", "input", "button"]
 ]
-_ON_EVENT_PATTERN = re.compile(r'on\w+\s*=\s*["\'][^"\']*["\']', flags=re.IGNORECASE)
+_ON_EVENT_PATTERN = re.compile(r'on\w+\s*=\s*(?:["\'][^"\']*["\']|[^>\s]+)', flags=re.IGNORECASE)
 _JAVASCRIPT_PATTERN = re.compile(r"javascript\s*:", flags=re.IGNORECASE)
 _DATA_PATTERN = re.compile(r"data\s*:", flags=re.IGNORECASE)
 
