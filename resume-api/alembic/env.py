@@ -6,12 +6,12 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 from dotenv import load_dotenv
 
 # Import Base from database for metadata
-# This is the Base used by all models including UserGitHubConnection
+# This is the Base used by all models including GitHubConnection
 from database import Base
 
 # Import all models to ensure they're registered with the Base metadata
-# The UserGitHubConnection model is imported when importing Base
-from database import UserGitHubConnection  # noqa: F401
+# The GitHubConnection model is imported when importing Base
+from database import GitHubConnection  # noqa: F401
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -27,7 +27,7 @@ if config.config_file_name is not None:
 load_dotenv()
 
 database_url = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///./resumeai.db")
-config.set_main_option("sqlalchemy.url", database_url.replace("aiosqlite", "sqlite"))
+config.set_main_option("sqlalchemy.url", database_url)
 
 # Add your model's MetaData object here
 # for 'autogenerate' support
