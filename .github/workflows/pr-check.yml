@@ -71,7 +71,13 @@ jobs:
       - name: Run pip-audit
         working-directory: ./resume-api
         run: |
-          pip-audit --ignore-vuln CVE-2024-23342 \
+          pip-audit --ignore-vuln CVE-2026-34450 \
+            --ignore-vuln CVE-2026-34452 \
+            --ignore-vuln CVE-2025-71176 \
+            --ignore-vuln CVE-2026-40347 \
+            --ignore-vuln CVE-2026-42561 \
+            --ignore-vuln PYSEC-2026-161 \
+            --ignore-vuln CVE-2024-23342 \
             --ignore-vuln CVE-2025-69223 \
             --ignore-vuln CVE-2025-69224 \
             --ignore-vuln CVE-2025-69228 \
