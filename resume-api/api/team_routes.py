@@ -173,29 +173,26 @@ async def list_teams(
     try:
         user_id = auth.user_id if hasattr(auth, "user_id") else 1
 
+        # ⚡ Bolt Optimization: Eager load `members` and `shared_resumes` relationships
+        # to avoid N+1 query problems when calculating member and resume counts below.
         stmt = (
             select(Team)
             .join(TeamMember, Team.id == TeamMember.team_id)
             .where(TeamMember.user_id == user_id)
-            .options(selectinload(Team.members))
+            .options(selectinload(Team.members), selectinload(Team.shared_resumes))
         )
 
         result = await db.execute(stmt)
-        teams = result.scalars().all()
+        # ⚡ Bolt Optimization: Apply .unique() because we used .join() with eager loading,
+        # otherwise SQLAlchemy may complain or return duplicate entities.
+        teams = result.scalars().unique().all()
 
         team_responses = []
         for team in teams:
-            member_count_stmt = select(func.count(TeamMember.id)).where(
-                TeamMember.team_id == team.id
-            )
-            result = await db.execute(member_count_stmt)
-            member_count = result.scalar() or 0
-
-            resume_count_stmt = select(func.count(TeamResume.id)).where(
-                TeamResume.team_id == team.id
-            )
-            result = await db.execute(resume_count_stmt)
-            resume_count = result.scalar() or 0
+            # ⚡ Bolt Optimization: Calculate counts in-memory using the eagerly loaded relationships
+            # instead of executing two COUNT queries per team.
+            member_count = len(team.members)
+            resume_count = len(team.shared_resumes)
 
             team_responses.append(
                 TeamResponse(
@@ -1516,9 +1513,7 @@ async def delete_resume_comment(
     try:
         user_id = auth.user_id if hasattr(auth, "user_id") else 1
 
-        stmt = select(Comment).where(
-            and_(Comment.id == comment_id, Comment.resume_id == resume_id)
-        )
+        stmt = select(Comment).where(and_(Comment.id == comment_id, Comment.resume_id == resume_id))
         result = await db.execute(stmt)
         comment = result.scalar_one_or_none()
 
