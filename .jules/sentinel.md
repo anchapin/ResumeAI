@@ -24,5 +24,7 @@
 ## 2026-04-03 - [SQL Injection via String Formatting in SQLAlchemy text()]
 
 **Vulnerability:** The `_get_table_row_count` method in `resume-api/lib/db/schema_manager.py` used a Python f-string within `sqlalchemy.text()` to build a SQL query dynamically (`text(f"SELECT COUNT(*) FROM {table_name}")`), creating a direct vector for SQL injection if `table_name` is user-controlled.
-**Learning:** `sqlalchemy.text()` does NOT sanitize variables passed into it via Python string formatting (like f-strings or `.format()`). Using standard string concatenation in database execution is inherently dangerous.
-**Prevention:** To safely use dynamic identifiers (like table or column names), use SQLAlchemy core objects like `table()` or `column()` combined with `select()`. For dynamic values, use parameterized named bindings (e.g., `text('... WHERE col=:val'), {'val': var}`).
+## 2026-06-05 - Command Argument Injection in subprocess
+**Vulnerability:** Command argument injection (also known as option injection) vulnerability found in `is_ecryptfs_path` inside `resume-api/lib/utils/ecryptfs_utils.py` where a user-provided path was passed directly to a `subprocess.run` call executing `df` without a delimiter.
+**Learning:** Even when using `shell=False` to prevent command injection, passing untrusted strings as arguments to command-line utilities can allow attackers to inject unintended flags or options if the string starts with a `-`.
+**Prevention:** Always use the end-of-options delimiter `--` when passing variable arguments (like file paths) to command-line utilities via `subprocess` to prevent them from being parsed as options.
