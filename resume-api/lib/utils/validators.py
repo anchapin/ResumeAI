@@ -250,7 +250,7 @@ def validate_list_length(
 _SCRIPT_PATTERN = re.compile(r"<script[^>]*>.*?</script\s*[^>]*>", flags=re.IGNORECASE | re.DOTALL)
 _DANGEROUS_TAGS_PATTERNS = [
     (
-        re.compile(rf"<{tag}[^>]*>.*?</{tag}>", flags=re.IGNORECASE | re.DOTALL),
+        re.compile(rf"<{tag}[^>]*>.*?</{tag}\s*[^>]*>", flags=re.IGNORECASE | re.DOTALL),
         re.compile(rf"<{tag}[^>]*/?>", flags=re.IGNORECASE),
     )
     for tag in ["iframe", "object", "embed", "form", "input", "button"]
