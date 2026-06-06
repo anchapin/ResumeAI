@@ -36,8 +36,12 @@ export const OfferComparison: React.FC<OfferComparisonProps> = ({ comparison, on
   return (
     <div className="space-y-6">
       {/* Tabs */}
-      <div className="flex gap-2 border-b border-slate-200">
+      <div role="tablist" aria-label="Offer comparison sections" className="flex gap-2 border-b border-slate-200">
         <button
+          role="tab"
+          aria-selected={activeTab === 'overview'}
+          aria-controls="panel-overview"
+          id="tab-overview"
           onClick={() => setActiveTab('overview')}
           className={`px-4 py-2 font-medium text-sm transition-colors ${
             activeTab === 'overview'
@@ -48,6 +52,10 @@ export const OfferComparison: React.FC<OfferComparisonProps> = ({ comparison, on
           Overview
         </button>
         <button
+          role="tab"
+          aria-selected={activeTab === 'details'}
+          aria-controls="panel-details"
+          id="tab-details"
           onClick={() => setActiveTab('details')}
           className={`px-4 py-2 font-medium text-sm transition-colors ${
             activeTab === 'details'
@@ -58,6 +66,10 @@ export const OfferComparison: React.FC<OfferComparisonProps> = ({ comparison, on
           Details
         </button>
         <button
+          role="tab"
+          aria-selected={activeTab === 'analysis'}
+          aria-controls="panel-analysis"
+          id="tab-analysis"
           onClick={() => setActiveTab('analysis')}
           className={`px-4 py-2 font-medium text-sm transition-colors ${
             activeTab === 'analysis'
@@ -71,7 +83,7 @@ export const OfferComparison: React.FC<OfferComparisonProps> = ({ comparison, on
 
       {/* Overview Tab */}
       {activeTab === 'overview' && (
-        <div className="space-y-6">
+        <div role="tabpanel" id="panel-overview" aria-labelledby="tab-overview" tabIndex={0} className="space-y-6">
           {/* Recommendation Banner */}
           <div className="bg-gradient-to-r from-primary-500 to-primary-600 rounded-xl p-6 text-white">
             <div className="flex items-start gap-4">
@@ -174,7 +186,7 @@ export const OfferComparison: React.FC<OfferComparisonProps> = ({ comparison, on
 
       {/* Details Tab */}
       {activeTab === 'details' && (
-        <div className="space-y-6">
+        <div role="tabpanel" id="panel-details" aria-labelledby="tab-details" tabIndex={0} className="space-y-6">
           {/* Side-by-side Comparison */}
           <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
             <table className="w-full">
@@ -301,7 +313,7 @@ export const OfferComparison: React.FC<OfferComparisonProps> = ({ comparison, on
 
       {/* Analysis Tab */}
       {activeTab === 'analysis' && (
-        <div className="space-y-6">
+        <div role="tabpanel" id="panel-analysis" aria-labelledby="tab-analysis" tabIndex={0} className="space-y-6">
           {comparison.scores.map((score) => {
             const offer = comparison.offers.find((o) => o.id === score.offerId);
             if (!offer) return null;
