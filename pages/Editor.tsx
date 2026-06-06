@@ -878,7 +878,15 @@ const Editor = () => {
           <EditorTabs activeTab={activeTab} onTabChange={setActiveTab} />
 
           {/* Content Area */}
-          {renderContent()}
+          <div
+            role="tabpanel"
+            id={`panel-${activeTab.toLowerCase().replace(/ /g, '-')}`}
+            aria-labelledby={`tab-${activeTab.toLowerCase().replace(/ /g, '-')}`}
+            tabIndex={0}
+            className="outline-none"
+          >
+            {renderContent()}
+          </div>
 
           {/* Bottom Actions */}
           <div className="flex justify-between items-center border-t border-slate-200 pt-8">
