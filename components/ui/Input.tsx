@@ -10,6 +10,10 @@ export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> 
 const Input = forwardRef<HTMLInputElement, InputProps>(
   ({ label, error, helperText, leftIcon, className = '', id, ...props }, ref) => {
     const inputId = id || (label ? `input-${label.replace(/\s+/g, '-').toLowerCase()}` : undefined);
+    const helperId = `${inputId}-helper`;
+    const errorId = `${inputId}-error`;
+
+    const ariaDescribedBy = error ? errorId : helperText ? helperId : undefined;
 
     const baseInputStyles =
       'w-full px-4 py-2 rounded-lg border-2 transition-all duration-200 outline-none focus:ring-4 focus:ring-primary-100 text-sm';
@@ -33,12 +37,23 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
               {leftIcon}
             </div>
           )}
-          <input ref={ref} id={inputId} className={combinedInputClassName} {...props} />
+          <input
+            ref={ref}
+            id={inputId}
+            className={combinedInputClassName}
+            aria-invalid={!!error}
+            aria-describedby={ariaDescribedBy}
+            {...props}
+          />
         </div>
         {error ? (
-          <p className="text-xs text-red-600 font-medium">{error}</p>
+          <p id={errorId} className="text-xs text-red-600 font-medium">
+            {error}
+          </p>
         ) : helperText ? (
-          <p className="text-xs text-slate-500">{helperText}</p>
+          <p id={helperId} className="text-xs text-slate-500">
+            {helperText}
+          </p>
         ) : null}
       </div>
     );
