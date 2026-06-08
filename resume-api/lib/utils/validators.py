@@ -730,6 +730,11 @@ def get_file_size_category(file_size: int) -> str:
         return "huge"
 
 
+_MD_IMG_DATA_PATTERN = re.compile(r"!\[.*?\]\(data:.*?\)", flags=re.IGNORECASE)
+_MD_LINK_JS_PATTERN = re.compile(r"\[.*?\]\(javascript:.*?\)", flags=re.IGNORECASE)
+_MD_LINK_DATA_PATTERN = re.compile(r"\[.*?\]\(data:.*?\)", flags=re.IGNORECASE)
+
+
 def sanitize_markdown(text: Optional[str]) -> Optional[str]:
     """Sanitize markdown for XSS."""
     if not text:
@@ -740,9 +745,9 @@ def sanitize_markdown(text: Optional[str]) -> Optional[str]:
         return None
 
     # Remove dangerous markdown patterns
-    text = re.sub(r"!\[.*?\]\(data:.*?\)", "", text, flags=re.IGNORECASE)
-    text = re.sub(r"\[.*?\]\(javascript:.*?\)", "", text, flags=re.IGNORECASE)
-    text = re.sub(r"\[.*?\]\(data:.*?\)", "", text, flags=re.IGNORECASE)
+    text = _MD_IMG_DATA_PATTERN.sub("", text)
+    text = _MD_LINK_JS_PATTERN.sub("", text)
+    text = _MD_LINK_DATA_PATTERN.sub("", text)
 
     return text.strip() if text else None
 
