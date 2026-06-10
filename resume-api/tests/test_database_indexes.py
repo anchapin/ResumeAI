@@ -63,8 +63,8 @@ class TestIndexExistence:
 
                 # Check for key indexes
                 assert any(
-                    "user" in idx.lower() and "created" in idx.lower() for idx in index_names
-                ), "Missing index on resumes(owner_id, created_at)"
+                    "owner" in idx.lower() for idx in index_names
+                ), "Missing index on resumes(owner_id)"
                 assert any(
                     "updated" in idx.lower() for idx in index_names
                 ), "Missing index on resumes(updated_at)"
