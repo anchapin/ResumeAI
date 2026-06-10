@@ -153,6 +153,19 @@ export default defineConfig(({ mode }) => {
             ) {
               return 'ui-libs';
             }
+            // Route-based chunks
+            if (id.includes('/pages/Editor')) {
+              return 'route-editor';
+            }
+            if (id.includes('/pages/Dashboard')) {
+              return 'route-dashboard';
+            }
+            if (id.includes('/pages/Settings')) {
+              return 'route-settings';
+            }
+            if (id.includes('/pages/Workspace') || id.includes('/pages/ResumeManagement')) {
+              return 'route-workspace';
+            }
           },
         },
       },

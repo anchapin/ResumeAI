@@ -39,3 +39,7 @@
 ## 2024-05-27 - Regex Cross-Matching Risk in Tag Sanitization
 **Learning:** Consolidating start and end HTML tag patterns into a single regex with a shared group (like `<(?:iframe|form|input)[^>]*>.*?</(?:iframe|form|input)>`) is a critical security and functionality bug because it allows cross-matching (e.g., `<input>...</form>`), leading to data loss.
 **Action:** When stripping multiple different HTML tags via regex, always iterate over a list of pre-compiled individual tag patterns (e.g., one for `iframe`, one for `form`) rather than merging them into a single cross-matching OR pattern.
+
+## 2025-05-18 - [Vite Manual Chunks for Routes]
+**Learning:** Explicitly splitting heavy routes like the Editor into their own chunks in `vite.config.ts` is crucial for SPA performance. While `React.lazy` splits dynamically imported components, defining explicit route chunks in `manualChunks` prevents large generalized chunks and ensures optimal caching without blocking the main thread.
+**Action:** Always verify if explicit `manualChunks` configuration is needed alongside dynamic imports for optimal code splitting, specifically targeting heavy modules.
