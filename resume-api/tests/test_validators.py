@@ -256,6 +256,11 @@ class TestHTMLSanitization:
         assert "onclick" not in result
         assert "alert" not in result
 
+        # Test unquoted event handlers
+        unquoted_result = sanitize_html("<img src='x' onerror=alert('xss')>")
+        assert "onerror" not in unquoted_result
+        assert unquoted_result == "<img src='x' >"
+
     def test_sanitize_javascript_url(self):
         """Test removal of javascript: URLs."""
         result = sanitize_html("<a href=\"javascript:alert('xss')\">Link</a>")
