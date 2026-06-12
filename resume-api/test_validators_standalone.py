@@ -45,6 +45,14 @@ test(
 )
 
 test(
+    "sanitize_html: removes unquoted event handlers",
+    lambda: (
+        "onerror" not in validators.sanitize_html("<img src='x' onerror=alert(1)>")
+        or (_ for _ in ()).throw(AssertionError("unquoted event handler not removed"))
+    ),
+)
+
+test(
     "escape_latex: percent sign",
     lambda: (
         validators.escape_latex("50%") == "50\\%"
