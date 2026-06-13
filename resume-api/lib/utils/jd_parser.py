@@ -150,11 +150,11 @@ class JobDescriptionParser:
 
     # Salary patterns
     SALARY_PATTERNS = [
-        r"\$?(\d{2,3}(?:,\d{3})*(?:\.\d{2})?)\s*[-–to]+\s*\$?(\d{2,3}(?:,\d{3})*(?:\.\d{2})?)\s*(per|a)?\s*(year|yr|annum|hour|hr|month)?",
-        r"\$?(\d{2,3}(?:,\d{3})?)k?\s*[-–to]+\s*\$?(\d{2,3}(?:,\d{3})?)k?\s*(per|a)?\s*(year|yr|annum|hour|hr|month)?",
-        r"salary\s*(?:range)?\s*[:\$]?\s*\$?(\d{2,3}(?:,\d{3})?)\s*[-–to]+\s*\$?(\d{2,3}(?:,\d{3})?)",
-        r"compensation\s*[:\$]?\s*\$?(\d{2,3}(?:,\d{3})?)\s*[-–to]+\s*\$?(\d{2,3}(?:,\d{3})?)",
-        r"\$?(\d{2,3}(?:,\d{3})?)\s*[-–to]+\s*\$?(\d{2,3}(?:,\d{3})?)\s*k",
+        re.compile(r"\$?(\d{2,3}(?:,\d{3})*(?:\.\d{2})?)\s*[-–to]+\s*\$?(\d{2,3}(?:,\d{3})*(?:\.\d{2})?)\s*(per|a)?\s*(year|yr|annum|hour|hr|month)?", re.IGNORECASE),
+        re.compile(r"\$?(\d{2,3}(?:,\d{3})?)k?\s*[-–to]+\s*\$?(\d{2,3}(?:,\d{3})?)k?\s*(per|a)?\s*(year|yr|annum|hour|hr|month)?", re.IGNORECASE),
+        re.compile(r"salary\s*(?:range)?\s*[:\$]?\s*\$?(\d{2,3}(?:,\d{3})?)\s*[-–to]+\s*\$?(\d{2,3}(?:,\d{3})?)", re.IGNORECASE),
+        re.compile(r"compensation\s*[:\$]?\s*\$?(\d{2,3}(?:,\d{3})?)\s*[-–to]+\s*\$?(\d{2,3}(?:,\d{3})?)", re.IGNORECASE),
+        re.compile(r"\$?(\d{2,3}(?:,\d{3})?)\s*[-–to]+\s*\$?(\d{2,3}(?:,\d{3})?)\s*k", re.IGNORECASE),
     ]
 
     # Location patterns
@@ -282,6 +282,12 @@ class JobDescriptionParser:
         "responsibilities",
         "duties",
     }
+
+    # Education patterns
+    EDUCATION_PATTERNS = [
+        re.compile(r"(bachelor['']?s?|master['']?s?|phd|doctorate|mba)[ ]+(?:degree)?[ ]*(?:in[ ]+)?([^\n,.]+)", re.IGNORECASE),
+        re.compile(r"(?:degree|education)[ ]*(?:required|preferred)?[ ]*(?:in)?[ ]*([^\n,.]+)", re.IGNORECASE),
+    ]
 
     # Common stop words for keyword extraction
     STOP_WORDS = frozenset(
@@ -626,7 +632,7 @@ class JobDescriptionParser:
         result = {"min": None, "max": None, "currency": "USD", "period": "yearly"}
 
         for pattern in self.SALARY_PATTERNS:
-            match = re.search(pattern, text, re.IGNORECASE)
+            match = pattern.search(text)
             if match:
                 groups = match.groups()
 
@@ -758,7 +764,8 @@ class JobDescriptionParser:
         # Also extract capitalized words that might be skills
         section_text = f"{skills_section} {requirements_section} {full_text}"
 
-        for word in self.CAPITALIZED_PATTERN.findall(section_text):
+        for match in self.CAPITALIZED_PATTERN.finditer(section_text):
+            word = match.group(0)
             if len(word) > 2:
                 word_lower = word.lower()
                 if word_lower not in skills_dict and word_lower not in self.SKILL_IGNORE_WORDS:
@@ -774,16 +781,10 @@ class JobDescriptionParser:
         """Extract education requirements."""
         requirements = []
 
-        # Common education patterns
-        patterns = [
-            r"(bachelor['']?s?|master['']?s?|phd|doctorate|mba)[ ]+(?:degree)?[ ]*(?:in[ ]+)?([^\n,.]+)",
-            r"(?:degree|education)[ ]*(?:required|preferred)?[ ]*(?:in)?[ ]*([^\n,.]+)",
-        ]
-
         all_text = f"{education_section} {requirements_section}"
 
-        for pattern in patterns:
-            matches = re.findall(pattern, all_text, re.IGNORECASE)
+        for pattern in self.EDUCATION_PATTERNS:
+            matches = pattern.findall(all_text)
             for match in matches:
                 if isinstance(match, tuple):
                     requirement = (
@@ -805,8 +806,11 @@ class JobDescriptionParser:
             "related field",
         ]
 
+        all_text_lower = all_text.lower()
+        reqs_lower = {r.lower() for r in requirements}
+
         for keyword in education_keywords:
-            if keyword in all_text.lower() and keyword not in [r.lower() for r in requirements]:
+            if keyword in all_text_lower and keyword not in reqs_lower:
                 requirements.append(keyword.title())
 
         return list(dict.fromkeys(requirements))[:10]
