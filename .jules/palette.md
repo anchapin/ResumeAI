@@ -18,3 +18,6 @@
 ## 2026-04-02 - Custom Tab Component Accessibility
 **Learning:** Custom tab implementations (like comment filter buttons) often lack necessary focus rings and active state announcements for screen readers. Using just active classes (e.g. `bg-white`) is not sufficient for keyboard navigation or screen reader context.
 **Action:** Always add explicit `focus-visible:ring` classes to ensure tab elements are navigable by keyboard. Use the `aria-pressed` or `aria-current` attributes to correctly announce the active tab to assistive technologies.
+## 2026-06-13 - Accessible Tabs & Material Icon Ligatures
+**Learning:** Custom tab implementations lacking semantic roles (`tablist`, `tab`, `tabpanel`) cause severe usability issues for screen reader users by hiding the relationship between tab controls and their content panels. Additionally, Material Symbol ligatures (like `<span className="material-symbols-outlined">star</span>`) must always have `aria-hidden="true"` applied to prevent repetitive or out-of-context screen reader announcements of the raw ligature text.
+**Action:** When implementing custom tabs, always provide proper ARIA roles and relationships. For Material Symbols used decoratively alongside text, explicitly hide them from assistive technologies using `aria-hidden="true"`.

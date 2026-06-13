@@ -36,10 +36,18 @@ export const OfferComparison: React.FC<OfferComparisonProps> = ({ comparison, on
   return (
     <div className="space-y-6">
       {/* Tabs */}
-      <div className="flex gap-2 border-b border-slate-200">
+      <div
+        className="flex gap-2 border-b border-slate-200"
+        role="tablist"
+        aria-label="Offer Comparison Views"
+      >
         <button
+          id="tab-overview"
+          role="tab"
+          aria-selected={activeTab === 'overview'}
+          aria-controls="panel-overview"
           onClick={() => setActiveTab('overview')}
-          className={`px-4 py-2 font-medium text-sm transition-colors ${
+          className={`px-4 py-2 font-medium text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 ${
             activeTab === 'overview'
               ? 'text-primary-600 border-b-2 border-primary-600'
               : 'text-slate-600 hover:text-slate-900'
@@ -48,8 +56,12 @@ export const OfferComparison: React.FC<OfferComparisonProps> = ({ comparison, on
           Overview
         </button>
         <button
+          id="tab-details"
+          role="tab"
+          aria-selected={activeTab === 'details'}
+          aria-controls="panel-details"
           onClick={() => setActiveTab('details')}
-          className={`px-4 py-2 font-medium text-sm transition-colors ${
+          className={`px-4 py-2 font-medium text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 ${
             activeTab === 'details'
               ? 'text-primary-600 border-b-2 border-primary-600'
               : 'text-slate-600 hover:text-slate-900'
@@ -58,8 +70,12 @@ export const OfferComparison: React.FC<OfferComparisonProps> = ({ comparison, on
           Details
         </button>
         <button
+          id="tab-analysis"
+          role="tab"
+          aria-selected={activeTab === 'analysis'}
+          aria-controls="panel-analysis"
           onClick={() => setActiveTab('analysis')}
-          className={`px-4 py-2 font-medium text-sm transition-colors ${
+          className={`px-4 py-2 font-medium text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 ${
             activeTab === 'analysis'
               ? 'text-primary-600 border-b-2 border-primary-600'
               : 'text-slate-600 hover:text-slate-900'
@@ -71,12 +87,19 @@ export const OfferComparison: React.FC<OfferComparisonProps> = ({ comparison, on
 
       {/* Overview Tab */}
       {activeTab === 'overview' && (
-        <div className="space-y-6">
+        <div
+          id="panel-overview"
+          role="tabpanel"
+          aria-labelledby="tab-overview"
+          className="space-y-6"
+        >
           {/* Recommendation Banner */}
           <div className="bg-gradient-to-r from-primary-500 to-primary-600 rounded-xl p-6 text-white">
             <div className="flex items-start gap-4">
               <div className="bg-white/20 size-12 rounded-full flex items-center justify-center flex-shrink-0">
-                <span className="material-symbols-outlined text-2xl">star</span>
+                <span className="material-symbols-outlined text-2xl" aria-hidden="true">
+                  star
+                </span>
               </div>
               <div className="flex-1">
                 <h3 className="font-bold text-lg mb-1">Recommended Offer</h3>
@@ -174,7 +197,7 @@ export const OfferComparison: React.FC<OfferComparisonProps> = ({ comparison, on
 
       {/* Details Tab */}
       {activeTab === 'details' && (
-        <div className="space-y-6">
+        <div id="panel-details" role="tabpanel" aria-labelledby="tab-details" className="space-y-6">
           {/* Side-by-side Comparison */}
           <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
             <table className="w-full">
@@ -301,7 +324,12 @@ export const OfferComparison: React.FC<OfferComparisonProps> = ({ comparison, on
 
       {/* Analysis Tab */}
       {activeTab === 'analysis' && (
-        <div className="space-y-6">
+        <div
+          id="panel-analysis"
+          role="tabpanel"
+          aria-labelledby="tab-analysis"
+          className="space-y-6"
+        >
           {comparison.scores.map((score) => {
             const offer = comparison.offers.find((o) => o.id === score.offerId);
             if (!offer) return null;
@@ -344,13 +372,18 @@ export const OfferComparison: React.FC<OfferComparisonProps> = ({ comparison, on
                   {score.pros.length > 0 && (
                     <div className="bg-green-50 rounded-lg p-4">
                       <h5 className="text-sm font-bold text-green-900 mb-2 flex items-center gap-1">
-                        <span className="material-symbols-outlined text-[18px]">thumb_up</span>
+                        <span className="material-symbols-outlined text-[18px]" aria-hidden="true">
+                          thumb_up
+                        </span>
                         Pros
                       </h5>
                       <ul className="space-y-1">
                         {score.pros.map((pro, idx) => (
                           <li key={idx} className="text-sm text-green-800 flex items-start gap-1">
-                            <span className="material-symbols-outlined text-[14px] mt-0.5">
+                            <span
+                              className="material-symbols-outlined text-[14px] mt-0.5"
+                              aria-hidden="true"
+                            >
                               check
                             </span>
                             {pro}
@@ -363,13 +396,18 @@ export const OfferComparison: React.FC<OfferComparisonProps> = ({ comparison, on
                   {score.cons.length > 0 && (
                     <div className="bg-red-50 rounded-lg p-4">
                       <h5 className="text-sm font-bold text-red-900 mb-2 flex items-center gap-1">
-                        <span className="material-symbols-outlined text-[18px]">thumb_down</span>
+                        <span className="material-symbols-outlined text-[18px]" aria-hidden="true">
+                          thumb_down
+                        </span>
                         Cons
                       </h5>
                       <ul className="space-y-1">
                         {score.cons.map((con, idx) => (
                           <li key={idx} className="text-sm text-red-800 flex items-start gap-1">
-                            <span className="material-symbols-outlined text-[14px] mt-0.5">
+                            <span
+                              className="material-symbols-outlined text-[14px] mt-0.5"
+                              aria-hidden="true"
+                            >
                               close
                             </span>
                             {con}
