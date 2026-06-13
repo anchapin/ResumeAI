@@ -39,3 +39,12 @@
 ## 2024-05-27 - Regex Cross-Matching Risk in Tag Sanitization
 **Learning:** Consolidating start and end HTML tag patterns into a single regex with a shared group (like `<(?:iframe|form|input)[^>]*>.*?</(?:iframe|form|input)>`) is a critical security and functionality bug because it allows cross-matching (e.g., `<input>...</form>`), leading to data loss.
 **Action:** When stripping multiple different HTML tags via regex, always iterate over a list of pre-compiled individual tag patterns (e.g., one for `iframe`, one for `form`) rather than merging them into a single cross-matching OR pattern.
+
+## 2026-06-13 - Python Regex Finditer Performance
+
+**Learning:** When using regex to extract a limited number of items, using  is significantly more memory-efficient and often faster than .  constructs the entire list in memory before any iteration, whereas  yields matches lazily, enabling early  and reducing overhead. Furthermore, pre-compiling regular expressions (like a list of salary or education patterns) at the module or class level prevents redundant implicit compilation during tight loops.
+**Action:** For performance-critical text parsing in Python, especially when extracting top  matches, always prefer  over . Always pre-compile static list-based patterns at initialization.
+
+## 2024-05-28 - Python Regex Finditer Performance
+**Learning:** When using regex to extract a limited number of items, using `re.finditer` is significantly more memory-efficient and often faster than `re.findall`. `findall` constructs the entire list in memory before any iteration, whereas `finditer` yields matches lazily, enabling early `break` and reducing overhead. Furthermore, pre-compiling regular expressions (like a list of salary or education patterns) at the module or class level prevents redundant implicit compilation during tight loops.
+**Action:** For performance-critical text parsing in Python, especially when extracting top `N` matches, always prefer `re.finditer` over `re.findall`. Always pre-compile static list-based patterns at initialization.
