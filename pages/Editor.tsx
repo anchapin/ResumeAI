@@ -853,7 +853,7 @@ const Editor = () => {
                     : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50'
                 }`}
               >
-                <span className="material-symbols-outlined text-lg">
+                <span className="material-symbols-outlined text-lg" aria-hidden="true">
                   {showPreview ? 'visibility_off' : 'visibility'}
                 </span>
                 {showPreview ? 'Hide Preview' : 'Preview'}
@@ -935,14 +935,15 @@ const Editor = () => {
           <div className="bg-white rounded-2xl shadow-2xl w-full max-max-2xl max-h-[80vh] overflow-hidden flex flex-col">
             <div className="flex items-center justify-between p-6 border-b border-slate-200">
               <div className="flex items-center gap-3">
-                <span className="material-symbols-outlined text-primary-600 text-2xl">history</span>
+                <span className="material-symbols-outlined text-primary-600 text-2xl" aria-hidden="true">history</span>
                 <h2 className="text-xl font-bold text-slate-900">Version History</h2>
               </div>
               <button
                 onClick={() => setShowVersionHistory(false)}
                 className="p-2 text-slate-400 hover:bg-slate-100 rounded-lg transition-colors"
+                aria-label="Close form"
               >
-                <span className="material-symbols-outlined text-2xl">close</span>
+                <span className="material-symbols-outlined text-2xl" aria-hidden="true">close</span>
               </button>
             </div>
             <div className="flex-1 overflow-y-auto p-6">
@@ -958,14 +959,15 @@ const Editor = () => {
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
             <div className="flex items-center justify-between p-6 border-b border-slate-200">
               <div className="flex items-center gap-3">
-                <span className="material-symbols-outlined text-primary-600 text-2xl">save</span>
+                <span className="material-symbols-outlined text-primary-600 text-2xl" aria-hidden="true">save</span>
                 <h2 className="text-xl font-bold text-slate-900">Save as Version</h2>
               </div>
               <button
                 onClick={() => setShowSaveVersionDialog(false)}
                 className="p-2 text-slate-400 hover:bg-slate-100 rounded-lg transition-colors"
+                aria-label="Close form"
               >
-                <span className="material-symbols-outlined text-2xl">close</span>
+                <span className="material-symbols-outlined text-2xl" aria-hidden="true">close</span>
               </button>
             </div>
             <div className="p-6">
@@ -1052,8 +1054,9 @@ const Editor = () => {
               <button
                 onClick={() => setShowCommentPanel(false)}
                 className="p-2 text-slate-400 hover:bg-slate-100 rounded-lg transition-colors"
+                aria-label="Close form"
               >
-                <span className="material-symbols-outlined text-2xl">close</span>
+                <span className="material-symbols-outlined text-2xl" aria-hidden="true">close</span>
               </button>
             </div>
             <div className="flex-1 overflow-y-auto">
