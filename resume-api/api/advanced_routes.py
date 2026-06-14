@@ -102,14 +102,17 @@ async def create_resume(
         if request.tags:
             existing_tags_result = await db.execute(select(Tag).where(Tag.name.in_(request.tags)))
             existing_tags_dict = {t.name: t for t in existing_tags_result.scalars().all()}
+            new_tags = []
             for tag_name in request.tags:
                 existing_tag = existing_tags_dict.get(tag_name)
                 if not existing_tag:
                     existing_tag = Tag(name=tag_name)
-                    db.add(existing_tag)
-                    await db.flush()
+                    new_tags.append(existing_tag)
                     existing_tags_dict[tag_name] = existing_tag
                 resume.tags.append(existing_tag)
+            if new_tags:
+                db.add_all(new_tags)
+                await db.flush()
 
         db.add(resume)
         await db.flush()
@@ -305,14 +308,17 @@ async def update_resume(
             resume.tags.clear()
             existing_tags_result = await db.execute(select(Tag).where(Tag.name.in_(request.tags)))
             existing_tags_dict = {t.name: t for t in existing_tags_result.scalars().all()}
+            new_tags = []
             for tag_name in request.tags:
                 existing_tag = existing_tags_dict.get(tag_name)
                 if not existing_tag:
                     existing_tag = Tag(name=tag_name)
-                    db.add(existing_tag)
-                    await db.flush()
+                    new_tags.append(existing_tag)
                     existing_tags_dict[tag_name] = existing_tag
                 resume.tags.append(existing_tag)
+            if new_tags:
+                db.add_all(new_tags)
+                await db.flush()
 
         # Create new version if data changed
         if request.data:
@@ -994,15 +1000,18 @@ async def _process_bulk_operation(
     if operation == "tag" and tags:
         existing_tags_result = await db.execute(select(Tag).where(Tag.name.in_(tags)))
         existing_tags_dict = {t.name: t for t in existing_tags_result.scalars().all()}
+        new_tags = []
         for tag_name in tags:
             existing_tag = existing_tags_dict.get(tag_name)
             if not existing_tag:
                 existing_tag = Tag(name=tag_name)
-                db.add(existing_tag)
-                await db.flush()
+                new_tags.append(existing_tag)
                 existing_tags_dict[tag_name] = existing_tag
             if existing_tag not in resume.tags:
                 resume.tags.append(existing_tag)
+        if new_tags:
+            db.add_all(new_tags)
+            await db.flush()
         return True, ""
 
     return False, "Unknown operation"
@@ -1110,14 +1119,17 @@ async def batch_create_resumes(
             if resume_request.tags:
                 existing_tags_result = await db.execute(select(Tag).where(Tag.name.in_(resume_request.tags)))
                 existing_tags_dict = {t.name: t for t in existing_tags_result.scalars().all()}
+                new_tags = []
                 for tag_name in resume_request.tags:
                     existing_tag = existing_tags_dict.get(tag_name)
                     if not existing_tag:
                         existing_tag = Tag(name=tag_name)
-                        db.add(existing_tag)
-                        await db.flush()
+                        new_tags.append(existing_tag)
                         existing_tags_dict[tag_name] = existing_tag
                     resume.tags.append(existing_tag)
+                if new_tags:
+                    db.add_all(new_tags)
+                    await db.flush()
 
             db.add(resume)
             await db.flush()
@@ -1232,14 +1244,17 @@ async def batch_update_resumes(
                 resume.tags.clear()
                 existing_tags_result = await db.execute(select(Tag).where(Tag.name.in_(update_request.tags)))
                 existing_tags_dict = {t.name: t for t in existing_tags_result.scalars().all()}
+                new_tags = []
                 for tag_name in update_request.tags:
                     existing_tag = existing_tags_dict.get(tag_name)
                     if not existing_tag:
                         existing_tag = Tag(name=tag_name)
-                        db.add(existing_tag)
-                        await db.flush()
+                        new_tags.append(existing_tag)
                         existing_tags_dict[tag_name] = existing_tag
                     resume.tags.append(existing_tag)
+                if new_tags:
+                    db.add_all(new_tags)
+                    await db.flush()
 
             await db.commit()
             await db.refresh(resume)
