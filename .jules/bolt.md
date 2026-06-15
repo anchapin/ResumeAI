@@ -39,3 +39,7 @@
 ## 2024-05-27 - Regex Cross-Matching Risk in Tag Sanitization
 **Learning:** Consolidating start and end HTML tag patterns into a single regex with a shared group (like `<(?:iframe|form|input)[^>]*>.*?</(?:iframe|form|input)>`) is a critical security and functionality bug because it allows cross-matching (e.g., `<input>...</form>`), leading to data loss.
 **Action:** When stripping multiple different HTML tags via regex, always iterate over a list of pre-compiled individual tag patterns (e.g., one for `iframe`, one for `form`) rather than merging them into a single cross-matching OR pattern.
+
+## 2026-06-14 - Batching Tag Creation to fix N+1
+**Learning:** In multiple advanced endpoints involving tags, looping through `request.tags` and individually performing `session.add(existing_tag)` and `await db.flush()` caused an N+1 performance bottleneck.
+**Action:** When conditionally creating missing DB records in a loop, append new records to a list and execute a batched `session.add_all(new_tags)` and a single `await db.flush()` outside the loop.
