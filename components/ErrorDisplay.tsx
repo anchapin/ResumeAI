@@ -280,8 +280,9 @@ ${error.context ? `\nContext: ${JSON.stringify(error.context, null, 2)}` : ''}
                 onClick={copyErrorId}
                 className="hover:opacity-100 opacity-50 transition-opacity"
                 title="Copy Error ID"
+                aria-label="Copy error ID"
               >
-                <span className="material-symbols-outlined text-[12px]">
+                <span className="material-symbols-outlined text-[12px]" aria-hidden="true">
                   {copied ? 'check' : 'content_copy'}
                 </span>
               </button>
