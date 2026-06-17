@@ -61,6 +61,7 @@ export const TemplateCustomizer: React.FC<TemplateCustomizerProps> = ({
                   ? 'border-primary-500 bg-primary-50'
                   : 'border-slate-200 hover:border-slate-300'
               }`}
+              aria-pressed={customization.color_scheme === scheme.name}
             >
               <div className="flex gap-1">
                 <div
@@ -81,7 +82,10 @@ export const TemplateCustomizer: React.FC<TemplateCustomizerProps> = ({
               </div>
               <span className="text-sm font-medium text-slate-700 capitalize">{scheme.name}</span>
               {customization.color_scheme === scheme.name && (
-                <span className="material-symbols-outlined text-primary-600 text-[20px] ml-auto">
+                <span
+                  className="material-symbols-outlined text-primary-600 text-[20px] ml-auto"
+                  aria-hidden="true"
+                >
                   check_circle
                 </span>
               )}
@@ -104,10 +108,14 @@ export const TemplateCustomizer: React.FC<TemplateCustomizerProps> = ({
                     ? 'border-primary-500 bg-primary-50'
                     : 'border-slate-200 hover:border-slate-300'
                 }`}
+                aria-pressed={customization.font === font}
               >
                 <span className="text-sm font-medium text-slate-700 capitalize">{font}</span>
                 {customization.font === font && (
-                  <span className="material-symbols-outlined text-primary-600 text-[20px]">
+                  <span
+                    className="material-symbols-outlined text-primary-600 text-[20px]"
+                    aria-hidden="true"
+                  >
                     check_circle
                   </span>
                 )}
@@ -130,10 +138,14 @@ export const TemplateCustomizer: React.FC<TemplateCustomizerProps> = ({
                   ? 'border-primary-500 bg-primary-50'
                   : 'border-slate-200 hover:border-slate-300'
               }`}
+              aria-pressed={customization.paper_size === size.value}
             >
               <span className="text-sm font-medium text-slate-700">{size.label}</span>
               {customization.paper_size === size.value && (
-                <span className="material-symbols-outlined text-primary-600 text-[20px]">
+                <span
+                  className="material-symbols-outlined text-primary-600 text-[20px]"
+                  aria-hidden="true"
+                >
                   check_circle
                 </span>
               )}
@@ -207,7 +219,9 @@ export const TemplateCustomizer: React.FC<TemplateCustomizerProps> = ({
             onClick={onApply}
             className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors font-medium"
           >
-            <span className="material-symbols-outlined text-[20px]">done</span>
+            <span className="material-symbols-outlined text-[20px]" aria-hidden="true">
+              done
+            </span>
             Apply Customization
           </button>
         </div>
