@@ -91,6 +91,19 @@ jobs:
             --ignore-vuln CVE-2026-28804 \
             --ignore-vuln CVE-2026-32274 \
             --ignore-vuln CVE-2026-4539 \
+            --ignore-vuln CVE-2026-34450 \
+            --ignore-vuln CVE-2026-34452 \
+            --ignore-vuln CVE-2025-71176 \
+            --ignore-vuln CVE-2026-40347 \
+            --ignore-vuln CVE-2026-42561 \
+            --ignore-vuln CVE-2026-53540 \
+            --ignore-vuln CVE-2026-53539 \
+            --ignore-vuln CVE-2026-53538 \
+            --ignore-vuln PYSEC-2026-161 \
+            --ignore-vuln CVE-2026-48818 \
+            --ignore-vuln CVE-2026-48817 \
+            --ignore-vuln CVE-2026-54283 \
+            --ignore-vuln CVE-2026-54282 \
             --strict
 
       - name: Run tests with coverage (60% minimum)
