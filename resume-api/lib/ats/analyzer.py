@@ -60,6 +60,9 @@ class ATSAnalyzer:
             r'^[^\n]{0,30}\n[^\n]{0,30}\n[^\n]{0,30}\n[^\n]{0,30}\n',
             re.MULTILINE
         )
+
+        # Table detection (aligned columns with multiple spaces)
+        self.table_pattern = re.compile(r' {2,}[A-Za-z]')
     
     def analyze(self, file_content: bytes, filename: str) -> ATSCheckResult:
         """Analyze a resume file for ATS compatibility
@@ -214,6 +217,10 @@ class ATSAnalyzer:
     def _has_table_structure(self, text: str) -> bool:
         """Detect if text likely contains table structure"""
         lines = text.split('\n')
+        if not lines:
+            return False
+
+        threshold = len(lines) * 0.2
         table_indicators = 0
         
         for line in lines:
@@ -221,11 +228,14 @@ class ATSAnalyzer:
             if '|' in line or '\t' in line:
                 table_indicators += 1
             # Check for aligned columns (multiple spaces between text)
-            if re.search(r' {2,}[A-Za-z]', line):
+            elif self.table_pattern.search(line):
                 table_indicators += 1
+
+            # Early return if we've already exceeded the threshold
+            if table_indicators > threshold:
+                return True
         
-        # If significant portion of lines have table indicators
-        return table_indicators > len(lines) * 0.2 if lines else False
+        return False
     
     def _extract_from_docx(self, file_content: bytes, issues: list[ATSIssue]) -> tuple[str, list[ATSIssue]]:
         """Extract text from DOCX"""

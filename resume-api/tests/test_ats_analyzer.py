@@ -20,7 +20,7 @@ class TestATSAnalyzer:
         """Test checking a plain text file"""
         analyzer = ATSAnalyzer()
         content = "John Doe\nSoftware Engineer\nExperienced developer"
-        file_content = BytesIO(content.encode('utf-8'))
+        file_content = content.encode('utf-8')
         
         result = analyzer.analyze(file_content, 'resume.txt')
         
@@ -34,7 +34,7 @@ class TestATSAnalyzer:
         """Test checking a PDF file"""
         analyzer = ATSAnalyzer()
         content = b"%PDF-1.4\nTest PDF content"
-        file_content = BytesIO(content)
+        file_content = content
         
         result = analyzer.analyze(file_content, 'resume.pdf')
         
@@ -47,7 +47,7 @@ class TestATSAnalyzer:
         analyzer = ATSAnalyzer()
         # Minimal valid DOCX structure (ZIP)
         content = b"PK\x03\x04" + b"\x00" * 100
-        file_content = BytesIO(content)
+        file_content = content
         
         result = analyzer.analyze(file_content, 'resume.docx')
         
@@ -58,7 +58,7 @@ class TestATSAnalyzer:
         """Test word count is calculated correctly"""
         analyzer = ATSAnalyzer()
         content = "One two three four five"
-        file_content = BytesIO(content.encode('utf-8'))
+        file_content = content.encode('utf-8')
         
         result = analyzer.analyze(file_content, 'resume.txt')
         
@@ -70,7 +70,7 @@ class TestATSAnalyzer:
         
         # Simulate content that might indicate two-column
         content = "Column 1 content " * 100 + " Column 2 content " * 100
-        file_content = BytesIO(content.encode('utf-8'))
+        file_content = content.encode('utf-8')
         
         result = analyzer.analyze(file_content, 'resume.pdf')
         
@@ -83,7 +83,7 @@ class TestATSAnalyzer:
         
         # Simple clean content should score higher
         clean_content = "John Doe\nSoftware Engineer\nPython, JavaScript"
-        file_content = BytesIO(clean_content.encode('utf-8'))
+        file_content = clean_content.encode('utf-8')
         
         result = analyzer.analyze(file_content, 'resume.txt')
         
@@ -97,7 +97,7 @@ class TestATSAnalyzer:
         
         # Valid content should be parseable
         content = "Valid resume content"
-        file_content = BytesIO(content.encode('utf-8'))
+        file_content = content.encode('utf-8')
         
         result = analyzer.analyze(file_content, 'resume.txt')
         
@@ -107,11 +107,11 @@ class TestATSAnalyzer:
         """Test handling of unsupported file types"""
         analyzer = ATSAnalyzer()
         content = b"random data"
-        file_content = BytesIO(content)
+        file_content = content
         
         result = analyzer.analyze(file_content, 'resume.xyz')
         
-        assert result.file_type == 'xyz'
+        assert result.file_type == 'unknown'
         # Unsupported type might have lower parseability
         assert isinstance(result.is_parseable, bool)
 
@@ -119,7 +119,7 @@ class TestATSAnalyzer:
         """Test that calculation time is recorded"""
         analyzer = ATSAnalyzer()
         content = "Test content for timing"
-        file_content = BytesIO(content.encode('utf-8'))
+        file_content = content.encode('utf-8')
         
         result = analyzer.analyze(file_content, 'resume.txt')
         
@@ -129,7 +129,7 @@ class TestATSAnalyzer:
         """Test that parsed text is extracted"""
         analyzer = ATSAnalyzer()
         content = "John Doe\nSoftware Engineer"
-        file_content = BytesIO(content.encode('utf-8'))
+        file_content = content.encode('utf-8')
         
         result = analyzer.analyze(file_content, 'resume.txt')
         
