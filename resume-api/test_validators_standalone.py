@@ -12,6 +12,11 @@ spec = importlib.util.spec_from_file_location("validators", "lib/utils/validator
 validators = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(validators)
 
+# Import models directly
+spec_models = importlib.util.spec_from_file_location("models", "api/models.py")
+models = importlib.util.module_from_spec(spec_models)
+spec_models.loader.exec_module(models)
+
 test_count = 0
 passed = 0
 failed = 0
@@ -263,6 +268,10 @@ def test_script_tags():
     assert result is None or "<script>" not in result
     assert result is None or "alert" not in result
 
+    result_models = models.sanitize_html("<script>alert('xss')</script>Hello")
+    assert result_models is None or "<script>" not in result_models
+    assert result_models is None or "alert" not in result_models
+
 
 test("sanitize_html: removes script tags", test_script_tags)
 
@@ -270,6 +279,7 @@ test(
     "sanitize_html: removes onclick",
     lambda: (
         "onclick" not in validators.sanitize_html('<div onclick="alert()">Click</div>')
+        and "onclick" not in models.sanitize_html('<div onclick="alert()">Click</div>')
         or (_ for _ in ()).throw(AssertionError("onclick not removed"))
     ),
 )
@@ -278,6 +288,7 @@ test(
     "sanitize_html: removes javascript URLs",
     lambda: (
         "javascript:" not in validators.sanitize_html('<a href="javascript:alert()">')
+        and "javascript:" not in models.sanitize_html('<a href="javascript:alert()">')
         or (_ for _ in ()).throw(AssertionError("javascript: not removed"))
     ),
 )
@@ -286,6 +297,7 @@ test(
     "sanitize_html: preserves normal text",
     lambda: (
         "Hello" in validators.sanitize_html("<p>Hello</p>")
+        and "Hello" in models.sanitize_html("<p>Hello</p>")
         or (_ for _ in ()).throw(AssertionError("Text content lost"))
     ),
 )
@@ -294,6 +306,7 @@ test(
     "sanitize_html: None returns None",
     lambda: (
         validators.sanitize_html(None) is None
+        and models.sanitize_html(None) is None
         or (_ for _ in ()).throw(AssertionError("None handling failed"))
     ),
 )
