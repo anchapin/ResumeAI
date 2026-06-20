@@ -28,8 +28,9 @@ export const VersionHistoryDialog: React.FC<VersionHistoryDialogProps> = ({
           <button
             onClick={onClose}
             className="p-2 text-slate-400 hover:bg-slate-100 rounded-lg transition-colors"
+            aria-label="Close dialog"
           >
-            <span className="material-symbols-outlined text-2xl">close</span>
+            <span className="material-symbols-outlined text-2xl" aria-hidden="true">close</span>
           </button>
         </div>
         <div className="flex-1 overflow-y-auto p-6">

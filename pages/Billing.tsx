@@ -213,8 +213,12 @@ const Billing: React.FC = () => {
           <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg mb-6 flex items-center gap-2">
             <span className="material-symbols-outlined text-red-500">error</span>
             <span className="text-sm font-semibold">{error}</span>
-            <button onClick={() => setError(null)} className="ml-2 text-red-500 hover:text-red-700">
-              <span className="material-symbols-outlined text-[20px]">close</span>
+            <button
+              onClick={() => setError(null)}
+              className="ml-2 text-red-500 hover:text-red-700"
+              aria-label="Dismiss error"
+            >
+              <span className="material-symbols-outlined text-[20px]" aria-hidden="true">close</span>
             </button>
           </div>
         )}
