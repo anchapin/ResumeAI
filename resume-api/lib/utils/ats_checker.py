@@ -148,6 +148,9 @@ class ATSCompatibilityChecker:
         "delivered",
     ]
 
+    # ⚡ Bolt Optimization: Pre-compile action verbs into a single regex for O(1) matching
+    ACTION_VERBS_RE = re.compile(r"\b(?:" + "|".join(ACTION_VERBS) + r")\b")
+
     # Formatting best practices
     FORMATTING_CHECKS = {
         "font_standard": [
@@ -488,11 +491,8 @@ class ATSCompatibilityChecker:
                     has_metrics = True
 
                 # Check for action verbs
-                if not has_action_verbs:
-                    for verb in self.ACTION_VERBS:
-                        if verb in all_text:
-                            has_action_verbs = True
-                            break
+                if not has_action_verbs and self.ACTION_VERBS_RE.search(all_text):
+                    has_action_verbs = True
 
             if not has_metrics:
                 msg = "Consider adding quantifiable metrics to your "
