@@ -11,7 +11,7 @@ from typing import List, Optional, Callable
 from datetime import datetime
 
 from sqlalchemy.ext.asyncio import AsyncEngine
-from sqlalchemy import text
+from sqlalchemy import text, select, table, column
 
 logger = logging.getLogger(__name__)
 
@@ -311,14 +311,10 @@ class BatchMigrationManager:
         while True:
             # Get batch of IDs
             async with self.primary_engine.begin() as conn:
-                result = await conn.execute(
-                    text(f"""
-                        SELECT {id_column} FROM {table_name}
-                        ORDER BY {id_column}
-                        LIMIT :limit OFFSET :offset
-                    """),
-                    {"limit": self.batch_size, "offset": offset},
-                )
+                col = column(id_column)
+                tbl = table(table_name)
+                stmt = select(col).select_from(tbl).order_by(col).limit(self.batch_size).offset(offset)
+                result = await conn.execute(stmt)
                 rows = result.fetchall()
 
             if not rows:
