@@ -9,19 +9,12 @@ export const EditorHeader: React.FC<EditorHeaderProps> = ({ onNavigate }) => {
 
   return (
     <header className="flex items-center justify-between px-10 py-3 bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
-      <button
-        type="button"
-        className="flex items-center gap-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 rounded-lg p-1"
-        onClick={onNavigate}
-        aria-label="Navigate home"
-      >
+      <div className="flex items-center gap-4 cursor-pointer" onClick={onNavigate}>
         <div className="bg-primary-600 size-8 rounded-lg flex items-center justify-center text-white">
-          <span className="material-symbols-outlined text-[18px]" aria-hidden="true">
-            description
-          </span>
+          <span className="material-symbols-outlined text-[18px]">description</span>
         </div>
         <h2 className="text-slate-900 text-lg font-bold">ResumeBuilder SaaS</h2>
-      </button>
+      </div>
       <div className="flex items-center gap-8">
         <nav className="flex gap-6">
           {NAV_ITEMS.map((item) => (
