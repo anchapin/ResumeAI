@@ -2,6 +2,20 @@ import re
 from typing import Optional
 
 
+# Pre-compiled regex patterns for performance optimization
+UPPER_RE = re.compile(r"[A-Z]")
+LOWER_RE = re.compile(r"[a-z]")
+DIGIT_RE = re.compile(r"\d")
+SPECIAL_RE = re.compile(r'[!@#$%^&*()_+\-=\[\]{};:\'",.<>?/|]')
+SEQ_LETTERS_RE = re.compile(
+    r"(abc|bcd|cde|def|efg|fgh|ghi|hij|ijk|jkl|klm|lmn|mno|nop|opq|pqr|rst|stu|tuv|uvw|vwx|wxy|xyz)",
+    re.IGNORECASE,
+)
+SEQ_NUMBERS_RE = re.compile(r"(1234|2345|3456|4567|5678|6789|7890)")
+REPEAT_RE = re.compile(r"(.)\1{2,}")
+REPEAT_SCORE_RE = re.compile(r"(.)\1{1,}")
+
+
 def validate_password_strength(password: str) -> tuple[bool, Optional[str]]:
     """
     Validate password strength according to NIST guidelines.
@@ -56,35 +70,31 @@ def validate_password_strength(password: str) -> tuple[bool, Optional[str]]:
         return False, "Password is too common. Please choose a stronger password."
 
     # Check for at least one uppercase letter
-    if not re.search(r"[A-Z]", password):
+    if not UPPER_RE.search(password):
         return False, "Password must contain at least one uppercase letter"
 
     # Check for at least one lowercase letter
-    if not re.search(r"[a-z]", password):
+    if not LOWER_RE.search(password):
         return False, "Password must contain at least one lowercase letter"
 
     # Check for at least one number
-    if not re.search(r"\d", password):
+    if not DIGIT_RE.search(password):
         return False, "Password must contain at least one number"
 
     # Check for at least one special character
-    if not re.search(r'[!@#$%^&*()_+\-=\[\]{};:\'",.<>?/|]', password):
+    if not SPECIAL_RE.search(password):
         return False, "Password must contain at least one special character"
 
     # Check for sequential characters (e.g., "abc", "123", "qwerty")
-    if re.search(
-        r"(abc|bcd|cde|def|efg|fgh|ghi|hij|ijk|jkl|klm|lmn|mno|nop|opq|pqr|rst|stu|tuv|uvw|vwx|wxy|xyz)",
-        password,
-        re.IGNORECASE,
-    ):
+    if SEQ_LETTERS_RE.search(password):
         return False, "Password must not contain sequential characters"
 
     # Check for 4 or more sequential numbers (allow 3 like 123)
-    if re.search(r"(1234|2345|3456|4567|5678|6789|7890)", password):
+    if SEQ_NUMBERS_RE.search(password):
         return False, "Password must not contain sequential characters"
 
     # Check for repeating characters (e.g., "aaa", "111")
-    if re.search(r"(.)\1{2,}", password):
+    if REPEAT_RE.search(password):
         return False, "Password must not contain repeating characters"
 
     return True, None
@@ -105,10 +115,10 @@ def get_password_strength_score(password: str) -> int:
     score = 0
 
     # Check for variety of character types
-    has_upper = bool(re.search(r"[A-Z]", password))
-    has_lower = bool(re.search(r"[a-z]", password))
-    has_digit = bool(re.search(r"\d", password))
-    has_special = bool(re.search(r'[!@#$%^&*()_+\-=\[\]{};:\'",.<>?/|]', password))
+    has_upper = bool(UPPER_RE.search(password))
+    has_lower = bool(LOWER_RE.search(password))
+    has_digit = bool(DIGIT_RE.search(password))
+    has_special = bool(SPECIAL_RE.search(password))
 
     variety_count = sum([has_upper, has_lower, has_digit, has_special])
 
@@ -123,7 +133,7 @@ def get_password_strength_score(password: str) -> int:
         score += 0.25
 
     # Length bonuses (heavier weighting for longer passwords)
-    has_repeat = re.search(r"(.)\1{1,}", password)
+    has_repeat = REPEAT_SCORE_RE.search(password)
     if len(password) >= 8:
         score += 1.5
     if len(password) >= 12:
