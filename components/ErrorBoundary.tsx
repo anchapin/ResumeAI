@@ -93,7 +93,9 @@ export function ErrorFallback({
   return (
     <div className="min-h-[400px] flex flex-col items-center justify-center p-8 bg-red-50/50 border border-red-100 rounded-3xl m-6 shadow-sm">
       <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-6">
-        <span className="material-symbols-outlined text-red-600 text-4xl">bug_report</span>
+        <span className="material-symbols-outlined text-red-600 text-4xl" aria-hidden="true">
+          bug_report
+        </span>
       </div>
 
       <h2 className="text-2xl font-bold text-slate-900 mb-2">Something went wrong</h2>
@@ -110,7 +112,9 @@ export function ErrorFallback({
             onClick={resetError}
             className="w-full py-3 bg-primary-600 text-white font-bold rounded-xl hover:bg-primary-700 transition-all shadow-lg shadow-primary-600/20 flex items-center justify-center gap-2"
           >
-            <span className="material-symbols-outlined text-[20px]">refresh</span>
+            <span className="material-symbols-outlined text-[20px]" aria-hidden="true">
+              refresh
+            </span>
             Try Again
           </button>
         )}
@@ -119,7 +123,9 @@ export function ErrorFallback({
           onClick={() => (window.location.href = '/dashboard')}
           className="w-full py-3 bg-white text-slate-700 font-bold rounded-xl border border-slate-200 hover:bg-slate-50 transition-all flex items-center justify-center gap-2"
         >
-          <span className="material-symbols-outlined text-[20px]">home</span>
+          <span className="material-symbols-outlined text-[20px]" aria-hidden="true">
+            home
+          </span>
           Back to Dashboard
         </button>
 
@@ -128,7 +134,7 @@ export function ErrorFallback({
           className="mt-4 text-xs font-bold text-slate-400 uppercase tracking-widest hover:text-slate-600 transition-colors flex items-center gap-1"
         >
           {showDetails ? 'Hide' : 'Show'} Technical Details
-          <span className="material-symbols-outlined text-[16px]">
+          <span className="material-symbols-outlined text-[16px]" aria-hidden="true">
             {showDetails ? 'expand_less' : 'expand_more'}
           </span>
         </button>
