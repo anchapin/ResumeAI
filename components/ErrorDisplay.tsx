@@ -1,4 +1,3 @@
- 
 import React, { useState, useEffect } from 'react';
 import { ErrorContext, ErrorType } from '../utils/errorHandler';
 import { getErrorMessageByType, getErrorSuggestion } from '../utils/errorMessages';
@@ -268,7 +267,10 @@ ${error.context ? `\nContext: ${JSON.stringify(error.context, null, 2)}` : ''}
       aria-label={`${title}: ${error.userMessage}`}
     >
       <div className="flex items-start gap-3">
-        <span className={`material-symbols-outlined ${iconColor} flex-shrink-0 mt-0.5`}>
+        <span
+          className={`material-symbols-outlined ${iconColor} flex-shrink-0 mt-0.5`}
+          aria-hidden="true"
+        >
           {getIcon(error.type)}
         </span>
         <div className="flex-1 overflow-hidden">
@@ -281,7 +283,7 @@ ${error.context ? `\nContext: ${JSON.stringify(error.context, null, 2)}` : ''}
                 className="hover:opacity-100 opacity-50 transition-opacity"
                 title="Copy Error ID"
               >
-                <span className="material-symbols-outlined text-[12px]">
+                <span className="material-symbols-outlined text-[12px]" aria-hidden="true">
                   {copied ? 'check' : 'content_copy'}
                 </span>
               </button>
@@ -302,7 +304,7 @@ ${error.context ? `\nContext: ${JSON.stringify(error.context, null, 2)}` : ''}
                 className="text-[10px] font-semibold uppercase tracking-wider opacity-60 hover:opacity-100 flex items-center gap-0.5"
               >
                 {showExpandedDetails ? 'Hide' : 'Show'} Technical Details
-                <span className="material-symbols-outlined text-[14px]">
+                <span className="material-symbols-outlined text-[14px]" aria-hidden="true">
                   {showExpandedDetails ? 'expand_less' : 'expand_more'}
                 </span>
               </button>
@@ -344,7 +346,9 @@ ${error.context ? `\nContext: ${JSON.stringify(error.context, null, 2)}` : ''}
                   aria-label={btn.label}
                 >
                   <span className="flex items-center gap-1">
-                    <span className="material-symbols-outlined text-[16px]">{btn.icon}</span>
+                    <span className="material-symbols-outlined text-[16px]" aria-hidden="true">
+                      {btn.icon}
+                    </span>
                     {btn.label}
                   </span>
                 </button>
@@ -357,7 +361,9 @@ ${error.context ? `\nContext: ${JSON.stringify(error.context, null, 2)}` : ''}
           className={`flex-shrink-0 hover:opacity-70 transition-opacity p-0.5`}
           aria-label="Close error message"
         >
-          <span className="material-symbols-outlined text-[20px]">close</span>
+          <span className="material-symbols-outlined text-[20px]" aria-hidden="true">
+            close
+          </span>
         </button>
       </div>
     </div>
