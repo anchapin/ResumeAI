@@ -275,6 +275,22 @@ test(
 )
 
 test(
+    "sanitize_html: removes unquoted event handlers",
+    lambda: (
+        "onerror" not in validators.sanitize_html('<img src="x" onerror=alert(1)>')
+        or (_ for _ in ()).throw(AssertionError("unquoted onerror not removed"))
+    ),
+)
+
+test(
+    "sanitize_html: removes event handlers with spaces",
+    lambda: (
+        "onerror" not in validators.sanitize_html('<img src="x" onerror  =  "alert(1)">')
+        or (_ for _ in ()).throw(AssertionError("onerror with spaces not removed"))
+    ),
+)
+
+test(
     "sanitize_html: removes javascript URLs",
     lambda: (
         "javascript:" not in validators.sanitize_html('<a href="javascript:alert()">')
