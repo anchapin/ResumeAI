@@ -56,10 +56,19 @@ const PaymentMethods: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex-1 min-h-screen bg-[#f6f6f8] pl-72 flex items-center justify-center">
-        <span className="material-symbols-outlined animate-spin text-primary-600 text-4xl">
+      <div
+        className="flex-1 min-h-screen bg-[#f6f6f8] pl-72 flex items-center justify-center"
+        role="status"
+        aria-live="polite"
+        aria-label="Loading payment methods"
+      >
+        <span
+          className="material-symbols-outlined animate-spin text-primary-600 text-4xl"
+          aria-hidden="true"
+        >
           progress_activity
         </span>
+        <span className="sr-only">Loading...</span>
       </div>
     );
   }
@@ -72,11 +81,22 @@ const PaymentMethods: React.FC = () => {
 
       <div className="p-8 max-w-[1200px] mx-auto">
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg mb-6 flex items-center gap-2">
-            <span className="material-symbols-outlined text-red-500">error</span>
+          <div
+            className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg mb-6 flex items-center gap-2"
+            role="alert"
+          >
+            <span className="material-symbols-outlined text-red-500" aria-hidden="true">
+              error
+            </span>
             <span className="text-sm font-semibold">{error}</span>
-            <button onClick={() => setError(null)} className="ml-2 text-red-500 hover:text-red-700">
-              <span className="material-symbols-outlined text-[20px]">close</span>
+            <button
+              onClick={() => setError(null)}
+              className="ml-2 text-red-500 hover:text-red-700"
+              aria-label="Dismiss error"
+            >
+              <span className="material-symbols-outlined text-[20px]" aria-hidden="true">
+                close
+              </span>
             </button>
           </div>
         )}
@@ -84,7 +104,10 @@ const PaymentMethods: React.FC = () => {
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
           {paymentMethods.length === 0 ? (
             <div className="text-center py-16">
-              <span className="material-symbols-outlined text-6xl text-slate-300 mb-4">
+              <span
+                className="material-symbols-outlined text-6xl text-slate-300 mb-4"
+                aria-hidden="true"
+              >
                 credit_card_off
               </span>
               <p className="text-slate-900 font-bold text-lg mb-2">No payment methods</p>
@@ -116,7 +139,10 @@ const PaymentMethods: React.FC = () => {
                     <td className="px-6 py-5">
                       <div className="flex items-center gap-4">
                         <div className="bg-slate-100 rounded-lg p-2">
-                          <span className="material-symbols-outlined text-slate-600 text-[24px]">
+                          <span
+                            className="material-symbols-outlined text-slate-600 text-[24px]"
+                            aria-hidden="true"
+                          >
                             {getCardIcon(pm.brand)}
                           </span>
                         </div>
@@ -134,7 +160,12 @@ const PaymentMethods: React.FC = () => {
                     <td className="px-6 py-5">
                       {pm.is_default ? (
                         <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-green-50 text-green-700">
-                          <span className="material-symbols-outlined text-[14px]">check</span>
+                          <span
+                            className="material-symbols-outlined text-[14px]"
+                            aria-hidden="true"
+                          >
+                            check
+                          </span>
                           Default
                         </span>
                       ) : (
@@ -147,13 +178,22 @@ const PaymentMethods: React.FC = () => {
                         disabled={removingId === pm.id || pm.is_default}
                         className="text-slate-400 hover:text-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         title={pm.is_default ? 'Cannot remove default payment method' : 'Remove'}
+                        aria-label="Remove payment method"
                       >
                         {removingId === pm.id ? (
-                          <span className="material-symbols-outlined animate-spin text-[20px]">
+                          <span
+                            className="material-symbols-outlined animate-spin text-[20px]"
+                            aria-hidden="true"
+                          >
                             progress_activity
                           </span>
                         ) : (
-                          <span className="material-symbols-outlined text-[20px]">delete</span>
+                          <span
+                            className="material-symbols-outlined text-[20px]"
+                            aria-hidden="true"
+                          >
+                            delete
+                          </span>
                         )}
                       </button>
                     </td>
@@ -166,7 +206,12 @@ const PaymentMethods: React.FC = () => {
 
         <div className="mt-6 bg-blue-50 border border-blue-200 rounded-xl p-6">
           <div className="flex gap-4">
-            <span className="material-symbols-outlined text-blue-600 text-[32px]">info</span>
+            <span
+              className="material-symbols-outlined text-blue-600 text-[32px]"
+              aria-hidden="true"
+            >
+              info
+            </span>
             <div>
               <h3 className="text-slate-900 font-bold text-lg mb-2">Add new payment method</h3>
               <p className="text-slate-700 text-sm">
