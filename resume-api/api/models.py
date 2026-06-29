@@ -32,6 +32,18 @@ EMAIL_PATTERN = re.compile(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
 URL_PATTERN = re.compile(r"^(https?://|ftp://)?[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(/.*)?$", re.IGNORECASE)
 PHONE_PATTERN = re.compile(r"^[\d\s\-\+\(\)]{7,20}$")
 
+# Pre-compiled patterns for sanitize_html
+_SCRIPT_PATTERN = re.compile(r"<script[^>]*>.*?</script>", flags=re.IGNORECASE | re.DOTALL)
+_DANGEROUS_TAGS = ["iframe", "object", "embed", "form", "input", "button"]
+_DANGEROUS_TAGS_PATTERNS = [
+    re.compile(f"<{tag}[^>]*>.*?</{tag}>", flags=re.IGNORECASE | re.DOTALL)
+    for tag in _DANGEROUS_TAGS
+]
+_DANGEROUS_TAGS_EMPTY_PATTERN = re.compile(f"<(?:{'|'.join(_DANGEROUS_TAGS)})[^>]*/?>", flags=re.IGNORECASE)
+_ON_EVENT_PATTERN = re.compile(r'on\w+\s*=\s*["\'][^"\']*["\']', flags=re.IGNORECASE)
+_JS_URL_PATTERN = re.compile(r"javascript\s*:", flags=re.IGNORECASE)
+_DATA_URL_PATTERN = re.compile(r"data\s*:", flags=re.IGNORECASE)
+
 
 def sanitize_html(text: Optional[str]) -> Optional[str]:
     """
@@ -47,20 +59,22 @@ def sanitize_html(text: Optional[str]) -> Optional[str]:
         return None
 
     # Remove script tags and content
-    text = re.sub(r"<script[^>]*>.*?</script>", "", text, flags=re.IGNORECASE | re.DOTALL)
+    text = _SCRIPT_PATTERN.sub("", text)
 
-    # Remove other dangerous tags
-    dangerous_tags = ["iframe", "object", "embed", "form", "input", "button"]
-    for tag in dangerous_tags:
-        text = re.sub(f"<{tag}[^>]*>.*?</{tag}>", "", text, flags=re.IGNORECASE | re.DOTALL)
-        text = re.sub(f"<{tag}[^>]*/?>", "", text, flags=re.IGNORECASE)
+    # Remove other dangerous tags (content)
+    # Using individual patterns to avoid cross-matching
+    for pattern in _DANGEROUS_TAGS_PATTERNS:
+        text = pattern.sub("", text)
+
+    # Remove empty dangerous tags (can be safely combined)
+    text = _DANGEROUS_TAGS_EMPTY_PATTERN.sub("", text)
 
     # Remove event handlers (onclick, onerror, etc.)
-    text = re.sub(r'on\w+\s*=\s*["\'][^"\']*["\']', "", text, flags=re.IGNORECASE)
+    text = _ON_EVENT_PATTERN.sub("", text)
 
     # Remove javascript: and data: URLs
-    text = re.sub(r"javascript\s*:", "", text, flags=re.IGNORECASE)
-    text = re.sub(r"data\s*:", "", text, flags=re.IGNORECASE)
+    text = _JS_URL_PATTERN.sub("", text)
+    text = _DATA_URL_PATTERN.sub("", text)
 
     return text.strip()
 
