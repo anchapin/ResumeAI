@@ -33,10 +33,10 @@ URL_PATTERN = re.compile(r"^(https?://|ftp://)?[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(/.*)
 PHONE_PATTERN = re.compile(r"^[\d\s\-\+\(\)]{7,20}$")
 
 # Pre-compiled patterns for sanitize_html
-_SCRIPT_PATTERN = re.compile(r"<script[^>]*>.*?</script\s*>", flags=re.IGNORECASE | re.DOTALL)
+_SCRIPT_PATTERN = re.compile(r"<script[^>]*>.*?</script(?:\s[^>]*>|>)", flags=re.IGNORECASE | re.DOTALL)
 _DANGEROUS_TAGS = ["iframe", "object", "embed", "form", "input", "button"]
 _DANGEROUS_TAGS_PATTERNS = [
-    re.compile(rf"<{tag}[^>]*>.*?</{tag}\s*>", flags=re.IGNORECASE | re.DOTALL)
+    re.compile(rf"<{tag}[^>]*>.*?</{tag}(?:\s[^>]*>|>)", flags=re.IGNORECASE | re.DOTALL)
     for tag in _DANGEROUS_TAGS
 ]
 _DANGEROUS_TAGS_EMPTY_PATTERN = re.compile(f"<(?:{'|'.join(_DANGEROUS_TAGS)})[^>]*/?>", flags=re.IGNORECASE)
