@@ -36,10 +36,12 @@ PHONE_PATTERN = re.compile(r"^[\d\s\-\+\(\)]{7,20}$")
 _SCRIPT_PATTERN = re.compile(r"<script[^>]*>.*?</script(?:\s[^>]*>|>)", flags=re.IGNORECASE | re.DOTALL)
 _DANGEROUS_TAGS = ["iframe", "object", "embed", "form", "input", "button"]
 _DANGEROUS_TAGS_PATTERNS = [
-    re.compile(rf"<{tag}[^>]*>.*?</{tag}(?:\s[^>]*>|>)", flags=re.IGNORECASE | re.DOTALL)
+    (
+        re.compile(rf"<{tag}[^>]*>.*?</{tag}(?:\s[^>]*>|>)", flags=re.IGNORECASE | re.DOTALL),
+        re.compile(rf"<{tag}[^>]*/?>", flags=re.IGNORECASE)
+    )
     for tag in _DANGEROUS_TAGS
 ]
-_DANGEROUS_TAGS_EMPTY_PATTERN = re.compile(f"<(?:{'|'.join(_DANGEROUS_TAGS)})[^>]*/?>", flags=re.IGNORECASE)
 _ON_EVENT_PATTERN = re.compile(r'on\w+\s*=\s*["\'][^"\']*["\']', flags=re.IGNORECASE)
 _JS_URL_PATTERN = re.compile(r"javascript\s*:", flags=re.IGNORECASE)
 _DATA_URL_PATTERN = re.compile(r"data\s*:", flags=re.IGNORECASE)
@@ -61,13 +63,11 @@ def sanitize_html(text: Optional[str]) -> Optional[str]:
     # Remove script tags and content
     text = _SCRIPT_PATTERN.sub("", text)
 
-    # Remove other dangerous tags (content)
-    # Using individual patterns to avoid cross-matching
-    for pattern in _DANGEROUS_TAGS_PATTERNS:
-        text = pattern.sub("", text)
-
-    # Remove empty dangerous tags (can be safely combined)
-    text = _DANGEROUS_TAGS_EMPTY_PATTERN.sub("", text)
+    # Remove other dangerous tags
+    # Keep them correctly ordered per tag to prevent nested payload bypass
+    for content_pattern, empty_pattern in _DANGEROUS_TAGS_PATTERNS:
+        text = content_pattern.sub("", text)
+        text = empty_pattern.sub("", text)
 
     # Remove event handlers (onclick, onerror, etc.)
     text = _ON_EVENT_PATTERN.sub("", text)
