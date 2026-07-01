@@ -39,3 +39,6 @@
 ## 2024-05-27 - Regex Cross-Matching Risk in Tag Sanitization
 **Learning:** Consolidating start and end HTML tag patterns into a single regex with a shared group (like `<(?:iframe|form|input)[^>]*>.*?</(?:iframe|form|input)>`) is a critical security and functionality bug because it allows cross-matching (e.g., `<input>...</form>`), leading to data loss.
 **Action:** When stripping multiple different HTML tags via regex, always iterate over a list of pre-compiled individual tag patterns (e.g., one for `iframe`, one for `form`) rather than merging them into a single cross-matching OR pattern.
+## 2026-07-01 - Component specific useMemo optimizations
+**Learning:** Adding useMemo caching to expensive filter maps is a great targeted optimization, especially when there's an external trigger causing the main component to unnecessarily re-evaluate local derived state variables.
+**Action:** When working in larger components with complex derived state like filtered lists, look for independent values that cause re-renders, and useMemo for the isolated parts to prevent cascading (N)$ operations.
