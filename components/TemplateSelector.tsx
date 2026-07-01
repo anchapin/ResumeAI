@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 
 // Default API URL fallback (can be overridden via VITE_API_URL environment variable)
 const DEFAULT_API_URL = 'http://127.0.0.1:8000';
@@ -57,8 +57,13 @@ export const TemplateSelector: React.FC<TemplateSelectorProps> = ({
     }
   };
 
-  const filteredTemplates =
-    categoryFilter === 'all' ? templates : templates.filter((t) => t.category === categoryFilter);
+  // Memoize the filtered templates to prevent O(n) recalculation on every re-render
+  // This reduces unnecessary processing when other state changes (e.g. expandedTemplate)
+  const filteredTemplates = useMemo(() => {
+    return categoryFilter === 'all'
+      ? templates
+      : templates.filter((t) => t.category === categoryFilter);
+  }, [categoryFilter, templates]);
 
   const categories = [
     { value: 'all', label: 'All Templates' },
