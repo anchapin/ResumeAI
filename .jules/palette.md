@@ -18,3 +18,6 @@
 ## 2026-04-02 - Custom Tab Component Accessibility
 **Learning:** Custom tab implementations (like comment filter buttons) often lack necessary focus rings and active state announcements for screen readers. Using just active classes (e.g. `bg-white`) is not sufficient for keyboard navigation or screen reader context.
 **Action:** Always add explicit `focus-visible:ring` classes to ensure tab elements are navigable by keyboard. Use the `aria-pressed` or `aria-current` attributes to correctly announce the active tab to assistive technologies.
+## 2026-07-02 - Missing ARIA Live Regions on Dynamic Status Indicators
+**Learning:** Dynamic status indicators that update based on user input, like a password strength meter, often fail to announce their state changes to screen readers if they are not explicitly wrapped in an aria-live region. Additionally, visual elements like progress bars require proper ARIA roles (`role="progressbar"`) and attributes (`aria-valuenow`, `aria-valuemin`, `aria-valuemax`, `aria-label`) to provide semantic meaning and context.
+**Action:** Always wrap dynamic, text-based status indicators in an element with `aria-live="polite"` (or `assertive` if urgent). For visual bars representing a value, always add `role="progressbar"` and the associated `aria-value*` attributes.
