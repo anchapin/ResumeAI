@@ -14,3 +14,7 @@
 ## 2026-03-09 - Ensure aria-hidden for ligature icons
 **Learning:** Adding `aria-label`s to buttons is critical, but when the button uses an icon font like Material Symbols that relies on text ligatures (e.g., `close`, `history`, `edit`), screen readers will read the ligature text aloud. This creates a confusing experience (e.g. reading "Close close" or just "Close" when it should be "Close form").
 **Action:** When adding `aria-label` to an icon-only button that uses ligature icons, always ensure the inner `<span>` element containing the ligature text has `aria-hidden="true"`.
+
+## 2024-07-04 - Adding ARIA Labels to Icon-Only Buttons
+**Learning:** Found multiple instances in `pages/Settings.tsx` where icon-only buttons (like Notifications, API key visibility toggle, and Close modals) were missing `aria-label` attributes, which makes them inaccessible to screen readers.
+**Action:** When adding new icon-only interactive elements using Material Symbols, ensure they always have an `aria-label` attribute describing their action (e.g. `aria-label="Close"`).
