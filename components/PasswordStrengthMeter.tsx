@@ -57,13 +57,13 @@ export const PasswordStrengthMeter: React.FC<PasswordStrengthMeterProps> = ({ pa
     <div className="mt-2">
       <div className="flex items-center justify-between mb-1">
         <span className="text-xs font-medium text-slate-600">Password Strength:</span>
-        <span className={'text-xs font-bold text-white px-2 py-0.5 rounded {strength.color}'}>
+        <span className={`text-xs font-bold text-white px-2 py-0.5 rounded ${strength.color}`}>
           {strength.label}
         </span>
       </div>
       <div className="h-1 bg-slate-200 rounded-full overflow-hidden">
         <div
-          className={'h-full transition-all duration-300 {strength.color}'}
+          className={`h-full transition-all duration-300 ${strength.color}`}
           style={{ width: `${(strength.score / 5) * 100}%` }}
         />
       </div>
