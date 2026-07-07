@@ -10,6 +10,7 @@ import logging
 import os
 import re
 from typing import Dict, Any, List, Optional
+from collections import Counter
 
 try:
     import openai
@@ -289,11 +290,9 @@ Return ONLY valid JSON, nothing else."""
             "most",
         }
         keywords = [w for w in words if len(w) > 2 and w not in stop_words]
-        word_freq: Dict[str, int] = {}
-        for word in keywords:
-            word_freq[word] = word_freq.get(word, 0) + 1
-        sorted_kw = sorted(word_freq.items(), key=lambda x: x[1], reverse=True)
-        return [word for word, _ in sorted_kw[:20]]
+
+        # ⚡ Bolt Optimization: Use collections.Counter for faster frequency counting
+        return [word for word, _ in Counter(keywords).most_common(20)]
 
     def suggest_improvements(self, resume_data: Dict[str, Any], job_description: str) -> List[str]:
         """
