@@ -12,6 +12,7 @@ import logging
 import re
 from typing import Dict, Any, List, Optional
 from abc import ABC, abstractmethod
+from collections import Counter
 
 from .circuit_breaker import (
     CircuitBreakerOpen,
@@ -128,15 +129,8 @@ class AITailoringUtils:
 
         keywords = [word for word in words if len(word) > 2 and word not in stop_words]
 
-        # Count frequency and sort
-        word_freq = {}
-        for word in keywords:
-            word_freq[word] = word_freq.get(word, 0) + 1
-
-        # Return sorted by frequency (top 20)
-        sorted_keywords = sorted(word_freq.items(), key=lambda x: x[1], reverse=True)
-
-        return [word for word, freq in sorted_keywords[:20]]
+        # ⚡ Bolt Optimization: Use collections.Counter for faster frequency counting
+        return [word for word, _ in Counter(keywords).most_common(20)]
 
     @staticmethod
     def calculate_match_score(resume_data: Dict[str, Any], keywords: List[str]) -> float:
