@@ -824,9 +824,9 @@ async def share_resume(
 
         # Hash password if provided
         if request.password:
-            import hashlib
+            from config.security import hash_password
 
-            share.share_password_hash = hashlib.sha256(request.password.encode()).hexdigest()
+            share.share_password_hash = hash_password(request.password)
 
         db.add(share)
 
@@ -907,10 +907,9 @@ async def access_shared_resume(
                     status_code=status.HTTP_401_UNAUTHORIZED,
                     detail="Password required",
                 )
-            import hashlib
+            from config.security import verify_password
 
-            password_hash = hashlib.sha256(password.encode()).hexdigest()
-            if password_hash != share.share_password_hash:
+            if not verify_password(password, share.share_password_hash):
                 raise HTTPException(
                     status_code=status.HTTP_401_UNAUTHORIZED,
                     detail="Invalid password",
@@ -1108,7 +1107,9 @@ async def batch_create_resumes(
 
             # Add tags
             if resume_request.tags:
-                existing_tags_result = await db.execute(select(Tag).where(Tag.name.in_(resume_request.tags)))
+                existing_tags_result = await db.execute(
+                    select(Tag).where(Tag.name.in_(resume_request.tags))
+                )
                 existing_tags_dict = {t.name: t for t in existing_tags_result.scalars().all()}
                 for tag_name in resume_request.tags:
                     existing_tag = existing_tags_dict.get(tag_name)
@@ -1230,7 +1231,9 @@ async def batch_update_resumes(
             # Update tags if provided
             if update_request.tags is not None:
                 resume.tags.clear()
-                existing_tags_result = await db.execute(select(Tag).where(Tag.name.in_(update_request.tags)))
+                existing_tags_result = await db.execute(
+                    select(Tag).where(Tag.name.in_(update_request.tags))
+                )
                 existing_tags_dict = {t.name: t for t in existing_tags_result.scalars().all()}
                 for tag_name in update_request.tags:
                     existing_tag = existing_tags_dict.get(tag_name)
