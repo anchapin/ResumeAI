@@ -39,3 +39,8 @@
 ## 2024-05-27 - Regex Cross-Matching Risk in Tag Sanitization
 **Learning:** Consolidating start and end HTML tag patterns into a single regex with a shared group (like `<(?:iframe|form|input)[^>]*>.*?</(?:iframe|form|input)>`) is a critical security and functionality bug because it allows cross-matching (e.g., `<input>...</form>`), leading to data loss.
 **Action:** When stripping multiple different HTML tags via regex, always iterate over a list of pre-compiled individual tag patterns (e.g., one for `iframe`, one for `form`) rather than merging them into a single cross-matching OR pattern.
+
+## 2024-07-11 - SQLAlchemy N+1 Query Optimization and Linting
+
+**Learning:** When resolving flake8 `E712` (comparison to False) linting errors in SQLAlchemy queries (e.g., `resume-api/`), changing `== False` to `is False` breaks the query builder because SQLAlchemy requires the `==` operator to overload the boolean expression for SQL generation (`ColumnElement` takes no arguments if you try to evaluate it with `is`).
+**Action:** Do not change `== False` to `is False` in SQLAlchemy where clauses. Instead, append `# noqa: E712` to the line to ensure backend queries function correctly while satisfying the linter.
