@@ -184,18 +184,34 @@ async def list_teams(
         teams = result.scalars().all()
 
         team_responses = []
-        for team in teams:
-            member_count_stmt = select(func.count(TeamMember.id)).where(
-                TeamMember.team_id == team.id
-            )
-            result = await db.execute(member_count_stmt)
-            member_count = result.scalar() or 0
 
-            resume_count_stmt = select(func.count(TeamResume.id)).where(
-                TeamResume.team_id == team.id
+        if teams:
+            team_ids = [team.id for team in teams]
+
+            # Fetch member counts in a single query
+            member_counts_stmt = (
+                select(TeamMember.team_id, func.count(TeamMember.id))
+                .where(TeamMember.team_id.in_(team_ids))
+                .group_by(TeamMember.team_id)
             )
-            result = await db.execute(resume_count_stmt)
-            resume_count = result.scalar() or 0
+            member_counts_result = await db.execute(member_counts_stmt)
+            member_counts = {row[0]: row[1] for row in member_counts_result.all()}
+
+            # Fetch resume counts in a single query
+            resume_counts_stmt = (
+                select(TeamResume.team_id, func.count(TeamResume.id))
+                .where(TeamResume.team_id.in_(team_ids))
+                .group_by(TeamResume.team_id)
+            )
+            resume_counts_result = await db.execute(resume_counts_stmt)
+            resume_counts = {row[0]: row[1] for row in resume_counts_result.all()}
+        else:
+            member_counts = {}
+            resume_counts = {}
+
+        for team in teams:
+            member_count = member_counts.get(team.id, 0)
+            resume_count = resume_counts.get(team.id, 0)
 
             team_responses.append(
                 TeamResponse(
@@ -752,7 +768,6 @@ async def get_team_member(
     Rate limit: 30 requests per minute per API key.
     """
     try:
-        user_id = auth.user_id if hasattr(auth, "user_id") else 1
 
         team_stmt = select(Team).where(Team.id == team_id)
         result = await db.execute(team_stmt)
@@ -1516,9 +1531,7 @@ async def delete_resume_comment(
     try:
         user_id = auth.user_id if hasattr(auth, "user_id") else 1
 
-        stmt = select(Comment).where(
-            and_(Comment.id == comment_id, Comment.resume_id == resume_id)
-        )
+        stmt = select(Comment).where(and_(Comment.id == comment_id, Comment.resume_id == resume_id))
         result = await db.execute(stmt)
         comment = result.scalar_one_or_none()
 
