@@ -39,3 +39,7 @@
 ## 2024-05-27 - Regex Cross-Matching Risk in Tag Sanitization
 **Learning:** Consolidating start and end HTML tag patterns into a single regex with a shared group (like `<(?:iframe|form|input)[^>]*>.*?</(?:iframe|form|input)>`) is a critical security and functionality bug because it allows cross-matching (e.g., `<input>...</form>`), leading to data loss.
 **Action:** When stripping multiple different HTML tags via regex, always iterate over a list of pre-compiled individual tag patterns (e.g., one for `iframe`, one for `form`) rather than merging them into a single cross-matching OR pattern.
+
+## 2026-07-12 - Optimize keyword extraction using collections.Counter
+**Learning:** Manual dictionary-based word frequency counting (incrementing keys and sorting `.items()`) is slower than `collections.Counter`, which is implemented in C and optimized for this exact use case.
+**Action:** Always prefer `collections.Counter` along with a generator expression or list comprehension for frequency counting of elements in sequences, especially for strings and text processing.
