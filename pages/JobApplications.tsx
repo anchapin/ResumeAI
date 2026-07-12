@@ -80,10 +80,20 @@ const calculateStats = (apps: TrackedJobApplication[], apiStats?: ApplicationSta
   // Fall back to calculating from apps array
   const total = apps.length;
   const sent = total;
-  const pending = apps.filter((a) => a.status === 'applied').length;
-  const interviews = apps.filter((a) => a.status === 'interviewing').length;
-  const offers = apps.filter((a) => a.status === 'offer').length;
-  const rejected = apps.filter((a) => a.status === 'rejected').length;
+
+  // ⚡ Bolt: Performance optimization
+  // Reduced time complexity from O(4N) to O(N) by replacing four filter().length
+  // iterations with a single reduce pass, preventing multiple array allocations.
+  const { pending, interviews, offers, rejected } = apps.reduce(
+    (acc, a) => {
+      if (a.status === 'applied') acc.pending++;
+      else if (a.status === 'interviewing') acc.interviews++;
+      else if (a.status === 'offer') acc.offers++;
+      else if (a.status === 'rejected') acc.rejected++;
+      return acc;
+    },
+    { pending: 0, interviews: 0, offers: 0, rejected: 0 },
+  );
 
   const responded = interviews + offers + rejected;
   const interviewRate = responded > 0 ? Math.round((interviews / responded) * 100) : 0;
