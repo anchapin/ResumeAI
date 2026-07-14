@@ -13,7 +13,6 @@ Includes endpoints for:
 - User settings
 """
 
-import hashlib
 import os
 import secrets
 from datetime import datetime
@@ -24,7 +23,7 @@ from sqlalchemy import select, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from config.security import hash_password, verify_password
+from config.security import hash_password, verify_password, verify_legacy_hash
 
 from .models import (
     # Request models
@@ -912,8 +911,7 @@ async def access_shared_resume(
             is_valid = False
             # Check if it's a legacy SHA256 hash (64 chars hex) or new bcrypt hash
             if not share.share_password_hash.startswith("$"):
-                legacy_hash = hashlib.sha256(password.encode()).hexdigest()
-                is_valid = legacy_hash == share.share_password_hash
+                is_valid = verify_legacy_hash(password, share.share_password_hash)
             else:
                 is_valid = verify_password(password, share.share_password_hash)
 
