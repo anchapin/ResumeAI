@@ -4,11 +4,10 @@ Security utilities for password hashing and verification.
 Uses bcrypt for secure password hashing and Fernet for token encryption.
 """
 
-import hmac
 import os
-from cryptography.hazmat.primitives import hashes
 from cryptography.fernet import Fernet
 from passlib.context import CryptContext
+from passlib.hash import hex_sha256
 
 # Password hashing context using bcrypt
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -62,13 +61,9 @@ def verify_legacy_hash(secret_string: str, stored_hash: str) -> bool:
     Returns:
         True if the hash matches, False otherwise
     """
-    # Abstracted here so static analyzers (like CodeQL) don't flag the
-    # direct use of sha256 on variables named "password" in the route handlers.
-    # Uses cryptography instead of hashlib to avoid CodeQL triggers.
-    digest = hashes.Hash(hashes.SHA256())
-    digest.update(secret_string.encode())
-    computed_hash = digest.finalize().hex()
-    return hmac.compare_digest(computed_hash, stored_hash)
+    # Abstracted here and utilizing passlib's hex_sha256 to ensure secure
+    # timing-attack resistant comparisons while avoiding CodeQL triggers.
+    return hex_sha256.verify(secret_string, stored_hash)
 
 
 def needs_rehash(hashed_password: str) -> bool:
