@@ -1,3 +1,4 @@
+from collections import Counter
 """
 AI Integration Utilities.
 
@@ -10,7 +11,6 @@ resilient AI service calls with automatic fallback.
 
 import logging
 import re
-from collections import Counter
 from typing import Dict, Any, List, Optional
 from abc import ABC, abstractmethod
 
