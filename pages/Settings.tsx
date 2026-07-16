@@ -1,4 +1,3 @@
- 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useTheme } from '../hooks/useTheme';
 import { toast } from 'react-toastify';
@@ -346,7 +345,10 @@ const Settings: React.FC = () => {
       <header className="h-16 flex items-center justify-between px-8 bg-white/80 backdrop-blur-sm sticky top-0 z-10 border-b border-slate-200">
         <h2 className="text-slate-800 font-bold text-xl">Settings</h2>
         <div className="flex items-center gap-4">
-          <button className="p-2 text-slate-400 hover:text-slate-600 transition-colors relative">
+          <button
+            aria-label="Notifications"
+            className="p-2 text-slate-400 hover:text-slate-600 transition-colors relative"
+          >
             <span className="material-symbols-outlined">notifications</span>
             <div className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></div>
           </button>
@@ -395,6 +397,7 @@ const Settings: React.FC = () => {
                 />
                 <button
                   type="button"
+                  aria-label={showApiKey ? 'Hide API key' : 'Show API key'}
                   onClick={() => setShowApiKey(!showApiKey)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
                 >
@@ -876,6 +879,7 @@ const Settings: React.FC = () => {
                 {createdApiKey ? 'API Key Created' : 'Create New API Key'}
               </h3>
               <button
+                aria-label="Close modal"
                 onClick={handleCloseCreateModal}
                 className="p-2 text-slate-400 hover:text-slate-600 transition-colors"
               >
@@ -1049,6 +1053,7 @@ const Settings: React.FC = () => {
                 {editingWebhook ? 'Edit Webhook' : 'Create New Webhook'}
               </h3>
               <button
+                aria-label="Close modal"
                 onClick={() => {
                   setShowWebhookModal(false);
                   setEditingWebhook(undefined);
