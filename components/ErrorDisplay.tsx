@@ -1,4 +1,3 @@
- 
 import React, { useState, useEffect } from 'react';
 import { ErrorContext, ErrorType } from '../utils/errorHandler';
 import { getErrorMessageByType, getErrorSuggestion } from '../utils/errorMessages';
@@ -277,6 +276,7 @@ ${error.context ? `\nContext: ${JSON.stringify(error.context, null, 2)}` : ''}
             <span className="text-[10px] opacity-60 font-mono flex items-center gap-1">
               ID: {error.id.split('_').pop()?.substring(0, 8)}
               <button
+                aria-label={copied ? 'Error ID copied' : 'Copy Error ID'}
                 onClick={copyErrorId}
                 className="hover:opacity-100 opacity-50 transition-opacity"
                 title="Copy Error ID"
@@ -298,6 +298,7 @@ ${error.context ? `\nContext: ${JSON.stringify(error.context, null, 2)}` : ''}
           {(error.context || process.env.NODE_ENV === 'development') && (
             <div className="mt-2">
               <button
+                aria-expanded={showExpandedDetails}
                 onClick={() => setShowExpandedDetails(!showExpandedDetails)}
                 className="text-[10px] font-semibold uppercase tracking-wider opacity-60 hover:opacity-100 flex items-center gap-0.5"
               >
