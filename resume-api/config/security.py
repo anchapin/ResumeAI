@@ -37,6 +37,7 @@ def hash_password(password: str) -> str:
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """
     Verify a password against its hash.
+    Includes fallback for backward compatibility with legacy unsalted SHA-256 hashes.
 
     Args:
         plain_password: Plain text password to verify
@@ -45,6 +46,10 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
     Returns:
         True if password matches, False otherwise
     """
+    if not hashed_password.startswith("$"):
+        from passlib.hash import hex_sha256
+
+        return hex_sha256.verify(plain_password, hashed_password)
     return pwd_context.verify(plain_password, hashed_password)
 
 
