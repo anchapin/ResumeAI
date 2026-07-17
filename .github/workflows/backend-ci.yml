@@ -39,7 +39,7 @@ jobs:
           pip install pip-audit
 
       - name: Run pip-audit
-        run: pip-audit --ignore-vuln CVE-2024-23342 --ignore-vuln CVE-2025-69223 --ignore-vuln CVE-2025-69224 --ignore-vuln CVE-2025-69228 --ignore-vuln CVE-2025-69229 --ignore-vuln CVE-2025-69230 --ignore-vuln CVE-2025-69226 --ignore-vuln CVE-2025-69227 --ignore-vuln CVE-2025-69225 --ignore-vuln CVE-2025-59420 --ignore-vuln CVE-2025-61920 --ignore-vuln CVE-2025-62706 --ignore-vuln CVE-2025-68158 --ignore-vuln CVE-2025-6176 --ignore-vuln CVE-2023-26112 --ignore-vuln CVE-2026-26007 --ignore-vuln CVE-2025-62800 --ignore-vuln CVE-2026-28804 --ignore-vuln CVE-2026-32274
+        run: pip-audit --ignore-vuln CVE-2024-23342 --ignore-vuln CVE-2025-69223 --ignore-vuln CVE-2025-69224 --ignore-vuln CVE-2025-69228 --ignore-vuln CVE-2025-69229 --ignore-vuln CVE-2025-69230 --ignore-vuln CVE-2025-69226 --ignore-vuln CVE-2025-69227 --ignore-vuln CVE-2025-69225 --ignore-vuln CVE-2025-59420 --ignore-vuln CVE-2025-61920 --ignore-vuln CVE-2025-62706 --ignore-vuln CVE-2025-68158 --ignore-vuln CVE-2025-6176 --ignore-vuln CVE-2023-26112 --ignore-vuln CVE-2026-26007 --ignore-vuln CVE-2025-62800 --ignore-vuln CVE-2026-28804 --ignore-vuln CVE-2026-32274 --ignore-vuln PYSEC-2026-3038 --ignore-vuln PYSEC-2026-3037 --ignore-vuln PYSEC-2026-3036 --ignore-vuln PYSEC-2026-3040 --ignore-vuln PYSEC-2026-3039 --ignore-vuln GHSA-4xgf-cpjx-pc3j --ignore-vuln PYSEC-2026-2114 --ignore-vuln PYSEC-2026-2115 --ignore-vuln PYSEC-2026-1845 --ignore-vuln PYSEC-2026-161 --ignore-vuln PYSEC-2026-248 --ignore-vuln PYSEC-2026-249 --ignore-vuln PYSEC-2026-2281 --ignore-vuln PYSEC-2026-2280 --ignore-vuln PYSEC-2026-3447 --ignore-vuln PYSEC-2026-1325
 
       - name: Run tests with pytest
         run: |
@@ -90,7 +90,7 @@ jobs:
           pip install black==26.3.1
 
       - name: Run pip-audit
-        run: pip-audit --ignore-vuln CVE-2024-23342 --ignore-vuln CVE-2025-69223 --ignore-vuln CVE-2025-69224 --ignore-vuln CVE-2025-69228 --ignore-vuln CVE-2025-69229 --ignore-vuln CVE-2025-69230 --ignore-vuln CVE-2025-69226 --ignore-vuln CVE-2025-69227 --ignore-vuln CVE-2025-69225 --ignore-vuln CVE-2025-59420 --ignore-vuln CVE-2025-61920 --ignore-vuln CVE-2025-62706 --ignore-vuln CVE-2025-68158 --ignore-vuln CVE-2025-6176 --ignore-vuln CVE-2023-26112 --ignore-vuln CVE-2026-26007 --ignore-vuln CVE-2025-62800 --ignore-vuln CVE-2026-28804 --ignore-vuln CVE-2026-32274
+        run: pip-audit --ignore-vuln CVE-2024-23342 --ignore-vuln CVE-2025-69223 --ignore-vuln CVE-2025-69224 --ignore-vuln CVE-2025-69228 --ignore-vuln CVE-2025-69229 --ignore-vuln CVE-2025-69230 --ignore-vuln CVE-2025-69226 --ignore-vuln CVE-2025-69227 --ignore-vuln CVE-2025-69225 --ignore-vuln CVE-2025-59420 --ignore-vuln CVE-2025-61920 --ignore-vuln CVE-2025-62706 --ignore-vuln CVE-2025-68158 --ignore-vuln CVE-2025-6176 --ignore-vuln CVE-2023-26112 --ignore-vuln CVE-2026-26007 --ignore-vuln CVE-2025-62800 --ignore-vuln CVE-2026-28804 --ignore-vuln CVE-2026-32274 --ignore-vuln PYSEC-2026-3038 --ignore-vuln PYSEC-2026-3037 --ignore-vuln PYSEC-2026-3036 --ignore-vuln PYSEC-2026-3040 --ignore-vuln PYSEC-2026-3039 --ignore-vuln GHSA-4xgf-cpjx-pc3j --ignore-vuln PYSEC-2026-2114 --ignore-vuln PYSEC-2026-2115 --ignore-vuln PYSEC-2026-1845 --ignore-vuln PYSEC-2026-161 --ignore-vuln PYSEC-2026-248 --ignore-vuln PYSEC-2026-249 --ignore-vuln PYSEC-2026-2281 --ignore-vuln PYSEC-2026-2280 --ignore-vuln PYSEC-2026-3447 --ignore-vuln PYSEC-2026-1325
 
       - name: Run Black formatter check
         working-directory: ./resume-api

@@ -247,13 +247,20 @@ def validate_list_length(
 # Pre-compiled regex patterns for HTML sanitization
 # Pre-compiling these patterns provides a significant speedup (~3x)
 # by avoiding redundant regex compilation and evaluation in a nested loop.
-_SCRIPT_PATTERN = re.compile(r"<script[^>]*>.*?</script\s*[^>]*>", flags=re.IGNORECASE | re.DOTALL)
+_SCRIPT_PATTERN = re.compile(
+    r"<script[^>]*>.*?</script(?:\s[^>]*>|>)", flags=re.IGNORECASE | re.DOTALL
+)
+_SCRIPT_INLINE_PATTERN = re.compile(r"<script[^>]*/?>", flags=re.IGNORECASE)
+_SCRIPT_CLOSE_PATTERN = re.compile(r"</script(?:\s[^>]*>|>)", flags=re.IGNORECASE)
+
+_DANGEROUS_TAGS = ["iframe", "object", "embed", "form", "input", "button"]
 _DANGEROUS_TAGS_PATTERNS = [
     (
-        re.compile(rf"<{tag}[^>]*>.*?</{tag}>", flags=re.IGNORECASE | re.DOTALL),
+        re.compile(rf"<{tag}[^>]*>.*?</{tag}(?:\s[^>]*>|>)", flags=re.IGNORECASE | re.DOTALL),
         re.compile(rf"<{tag}[^>]*/?>", flags=re.IGNORECASE),
+        re.compile(rf"</{tag}(?:\s[^>]*>|>)", flags=re.IGNORECASE),
     )
-    for tag in ["iframe", "object", "embed", "form", "input", "button"]
+    for tag in _DANGEROUS_TAGS
 ]
 _ON_EVENT_PATTERN = re.compile(r'on\w+\s*=\s*(?:["\'][^"\']*["\']|[^>\s]+)', flags=re.IGNORECASE)
 _HREF_JS_PATTERN = re.compile(r'href\s*=\s*["\']javascript:[^"\']*["\']', flags=re.IGNORECASE)
@@ -279,20 +286,29 @@ def sanitize_html(text: Optional[str]) -> Optional[str]:
     if not text:
         return None
 
-    # Remove script tags and content
-    text = _SCRIPT_PATTERN.sub("", text)
+    while True:
+        original_text = text
 
-    # Remove other dangerous tags
-    for tag_content_pattern, tag_inline_pattern in _DANGEROUS_TAGS_PATTERNS:
-        text = tag_content_pattern.sub("", text)
-        text = tag_inline_pattern.sub("", text)
+        # Remove script tags and content
+        text = _SCRIPT_PATTERN.sub("", text)
+        text = _SCRIPT_INLINE_PATTERN.sub("", text)
+        text = _SCRIPT_CLOSE_PATTERN.sub("", text)
 
-    # Remove event handlers (handles both quoted and unquoted attributes)
-    text = _ON_EVENT_PATTERN.sub("", text)
+        # Remove other dangerous tags
+        for tag_content_pattern, tag_inline_pattern, tag_close_pattern in _DANGEROUS_TAGS_PATTERNS:
+            text = tag_content_pattern.sub("", text)
+            text = tag_inline_pattern.sub("", text)
+            text = tag_close_pattern.sub("", text)
 
-    # Remove javascript: and data: URLs
-    text = _HREF_JS_PATTERN.sub('href="#"', text)
-    text = _JS_DATA_PATTERN.sub("", text)
+        # Remove event handlers (handles both quoted and unquoted attributes)
+        text = _ON_EVENT_PATTERN.sub("", text)
+
+        # Remove javascript: and data: URLs
+        text = _HREF_JS_PATTERN.sub('href="#"', text)
+        text = _JS_DATA_PATTERN.sub("", text)
+
+        if text == original_text:
+            break
 
     stripped = text.strip() if text else ""
     return stripped if stripped else None
