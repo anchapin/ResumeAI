@@ -270,6 +270,7 @@ const ResumePreview = React.memo<ResumePreviewProps>(
               onClick={() => setPreviewZoom(Math.max(0.5, previewZoom - 0.1))}
               className="p-1.5 hover:bg-slate-100 rounded text-slate-500"
               title="Zoom Out"
+              aria-label="Zoom out preview"
             >
               <span className="material-symbols-outlined text-lg">remove</span>
             </button>
@@ -280,6 +281,7 @@ const ResumePreview = React.memo<ResumePreviewProps>(
               onClick={() => setPreviewZoom(Math.min(2.0, previewZoom + 0.1))}
               className="p-1.5 hover:bg-slate-100 rounded text-slate-500"
               title="Zoom In"
+              aria-label="Zoom in preview"
             >
               <span className="material-symbols-outlined text-lg">add</span>
             </button>
@@ -293,6 +295,7 @@ const ResumePreview = React.memo<ResumePreviewProps>(
                 disabled={isGeneratingPDF}
                 className="flex items-center gap-1 px-3 py-1.5 bg-primary-600 text-white text-xs font-bold rounded hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 title="Download PDF"
+                aria-label="Download PDF"
               >
                 <span className="material-symbols-outlined text-sm">
                   {isGeneratingPDF ? 'hourglass_empty' : 'download'}
