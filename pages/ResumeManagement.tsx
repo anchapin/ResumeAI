@@ -1,4 +1,3 @@
- 
 import React, { useState, useEffect, useCallback } from 'react';
 import Sidebar from '../components/Sidebar';
 import ResumeCard from '../components/ResumeCard';
@@ -52,25 +51,25 @@ const ResumeManagement: React.FC = () => {
   }, [loadResumes]);
 
   // Selection handlers
-  const toggleSelection = (id: number) => {
+  const toggleSelection = useCallback((id: number, selected: boolean) => {
     setSelectedIds((prev) => {
       const newSet = new Set(prev);
-      if (newSet.has(id)) {
-        newSet.delete(id);
-      } else {
+      if (selected) {
         newSet.add(id);
+      } else {
+        newSet.delete(id);
       }
       return newSet;
     });
-  };
+  }, []);
 
-  const selectAll = () => {
+  const selectAll = useCallback(() => {
     setSelectedIds(new Set(resumes.map((r) => r.id)));
-  };
+  }, [resumes]);
 
-  const deselectAll = () => {
+  const deselectAll = useCallback(() => {
     setSelectedIds(new Set());
-  };
+  }, []);
 
   // Bulk operation handlers
   const handleBulkDelete = async () => {
@@ -198,42 +197,48 @@ const ResumeManagement: React.FC = () => {
   };
 
   // Individual action handlers
-  const handleEdit = (id: number) => {
+  const handleEdit = useCallback((id: number) => {
     // Navigate to editor with the resume
     window.location.hash = `#editor?id=${id}`;
-  };
+  }, []);
 
-  const handleDuplicate = async (id: number) => {
-    try {
-      const result = await bulkOperation([id], 'duplicate');
-      if (result.failed.length === 0) {
-        showSuccessToast('Resume duplicated successfully');
-        await loadResumes();
-      } else {
+  const handleDuplicate = useCallback(
+    async (id: number) => {
+      try {
+        const result = await bulkOperation([id], 'duplicate');
+        if (result.failed.length === 0) {
+          showSuccessToast('Resume duplicated successfully');
+          await loadResumes();
+        } else {
+          showErrorToast('Failed to duplicate resume');
+        }
+      } catch (error) {
         showErrorToast('Failed to duplicate resume');
+        console.error(error);
       }
-    } catch (error) {
-      showErrorToast('Failed to duplicate resume');
-      console.error(error);
-    }
-  };
+    },
+    [loadResumes],
+  );
 
-  const handleDelete = async (id: number) => {
-    if (!confirm('Are you sure you want to delete this resume?')) return;
+  const handleDelete = useCallback(
+    async (id: number) => {
+      if (!confirm('Are you sure you want to delete this resume?')) return;
 
-    try {
-      await bulkOperation([id], 'delete');
-      showSuccessToast('Resume deleted successfully');
-      await loadResumes();
-    } catch (error) {
-      showErrorToast('Failed to delete resume');
-      console.error(error);
-    }
-  };
+      try {
+        await bulkOperation([id], 'delete');
+        showSuccessToast('Resume deleted successfully');
+        await loadResumes();
+      } catch (error) {
+        showErrorToast('Failed to delete resume');
+        console.error(error);
+      }
+    },
+    [loadResumes],
+  );
 
-  const handleShare = (id: number) => {
+  const handleShare = useCallback((id: number) => {
     setSharingResumeId(id);
-  };
+  }, []);
 
   // Get selected resumes for display
   const selectedResumes = resumes.filter((r) => selectedIds.has(r.id));
@@ -366,11 +371,11 @@ const ResumeManagement: React.FC = () => {
                   key={resume.id}
                   resume={resume}
                   isSelected={selectedIds.has(resume.id)}
-                  onSelect={(selected) => toggleSelection(resume.id)}
-                  onEdit={() => handleEdit(resume.id)}
-                  onDuplicate={() => handleDuplicate(resume.id)}
-                  onDelete={() => handleDelete(resume.id)}
-                  onShare={() => handleShare(resume.id)}
+                  onSelect={toggleSelection}
+                  onEdit={handleEdit}
+                  onDuplicate={handleDuplicate}
+                  onDelete={handleDelete}
+                  onShare={handleShare}
                 />
               ))}
             </div>
