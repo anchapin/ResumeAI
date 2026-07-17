@@ -76,7 +76,7 @@ describe('ResumeCard', () => {
     const checkbox = screen.getByRole('checkbox');
     fireEvent.click(checkbox);
 
-    expect(onSelect).toHaveBeenCalledWith(true);
+    expect(onSelect).toHaveBeenCalledWith(mockResume.id, true);
   });
 
   it('calls onEdit when edit button is clicked', () => {
@@ -96,7 +96,7 @@ describe('ResumeCard', () => {
     const editButton = screen.getByTitle('Edit Resume');
     fireEvent.click(editButton);
 
-    expect(onEdit).toHaveBeenCalledTimes(1);
+    expect(onEdit).toHaveBeenCalledWith(mockResume.id);
   });
 
   it('calls onDuplicate when duplicate button is clicked', () => {
@@ -116,7 +116,7 @@ describe('ResumeCard', () => {
     const duplicateButton = screen.getByTitle('Duplicate Resume');
     fireEvent.click(duplicateButton);
 
-    expect(onDuplicate).toHaveBeenCalledTimes(1);
+    expect(onDuplicate).toHaveBeenCalledWith(mockResume.id);
   });
 
   it('calls onDelete when delete button is clicked and confirmed', () => {
@@ -141,7 +141,7 @@ describe('ResumeCard', () => {
     const confirmButton = screen.getByTitle('Confirm Delete');
     fireEvent.click(confirmButton);
 
-    expect(onDelete).toHaveBeenCalledTimes(1);
+    expect(onDelete).toHaveBeenCalledWith(mockResume.id);
   });
 
   it('cancels deletion when cancel button is clicked', () => {
@@ -211,7 +211,7 @@ describe('ResumeCard', () => {
     const shareButton = screen.getByTitle('Share Resume');
     fireEvent.click(shareButton);
 
-    expect(onShare).toHaveBeenCalledTimes(1);
+    expect(onShare).toHaveBeenCalledWith(mockResume.id);
   });
 
   it('shows private badge when isPublic is false', () => {
