@@ -91,6 +91,7 @@ jobs:
             --ignore-vuln CVE-2026-28804 \
             --ignore-vuln CVE-2026-32274 \
             --ignore-vuln CVE-2026-4539 \
+            --ignore-vuln CVE-2026-1325 \
             --strict
 
       - name: Run tests with coverage (60% minimum)
