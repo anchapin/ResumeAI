@@ -125,9 +125,9 @@ const Dashboard: React.FC = () => {
       <header className="h-16 flex items-center justify-between px-8 bg-white/80 backdrop-blur-sm sticky top-0 z-10 border-b border-slate-200">
         <div className="flex items-center gap-6">
           <h2 className="text-slate-800 font-bold text-xl">Job Search Overview</h2>
-          <Button 
-            variant="outline" 
-            size="sm" 
+          <Button
+            variant="outline"
+            size="sm"
             className="flex items-center gap-2"
             onClick={() => setShowImportDialog(true)}
           >
@@ -136,8 +136,10 @@ const Dashboard: React.FC = () => {
           </Button>
         </div>
         <div className="flex items-center gap-4">
-          <Button variant="ghost" className="p-2 relative">
-            <span className="material-symbols-outlined">notifications</span>
+          <Button variant="ghost" className="p-2 relative" aria-label="Notifications">
+            <span className="material-symbols-outlined" aria-hidden="true">
+              notifications
+            </span>
             <div className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></div>
           </Button>
           <div
