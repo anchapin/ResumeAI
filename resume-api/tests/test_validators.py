@@ -277,6 +277,19 @@ class TestHTMLSanitization:
         """Test None input."""
         assert sanitize_html(None) is None
 
+    def test_sanitize_nested_script(self):
+        """Test removal of nested script tags."""
+        result = sanitize_html("<scr<script>ipt>alert(1)</script>")
+        assert "<script>" not in result
+        assert "alert" not in result
+
+    def test_sanitize_nested_iframe(self):
+        """Test removal of nested iframe tags."""
+        result = sanitize_html("<if<iframe src='evil.com'></iframe>rame>")
+        # Function returns None if the string becomes empty or just whitespace
+        if result is not None:
+            assert "<iframe" not in result
+
 
 class TestResumeFieldValidation:
     """Test resume field validation."""
