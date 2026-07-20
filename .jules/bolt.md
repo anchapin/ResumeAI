@@ -39,3 +39,7 @@
 ## 2024-05-27 - Regex Cross-Matching Risk in Tag Sanitization
 **Learning:** Consolidating start and end HTML tag patterns into a single regex with a shared group (like `<(?:iframe|form|input)[^>]*>.*?</(?:iframe|form|input)>`) is a critical security and functionality bug because it allows cross-matching (e.g., `<input>...</form>`), leading to data loss.
 **Action:** When stripping multiple different HTML tags via regex, always iterate over a list of pre-compiled individual tag patterns (e.g., one for `iframe`, one for `form`) rather than merging them into a single cross-matching OR pattern.
+
+## 2026-07-20 - Substring Checking inside loops
+**Learning:** In text parsing functions (like `ATSCompatibilityChecker._check_content`), iterating over a list of static words and checking for substrings inside a nested string loop (e.g., checking for presence of action verbs within bullet points across all experience entries) is an `O(N)` loop bottleneck per iteration. Replacing it with a pre-compiled `re.compile(r'\b(?:word1|word2)\b')` regex dramatically improves performance, reducing O(N) Python iteration to a single fast O(1) C-optimized regex search call. Furthermore, joining strings with `[description] + bullet_texts` using a single `.join()` is faster than doing nested `.join()` calls.
+**Action:** When performing substring searches over a predefined list of words within a loop, precompile the words into a single OR-joined regex and execute `.search()` rather than using nested Python `for word in words: if word in text:` loops.
