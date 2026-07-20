@@ -148,6 +148,9 @@ class ATSCompatibilityChecker:
         "delivered",
     ]
 
+    # Pre-compiled regex for fast action verb detection
+    COMPILED_ACTION_VERBS_PATTERN = re.compile(r"\b(?:" + "|".join(ACTION_VERBS) + r")\b")
+
     # Formatting best practices
     FORMATTING_CHECKS = {
         "font_standard": [
@@ -476,23 +479,16 @@ class ATSCompatibilityChecker:
                     else:
                         bullet_texts.append(str(b))
 
-                all_text = " ".join(
-                    [
-                        description,
-                        " ".join(bullet_texts),
-                    ]
-                ).lower()
+                # ⚡ Bolt Optimization: Use a single join instead of nested joins
+                all_text = " ".join([description] + bullet_texts).lower()
 
                 # Check for metrics
                 if not has_metrics and self.METRIC_PATTERN.search(all_text):
                     has_metrics = True
 
-                # Check for action verbs
-                if not has_action_verbs:
-                    for verb in self.ACTION_VERBS:
-                        if verb in all_text:
-                            has_action_verbs = True
-                            break
+                # ⚡ Bolt Optimization: Replace O(N) substring loop with O(1) regex execution
+                if not has_action_verbs and self.COMPILED_ACTION_VERBS_PATTERN.search(all_text):
+                    has_action_verbs = True
 
             if not has_metrics:
                 msg = "Consider adding quantifiable metrics to your "
