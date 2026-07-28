@@ -148,6 +148,8 @@ class ATSCompatibilityChecker:
         "delivered",
     ]
 
+    ACTION_VERBS_PATTERN = re.compile(r"\b(?:" + "|".join(ACTION_VERBS) + r")\b", re.IGNORECASE)
+
     # Formatting best practices
     FORMATTING_CHECKS = {
         "font_standard": [
@@ -476,23 +478,15 @@ class ATSCompatibilityChecker:
                     else:
                         bullet_texts.append(str(b))
 
-                all_text = " ".join(
-                    [
-                        description,
-                        " ".join(bullet_texts),
-                    ]
-                ).lower()
+                all_text = " ".join([description] + bullet_texts).lower()
 
                 # Check for metrics
                 if not has_metrics and self.METRIC_PATTERN.search(all_text):
                     has_metrics = True
 
                 # Check for action verbs
-                if not has_action_verbs:
-                    for verb in self.ACTION_VERBS:
-                        if verb in all_text:
-                            has_action_verbs = True
-                            break
+                if not has_action_verbs and self.ACTION_VERBS_PATTERN.search(all_text):
+                    has_action_verbs = True
 
             if not has_metrics:
                 msg = "Consider adding quantifiable metrics to your "
