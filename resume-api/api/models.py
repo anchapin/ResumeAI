@@ -46,17 +46,26 @@ def sanitize_html(text: Optional[str]) -> Optional[str]:
     if not text:
         return None
 
-    # Remove script tags and content
-    text = re.sub(r"<script[^>]*>.*?</script>", "", text, flags=re.IGNORECASE | re.DOTALL)
+    while True:
+        original = text
+        # Remove script tags and content
+        text = re.sub(
+            r"<script[^>]*>.*?</script(?:\s[^>]*>|>)", "", text, flags=re.IGNORECASE | re.DOTALL
+        )
 
-    # Remove other dangerous tags
-    dangerous_tags = ["iframe", "object", "embed", "form", "input", "button"]
-    for tag in dangerous_tags:
-        text = re.sub(f"<{tag}[^>]*>.*?</{tag}>", "", text, flags=re.IGNORECASE | re.DOTALL)
-        text = re.sub(f"<{tag}[^>]*/?>", "", text, flags=re.IGNORECASE)
+        # Remove other dangerous tags
+        dangerous_tags = ["iframe", "object", "embed", "form", "input", "button"]
+        for tag in dangerous_tags:
+            text = re.sub(
+                rf"<{tag}[^>]*>.*?</{tag}(?:\s[^>]*>|>)", "", text, flags=re.IGNORECASE | re.DOTALL
+            )
+            text = re.sub(rf"<{tag}[^>]*/?>", "", text, flags=re.IGNORECASE)
+
+        if text == original:
+            break
 
     # Remove event handlers (onclick, onerror, etc.)
-    text = re.sub(r'on\w+\s*=\s*["\'][^"\']*["\']', "", text, flags=re.IGNORECASE)
+    text = re.sub(r'on\w+\s*=\s*(?:["\'][^"\']*["\']|[^>\s]+)', "", text, flags=re.IGNORECASE)
 
     # Remove javascript: and data: URLs
     text = re.sub(r"javascript\s*:", "", text, flags=re.IGNORECASE)
@@ -2154,5 +2163,6 @@ class QueueStatsResponse(BaseModel):
                 "worker_running": True,
             }
         }
+
 
 ResumeRequest.model_rebuild()
