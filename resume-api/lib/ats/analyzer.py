@@ -126,7 +126,7 @@ class ATSAnalyzer:
             return 'docx'
         elif ext == 'txt':
             return 'txt'
-        return 'unknown'
+        return ext
     
     def _extract_text(self, file_content: bytes, file_type: str) -> tuple[str, list[ATSIssue]]:
         """Extract text from file based on type"""
@@ -137,7 +137,7 @@ class ATSAnalyzer:
         elif file_type == 'docx':
             return self._extract_from_docx(file_content, issues)
         elif file_type == 'txt':
-            return file_content.decode('utf-8', errors='replace'), issues
+            return file_content.read().decode('utf-8', errors='replace') if hasattr(file_content, 'read') else file_content.decode('utf-8', errors='replace'), issues
         else:
             raise ValueError(f"Unsupported file type: {file_type}")
     
@@ -147,7 +147,7 @@ class ATSAnalyzer:
             import pypdf
         except ImportError:
             # Fall back to simple text extraction
-            text = file_content.decode('utf-8', errors='replace')
+            text = file_content.read().decode('utf-8', errors='replace') if hasattr(file_content, 'read') else file_content.decode('utf-8', errors='replace')
             issues.append(ATSIssue(
                 issue_type=IssueType.COMPLEX_FORMATTING,
                 severity=IssueSeverity.WARNING,
@@ -157,7 +157,7 @@ class ATSAnalyzer:
             ))
             return text, issues
         
-        pdf_reader = pypdf.PdfReader(io.BytesIO(file_content))
+        pdf_reader = pypdf.PdfReader(file_content if hasattr(file_content, 'read') else io.BytesIO(file_content))
         text_parts = []
         
         for page_num, page in enumerate(pdf_reader.pages, 1):
@@ -232,7 +232,7 @@ class ATSAnalyzer:
         try:
             import docx
         except ImportError:
-            text = file_content.decode('utf-8', errors='replace')
+            text = file_content.read().decode('utf-8', errors='replace') if hasattr(file_content, 'read') else file_content.decode('utf-8', errors='replace')
             issues.append(ATSIssue(
                 issue_type=IssueType.COMPLEX_FORMATTING,
                 severity=IssueSeverity.WARNING,
@@ -242,7 +242,7 @@ class ATSAnalyzer:
             ))
             return text, issues
         
-        doc = docx.Document(io.BytesIO(file_content))
+        doc = docx.Document(file_content if hasattr(file_content, 'read') else io.BytesIO(file_content))
         text_parts = []
         
         for para in doc.paragraphs:
