@@ -122,14 +122,17 @@ export function extractJobKeywords(jobDescription: string): string[] {
   const words = jobDescription
     .toLowerCase()
     .replace(/[^a-z0-9\s]/g, ' ')
-    .split(/\s+/)
-    .filter((word) => word.length > 2 && !commonWords.has(word));
+    .split(/\s+/);
 
-  // Count frequency
+  // ⚡ Bolt: Count frequency and filter words in a single pass using a standard for loop
+  // This avoids intermediate array allocation from .filter() and overhead from .forEach()
   const frequency: Record<string, number> = {};
-  words.forEach((word) => {
-    frequency[word] = (frequency[word] || 0) + 1;
-  });
+  for (let i = 0; i < words.length; i++) {
+    const word = words[i];
+    if (word.length > 2 && !commonWords.has(word)) {
+      frequency[word] = (frequency[word] || 0) + 1;
+    }
+  }
 
   // Return top keywords
   return Object.entries(frequency)
