@@ -1,0 +1,9 @@
+Defaulting to user installation because normal site-packages is not writeable
+Requirement already satisfied: pdfplumber in /home/alex/.local/lib/python3.12/site-packages (0.11.9)
+Requirement already satisfied: pdfminer.six==20251230 in /home/alex/.local/lib/python3.12/site-packages (from pdfplumber) (20251230)
+Requirement already satisfied: Pillow>=9.1 in /home/alex/.local/lib/python3.12/site-packages (from pdfplumber) (11.3.0)
+Requirement already satisfied: pypdfium2>=4.18.0 in /home/alex/.local/lib/python3.12/site-packages (from pdfplumber) (5.5.0)
+Requirement already satisfied: charset-normalizer>=2.0.0 in /home/alex/.local/lib/python3.12/site-packages (from pdfminer.six==20251230->pdfplumber) (3.4.2)
+Requirement already satisfied: cryptography>=36.0.0 in /home/alex/.local/lib/python3.12/site-packages (from pdfminer.six==20251230->pdfplumber) (45.0.5)
+Requirement already satisfied: cffi>=1.14 in /home/alex/.local/lib/python3.12/site-packages (from cryptography>=36.0.0->pdfminer.six==20251230->pdfplumber) (1.17.1)
+Requirement already satisfied: pycparser in /home/alex/.local/lib/python3.12/site-packages (from cffi>=1.14->cryptography>=36.0.0->pdfminer.six==20251230->pdfplumber) (2.22)
